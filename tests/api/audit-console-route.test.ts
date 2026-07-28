@@ -1,5 +1,21 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { isSameOriginConsoleRequest, POST } from '../../src/app/api/audit/console/route';
+import { POST } from '../../src/app/api/audit/console/route';
+import { isSameOriginConsoleRequest } from '../../src/app/api/_lib/same-origin';
+import { CONSOLE_COOKIE, createSessionValue } from '../../src/app/api/_lib/console-session';
+
+const TOKEN = 'test-console-token-long-enough';
+
+function runRequest(headers: Record<string, string>) {
+  return new Request('http://localhost:3000/api/audit/console', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...headers },
+    body: JSON.stringify({
+      journeyId: 'demo-login',
+      environment: 'staging',
+      html: '<main></main>',
+    }),
+  });
+}
 
 describe('audit console route', () => {
   afterEach(() => {
@@ -71,5 +87,58 @@ describe('audit console route', () => {
     expect(response.status).toBe(403);
     const body = await response.json();
     expect(body.error).toBe('console_same_origin_required');
+  });
+
+  it('rejects a forged same-origin header with no operator session', async () => {
+    // The header is trivially forged outside a browser, so on its own it must
+    // not be enough to spend the server's token.
+    process.env.AUDITOR_RUN_TOKEN = TOKEN;
+
+    const response = await POST(runRequest({ 'sec-fetch-site': 'same-origin' }));
+    expect(response.status).toBe(401);
+    expect((await response.json()).error).toBe('console_session_required');
+  });
+
+  it('rejects a session cookie signed with a different token', async () => {
+    process.env.AUDITOR_RUN_TOKEN = TOKEN;
+
+    const response = await POST(
+      runRequest({
+        'sec-fetch-site': 'same-origin',
+        cookie: `${CONSOLE_COOKIE}=${createSessionValue('some-other-token-entirely')}`,
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect((await response.json()).error).toBe('console_session_required');
+  });
+
+  it('runs the audit when a valid session cookie is present', async () => {
+    process.env.AUDITOR_RUN_TOKEN = TOKEN;
+
+    const response = await POST(
+      runRequest({
+        'sec-fetch-site': 'same-origin',
+        cookie: `${CONSOLE_COOKIE}=${createSessionValue(TOKEN)}`,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).ciStatus).toBeDefined();
+  });
+
+  it('still requires same-origin even with a valid session', async () => {
+    process.env.AUDITOR_RUN_TOKEN = TOKEN;
+
+    const response = await POST(
+      runRequest({
+        origin: 'https://evil.example',
+        'sec-fetch-site': 'cross-site',
+        cookie: `${CONSOLE_COOKIE}=${createSessionValue(TOKEN)}`,
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect((await response.json()).error).toBe('console_same_origin_required');
   });
 });

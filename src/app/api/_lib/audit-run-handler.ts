@@ -26,7 +26,16 @@ const auditRunBodySchema = z
     omitAxTree: z.boolean().optional(),
     chaosScenario: z.enum(['omit_ax_tree', 'complete_critical', 'complete_clean']).optional(),
     browserMode: z.boolean().optional(),
-    stepId: z.string().min(1).optional(),
+    // stepId names the artifact files for this run. It is concatenated onto the
+    // artifacts directory, so it must be a bare filename segment -- no
+    // separators and no dots, which rules out `..` traversal. runJourney
+    // re-checks containment before writing.
+    stepId: z
+      .string()
+      .min(1)
+      .max(64)
+      .regex(/^[A-Za-z0-9_-]+$/, 'stepId may only contain letters, numbers, hyphens, underscores')
+      .optional(),
     fixtureDir: z.string().min(1).optional(),
   })
   .superRefine((body, ctx) => {

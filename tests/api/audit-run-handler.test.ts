@@ -142,4 +142,55 @@ describe('handleAuditRun', () => {
     expect(result.status).toBe(400);
     expect(result.body.error).toBe('invalid_request_body');
   });
+
+  it('rejects a stepId that could escape the artifacts directory', async () => {
+    // stepId is concatenated onto the artifacts path, so anything other than a
+    // bare filename segment is an arbitrary file write.
+    const traversals = [
+      '../../pwned',
+      '../pwned',
+      '/tmp/pwned',
+      'nested/../../pwned',
+      'a/b',
+      '..',
+      '.',
+    ];
+
+    for (const stepId of traversals) {
+      const request = new Request('http://localhost/api/audit/run', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          journeyId: 'demo-login',
+          environment: 'staging',
+          browserMode: true,
+          stepId,
+        }),
+      });
+
+      const result = await handleAuditRun(request, `req-stepid-${traversals.indexOf(stepId)}`);
+
+      expect(result.ok, `stepId ${JSON.stringify(stepId)} should be rejected`).toBe(false);
+      expect(result.status).toBe(400);
+      expect(result.body.error).toBe('invalid_request_body');
+    }
+  });
+
+  it('rejects an over-long stepId', async () => {
+    const request = new Request('http://localhost/api/audit/run', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        journeyId: 'demo-login',
+        environment: 'staging',
+        browserMode: true,
+        stepId: 'a'.repeat(65),
+      }),
+    });
+
+    const result = await handleAuditRun(request, 'req-stepid-long');
+
+    expect(result.ok).toBe(false);
+    expect(result.body.error).toBe('invalid_request_body');
+  });
 });

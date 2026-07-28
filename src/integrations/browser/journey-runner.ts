@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium, type Page } from 'playwright';
 import type { Environment } from '../../domain/contracts';
@@ -21,6 +21,29 @@ function resolveFixtureUrl(fixtureDir: string, path: string): string {
   return pathToFileURL(join(fixtureDir, path)).href;
 }
 
+/**
+ * Builds the artifact path prefix, refusing anything that escapes artifactsDir.
+ *
+ * stepId reaches here from the request body, and `join` happily resolves `..`
+ * segments, so without this an audit run is an arbitrary file write: a stepId
+ * of `../../foo` drops foo.png / foo.html / foo.ax.json anywhere on disk and
+ * overwrites whatever was there. The API schema rejects such values already;
+ * this is the backstop for any other caller (tests, scripts, future routes).
+ */
+export function resolveArtifactPrefix(artifactsDir: string, stepId: string): string {
+  const root = resolve(artifactsDir);
+  const prefix = resolve(root, stepId);
+
+  if (prefix !== root && !prefix.startsWith(root + sep)) {
+    throw new Error('stepId must not escape the artifacts directory.');
+  }
+  if (prefix === root) {
+    throw new Error('stepId must name a file within the artifacts directory.');
+  }
+
+  return prefix;
+}
+
 function routeFromPageUrl(url: string): string {
   const pathname = new URL(url).pathname;
   const fileName = pathname.split('/').pop() ?? '';
@@ -31,6 +54,10 @@ function routeFromPageUrl(url: string): string {
 }
 
 export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunnerResult> {
+  // Validate before launching a browser or creating directories, so a bad
+  // stepId costs nothing and leaves nothing behind.
+  const artifactPrefix = resolveArtifactPrefix(input.artifactsDir, input.stepId);
+
   await mkdir(input.artifactsDir, { recursive: true });
 
   const browser = await chromium.launch({ headless: input.headless ?? true });
@@ -56,7 +83,6 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     const html = await page.content();
     const title = await page.title();
     const url = page.url();
-    const artifactPrefix = join(input.artifactsDir, input.stepId);
     const screenshotPath = `${artifactPrefix}.png`;
     const domSnapshotPath = `${artifactPrefix}.html`;
 

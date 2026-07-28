@@ -202,6 +202,14 @@ export const GLOSSARY = {
       'Audits are authorised with a token held on the server. Until it is configured, the run button stays disabled.',
   },
 
+  consoleUnlock: {
+    term: 'Run token',
+    short:
+      'The shared secret the server uses to authorise audits. The console asks for it once, then remembers you.',
+    detail:
+      'Running an audit spends real resources, so the console has to know you are allowed to. Unlocking stores a signed, browser-only cookie for 30 days — the token itself is never kept in the browser. Changing the token on the server locks every console again.',
+  },
+
   chaosDemo: {
     term: 'Practice mode',
     short: 'Runs a simulated audit rigged to produce a specific verdict, so you can see what each one looks like.',
@@ -251,6 +259,28 @@ export const API_ERRORS: Record<string, ApiErrorCopy> = {
     cause:
       'For safety, this endpoint only accepts requests made from this page in a browser.',
     fix: 'Reload the page and try again. If you are calling the API from a script, use /api/audit/run with a bearer token instead.',
+  },
+  console_session_required: {
+    title: 'The console is locked',
+    cause:
+      'This browser has no valid operator session — it either never unlocked, or the session expired or was invalidated by a token change.',
+    fix: 'Unlock the console with the run token and run again.',
+  },
+  invalid_token: {
+    title: 'That token was not accepted',
+    cause: 'The value entered does not match AUDITOR_RUN_TOKEN on the server.',
+    fix: 'Copy the value from .env.local exactly, without surrounding quotes or spaces.',
+  },
+  too_many_attempts: {
+    title: 'Too many failed unlock attempts',
+    cause: 'Repeated wrong tokens from this address, so unlocking is paused briefly.',
+    fix: 'Wait five minutes, then try again with the correct token.',
+  },
+  auditor_run_token_too_weak: {
+    title: 'The server token is too short to unlock with',
+    cause:
+      'AUDITOR_RUN_TOKEN is under 16 characters, which is too easy to guess for something that gates real audit runs.',
+    fix: 'Generate a longer one — openssl rand -hex 32 — set it on the server, and restart the app.',
   },
   unauthorized: {
     title: 'The run token was missing or wrong',

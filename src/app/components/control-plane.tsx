@@ -8,6 +8,9 @@ import { StatusRail, type ReadyState, type SystemStatus } from './status-rail';
 import { RunForm, type PlatformHint, type RunConfig } from './run-form';
 import { VerdictLegend, VerdictPanel } from './verdict-panel';
 import { FindingsList, RunDetails } from './findings-list';
+import { UnlockCard } from './unlock-card';
+
+type AuthState = 'checking' | 'locked' | 'unlocked';
 
 const RUN_STEPS = [
   'Starting a browser',
@@ -41,6 +44,7 @@ export function ControlPlane() {
     html: '<main><img src="hero.png" alt="Hero"></main>',
   });
 
+  const [authState, setAuthState] = useState<AuthState>('checking');
   const [submitting, setSubmitting] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [result, setResult] = useState<AuditResult | null>(null);
@@ -70,11 +74,37 @@ export function ControlPlane() {
     }
   }, []);
 
+  const checkSession = useCallback(async () => {
+    try {
+      const res = await fetch('/api/console/session');
+      const body = await res.json();
+      setAuthState(body?.authenticated === true ? 'unlocked' : 'locked');
+    } catch {
+      // A failed request means we do not know, which is not the same as "no
+      // session". Prompting for the token on a transient blip would train the
+      // operator to re-paste a long-lived secret whenever the network hiccups,
+      // so only an unauthenticated answer from the server locks the console.
+      // StatusRail reports unreachability separately.
+      setAuthState((previous) => (previous === 'checking' ? 'locked' : previous));
+    }
+  }, []);
+
+  const lockConsole = useCallback(async () => {
+    try {
+      await fetch('/api/console/session', { method: 'DELETE' });
+    } catch {
+      // Even if the request fails, drop the UI back to locked.
+    }
+    setResult(null);
+    setAuthState('locked');
+  }, []);
+
   useEffect(() => {
     checkStatus();
+    checkSession();
     const id = setInterval(checkStatus, 30_000);
     return () => clearInterval(id);
-  }, [checkStatus]);
+  }, [checkStatus, checkSession]);
 
   // Advance the progress list while a run is in flight. These are indicative
   // stages, not reports from the server — the API returns a single response at
@@ -121,6 +151,15 @@ export function ControlPlane() {
         });
 
         const payload = await res.json().catch(() => ({}));
+
+        // The session expired or the server token rotated mid-visit: send the
+        // operator back to the unlock screen rather than showing a bare error.
+        if (res.status === 401 && payload?.error === 'console_session_required') {
+          setAuthState('locked');
+          setResult(null);
+          return;
+        }
+
         setResult(parseAuditResponse(payload, res.status, res.ok, simulated));
       } catch (err) {
         setResult({
@@ -176,28 +215,45 @@ export function ControlPlane() {
         <div className="console">
           <StatusRail status={status} onRefresh={checkStatus} />
 
-          <section className="console-card" aria-labelledby="run-heading">
-            <h1 id="run-heading" className="console-title">
-              Run an audit
-            </h1>
-            <p className="console-sub">
-              Three steps. Every label has a{' '}
-              <span className="inline-tip-demo" aria-hidden="true">
-                ?
-              </span>{' '}
-              you can hover, tab to, or click for a plain-English explanation.
-            </p>
+          {authState === 'checking' && (
+            <section className="console-card" aria-busy="true">
+              <p className="console-sub">Checking whether this browser is unlocked…</p>
+            </section>
+          )}
 
-            <RunForm
-              config={config}
-              onChange={(patch) => setConfig((prev) => ({ ...prev, ...patch }))}
-              onSubmit={() => runAudit()}
-              submitting={submitting}
-              readyState={status.state}
-            />
-          </section>
+          {authState === 'locked' && <UnlockCard onUnlocked={() => setAuthState('unlocked')} />}
 
-          {status.chaosEnabled && (
+          {authState === 'unlocked' && (
+            <section className="console-card" aria-labelledby="run-heading">
+              <h1 id="run-heading" className="console-title">
+                Run an audit
+              </h1>
+              <p className="console-sub">
+                Three steps. Every label has a{' '}
+                <span className="inline-tip-demo" aria-hidden="true">
+                  ?
+                </span>{' '}
+                you can hover, tab to, or click for a plain-English explanation.
+              </p>
+
+              <RunForm
+                config={config}
+                onChange={(patch) => setConfig((prev) => ({ ...prev, ...patch }))}
+                onSubmit={() => runAudit()}
+                submitting={submitting}
+                readyState={status.state}
+              />
+
+              <p className="lock-row">
+                <button type="button" className="ghost-btn" onClick={lockConsole}>
+                  Lock console
+                </button>
+                <span className="lock-note">Unlocked on this browser for 30 days.</span>
+              </p>
+            </section>
+          )}
+
+          {authState === 'unlocked' && status.chaosEnabled && (
             <section className="console-card practice-card" aria-labelledby="practice-heading">
               <div className="console-subtitle">
                 <h2 id="practice-heading">Practice mode</h2>
