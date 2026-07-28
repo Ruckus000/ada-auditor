@@ -8,7 +8,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/integrations/**/*.test.ts'],
+    include: ['tests/integrations/browser/**/*.test.ts'],
     environment: 'node',
   },
 });

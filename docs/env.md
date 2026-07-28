@@ -6,6 +6,7 @@ Required for Phase 1 Vercel control plane operation.
 |---|---|---|
 | `AUDITOR_RUN_TOKEN` | Yes (for audit runs + readiness) | Secret token for `POST /api/audit/run`. Send as `Authorization: Bearer <token>` or `x-auditor-run-token`. |
 | `CHAOS_ENABLED` | No | Set to `true` to allow chaos scenario injection via API (`chaosScenario` body field) and to run `npm run chaos`. Default: disabled. |
+| `RUN_STORE_PATH` | No | Directory for persisted audit run records (filesystem adapter). Default: `data/runs` under project root. On Vercel serverless, use a mounted path in preview or swap to Blob/KV when configured. |
 
 ## Local development
 

@@ -1,8 +1,11 @@
 import { join } from 'node:path';
 import { environmentSchema } from '../../../domain/contracts';
 import { runBrowserAudit } from '../../../integrations/browser';
+import { getRunStore } from '../../../integrations/persistence';
 import { runAudit } from '../../../services/run-audit';
 import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-log';
+import { compareToBaseline } from '../../../services/regression';
+import { toStoredRunRecord } from '../../../services/run-persistence';
 import { z } from 'zod';
 import {
   CHAOS_SCENARIOS,
@@ -160,6 +163,27 @@ export async function handleAuditRun(
         })
       : await runAudit(runInput!);
     const durationMs = Date.now() - startedAt;
+    const store = getRunStore();
+    const baseline = await store.getLatestRun(
+      report.journeyId,
+      report.environment,
+      requestId,
+    );
+
+    const storedRun = toStoredRunRecord({
+      requestId,
+      journeyId: report.journeyId,
+      environment: report.environment,
+      platform: report.platform.id,
+      evidenceStatus: report.evidenceStatus,
+      ciStatus: report.ciStatus,
+      findings: report.findings,
+      durationMs,
+      ...(parsedBody.browserMode ? { browserMode: true } : {}),
+    });
+    await store.saveRun(storedRun);
+
+    const regression = baseline ? compareToBaseline(storedRun, baseline) : undefined;
 
     const log = createAuditRunLog({
       journey: report.journeyId,
@@ -188,6 +212,7 @@ export async function handleAuditRun(
         executiveSummary: report.executiveSummary,
         durationMs,
         ...(parsedBody.browserMode ? { browserMode: true } : {}),
+        ...(regression ? { regression } : {}),
       },
     };
   } catch (error) {
