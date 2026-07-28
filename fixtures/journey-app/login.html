@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login</title>
+  </head>
+  <body>
+    <main>
+      <h1>Login</h1>
+      <button id="login-button" type="button">Sign in</button>
+      <button id="delete-account" type="button" data-action="delete">Delete account</button>
+    </main>
+    <script>
+      document.getElementById('login-button').addEventListener('click', () => {
+        window.location.href = 'dashboard.html';
+      });
+    </script>
+  </body>
+</html>

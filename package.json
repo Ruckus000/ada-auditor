@@ -7,19 +7,35 @@
     "doc": "docs"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "dev": "next dev",
+    "build": "next build",
+    "build:kernel": "tsc --project tsconfig.kernel.json",
+    "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:browser": "vitest run tests/integrations/browser",
+    "chaos": "tsx scripts/chaos.ts",
+    "lint": "next lint",
+    "playwright:install": "playwright install chromium"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "next": "^15.5.22",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.22",
+    "playwright": "^1.62.0",
+    "tsx": "^4.23.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }
