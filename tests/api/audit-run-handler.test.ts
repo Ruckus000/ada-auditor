@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { handleAuditRun } from '../../src/app/api/_lib/audit-run-handler';
@@ -174,6 +174,61 @@ describe('handleAuditRun', () => {
       expect(result.status).toBe(400);
       expect(result.body.error).toBe('invalid_request_body');
     }
+  });
+
+  it('returns a stable code, not the exception text, when a run throws', async () => {
+    // The message carries a filesystem path. Echoing error.message straight to
+    // the caller, as the handler used to, leaks it.
+    vi.resetModules();
+    vi.doMock('../../src/services/run-audit', () => ({
+      runAudit: async () => {
+        throw new Error('ENOENT: no such file or directory, open /Users/someone/.secrets/db.json');
+      },
+    }));
+
+    const { handleAuditRun: handler } = await import('../../src/app/api/_lib/audit-run-handler');
+
+    const request = new Request('http://localhost/api/audit/run', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        journeyId: 'demo-login',
+        environment: 'staging',
+        html: '<main></main>',
+      }),
+    });
+
+    const result = await handler(request, 'req-failure-code');
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(422);
+    expect(result.body.error).toBe('audit_run_failed');
+    expect(JSON.stringify(result.body)).not.toContain('.secrets');
+    expect(JSON.stringify(result.body)).not.toContain('ENOENT');
+
+    vi.doUnmock('../../src/services/run-audit');
+    vi.resetModules();
+  });
+
+  it('ignores a caller-supplied fixtureDir rather than passing it to the browser', async () => {
+    // fixtureDir feeds page.goto(file://...), so accepting it over HTTP would
+    // make an audit run a local file read. Zod strips the unknown key and the
+    // run proceeds against the built-in fixtures.
+    const request = new Request('http://localhost/api/audit/run', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        journeyId: 'demo-login',
+        environment: 'staging',
+        html: '<main><img src="hero.png" alt="Hero"></main>',
+        fixtureDir: '/etc',
+      }),
+    });
+
+    const result = await handleAuditRun(request, 'req-fixturedir');
+
+    expect(result.ok).toBe(true);
+    expect(result.status).toBe(200);
   });
 
   it('rejects an over-long stepId', async () => {

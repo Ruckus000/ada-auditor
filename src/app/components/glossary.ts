@@ -302,17 +302,36 @@ export const API_ERRORS: Record<string, ApiErrorCopy> = {
     cause: 'The requested simulation is not one the server recognises.',
     fix: 'Reload the page and try again.',
   },
-  'Journey is not allowed by run contract scope.': {
+  // Run failures. The server maps internal exceptions to these stable codes
+  // rather than echoing exception text, so these keys are a contract, not a
+  // copy of whatever string was thrown.
+  journey_not_in_scope: {
     title: 'That journey is not permitted',
     cause:
       'The run contract lists which journeys may be audited, and the Journey ID you entered is not on it.',
     fix: 'Open Advanced settings and set Journey ID back to demo-login.',
   },
-  'Action is not allowed by environment policy.': {
+  action_not_allowed: {
     title: 'The journey needed an action this environment forbids',
     cause:
       'Completing this journey required an interaction that the selected target environment does not permit.',
     fix: 'Choose a less restrictive environment — staging allows safe form submissions, production does not.',
+  },
+  invalid_step_id: {
+    title: 'The step name was rejected',
+    cause: 'Step names become filenames, so they may only contain letters, numbers, hyphens and underscores.',
+    fix: 'Use a plain name such as dashboard.',
+  },
+  incomplete_evidence: {
+    title: 'The run stopped on incomplete evidence',
+    cause:
+      'This run contract is set to stop rather than continue when evidence cannot be fully captured.',
+    fix: 'Re-run using the demo journey, which captures all three artifacts.',
+  },
+  audit_run_failed: {
+    title: 'The run did not finish',
+    cause: 'The auditor stopped partway through for a reason it could not categorise.',
+    fix: 'Try again. If it keeps happening, copy the trace ID below — the server log records the detail.',
   },
 };
 

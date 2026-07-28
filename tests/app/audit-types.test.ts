@@ -134,9 +134,10 @@ describe('describeApiError', () => {
     expect(copy.fix).toContain('AUDITOR_RUN_TOKEN');
   });
 
-  it('explains the free-text 422 messages the handler re-throws', () => {
-    const copy = describeApiError('Journey is not allowed by run contract scope.', 422);
-    expect(copy.fix).toContain('demo-login');
+  it('explains the stable run-failure codes the handler returns', () => {
+    expect(describeApiError('journey_not_in_scope', 422).fix).toContain('demo-login');
+    expect(describeApiError('action_not_allowed', 422).title).toContain('forbids');
+    expect(describeApiError('invalid_step_id', 422).title).toContain('step name');
   });
 
   it('treats httpStatus 0 as a transport failure', () => {
