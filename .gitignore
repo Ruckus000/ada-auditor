@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+.next/
+.vercel/
+.env
+.env*.local
+.cursor/
