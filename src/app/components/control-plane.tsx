@@ -1,255 +1,317 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { GLOSSARY, glossaryAnchorId, glossaryEntry, type GlossaryKey } from './glossary';
+import { InfoTip } from './info-tip';
+import { parseAuditResponse, type AuditResult } from './audit-types';
+import { StatusRail, type ReadyState, type SystemStatus } from './status-rail';
+import { RunForm, type PlatformHint, type RunConfig } from './run-form';
+import { VerdictLegend, VerdictPanel } from './verdict-panel';
+import { FindingsList, RunDetails } from './findings-list';
 
-type StatusState = 'loading' | 'ok' | 'warn' | 'bad';
+const RUN_STEPS = [
+  'Starting a browser',
+  'Walking through the journey',
+  'Capturing evidence',
+  'Applying the rules',
+];
 
-interface HealthResponse {
-  status: string;
-  service: string;
-  timestamp: string;
-}
-
-interface ReadyResponse {
-  status: string;
-  checks: {
-    auditorRunTokenConfigured: boolean;
-    chaosEnabled: boolean;
-  };
-  timestamp: string;
-}
-
-function dotClass(state: StatusState): string {
-  return `status-dot ${state}`;
-}
+const PRACTICE_SCENARIOS: Array<{
+  scenario: 'complete_clean' | 'complete_critical' | 'omit_ax_tree';
+  label: string;
+  outcome: string;
+}> = [
+  { scenario: 'complete_clean', label: 'a pass', outcome: 'pass' },
+  { scenario: 'complete_critical', label: 'a fail', outcome: 'fail' },
+  { scenario: 'omit_ax_tree', label: 'an inconclusive', outcome: 'inconclusive' },
+];
 
 export function ControlPlane() {
-  const [healthState, setHealthState] = useState<StatusState>('loading');
-  const [readyState, setReadyState] = useState<StatusState>('loading');
-  const [healthDetail, setHealthDetail] = useState('…');
-  const [readyDetail, setReadyDetail] = useState('…');
+  const [status, setStatus] = useState<SystemStatus>({
+    state: 'loading',
+    chaosEnabled: false,
+    checkedAt: null,
+  });
 
-  const [token, setToken] = useState('');
-  const [journeyId, setJourneyId] = useState('demo-login');
-  const [environment, setEnvironment] = useState('staging');
-  const [html, setHtml] = useState('<main><img src="hero.png" alt="Hero"></main>');
+  const [config, setConfig] = useState<RunConfig>({
+    environment: 'staging',
+    runMode: 'browser',
+    platformHint: 'auto',
+    journeyId: 'demo-login',
+    html: '<main><img src="hero.png" alt="Hero"></main>',
+  });
+
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const [result, setResult] = useState<AuditResult | null>(null);
+  const [copied, setCopied] = useState(false);
+  const ledgerRef = useRef<HTMLDivElement>(null);
 
-  const fetchStatus = useCallback(async () => {
-    setHealthState('loading');
-    setReadyState('loading');
-
-    try {
-      const healthRes = await fetch('/api/health');
-      const health: HealthResponse = await healthRes.json();
-      const healthOk = healthRes.ok && health.status === 'ok';
-      setHealthState(healthOk ? 'ok' : 'bad');
-      setHealthDetail(healthOk ? 'live' : health.status);
-    } catch {
-      setHealthState('bad');
-      setHealthDetail('unreachable');
-    }
+  const checkStatus = useCallback(async () => {
+    setStatus((prev) => ({ ...prev, state: 'loading' }));
 
     try {
-      const readyRes = await fetch('/api/ready');
-      const ready: ReadyResponse = await readyRes.json();
-      if (readyRes.ok && ready.status === 'ready') {
-        setReadyState('ok');
-        setReadyDetail('ready');
-      } else if (ready.checks?.auditorRunTokenConfigured === false) {
-        setReadyState('warn');
-        setReadyDetail('token missing');
+      const res = await fetch('/api/ready');
+      const body = await res.json();
+      const chaosEnabled = body?.checks?.chaosEnabled === true;
+
+      let state: ReadyState;
+      if (res.ok && body?.status === 'ready') {
+        state = 'ok';
+      } else if (body?.checks?.auditorRunTokenConfigured === false) {
+        state = 'needs-token';
       } else {
-        setReadyState('bad');
-        setReadyDetail(ready.status);
+        state = 'unreachable';
       }
+
+      setStatus({ state, chaosEnabled, checkedAt: Date.now() });
     } catch {
-      setReadyState('bad');
-      setReadyDetail('unreachable');
+      setStatus({ state: 'unreachable', chaosEnabled: false, checkedAt: Date.now() });
     }
   }, []);
 
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30_000);
-    return () => clearInterval(interval);
-  }, [fetchStatus]);
+    checkStatus();
+    const id = setInterval(checkStatus, 30_000);
+    return () => clearInterval(id);
+  }, [checkStatus]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!token.trim()) {
-      setResult({ ok: false, text: 'Run token is required.' });
-      return;
-    }
+  // Advance the progress list while a run is in flight. These are indicative
+  // stages, not reports from the server — the API returns a single response at
+  // the end — so the last stage stays put rather than claiming completion.
+  useEffect(() => {
+    if (!submitting) return;
+    setActiveStep(0);
+    const id = setInterval(() => {
+      setActiveStep((step) => Math.min(step + 1, RUN_STEPS.length - 1));
+    }, 1200);
+    return () => clearInterval(id);
+  }, [submitting]);
 
-    setSubmitting(true);
-    setResult(null);
+  const runAudit = useCallback(
+    async (chaosScenario?: string) => {
+      setSubmitting(true);
+      setResult(null);
+      setCopied(false);
 
+      const simulated = chaosScenario != null;
+
+      try {
+        const body: Record<string, unknown> = {
+          journeyId: config.journeyId,
+          environment: config.environment,
+        };
+
+        if (chaosScenario) {
+          body.chaosScenario = chaosScenario;
+        } else if (config.runMode === 'browser') {
+          body.browserMode = true;
+        } else {
+          body.html = config.html;
+        }
+
+        if (config.platformHint !== 'auto') {
+          body.platformHint = config.platformHint;
+        }
+
+        const res = await fetch('/api/audit/console', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const payload = await res.json().catch(() => ({}));
+        setResult(parseAuditResponse(payload, res.status, res.ok, simulated));
+      } catch (err) {
+        setResult({
+          httpStatus: 0,
+          ok: false,
+          error: err instanceof Error ? err.message : undefined,
+          findings: [],
+          simulated,
+        });
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [config],
+  );
+
+  // Move focus to the result so keyboard and screen reader users are taken
+  // straight to what they just asked for.
+  useEffect(() => {
+    if (result) ledgerRef.current?.focus();
+  }, [result]);
+
+  async function copyTrace() {
+    if (!result?.requestId) return;
     try {
-      const res = await fetch('/api/audit/run', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token.trim()}`,
-        },
-        body: JSON.stringify({
-          journeyId,
-          environment,
-          html,
-        }),
-      });
-
-      const body = await res.json();
-      const summary = [
-        `HTTP ${res.status}`,
-        body.requestId ? `requestId: ${body.requestId}` : null,
-        body.ciStatus ? `ciStatus: ${body.ciStatus}` : null,
-        body.evidenceStatus ? `evidence: ${body.evidenceStatus}` : null,
-        body.error ? `error: ${body.error}` : null,
-      ]
-        .filter(Boolean)
-        .join('\n');
-
-      setResult({ ok: res.ok, text: summary });
-    } catch (err) {
-      setResult({
-        ok: false,
-        text: err instanceof Error ? err.message : 'Request failed',
-      });
-    } finally {
-      setSubmitting(false);
+      await navigator.clipboard.writeText(result.requestId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Clipboard access can be denied; the id is selectable on screen regardless.
     }
   }
 
   return (
     <div className="shell">
-      <div className="aurora" aria-hidden="true" />
-
-      <section className="hero">
-        <div>
-          <div className="brand-mark">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-              <path
-                d="M8 12h8M12 8v8"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            ADA Auditor
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          <div>
+            <p className="brand-name">ADA Auditor</p>
+            <p className="brand-sub">
+              Accessibility risk checks for web apps — not a legal certification.
+            </p>
           </div>
-
-          <h1 className="headline">
-            Evidence-first <em>accessibility risk</em> auditor
-          </h1>
-
-          <p className="lead">
-            Hybrid deterministic checks and AI advisory for authenticated multi-step web
-            apps. Surfaces WCAG risk signals with traceable evidence — not a legal
-            certification authority.
-          </p>
-
-          <p className="disclaimer">
-            <span aria-hidden="true">⚠</span>
-            <span>
-              This tool identifies accessibility <strong>risk</strong>. It does not
-              certify ADA compliance or replace professional legal review.
-            </span>
-          </p>
-
-          <ul className="pillars">
-            <li>Incomplete evidence → inconclusive (never pass or fail)</li>
-            <li>Deterministic findings gated on evidence completeness</li>
-            <li>Platform hints override HTML heuristics</li>
-          </ul>
         </div>
+        <a className="skip-to-glossary" href="#glossary">
+          Glossary
+        </a>
+      </header>
 
-        <aside className="panel" aria-label="Control plane">
-          <div className="status-strip">
-            <div className="status-item">
-              <span className={dotClass(healthState)} aria-hidden="true" />
-              <span className="status-label">Health</span>
-              <span className="status-value">{healthDetail}</span>
-            </div>
-            <div className="status-item">
-              <span className={dotClass(readyState)} aria-hidden="true" />
-              <span className="status-label">Ready</span>
-              <span className="status-value">{readyDetail}</span>
-            </div>
-          </div>
+      <main className="workspace">
+        {/* Left rail — everything you do */}
+        <div className="console">
+          <StatusRail status={status} onRefresh={checkStatus} />
 
-          <div className="panel-body">
-            <h2 className="panel-title">Run audit</h2>
-            <p className="panel-sub">
-              POST to <code>/api/audit/run</code> with your run token.
+          <section className="console-card" aria-labelledby="run-heading">
+            <h1 id="run-heading" className="console-title">
+              Run an audit
+            </h1>
+            <p className="console-sub">
+              Three steps. Every label has a{' '}
+              <span className="inline-tip-demo" aria-hidden="true">
+                ?
+              </span>{' '}
+              you can hover, tab to, or click for a plain-English explanation.
             </p>
 
-            <form className="form-grid" onSubmit={handleSubmit}>
-              <div className="field">
-                <label htmlFor="token">Run token</label>
-                <input
-                  id="token"
-                  type="password"
-                  autoComplete="off"
-                  placeholder="Bearer token"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                />
-              </div>
+            <RunForm
+              config={config}
+              onChange={(patch) => setConfig((prev) => ({ ...prev, ...patch }))}
+              onSubmit={() => runAudit()}
+              submitting={submitting}
+              readyState={status.state}
+            />
+          </section>
 
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="journeyId">Journey ID</label>
-                  <input
-                    id="journeyId"
-                    type="text"
-                    value={journeyId}
-                    onChange={(e) => setJourneyId(e.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="environment">Environment</label>
-                  <select
-                    id="environment"
-                    value={environment}
-                    onChange={(e) => setEnvironment(e.target.value)}
+          {status.chaosEnabled && (
+            <section className="console-card practice-card" aria-labelledby="practice-heading">
+              <div className="console-subtitle">
+                <h2 id="practice-heading">Practice mode</h2>
+                <InfoTip termKey="chaosDemo" />
+              </div>
+              <p className="console-sub">
+                Not sure what a verdict means? Run a simulation rigged to produce one. Nothing is
+                really tested — these exist so you can see each outcome before it matters.
+              </p>
+              <div className="practice-buttons">
+                {PRACTICE_SCENARIOS.map((item) => (
+                  <button
+                    key={item.scenario}
+                    type="button"
+                    className={`ghost-btn practice-${item.outcome}`}
+                    disabled={submitting || status.state !== 'ok'}
+                    onClick={() => runAudit(item.scenario)}
                   >
-                    <option value="production">production</option>
-                    <option value="preview">preview</option>
-                    <option value="staging">staging</option>
-                    <option value="test">test</option>
-                  </select>
-                </div>
+                    Show me {item.label}
+                  </button>
+                ))}
               </div>
+            </section>
+          )}
+        </div>
 
-              <div className="field">
-                <label htmlFor="html">HTML snapshot</label>
-                <textarea
-                  id="html"
-                  value={html}
-                  onChange={(e) => setHtml(e.target.value)}
-                  spellCheck={false}
-                />
+        {/* Right rail — everything you read */}
+        <div
+          className="ledger"
+          ref={ledgerRef}
+          tabIndex={-1}
+          aria-label="Audit results"
+          role="region"
+        >
+          {submitting ? (
+            <section className="ledger-card running-card" aria-labelledby="running-heading">
+              <h2 id="running-heading" className="ledger-title">
+                Running…
+              </h2>
+              <ol className="run-steps">
+                {RUN_STEPS.map((step, i) => (
+                  <li
+                    key={step}
+                    className={
+                      i < activeStep ? 'run-step is-done' : i === activeStep ? 'run-step is-active' : 'run-step'
+                    }
+                  >
+                    <span className="run-step-mark" aria-hidden="true">
+                      {i < activeStep ? '✓' : i === activeStep ? '●' : '○'}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+              <p className="sr-only" role="status" aria-live="polite">
+                {RUN_STEPS[activeStep]}
+              </p>
+              <p className="running-note">
+                A browser run takes a few seconds because a real browser is starting up.
+              </p>
+            </section>
+          ) : result ? (
+            <div className="result-stack">
+              <VerdictPanel result={result} />
+              {result.ok && <FindingsList result={result} />}
+              <RunDetails result={result} onCopyTrace={copyTrace} copied={copied} />
+              <details className="ledger-card outcomes-details">
+                <summary>What the three outcomes mean</summary>
+                <VerdictLegend current={result.verdict} />
+              </details>
+            </div>
+          ) : (
+            <section className="ledger-card empty-ledger" aria-labelledby="empty-heading">
+              <h2 id="empty-heading" className="ledger-title">
+                No run yet
+              </h2>
+              <p className="ledger-lede">
+                Results appear here. Every audit ends in exactly one of three outcomes:
+              </p>
+              <VerdictLegend />
+              <p className="ledger-note">
+                Today the demo audits a built-in login → dashboard page, not a client site. Client
+                sites are <strong>targets</strong> — nothing gets installed on them. You point this
+                tool at their staging URL and it audits from here.
+              </p>
+            </section>
+          )}
+        </div>
+      </main>
+
+      <section className="glossary" id="glossary" aria-labelledby="glossary-heading">
+        <h2 id="glossary-heading" className="glossary-title">
+          Glossary
+        </h2>
+        <p className="glossary-lede">Every term this tool uses, in plain English.</p>
+        <dl className="glossary-grid">
+          {(Object.keys(GLOSSARY) as GlossaryKey[]).map((key) => {
+            const entry = glossaryEntry(key);
+            return (
+              <div className="glossary-entry" key={key} id={glossaryAnchorId(key)}>
+                <dt>{entry.term}</dt>
+                <dd>
+                  {entry.short}
+                  {entry.detail && <span className="glossary-detail">{entry.detail}</span>}
+                </dd>
               </div>
-
-              <button className="submit-btn" type="submit" disabled={submitting}>
-                {submitting ? 'Running…' : 'Run audit'}
-              </button>
-            </form>
-
-            {result && (
-              <div className={`result ${result.ok ? 'ok' : 'err'}`} role="status">
-                {result.text}
-              </div>
-            )}
-          </div>
-        </aside>
+            );
+          })}
+        </dl>
       </section>
 
       <footer className="footer">
-        ADA Auditor control plane · evidence over opinion
+        Evidence-first accessibility risk auditor. It finds risk; it does not certify legal
+        compliance.
       </footer>
     </div>
   );

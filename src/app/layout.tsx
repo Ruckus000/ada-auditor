@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Fraunces, JetBrains_Mono, Manrope } from 'next/font/google';
+import { Fraunces, Instrument_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
 const fraunces = Fraunces({
@@ -8,9 +8,9 @@ const fraunces = Fraunces({
   display: 'swap',
 });
 
-const manrope = Manrope({
+const instrumentSans = Instrument_Sans({
   subsets: ['latin'],
-  variable: '--font-manrope',
+  variable: '--font-instrument',
   display: 'swap',
 });
 
@@ -23,14 +23,14 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'ADA Auditor',
   description:
-    'Evidence-first accessibility risk auditor — deterministic checks and AI advisory, not legal certification.',
+    'Accessibility risk checks for web apps — run a demo audit, read pass/fail/inconclusive results. Not legal certification.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${manrope.variable} ${jetbrains.variable}`}
+      className={`${fraunces.variable} ${instrumentSans.variable} ${jetbrains.variable}`}
     >
       <body>{children}</body>
     </html>
