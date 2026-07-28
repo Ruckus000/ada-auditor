@@ -1,4 +1,6 @@
+import { join } from 'node:path';
 import { environmentSchema } from '../../../domain/contracts';
+import { runBrowserAudit } from '../../../integrations/browser';
 import { runAudit } from '../../../services/run-audit';
 import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-log';
 import { z } from 'zod';
@@ -10,14 +12,37 @@ import {
 } from './chaos';
 import { createRequestId } from './request-id';
 
-const auditRunBodySchema = z.object({
-  journeyId: z.string().min(1),
-  environment: environmentSchema,
-  html: z.string().min(1),
-  platformHint: z.string().min(1).optional(),
-  omitAxTree: z.boolean().optional(),
-  chaosScenario: z.enum(['omit_ax_tree', 'complete_critical', 'complete_clean']).optional(),
-});
+const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
+
+const auditRunBodySchema = z
+  .object({
+    journeyId: z.string().min(1),
+    environment: environmentSchema,
+    html: z.string().min(1).optional(),
+    platformHint: z.string().min(1).optional(),
+    omitAxTree: z.boolean().optional(),
+    chaosScenario: z.enum(['omit_ax_tree', 'complete_critical', 'complete_clean']).optional(),
+    browserMode: z.boolean().optional(),
+    stepId: z.string().min(1).optional(),
+    fixtureDir: z.string().min(1).optional(),
+  })
+  .superRefine((body, ctx) => {
+    if (body.chaosScenario && body.browserMode) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'chaosScenario and browserMode are mutually exclusive',
+        path: ['chaosScenario'],
+      });
+    }
+
+    if (!body.browserMode && !body.chaosScenario && !body.html) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'html is required unless browserMode is true',
+        path: ['html'],
+      });
+    }
+  });
 
 export type AuditRunHandlerResult =
   | { ok: true; status: number; body: Record<string, unknown> }
@@ -54,13 +79,15 @@ export async function handleAuditRun(
     };
   }
 
-  let runInput: {
-    journeyId: string;
-    environment: z.infer<typeof environmentSchema>;
-    html: string;
-    omitAxTree?: boolean;
-    platformHint?: string;
-  };
+  let runInput:
+    | {
+        journeyId: string;
+        environment: z.infer<typeof environmentSchema>;
+        html: string;
+        omitAxTree?: boolean;
+        platformHint?: string;
+      }
+    | undefined;
 
   if (parsedBody.chaosScenario) {
     if (!isChaosEnabled()) {
@@ -110,18 +137,28 @@ export async function handleAuditRun(
       parsedBody.journeyId,
       parsedBody.environment,
     );
-  } else {
+  } else if (!parsedBody.browserMode) {
     runInput = {
       journeyId: parsedBody.journeyId,
       environment: parsedBody.environment,
-      html: parsedBody.html,
+      html: parsedBody.html!,
       omitAxTree: parsedBody.omitAxTree,
       platformHint: parsedBody.platformHint,
     };
   }
 
   try {
-    const report = await runAudit(runInput);
+    const report = parsedBody.browserMode
+      ? await runBrowserAudit({
+          journeyId: parsedBody.journeyId,
+          environment: parsedBody.environment,
+          stepId: parsedBody.stepId ?? 'dashboard',
+          fixtureDir: parsedBody.fixtureDir ?? DEFAULT_FIXTURE_DIR,
+          artifactsDir: join(process.cwd(), 'artifacts', requestId),
+          omitAxTree: parsedBody.omitAxTree,
+          platformHint: parsedBody.platformHint,
+        })
+      : await runAudit(runInput!);
     const durationMs = Date.now() - startedAt;
 
     const log = createAuditRunLog({
@@ -132,6 +169,7 @@ export async function handleAuditRun(
       ciStatus: report.ciStatus,
       durationMs,
       requestId,
+      ...(parsedBody.browserMode ? { browserMode: true } : {}),
     });
     emitAuditRunLog(log);
 
@@ -149,6 +187,7 @@ export async function handleAuditRun(
         findings: report.findings,
         executiveSummary: report.executiveSummary,
         durationMs,
+        ...(parsedBody.browserMode ? { browserMode: true } : {}),
       },
     };
   } catch (error) {
@@ -157,14 +196,15 @@ export async function handleAuditRun(
       error instanceof Error ? error.message : 'audit_run_failed';
 
     const log = createAuditRunLog({
-      journey: runInput.journeyId,
-      env: runInput.environment,
+      journey: parsedBody.browserMode ? parsedBody.journeyId : runInput!.journeyId,
+      env: parsedBody.browserMode ? parsedBody.environment : runInput!.environment,
       platform: 'unknown',
       evidenceStatus: 'unknown',
       ciStatus: 'unknown',
       durationMs,
       failureReason,
       requestId,
+      ...(parsedBody.browserMode ? { browserMode: true } : {}),
     });
     emitAuditRunLog(log);
 

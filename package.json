@@ -13,7 +13,7 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:browser": "vitest run tests/integrations/browser",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
     "chaos": "tsx scripts/chaos.ts",
     "lint": "next lint",
     "playwright:install": "playwright install chromium"

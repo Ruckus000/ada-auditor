@@ -7,6 +7,7 @@ export type AuditRunLog = {
   durationMs: number;
   failureReason?: string;
   requestId: string;
+  browserMode?: boolean;
 };
 
 export function createAuditRunLog(fields: AuditRunLog): AuditRunLog {
