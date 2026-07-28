@@ -4,7 +4,7 @@ Required for Phase 1 Vercel control plane operation.
 
 | Variable | Required | Description |
 |---|---|---|
-| `AUDITOR_RUN_TOKEN` | Yes (for audit runs + readiness) | Server secret. Control plane UI (`POST /api/audit/console`) uses it automatically. External callers use `POST /api/audit/run` with `Authorization: Bearer <token>` or `x-auditor-run-token`. |
+| `AUDITOR_RUN_TOKEN` | Yes (for audit runs + readiness) | Server secret, and the console's unlock password. Must be at least 16 characters — use `openssl rand -hex 32`. The operator enters it once per browser to unlock the console; external callers send it to `POST /api/audit/run` as `Authorization: Bearer <token>` or `x-auditor-run-token`. Rotating it locks every console session. |
 | `CHAOS_ENABLED` | No | Set to `true` to allow chaos scenario injection via API (`chaosScenario` body field) and to run `npm run chaos`. Default: disabled. |
 | `RUN_STORE_PATH` | No | Directory for persisted audit run records (filesystem adapter). Default: `data/runs` under project root. On Vercel serverless, use a mounted path in preview or swap to Blob/KV when configured. |
 
@@ -16,7 +16,19 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000` and click **Run fixture journey**. No token paste — the console uses `.env.local`.
+Open `http://localhost:3000`. The console asks for `AUDITOR_RUN_TOKEN` once to unlock, then stores a
+signed, HttpOnly cookie for 30 days — every run after that needs no paste.
+
+### Why the console needs unlocking
+
+`POST /api/audit/console` runs audits with the server's own token, so the operator never handles it
+per run. That convenience needs a gate. A same-origin header check is not one: `sec-fetch-site` and
+`Origin` are trustworthy from a browser but forged trivially by anything else, so on their own they
+let any caller spend the server's token. The console therefore requires an operator session, and
+keeps the same-origin check underneath it as CSRF defence.
+
+The cookie is an HMAC over its own expiry keyed on `AUDITOR_RUN_TOKEN` — it cannot be forged or
+extended without the token, and the token itself is never stored in the browser.
 
 ### Sync token with Vercel (recommended)
 

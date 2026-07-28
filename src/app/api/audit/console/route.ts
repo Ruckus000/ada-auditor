@@ -1,9 +1,22 @@
 import { handleAuditRun } from '../../_lib/audit-run-handler';
 import { createRequestId } from '../../_lib/request-id';
+import { hasConsoleSession } from '../../_lib/console-session';
+import { isSameOriginConsoleRequest } from '../../_lib/same-origin';
 
 /**
- * Operator paved road: same-origin console uses server env token.
- * External integrations must still call POST /api/audit/run with Bearer auth.
+ * Operator paved road: the console runs audits without pasting a token per run.
+ *
+ * Two independent gates, because neither is sufficient alone:
+ *
+ *  - An operator session cookie proves the caller knows AUDITOR_RUN_TOKEN. This
+ *    is the authentication. Header checks cannot do this job: `sec-fetch-site`
+ *    and `Origin` are trustworthy coming from a browser but are freely forged
+ *    by any other client, so gating on them alone let anyone run audits with
+ *    the server's token.
+ *  - The same-origin check remains as CSRF defence, so another site cannot ride
+ *    an operator's cookie.
+ *
+ * External integrations still call POST /api/audit/run with Bearer auth.
  */
 export async function POST(request: Request) {
   const requestId = createRequestId();
@@ -23,6 +36,10 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!hasConsoleSession(request, configuredToken)) {
+    return Response.json({ error: 'console_session_required', requestId }, { status: 401 });
+  }
+
   const headers = new Headers(request.headers);
   headers.set('authorization', `Bearer ${configuredToken}`);
   headers.delete('x-auditor-run-token');
@@ -35,22 +52,4 @@ export async function POST(request: Request) {
 
   const result = await handleAuditRun(authorizedRequest, requestId);
   return Response.json(result.body, { status: result.status });
-}
-
-export function isSameOriginConsoleRequest(request: Request): boolean {
-  const fetchSite = request.headers.get('sec-fetch-site');
-  if (fetchSite === 'same-origin') {
-    return true;
-  }
-
-  const origin = request.headers.get('origin');
-  if (!origin) {
-    return false;
-  }
-
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
 }

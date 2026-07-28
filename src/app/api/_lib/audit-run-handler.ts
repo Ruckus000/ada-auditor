@@ -14,6 +14,7 @@ import {
   type ChaosScenario,
 } from './chaos';
 import { createRequestId } from './request-id';
+import { classifyRunFailure } from './run-failure';
 
 const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 
@@ -26,8 +27,21 @@ const auditRunBodySchema = z
     omitAxTree: z.boolean().optional(),
     chaosScenario: z.enum(['omit_ax_tree', 'complete_critical', 'complete_clean']).optional(),
     browserMode: z.boolean().optional(),
-    stepId: z.string().min(1).optional(),
-    fixtureDir: z.string().min(1).optional(),
+    // stepId names the artifact files for this run. It is concatenated onto the
+    // artifacts directory, so it must be a bare filename segment -- no
+    // separators and no dots, which rules out `..` traversal. runJourney
+    // re-checks containment before writing.
+    stepId: z
+      .string()
+      .min(1)
+      .max(64)
+      .regex(/^[A-Za-z0-9_-]+$/, 'stepId may only contain letters, numbers, hyphens, underscores')
+      .optional(),
+    // fixtureDir is deliberately NOT accepted over HTTP. It feeds
+    // page.goto(file://...), so a caller-supplied value turns an audit run into
+    // a local file read primitive. It stays a parameter of runBrowserAudit for
+    // tests and scripts, which are already trusted; the route always uses
+    // DEFAULT_FIXTURE_DIR.
   })
   .superRefine((body, ctx) => {
     if (body.chaosScenario && body.browserMode) {
@@ -156,7 +170,7 @@ export async function handleAuditRun(
           journeyId: parsedBody.journeyId,
           environment: parsedBody.environment,
           stepId: parsedBody.stepId ?? 'dashboard',
-          fixtureDir: parsedBody.fixtureDir ?? DEFAULT_FIXTURE_DIR,
+          fixtureDir: DEFAULT_FIXTURE_DIR,
           artifactsDir: join(process.cwd(), 'artifacts', requestId),
           omitAxTree: parsedBody.omitAxTree,
           platformHint: parsedBody.platformHint,
@@ -236,7 +250,9 @@ export async function handleAuditRun(
     return {
       ok: false,
       status: 422,
-      body: { error: failureReason, requestId },
+      // The log above keeps the full message; the response gets a stable code,
+      // so internal detail (paths, action and environment names) stays server-side.
+      body: { error: classifyRunFailure(failureReason), requestId },
     };
   }
 }

@@ -202,6 +202,14 @@ export const GLOSSARY = {
       'Audits are authorised with a token held on the server. Until it is configured, the run button stays disabled.',
   },
 
+  consoleUnlock: {
+    term: 'Run token',
+    short:
+      'The shared secret the server uses to authorise audits. The console asks for it once, then remembers you.',
+    detail:
+      'Running an audit spends real resources, so the console has to know you are allowed to. Unlocking stores a signed, browser-only cookie for 30 days — the token itself is never kept in the browser. Changing the token on the server locks every console again.',
+  },
+
   chaosDemo: {
     term: 'Practice mode',
     short: 'Runs a simulated audit rigged to produce a specific verdict, so you can see what each one looks like.',
@@ -252,6 +260,28 @@ export const API_ERRORS: Record<string, ApiErrorCopy> = {
       'For safety, this endpoint only accepts requests made from this page in a browser.',
     fix: 'Reload the page and try again. If you are calling the API from a script, use /api/audit/run with a bearer token instead.',
   },
+  console_session_required: {
+    title: 'The console is locked',
+    cause:
+      'This browser has no valid operator session — it either never unlocked, or the session expired or was invalidated by a token change.',
+    fix: 'Unlock the console with the run token and run again.',
+  },
+  invalid_token: {
+    title: 'That token was not accepted',
+    cause: 'The value entered does not match AUDITOR_RUN_TOKEN on the server.',
+    fix: 'Copy the value from .env.local exactly, without surrounding quotes or spaces.',
+  },
+  too_many_attempts: {
+    title: 'Too many failed unlock attempts',
+    cause: 'Repeated wrong tokens from this address, so unlocking is paused briefly.',
+    fix: 'Wait five minutes, then try again with the correct token.',
+  },
+  auditor_run_token_too_weak: {
+    title: 'The server token is too short to unlock with',
+    cause:
+      'AUDITOR_RUN_TOKEN is under 16 characters, which is too easy to guess for something that gates real audit runs.',
+    fix: 'Generate a longer one — openssl rand -hex 32 — set it on the server, and restart the app.',
+  },
   unauthorized: {
     title: 'The run token was missing or wrong',
     cause: 'The request reached the audit endpoint without a valid token.',
@@ -272,17 +302,36 @@ export const API_ERRORS: Record<string, ApiErrorCopy> = {
     cause: 'The requested simulation is not one the server recognises.',
     fix: 'Reload the page and try again.',
   },
-  'Journey is not allowed by run contract scope.': {
+  // Run failures. The server maps internal exceptions to these stable codes
+  // rather than echoing exception text, so these keys are a contract, not a
+  // copy of whatever string was thrown.
+  journey_not_in_scope: {
     title: 'That journey is not permitted',
     cause:
       'The run contract lists which journeys may be audited, and the Journey ID you entered is not on it.',
     fix: 'Open Advanced settings and set Journey ID back to demo-login.',
   },
-  'Action is not allowed by environment policy.': {
+  action_not_allowed: {
     title: 'The journey needed an action this environment forbids',
     cause:
       'Completing this journey required an interaction that the selected target environment does not permit.',
     fix: 'Choose a less restrictive environment — staging allows safe form submissions, production does not.',
+  },
+  invalid_step_id: {
+    title: 'The step name was rejected',
+    cause: 'Step names become filenames, so they may only contain letters, numbers, hyphens and underscores.',
+    fix: 'Use a plain name such as dashboard.',
+  },
+  incomplete_evidence: {
+    title: 'The run stopped on incomplete evidence',
+    cause:
+      'This run contract is set to stop rather than continue when evidence cannot be fully captured.',
+    fix: 'Re-run using the demo journey, which captures all three artifacts.',
+  },
+  audit_run_failed: {
+    title: 'The run did not finish',
+    cause: 'The auditor stopped partway through for a reason it could not categorise.',
+    fix: 'Try again. If it keeps happening, copy the trace ID below — the server log records the detail.',
   },
 };
 
