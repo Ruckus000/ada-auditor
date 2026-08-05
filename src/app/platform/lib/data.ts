@@ -319,7 +319,7 @@ export const FINDINGS_BY_CLIENT: Record<string, FindingRecord[]> = {
         '',
         'server/templates/head.hbs',
         '<title>Northwind Health</title>',
-        '<title>{page} — Northwind Health</title>',
+        '<title>{{page}} — Northwind Health</title>',
         [
           ['/book', 'Document title'],
           ['/clinics', 'Document title'],

@@ -89,13 +89,15 @@ export function SettingsScreen({ client }: { client: ClientView | null }) {
   const inClient = client !== null;
   const nav = inClient ? CLIENT_NAV : WORKSPACE_NAV;
   const tab = state.settingsTab;
+  // Inside a client the sticky bar already owns the page's h1.
+  const Title = inClient ? 'h2' : 'h1';
 
   return (
     <div data-screen-label="Settings" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>
+        <Title style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>
           {inClient ? `Settings · ${client.name}` : 'Workspace settings · Meridian Access'}
-        </h1>
+        </Title>
         <span style={{ fontSize: 13, color: T.inkMuted }}>
           {inClient
             ? 'Applies to every future run of this client. Past runs keep the settings they were run with.'

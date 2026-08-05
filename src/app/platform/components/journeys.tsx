@@ -13,6 +13,7 @@ export function JourneysScreen({ client }: { client: ClientView }) {
     <div data-screen-label="Journeys" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <ScreenHeading
+          level={2}
           title="Journeys"
           lede="A journey is a task a real person has to finish. We test the whole chain — one broken step breaks the task, however long the chain is."
         />

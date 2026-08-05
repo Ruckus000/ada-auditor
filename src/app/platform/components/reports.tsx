@@ -48,6 +48,7 @@ export function ReportsLibraryScreen({ client }: { client: ClientView | null }) 
     >
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <ScreenHeading
+          level={inClient ? 2 : 1}
           title="Reports"
           lede={
             inClient
@@ -439,6 +440,8 @@ export function ReportBuilderScreen({ client }: { client: ClientView }) {
       : reportPaper(state.reportOpen ?? 0);
   const aud = state.audience;
   const sections = reportSections(aud);
+  // Inside a client the sticky bar already owns the page's h1.
+  const Title = state.scope === 'client' ? 'h2' : 'h1';
 
   return (
     <div
@@ -468,9 +471,9 @@ export function ReportBuilderScreen({ client }: { client: ClientView }) {
           ← All reports
         </button>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <h1 style={{ margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>
+          <Title style={{ margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>
             {paper.title}
-          </h1>
+          </Title>
           <span style={{ fontSize: 12.5, color: T.inkMuted }}>
             {paper.sub}
             {state.draft ? '' : ` · issued ${paper.issued}`}

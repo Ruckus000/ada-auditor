@@ -11,7 +11,12 @@ import { CloseIcon } from './ui';
  */
 export function Toast() {
   const { state, actions } = usePlatform();
-  if (!state.toast) return null;
+
+  // The live region is always mounted, empty, so the assistive technology is
+  // already watching it when a message lands. Mounting region and text together
+  // is the classic way to ship a confirmation nobody hears — the same defect
+  // this tool reports as "Confirmation is never announced".
+  if (!state.toast) return <div role="status" aria-live="polite" className="ph-sr-only" />;
 
   return (
     <div

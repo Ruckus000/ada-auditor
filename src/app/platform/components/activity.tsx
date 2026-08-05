@@ -23,6 +23,7 @@ export function ActivityScreen({ client }: { client: ClientView | null }) {
     <div data-screen-label="Activity" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <ScreenHeading
+          level={inClient ? 2 : 1}
           title="Activity"
           lede="Every decision anyone made, and how to take it back. Kept for seven years for legal."
         />

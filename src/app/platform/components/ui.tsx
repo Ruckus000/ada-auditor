@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { FONT, SHADOW, T } from '../lib/tokens';
 
 /* ------------------------------------------------------------ icons --- */
@@ -180,10 +180,26 @@ export function SectionHeading({
   );
 }
 
-export function ScreenHeading({ title, lede }: { title: string; lede?: ReactNode }) {
+/**
+ * `level` drops to 2 inside a client, where the sticky bar's client name is
+ * already the page's h1. Two h1s on one page is the heading-structure defect
+ * this product exists to report.
+ */
+export function ScreenHeading({
+  title,
+  lede,
+  level = 1,
+}: {
+  title: string;
+  lede?: ReactNode;
+  level?: 1 | 2;
+}) {
+  const Tag = level === 1 ? 'h1' : 'h2';
   return (
     <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>{title}</h1>
+      <Tag style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>
+        {title}
+      </Tag>
       {lede ? (
         <p style={{ margin: 0, fontSize: 13, color: T.inkMuted, maxWidth: 760, textWrap: 'pretty' }}>
           {lede}
@@ -401,11 +417,17 @@ export interface MenuState {
 
 export function DropMenu({ menu, compact = false }: { menu: MenuState; compact?: boolean }) {
   return (
-    <span style={{ position: 'relative' }}>
+    <span
+      style={{ position: 'relative' }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && menu.open) menu.onToggle();
+      }}
+    >
       <button
         type="button"
         onClick={menu.onToggle}
         aria-expanded={menu.open}
+        aria-haspopup="true"
         className="ph-ghost"
         style={{
           display: 'inline-flex',
@@ -429,8 +451,13 @@ export function DropMenu({ menu, compact = false }: { menu: MenuState; compact?:
         </span>
       </button>
       {menu.open ? (
+        // Deliberately not `role="menu"`: that role promises arrow-key
+        // navigation this control does not implement, and would strip the
+        // buttons out of the Tab order a keyboard user actually gets. A plain
+        // group of toggle buttons is what this is.
         <span
-          role="menu"
+          role="group"
+          aria-label={menu.label}
           className="ph-pop-menu"
           style={{
             position: 'absolute',
@@ -451,8 +478,7 @@ export function DropMenu({ menu, compact = false }: { menu: MenuState; compact?:
             <button
               key={option.label}
               type="button"
-              role="menuitemradio"
-              aria-checked={option.selected}
+              aria-pressed={option.selected}
               onClick={option.onPick}
               className="ph-menu-item"
               style={{
@@ -588,6 +614,9 @@ export function Eyebrow({ children }: { children: ReactNode }) {
 
 /* ---------------------------------------------------------- modals --- */
 
+const FOCUSABLE =
+  'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Modal({
   title,
   subtitle,
@@ -605,6 +634,54 @@ export function Modal({
   screenLabel: string;
   hideClose?: boolean;
 }) {
+  const card = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  // `aria-modal` is a promise to the user that the rest of the page is out of
+  // reach. Without these three behaviours it is a lie: focus starts outside the
+  // dialog, Tab walks straight out the back of it, and Escape does nothing.
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    const dialog = card.current;
+    dialog?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        closeRef.current();
+        return;
+      }
+      if (e.key !== 'Tab' || !dialog) return;
+
+      const stops = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      if (!stops.length) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+
+      // Tabbing off either end wraps within the dialog rather than escaping to
+      // the page behind it.
+      if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!dialog.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown, true);
+      // Send focus back where it came from, so closing a dialog does not dump
+      // the operator at the top of the document.
+      opener?.focus?.();
+    };
+  }, []);
+
   return (
     <div
       onClick={onClose}
@@ -622,6 +699,7 @@ export function Modal({
       }}
     >
       <div
+        ref={card}
         role="dialog"
         aria-modal="true"
         aria-label={title}

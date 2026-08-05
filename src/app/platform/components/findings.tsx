@@ -28,9 +28,9 @@ export function FindingsListScreen({ client }: { client: ClientView }) {
       style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>
           Findings
-        </h1>
+        </h2>
         <span style={{ fontSize: 12.5, color: T.inkMuted }}>
           {findingSummary(records, client.run)}
         </span>
@@ -492,7 +492,7 @@ export function FindingDetailScreen({ client }: { client: ClientView }) {
                 {finding.area}
               </span>
             </span>
-            <h1
+            <h2
               style={{
                 margin: 0,
                 fontSize: 26,
@@ -503,7 +503,7 @@ export function FindingDetailScreen({ client }: { client: ClientView }) {
               }}
             >
               {finding.what}
-            </h1>
+            </h2>
             <p
               style={{
                 margin: 0,
