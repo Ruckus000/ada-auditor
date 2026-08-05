@@ -171,6 +171,13 @@ code {
   color: var(--ink-muted);
 }
 
+.topbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .skip-to-glossary {
   flex-shrink: 0;
   padding: 0.45rem 0.85rem;
