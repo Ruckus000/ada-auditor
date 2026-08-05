@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADA Auditor — Release Board variant</title>
+  <style>
+    :root {
+      --nav: #0747a6;
+      --nav-dark: #05367d;
+      --nav-hover: #1d5ec1;
+      --canvas: #f4f5f7;
+      --surface: #fff;
+      --ink: #172b4d;
+      --muted: #5e6c84;
+      --line: #dfe1e6;
+      --blue: #0052cc;
+      --blue-wash: #deebff;
+      --red: #de350b;
+      --red-wash: #ffebe6;
+      --yellow: #ff991f;
+      --yellow-wash: #fff0b3;
+      --green: #006644;
+      --green-wash: #e3fcef;
+      --purple: #403294;
+      --purple-wash: #eae6ff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); font-size: 14px; line-height: 1.45; }
+    button, select { font: inherit; }
+    :focus-visible { outline: 2px solid #00b8d9; outline-offset: 2px; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 250px minmax(0,1fr); }
+    .sidebar { background: var(--nav); color: #deebff; display: flex; flex-direction: column; }
+    .brand { min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 0 22px; color: #fff; font-size: 18px; font-weight: 600; }
+    .brand-mark { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 3px; color: var(--nav); background: #fff; font-size: 16px; font-weight: 800; }
+    .brand-mark::after { content: "✓"; }
+    .project-switcher { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 12px 24px; padding: 10px; border: 1px solid #3c78d4; border-radius: 3px; color: #fff; background: var(--nav-dark); font-size: 12px; }
+    .project-switcher small { display: block; margin-bottom: 2px; color: #b3d4ff; }
+    .nav { display: grid; gap: 2px; padding: 0 10px; }
+    .nav-label { padding: 0 12px 8px; color: #b3d4ff; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .nav a { display: flex; align-items: center; gap: 12px; min-height: 38px; padding: 0 12px; border-radius: 3px; color: #deebff; text-decoration: none; }
+    .nav a:hover, .nav a[aria-current="page"] { color: #fff; background: var(--nav-hover); }
+    .nav-icon { width: 16px; text-align: center; }
+    .sidebar-footer { margin-top: auto; padding: 18px 22px; border-top: 1px solid #2563b8; color: #b3d4ff; font-size: 12px; }
+    .sidebar-footer strong { display: block; margin-bottom: 3px; color: #fff; font-size: 13px; }
+    .main { min-width: 0; }
+    .topbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 30px; border-bottom: 1px solid var(--line); background: #fff; }
+    .breadcrumbs { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; }
+    .breadcrumbs strong { color: var(--ink); font-weight: 600; }
+    .top-actions { display: flex; align-items: center; gap: 14px; }
+    .icon-button { width: 32px; height: 32px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; cursor: pointer; font-size: 17px; }
+    .icon-button:hover { background: var(--canvas); }
+    .avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #6554c0; font-size: 11px; font-weight: 700; }
+    .content { max-width: 1320px; margin: 0 auto; padding: 30px; }
+    .project-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+    .project-head h1 { margin: 0 0 4px; font-size: 28px; font-weight: 600; letter-spacing: -.02em; }
+    .project-head p { margin: 0; color: var(--muted); }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 0 14px; border: 0; border-radius: 3px; cursor: pointer; font-weight: 600; }
+    .button-primary { color: #fff; background: var(--blue); box-shadow: 0 1px 1px rgba(9,30,66,.25); }
+    .button-primary:hover { background: #0065ff; }
+    .button-subtle { color: var(--blue); background: var(--blue-wash); }
+    details.run-details { position: relative; }
+    summary { list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    .run-popover { position: absolute; top: calc(100% + 10px); right: 0; z-index: 4; width: min(370px, calc(100vw - 32px)); padding: 18px; border: 1px solid var(--line); border-radius: 3px; background: #fff; box-shadow: 0 8px 16px rgba(9,30,66,.25); }
+    .run-popover h2 { margin: 0 0 4px; font-size: 16px; }
+    .run-popover p { margin: 0; color: var(--muted); font-size: 12px; }
+    .field { display: grid; gap: 6px; margin-top: 14px; }
+    label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    select { width: 100%; min-height: 36px; padding: 0 9px; border: 1px solid #b6bac3; border-radius: 3px; color: var(--ink); background: #fff; }
+    .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+    .form-foot small { color: var(--muted); }
+    .tabs { display: flex; gap: 4px; margin-top: 26px; border-bottom: 1px solid var(--line); }
+    .tab { position: relative; padding: 12px 16px; border: 0; color: var(--muted); background: transparent; cursor: pointer; font-size: 13px; }
+    .tab[aria-selected="true"] { color: var(--blue); font-weight: 600; }
+    .tab[aria-selected="true"]::after { content: ""; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: var(--blue); }
+    .release-banner { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 16px; margin-top: 24px; padding: 18px 20px; border-left: 4px solid var(--red); background: var(--red-wash); }
+    .release-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 3px; color: #fff; background: var(--red); font-weight: 800; }
+    .release-banner h2 { margin: 0; font-size: 18px; }
+    .release-banner p { margin: 2px 0 0; color: #6b2a1a; font-size: 13px; }
+    .release-side { text-align: right; }
+    .lozenge { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 3px; font-size: 11px; font-weight: 700; letter-spacing: .01em; }
+    .lozenge-red { color: #bf2600; background: #ffbdad; }
+    .lozenge-green { color: var(--green); background: #abf5d1; }
+    .lozenge-blue { color: var(--blue); background: #b3d4ff; }
+    .lozenge-purple { color: var(--purple); background: #c0b6f2; }
+    .release-side small { display: block; margin-top: 4px; color: #6b2a1a; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .65fr); gap: 22px; margin-top: 22px; align-items: start; }
+    .card { border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 17px 18px; border-bottom: 1px solid var(--line); }
+    .card-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+    .card-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 18px; border-bottom: 1px solid var(--line); background: #fafbfc; }
+    .filter-label { color: var(--muted); font-size: 12px; }
+    .filter { min-height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 3px; color: var(--muted); background: #fff; cursor: pointer; font-size: 11px; }
+    .filter[aria-pressed="true"] { color: var(--blue); border-color: #4c9aff; background: var(--blue-wash); font-weight: 650; }
+    .finding { display: grid; grid-template-columns: 90px minmax(0,1fr) 128px; gap: 14px; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .finding:last-child { border-bottom: 0; }
+    .finding:hover { background: #fafbfc; }
+    .finding-title { margin: 0; font-weight: 600; }
+    .finding-meta { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .finding-action { color: var(--muted); font-size: 12px; text-align: right; }
+    .finding-action strong { display: block; color: #bf2600; font-size: 12px; }
+    .finding-action a { color: var(--blue); text-decoration: none; }
+    .side-stack { display: grid; gap: 18px; }
+    .side-card { padding: 18px; }
+    .side-card h2 { margin: 0 0 14px; font-size: 16px; }
+    .facts { display: grid; gap: 11px; margin: 0; }
+    .fact { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
+    .fact:last-child { padding-bottom: 0; border-bottom: 0; }
+    .fact dt { color: var(--muted); font-size: 12px; }
+    .fact dd { margin: 0; color: var(--ink); font-size: 12px; font-weight: 600; text-align: right; }
+    .evidence-list { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; }
+    .evidence-item { display: grid; grid-template-columns: 24px minmax(0,1fr) auto; gap: 8px; align-items: center; }
+    .evidence-icon { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 3px; color: var(--green); background: var(--green-wash); font-size: 12px; font-weight: 700; }
+    .evidence-item strong { display: block; font-size: 12px; }
+    .evidence-item small { color: var(--muted); font-size: 11px; }
+    .activity { display: grid; gap: 14px; padding: 0; margin: 0; list-style: none; }
+    .activity li { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 8px; }
+    .activity-mark { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: var(--blue); background: var(--blue-wash); font-size: 11px; }
+    .activity p { margin: 0; font-size: 12px; }
+    .activity small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .trace { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--line); }
+    .trace small { display: block; color: var(--muted); font-size: 11px; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; }
+    .copy { border: 0; color: var(--blue); background: transparent; cursor: pointer; font-size: 12px; }
+    .footer-note { margin: 24px 0 0; color: var(--muted); font-size: 12px; }
+    @media (max-width: 950px) {
+      .app { grid-template-columns: 72px minmax(0,1fr); }
+      .brand { justify-content: center; padding-inline: 0; }
+      .brand span:last-child, .project-switcher, .nav-label, .nav a span:last-child, .sidebar-footer { display: none; }
+      .nav a { justify-content: center; padding-inline: 0; }
+      .topbar, .content { padding-inline: 22px; }
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .topbar { padding-inline: 14px; }
+      .content { padding: 22px 14px 36px; }
+      .project-head { display: grid; }
+      .project-head .button { width: 100%; }
+      .breadcrumbs span:not(:last-child) { display: none; }
+      .tabs { overflow-x: auto; }
+      .tab { flex: 0 0 auto; padding-inline: 11px; }
+      .release-banner { grid-template-columns: auto minmax(0,1fr); }
+      .release-side { grid-column: 2; text-align: left; }
+      .finding { grid-template-columns: minmax(0,1fr); gap: 6px; }
+      .finding-action { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Project navigation">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>ADA Auditor</span></div>
+      <div class="project-switcher"><span><small>Project</small>Demo web app</span><span aria-hidden="true">⌄</span></div>
+      <nav class="nav"><div class="nav-label">Project</div><a href="#summary" aria-current="page"><span class="nav-icon">▦</span><span>Summary</span></a><a href="#runs"><span class="nav-icon">◷</span><span>Audit runs</span></a><a href="#findings"><span class="nav-icon">◆</span><span>Findings</span></a><a href="#journeys"><span class="nav-icon">↗</span><span>Journeys</span></a></nav>
+      <nav class="nav" style="margin-top:26px"><div class="nav-label">Project settings</div><a href="#settings"><span class="nav-icon">⚙</span><span>Settings</span></a><a href="#glossary"><span class="nav-icon">?</span><span>Glossary</span></a></nav>
+      <div class="sidebar-footer"><strong>Service ready</strong>Last checked just now</div>
+    </aside>
+    <div class="main">
+      <header class="topbar"><div class="breadcrumbs"><span>Projects</span><span aria-hidden="true">/</span><span>Demo web app</span><span aria-hidden="true">/</span><strong>Summary</strong></div><div class="top-actions"><button class="icon-button" type="button" aria-label="Open notifications">♧</button><button class="icon-button" type="button" aria-label="Open help">?</button><span class="avatar" aria-label="Signed in as JP">JP</span></div></header>
+      <main class="content" id="summary">
+        <div class="project-head"><div><h1>Release summary</h1><p>Demo web app · latest journey status and follow-up</p></div><details class="run-details"><summary class="button button-primary">＋ Run new audit</summary><div class="run-popover"><h2>Run an audit</h2><p>Staging is recommended for full browser evidence.</p><div class="field"><label for="atl-environment">Environment</label><select id="atl-environment"><option>Staging — recommended</option><option>Preview</option><option>Production — read-only</option></select></div><div class="field"><label for="atl-journey">Journey</label><select id="atl-journey"><option>demo-login</option><option>checkout-flow</option></select></div><div class="form-foot"><small>Browser · complete evidence</small><button class="button button-primary" type="button">Start audit</button></div></div></details></div>
+        <div class="tabs" role="tablist" aria-label="Project views"><button class="tab" type="button" role="tab" aria-selected="true">Summary</button><button class="tab" type="button" role="tab" aria-selected="false">Runs</button><button class="tab" type="button" role="tab" aria-selected="false">Findings</button><button class="tab" type="button" role="tab" aria-selected="false">Journeys</button></div>
+        <section class="release-banner" aria-labelledby="release-title"><div class="release-icon" aria-hidden="true">!</div><div><h2 id="release-title">Fail — 2 issues block release</h2><p>Fix the critical findings below, then run <strong>demo-login</strong> again. This run has complete evidence.</p></div><div class="release-side"><span class="lozenge lozenge-red">FAIL</span><small>4 minutes ago · staging</small></div></section>
+        <div class="layout">
+          <section class="card" id="findings" aria-labelledby="findings-title"><div class="card-head"><div><h2 id="findings-title">Active findings</h2><p>Prioritized by release impact · 5 total</p></div><span class="lozenge lozenge-blue">+1 since last run</span></div><div class="filter-bar"><span class="filter-label">Filter:</span><button class="filter" type="button" aria-pressed="true">All 5</button><button class="filter" type="button" aria-pressed="false">Blocking 2</button><button class="filter" type="button" aria-pressed="false">Advisory 3</button></div><div class="finding"><span class="lozenge lozenge-red">CRITICAL</span><div><p class="finding-title">Form field has no accessible name</p><p class="finding-meta"><code>label-control-name</code> · deterministic rule · login form</p></div><div class="finding-action"><strong>Blocks release</strong><a href="#evidence">View details →</a></div></div><div class="finding"><span class="lozenge lozenge-red">CRITICAL</span><div><p class="finding-title">Focus moves behind the modal</p><p class="finding-meta"><code>focus-trap</code> · deterministic rule · authentication step</p></div><div class="finding-action"><strong>Blocks release</strong><a href="#evidence">View details →</a></div></div><div class="finding"><span class="lozenge lozenge-yellow">MAJOR</span><div><p class="finding-title">Heading hierarchy skips from h1 to h3</p><p class="finding-meta"><code>heading-order</code> · deterministic rule · dashboard</p></div><div class="finding-action">Does not block<br><a href="#evidence">View details →</a></div></div><div class="finding"><span class="lozenge lozenge-purple">ADVISORY</span><div><p class="finding-title">Error copy may be hard to understand</p><p class="finding-meta"><code>error-recovery</code> · AI advisory · confidence 82%</p></div><div class="finding-action">Advisory only<br><a href="#evidence">View details →</a></div></div></section>
+          <div class="side-stack"><section class="card side-card" id="evidence" aria-labelledby="context-title"><h2 id="context-title">Run context</h2><dl class="facts"><div class="fact"><dt>Environment</dt><dd>Staging</dd></div><div class="fact"><dt>Journey</dt><dd>demo-login</dd></div><div class="fact"><dt>Platform</dt><dd>Auto-detected</dd></div><div class="fact"><dt>Duration</dt><dd>1.8 seconds</dd></div><div class="fact"><dt>Evidence</dt><dd><span class="lozenge lozenge-green">COMPLETE</span></dd></div></dl><div class="trace"><span><small>Trace ID</small><code>run_01JBF…8K2</code></span><button class="copy" type="button">Copy</button></div></section><section class="card side-card"><h2>Evidence artifacts</h2><ul class="evidence-list"><li class="evidence-item"><span class="evidence-icon" aria-hidden="true">✓</span><span><strong>Screenshot</strong><small>Captured</small></span><span class="lozenge lozenge-green">Ready</span></li><li class="evidence-item"><span class="evidence-icon" aria-hidden="true">✓</span><span><strong>DOM snapshot</strong><small>Captured</small></span><span class="lozenge lozenge-green">Ready</span></li><li class="evidence-item"><span class="evidence-icon" aria-hidden="true">✓</span><span><strong>Accessibility tree</strong><small>Captured</small></span><span class="lozenge lozenge-green">Ready</span></li></ul></section><section class="card side-card"><h2>Activity</h2><ul class="activity"><li><span class="activity-mark" aria-hidden="true">↻</span><div><p>Compared with previous baseline</p><small>1 new · 1 resolved · 3 unchanged</small></div></li><li><span class="activity-mark" aria-hidden="true">✓</span><div><p>Evidence bundle captured</p><small>Screenshot, DOM, and AX tree</small></div></li></ul></section></div>
+        </div>
+        <p class="footer-note">ADA Auditor provides accessibility risk evidence, not legal certification. Incomplete evidence is inconclusive; AI findings never gate CI.</p>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

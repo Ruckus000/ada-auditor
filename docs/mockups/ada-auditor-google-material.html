@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADA Auditor — Confidence Workspace variant</title>
+  <style>
+    :root {
+      --canvas: #f8f9fc;
+      --surface: #fff;
+      --ink: #202124;
+      --muted: #5f6368;
+      --line: #dadce0;
+      --blue: #1a73e8;
+      --blue-ink: #185abc;
+      --blue-wash: #e8f0fe;
+      --green: #188038;
+      --green-wash: #e6f4ea;
+      --red: #c5221f;
+      --red-wash: #fce8e6;
+      --yellow: #a50e0e;
+      --yellow-wash: #fef7e0;
+      --indigo: #5f6368;
+      --shadow-1: 0 1px 2px rgba(60,64,67,.15), 0 1px 3px 1px rgba(60,64,67,.08);
+      --shadow-2: 0 4px 8px 3px rgba(60,64,67,.15), 0 1px 3px rgba(60,64,67,.3);
+      font-family: Roboto, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); font-size: 14px; line-height: 1.5; }
+    button, input, select { font: inherit; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 264px minmax(0,1fr); }
+    .sidebar { padding: 20px 12px; background: #fff; border-right: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 2px 16px 26px; font-size: 18px; letter-spacing: -.02em; }
+    .brand-mark { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--blue); font-size: 17px; font-weight: 700; }
+    .brand-mark::after { content: "✓"; }
+    .nav-section { margin: 0 0 24px; }
+    .nav-label { padding: 0 16px 8px; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; }
+    .nav-section a { display: flex; align-items: center; gap: 14px; min-height: 44px; padding: 0 18px; border-radius: 0 22px 22px 0; color: var(--muted); text-decoration: none; }
+    .nav-section a:hover, .nav-section a[aria-current="page"] { color: var(--blue-ink); background: var(--blue-wash); }
+    .nav-icon { width: 18px; text-align: center; font-size: 17px; }
+    .help-card { margin: 30px 8px 0; padding: 16px; border-radius: 12px; background: #f1f3f4; }
+    .help-card h2 { margin: 0 0 5px; font-size: 14px; }
+    .help-card p { margin: 0; color: var(--muted); font-size: 12px; }
+    .main { min-width: 0; }
+    .topbar { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 0 38px; background: #fff; border-bottom: 1px solid var(--line); }
+    .crumbs { color: var(--muted); }
+    .crumbs strong { color: var(--ink); font-weight: 500; }
+    .top-actions { display: flex; align-items: center; gap: 16px; }
+    .top-link { color: var(--blue-ink); text-decoration: none; }
+    .avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #7e57c2; font-size: 12px; font-weight: 500; }
+    .content { max-width: 1220px; margin: 0 auto; padding: 38px clamp(18px, 4vw, 50px) 56px; }
+    .intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+    .intro h1 { margin: 0 0 4px; font-size: clamp(28px, 3vw, 36px); font-weight: 400; letter-spacing: -.03em; }
+    .intro p { margin: 0; color: var(--muted); }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 20px; border: 0; border-radius: 22px; cursor: pointer; font-weight: 500; letter-spacing: .01em; }
+    .button-primary { color: #fff; background: var(--blue); box-shadow: var(--shadow-1); }
+    .button-primary:hover { background: var(--blue-ink); box-shadow: var(--shadow-2); }
+    .button-text { min-height: 34px; padding-inline: 12px; color: var(--blue-ink); background: transparent; }
+    details.run-details { position: relative; }
+    summary { list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    .run-popover { position: absolute; top: calc(100% + 12px); right: 0; z-index: 4; width: min(380px, calc(100vw - 36px)); padding: 22px; border-radius: 16px; background: #fff; box-shadow: var(--shadow-2); }
+    .run-popover h2 { margin: 0 0 4px; font-weight: 400; }
+    .run-popover > p { margin: 0; color: var(--muted); font-size: 13px; }
+    .field { display: grid; gap: 6px; margin-top: 16px; }
+    label { font-size: 12px; color: var(--muted); }
+    select { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--ink); }
+    .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 20px; }
+    .form-foot small { color: var(--muted); }
+    .summary-card { display: grid; grid-template-columns: minmax(300px, 1.15fr) minmax(0, 1fr); gap: 26px; padding: 28px; border-radius: 18px; background: #e8f0fe; box-shadow: var(--shadow-1); }
+    .summary-copy { display: flex; align-items: center; gap: 20px; }
+    .confidence-ring { flex: 0 0 108px; width: 108px; height: 108px; display: grid; place-items: center; border-radius: 50%; background: var(--red); }
+    .confidence-ring::before { content: ""; grid-area: 1/1; width: 82px; height: 82px; border-radius: 50%; background: #e8f0fe; }
+    .confidence-ring span { grid-area: 1/1; z-index: 1; color: var(--red); font-size: 22px; font-weight: 500; }
+    .summary-kicker { margin: 0 0 3px; color: var(--red); font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+    .summary-copy h2 { margin: 0; font-size: 25px; font-weight: 400; letter-spacing: -.02em; }
+    .summary-copy p:last-child { margin: 5px 0 0; color: #3c4043; }
+    .summary-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: center; }
+    .detail { padding: 13px 15px; border-radius: 12px; background: rgba(255,255,255,.72); }
+    .detail strong { display: block; font-size: 20px; font-weight: 400; }
+    .detail span { color: var(--muted); font-size: 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 16px; color: var(--muted); background: #fff; font-size: 12px; }
+    .chip-green { color: var(--green); background: var(--green-wash); }
+    .chip-red { color: var(--red); background: var(--red-wash); }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 32px 0 14px; }
+    .section-head h2 { margin: 0; font-size: 20px; font-weight: 400; }
+    .section-head p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(270px, .7fr); gap: 20px; align-items: start; }
+    .card { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-1); overflow: hidden; }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 20px 13px; }
+    .card-head h3 { margin: 0; font-size: 16px; font-weight: 500; }
+    .card-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .list { margin: 0; padding: 0 20px 8px; list-style: none; }
+    .issue { display: grid; grid-template-columns: 10px minmax(0,1fr) auto; gap: 12px; align-items: start; padding: 17px 0; border-top: 1px solid #eef0f2; }
+    .issue-dot { width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; background: var(--red); }
+    .issue-dot.major { background: #f9ab00; }
+    .issue-dot.advisory { background: #7e57c2; }
+    .issue-title { margin: 0; font-weight: 500; }
+    .issue-meta { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .lozenge { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 12px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .lozenge-red { color: var(--red); background: var(--red-wash); }
+    .lozenge-yellow { color: #8b4c00; background: var(--yellow-wash); }
+    .lozenge-purple { color: #6a1b9a; background: #f3e5f5; }
+    .side-stack { display: grid; gap: 20px; }
+    .side-card { padding: 20px; }
+    .side-card h3 { margin: 0 0 16px; font-size: 16px; font-weight: 500; }
+    .evidence-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid #eef0f2; }
+    .evidence-row:first-of-type { border-top: 0; padding-top: 0; }
+    .evidence-icon { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: var(--green); background: var(--green-wash); }
+    .evidence-row strong { display: block; font-size: 13px; font-weight: 500; }
+    .evidence-row small { color: var(--muted); font-size: 11px; }
+    .next-step { padding: 17px; border-radius: 12px; background: var(--green-wash); }
+    .next-step strong { display: block; color: var(--green); font-size: 13px; }
+    .next-step p { margin: 3px 0 0; color: #3c4043; font-size: 12px; }
+    .history { display: grid; gap: 10px; }
+    .history-row { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+    .history-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); }
+    .history-dot.fail { background: var(--red); }
+    .history-row time { color: var(--muted); font-size: 11px; }
+    .footer-note { margin: 24px 0 0; color: var(--muted); font-size: 12px; }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 76px minmax(0,1fr); }
+      .sidebar { padding-inline: 8px; }
+      .brand { justify-content: center; padding-inline: 0; }
+      .brand span:last-child, .nav-label, .nav-section a span:last-child, .help-card { display: none; }
+      .nav-section a { justify-content: center; padding-inline: 0; }
+      .topbar { padding-inline: 24px; }
+      .content { padding-inline: 24px; }
+      .summary-card { grid-template-columns: 1fr; }
+      .workspace-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .intro { display: grid; }
+      .intro .button { width: 100%; }
+      .topbar { padding-inline: 16px; }
+      .content { padding: 26px 16px 40px; }
+      .top-link { display: none; }
+      .summary-card { padding: 20px; }
+      .summary-copy { align-items: flex-start; flex-direction: column; }
+      .summary-details { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>ADA Auditor</span></div>
+      <div class="nav-section"><div class="nav-label">Your workspace</div><nav><a href="#overview" aria-current="page"><span class="nav-icon">⌂</span><span>Overview</span></a><a href="#runs"><span class="nav-icon">◷</span><span>Audit runs</span></a><a href="#journeys"><span class="nav-icon">↗</span><span>Journeys</span></a></nav></div>
+      <div class="nav-section"><div class="nav-label">Learn</div><nav><a href="#glossary"><span class="nav-icon">?</span><span>Glossary</span></a><a href="#settings"><span class="nav-icon">⚙</span><span>Settings</span></a></nav></div>
+      <div class="help-card"><h2>Need a refresher?</h2><p>See what “inconclusive” means and when a finding can block release.</p></div>
+    </aside>
+    <div class="main">
+      <header class="topbar"><div class="crumbs"><span>ADA Auditor</span> <span aria-hidden="true">›</span> <strong>Overview</strong></div><div class="top-actions"><a class="top-link" href="#glossary">Open glossary</a><span class="avatar" aria-label="Signed in as JP">JP</span></div></header>
+      <main class="content" id="overview">
+        <div class="intro"><div><h1>Good morning, Jordan</h1><p>Here’s the latest accessibility signal from your demo journey.</p></div><details class="run-details"><summary class="button button-primary">＋ Run new audit</summary><div class="run-popover"><h2>Start a new audit</h2><p>Use staging for richer interaction and complete evidence.</p><div class="field"><label for="material-environment">Target environment</label><select id="material-environment"><option>Staging — recommended</option><option>Preview</option><option>Production — read-only</option></select></div><div class="field"><label for="material-journey">Journey</label><select id="material-journey"><option>demo-login · browser evidence</option><option>checkout-flow</option></select></div><div class="form-foot"><small>Ready to run</small><button class="button button-primary" type="button">Start audit</button></div></div></details></div>
+        <section class="summary-card" aria-labelledby="summary-title"><div><div class="summary-copy"><div class="confidence-ring" aria-label="Complete evidence; two blockers found"><span aria-hidden="true">!</span></div><div><p class="summary-kicker">Release decision · July 31, 10:42 AM</p><h2 id="summary-title">Fail — fix 2 blockers</h2><p>We found critical issues in the latest demo-login run.</p></div></div><div class="chips"><span class="chip chip-green">✓ Evidence complete</span><span class="chip chip-red">2 blocking issues</span><span class="chip">Staging</span></div></div><div class="summary-details"><div class="detail"><strong>5</strong><span>Total findings</span></div><div class="detail"><strong>+1</strong><span>New since last run</span></div><div class="detail"><strong>1.8s</strong><span>Run duration</span></div><div class="detail"><strong>100%</strong><span>Journey completed</span></div></div></section>
+        <div class="section-head"><div><h2>Recommended next step</h2><p>Start with the issues that can block a release.</p></div><button class="button button-text" type="button">View all findings ›</button></div>
+        <div class="workspace-grid">
+          <section class="card" aria-labelledby="issues-title"><div class="card-head"><div><h3 id="issues-title">Your priority issues</h3><p>Deterministic rules are listed before AI advisories.</p></div><span class="lozenge lozenge-red">2 blockers</span></div><ul class="list"><li class="issue"><span class="issue-dot" aria-hidden="true"></span><div><p class="issue-title">Form field has no accessible name</p><p class="issue-meta"><code>label-control-name</code> · deterministic rule</p></div><span class="lozenge lozenge-red">Blocks release</span></li><li class="issue"><span class="issue-dot" aria-hidden="true"></span><div><p class="issue-title">Focus moves behind the modal</p><p class="issue-meta"><code>focus-trap</code> · deterministic rule</p></div><span class="lozenge lozenge-red">Blocks release</span></li><li class="issue"><span class="issue-dot major" aria-hidden="true"></span><div><p class="issue-title">Heading hierarchy skips from h1 to h3</p><p class="issue-meta"><code>heading-order</code> · deterministic rule</p></div><span class="lozenge lozenge-yellow">Review</span></li><li class="issue"><span class="issue-dot advisory" aria-hidden="true"></span><div><p class="issue-title">Error copy may be hard to understand</p><p class="issue-meta"><code>error-recovery</code> · AI advisory</p></div><span class="lozenge lozenge-purple">Advisory</span></li></ul></section>
+          <div class="side-stack"><section class="card side-card" aria-labelledby="confidence-title"><h3 id="confidence-title">Why this result is trustworthy</h3><div class="evidence-row"><span class="evidence-icon" aria-hidden="true">✓</span><div><strong>Screenshot</strong><small>Captured</small></div></div><div class="evidence-row"><span class="evidence-icon" aria-hidden="true">✓</span><div><strong>DOM snapshot</strong><small>Captured</small></div></div><div class="evidence-row"><span class="evidence-icon" aria-hidden="true">✓</span><div><strong>Accessibility tree</strong><small>Captured</small></div></div></section><section class="card side-card"><div class="next-step"><strong>What to do next</strong><p>Fix the 2 blocking findings, then run the journey again. A pass is not legal certification.</p></div></section><section class="card side-card" aria-labelledby="history-title"><h3 id="history-title">Recent runs</h3><div class="history"><div class="history-row"><span class="history-dot fail" aria-hidden="true"></span><span>Fail · 2 blockers</span><time>Now</time></div><div class="history-row"><span class="history-dot" aria-hidden="true"></span><span>Pass · 0 blockers</span><time>Yesterday</time></div><div class="history-row"><span class="history-dot" aria-hidden="true"></span><span>Pass · 0 blockers</span><time>Jul 29</time></div></div></section></div>
+        </div>
+        <p class="footer-note">Incomplete evidence is always inconclusive — never pass or fail. AI findings are advisory and do not block CI.</p>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
