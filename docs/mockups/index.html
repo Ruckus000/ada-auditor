@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADA Auditor — dashboard design variants</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #172b4d; background: #f4f5f7; }
+    body { max-width: 960px; margin: 0 auto; padding: 56px 24px; }
+    h1 { margin-bottom: 8px; letter-spacing: -.03em; }
+    .lede { max-width: 680px; color: #5e6c84; line-height: 1.6; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+    a { display: block; min-height: 210px; padding: 22px; border: 1px solid #dfe1e6; border-radius: 8px; color: inherit; background: white; text-decoration: none; box-shadow: 0 1px 2px rgba(9,30,66,.1); }
+    a:hover { border-color: #4c9aff; box-shadow: 0 4px 10px rgba(9,30,66,.15); }
+    h2 { margin: 0 0 10px; font-size: 18px; }
+    p { margin: 0; color: #5e6c84; line-height: 1.5; }
+    .tag { display: inline-block; margin-bottom: 20px; padding: 4px 8px; border-radius: 999px; color: #0747a6; background: #deebff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } a { min-height: auto; } }
+  </style>
+</head>
+<body>
+  <span class="tag">ADA Auditor · dashboard study</span>
+  <h1>Three directions for a friendlier audit console</h1>
+  <p class="lede">These are static, self-contained HTML proposals using the same representative audit state. Each one changes the hierarchy, density, geometry, and interaction model—not just the color palette.</p>
+  <div class="grid">
+    <a href="ada-auditor-vercel-shadcn.html"><h2>Audit Flow</h2><p>Vercel/shadcn-inspired: dark, beginner-friendly setup flow that makes the safe path and evidence trade-offs explicit.</p></a>
+    <a href="ada-auditor-google-material.html"><h2>Confidence Workspace</h2><p>Google Material-inspired: airy, guided, plain-language flow that makes evidence confidence visible.</p></a>
+    <a href="ada-auditor-atlassian.html"><h2>Release Board</h2><p>Atlassian-inspired: project shell, tabs, lozenges, issue triage, and traceability for team review.</p></a>
+  </div>
+</body>
+</html>

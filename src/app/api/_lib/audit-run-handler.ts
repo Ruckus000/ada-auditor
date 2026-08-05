@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { environmentSchema } from '../../../domain/contracts';
-import { runBrowserAudit } from '../../../integrations/browser';
 import { getRunStore } from '../../../integrations/persistence';
 import { runAudit } from '../../../services/run-audit';
 import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-log';
@@ -165,8 +164,12 @@ export async function handleAuditRun(
   }
 
   try {
+    // Playwright must not load on the HTML control-plane path — Vercel serverless
+    // has no Chromium. Dynamic import keeps browser deps out of that bundle.
     const report = parsedBody.browserMode
-      ? await runBrowserAudit({
+      ? await (
+          await import('../../../integrations/browser/run-browser-audit')
+        ).runBrowserAudit({
           journeyId: parsedBody.journeyId,
           environment: parsedBody.environment,
           stepId: parsedBody.stepId ?? 'dashboard',

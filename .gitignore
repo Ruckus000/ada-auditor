@@ -11,3 +11,5 @@ coverage/
 tsconfig.tsbuildinfo
 artifacts/
 data/runs/
+.designops/
+.DS_Store

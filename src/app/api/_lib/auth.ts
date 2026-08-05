@@ -1,3 +1,5 @@
+import { MIN_TOKEN_LENGTH } from './console-session';
+
 export function extractRunToken(request: Request): string | null {
   const headerToken = request.headers.get('x-auditor-run-token');
   if (headerToken) {
@@ -14,7 +16,7 @@ export function extractRunToken(request: Request): string | null {
 
 export function isRunAuthorized(request: Request): boolean {
   const configuredToken = process.env.AUDITOR_RUN_TOKEN;
-  if (!configuredToken) {
+  if (!configuredToken || configuredToken.length < MIN_TOKEN_LENGTH) {
     return false;
   }
 
