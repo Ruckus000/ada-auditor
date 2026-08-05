@@ -205,9 +205,14 @@ export function ControlPlane() {
             </p>
           </div>
         </div>
-        <a className="skip-to-glossary" href="#glossary">
-          Glossary
-        </a>
+        <nav className="topbar-links" aria-label="Sections">
+          <a className="skip-to-glossary" href="/platform">
+            Platform screens
+          </a>
+          <a className="skip-to-glossary" href="#glossary">
+            Glossary
+          </a>
+        </nav>
       </header>
 
       <main className="workspace">
