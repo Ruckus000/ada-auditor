@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 import { createEvidenceBundle } from '../../../src/domain/evidence';
 import {
-  DEFAULT_DEMO_JOURNEY_STEPS,
+  buildDefaultDemoJourneySteps,
   runJourney,
 } from '../../../src/integrations/browser/journey-runner';
 
@@ -31,7 +31,7 @@ describe('runJourney', () => {
         stepId: 'dashboard',
         fixtureDir: FIXTURE_DIR,
         artifactsDir,
-        steps: DEFAULT_DEMO_JOURNEY_STEPS,
+        steps: buildDefaultDemoJourneySteps(),
       });
 
       expect(result.page.title).toBe('Dashboard');
@@ -72,7 +72,7 @@ describe('runJourney', () => {
         stepId: 'dashboard',
         fixtureDir: FIXTURE_DIR,
         artifactsDir,
-        steps: DEFAULT_DEMO_JOURNEY_STEPS,
+        steps: buildDefaultDemoJourneySteps(),
         omitAxTree: true,
       });
 

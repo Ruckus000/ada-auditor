@@ -5,7 +5,7 @@ import { resolvePlatformMetadata } from '../platforms';
 import { createAiAdvisoryFinding } from '../../services/ai-advisory';
 import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
-import { DEFAULT_DEMO_JOURNEY_STEPS, runJourney } from './journey-runner';
+import { buildDefaultDemoJourneySteps, runJourney } from './journey-runner';
 import type { JourneyRunnerInput } from './types';
 
 export type RunBrowserAuditInput = JourneyRunnerInput & {
@@ -16,7 +16,7 @@ export type RunBrowserAuditInput = JourneyRunnerInput & {
 export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const journeyResult = await runJourney({
     ...input,
-    steps: input.steps ?? DEFAULT_DEMO_JOURNEY_STEPS,
+    steps: input.steps ?? buildDefaultDemoJourneySteps(),
   });
 
   const platform = resolvePlatformMetadata({

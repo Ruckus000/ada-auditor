@@ -7,12 +7,38 @@
   <body>
     <main>
       <h1>Login</h1>
-      <button id="login-button" type="button">Sign in</button>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" />
+        <button id="login-button" type="submit">Sign in</button>
+      </form>
+      <p id="login-error" hidden>Invalid credentials</p>
       <button id="delete-account" type="button" data-action="delete">Delete account</button>
     </main>
     <script>
-      document.getElementById('login-button').addEventListener('click', () => {
-        window.location.href = 'dashboard.html';
+      // Fixture defaults must match getDemoCredentials() in journey-runner.ts
+      var VALID_USER = 'auditor';
+      var VALID_PASS = 'demo-pass';
+
+      document.getElementById('login-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        var user = document.getElementById('username').value;
+        var pass = document.getElementById('password').value;
+        var error = document.getElementById('login-error');
+        if (user === VALID_USER && pass === VALID_PASS) {
+          // sessionStorage works for file:// fixtures; cookie helps http(s) staging.
+          try {
+            sessionStorage.setItem('ada-auditor-session', '1');
+          } catch (e) {}
+          try {
+            document.cookie = 'ada_auditor_session=1; path=/';
+          } catch (e) {}
+          window.location.href = 'dashboard.html';
+          return;
+        }
+        error.hidden = false;
       });
     </script>
   </body>

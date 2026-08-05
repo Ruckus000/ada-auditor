@@ -1,24 +1,25 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { chromium, type Page } from 'playwright';
 import type { Environment } from '../../domain/contracts';
 import { isActionAllowed } from '../../domain/policy';
-import type { JourneyRunnerInput, JourneyRunnerResult, JourneyStep } from './types';
+import {
+  buildDefaultDemoJourneySteps,
+  resolveNavigationUrl,
+} from './demo-journey';
+import type { JourneyRunnerInput, JourneyRunnerResult } from './types';
 
-export const DEFAULT_DEMO_JOURNEY_STEPS: JourneyStep[] = [
-  { action: 'navigate', type: 'goto', path: 'login.html' },
-  { action: 'login', type: 'click', selector: '#login-button' },
-];
+export {
+  buildDefaultDemoJourneySteps,
+  DEFAULT_DEMO_JOURNEY_STEPS,
+  getDemoCredentials,
+  resolveNavigationUrl,
+} from './demo-journey';
 
 async function captureAxTree(page: Page, outputPath: string): Promise<void> {
   const client = await page.context().newCDPSession(page);
   const { nodes } = await client.send('Accessibility.getFullAXTree');
   await writeFile(outputPath, JSON.stringify({ nodes }, null, 2), 'utf8');
-}
-
-function resolveFixtureUrl(fixtureDir: string, path: string): string {
-  return pathToFileURL(join(fixtureDir, path)).href;
 }
 
 /**
@@ -64,7 +65,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   const page = await browser.newPage();
 
   try {
-    const steps = input.steps ?? DEFAULT_DEMO_JOURNEY_STEPS;
+    const steps = input.steps ?? buildDefaultDemoJourneySteps();
 
     for (const step of steps) {
       if (!isActionAllowed(input.environment, step.action)) {
@@ -72,7 +73,12 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       }
 
       if (step.type === 'goto') {
-        await page.goto(resolveFixtureUrl(input.fixtureDir, step.path));
+        await page.goto(resolveNavigationUrl(input.fixtureDir, step.path, input.targetBaseUrl));
+        continue;
+      }
+
+      if (step.type === 'fill') {
+        await page.fill(step.selector, step.value);
         continue;
       }
 

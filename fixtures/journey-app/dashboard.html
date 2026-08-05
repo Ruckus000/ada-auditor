@@ -10,5 +10,15 @@
       <img src="hero.png" />
       <p>Welcome back.</p>
     </main>
+    <script>
+      try {
+        var ok = sessionStorage.getItem('ada-auditor-session') === '1';
+        if (!ok && document.cookie.indexOf('ada_auditor_session=1') === -1) {
+          window.location.href = 'login.html';
+        }
+      } catch (e) {
+        // file:// / blocked storage: allow chaos fixtures that navigate here directly
+      }
+    </script>
   </body>
 </html>
