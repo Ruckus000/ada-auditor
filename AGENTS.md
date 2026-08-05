@@ -72,18 +72,23 @@ Follow `YAGNI → KISS → SRP → DRY`.
 
 ## Current kernel status (as of 2026-07-28)
 
-Implemented and verified locally:
+Implemented and verified locally + on Vercel preview:
 
 - Domain contracts, evidence, policy, platforms
 - Services: deterministic audit, AI advisory, reporting (`pass|fail|inconclusive`), `runAudit`
 - Platform adapters: generic / react / wordpress
-- Adversarial-review remediations landed
-- Tests: Vitest suite green (28 tests at last verify)
-- **Not yet:** git baseline commit, Next.js/Vercel shell, Playwright runner, persistence, customer live audits
+- Phase 1 control plane: Next.js App Router, `/api/audit/run`, `/api/health`, `/api/ready`, console session unlock, structured run logs, `npm run chaos` (HTML + browser fixtures), GitHub Actions CI
+- Phase 2: Playwright authenticated demo journey (credential form + fill), real DOM/ax/screenshot evidence, `AUDIT_TARGET_BASE_URL` staging seam
+- Phase 3: `FileRunStore` (local/CI) + Upstash Redis `KvRunStore` (Vercel), regression comparison, `GET /api/audit/runs/latest`
+- Tests: Vitest unit suite + browser suite green; chaos boringly green including browser scenarios
+
+### Phase 4 — Scale breadth (NEXT)
+
+- More journeys/adapters only after Phase 1–2 chaos stays boringly green
 
 ## Roadmap (execute in order; multitask only independent work)
 
-### Phase 1 — Vercel control plane (NEXT)
+### Phase 1 — Vercel control plane — DONE
 1. Git baseline commit of current kernel
 2. Next.js App Router shell wrapping existing core
 3. `POST /api/audit/run`, `GET /api/health`, `GET /api/ready` + `AUDITOR_RUN_TOKEN`
@@ -91,14 +96,14 @@ Implemented and verified locally:
 5. Auditor-platform chaos inject + `npm run chaos` (preview/CI); customer sites out of scope
 6. Deploy to Vercel
 
-### Phase 2 — Real browser journey
+### Phase 2 — Real browser journey — DONE
 - One Playwright authenticated journey + real DOM/ax/screenshot evidence
-- Same contracts; staging-first for customer targets
+- Same contracts; staging-first for customer targets (`AUDIT_TARGET_BASE_URL`)
 
-### Phase 3 — Persistence + regression
-- Store runs/findings; compare baselines; feed CI/executive outputs
+### Phase 3 — Persistence + regression — DONE
+- Store runs/findings (filesystem + Redis/KV); compare baselines; `GET /api/audit/runs/latest` for CI/executive consumers
 
-### Phase 4 — Scale breadth
+### Phase 4 — Scale breadth (NEXT)
 - More journeys/adapters only after Phase 1–2 chaos is boringly green
 
 ## Agent behavior
