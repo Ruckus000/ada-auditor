@@ -1,5 +1,9 @@
-import type { StoredArtifacts } from '../domain/artifacts';
-import type { RunStatus, StoredFinding, StoredRunRecord } from '../domain/persistence';
+import type {
+  RunStatus,
+  StoredFinding,
+  StoredRunPage,
+  StoredRunRecord,
+} from '../domain/persistence';
 import type { AuditFinding } from './reporting';
 import type { CiStatus } from './reporting';
 
@@ -13,7 +17,7 @@ type PersistRunInput = {
   findings: AuditFinding[];
   durationMs: number;
   browserMode?: boolean;
-  artifacts?: StoredArtifacts;
+  pages?: StoredRunPage[];
   status?: RunStatus;
   failureReason?: string;
 };
@@ -43,6 +47,10 @@ function toStoredFinding(finding: AuditFinding): StoredFinding {
     message: finding.message,
     wcagCriteria: finding.wcagCriteria,
     conformanceLevel: finding.conformanceLevel,
+    // Without this a multi-page run stores findings that cannot say which page
+    // they belong to, and the regression diff collapses the same rule and
+    // selector on two pages into one entry.
+    pageUrl: finding.pageUrl,
     selector: finding.selector,
     htmlSnippet: finding.htmlSnippet,
     helpUrl: finding.helpUrl,
@@ -61,9 +69,7 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     durationMs: input.durationMs,
     createdAt: new Date().toISOString(),
     ...(input.browserMode ? { browserMode: true } : {}),
-    ...(input.artifacts && Object.keys(input.artifacts).length > 0
-      ? { artifacts: input.artifacts }
-      : {}),
+    ...(input.pages && input.pages.length > 0 ? { pages: input.pages } : {}),
     ...(input.status ? { status: input.status } : {}),
     ...(input.failureReason ? { failureReason: input.failureReason } : {}),
   };

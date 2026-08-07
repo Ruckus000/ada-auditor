@@ -14,6 +14,8 @@ import {
  * axe actually emits them.
  */
 
+const PAGE_URL = 'https://app.example.com/dashboard';
+
 function rule(overrides: Partial<AxeScanResult['violations'][number]> = {}) {
   return {
     id: 'image-alt',
@@ -86,6 +88,29 @@ describe('selectorFromTarget', () => {
 });
 
 describe('runDeterministicAudit', () => {
+  it('stamps every finding with the page it was found on', () => {
+    // A run audits every page its journey walks through, so a finding that
+    // cannot say where it lives is not actionable — and the regression diff
+    // would collapse the same rule and selector on two pages into one entry.
+    const findings = runDeterministicAudit(
+      { violations: [rule()], incomplete: [rule({ id: 'color-contrast' })] },
+      'https://app.example.com/checkout',
+    );
+
+    expect(findings).toHaveLength(2);
+    expect(findings.every((f) => f.pageUrl === 'https://app.example.com/checkout')).toBe(true);
+  });
+
+  it('keeps two pages apart when they break the same rule on the same selector', () => {
+    const scan = { violations: [rule()], incomplete: [] };
+
+    const [first] = runDeterministicAudit(scan, 'https://app.example.com/a');
+    const [second] = runDeterministicAudit(scan, 'https://app.example.com/b');
+
+    expect(first.selector).toBe(second.selector);
+    expect(first.pageUrl).not.toBe(second.pageUrl);
+  });
+
   it('emits one finding per node, not one per rule', () => {
     const findings = runDeterministicAudit({
       violations: [
@@ -98,7 +123,7 @@ describe('runDeterministicAudit', () => {
         }),
       ],
       incomplete: [],
-    });
+    }, PAGE_URL);
 
     // The old regex engine returned exactly one finding here regardless of
     // how many images were broken, which made it unactionable.
@@ -107,7 +132,7 @@ describe('runDeterministicAudit', () => {
   });
 
   it('carries the fields needed to locate and cite a failure', () => {
-    const [finding] = runDeterministicAudit({ violations: [rule()], incomplete: [] });
+    const [finding] = runDeterministicAudit({ violations: [rule()], incomplete: [] }, PAGE_URL);
 
     expect(finding).toMatchObject({
       code: 'image-alt',
@@ -125,7 +150,7 @@ describe('runDeterministicAudit', () => {
     const impacts = ['critical', 'serious', 'moderate', 'minor'] as const;
     const severities = impacts.map(
       (impact) =>
-        runDeterministicAudit({ violations: [rule({ impact })], incomplete: [] })[0].severity,
+        runDeterministicAudit({ violations: [rule({ impact })], incomplete: [] }, PAGE_URL)[0].severity,
     );
 
     expect(severities).toEqual(['critical', 'major', 'minor', 'minor']);
@@ -139,7 +164,7 @@ describe('runDeterministicAudit', () => {
         rule({ id: 'color-contrast', impact: 'serious', tags: ['cat.color', 'wcag2aa', 'wcag143'] }),
       ],
       incomplete: [],
-    });
+    }, PAGE_URL);
 
     expect(finding.severity).not.toBe('critical');
   });
@@ -148,7 +173,7 @@ describe('runDeterministicAudit', () => {
     const findings = runDeterministicAudit({
       violations: [],
       incomplete: [rule({ id: 'color-contrast', impact: 'serious' })],
-    });
+    }, PAGE_URL);
 
     expect(findings).toHaveLength(1);
     expect(findings[0].severity).toBe('needs-review');
@@ -168,7 +193,7 @@ describe('runDeterministicAudit', () => {
         }),
       ],
       incomplete: [],
-    });
+    }, PAGE_URL);
 
     expect(finding.message).toContain('no alt attribute');
   });
@@ -177,7 +202,7 @@ describe('runDeterministicAudit', () => {
     const [finding] = runDeterministicAudit({
       violations: [rule({ nodes: [{ html: '<img>', target: ['#a'], failureSummary: '   ' }] })],
       incomplete: [],
-    });
+    }, PAGE_URL);
 
     expect(finding.message).toBe('Images must have alternate text');
   });
@@ -186,7 +211,7 @@ describe('runDeterministicAudit', () => {
     const [finding] = runDeterministicAudit({
       violations: [rule({ nodes: [{ html: `<div>${'x'.repeat(5000)}</div>`, target: ['#a'] }] })],
       incomplete: [],
-    });
+    }, PAGE_URL);
 
     expect(finding.htmlSnippet.length).toBeLessThanOrEqual(513);
     expect(finding.htmlSnippet.endsWith('…')).toBe(true);
@@ -198,21 +223,21 @@ describe('runDeterministicAudit', () => {
         rule({ id: 'region', impact: 'moderate', tags: ['cat.keyboard', 'best-practice'] }),
       ],
       incomplete: [],
-    });
+    }, PAGE_URL);
 
     expect(finding.wcagCriteria).toEqual([]);
     expect(finding.conformanceLevel).toBeNull();
   });
 
   it('returns nothing for a clean scan', () => {
-    expect(runDeterministicAudit({ violations: [], incomplete: [] })).toEqual([]);
+    expect(runDeterministicAudit({ violations: [], incomplete: [] }, PAGE_URL)).toEqual([]);
   });
 
   it('treats a missing impact as minor rather than throwing', () => {
     const [finding] = runDeterministicAudit({
       violations: [rule({ impact: null })],
       incomplete: [],
-    });
+    }, PAGE_URL);
 
     expect(finding.severity).toBe('minor');
   });

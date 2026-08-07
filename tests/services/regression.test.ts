@@ -69,6 +69,57 @@ describe('compareToBaseline', () => {
     expect(summary.status).toBe('warn');
   });
 
+  it('keeps the same rule and selector apart when they occur on two pages', () => {
+    // A shared header template breaks `image-alt` on `#nav-logo` on every page
+    // it appears. Without the page in the key those collapse into one entry —
+    // the same class of bug that adding the selector fixed, one level up.
+    const onLogin = {
+      code: 'image-alt',
+      severity: 'critical',
+      source: 'deterministic',
+      selector: '#nav-logo',
+      pageUrl: 'https://app.example.com/login',
+    };
+    const onDashboard = { ...onLogin, pageUrl: 'https://app.example.com/dashboard' };
+
+    const summary = compareToBaseline(
+      makeRecord('current', [onLogin, onDashboard]),
+      makeRecord('baseline', [onLogin]),
+    );
+
+    expect(summary.status).toBe('fail');
+    expect(summary.newFindings).toHaveLength(1);
+    expect(summary.newFindings[0].pageUrl).toBe('https://app.example.com/dashboard');
+    expect(summary.unchangedCount).toBe(1);
+  });
+
+  it('reports a finding that moved to a different page as resolved and new', () => {
+    const summary = compareToBaseline(
+      makeRecord('current', [
+        {
+          code: 'image-alt',
+          severity: 'critical',
+          source: 'deterministic',
+          selector: '#hero',
+          pageUrl: 'https://app.example.com/b',
+        },
+      ]),
+      makeRecord('baseline', [
+        {
+          code: 'image-alt',
+          severity: 'critical',
+          source: 'deterministic',
+          selector: '#hero',
+          pageUrl: 'https://app.example.com/a',
+        },
+      ]),
+    );
+
+    expect(summary.newFindings).toHaveLength(1);
+    expect(summary.resolvedFindings).toHaveLength(1);
+    expect(summary.unchangedCount).toBe(0);
+  });
+
   it('ignores advisory findings for regression status', () => {
     const summary = compareToBaseline(
       makeRecord('current', [

@@ -44,7 +44,15 @@ npm test -- tests/integrations/browser
 ## Contracts
 
 - Every planned step is checked with `isActionAllowed(environment, action)` before Playwright executes it.
-- Missing `axTreePath` (or `omitAxTree: true`) → degraded evidence → `ciStatus: inconclusive`.
+- **Every navigation is scanned**, not just the last one. `runJourney` returns
+  `{ pages, truncatedPages }`; consecutive steps that leave the URL unchanged
+  are captured once.
+- Evidence is per page. Missing `axTreePath` (or `omitAxTree: true`) → that
+  page is degraded, its deterministic findings are rejected, and the run takes
+  the worst status → `ciStatus: inconclusive`.
+- Pages per run are capped (`maxPages`, else `AUDITOR_MAX_PAGES_PER_RUN`, else
+  20). Truncation is logged as `audit_page_cap_reached` and reported as
+  `truncatedPages` — a partial audit never presents as a complete one.
 - Customer production: denied actions throw before any click.
 
 ## Merge / rebase

@@ -20,6 +20,15 @@ export type DeterministicFinding = {
   wcagCriteria: string[];
   /** Strictest level the rule maps to, or null for best-practice rules. */
   conformanceLevel: ConformanceLevel | null;
+  /**
+   * URL of the page this finding was found on.
+   *
+   * A run walks several pages, so a finding that cannot say where it lives is
+   * not actionable: two pages can break the same rule on the same selector and
+   * need two separate fixes. This is also part of the regression key — see
+   * `findingKey` in `services/regression.ts`.
+   */
+  pageUrl: string;
   /** CSS selector locating the offending node. */
   selector: string;
   /** Truncated outerHTML of the offending node. UNTRUSTED — escape on render. */
@@ -138,6 +147,7 @@ function truncate(html: string): string {
 
 function toFindings(
   rules: AxeRuleResult[],
+  pageUrl: string,
   severityFor: (rule: AxeRuleResult) => FindingSeverity,
 ): DeterministicFinding[] {
   const findings: DeterministicFinding[] = [];
@@ -157,6 +167,7 @@ function toFindings(
         source: 'deterministic',
         wcagCriteria,
         conformanceLevel,
+        pageUrl,
         selector: selectorFromTarget(node.target),
         htmlSnippet: truncate(node.html),
         helpUrl: rule.helpUrl,
@@ -167,13 +178,20 @@ function toFindings(
   return findings;
 }
 
-export function runDeterministicAudit(input: AxeScanResult): DeterministicFinding[] {
+/**
+ * Maps one page's scan. A run calls this once per page it walked through and
+ * concatenates the results, so `pageUrl` is what keeps them apart afterwards.
+ */
+export function runDeterministicAudit(
+  input: AxeScanResult,
+  pageUrl: string,
+): DeterministicFinding[] {
   return [
-    ...toFindings(input.violations, (rule) =>
+    ...toFindings(input.violations, pageUrl, (rule) =>
       rule.impact ? SEVERITY_BY_IMPACT[rule.impact] : 'minor',
     ),
     // axe could not reach a verdict on these, so they are never a failure —
     // they are the queue a human auditor works through.
-    ...toFindings(input.incomplete, () => 'needs-review'),
+    ...toFindings(input.incomplete, pageUrl, () => 'needs-review'),
   ];
 }

@@ -14,5 +14,15 @@ export type StoredArtifacts = {
 };
 
 export interface ArtifactStore {
-  upload(requestId: string, artifacts: JourneyArtifacts): Promise<StoredArtifacts>;
+  /**
+   * `pageKey` scopes one page's evidence within a run. A run audits every page
+   * its journey walks through, and each captures a screenshot, a DOM snapshot
+   * and an AX tree — without the page in the path they would all compete for
+   * the same three keys.
+   */
+  upload(
+    requestId: string,
+    artifacts: JourneyArtifacts,
+    pageKey?: string,
+  ): Promise<StoredArtifacts>;
 }

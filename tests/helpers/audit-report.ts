@@ -20,6 +20,7 @@ export function criticalFinding(
     source: 'deterministic',
     wcagCriteria: ['1.1.1'],
     conformanceLevel: 'A',
+    pageUrl: 'https://app.example.com/dashboard',
     selector: '#hero',
     htmlSnippet: '<img src="hero.png">',
     helpUrl: 'https://dequeuniversity.com/rules/axe/4.12/image-alt',
@@ -33,7 +34,35 @@ type ReportOverrides = {
   findings?: DeterministicFinding[];
   evidenceStatus?: 'complete' | 'degraded';
   ciStatus?: 'pass' | 'fail' | 'inconclusive';
+  /** Pages the run audited. Defaults to a single-page journey. */
+  pages?: Array<{
+    page: { url: string; route: string; title: string };
+    pageKey: string;
+    evidenceStatus: 'complete' | 'degraded';
+    artifacts: Record<string, string>;
+  }>;
 };
+
+function defaultPages(evidenceStatus: 'complete' | 'degraded') {
+  return [
+    {
+      page: {
+        url: 'https://app.example.com/dashboard',
+        route: '/dashboard',
+        title: 'Dashboard',
+      },
+      pageKey: '01-dashboard',
+      evidenceStatus,
+      artifacts: {
+        screenshotPath: 'artifacts/01-dashboard.png',
+        domSnapshotPath: 'artifacts/01-dashboard.html',
+        ...(evidenceStatus === 'complete'
+          ? { axTreePath: 'artifacts/01-dashboard.ax.json' }
+          : {}),
+      },
+    },
+  ];
+}
 
 export function auditReport(overrides: ReportOverrides = {}) {
   const findings = overrides.findings ?? [];
@@ -54,18 +83,16 @@ export function auditReport(overrides: ReportOverrides = {}) {
     findings,
     platform: { id: 'generic', hints: ['rendered-dom-baseline'] },
     contract: {},
-    page: { url: 'https://app.example.com/dashboard', route: '/dashboard', title: 'Dashboard' },
-    artifacts: {
-      screenshotPath: 'artifacts/dashboard.png',
-      domSnapshotPath: 'artifacts/dashboard.html',
-      axTreePath: 'artifacts/dashboard.ax.json',
-    },
+    pages: overrides.pages ?? defaultPages(evidenceStatus),
+    truncatedPages: 0,
     executiveSummary: {
       totalFindings: findings.length,
       blockingFindings,
       // The helper only builds deterministic findings; advisory ones are
       // covered where the advisory itself is under test.
       advisoryFindings: 0,
+      pagesScanned: (overrides.pages ?? defaultPages(evidenceStatus)).length,
+      pagesTruncated: 0,
     },
   };
 }

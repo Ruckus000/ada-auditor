@@ -34,6 +34,14 @@ export type JourneyRunnerInput = {
   targetUrl?: string;
   /** Hosts this run may navigate to. Defaults to the target's own host. */
   allowedHosts?: string[];
+  /**
+   * Most pages this run will audit. Defaults to `AUDITOR_MAX_PAGES_PER_RUN`, or
+   * 20. Every page costs an axe scan, a full-page screenshot and an AX tree
+   * against the same 300s function ceiling, so the ceiling is explicit — and
+   * when it truncates a journey the run says so rather than reporting a partial
+   * audit as a complete one.
+   */
+  maxPages?: number;
 };
 
 export type JourneyPageMeta = {
@@ -48,13 +56,36 @@ export type JourneyArtifacts = {
   axTreePath?: string;
 };
 
-export type JourneyRunnerResult = {
+/**
+ * One page the journey visited, scanned in the state the journey left it in.
+ *
+ * Each page carries its own evidence, so a finding can be traced to the exact
+ * screenshot and DOM it came from rather than to whatever the run happened to
+ * end on.
+ */
+export type PageAudit = {
+  page: JourneyPageMeta;
   /** Rendered DOM. Used for platform detection, not for rule evaluation. */
   html: string;
   /** Rule results from the live page — the only source of findings. */
   axe: AxeScanResult;
   /** Pruned accessibility tree, for the advisory pass. Empty when omitted. */
   axTree: AxNodeSummary[];
-  page: JourneyPageMeta;
   artifacts: JourneyArtifacts;
+  /** Filesystem- and URL-safe id for this page's artifact set within the run. */
+  pageKey: string;
+};
+
+export type JourneyRunnerResult = {
+  /**
+   * Every page audited, in visit order. This used to be a single page's worth
+   * of results — the journey's last — so every page walked through was
+   * discarded and a journey stepping past real violations reported a clean pass.
+   */
+  pages: PageAudit[];
+  /**
+   * How many further navigations the page cap refused to audit. Non-zero means
+   * this run did NOT cover the whole journey.
+   */
+  truncatedPages: number;
 };

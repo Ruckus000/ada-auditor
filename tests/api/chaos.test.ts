@@ -12,11 +12,12 @@ import {
  * — an assertion that could only hold against a single-regex engine.
  */
 describe('chaos scenarios', () => {
-  it('covers omit / critical / clean browser fixtures', () => {
+  it('covers omit / critical / clean / pass-through browser fixtures', () => {
     expect(CHAOS_SCENARIOS).toEqual([
       'browser_omit_ax_tree',
       'browser_complete_critical',
       'browser_complete_clean',
+      'browser_passthrough_violations',
     ]);
   });
 
@@ -37,13 +38,26 @@ describe('chaos scenarios', () => {
     expect(expectedCiStatusForScenario('browser_complete_critical')).toBe('fail');
   });
 
-  it('browser_complete_clean navigates to the clean dashboard fixture', () => {
+  it('browser_complete_clean visits only pages that are themselves clean', () => {
+    // The run audits every page it walks through, so a "clean" scenario whose
+    // journey steps over `dashboard.html` (an image with no alt) would assert
+    // nothing — it used to pass only because that page was discarded.
     const params = resolveChaosRunParams('browser_complete_clean');
+    const paths = params.steps?.flatMap((step) => (step.type === 'goto' ? [step.path] : [])) ?? [];
 
-    expect(
-      params.steps?.some((step) => step.type === 'goto' && step.path === 'dashboard-clean.html'),
-    ).toBe(true);
+    expect(paths).toEqual(['login.html', 'dashboard-clean.html']);
     expect(expectedCiStatusForScenario('browser_complete_clean')).toBe('pass');
+  });
+
+  it('browser_passthrough_violations walks past violations and ends clean', () => {
+    // The steady-state claim multi-page scanning adds. Ending on a clean page
+    // must not launder what the journey stepped over.
+    const params = resolveChaosRunParams('browser_passthrough_violations');
+    const paths = params.steps?.flatMap((step) => (step.type === 'goto' ? [step.path] : [])) ?? [];
+
+    expect(paths).toEqual(['login.html', 'violations.html', 'dashboard-clean.html']);
+    expect(paths[paths.length - 1]).toBe('dashboard-clean.html');
+    expect(expectedCiStatusForScenario('browser_passthrough_violations')).toBe('fail');
   });
 
   it('every scenario resolves runnable browser params', () => {

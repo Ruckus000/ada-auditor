@@ -41,6 +41,22 @@ async function main(): Promise<void> {
         fail(`scenario ${scenario}: expected ciStatus=${expected}, got ${report.ciStatus}`);
       }
 
+      // A run must audit every page its journey walked through. Asserting only
+      // on ciStatus would let a regression to single-page scanning pass three
+      // of these four scenarios unnoticed.
+      if (scenario === 'browser_passthrough_violations') {
+        const onPassedThroughPage = report.findings.filter(
+          (finding) =>
+            finding.source === 'deterministic' && finding.pageUrl.endsWith('violations.html'),
+        );
+
+        if (onPassedThroughPage.length < 5) {
+          fail(
+            `scenario ${scenario}: expected >=5 findings on the page walked through, got ${onPassedThroughPage.length}`,
+          );
+        }
+      }
+
       console.log(
         JSON.stringify({
           type: 'chaos_result',
@@ -49,6 +65,7 @@ async function main(): Promise<void> {
           ciStatus: report.ciStatus,
           expectedCiStatus: expected,
           findings: report.findings.length,
+          pagesScanned: report.pages.length,
           pass: true,
         }),
       );

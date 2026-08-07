@@ -15,12 +15,14 @@ import type { JourneyStep } from '../../../integrations/browser/types';
 export type ChaosScenario =
   | 'browser_omit_ax_tree'
   | 'browser_complete_critical'
-  | 'browser_complete_clean';
+  | 'browser_complete_clean'
+  | 'browser_passthrough_violations';
 
 export const CHAOS_SCENARIOS: ChaosScenario[] = [
   'browser_omit_ax_tree',
   'browser_complete_critical',
   'browser_complete_clean',
+  'browser_passthrough_violations',
 ];
 
 export function isChaosEnabled(): boolean {
@@ -65,8 +67,29 @@ export function resolveChaosRunParams(
     case 'browser_complete_clean':
       return {
         ...base,
+        // Every page in this journey must itself be clean, because the run now
+        // audits every page it walks through. This scenario used to run the
+        // demo login journey — which lands on `dashboard.html`, an image with
+        // no alt — and then navigate to a clean page. It passed only because
+        // the intermediate page was discarded, which is precisely the bug
+        // multi-page scanning fixes. A "clean" assertion that depends on a
+        // page being ignored asserts nothing.
         steps: [
-          ...buildDefaultDemoJourneySteps(),
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
+        ],
+      };
+    case 'browser_passthrough_violations':
+      // The steady-state claim multi-page scanning adds: a page the journey
+      // walks *through* is audited. This journey steps past five real WCAG
+      // violations and ends somewhere clean; before multi-page scanning it
+      // reported `pass` with zero findings.
+      return {
+        ...base,
+        stepId: 'passthrough',
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'violations.html' },
           { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
         ],
       };
@@ -83,5 +106,7 @@ export function expectedCiStatusForScenario(
       return 'fail';
     case 'browser_complete_clean':
       return 'pass';
+    case 'browser_passthrough_violations':
+      return 'fail';
   }
 }

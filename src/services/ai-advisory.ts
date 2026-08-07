@@ -15,6 +15,14 @@ import type { AxeScanResult } from './deterministic-audit';
  * hardcoded sentence at a hardcoded 0.84 confidence, compared against a
  * hardcoded 0.7 threshold — a comparison whose outcome was fixed when it was
  * written, so it emitted the identical finding on every run forever.
+ *
+ * ## One call per run, not per page
+ *
+ * A run audits every page a journey walks through, but the advisory sees all of
+ * them at once. Calling per page would cost N× for little gain, and the issues
+ * worth a judgement call across a multi-page journey — navigation whose label
+ * changes between pages, a heading structure that drifts, an error message that
+ * contradicts the form it belongs to — are only visible in aggregate.
  */
 
 export type AiAdvisoryFinding = {
@@ -69,11 +77,16 @@ const FINDINGS_TOOL: Anthropic.Tool = {
 
 const SYSTEM_PROMPT = `You review web accessibility evidence and report only issues that need human judgement.
 
+The evidence covers every page a user journey walked through, in order. Judge each page, and also judge them together.
+
 Report things a rule engine cannot decide:
 - Alt text, labels, and link text that exist but do not describe their target ("image1", "click here", "submit").
 - Heading levels used for visual size rather than document structure.
 - Error and instruction text that does not tell a user what to do next.
 - Accessible names that contradict the visible label.
+- Inconsistencies across the journey: navigation named differently on different pages, heading structure that breaks down partway through, a flow whose steps are not announced.
+
+Name the page URL in any finding that belongs to one page.
 
 Do not report anything an automated checker already proves — a missing alt attribute, a missing form label, a contrast ratio. Those arrive separately.
 
@@ -98,30 +111,37 @@ export function isAiAdvisoryConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
-function buildEvidence(input: {
+/** One page's evidence, as the advisory pass sees it. */
+export type AdvisoryPage = {
   page: { url: string; title: string };
   axTree: AxNodeSummary[];
   axe: AxeScanResult;
-}): string {
+};
+
+function buildPageEvidence(entry: AdvisoryPage, index: number): string {
   // axe's `incomplete` results are the cases it could not decide, which is
   // exactly where a judgement call adds something.
-  const needsReview = input.axe.incomplete.map((rule) => ({
+  const needsReview = entry.axe.incomplete.map((rule) => ({
     rule: rule.id,
     help: rule.help,
     elements: rule.nodes.slice(0, 10).map((node) => node.html.slice(0, 200)),
   }));
 
   return [
-    '<page>',
-    JSON.stringify({ url: input.page.url, title: input.page.title }),
-    '</page>',
+    `<page index="${index + 1}">`,
+    JSON.stringify({ url: entry.page.url, title: entry.page.title }),
     '<accessibility_tree>',
-    JSON.stringify(input.axTree),
+    JSON.stringify(entry.axTree),
     '</accessibility_tree>',
     '<checks_needing_review>',
     JSON.stringify(needsReview),
     '</checks_needing_review>',
+    '</page>',
   ].join('\n');
+}
+
+function buildEvidence(pages: AdvisoryPage[]): string {
+  return ['<journey>', ...pages.map(buildPageEvidence), '</journey>'].join('\n');
 }
 
 /**
@@ -131,13 +151,18 @@ function buildEvidence(input: {
  * rather than to a failed run.
  */
 export async function requestAiAdvisory(input: {
-  page: { url: string; title: string };
-  axTree: AxNodeSummary[];
-  axe: AxeScanResult;
+  /** Every page the journey walked, in order. One call covers all of them. */
+  pages: AdvisoryPage[];
   minConfidence: number;
   client?: Anthropic;
 }): Promise<AiAdvisoryFinding[]> {
   if (!input.client && !isAiAdvisoryConfigured()) {
+    return [];
+  }
+
+  // Nothing was captured, so there is nothing to judge — and no reason to spend
+  // a model call proving it.
+  if (input.pages.length === 0) {
     return [];
   }
 
@@ -151,7 +176,7 @@ export async function requestAiAdvisory(input: {
       system: SYSTEM_PROMPT,
       tools: [FINDINGS_TOOL],
       tool_choice: { type: 'tool', name: FINDINGS_TOOL.name },
-      messages: [{ role: 'user', content: buildEvidence(input) }],
+      messages: [{ role: 'user', content: buildEvidence(input.pages) }],
     });
   } catch {
     // The advisory is additive. If it is unavailable the deterministic run

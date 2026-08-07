@@ -35,8 +35,12 @@ Supporting Netflix practices we adopt:
 
 ### Steady-state rules (must not regress)
 
-- Incomplete evidence → `ciStatus: 'inconclusive'` (never `pass`, never `fail`)
-- Deterministic findings from incomplete evidence are **rejected**
+- Incomplete evidence → `ciStatus: 'inconclusive'` (never `pass`, never `fail`).
+  Evidence is per page and the run takes the worst: one page missing an
+  artifact makes the whole run inconclusive
+- Deterministic findings from incomplete evidence are **rejected**, per page
+- Every page a journey navigates to is audited — never only the last one — and
+  every deterministic finding carries the `pageUrl` it was found on
 - Explicit `platformHint` wins over rendered-DOM heuristics
 - AI advisory is independent of deterministic hits; `gateable: false` in v1
 - Run contracts are enforced (scope, confidence `minReport`, `failureMode`)
@@ -93,8 +97,16 @@ Implemented and verified locally + on Vercel preview:
 - **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
   target is checked on scheme, host, all resolved addresses, and again on the
   URL the page settled on after each navigation.
+- **Multi-page runs.** `runJourney` scans after every navigation and returns
+  `{ pages, truncatedPages }`; each page carries its own axe results, AX tree
+  and artifact set under `runs/<requestId>/<pageKey>/`. Findings carry
+  `pageUrl`, evidence is per page and the run takes the worst, and pages per
+  run are capped (`AUDITOR_MAX_PAGES_PER_RUN`, default 20) with a
+  `audit_page_cap_reached` log when the cap truncates a journey. The AI
+  advisory runs **once over the aggregate**, not per page — N× cost otherwise,
+  and cross-page issues only exist in aggregate.
 - Reporting (`pass|fail|inconclusive`), regression comparison keyed on
-  rule + selector, `FileRunStore` + Upstash `KvRunStore`,
+  rule + page + selector, `FileRunStore` + Upstash `KvRunStore`,
   `GET /api/audit/runs/latest`
 - Chromium everywhere: the installed browser locally and in CI,
   `@sparticuz/chromium` on Vercel (`integrations/browser/launch.ts`)
@@ -104,12 +116,17 @@ Implemented and verified locally + on Vercel preview:
 
 Read this before claiming something works.
 
-- **A run scans only the journey's final page.** Every page walked through is
-  discarded, so a journey passing through a page with real violations reports a
-  clean pass. Findings carry no page field. This is the first thing Phase 2
-  fixes — see `docs/superpowers/plans/2026-08-07-phase-2.md`.
 - **`RunStore` cannot list.** The interface is `saveRun` / `getRun` /
-  `getLatestRun`; there is no way to enumerate run history.
+  `getLatestRun`; there is no way to enumerate run history. It lands with the
+  Postgres store in Phase 2B — see
+  `docs/superpowers/plans/2026-08-07-phase-2.md`.
+- **The console still renders one flat findings list.** The PDF report groups
+  by page; `src/app/components/findings-list.tsx` does not, and the evidence
+  panel still describes a run's evidence as one rolled-up set of three
+  artifacts rather than a set per page. The data is there; the screen is not.
+- **A page cap of 20 is a guess, not a measurement.** No real journey has been
+  run against it. If real journeys exceed it, that is the signal for a
+  container worker rather than a bigger number.
 
 - **A run still cannot outlive one function invocation.** `maxDuration` is 300s
   (the Hobby ceiling; Pro allows 800s). The 202 + poll shape unblocks the caller

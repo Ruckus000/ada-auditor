@@ -112,7 +112,7 @@ function renderFinding(finding: StoredFinding): string {
         <span class="badge">${escapeHtml(
           SEVERITY_LABEL[finding.severity] ?? finding.severity,
         )}</span>
-        <h3>${escapeHtml(finding.code)}</h3>
+        <h4>${escapeHtml(finding.code)}</h4>
         <p class="criteria">${criteria}</p>
       </header>
       ${renderMessage(finding.message ?? '')}
@@ -130,15 +130,83 @@ function renderFinding(finding: StoredFinding): string {
     </article>`;
 }
 
+/**
+ * Groups findings by the page they were found on, preserving visit order.
+ *
+ * A run audits every page its journey walks through, so a flat list forces the
+ * reader to work out which of five screens each finding belongs to. Advisory
+ * findings carry no page — they are produced once over the whole journey — and
+ * collect in a trailing group of their own rather than being attributed to a
+ * page they were not derived from.
+ */
+type PageGroup = { pageUrl: string | null; title?: string; findings: StoredFinding[] };
+
+function groupByPage(run: StoredRunRecord): PageGroup[] {
+  const byUrl = new Map<string, StoredFinding[]>();
+  const unattributed: StoredFinding[] = [];
+
+  for (const finding of run.findings) {
+    if (!finding.pageUrl) {
+      unattributed.push(finding);
+      continue;
+    }
+    const bucket = byUrl.get(finding.pageUrl);
+    if (bucket) bucket.push(finding);
+    else byUrl.set(finding.pageUrl, [finding]);
+  }
+
+  // Visit order when the run records its pages; otherwise the order findings
+  // first appeared, which for a single-page run is the flat list as before.
+  const orderedUrls = [
+    ...(run.pages ?? []).map((page) => page.url).filter((url) => byUrl.has(url)),
+    ...[...byUrl.keys()].filter((url) => !(run.pages ?? []).some((page) => page.url === url)),
+  ];
+
+  const titleFor = (url: string) => run.pages?.find((page) => page.url === url)?.title;
+
+  const groups: PageGroup[] = orderedUrls.map((url) => ({
+    pageUrl: url,
+    title: titleFor(url),
+    findings: sortBySeverity(byUrl.get(url) ?? []),
+  }));
+
+  if (unattributed.length > 0) {
+    groups.push({ pageUrl: null, title: undefined, findings: sortBySeverity(unattributed) });
+  }
+
+  return groups;
+}
+
+function sortBySeverity(findings: StoredFinding[]): StoredFinding[] {
+  return [...findings].sort((a, b) => severityRank(a.severity) - severityRank(b.severity));
+}
+
+function renderPageGroup(group: PageGroup): string {
+  const heading =
+    group.pageUrl === null
+      ? 'Across the journey'
+      : `${group.title ? `${escapeHtml(group.title)} — ` : ''}<span class="page-url">${escapeHtml(
+          group.pageUrl,
+        )}</span>`;
+
+  return `
+    <section class="page-group">
+      <h3 class="page-heading">${heading}</h3>
+      <p class="page-count">${group.findings.length} ${
+        group.findings.length === 1 ? 'finding' : 'findings'
+      }</p>
+      ${group.findings.map(renderFinding).join('\n')}
+    </section>`;
+}
+
 export function renderRunReport(run: StoredRunRecord): string {
   const verdict = VERDICT_COPY[run.ciStatus] ?? {
     title: escapeHtml(run.ciStatus),
     detail: '',
   };
 
-  const findings = [...run.findings].sort(
-    (a, b) => severityRank(a.severity) - severityRank(b.severity),
-  );
+  const findings = sortBySeverity(run.findings);
+  const groups = groupByPage(run);
 
   const blocking = findings.filter(
     (f) => f.source === 'deterministic' && f.severity === 'critical',
@@ -163,7 +231,11 @@ export function renderRunReport(run: StoredRunRecord): string {
   }
   h1 { font-size: 20pt; margin: 0 0 4pt; letter-spacing: -0.01em; }
   h2 { font-size: 13pt; margin: 22pt 0 8pt; padding-bottom: 4pt; border-bottom: 1px solid #d8dce3; }
-  h3 { font-size: 11.5pt; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  h4 { font-size: 11.5pt; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .page-group { margin: 0 0 20pt; }
+  .page-heading { font-size: 11.5pt; margin: 16pt 0 2pt; }
+  .page-url { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9.5pt; color: #5b6272; word-break: break-all; }
+  .page-count { font-size: 9pt; color: #5b6272; margin: 0 0 8pt; }
   .meta { color: #5b6272; font-size: 9.5pt; margin: 0 0 18pt; }
   .verdict { padding: 12pt 14pt; border-radius: 6px; border: 1px solid #d8dce3; background: #f7f8fa; }
   .verdict.fail { border-color: #e0b4b4; background: #fdf5f5; }
@@ -211,6 +283,13 @@ export function renderRunReport(run: StoredRunRecord): string {
     <h2>${verdict.title}</h2>
     <p>${verdict.detail}</p>
     <ul class="counts">
+      ${
+        run.pages
+          ? `<li><strong>${run.pages.length}</strong> ${
+              run.pages.length === 1 ? 'page' : 'pages'
+            } audited</li>`
+          : ''
+      }
       <li><strong>${blocking}</strong> blocking</li>
       ${counts
         .map(
@@ -225,8 +304,8 @@ export function renderRunReport(run: StoredRunRecord): string {
 
   <h2>Findings</h2>
   ${
-    findings.length > 0
-      ? findings.map(renderFinding).join('\n')
+    groups.length > 0
+      ? groups.map(renderPageGroup).join('\n')
       : '<p>No findings were recorded for this run.</p>'
   }
 

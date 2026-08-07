@@ -12,6 +12,7 @@ describe('summarizeRun', () => {
           message: 'Images must have alternate text',
           wcagCriteria: ['1.1.1'],
           conformanceLevel: 'A',
+          pageUrl: 'https://app.example.com/dashboard',
           selector: '#hero',
           htmlSnippet: '<img src="hero.png">',
           helpUrl: 'https://dequeuniversity.com/rules/axe/4.12/image-alt',
@@ -42,6 +43,32 @@ describe('summarizeRun', () => {
     expect(report.executionStatus).toBe('complete');
   });
 
+  it('reports how many pages the run covered', () => {
+    // A page with nothing wrong on it still counts as audited, so this cannot
+    // be inferred from the findings.
+    const report = summarizeRun({
+      findings: [],
+      evidenceStatus: 'complete',
+      pagesScanned: 4,
+    });
+
+    expect(report.executiveSummary.pagesScanned).toBe(4);
+    expect(report.executiveSummary.pagesTruncated).toBe(0);
+  });
+
+  it('says when the page cap cut the journey short', () => {
+    // A silent cap reads as "we audited everything" when we did not.
+    const report = summarizeRun({
+      findings: [],
+      evidenceStatus: 'complete',
+      pagesScanned: 20,
+      pagesTruncated: 3,
+    });
+
+    expect(report.executiveSummary.pagesScanned).toBe(20);
+    expect(report.executiveSummary.pagesTruncated).toBe(3);
+  });
+
   it('marks degraded evidence as inconclusive rather than pass', () => {
     const report = summarizeRun({
       findings: [],
@@ -63,6 +90,7 @@ describe('summarizeRun', () => {
           message: 'Images must have alternate text',
           wcagCriteria: ['1.1.1'],
           conformanceLevel: 'A',
+          pageUrl: 'https://app.example.com/dashboard',
           selector: '#hero',
           htmlSnippet: '<img src="hero.png">',
           helpUrl: 'https://dequeuniversity.com/rules/axe/4.12/image-alt',

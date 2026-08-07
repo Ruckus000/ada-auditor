@@ -110,6 +110,19 @@ describe('BlobArtifactStore', () => {
     expect(put.mock.calls.every((call) => call[0].startsWith('runs/req-abc/'))).toBe(true);
   });
 
+  it('scopes each page of a multi-page run to its own path', async () => {
+    // Every audited page captures a screenshot, a DOM snapshot and an AX tree.
+    // Without the page in the path they all compete for the same three keys.
+    const put = vi.fn().mockResolvedValue({ url: 'https://blob.test/x' });
+    const store = new BlobArtifactStore(put);
+
+    await store.upload('req-abc', await fixtureArtifacts(), '02-checkout');
+
+    expect(put.mock.calls.every((call) => call[0].startsWith('runs/req-abc/02-checkout/'))).toBe(
+      true,
+    );
+  });
+
   it('sets a content type so evidence renders rather than downloads', async () => {
     const put = vi.fn().mockResolvedValue({ url: 'https://blob.test/x' });
     const store = new BlobArtifactStore(put);

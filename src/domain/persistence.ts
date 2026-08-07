@@ -29,11 +29,33 @@ export type StoredFinding = {
   message?: string;
   wcagCriteria?: string[];
   conformanceLevel?: string | null;
+  /**
+   * Page the finding was found on. Present on deterministic findings; absent on
+   * advisory ones, which are produced once over the whole journey rather than
+   * per page.
+   */
+  pageUrl?: string;
   selector?: string;
   htmlSnippet?: string;
   helpUrl?: string;
   gateable?: boolean;
   confidence?: number;
+};
+
+/**
+ * One audited page within a run.
+ *
+ * A run is a journey, and a journey is several pages. Each carries its own
+ * evidence and its own artifacts, so a finding's `pageUrl` leads to the exact
+ * screenshot and DOM it came from — and a page whose evidence was incomplete
+ * can be named rather than merely dragging the whole run to `inconclusive`.
+ */
+export type StoredRunPage = {
+  url: string;
+  route: string;
+  title: string;
+  evidenceStatus: string;
+  artifacts?: StoredArtifacts;
 };
 
 export type StoredRunRecord = {
@@ -47,8 +69,14 @@ export type StoredRunRecord = {
   durationMs: number;
   createdAt: string;
   browserMode?: boolean;
-  /** Where the evidence for this run actually lives, once uploaded. */
-  artifacts?: StoredArtifacts;
+  /**
+   * Every page the journey walked through, in visit order, each with its own
+   * uploaded evidence. This replaced a single run-level `artifacts` field,
+   * which could only ever describe one page and so described the last one — the
+   * same single-page assumption that made a run miss the violations it walked
+   * past.
+   */
+  pages?: StoredRunPage[];
   status?: RunStatus;
   /** Populated when `status` is `failed`; a stable code, never raw error text. */
   failureReason?: string;

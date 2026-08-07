@@ -203,6 +203,88 @@ describe('renderRunReport — content', () => {
     expect(html).toContain('<li>&lt;script&gt;alert(1)&lt;/script&gt;</li>');
   });
 
+  it('groups findings by the page they were found on', () => {
+    // A run walks several pages. A flat list makes the reader work out which of
+    // five screens each finding belongs to.
+    const html = renderRunReport(
+      run({
+        pages: [
+          {
+            url: 'https://app.example.com/login',
+            route: '/login',
+            title: 'Login',
+            evidenceStatus: 'complete',
+          },
+          {
+            url: 'https://app.example.com/checkout',
+            route: '/checkout',
+            title: 'Checkout',
+            evidenceStatus: 'complete',
+          },
+        ],
+        findings: [
+          finding({ code: 'checkout-rule', pageUrl: 'https://app.example.com/checkout' }),
+          finding({ code: 'login-rule', pageUrl: 'https://app.example.com/login' }),
+        ],
+      }),
+    );
+
+    expect(html).toContain('https://app.example.com/login');
+    expect(html).toContain('Checkout');
+    // Groups follow visit order, not the order findings happened to arrive.
+    expect(html.indexOf('login-rule')).toBeLessThan(html.indexOf('checkout-rule'));
+    expect(html).toContain('<strong>2</strong> pages audited');
+  });
+
+  it('collects advisory findings under the journey rather than a page they did not come from', () => {
+    const html = renderRunReport(
+      run({
+        pages: [
+          {
+            url: 'https://app.example.com/login',
+            route: '/login',
+            title: 'Login',
+            evidenceStatus: 'complete',
+          },
+        ],
+        findings: [
+          finding({ pageUrl: 'https://app.example.com/login' }),
+          {
+            code: 'ai-advisory',
+            severity: 'advisory',
+            source: 'ai-advisory',
+            message: 'Navigation is labelled differently on two pages.',
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain('Across the journey');
+  });
+
+  it('still orders by severity inside a page group', () => {
+    const html = renderRunReport(
+      run({
+        findings: [
+          finding({ code: 'minor-rule', severity: 'minor', pageUrl: 'https://a.example/x' }),
+          finding({ code: 'critical-rule', severity: 'critical', pageUrl: 'https://a.example/x' }),
+        ],
+      }),
+    );
+
+    expect(html.indexOf('critical-rule')).toBeLessThan(html.indexOf('minor-rule'));
+  });
+
+  it('escapes a page URL, which comes from the audited site', () => {
+    const html = renderRunReport(
+      run({
+        findings: [finding({ pageUrl: 'https://a.example/"><script>alert(1)</script>' })],
+      }),
+    );
+
+    expect(html).not.toContain('<script>alert(1)</script>');
+  });
+
   it('handles a run with no findings', () => {
     const html = renderRunReport(run({ ciStatus: 'pass', findings: [] }));
 

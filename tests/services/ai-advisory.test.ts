@@ -4,6 +4,7 @@ import {
   createAiAdvisoryFinding,
   isAiAdvisoryConfigured,
   requestAiAdvisory,
+  type AdvisoryPage,
 } from '../../src/services/ai-advisory';
 import type { AxeScanResult } from '../../src/services/deterministic-audit';
 
@@ -24,11 +25,18 @@ function toolUseResponse(findings: Array<{ issue: string; confidence: number }>)
   };
 }
 
-function advisoryInput(overrides: Partial<Parameters<typeof requestAiAdvisory>[0]> = {}) {
+function advisoryPage(overrides: Partial<AdvisoryPage> = {}): AdvisoryPage {
   return {
     page: PAGE,
     axTree: [{ role: 'heading', name: 'Dashboard', level: 1 }],
     axe: EMPTY_AXE,
+    ...overrides,
+  };
+}
+
+function advisoryInput(overrides: Partial<Parameters<typeof requestAiAdvisory>[0]> = {}) {
+  return {
+    pages: [advisoryPage()],
     minConfidence: 0.7,
     ...overrides,
   };
@@ -161,19 +169,23 @@ describe('requestAiAdvisory', () => {
     await requestAiAdvisory(
       advisoryInput({
         client,
-        axe: {
-          violations: [],
-          incomplete: [
-            {
-              id: 'color-contrast',
-              impact: 'serious',
-              tags: ['wcag2aa', 'wcag143'],
-              help: 'Elements must meet contrast ratio thresholds',
-              helpUrl: 'https://example.test/color-contrast',
-              nodes: [{ html: '<p id="x">text</p>', target: ['#x'] }],
+        pages: [
+          advisoryPage({
+            axe: {
+              violations: [],
+              incomplete: [
+                {
+                  id: 'color-contrast',
+                  impact: 'serious',
+                  tags: ['wcag2aa', 'wcag143'],
+                  help: 'Elements must meet contrast ratio thresholds',
+                  helpUrl: 'https://example.test/color-contrast',
+                  nodes: [{ html: '<p id="x">text</p>', target: ['#x'] }],
+                },
+              ],
             },
-          ],
-        },
+          }),
+        ],
       }),
     );
 
@@ -186,6 +198,43 @@ describe('requestAiAdvisory', () => {
     // The page is third-party content, so the system prompt must frame it as
     // data rather than instructions.
     expect(request.system).toContain('untrusted');
+  });
+
+  it('reviews the whole journey in a single call, not one per page', async () => {
+    // Per-page calls would cost N× and, worse, could never see the issues that
+    // only exist across pages — navigation named differently on two screens,
+    // heading structure drifting partway through the flow.
+    const { client, create } = stubClient(toolUseResponse([]));
+
+    await requestAiAdvisory(
+      advisoryInput({
+        client,
+        pages: [
+          advisoryPage({ page: { url: 'https://app.example.com/login', title: 'Login' } }),
+          advisoryPage({
+            page: { url: 'https://app.example.com/violations', title: 'Violations' },
+          }),
+          advisoryPage({ page: { url: 'https://app.example.com/done', title: 'Done' } }),
+        ],
+      }),
+    );
+
+    expect(create).toHaveBeenCalledOnce();
+
+    const content = create.mock.calls[0][0].messages[0].content as string;
+    expect(content).toContain('https://app.example.com/login');
+    expect(content).toContain('https://app.example.com/violations');
+    expect(content).toContain('https://app.example.com/done');
+    // Order is preserved, so "between page 1 and page 2" means something.
+    expect(content.indexOf('/login')).toBeLessThan(content.indexOf('/violations'));
+    expect(content.indexOf('/violations')).toBeLessThan(content.indexOf('/done'));
+  });
+
+  it('does not spend a model call when no page was captured', async () => {
+    const { client, create } = stubClient(toolUseResponse([]));
+
+    await expect(requestAiAdvisory(advisoryInput({ client, pages: [] }))).resolves.toEqual([]);
+    expect(create).not.toHaveBeenCalled();
   });
 });
 

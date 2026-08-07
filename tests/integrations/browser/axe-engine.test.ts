@@ -75,7 +75,12 @@ describe('axe engine against a real page', () => {
 
   it('carries a snippet and a help URL a developer can act on', async () => {
     const report = await auditViolationsPage();
-    const imageAlt = report.findings.find((f) => f.code === 'image-alt');
+    // The journey passes through `dashboard.html`, which breaks `image-alt`
+    // too — so the finding has to be picked by page, which is the point of
+    // `pageUrl` existing.
+    const imageAlt = report.findings
+      .filter((f) => f.source === 'deterministic')
+      .find((f) => f.code === 'image-alt' && f.pageUrl.endsWith('violations.html'));
 
     expect(imageAlt).toBeDefined();
     expect(imageAlt?.selector).toContain('no-alt');
@@ -94,6 +99,40 @@ describe('axe engine against a real page', () => {
     expect(report.executiveSummary.blockingFindings).toBeLessThan(
       report.executiveSummary.totalFindings,
     );
+  }, 120_000);
+
+  it('reports violations on a page the journey only passes through', async () => {
+    // The regression this phase exists to prevent. Before multi-page scanning
+    // this exact journey returned `pass` with zero findings: only the final
+    // page was ever audited, so five real WCAG violations one step earlier
+    // were discarded. A clean last screen must not launder the journey.
+    const report = await runBrowserAudit({
+      journeyId: 'demo-login',
+      environment: 'staging',
+      stepId: 'passthrough',
+      fixtureDir: FIXTURE_DIR,
+      artifactsDir,
+      steps: [
+        { action: 'navigate', type: 'goto', path: 'login.html' },
+        { action: 'navigate', type: 'goto', path: 'violations.html' },
+        { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
+      ],
+    });
+
+    const onViolations = report.findings
+      .filter((f) => f.source === 'deterministic')
+      .filter((f) => f.pageUrl.endsWith('violations.html'));
+
+    expect(onViolations.length).toBeGreaterThanOrEqual(5);
+    expect(new Set(onViolations.map((f) => f.selector)).size).toBeGreaterThanOrEqual(5);
+    expect(report.ciStatus).toBe('fail');
+
+    // And the run knows which pages it covered, in order.
+    expect(report.pages.map((p) => p.page.route)).toEqual([
+      '/login.html',
+      '/violations.html',
+      '/dashboard-clean.html',
+    ]);
   }, 120_000);
 
   it('rejects every deterministic finding when evidence is incomplete', async () => {

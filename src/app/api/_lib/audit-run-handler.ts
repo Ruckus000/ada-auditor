@@ -58,7 +58,12 @@ const auditRunBodySchema = z.object({
   targetUrl: z.url().optional(),
   steps: z.array(journeyStepSchema).min(1).max(50).optional(),
   chaosScenario: z
-    .enum(['browser_omit_ax_tree', 'browser_complete_critical', 'browser_complete_clean'])
+    .enum([
+      'browser_omit_ax_tree',
+      'browser_complete_critical',
+      'browser_complete_clean',
+      'browser_passthrough_violations',
+    ])
     .optional(),
   // stepId names the artifact files for this run. It is concatenated onto the
   // artifacts directory, so it must be a bare filename segment -- no
@@ -112,8 +117,24 @@ async function executeRun(
     });
 
     // Upload before persisting so the record points at durable evidence rather
-    // than at a filesystem that disappears with the invocation.
-    const artifacts = await getArtifactStore().upload(requestId, report.artifacts);
+    // than at a filesystem that disappears with the invocation. One upload per
+    // audited page, each keyed by that page so they cannot overwrite one
+    // another.
+    const artifactStore = getArtifactStore();
+    const pages = [];
+    for (const audited of report.pages) {
+      pages.push({
+        url: audited.page.url,
+        route: audited.page.route,
+        title: audited.page.title,
+        evidenceStatus: audited.evidenceStatus,
+        artifacts: await artifactStore.upload(
+          requestId,
+          audited.artifacts,
+          audited.pageKey,
+        ),
+      });
+    }
 
     const durationMs = Date.now() - startedAt;
     const baseline = await store.getLatestRun(report.journeyId, report.environment, requestId);
@@ -128,7 +149,7 @@ async function executeRun(
       findings: report.findings,
       durationMs,
       browserMode: true,
-      artifacts,
+      pages,
       status: 'complete',
     });
     await store.saveRun(storedRun);
@@ -164,7 +185,8 @@ async function executeRun(
         durationMs,
         browserMode: true,
         status: 'complete',
-        ...(Object.keys(artifacts).length > 0 ? { artifacts } : {}),
+        pages,
+        ...(report.truncatedPages > 0 ? { truncatedPages: report.truncatedPages } : {}),
         ...(regression ? { regression } : {}),
       },
     };
