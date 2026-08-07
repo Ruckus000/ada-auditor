@@ -104,6 +104,13 @@ Implemented and verified locally + on Vercel preview:
 
 Read this before claiming something works.
 
+- **A run scans only the journey's final page.** Every page walked through is
+  discarded, so a journey passing through a page with real violations reports a
+  clean pass. Findings carry no page field. This is the first thing Phase 2
+  fixes — see `docs/superpowers/plans/2026-08-07-phase-2.md`.
+- **`RunStore` cannot list.** The interface is `saveRun` / `getRun` /
+  `getLatestRun`; there is no way to enumerate run history.
+
 - **A run still cannot outlive one function invocation.** `maxDuration` is 300s
   (the Hobby ceiling; Pro allows 800s). The 202 + poll shape unblocks the caller
   but does not add compute — background work is bounded by the same limit. A
