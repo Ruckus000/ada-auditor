@@ -2,16 +2,14 @@ import { isSameOriginConsoleRequest } from '../../_lib/same-origin';
 import { createRequestId } from '../../_lib/request-id';
 import {
   buildSessionCookie,
-  clearFailures,
   createSessionValue,
   hasConsoleSession,
-  isThrottled,
   MIN_TOKEN_LENGTH,
-  recordFailure,
   safeEqual,
   SESSION_TTL_SECONDS,
   throttleKey,
 } from '../../_lib/console-session';
+import { getThrottleStore } from '../../_lib/unlock-throttle';
 
 /** Whether this browser already holds a valid operator session. */
 export async function GET(request: Request) {
@@ -44,7 +42,8 @@ export async function POST(request: Request) {
   }
 
   const key = throttleKey(request);
-  if (isThrottled(key)) {
+  const throttle = getThrottleStore();
+  if (await throttle.isThrottled(key)) {
     return Response.json({ error: 'too_many_attempts', requestId }, { status: 429 });
   }
 
@@ -56,11 +55,11 @@ export async function POST(request: Request) {
   }
 
   if (typeof submitted !== 'string' || !safeEqual(submitted, configuredToken)) {
-    recordFailure(key);
+    await throttle.recordFailure(key);
     return Response.json({ error: 'invalid_token', requestId }, { status: 401 });
   }
 
-  clearFailures(key);
+  await throttle.clearFailures(key);
 
   return Response.json(
     { authenticated: true, requestId },

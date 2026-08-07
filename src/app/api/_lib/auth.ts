@@ -1,4 +1,4 @@
-import { MIN_TOKEN_LENGTH } from './console-session';
+import { MIN_TOKEN_LENGTH, safeEqual } from './console-session';
 
 export function extractRunToken(request: Request): string | null {
   const headerToken = request.headers.get('x-auditor-run-token');
@@ -21,5 +21,13 @@ export function isRunAuthorized(request: Request): boolean {
   }
 
   const providedToken = extractRunToken(request);
-  return providedToken === configuredToken;
+  if (!providedToken) {
+    return false;
+  }
+
+  // Constant-time, matching how the console session validates the same secret.
+  // A `===` here compared the deployment's only credential with an early-exit
+  // comparison, which is a needless asymmetry when the safe helper is one
+  // import away.
+  return safeEqual(providedToken, configuredToken);
 }

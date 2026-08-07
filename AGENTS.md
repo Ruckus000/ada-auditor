@@ -37,10 +37,14 @@ Supporting Netflix practices we adopt:
 
 - Incomplete evidence → `ciStatus: 'inconclusive'` (never `pass`, never `fail`)
 - Deterministic findings from incomplete evidence are **rejected**
-- Explicit `platformHint` wins over HTML heuristics
+- Explicit `platformHint` wins over rendered-DOM heuristics
 - AI advisory is independent of deterministic hits; `gateable: false` in v1
 - Run contracts are enforced (scope, confidence `minReport`, `failureMode`)
 - Forbidden production actions never execute
+- A run may only navigate to hosts in `scope.allowedDomains`; an empty scope
+  denies everything rather than allowing it
+- Credentials are referenced, never inlined — no secret in a request body, a
+  stored journey, or a run log
 
 ### Full-cycle expectations
 
@@ -56,7 +60,7 @@ Anyone shipping a feature also ships:
 Follow `YAGNI → KISS → SRP → DRY`.
 
 - `/src/domain` — contracts, policy, evidence, platforms (no HTTP/framework imports beyond validation libs)
-- `/src/services` — orchestration (`runAudit`, reporting, deterministic + AI)
+- `/src/services` — orchestration (rule mapping, reporting, AI advisory, ax-tree pruning). Must not import Playwright or axe-core: browser work belongs in integrations, and keeping services framework-free is what keeps them in the fast unit suite, which excludes `tests/integrations/browser/**`.
 - `/src/integrations` — browser, AI providers, platform adapters, schedulers
 - `/src/app` or `/src/api` — Next.js / Vercel edges only
 - Framework code at the edges; business rules in the center
@@ -67,44 +71,53 @@ Follow `YAGNI → KISS → SRP → DRY`.
 
 - Domain/service unit tests required for contract and reporting changes
 - Chaos-style regressions required for steady-state claims (incomplete evidence, hint conflicts, scope fail-closed, complete-evidence CI fail path)
-- Do not claim “done” without fresh `npm test` and `npm run build` evidence
+- Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run chaos` and `npm run build` evidence
+- Keep browser launches out of the unit suite. Handler tests mock the audit; the real browser is covered by `tests/integrations/browser/**` and by chaos.
 - When adding Vercel routes: add route/handler tests or chaos script assertions for terminal statuses
 
-## Current kernel status (as of 2026-07-28)
+## Current status
 
 Implemented and verified locally + on Vercel preview:
 
 - Domain contracts, evidence, policy, platforms
-- Services: deterministic audit, AI advisory, reporting (`pass|fail|inconclusive`), `runAudit`
-- Platform adapters: generic / react / wordpress
-- Phase 1 control plane: Next.js App Router, `/api/audit/run`, `/api/health`, `/api/ready`, console session unlock, structured run logs, `npm run chaos` (HTML + browser fixtures), GitHub Actions CI
-- Phase 2: Playwright authenticated demo journey (credential form + fill), real DOM/ax/screenshot evidence, `AUDIT_TARGET_BASE_URL` staging seam
-- Phase 3: `FileRunStore` (local/CI) + Upstash Redis `KvRunStore` (Vercel), regression comparison, `GET /api/audit/runs/latest`
-- Tests: Vitest unit suite + browser suite green; chaos boringly green including browser scenarios
+- **Rule engine: axe-core (~100 rules) against the live page.** One finding per
+  offending element, each carrying a selector, WCAG success criteria, a
+  conformance level, a help URL and a snippet. The scan runs in
+  `integrations/browser/axe-scan.ts`; `services/deterministic-audit.ts` maps its
+  plain-data output and imports neither Playwright nor axe-core.
+- **AI advisory: a real `claude-opus-5` call** with strict tool use, over the
+  pruned accessibility tree plus axe's undecided checks. Judges what rules
+  cannot — alt text that says nothing, headings used for size, error text that
+  does not say what to fix. Gated on `ANTHROPIC_API_KEY`; absent or failing, the
+  run completes without it. Always `gateable: false`.
+- **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
+  target is checked on scheme, host, all resolved addresses, and again on the
+  URL the page settled on after each navigation.
+- Reporting (`pass|fail|inconclusive`), regression comparison keyed on
+  rule + selector, `FileRunStore` + Upstash `KvRunStore`,
+  `GET /api/audit/runs/latest`
+- Chromium everywhere: the installed browser locally and in CI,
+  `@sparticuz/chromium` on Vercel (`integrations/browser/launch.ts`)
+- Tests: Vitest unit + browser suites green; `npm run chaos` green
 
-### Phase 4 — Scale breadth (NEXT)
+### Known gaps
 
-- More journeys/adapters only after Phase 1–2 chaos stays boringly green
+Read this before claiming something works.
 
-## Roadmap (execute in order; multitask only independent work)
-
-### Phase 1 — Vercel control plane — DONE
-1. Git baseline commit of current kernel
-2. Next.js App Router shell wrapping existing core
-3. `POST /api/audit/run`, `GET /api/health`, `GET /api/ready` + `AUDITOR_RUN_TOKEN`
-4. Structured JSON run logs
-5. Auditor-platform chaos inject + `npm run chaos` (preview/CI); customer sites out of scope
-6. Deploy to Vercel
-
-### Phase 2 — Real browser journey — DONE
-- One Playwright authenticated journey + real DOM/ax/screenshot evidence
-- Same contracts; staging-first for customer targets (`AUDIT_TARGET_BASE_URL`)
-
-### Phase 3 — Persistence + regression — DONE
-- Store runs/findings (filesystem + Redis/KV); compare baselines; `GET /api/audit/runs/latest` for CI/executive consumers
-
-### Phase 4 — Scale breadth (NEXT)
-- More journeys/adapters only after Phase 1–2 chaos is boringly green
+- **Artifacts are not durable.** Screenshot, DOM and accessibility tree are
+  written to the function's local disk, are on no run record, and are served by
+  no route — so on Vercel they vanish when the invocation ends. Evidence the
+  customer cannot reach is not yet evidence.
+- **Runs are synchronous.** `POST /api/audit/run` blocks for the whole audit,
+  bounded by `maxDuration = 300`. Fine for a journey and a few pages; not a
+  site crawl.
+- **No report export.** Output is JSON. There is no PDF, which is the artifact
+  an ADA-compliance buyer actually pays for.
+- **No tenancy.** One shared `AUDITOR_RUN_TOKEN`, a flat `journeyId:environment`
+  keyspace, and `accountId: 'acct-demo'` hardcoded. Any authenticated caller can
+  read any run by guessing a journeyId.
+- **The UI at `/` is a fixture prototype.** Roughly 7,000 lines with no `fetch`
+  calls, no persistence and no auth. The working surface is `/console`.
 
 ## Agent behavior
 
