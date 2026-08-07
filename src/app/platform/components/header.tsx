@@ -367,6 +367,25 @@ export function PlatformHeader() {
           </a>
         ) : null}
 
+        {/* Not in the source design, which specifies this header exactly and
+            gives the avatar no menu. Added because moving the console to
+            /console left it reachable only by typing the URL. A plain anchor,
+            not a client-side link: the console is a separate surface with its
+            own stylesheet, so a full navigation is the honest behaviour. */}
+        <a
+          href="/console"
+          className="ph-quiet-link"
+          style={{
+            fontSize: 12.5,
+            color: T.inkMuted,
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          Console ↗
+        </a>
+
         <button
           type="button"
           onClick={() => actions.patch({ modal: 'audit' })}
