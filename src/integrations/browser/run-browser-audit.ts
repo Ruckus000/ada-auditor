@@ -2,7 +2,8 @@ import { createRunContract } from '../../domain/contracts';
 import { createEvidenceBundle } from '../../domain/evidence';
 import { createPlatformContext } from '../../domain/platforms';
 import { resolvePlatformMetadata } from '../platforms';
-import { createAiAdvisoryFinding } from '../../services/ai-advisory';
+import type Anthropic from '@anthropic-ai/sdk';
+import { requestAiAdvisory } from '../../services/ai-advisory';
 import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
 import { buildDefaultDemoJourneySteps, runJourney } from './journey-runner';
@@ -11,6 +12,8 @@ import type { JourneyRunnerInput } from './types';
 export type RunBrowserAuditInput = JourneyRunnerInput & {
   platformHint?: string;
   allowedJourneyIds?: string[];
+  /** Injected in tests so the advisory pass never reaches the network. */
+  anthropicClient?: Anthropic;
 };
 
 /**
@@ -89,12 +92,15 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const deterministicFindings =
     evidence.status === 'complete' ? runDeterministicAudit(journeyResult.axe) : [];
 
-  const advisoryCandidate = createAiAdvisoryFinding({
-    message: 'Review instructions and labels for screen-reader clarity.',
-    confidence: 0.84,
+  // Independent of the deterministic result, per the steady-state rule: the
+  // advisory is not a commentary on what the rules found, and never gates.
+  const aiFindings = await requestAiAdvisory({
+    page: journeyResult.page,
+    axTree: journeyResult.axTree,
+    axe: journeyResult.axe,
+    minConfidence: contract.confidencePolicy.minReport,
+    client: input.anthropicClient,
   });
-  const aiFindings =
-    advisoryCandidate.confidence >= contract.confidencePolicy.minReport ? [advisoryCandidate] : [];
 
   const findings = [...deterministicFindings, ...aiFindings];
   const report = summarizeRun({

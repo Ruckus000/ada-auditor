@@ -3,6 +3,7 @@ import { join, resolve, sep } from 'node:path';
 import type { Page } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { isActionAllowed } from '../../domain/policy';
+import { pruneAxTree, type AxNodeSummary } from '../../services/ax-tree';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
@@ -15,10 +16,18 @@ import type { JourneyRunnerInput, JourneyRunnerResult } from './types';
 
 export { buildDefaultDemoJourneySteps, resolveNavigationUrl } from './demo-journey';
 
-async function captureAxTree(page: Page, outputPath: string): Promise<void> {
+/**
+ * Writes the full tree as evidence and returns a pruned copy for analysis.
+ *
+ * The full tree is what an auditor reviews later; the pruned one is what the
+ * advisory pass reads. Previously only the file was produced and nothing ever
+ * read it back, so the tree was captured purely to prove it could be.
+ */
+async function captureAxTree(page: Page, outputPath: string): Promise<AxNodeSummary[]> {
   const client = await page.context().newCDPSession(page);
   const { nodes } = await client.send('Accessibility.getFullAXTree');
   await writeFile(outputPath, JSON.stringify({ nodes }, null, 2), 'utf8');
+  return pruneAxTree(nodes);
 }
 
 /**
@@ -139,15 +148,17 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       domSnapshotPath,
     };
 
+    let axTree: AxNodeSummary[] = [];
     if (!input.omitAxTree) {
       const axTreePath = `${artifactPrefix}.ax.json`;
-      await captureAxTree(page, axTreePath);
+      axTree = await captureAxTree(page, axTreePath);
       artifacts.axTreePath = axTreePath;
     }
 
     return {
       html,
       axe,
+      axTree,
       page: {
         url,
         route: routeFromPageUrl(url),

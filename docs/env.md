@@ -9,6 +9,7 @@ Required for Phase 1 Vercel control plane operation.
 | `RUN_STORE_PATH` | No | Directory for persisted audit run records (filesystem adapter). Default: `data/runs` under project root. Used for local/CI when Redis/KV is not configured. |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Required on Vercel | Upstash Redis REST credentials (also set by Vercel Redis/KV marketplace). When both are set, run metadata uses durable `KvRunStore` instead of the filesystem. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | No | Alternate Upstash env names; accepted if `KV_REST_API_*` is unset. |
+| `ANTHROPIC_API_KEY` | No | Enables the AI advisory pass, which judges what a rule engine cannot — alt text that exists but says nothing, headings used for size rather than structure, error messages that do not say what to fix. Unset means the run completes with deterministic findings only; it is never a run failure. Advisory findings are always `gateable: false` and never affect `ciStatus`. |
 | `AUDIT_CREDENTIAL_<REF>_USER` / `_PASS` | Per authenticated journey | Credentials for a client login. A journey step names a reference (`{ credentialRef: "acme", field: "pass" }`) and the value is resolved server-side, so the secret never travels in a request body, never persists with the journey, and never reaches a run log. Reference `acme` reads `AUDIT_CREDENTIAL_ACME_USER` / `AUDIT_CREDENTIAL_ACME_PASS`. Replaced the single global `AUDIT_DEMO_USER` / `AUDIT_DEMO_PASS` pair, which could only ever describe one login. |
 
 ## Local development

@@ -1,4 +1,5 @@
 import type { Environment } from '../../domain/contracts';
+import type { AxNodeSummary } from '../../services/ax-tree';
 import type { AxeScanResult } from '../../services/deterministic-audit';
 
 /**
@@ -52,6 +53,8 @@ export type JourneyRunnerResult = {
   html: string;
   /** Rule results from the live page — the only source of findings. */
   axe: AxeScanResult;
+  /** Pruned accessibility tree, for the advisory pass. Empty when omitted. */
+  axTree: AxNodeSummary[];
   page: JourneyPageMeta;
   artifacts: JourneyArtifacts;
 };
