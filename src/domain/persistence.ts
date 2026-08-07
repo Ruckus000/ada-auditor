@@ -1,4 +1,5 @@
 import type { Environment } from './contracts';
+import type { StoredArtifacts } from './artifacts';
 
 /**
  * A persisted finding.
@@ -36,6 +37,8 @@ export type StoredRunRecord = {
   durationMs: number;
   createdAt: string;
   browserMode?: boolean;
+  /** Where the evidence for this run actually lives, once uploaded. */
+  artifacts?: StoredArtifacts;
 };
 
 export interface RunStore {

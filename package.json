@@ -16,7 +16,8 @@
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "chaos": "tsx scripts/chaos.ts",
     "lint": "next lint",
-    "playwright:install": "playwright install chromium"
+    "playwright:install": "playwright install chromium",
+    "prune:artifacts": "tsx scripts/prune-artifacts.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "@axe-core/playwright": "^4.12.1",
     "@sparticuz/chromium": "^147.0.0",
     "@upstash/redis": "^1.38.0",
+    "@vercel/blob": "^2.7.0",
     "next": "^16.2.12",
     "playwright-core": "^1.62.1",
     "react": "^19.2.8",

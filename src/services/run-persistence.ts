@@ -1,3 +1,4 @@
+import type { StoredArtifacts } from '../domain/artifacts';
 import type { StoredFinding, StoredRunRecord } from '../domain/persistence';
 import type { AuditFinding } from './reporting';
 import type { CiStatus } from './reporting';
@@ -12,6 +13,7 @@ type PersistRunInput = {
   findings: AuditFinding[];
   durationMs: number;
   browserMode?: boolean;
+  artifacts?: StoredArtifacts;
 };
 
 /**
@@ -57,5 +59,8 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     durationMs: input.durationMs,
     createdAt: new Date().toISOString(),
     ...(input.browserMode ? { browserMode: true } : {}),
+    ...(input.artifacts && Object.keys(input.artifacts).length > 0
+      ? { artifacts: input.artifacts }
+      : {}),
   };
 }

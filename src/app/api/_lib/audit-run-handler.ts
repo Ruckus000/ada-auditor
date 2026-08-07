@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { environmentSchema } from '../../../domain/contracts';
+import { getArtifactStore } from '../../../integrations/artifacts/blob-store';
 import { getRunStore } from '../../../integrations/persistence';
 import { runBrowserAudit } from '../../../integrations/browser/run-browser-audit';
 import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-log';
@@ -171,6 +172,10 @@ export async function handleAuditRun(
       platformHint: parsedBody.platformHint,
     });
 
+    // Upload before persisting so the record points at durable evidence rather
+    // than at a filesystem that disappears with the invocation.
+    const artifacts = await getArtifactStore().upload(requestId, report.artifacts);
+
     const durationMs = Date.now() - startedAt;
     const store = getRunStore();
     const baseline = await store.getLatestRun(report.journeyId, report.environment, requestId);
@@ -185,6 +190,7 @@ export async function handleAuditRun(
       findings: report.findings,
       durationMs,
       browserMode: true,
+      artifacts,
     });
     await store.saveRun(storedRun);
 
@@ -218,6 +224,7 @@ export async function handleAuditRun(
         executiveSummary: report.executiveSummary,
         durationMs,
         browserMode: true,
+        ...(Object.keys(artifacts).length > 0 ? { artifacts } : {}),
         ...(regression ? { regression } : {}),
       },
     };
