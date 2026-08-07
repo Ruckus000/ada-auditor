@@ -9,8 +9,7 @@ Required for Phase 1 Vercel control plane operation.
 | `RUN_STORE_PATH` | No | Directory for persisted audit run records (filesystem adapter). Default: `data/runs` under project root. Used for local/CI when Redis/KV is not configured. |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Required on Vercel | Upstash Redis REST credentials (also set by Vercel Redis/KV marketplace). When both are set, run metadata uses durable `KvRunStore` instead of the filesystem. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | No | Alternate Upstash env names; accepted if `KV_REST_API_*` is unset. |
-| `AUDIT_DEMO_USER` / `AUDIT_DEMO_PASS` | Required when `AUDIT_TARGET_BASE_URL` is set | Credentials for the demo authenticated journey. Local fixtures default to `auditor` / `demo-pass` (must match `fixtures/journey-app/login.html`). Never send secrets in the public HTTP body. |
-| `AUDIT_TARGET_BASE_URL` | No | Optional http(s) origin for staging-first journeys. When unset, browser mode uses local `file://` fixtures. When set, `AUDIT_DEMO_USER` and `AUDIT_DEMO_PASS` are required. |
+| `AUDIT_CREDENTIAL_<REF>_USER` / `_PASS` | Per authenticated journey | Credentials for a client login. A journey step names a reference (`{ credentialRef: "acme", field: "pass" }`) and the value is resolved server-side, so the secret never travels in a request body, never persists with the journey, and never reaches a run log. Reference `acme` reads `AUDIT_CREDENTIAL_ACME_USER` / `AUDIT_CREDENTIAL_ACME_PASS`. Replaced the single global `AUDIT_DEMO_USER` / `AUDIT_DEMO_PASS` pair, which could only ever describe one login. |
 
 ## Local development
 
@@ -51,14 +50,30 @@ Do **not** symlink env files — Vercel stores secrets in the cloud; `vercel env
 ## Persistence
 
 - **Local/CI:** `FileRunStore` under `RUN_STORE_PATH` (default `data/runs`).
-- **Vercel:** Redis/KV is required. `createRunStore()` fails closed when `VERCEL` is set and neither `KV_REST_API_*` nor `UPSTASH_REDIS_REST_*` is configured (no silent ephemeral filesystem). Provision Upstash Redis from the [Vercel Marketplace](https://vercel.com/marketplace?category=storage&search=redis) and link it so credentials are present. Run JSON metadata is durable; screenshot/DOM/ax artifacts stay on local disk / ephemeral function FS until a later Blob pass (regression does not need binaries). If a temporary agent-provisioned Redis was used for gate closing, claim it at the Upstash console URL before it expires, or replace with a Marketplace store.
+- **Vercel:** Redis/KV is required. `createRunStore()` fails closed when `VERCEL` is set and neither `KV_REST_API_*` nor `UPSTASH_REDIS_REST_*` is configured (no silent ephemeral filesystem). Provision Upstash Redis from the [Vercel Marketplace](https://vercel.com/marketplace?category=storage&search=redis) and link it so credentials are present. Run JSON metadata is durable; screenshot/DOM/ax artifacts stay on local disk / ephemeral function FS until a later Blob pass (regression does not need binaries).
+
+## Auditing a real site
+
+`POST /api/audit/run` takes an optional `targetUrl` plus `steps`. Absent a
+`targetUrl` the run uses the built-in `file://` fixtures.
+
+Every target is checked three ways before and during a run
+(`src/integrations/browser/target-url.ts`): scheme and host up front; every
+address the host resolves to, so a friendly name pointing into private space is
+refused; and the URL the page actually settled on after each navigation, which
+is what catches a redirect or a rebinding host. Blocked ranges include loopback,
+RFC1918, carrier-grade NAT, IPv6 unique- and link-local, IPv4-mapped IPv6, and
+`169.254.169.254` — the cloud metadata endpoint.
+
+A run may only navigate to the target's own host. Off-origin navigation aborts
+the run rather than following it. If a temporary agent-provisioned Redis was used for gate closing, claim it at the Upstash console URL before it expires, or replace with a Marketplace store.
 - **KvRunStore concurrency (YAGNI):** single-writer / best-effort under concurrent saves (last writer wins on `latest`/`previous`). A crash between pointer updates can leave an orphaned `run:*` until the next successful save. Acceptable for v1 control-plane write rates; transactional MULTI is deferred. `getLatestRun` falls back to `previous:*` when `latest` points at a missing run.
 - **CI/executive read:** `GET /api/audit/runs/latest?journeyId=&environment=` with the same run token returns the latest stored run plus optional regression vs the prior baseline.
 
 ## Chaos and browser mode
 
-- `npm run chaos` exercises HTML stub scenarios **and** Playwright fixture browser scenarios (incomplete → `inconclusive`, critical → `fail`, clean → `pass`).
-- Browser chaos and `npm run test:browser` are **CI/local** gates. Vercel serverless does not run Playwright Chromium; cloud control-plane runs use the HTML/`runAudit` path (or a future dedicated browser runner).
+- `npm run chaos` exercises the three Playwright fixture scenarios (incomplete → `inconclusive`, critical → `fail`, clean → `pass`). The HTML-stub variants were removed with the HTML audit path: their "clean" case was a bare `<main>` fragment, which a real rule engine correctly fails for having no page language and no title.
+- Chromium runs everywhere. Locally and in CI it is the browser from `playwright install chromium`; on Vercel it ships with the function via `@sparticuz/chromium`. `src/integrations/browser/launch.ts` picks between them.
 
 ## Vercel
 
@@ -73,7 +88,7 @@ Set the same variables in the Vercel project dashboard (or via `vercel env add`)
 1. `GET /api/health` → 200
 2. `GET /api/ready` → 200 when `AUDITOR_RUN_TOKEN` is set and at least 16 characters (same bar as API auth / console unlock)
 3. Unlock the console with the run token
-4. Run a fixture HTML audit from the control plane
+4. Run a fixture audit from the control plane
 5. Optional: `GET /api/audit/runs/latest?journeyId=demo-login&environment=staging` with Bearer token after at least one successful run
 
 ## Security notes

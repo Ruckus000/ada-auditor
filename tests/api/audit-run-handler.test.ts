@@ -192,6 +192,107 @@ describe('handleAuditRun', () => {
     expect(JSON.stringify(result.body)).not.toContain('ENOENT');
   });
 
+  it('passes a target URL and custom steps through to the run', async () => {
+    await handleAuditRun(
+      runRequest({
+        journeyId: 'acme-checkout',
+        environment: 'staging',
+        targetUrl: 'https://staging.acme.example/app',
+        steps: [{ action: 'navigate', type: 'goto', path: 'cart' }],
+      }),
+      'req-target-1',
+    );
+
+    const call = runBrowserAudit.mock.calls[0][0];
+    expect(call.targetUrl).toBe('https://staging.acme.example/app');
+    expect(call.steps).toEqual([{ action: 'navigate', type: 'goto', path: 'cart' }]);
+  });
+
+  it('rejects a target URL that is not a URL', async () => {
+    const result = await handleAuditRun(
+      runRequest({ journeyId: 'demo-login', environment: 'staging', targetUrl: 'not-a-url' }),
+      'req-target-2',
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(400);
+    expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+
+  it('accepts a credential reference on a fill step but never a raw secret alongside it', async () => {
+    await handleAuditRun(
+      runRequest({
+        journeyId: 'acme-checkout',
+        environment: 'staging',
+        targetUrl: 'https://staging.acme.example/',
+        steps: [
+          { action: 'login', type: 'fill', selector: '#u', credentialRef: 'acme', field: 'user' },
+          { action: 'login', type: 'fill', selector: '#p', credentialRef: 'acme', field: 'pass' },
+        ],
+      }),
+      'req-target-3',
+    );
+
+    const steps = runBrowserAudit.mock.calls[0][0].steps;
+    expect(steps).toHaveLength(2);
+    // The reference travels; the secret does not.
+    expect(JSON.stringify(steps)).not.toContain('password');
+    expect(steps[1]).toMatchObject({ credentialRef: 'acme', field: 'pass' });
+  });
+
+  it('rejects a credential reference that could forge an environment key', async () => {
+    const result = await handleAuditRun(
+      runRequest({
+        journeyId: 'acme',
+        environment: 'staging',
+        steps: [
+          { action: 'login', type: 'fill', selector: '#p', credentialRef: '../../x', field: 'pass' },
+        ],
+      }),
+      'req-target-4',
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(400);
+  });
+
+  it('caps how many steps a single journey can carry', async () => {
+    const result = await handleAuditRun(
+      runRequest({
+        journeyId: 'demo-login',
+        environment: 'staging',
+        steps: Array.from({ length: 51 }, () => ({
+          action: 'navigate',
+          type: 'goto',
+          path: 'x',
+        })),
+      }),
+      'req-target-5',
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(400);
+  });
+
+  it('ignores a caller target when running a chaos scenario', async () => {
+    // Chaos runs are platform self-tests against local fixtures; letting a
+    // caller redirect one at an arbitrary origin would turn a debug affordance
+    // into a request-forgery primitive.
+    process.env.CHAOS_ENABLED = 'true';
+
+    await handleAuditRun(
+      runRequest({
+        journeyId: 'demo-login',
+        environment: 'staging',
+        chaosScenario: 'browser_complete_clean',
+        targetUrl: 'https://attacker.example/',
+      }),
+      'req-target-6',
+    );
+
+    expect(runBrowserAudit.mock.calls[0][0].targetUrl).toBeUndefined();
+  });
+
   it('rejects a malformed body before touching the browser', async () => {
     const result = await handleAuditRun(
       runRequest({ journeyId: '', environment: 'staging' }),

@@ -25,8 +25,14 @@ export type RunBrowserAuditInput = JourneyRunnerInput & {
  * were captured in the same session.
  */
 export async function runBrowserAudit(input: RunBrowserAuditInput) {
+  // The allowlist is the target's own host unless a run says otherwise: an
+  // audit of one site has no business navigating to another.
+  const allowedHosts =
+    input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
+
   const journeyResult = await runJourney({
     ...input,
+    allowedHosts,
     steps: input.steps ?? buildDefaultDemoJourneySteps(),
   });
 
@@ -44,7 +50,10 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     environment: input.environment,
     identity: { accountId: 'acct-demo', role: 'auditor' },
     scope: {
-      allowedDomains: ['app.example.com'],
+      // Reflects the hosts the run may actually reach. This used to be a
+      // hardcoded literal that nothing enforced; it now mirrors what the
+      // navigation guard checks against on every step.
+      allowedDomains: allowedHosts,
       journeyIds,
     },
     actionPolicy: {

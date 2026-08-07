@@ -17,11 +17,44 @@ import { classifyRunFailure } from './run-failure';
 
 const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 
+/**
+ * A `fill` step carries either a literal value or a credential reference.
+ * Passwords must use the reference: steps travel in this request body, get
+ * persisted with the journey, and would otherwise be recoverable from both.
+ */
+const journeyStepSchema = z.union([
+  z.object({ action: z.string().min(1), type: z.literal('goto'), path: z.string().min(1) }),
+  z.object({ action: z.string().min(1), type: z.literal('click'), selector: z.string().min(1) }),
+  // Two `fill` shapes, so these are a plain union rather than a discriminated
+  // one — `type` alone does not tell them apart.
+  z.object({
+    action: z.string().min(1),
+    type: z.literal('fill'),
+    selector: z.string().min(1),
+    value: z.string(),
+  }),
+  z.object({
+    action: z.string().min(1),
+    type: z.literal('fill'),
+    selector: z.string().min(1),
+    credentialRef: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
+    field: z.enum(['user', 'pass']),
+  }),
+]);
+
 const auditRunBodySchema = z.object({
   journeyId: z.string().min(1),
   environment: environmentSchema,
   platformHint: z.string().min(1).optional(),
   omitAxTree: z.boolean().optional(),
+  /**
+   * Origin of the site to audit. Absent means the built-in fixture app.
+   * The scheme, host, and every resolved address are checked before a browser
+   * launches, and the settled URL is re-checked after each navigation — see
+   * `integrations/browser/target-url.ts`.
+   */
+  targetUrl: z.url().optional(),
+  steps: z.array(journeyStepSchema).min(1).max(50).optional(),
   chaosScenario: z
     .enum(['browser_omit_ax_tree', 'browser_complete_critical', 'browser_complete_clean'])
     .optional(),
@@ -133,7 +166,8 @@ export async function handleAuditRun(
       fixtureDir: DEFAULT_FIXTURE_DIR,
       artifactsDir: join(process.cwd(), 'artifacts', requestId),
       omitAxTree: chaosParams?.omitAxTree ?? parsedBody.omitAxTree,
-      steps: chaosParams?.steps,
+      steps: chaosParams?.steps ?? parsedBody.steps,
+      targetUrl: chaosParams ? undefined : parsedBody.targetUrl,
       platformHint: parsedBody.platformHint,
     });
 

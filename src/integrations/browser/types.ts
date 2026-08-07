@@ -1,10 +1,20 @@
 import type { Environment } from '../../domain/contracts';
 import type { AxeScanResult } from '../../services/deterministic-audit';
 
+/**
+ * A `fill` step either types a literal value or resolves a stored credential.
+ *
+ * Steps arrive over HTTP and are persisted with the journey, so a password
+ * must never be one of their fields. `credentialRef` names a secret the server
+ * resolves at run time; the value never leaves the server, never appears in a
+ * request body, and never lands in a stored journey.
+ */
+export type FillValue = { value: string } | { credentialRef: string; field: 'user' | 'pass' };
+
 export type JourneyStep =
   | { action: string; type: 'goto'; path: string }
   | { action: string; type: 'click'; selector: string }
-  | { action: string; type: 'fill'; selector: string; value: string };
+  | ({ action: string; type: 'fill'; selector: string } & FillValue);
 
 export type JourneyRunnerInput = {
   environment: Environment;
@@ -15,8 +25,14 @@ export type JourneyRunnerInput = {
   steps?: JourneyStep[];
   omitAxTree?: boolean;
   headless?: boolean;
-  /** Override AUDIT_TARGET_BASE_URL for this run (http(s) staging target). */
-  targetBaseUrl?: string;
+  /**
+   * Origin of the site under audit. When set, `goto` paths resolve against it
+   * and every navigation is checked against `allowedHosts`. When unset, the
+   * run uses local `file://` fixtures.
+   */
+  targetUrl?: string;
+  /** Hosts this run may navigate to. Defaults to the target's own host. */
+  allowedHosts?: string[];
 };
 
 export type JourneyPageMeta = {

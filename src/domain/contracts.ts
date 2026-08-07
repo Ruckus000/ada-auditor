@@ -17,7 +17,13 @@ export const runContractSchema = z.object({
     role: z.string().min(1),
   }),
   scope: z.object({
-    allowedDomains: z.array(z.string().min(1)).min(1),
+    /**
+     * Hosts the run may navigate to. Empty means none — the correct scope for
+     * a run against local `file://` fixtures, which reaches no network at all.
+     * It fails closed rather than open: `assertAllowedUrl` rejects every URL
+     * when the list is empty, so an empty scope can never widen access.
+     */
+    allowedDomains: z.array(z.string().min(1)),
     journeyIds: z.array(z.string().min(1)).min(1),
   }),
   actionPolicy: z.object({

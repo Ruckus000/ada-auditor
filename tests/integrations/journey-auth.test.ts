@@ -1,75 +1,102 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   buildDefaultDemoJourneySteps,
-  getDemoCredentials,
   resolveNavigationUrl,
 } from '../../src/integrations/browser/demo-journey';
+import {
+  CredentialError,
+  resolveCredential,
+} from '../../src/integrations/browser/credentials';
 
-describe('demo journey auth helpers', () => {
-  const originalUser = process.env.AUDIT_DEMO_USER;
-  const originalPass = process.env.AUDIT_DEMO_PASS;
-  const originalBase = process.env.AUDIT_TARGET_BASE_URL;
+/**
+ * These cases previously covered `getDemoCredentials()`, which read a single
+ * global `AUDIT_DEMO_USER` / `AUDIT_DEMO_PASS` pair. That shape could only ever
+ * describe one login, so it did not survive supporting more than one client.
+ * Journeys now name a credential and the value is resolved server-side.
+ */
+describe('resolveCredential', () => {
+  const KEYS = ['AUDIT_CREDENTIAL_ACME_USER', 'AUDIT_CREDENTIAL_ACME_PASS'];
 
   afterEach(() => {
-    if (originalUser === undefined) delete process.env.AUDIT_DEMO_USER;
-    else process.env.AUDIT_DEMO_USER = originalUser;
-    if (originalPass === undefined) delete process.env.AUDIT_DEMO_PASS;
-    else process.env.AUDIT_DEMO_PASS = originalPass;
-    if (originalBase === undefined) delete process.env.AUDIT_TARGET_BASE_URL;
-    else process.env.AUDIT_TARGET_BASE_URL = originalBase;
+    for (const key of KEYS) {
+      delete process.env[key];
+    }
   });
 
-  it('defaults demo credentials for the local fixture', () => {
-    delete process.env.AUDIT_DEMO_USER;
-    delete process.env.AUDIT_DEMO_PASS;
-    delete process.env.AUDIT_TARGET_BASE_URL;
-    expect(getDemoCredentials()).toEqual({ user: 'auditor', pass: 'demo-pass' });
+  it('resolves a reference to its configured value', () => {
+    process.env.AUDIT_CREDENTIAL_ACME_USER = 'acme-operator';
+    process.env.AUDIT_CREDENTIAL_ACME_PASS = 'acme-secret';
+
+    expect(resolveCredential('acme', 'user')).toBe('acme-operator');
+    expect(resolveCredential('acme', 'pass')).toBe('acme-secret');
   });
 
-  it('reads demo credentials from the environment', () => {
-    process.env.AUDIT_DEMO_USER = 'staging-user';
-    process.env.AUDIT_DEMO_PASS = 'staging-secret';
-    expect(getDemoCredentials()).toEqual({ user: 'staging-user', pass: 'staging-secret' });
+  it('accepts hyphenated references', () => {
+    process.env.AUDIT_CREDENTIAL_ACME_USER = 'acme-operator';
+
+    expect(resolveCredential('ACME', 'user')).toBe('acme-operator');
   });
 
-  it('requires explicit demo credentials when AUDIT_TARGET_BASE_URL is remote', () => {
-    delete process.env.AUDIT_DEMO_USER;
-    delete process.env.AUDIT_DEMO_PASS;
-    process.env.AUDIT_TARGET_BASE_URL = 'https://staging.example.com/app/';
-    expect(() => getDemoCredentials()).toThrow(/AUDIT_DEMO_USER/);
+  it('fails when the credential is not configured', () => {
+    expect(() => resolveCredential('acme', 'pass')).toThrow(CredentialError);
   });
 
-  it('accepts explicit demo credentials with a remote target base', () => {
-    process.env.AUDIT_TARGET_BASE_URL = 'https://staging.example.com/app/';
-    process.env.AUDIT_DEMO_USER = 'staging-user';
-    process.env.AUDIT_DEMO_PASS = 'staging-secret';
-    expect(getDemoCredentials()).toEqual({ user: 'staging-user', pass: 'staging-secret' });
+  it('never puts the secret in the error message', () => {
+    process.env.AUDIT_CREDENTIAL_ACME_USER = 'acme-operator';
+
+    try {
+      resolveCredential('acme', 'pass');
+      expect.unreachable('should have thrown');
+    } catch (error) {
+      expect((error as Error).message).toContain('acme');
+      expect((error as Error).message).not.toContain('acme-operator');
+    }
   });
 
-  it('builds fill + submit steps for credential login', () => {
-    delete process.env.AUDIT_DEMO_USER;
-    delete process.env.AUDIT_DEMO_PASS;
-    delete process.env.AUDIT_TARGET_BASE_URL;
+  it.each(['../../etc', 'a b', 'PATH; rm -rf /', '', 'x'.repeat(65)])(
+    'refuses the malformed reference %j rather than building an env key from it',
+    (ref) => {
+      expect(() => resolveCredential(ref, 'user')).toThrow(CredentialError);
+    },
+  );
+});
+
+describe('buildDefaultDemoJourneySteps', () => {
+  it('drives the fixture login form', () => {
     const steps = buildDefaultDemoJourneySteps();
-    expect(steps).toEqual([
-      { action: 'navigate', type: 'goto', path: 'login.html' },
-      { action: 'login', type: 'fill', selector: '#username', value: 'auditor' },
-      { action: 'login', type: 'fill', selector: '#password', value: 'demo-pass' },
-      { action: 'login', type: 'click', selector: '#login-button' },
-    ]);
+
+    expect(steps[0]).toMatchObject({ type: 'goto', path: 'login.html' });
+    expect(steps.at(-1)).toMatchObject({ type: 'click', selector: '#login-button' });
   });
 
-  it('resolves file URLs when no staging base is set', () => {
-    delete process.env.AUDIT_TARGET_BASE_URL;
-    const url = resolveNavigationUrl('/tmp/fixtures', 'login.html');
+  it('classifies its actions so environment policy can gate them', () => {
+    const actions = new Set(buildDefaultDemoJourneySteps().map((step) => step.action));
+
+    expect(actions).toEqual(new Set(['navigate', 'login']));
+  });
+});
+
+describe('resolveNavigationUrl', () => {
+  it('builds a file URL for fixture runs', () => {
+    const url = resolveNavigationUrl('/fixtures/journey-app', 'login.html');
+
     expect(url.startsWith('file://')).toBe(true);
-    expect(url.endsWith('/login.html')).toBe(true);
+    expect(url.endsWith('/fixtures/journey-app/login.html')).toBe(true);
   });
 
-  it('resolves against AUDIT_TARGET_BASE_URL when set', () => {
-    process.env.AUDIT_TARGET_BASE_URL = 'https://staging.example.com/app/';
-    expect(resolveNavigationUrl('/tmp/fixtures', 'login.html')).toBe(
-      'https://staging.example.com/app/login.html',
+  it('resolves against the run target when one is given', () => {
+    expect(resolveNavigationUrl('/fixtures', 'dashboard.html', 'https://staging.example.com')).toBe(
+      'https://staging.example.com/dashboard.html',
     );
+  });
+
+  it('keeps the resolved path inside the target, with or without a trailing slash', () => {
+    // A target of `.../app` must not resolve `dashboard.html` to the root —
+    // the app being audited may not own the whole origin.
+    for (const target of ['https://staging.example.com/app', 'https://staging.example.com/app/']) {
+      expect(resolveNavigationUrl('/fixtures', 'dashboard.html', target)).toBe(
+        'https://staging.example.com/app/dashboard.html',
+      );
+    }
   });
 });

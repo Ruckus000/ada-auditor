@@ -2,61 +2,45 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { JourneyStep } from './types';
 
-export function isRemoteTargetBaseUrl(base?: string): boolean {
-  const candidate = base ?? process.env.AUDIT_TARGET_BASE_URL;
-  if (!candidate) {
-    return false;
-  }
+/**
+ * The built-in demo journey, used by the fixture app, the chaos scenarios and
+ * the console's practice runs.
+ *
+ * Its credentials are fixture credentials — they unlock a local HTML file, not
+ * anyone's account — so they are literals here rather than a `credentialRef`.
+ * Real client journeys carry a reference and the secret is resolved
+ * server-side; see `credentials.ts`.
+ */
 
-  try {
-    const protocol = new URL(candidate).protocol;
-    return protocol === 'http:' || protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-export function getDemoCredentials(): { user: string; pass: string } {
-  const user = process.env.AUDIT_DEMO_USER;
-  const pass = process.env.AUDIT_DEMO_PASS;
-
-  if (isRemoteTargetBaseUrl()) {
-    if (!user || !pass) {
-      throw new Error(
-        'AUDIT_DEMO_USER and AUDIT_DEMO_PASS are required when AUDIT_TARGET_BASE_URL is set',
-      );
-    }
-    return { user, pass };
-  }
-
-  return {
-    user: user ?? 'auditor',
-    pass: pass ?? 'demo-pass',
-  };
-}
+export const DEMO_USER = 'auditor';
+export const DEMO_PASS = 'demo-pass';
 
 export function buildDefaultDemoJourneySteps(): JourneyStep[] {
-  const { user, pass } = getDemoCredentials();
   return [
     { action: 'navigate', type: 'goto', path: 'login.html' },
-    { action: 'login', type: 'fill', selector: '#username', value: user },
-    { action: 'login', type: 'fill', selector: '#password', value: pass },
+    { action: 'login', type: 'fill', selector: '#username', value: DEMO_USER },
+    { action: 'login', type: 'fill', selector: '#password', value: DEMO_PASS },
     { action: 'login', type: 'click', selector: '#login-button' },
   ];
 }
 
-/** @deprecated Prefer buildDefaultDemoJourneySteps() so credentials stay current. */
-export const DEFAULT_DEMO_JOURNEY_STEPS: JourneyStep[] = buildDefaultDemoJourneySteps();
-
+/**
+ * Resolves a step's path against the run's target.
+ *
+ * With a target origin the path joins onto it; without one the run is against
+ * local fixtures and the path becomes a `file://` URL. The caller is
+ * responsible for putting the result through the target-url guard — this
+ * function only builds the string.
+ */
 export function resolveNavigationUrl(
   fixtureDir: string,
   path: string,
-  targetBaseUrl?: string,
+  targetUrl?: string,
 ): string {
-  const base = targetBaseUrl ?? process.env.AUDIT_TARGET_BASE_URL;
-  if (base) {
-    const normalized = base.endsWith('/') ? base : `${base}/`;
+  if (targetUrl) {
+    const normalized = targetUrl.endsWith('/') ? targetUrl : `${targetUrl}/`;
     return new URL(path, normalized).href;
   }
+
   return pathToFileURL(join(fixtureDir, path)).href;
 }

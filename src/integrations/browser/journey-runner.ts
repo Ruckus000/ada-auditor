@@ -4,19 +4,16 @@ import type { Page } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { isActionAllowed } from '../../domain/policy';
 import { scanPageWithAxe } from './axe-scan';
+import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
+import { assertAllowedUrl, assertSafeTargetUrl } from './target-url';
 import {
   buildDefaultDemoJourneySteps,
   resolveNavigationUrl,
 } from './demo-journey';
 import type { JourneyRunnerInput, JourneyRunnerResult } from './types';
 
-export {
-  buildDefaultDemoJourneySteps,
-  DEFAULT_DEMO_JOURNEY_STEPS,
-  getDemoCredentials,
-  resolveNavigationUrl,
-} from './demo-journey';
+export { buildDefaultDemoJourneySteps, resolveNavigationUrl } from './demo-journey';
 
 async function captureAxTree(page: Page, outputPath: string): Promise<void> {
   const client = await page.context().newCDPSession(page);
@@ -61,6 +58,17 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // stepId costs nothing and leaves nothing behind.
   const artifactPrefix = resolveArtifactPrefix(input.artifactsDir, input.stepId);
 
+  // Default the allowlist to the target's own host: an audit of one site has no
+  // business navigating to another.
+  const allowedHosts =
+    input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
+
+  // Resolve and range-check the entry point before spending a browser launch
+  // on it.
+  if (input.targetUrl) {
+    await assertSafeTargetUrl(input.targetUrl, allowedHosts);
+  }
+
   await mkdir(input.artifactsDir, { recursive: true });
 
   const browser = await launchChromium({ headless: input.headless });
@@ -73,23 +81,44 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   try {
     const steps = input.steps ?? buildDefaultDemoJourneySteps();
 
+    // A redirect can land somewhere the pre-navigation checks never saw, and a
+    // rebinding host can answer differently for the browser than it did for our
+    // resolver. Re-checking the URL the page actually settled on is what closes
+    // both. Only applies to remote targets; fixture runs are file:// and local.
+    const guardCurrentUrl = () => {
+      if (!input.targetUrl) {
+        return;
+      }
+      assertAllowedUrl(page.url(), allowedHosts);
+    };
+
     for (const step of steps) {
       if (!isActionAllowed(input.environment, step.action)) {
         throw new Error(`Action "${step.action}" is not allowed in ${input.environment}.`);
       }
 
       if (step.type === 'goto') {
-        await page.goto(resolveNavigationUrl(input.fixtureDir, step.path, input.targetBaseUrl));
+        const url = resolveNavigationUrl(input.fixtureDir, step.path, input.targetUrl);
+        if (input.targetUrl) {
+          await assertSafeTargetUrl(url, allowedHosts);
+        }
+        await page.goto(url);
+        guardCurrentUrl();
         continue;
       }
 
       if (step.type === 'fill') {
-        await page.fill(step.selector, step.value);
+        const value =
+          'credentialRef' in step
+            ? resolveCredential(step.credentialRef, step.field)
+            : step.value;
+        await page.fill(step.selector, value);
         continue;
       }
 
       await page.click(step.selector);
       await page.waitForLoadState('domcontentloaded');
+      guardCurrentUrl();
     }
 
     // Scan before capturing artifacts so the evidence on disk is the same DOM
