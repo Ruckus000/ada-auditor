@@ -1,4 +1,5 @@
 import type { Environment } from '../../domain/contracts';
+import type { AxeScanResult } from '../../services/deterministic-audit';
 
 export type JourneyStep =
   | { action: string; type: 'goto'; path: string }
@@ -31,7 +32,10 @@ export type JourneyArtifacts = {
 };
 
 export type JourneyRunnerResult = {
+  /** Rendered DOM. Used for platform detection, not for rule evaluation. */
   html: string;
+  /** Rule results from the live page — the only source of findings. */
+  axe: AxeScanResult;
   page: JourneyPageMeta;
   artifacts: JourneyArtifacts;
 };

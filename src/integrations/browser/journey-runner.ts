@@ -1,8 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
-import { chromium, type Page } from 'playwright';
+import type { Page } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { isActionAllowed } from '../../domain/policy';
+import { scanPageWithAxe } from './axe-scan';
+import { launchChromium } from './launch';
 import {
   buildDefaultDemoJourneySteps,
   resolveNavigationUrl,
@@ -61,8 +63,12 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
 
   await mkdir(input.artifactsDir, { recursive: true });
 
-  const browser = await chromium.launch({ headless: input.headless ?? true });
-  const page = await browser.newPage();
+  const browser = await launchChromium({ headless: input.headless });
+  // axe is injected into every frame at scan time. A target site with a strict
+  // `script-src` CSP would block that injection and silently return no
+  // results, so the context opts out of CSP enforcement for the audit session.
+  const context = await browser.newContext({ bypassCSP: true });
+  const page = await context.newPage();
 
   try {
     const steps = input.steps ?? buildDefaultDemoJourneySteps();
@@ -86,6 +92,10 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       await page.waitForLoadState('domcontentloaded');
     }
 
+    // Scan before capturing artifacts so the evidence on disk is the same DOM
+    // the findings were derived from.
+    const axe = await scanPageWithAxe(page);
+
     const html = await page.content();
     const title = await page.title();
     const url = page.url();
@@ -108,6 +118,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
 
     return {
       html,
+      axe,
       page: {
         url,
         route: routeFromPageUrl(url),

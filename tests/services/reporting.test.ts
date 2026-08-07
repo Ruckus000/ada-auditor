@@ -6,10 +6,15 @@ describe('summarizeRun', () => {
     const report = summarizeRun({
       findings: [
         {
-          code: 'missing-image-alt',
+          code: 'image-alt',
           severity: 'critical',
           source: 'deterministic',
-          message: 'Image is missing alt text.',
+          message: 'Images must have alternate text',
+          wcagCriteria: ['1.1.1'],
+          conformanceLevel: 'A',
+          selector: '#hero',
+          htmlSnippet: '<img src="hero.png">',
+          helpUrl: 'https://dequeuniversity.com/rules/axe/4.12/image-alt',
         },
         {
           code: 'ai-advisory',
@@ -52,10 +57,15 @@ describe('summarizeRun', () => {
     const report = summarizeRun({
       findings: [
         {
-          code: 'missing-image-alt',
+          code: 'image-alt',
           severity: 'critical',
           source: 'deterministic',
-          message: 'Image is missing alt text.',
+          message: 'Images must have alternate text',
+          wcagCriteria: ['1.1.1'],
+          conformanceLevel: 'A',
+          selector: '#hero',
+          htmlSnippet: '<img src="hero.png">',
+          helpUrl: 'https://dequeuniversity.com/rules/axe/4.12/image-alt',
         },
       ],
       evidenceStatus: 'degraded',

@@ -2,18 +2,14 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  BROWSER_CHAOS_SCENARIOS,
   CHAOS_SCENARIOS,
-  expectedCiStatusForBrowserScenario,
   expectedCiStatusForScenario,
   isChaosEnabled,
-  resolveBrowserChaosRunParams,
   resolveChaosRunParams,
 } from '../src/app/api/_lib/chaos';
 import { runBrowserAudit } from '../src/integrations/browser/run-browser-audit';
-import { runAudit } from '../src/services/run-audit';
 
-function fail(message: string): void {
+function fail(message: string): never {
   console.error(`CHAOS FAIL: ${message}`);
   process.exit(1);
 }
@@ -27,33 +23,8 @@ async function main(): Promise<void> {
 
   for (const scenario of CHAOS_SCENARIOS) {
     const params = resolveChaosRunParams(scenario);
-    const report = await runAudit(params);
-    const expected = expectedCiStatusForScenario(scenario);
-
-    if (report.ciStatus !== expected) {
-      fail(
-        `scenario ${scenario}: expected ciStatus=${expected}, got ${report.ciStatus}`,
-      );
-    }
-
-    console.log(
-      JSON.stringify({
-        type: 'chaos_result',
-        scenario,
-        evidenceStatus: report.evidenceStatus,
-        ciStatus: report.ciStatus,
-        expectedCiStatus: expected,
-        pass: true,
-      }),
-    );
-  }
-
-  console.log('CHAOS: starting browser-mode steady-state assertions');
-
-  for (const scenario of BROWSER_CHAOS_SCENARIOS) {
-    const params = resolveBrowserChaosRunParams(scenario);
     const artifactsDir = await mkdtemp(join(tmpdir(), `ada-chaos-${scenario}-`));
-    const expected = expectedCiStatusForBrowserScenario(scenario);
+    const expected = expectedCiStatusForScenario(scenario);
 
     try {
       const report = await runBrowserAudit({
@@ -67,9 +38,7 @@ async function main(): Promise<void> {
       });
 
       if (report.ciStatus !== expected) {
-        fail(
-          `scenario ${scenario}: expected ciStatus=${expected}, got ${report.ciStatus}`,
-        );
+        fail(`scenario ${scenario}: expected ciStatus=${expected}, got ${report.ciStatus}`);
       }
 
       console.log(
@@ -79,6 +48,7 @@ async function main(): Promise<void> {
           evidenceStatus: report.evidenceStatus,
           ciStatus: report.ciStatus,
           expectedCiStatus: expected,
+          findings: report.findings.length,
           pass: true,
         }),
       );

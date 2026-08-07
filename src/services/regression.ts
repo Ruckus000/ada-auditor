@@ -14,8 +14,17 @@ function deterministicFindings(findings: StoredFinding[]): StoredFinding[] {
   return findings.filter((finding) => finding.source === 'deterministic');
 }
 
+/**
+ * Identity of a finding for diffing purposes.
+ *
+ * The selector is part of the key because the rule engine reports one finding
+ * per offending element. Keying on the rule alone would collapse every
+ * occurrence into a single entry, so fixing nine of ten broken images would
+ * show up as no change at all, and breaking a tenth would show up as nothing
+ * new.
+ */
 function findingKey(finding: StoredFinding): string {
-  return `${finding.source}:${finding.code}`;
+  return `${finding.source}:${finding.code}:${finding.selector ?? ''}`;
 }
 
 export function compareToBaseline(

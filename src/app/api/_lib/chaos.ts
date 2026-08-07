@@ -3,20 +3,21 @@ import type { Environment } from '../../../domain/contracts';
 import { buildDefaultDemoJourneySteps } from '../../../integrations/browser/demo-journey';
 import type { JourneyStep } from '../../../integrations/browser/types';
 
-export type ChaosScenario = 'omit_ax_tree' | 'complete_critical' | 'complete_clean';
-
-export type BrowserChaosScenario =
+/**
+ * Steady-state scenarios.
+ *
+ * These used to have an HTML-string variant alongside the browser one. It was
+ * removed with the HTML audit path: its "clean" fixture was a bare `<main>`
+ * fragment, which a real rule engine correctly fails for having no page
+ * language and no title. A scenario that can only pass against a toy engine is
+ * not a steady-state assertion, so the browser scenarios are now the only ones.
+ */
+export type ChaosScenario =
   | 'browser_omit_ax_tree'
   | 'browser_complete_critical'
   | 'browser_complete_clean';
 
 export const CHAOS_SCENARIOS: ChaosScenario[] = [
-  'omit_ax_tree',
-  'complete_critical',
-  'complete_clean',
-];
-
-export const BROWSER_CHAOS_SCENARIOS: BrowserChaosScenario[] = [
   'browser_omit_ax_tree',
   'browser_complete_critical',
   'browser_complete_clean',
@@ -29,15 +30,6 @@ export function isChaosEnabled(): boolean {
 export type ChaosRunParams = {
   journeyId: string;
   environment: Environment;
-  html: string;
-  omitAxTree?: boolean;
-  platformHint?: string;
-};
-
-export type BrowserChaosRunParams = {
-  browserMode: true;
-  journeyId: string;
-  environment: Environment;
   stepId: string;
   fixtureDir: string;
   omitAxTree?: boolean;
@@ -48,39 +40,10 @@ export const DEFAULT_CHAOS_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-a
 
 export function resolveChaosRunParams(
   scenario: ChaosScenario,
-  journeyId = 'chaos-demo',
-  environment: Environment = 'staging',
-): ChaosRunParams {
-  switch (scenario) {
-    case 'omit_ax_tree':
-      return {
-        journeyId,
-        environment,
-        html: '<main><img src="hero.png"></main>',
-        omitAxTree: true,
-      };
-    case 'complete_critical':
-      return {
-        journeyId,
-        environment,
-        html: '<main><img src="hero.png"></main>',
-      };
-    case 'complete_clean':
-      return {
-        journeyId,
-        environment,
-        html: '<main><img src="hero.png" alt="Hero"></main>',
-      };
-  }
-}
-
-export function resolveBrowserChaosRunParams(
-  scenario: BrowserChaosScenario,
   journeyId = 'demo-login',
   environment: Environment = 'staging',
-): BrowserChaosRunParams {
-  const base: BrowserChaosRunParams = {
-    browserMode: true,
+): ChaosRunParams {
+  const base: ChaosRunParams = {
     journeyId,
     environment,
     stepId: 'dashboard',
@@ -110,19 +73,8 @@ export function resolveBrowserChaosRunParams(
   }
 }
 
-export function expectedCiStatusForScenario(scenario: ChaosScenario): 'inconclusive' | 'fail' | 'pass' {
-  switch (scenario) {
-    case 'omit_ax_tree':
-      return 'inconclusive';
-    case 'complete_critical':
-      return 'fail';
-    case 'complete_clean':
-      return 'pass';
-  }
-}
-
-export function expectedCiStatusForBrowserScenario(
-  scenario: BrowserChaosScenario,
+export function expectedCiStatusForScenario(
+  scenario: ChaosScenario,
 ): 'inconclusive' | 'fail' | 'pass' {
   switch (scenario) {
     case 'browser_omit_ax_tree':

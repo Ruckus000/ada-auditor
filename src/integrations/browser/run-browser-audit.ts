@@ -13,6 +13,17 @@ export type RunBrowserAuditInput = JourneyRunnerInput & {
   allowedJourneyIds?: string[];
 };
 
+/**
+ * The single audit path.
+ *
+ * There used to be a second one that accepted an HTML string and evaluated it
+ * with a regex. It was deleted rather than upgraded: rule evaluation over a
+ * markup fragment has no stylesheet and no layout, so contrast and geometry
+ * rules would score against user-agent defaults — and it asserted complete
+ * evidence while pointing at artifact files it never created. Findings now
+ * come only from a real page whose screenshot, DOM, and accessibility tree
+ * were captured in the same session.
+ */
 export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const journeyResult = await runJourney({
     ...input,
@@ -67,16 +78,14 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   });
 
   const deterministicFindings =
-    evidence.status === 'complete' ? runDeterministicAudit({ html: journeyResult.html }) : [];
+    evidence.status === 'complete' ? runDeterministicAudit(journeyResult.axe) : [];
 
   const advisoryCandidate = createAiAdvisoryFinding({
     message: 'Review instructions and labels for screen-reader clarity.',
     confidence: 0.84,
   });
   const aiFindings =
-    advisoryCandidate.confidence >= contract.confidencePolicy.minReport
-      ? [advisoryCandidate]
-      : [];
+    advisoryCandidate.confidence >= contract.confidencePolicy.minReport ? [advisoryCandidate] : [];
 
   const findings = [...deterministicFindings, ...aiFindings];
   const report = summarizeRun({
