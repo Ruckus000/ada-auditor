@@ -20,10 +20,12 @@ const jetbrains = JetBrains_Mono({
   display: 'swap',
 });
 
+// Site-wide fallback. Each route sets its own title and description; this is
+// what anything without them inherits.
 export const metadata: Metadata = {
   title: 'ADA Auditor',
   description:
-    'Accessibility risk checks for web apps — run a demo audit, read pass/fail/inconclusive results. Not legal certification.',
+    'Accessibility risk checks for web apps. It finds risk; it does not certify legal compliance.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
