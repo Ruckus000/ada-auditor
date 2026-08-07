@@ -55,6 +55,24 @@ Do **not** symlink env files — Vercel stores secrets in the cloud; `vercel env
 - **Local/CI:** `FileRunStore` under `RUN_STORE_PATH` (default `data/runs`).
 - **Vercel:** Redis/KV is required. `createRunStore()` fails closed when `VERCEL` is set and neither `KV_REST_API_*` nor `UPSTASH_REDIS_REST_*` is configured (no silent ephemeral filesystem). Provision Upstash Redis from the [Vercel Marketplace](https://vercel.com/marketplace?category=storage&search=redis) and link it so credentials are present. Run JSON metadata is durable. Artifacts go to Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set, and their URLs are stored on the run record so a finding can always be traced back to the screenshot and DOM it came from. Locally and in CI they stay on disk, where they are already reachable.
 
+## Running an audit
+
+`POST /api/audit/run` is asynchronous by default: it records the run, returns
+**202** with a `requestId` and a `pollUrl`, and finishes the work in the
+background. Poll `GET /api/audit/runs/{id}` until `status` is `complete` or
+`failed`.
+
+Add `?wait=1` to block and get the result in one call — what CI wants, and what
+the console uses.
+
+Async unblocks the caller; it does **not** buy more compute. Background work is
+bounded by the same `maxDuration` (300s, which is the ceiling on Hobby and the
+default on every plan; Pro and Enterprise allow up to 800s). A run is recorded
+as `running` before the work starts, so one that times out or crashes leaves a
+trace rather than vanishing.
+
+`GET /api/audit/runs/{id}/report.pdf` renders that run as a client-facing PDF.
+
 ## Auditing a real site
 
 `POST /api/audit/run` takes an optional `targetUrl` plus `steps`. Absent a

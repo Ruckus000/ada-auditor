@@ -2,6 +2,16 @@ import type { Environment } from './contracts';
 import type { StoredArtifacts } from './artifacts';
 
 /**
+ * Lifecycle of a run record.
+ *
+ * A record is written as `running` before the audit starts, so a run that
+ * times out or crashes leaves evidence that it began instead of vanishing
+ * without trace — which is what happened when records were only written on
+ * success.
+ */
+export type RunStatus = 'running' | 'complete' | 'failed';
+
+/**
  * A persisted finding.
  *
  * This used to be `{code, severity, source}`, which discarded the message and
@@ -39,6 +49,9 @@ export type StoredRunRecord = {
   browserMode?: boolean;
   /** Where the evidence for this run actually lives, once uploaded. */
   artifacts?: StoredArtifacts;
+  status?: RunStatus;
+  /** Populated when `status` is `failed`; a stable code, never raw error text. */
+  failureReason?: string;
 };
 
 export interface RunStore {

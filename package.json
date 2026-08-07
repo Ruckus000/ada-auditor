@@ -29,6 +29,7 @@
     "@sparticuz/chromium": "^147.0.0",
     "@upstash/redis": "^1.38.0",
     "@vercel/blob": "^2.7.0",
+    "@vercel/functions": "^3.8.0",
     "next": "^16.2.12",
     "playwright-core": "^1.62.1",
     "react": "^19.2.8",

@@ -104,15 +104,12 @@ Implemented and verified locally + on Vercel preview:
 
 Read this before claiming something works.
 
-- **Artifacts are not durable.** Screenshot, DOM and accessibility tree are
-  written to the function's local disk, are on no run record, and are served by
-  no route — so on Vercel they vanish when the invocation ends. Evidence the
-  customer cannot reach is not yet evidence.
-- **Runs are synchronous.** `POST /api/audit/run` blocks for the whole audit,
-  bounded by `maxDuration = 300`. Fine for a journey and a few pages; not a
-  site crawl.
-- **No report export.** Output is JSON. There is no PDF, which is the artifact
-  an ADA-compliance buyer actually pays for.
+- **A run still cannot outlive one function invocation.** `maxDuration` is 300s
+  (the Hobby ceiling; Pro allows 800s). The 202 + poll shape unblocks the caller
+  but does not add compute — background work is bounded by the same limit. A
+  real site-wide crawl needs a container worker, not a bigger number here.
+- **The console still blocks.** It calls `?wait=1`, because its run flow renders
+  a result rather than polling. The async shape is there for API and CI callers.
 - **No tenancy.** One shared `AUDITOR_RUN_TOKEN`, a flat `journeyId:environment`
   keyspace, and `accountId: 'acct-demo'` hardcoded. Any authenticated caller can
   read any run by guessing a journeyId.

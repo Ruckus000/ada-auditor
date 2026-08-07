@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { waitUntil } from '@vercel/functions';
 import { environmentSchema } from '../../../domain/contracts';
 import { getArtifactStore } from '../../../integrations/artifacts/blob-store';
 import { getRunStore } from '../../../integrations/persistence';
@@ -81,7 +82,147 @@ export type AuditRunHandlerResult =
   | { ok: false; status: number; body: Record<string, unknown> };
 
 /**
- * Runs one audit.
+ * Runs the audit and persists the outcome. Shared by both response modes.
+ *
+ * Returns the same body either mode would produce, so the async path is purely
+ * about when the caller is unblocked — not about what eventually gets stored.
+ */
+async function executeRun(
+  parsedBody: z.infer<typeof auditRunBodySchema>,
+  requestId: string,
+  startedAt: number,
+): Promise<AuditRunHandlerResult> {
+  const chaosParams = parsedBody.chaosScenario
+    ? resolveChaosRunParams(parsedBody.chaosScenario, parsedBody.journeyId, parsedBody.environment)
+    : undefined;
+
+  const store = getRunStore();
+
+  try {
+    const report = await runBrowserAudit({
+      journeyId: parsedBody.journeyId,
+      environment: parsedBody.environment,
+      stepId: chaosParams?.stepId ?? parsedBody.stepId ?? 'dashboard',
+      fixtureDir: DEFAULT_FIXTURE_DIR,
+      artifactsDir: join(process.cwd(), 'artifacts', requestId),
+      omitAxTree: chaosParams?.omitAxTree ?? parsedBody.omitAxTree,
+      steps: chaosParams?.steps ?? parsedBody.steps,
+      targetUrl: chaosParams ? undefined : parsedBody.targetUrl,
+      platformHint: parsedBody.platformHint,
+    });
+
+    // Upload before persisting so the record points at durable evidence rather
+    // than at a filesystem that disappears with the invocation.
+    const artifacts = await getArtifactStore().upload(requestId, report.artifacts);
+
+    const durationMs = Date.now() - startedAt;
+    const baseline = await store.getLatestRun(report.journeyId, report.environment, requestId);
+
+    const storedRun = toStoredRunRecord({
+      requestId,
+      journeyId: report.journeyId,
+      environment: report.environment,
+      platform: report.platform.id,
+      evidenceStatus: report.evidenceStatus,
+      ciStatus: report.ciStatus,
+      findings: report.findings,
+      durationMs,
+      browserMode: true,
+      artifacts,
+      status: 'complete',
+    });
+    await store.saveRun(storedRun);
+
+    const regression = baseline ? compareToBaseline(storedRun, baseline) : undefined;
+
+    emitAuditRunLog(
+      createAuditRunLog({
+        journey: report.journeyId,
+        env: report.environment,
+        platform: report.platform.id,
+        evidenceStatus: report.evidenceStatus,
+        ciStatus: report.ciStatus,
+        durationMs,
+        requestId,
+        browserMode: true,
+      }),
+    );
+
+    return {
+      ok: true,
+      status: 200,
+      body: {
+        requestId,
+        journeyId: report.journeyId,
+        environment: report.environment,
+        platform: report.platform.id,
+        evidenceStatus: report.evidenceStatus,
+        ciStatus: report.ciStatus,
+        executionStatus: report.executionStatus,
+        findings: report.findings,
+        executiveSummary: report.executiveSummary,
+        durationMs,
+        browserMode: true,
+        status: 'complete',
+        ...(Object.keys(artifacts).length > 0 ? { artifacts } : {}),
+        ...(regression ? { regression } : {}),
+      },
+    };
+  } catch (error) {
+    const durationMs = Date.now() - startedAt;
+    const failureReason = error instanceof Error ? error.message : 'audit_run_failed';
+    const code = classifyRunFailure(failureReason);
+
+    emitAuditRunLog(
+      createAuditRunLog({
+        journey: parsedBody.journeyId,
+        env: parsedBody.environment,
+        platform: 'unknown',
+        evidenceStatus: 'unknown',
+        ciStatus: 'unknown',
+        durationMs,
+        failureReason,
+        requestId,
+        browserMode: true,
+      }),
+    );
+
+    // Record the failure so a poll gets an answer instead of a record stuck at
+    // `running` forever. The stored reason is the same stable code the caller
+    // sees — never the raw message, which carries paths.
+    await store
+      .saveRun(
+        toStoredRunRecord({
+          requestId,
+          journeyId: parsedBody.journeyId,
+          environment: parsedBody.environment,
+          platform: 'unknown',
+          evidenceStatus: 'unknown',
+          ciStatus: 'inconclusive',
+          findings: [],
+          durationMs,
+          browserMode: true,
+          status: 'failed',
+          failureReason: code,
+        }),
+      )
+      .catch(() => {
+        // A failed run that also fails to record is not worth masking the
+        // original error for.
+      });
+
+    return {
+      ok: false,
+      status: 422,
+      // The log above keeps the full message; the response gets a stable code,
+      // so internal detail (paths, action and environment names) stays server-side.
+      body: { error: code, requestId },
+    };
+  }
+}
+
+/**
+ * Entry point for `POST /api/audit/run`.
  *
  * There is a single execution path: drive a real browser through the journey
  * and evaluate the rendered page. The HTML-string path that used to sit
@@ -155,103 +296,53 @@ export async function handleAuditRun(
     }
   }
 
-  const chaosParams = parsedBody.chaosScenario
-    ? resolveChaosRunParams(parsedBody.chaosScenario, parsedBody.journeyId, parsedBody.environment)
-    : undefined;
+  // Two response modes.
+  //
+  // Async (default): persist a `running` placeholder, hand back 202 and a
+  // request id, and finish the work in the background. The caller polls
+  // `GET /api/audit/runs/{id}`. This unblocks the client — a run takes tens of
+  // seconds and a browser or proxy may not wait — but it does NOT buy more
+  // compute: background work is bounded by the same `maxDuration` as the
+  // request. Nothing here makes a long crawl fit where it otherwise would not.
+  //
+  // Sync (`?wait=1`): block and return the result. CI wants a single call with
+  // a pass/fail, and the chaos script and handler tests want determinism.
+  const wantsSync = new URL(request.url).searchParams.get('wait') === '1';
 
-  try {
-    const report = await runBrowserAudit({
+  if (wantsSync) {
+    return executeRun(parsedBody, requestId, startedAt);
+  }
+
+  // Written before the work starts so a run that times out or crashes leaves a
+  // trace. Previously a record only appeared on success, so a run that died
+  // mid-flight was indistinguishable from one that never happened.
+  await getRunStore().saveRun(
+    toStoredRunRecord({
+      requestId,
       journeyId: parsedBody.journeyId,
       environment: parsedBody.environment,
-      stepId: chaosParams?.stepId ?? parsedBody.stepId ?? 'dashboard',
-      fixtureDir: DEFAULT_FIXTURE_DIR,
-      artifactsDir: join(process.cwd(), 'artifacts', requestId),
-      omitAxTree: chaosParams?.omitAxTree ?? parsedBody.omitAxTree,
-      steps: chaosParams?.steps ?? parsedBody.steps,
-      targetUrl: chaosParams ? undefined : parsedBody.targetUrl,
-      platformHint: parsedBody.platformHint,
-    });
-
-    // Upload before persisting so the record points at durable evidence rather
-    // than at a filesystem that disappears with the invocation.
-    const artifacts = await getArtifactStore().upload(requestId, report.artifacts);
-
-    const durationMs = Date.now() - startedAt;
-    const store = getRunStore();
-    const baseline = await store.getLatestRun(report.journeyId, report.environment, requestId);
-
-    const storedRun = toStoredRunRecord({
-      requestId,
-      journeyId: report.journeyId,
-      environment: report.environment,
-      platform: report.platform.id,
-      evidenceStatus: report.evidenceStatus,
-      ciStatus: report.ciStatus,
-      findings: report.findings,
-      durationMs,
+      platform: 'unknown',
+      evidenceStatus: 'unknown',
+      ciStatus: 'inconclusive',
+      findings: [],
+      durationMs: 0,
       browserMode: true,
-      artifacts,
-    });
-    await store.saveRun(storedRun);
+      status: 'running',
+    }),
+  );
 
-    const regression = baseline ? compareToBaseline(storedRun, baseline) : undefined;
+  const work = executeRun(parsedBody, requestId, startedAt);
+  waitUntil(work);
 
-    emitAuditRunLog(
-      createAuditRunLog({
-        journey: report.journeyId,
-        env: report.environment,
-        platform: report.platform.id,
-        evidenceStatus: report.evidenceStatus,
-        ciStatus: report.ciStatus,
-        durationMs,
-        requestId,
-        browserMode: true,
-      }),
-    );
-
-    return {
-      ok: true,
-      status: 200,
-      body: {
-        requestId,
-        journeyId: report.journeyId,
-        environment: report.environment,
-        platform: report.platform.id,
-        evidenceStatus: report.evidenceStatus,
-        ciStatus: report.ciStatus,
-        executionStatus: report.executionStatus,
-        findings: report.findings,
-        executiveSummary: report.executiveSummary,
-        durationMs,
-        browserMode: true,
-        ...(Object.keys(artifacts).length > 0 ? { artifacts } : {}),
-        ...(regression ? { regression } : {}),
-      },
-    };
-  } catch (error) {
-    const durationMs = Date.now() - startedAt;
-    const failureReason = error instanceof Error ? error.message : 'audit_run_failed';
-
-    emitAuditRunLog(
-      createAuditRunLog({
-        journey: parsedBody.journeyId,
-        env: parsedBody.environment,
-        platform: 'unknown',
-        evidenceStatus: 'unknown',
-        ciStatus: 'unknown',
-        durationMs,
-        failureReason,
-        requestId,
-        browserMode: true,
-      }),
-    );
-
-    return {
-      ok: false,
-      status: 422,
-      // The log above keeps the full message; the response gets a stable code,
-      // so internal detail (paths, action and environment names) stays server-side.
-      body: { error: classifyRunFailure(failureReason), requestId },
-    };
-  }
+  return {
+    ok: true,
+    status: 202,
+    body: {
+      requestId,
+      journeyId: parsedBody.journeyId,
+      environment: parsedBody.environment,
+      status: 'running',
+      pollUrl: `/api/audit/runs/${requestId}`,
+    },
+  };
 }

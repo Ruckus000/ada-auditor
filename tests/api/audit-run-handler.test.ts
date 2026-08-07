@@ -6,8 +6,9 @@ vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserA
 
 const { handleAuditRun } = await import('../../src/app/api/_lib/audit-run-handler');
 
+/** Synchronous mode: these assert on the run's outcome, not on the 202 shape. */
 function runRequest(body: Record<string, unknown>): Request {
-  return new Request('http://localhost/api/audit/run', {
+  return new Request('http://localhost/api/audit/run?wait=1', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
