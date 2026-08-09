@@ -9,6 +9,7 @@ import { RunForm, type PlatformHint, type RunConfig } from './run-form';
 import { VerdictLegend, VerdictPanel } from './verdict-panel';
 import { FindingsList, RunDetails } from './findings-list';
 import { UnlockCard } from './unlock-card';
+import { PRACTICE_SCENARIOS } from './practice-scenarios';
 
 type AuthState = 'checking' | 'locked' | 'unlocked';
 
@@ -17,16 +18,6 @@ const RUN_STEPS = [
   'Walking through the journey',
   'Capturing evidence',
   'Applying the rules',
-];
-
-const PRACTICE_SCENARIOS: Array<{
-  scenario: 'complete_clean' | 'complete_critical' | 'omit_ax_tree';
-  label: string;
-  outcome: string;
-}> = [
-  { scenario: 'complete_clean', label: 'a pass', outcome: 'pass' },
-  { scenario: 'complete_critical', label: 'a fail', outcome: 'fail' },
-  { scenario: 'omit_ax_tree', label: 'an inconclusive', outcome: 'inconclusive' },
 ];
 
 export function ControlPlane() {

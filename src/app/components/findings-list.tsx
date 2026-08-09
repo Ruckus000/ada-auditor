@@ -1,7 +1,14 @@
 'use client';
 
 import { InfoTip, TermLabel } from './info-tip';
-import { countBySource, type AuditResult, type Finding, type Severity } from './audit-types';
+import {
+  countBySource,
+  groupFindingsByPage,
+  type AuditPage,
+  type AuditResult,
+  type Finding,
+  type Severity,
+} from './audit-types';
 
 const SEVERITY_COPY: Record<Severity, { label: string; mark: string; note: string }> = {
   critical: { label: 'Critical', mark: '▲', note: 'Serious barrier. Fails the build.' },
@@ -10,7 +17,12 @@ const SEVERITY_COPY: Record<Severity, { label: string; mark: string; note: strin
   advisory: { label: 'Advisory', mark: '◌', note: 'A suggestion to check by hand.' },
 };
 
-function FindingCard({ finding }: { finding: Finding }) {
+/**
+ * `showPage` is for lists that are not already grouped by page — the
+ * regression diff, where "a new critical appeared" is only actionable once you
+ * know which of five screens it appeared on.
+ */
+function FindingCard({ finding, showPage }: { finding: Finding; showPage?: boolean }) {
   const severity = SEVERITY_COPY[finding.severity];
   const blocks = finding.source === 'deterministic' && finding.severity === 'critical';
 
@@ -30,6 +42,9 @@ function FindingCard({ finding }: { finding: Finding }) {
         <p className="finding-message">{finding.message ?? finding.code}</p>
         <p className="finding-meta">
           {finding.message && <code className="finding-code">{finding.code}</code>}
+          {showPage && finding.pageUrl && (
+            <span className="finding-page">on {finding.pageUrl}</span>
+          )}
           {finding.confidence != null && (
             <span className="finding-confidence">
               {Math.round(finding.confidence * 100)}% confidence
@@ -46,17 +61,50 @@ function FindingCard({ finding }: { finding: Finding }) {
   );
 }
 
-function EvidenceChecklist({ status }: { status: 'complete' | 'degraded' }) {
-  // The API reports a single rolled-up status. Under `complete` all three
+const ARTIFACT_ITEMS: Array<{ key: 'screenshot' | 'domSnapshot' | 'axTree'; label: string }> = [
+  { key: 'screenshot', label: 'Screenshot' },
+  { key: 'domSnapshot', label: 'DOM snapshot' },
+  { key: 'axTree', label: 'Accessibility tree' },
+];
+
+function ArtifactChecklist({ status }: { status: 'complete' | 'degraded' }) {
+  // The API reports one rolled-up status per page. Under `complete` all three
   // artifacts are guaranteed present; under `degraded` at least one is missing
   // and the response does not say which, so we say exactly that rather than
   // guessing.
   const complete = status === 'complete';
-  const items: Array<{ key: 'screenshot' | 'domSnapshot' | 'axTree'; label: string }> = [
-    { key: 'screenshot', label: 'Screenshot' },
-    { key: 'domSnapshot', label: 'DOM snapshot' },
-    { key: 'axTree', label: 'Accessibility tree' },
-  ];
+
+  return (
+    <ul className="evidence-list">
+      {ARTIFACT_ITEMS.map((item) => (
+        <li key={item.key} className={complete ? 'artifact is-present' : 'artifact is-unknown'}>
+          <span className="artifact-mark" aria-hidden="true">
+            {complete ? '✓' : '?'}
+          </span>
+          <TermLabel termKey={item.key}>{item.label}</TermLabel>
+          <span className="artifact-state">{complete ? 'captured' : 'not confirmed'}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** A page's URL, shown only when it says something the title does not. */
+function PageLabel({ page }: { page: AuditPage }) {
+  return (
+    <>
+      <span className="page-title">{page.title}</span>
+      {page.route !== page.title && <span className="page-route">{page.route}</span>}
+    </>
+  );
+}
+
+function EvidenceBlock({ result }: { result: AuditResult }) {
+  const status = result.evidenceStatus;
+  if (!status) return null;
+
+  const pages = result.pages ?? [];
+  const complete = status === 'complete';
 
   return (
     <section className="evidence-block" aria-labelledby="evidence-heading">
@@ -66,22 +114,44 @@ function EvidenceChecklist({ status }: { status: 'complete' | 'degraded' }) {
         <h3 id="evidence-heading">Evidence</h3>
         <InfoTip termKey="evidence" />
       </div>
+
       <p className={`evidence-status evidence-${status}`}>
         {complete
-          ? 'Complete — all three artifacts were captured, so this run could be judged.'
-          : 'Incomplete — at least one artifact is missing, which is why the verdict is inconclusive.'}
+          ? pages.length > 1
+            ? `Complete — all three artifacts were captured on each of the ${pages.length} pages, so this run could be judged.`
+            : 'Complete — all three artifacts were captured, so this run could be judged.'
+          : 'Incomplete — at least one artifact is missing, which is why the verdict is inconclusive. A single page short of evidence makes the whole run inconclusive.'}
       </p>
-      <ul className="evidence-list">
-        {items.map((item) => (
-          <li key={item.key} className={complete ? 'artifact is-present' : 'artifact is-unknown'}>
-            <span className="artifact-mark" aria-hidden="true">
-              {complete ? '✓' : '?'}
-            </span>
-            <TermLabel termKey={item.key}>{item.label}</TermLabel>
-            <span className="artifact-state">{complete ? 'captured' : 'not confirmed'}</span>
-          </li>
-        ))}
-      </ul>
+
+      {pages.length > 0 ? (
+        <ul className="evidence-pages">
+          {pages.map((page) => (
+            <li key={page.url} className="evidence-page">
+              <p className="evidence-page-name">
+                <PageLabel page={page} />
+                {page.evidenceStatus && (
+                  <span className={`page-evidence page-evidence-${page.evidenceStatus}`}>
+                    {page.evidenceStatus === 'complete' ? 'complete' : 'incomplete'}
+                  </span>
+                )}
+              </p>
+              <ArtifactChecklist status={page.evidenceStatus ?? status} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        // An error response, or a shape without pages. The rolled-up status is
+        // all there is, so do not invent a per-page breakdown.
+        <ArtifactChecklist status={status} />
+      )}
+
+      {result.truncatedPages != null && result.truncatedPages > 0 && (
+        <p className="evidence-truncated" role="status">
+          This run stopped at its page limit and did not audit {result.truncatedPages} further{' '}
+          {result.truncatedPages === 1 ? 'page' : 'pages'}. Anything on{' '}
+          {result.truncatedPages === 1 ? 'it' : 'them'} is unknown, not clean.
+        </p>
+      )}
     </section>
   );
 }
@@ -124,7 +194,7 @@ function RegressionBlock({ result }: { result: AuditResult }) {
           <p className="regression-sub">New since last run</p>
           <ul className="findings-list">
             {regression.newFindings.map((finding, i) => (
-              <FindingCard key={`${finding.code}-${i}`} finding={finding} />
+              <FindingCard key={`${finding.code}-${i}`} finding={finding} showPage />
             ))}
           </ul>
         </>
@@ -139,56 +209,114 @@ function RegressionBlock({ result }: { result: AuditResult }) {
   );
 }
 
+/**
+ * One page's findings, split into rule-based and advisory.
+ *
+ * The two kinds mean different things — one is proof, one is a judgement call
+ * that never gates a release — so they stay visually separate inside a page
+ * rather than being interleaved.
+ */
+function PageFindings({ group }: { group: { page: AuditPage | null; findings: Finding[] } }) {
+  const { deterministic, advisory } = countBySource(group.findings);
+
+  return (
+    <section className="page-findings" aria-label={group.page ? group.page.title : 'Across the journey'}>
+      <div className="page-findings-head">
+        <h4 className="page-findings-title">
+          {group.page ? (
+            <PageLabel page={group.page} />
+          ) : (
+            // The advisory pass reads the whole journey at once, so its
+            // findings belong to no single page. Saying so beats filing them
+            // under a page they were not derived from.
+            <span className="page-title">Across the journey</span>
+          )}
+        </h4>
+        <span className="page-findings-count">
+          {group.findings.length} {group.findings.length === 1 ? 'issue' : 'issues'}
+        </span>
+      </div>
+
+      {deterministic.length > 0 && (
+        <>
+          <div className="findings-group">
+            <h5>Rule-based ({deterministic.length})</h5>
+            <InfoTip termKey="deterministic" />
+          </div>
+          <ul className="findings-list">
+            {deterministic.map((finding, i) => (
+              <FindingCard key={`${finding.code}-${i}`} finding={finding} />
+            ))}
+          </ul>
+        </>
+      )}
+
+      {advisory.length > 0 && (
+        <>
+          <div className="findings-group">
+            <h5>Advisory ({advisory.length})</h5>
+            <InfoTip termKey="advisory" />
+          </div>
+          <ul className="findings-list">
+            {advisory.map((finding, i) => (
+              <FindingCard key={`${finding.code}-${i}`} finding={finding} />
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Pages the run audited and found nothing on — worth saying out loud. */
+function CleanPages({ result, groups }: { result: AuditResult; groups: Array<{ page: AuditPage | null }> }) {
+  const withFindings = new Set(groups.map((g) => g.page?.url).filter(Boolean));
+  const clean = (result.pages ?? []).filter((page) => !withFindings.has(page.url));
+
+  if (clean.length === 0) return null;
+
+  return (
+    <p className="pages-clean">
+      No issues on {clean.map((page) => page.title).join(', ')}.
+    </p>
+  );
+}
+
 export function FindingsList({ result }: { result: AuditResult }) {
-  const { deterministic, advisory } = countBySource(result.findings);
+  const groups = groupFindingsByPage(result);
+  const pagesAudited = result.pages?.length ?? 0;
 
   return (
     <>
-      {result.evidenceStatus && <EvidenceChecklist status={result.evidenceStatus} />}
+      <EvidenceBlock result={result} />
 
       <section className="findings-block" aria-labelledby="findings-heading">
         <div className="ledger-heading">
           <h3 id="findings-heading">What we found</h3>
         </div>
 
+        {pagesAudited > 0 && (
+          <p className="findings-scope">
+            {pagesAudited} {pagesAudited === 1 ? 'page' : 'pages'} audited — every page the journey
+            walked through, not just the last one.
+          </p>
+        )}
+
         {result.findings.length === 0 ? (
           <div className="findings-empty">
             <p className="empty-headline">No issues found.</p>
             <p className="empty-note">
               This version ships a small rule set, so an empty result means the rules that ran found
-              nothing — not that the page is free of accessibility problems. A manual review is
-              still worth doing.
+              nothing — not that the {pagesAudited === 1 ? 'page is' : 'pages are'} free of
+              accessibility problems. A manual review is still worth doing.
             </p>
           </div>
         ) : (
           <>
-            {deterministic.length > 0 && (
-              <>
-                <div className="findings-group">
-                  <h4>Rule-based ({deterministic.length})</h4>
-                  <InfoTip termKey="deterministic" />
-                </div>
-                <ul className="findings-list">
-                  {deterministic.map((finding, i) => (
-                    <FindingCard key={`${finding.code}-${i}`} finding={finding} />
-                  ))}
-                </ul>
-              </>
-            )}
-
-            {advisory.length > 0 && (
-              <>
-                <div className="findings-group">
-                  <h4>Advisory ({advisory.length})</h4>
-                  <InfoTip termKey="advisory" />
-                </div>
-                <ul className="findings-list">
-                  {advisory.map((finding, i) => (
-                    <FindingCard key={`${finding.code}-${i}`} finding={finding} />
-                  ))}
-                </ul>
-              </>
-            )}
+            {groups.map((group, i) => (
+              <PageFindings key={group.page?.url ?? `journey-${i}`} group={group} />
+            ))}
+            <CleanPages result={result} groups={groups} />
           </>
         )}
       </section>

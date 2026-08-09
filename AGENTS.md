@@ -78,6 +78,9 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run chaos` and `npm run build` evidence
 - Keep browser launches out of the unit suite. Handler tests mock the audit; the real browser is covered by `tests/integrations/browser/**` and by chaos.
 - When adding Vercel routes: add route/handler tests or chaos script assertions for terminal statuses
+- Before claiming a change works end to end, run one real audit through
+  `next start` (not just `next dev`). Vitest loads modules unbundled, so
+  packaging faults reach production with every suite green
 
 ## Current status
 
@@ -109,7 +112,14 @@ Implemented and verified locally + on Vercel preview:
   rule + page + selector, `FileRunStore` + Upstash `KvRunStore`,
   `GET /api/audit/runs/latest`
 - Chromium everywhere: the installed browser locally and in CI,
-  `@sparticuz/chromium` on Vercel (`integrations/browser/launch.ts`)
+  `@sparticuz/chromium` on Vercel (`integrations/browser/launch.ts`).
+  `@axe-core/playwright` and `axe-core` are in `serverExternalPackages`
+  alongside them: axe is injected into the page as a *source string*, so
+  bundling it breaks every run made through the app.
+- **Console: findings grouped by page.** `groupFindingsByPage` in
+  `app/components/audit-types.ts` (pure, unit-tested) drives the grouping; the
+  evidence panel lists each audited page with its own artifact checklist, and
+  a truncated run says so.
 - Tests: Vitest unit + browser suites green; `npm run chaos` green
 
 ### Known gaps
@@ -120,13 +130,16 @@ Read this before claiming something works.
   `getLatestRun`; there is no way to enumerate run history. It lands with the
   Postgres store in Phase 2B — see
   `docs/superpowers/plans/2026-08-07-phase-2.md`.
-- **The console still renders one flat findings list.** The PDF report groups
-  by page; `src/app/components/findings-list.tsx` does not, and the evidence
-  panel still describes a run's evidence as one rolled-up set of three
-  artifacts rather than a set per page. The data is there; the screen is not.
 - **A page cap of 20 is a guess, not a measurement.** No real journey has been
   run against it. If real journeys exceed it, that is the signal for a
   container worker rather than a bigger number.
+- **Neither test suite exercises the app's own bundle.** Vitest loads modules
+  unbundled, so a packaging fault in the Next build is invisible to all 344
+  tests — which is exactly how `@axe-core/playwright` shipped with its
+  injected source mangled by the bundler and every run through the app failing
+  while the suites stayed green. The only thing that catches this class of bug
+  is running a real audit through `next start`. Do that before claiming a
+  change works end to end.
 
 - **A run still cannot outlive one function invocation.** `maxDuration` is 300s
   (the Hobby ceiling; Pro allows 800s). The 202 + poll shape unblocks the caller

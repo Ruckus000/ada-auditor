@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   countBySource,
+  groupFindingsByPage,
   parseAuditResponse,
   parseFindings,
+  parsePages,
+  type AuditResult,
 } from '../../src/app/components/audit-types';
 import { describeApiError } from '../../src/app/components/glossary';
 
@@ -45,12 +48,16 @@ describe('parseAuditResponse', () => {
     evidenceStatus: 'complete',
     ciStatus: 'fail',
     durationMs: 42,
+    pages: [
+      { url: 'https://a.example/login', route: '/login', title: 'Login', evidenceStatus: 'complete' },
+    ],
     findings: [
       {
         code: 'missing-image-alt',
         severity: 'critical',
         message: 'Image is missing alt text.',
         source: 'deterministic',
+        pageUrl: 'https://a.example/login',
       },
       {
         code: 'ai-advisory',
@@ -82,6 +89,15 @@ describe('parseAuditResponse', () => {
     expect(result.simulated).toBe(false);
   });
 
+  it('carries the page each finding was found on through to the console', () => {
+    const result = parseAuditResponse(payload, 200, true, false);
+
+    expect(result.pages?.map((p) => p.title)).toEqual(['Login']);
+    expect(result.findings[0].pageUrl).toBe('https://a.example/login');
+    // Advisory findings have no page — they are produced once per journey.
+    expect(result.findings[1].pageUrl).toBeUndefined();
+  });
+
   it('keeps the regression diff intact, including message-less new findings', () => {
     const result = parseAuditResponse(payload, 200, true, false);
 
@@ -107,6 +123,120 @@ describe('parseAuditResponse', () => {
     const result = parseAuditResponse({}, 500, false, false);
     expect(result.findings).toEqual([]);
     expect(result.regression).toBeUndefined();
+  });
+});
+
+describe('parsePages', () => {
+  it('reads the pages a run audited, in order', () => {
+    const pages = parsePages([
+      { url: 'https://a.example/login', route: '/login', title: 'Login', evidenceStatus: 'complete' },
+      { url: 'https://a.example/cart', route: '/cart', title: 'Cart', evidenceStatus: 'degraded' },
+    ]);
+
+    expect(pages?.map((p) => p.title)).toEqual(['Login', 'Cart']);
+    expect(pages?.[1].evidenceStatus).toBe('degraded');
+  });
+
+  it('falls back to the URL when route or title are missing', () => {
+    const pages = parsePages([{ url: 'https://a.example/x' }]);
+
+    expect(pages?.[0].route).toBe('https://a.example/x');
+    expect(pages?.[0].title).toBe('https://a.example/x');
+    expect(pages?.[0].evidenceStatus).toBeUndefined();
+  });
+
+  it('drops entries with no URL and returns undefined for a non-array', () => {
+    expect(parsePages([{ title: 'nope' }, null])).toEqual([]);
+    expect(parsePages(undefined)).toBeUndefined();
+  });
+});
+
+describe('groupFindingsByPage', () => {
+  function result(overrides: Partial<AuditResult> = {}): AuditResult {
+    return {
+      httpStatus: 200,
+      ok: true,
+      findings: [],
+      simulated: false,
+      ...overrides,
+    };
+  }
+
+  const LOGIN = { url: 'https://a.example/login', route: '/login', title: 'Login' };
+  const CART = { url: 'https://a.example/cart', route: '/cart', title: 'Cart' };
+
+  it('groups by page in visit order, not in the order findings arrived', () => {
+    const groups = groupFindingsByPage(
+      result({
+        pages: [LOGIN, CART],
+        findings: parseFindings([
+          { code: 'cart-rule', severity: 'critical', source: 'deterministic', pageUrl: CART.url },
+          { code: 'login-rule', severity: 'major', source: 'deterministic', pageUrl: LOGIN.url },
+        ]),
+      }),
+    );
+
+    expect(groups.map((g) => g.page?.title)).toEqual(['Login', 'Cart']);
+    expect(groups[0].findings[0].code).toBe('login-rule');
+  });
+
+  it('puts advisory findings under the journey rather than a page', () => {
+    // The advisory pass reads every page at once, so its findings belong to no
+    // single page — filing them under one would be a claim we cannot support.
+    const groups = groupFindingsByPage(
+      result({
+        pages: [LOGIN],
+        findings: parseFindings([
+          { code: 'login-rule', severity: 'major', source: 'deterministic', pageUrl: LOGIN.url },
+          { code: 'ai-advisory', severity: 'advisory', source: 'ai-advisory', message: 'x' },
+        ]),
+      }),
+    );
+
+    expect(groups).toHaveLength(2);
+    expect(groups[1].page).toBeNull();
+    expect(groups[1].findings[0].source).toBe('ai-advisory');
+  });
+
+  it('omits a page the run audited and found nothing on', () => {
+    const groups = groupFindingsByPage(
+      result({
+        pages: [LOGIN, CART],
+        findings: parseFindings([
+          { code: 'cart-rule', severity: 'critical', source: 'deterministic', pageUrl: CART.url },
+        ]),
+      }),
+    );
+
+    expect(groups.map((g) => g.page?.title)).toEqual(['Cart']);
+  });
+
+  it('never drops a finding whose page the run did not list', () => {
+    // Showing it under an unfamiliar URL beats losing it entirely.
+    const groups = groupFindingsByPage(
+      result({
+        pages: [LOGIN],
+        findings: parseFindings([
+          { code: 'stray', severity: 'critical', source: 'deterministic', pageUrl: 'https://a.example/gone' },
+        ]),
+      }),
+    );
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].page?.url).toBe('https://a.example/gone');
+  });
+
+  it('handles a response with no pages at all', () => {
+    const groups = groupFindingsByPage(
+      result({
+        findings: parseFindings([
+          { code: 'a', severity: 'critical', source: 'deterministic', pageUrl: LOGIN.url },
+        ]),
+      }),
+    );
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].page?.url).toBe(LOGIN.url);
   });
 });
 
