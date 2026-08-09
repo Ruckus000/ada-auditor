@@ -9,7 +9,10 @@ coverage/
 .claude/
 .serena/
 tsconfig.tsbuildinfo
-artifacts/
-data/runs/
+# Run output only. Anchored to the repo root on purpose: a bare `artifacts/`
+# matches any directory of that name at any depth, which silently excluded
+# src/integrations/artifacts/ and left the repo unbuildable from a clean clone.
+/artifacts/
+/data/runs/
 .designops/
 .DS_Store
