@@ -39,3 +39,22 @@ export function createEvidenceBundle(input: EvidenceBundleInput): EvidenceBundle
     status: complete ? 'complete' : 'degraded',
   };
 }
+
+/**
+ * A run's evidence status is the worst of its pages'.
+ *
+ * A run now audits every page a journey walks through, and each page has its
+ * own evidence. One page missing an artifact is enough to make the run's
+ * verdict unsafe, so the run takes the worst status rather than an average or
+ * the last page's — the steady-state rule (incomplete evidence is never `pass`
+ * and never `fail`) has to survive the page dimension unchanged.
+ *
+ * A run with no pages at all is `degraded`: nothing was captured, so nothing
+ * can be judged.
+ */
+export function worstEvidenceStatus(statuses: EvidenceStatus[]): EvidenceStatus {
+  if (statuses.length === 0) {
+    return 'degraded';
+  }
+  return statuses.every((status) => status === 'complete') ? 'complete' : 'degraded';
+}

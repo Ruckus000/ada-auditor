@@ -44,7 +44,14 @@ export async function POST(request: Request) {
   headers.set('authorization', `Bearer ${configuredToken}`);
   headers.delete('x-auditor-run-token');
 
-  const authorizedRequest = new Request(request.url, {
+  // The console renders a result when the run finishes, so it asks for the
+  // synchronous mode. The async 202 shape is for API and CI callers, which
+  // poll; adopting it here would mean rewriting the console's run flow for no
+  // gain it can currently use.
+  const runUrl = new URL(request.url);
+  runUrl.searchParams.set('wait', '1');
+
+  const authorizedRequest = new Request(runUrl, {
     method: 'POST',
     headers,
     body: await request.text(),

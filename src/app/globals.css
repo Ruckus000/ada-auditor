@@ -1003,13 +1003,108 @@ code {
   color: var(--ink-muted);
 }
 
+/* A run audits every page its journey walks through, so evidence is listed
+   per page rather than as one rolled-up set of three artifacts. */
+.evidence-pages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.evidence-page-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+}
+
+.page-title { font-weight: 650; }
+
+.page-route {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  word-break: break-all;
+}
+
+.page-evidence {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.page-evidence-complete { color: var(--pass); }
+.page-evidence-degraded { color: var(--incon); }
+
+/* A silent cap reads as "we audited everything" when we did not. */
+.evidence-truncated {
+  margin: 0.8rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--incon);
+  border-radius: var(--r-md);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--incon);
+}
+
 /* ---------------- Findings ---------------- */
+
+.findings-scope {
+  margin: 0 0 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.page-findings {
+  margin: 0 0 1.4rem;
+  padding: 0 0 0 0.8rem;
+  border-left: 2px solid var(--rule-strong);
+}
+
+.page-findings:last-of-type { margin-bottom: 0; }
+
+.page-findings-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+}
+
+.page-findings-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.page-findings-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.pages-clean {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
 
 .findings-group {
   margin: 1rem 0 0.5rem;
 }
 
-.findings-group h4 {
+.findings-group h5 {
   margin: 0;
   font-size: 0.78rem;
   font-weight: 650;
@@ -1096,6 +1191,14 @@ code {
   font-family: var(--mono);
   font-size: 0.7rem;
   color: var(--ink-muted);
+}
+
+/* Shown only where the list is not already grouped by page. */
+.finding-page {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  word-break: break-all;
 }
 
 .gate-flag {

@@ -5,15 +5,16 @@ import {
   createSessionValue,
   GLOBAL_THROTTLE_KEY,
   hasConsoleSession,
-  isThrottled,
   isValidSessionValue,
   readCookie,
-  recordFailure,
-  resetThrottle,
   safeEqual,
   SESSION_TTL_SECONDS,
   throttleKey,
 } from '../../src/app/api/_lib/console-session';
+import {
+  KvThrottleStore,
+  MemoryThrottleStore,
+} from '../../src/app/api/_lib/unlock-throttle';
 
 const SECRET = 'a'.repeat(32);
 
@@ -145,28 +146,110 @@ describe('throttle key', () => {
 });
 
 describe('unlock throttle', () => {
-  beforeEach(resetThrottle);
-  afterEach(resetThrottle);
+  let throttle: MemoryThrottleStore;
 
-  it('blocks a key after repeated failures', () => {
-    expect(isThrottled('1.2.3.4')).toBe(false);
-    for (let i = 0; i < 8; i += 1) {
-      recordFailure('1.2.3.4');
-    }
-    expect(isThrottled('1.2.3.4')).toBe(true);
+  beforeEach(() => {
+    throttle = new MemoryThrottleStore();
   });
 
-  it('does not block an unrelated key', () => {
+  it('blocks a key after repeated failures', async () => {
+    expect(await throttle.isThrottled('1.2.3.4')).toBe(false);
     for (let i = 0; i < 8; i += 1) {
-      recordFailure('1.2.3.4');
+      await throttle.recordFailure('1.2.3.4');
     }
-    expect(isThrottled('5.6.7.8')).toBe(false);
+    expect(await throttle.isThrottled('1.2.3.4')).toBe(true);
   });
 
-  it('lets the block lapse', () => {
+  it('does not block an unrelated key', async () => {
     for (let i = 0; i < 8; i += 1) {
-      recordFailure('1.2.3.4');
+      await throttle.recordFailure('1.2.3.4');
     }
-    expect(isThrottled('1.2.3.4', Date.now() + 6 * 60 * 1000)).toBe(false);
+    expect(await throttle.isThrottled('5.6.7.8')).toBe(false);
+  });
+
+  it('lets the window lapse', async () => {
+    const now = Date.now();
+    for (let i = 0; i < 8; i += 1) {
+      await throttle.recordFailure('1.2.3.4', now);
+    }
+    expect(await throttle.isThrottled('1.2.3.4', now + 6 * 60 * 1000)).toBe(false);
+  });
+
+  it('clears on a successful unlock', async () => {
+    for (let i = 0; i < 8; i += 1) {
+      await throttle.recordFailure('1.2.3.4');
+    }
+    await throttle.clearFailures('1.2.3.4');
+    expect(await throttle.isThrottled('1.2.3.4')).toBe(false);
+  });
+});
+
+describe('KvThrottleStore', () => {
+  function fakeKv() {
+    const values = new Map<string, number>();
+    const expires: string[] = [];
+    return {
+      values,
+      expires,
+      kv: {
+        get: async <T,>(key: string) => (values.get(key) ?? null) as T | null,
+        incr: async (key: string) => {
+          const next = (values.get(key) ?? 0) + 1;
+          values.set(key, next);
+          return next;
+        },
+        expire: async (key: string) => {
+          expires.push(key);
+          return 1;
+        },
+        del: async (key: string) => values.delete(key),
+      },
+    };
+  }
+
+  it('counts failures atomically and blocks at the limit', async () => {
+    const { kv } = fakeKv();
+    const store = new KvThrottleStore(kv);
+
+    for (let i = 0; i < 7; i += 1) {
+      await store.recordFailure('1.2.3.4');
+    }
+    expect(await store.isThrottled('1.2.3.4')).toBe(false);
+
+    await store.recordFailure('1.2.3.4');
+    expect(await store.isThrottled('1.2.3.4')).toBe(true);
+  });
+
+  it('checking does not itself count as an attempt', async () => {
+    // A read that incremented would let a passive check lock out the operator.
+    const { kv, values } = fakeKv();
+    const store = new KvThrottleStore(kv);
+
+    await store.recordFailure('1.2.3.4');
+    for (let i = 0; i < 20; i += 1) {
+      await store.isThrottled('1.2.3.4');
+    }
+
+    expect(values.get('unlock:attempts:1.2.3.4')).toBe(1);
+  });
+
+  it('sets an expiry once, when the window opens', async () => {
+    const { kv, expires } = fakeKv();
+    const store = new KvThrottleStore(kv);
+
+    await store.recordFailure('1.2.3.4');
+    await store.recordFailure('1.2.3.4');
+
+    expect(expires).toEqual(['unlock:attempts:1.2.3.4']);
+  });
+
+  it('clears the counter on a successful unlock', async () => {
+    const { kv, values } = fakeKv();
+    const store = new KvThrottleStore(kv);
+
+    await store.recordFailure('1.2.3.4');
+    await store.clearFailures('1.2.3.4');
+
+    expect(values.has('unlock:attempts:1.2.3.4')).toBe(false);
   });
 });

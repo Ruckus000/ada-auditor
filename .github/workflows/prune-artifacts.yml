@@ -1,0 +1,25 @@
+name: Prune artifacts
+
+# Audit artifacts are screenshots and DOM snapshots of authenticated pages on
+# client systems. Retention is enforced on a schedule so it does not depend on
+# anyone remembering.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  prune:
+    name: Delete evidence past its retention window
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run prune:artifacts
+        env:
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          ARTIFACT_RETENTION_DAYS: ${{ vars.ARTIFACT_RETENTION_DAYS }}

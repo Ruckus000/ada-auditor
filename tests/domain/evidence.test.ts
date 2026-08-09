@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEvidenceBundle } from '../../src/domain/evidence';
+import { createEvidenceBundle, worstEvidenceStatus } from '../../src/domain/evidence';
 
 describe('createEvidenceBundle', () => {
   it('marks incomplete evidence as degraded', () => {
@@ -24,5 +24,22 @@ describe('createEvidenceBundle', () => {
     });
 
     expect(evidence.status).toBe('complete');
+  });
+});
+
+describe('worstEvidenceStatus', () => {
+  it('is complete only when every page is', () => {
+    expect(worstEvidenceStatus(['complete', 'complete'])).toBe('complete');
+  });
+
+  it('lets one degraded page drag the whole run down', () => {
+    // Steady-state rule: incomplete evidence is never pass and never fail. A
+    // run that audits five pages and captured full evidence for four of them
+    // still cannot be judged.
+    expect(worstEvidenceStatus(['complete', 'degraded', 'complete'])).toBe('degraded');
+  });
+
+  it('treats a run that captured nothing as degraded, not clean', () => {
+    expect(worstEvidenceStatus([])).toBe('degraded');
   });
 });

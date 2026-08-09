@@ -101,15 +101,6 @@ export function buildSessionCookie(value: string, request: Request, maxAge: numb
 }
 
 /**
- * Best-effort throttle on unlock attempts, to blunt online brute force of the
- * token. In-memory and therefore per-instance: it is a speed bump, not a
- * guarantee, and it is no substitute for a high-entropy token.
- */
-const attempts = new Map<string, { count: number; blockedUntil: number }>();
-const MAX_ATTEMPTS = 8;
-const BLOCK_MS = 5 * 60 * 1000;
-
-/**
  * Only headers the platform itself injects are usable here.
  *
  * `x-forwarded-for` and `x-real-ip` are client-settable whenever the app can be
@@ -118,6 +109,8 @@ const BLOCK_MS = 5 * 60 * 1000;
  * source of client identity exists we fall back to one shared bucket, which
  * throttles globally: heavy-handed for a single-operator console, but it fails
  * closed rather than silently doing nothing.
+ *
+ * The counter itself lives in `unlock-throttle.ts`.
  */
 export const GLOBAL_THROTTLE_KEY = 'global';
 
@@ -126,26 +119,6 @@ export function throttleKey(request: Request): string {
   return vercelClientIp?.split(',')[0]?.trim() || GLOBAL_THROTTLE_KEY;
 }
 
-export function isThrottled(key: string, now = Date.now()): boolean {
-  const entry = attempts.get(key);
-  return entry != null && entry.blockedUntil > now;
-}
 
-export function recordFailure(key: string, now = Date.now()): void {
-  const entry = attempts.get(key) ?? { count: 0, blockedUntil: 0 };
-  entry.count += 1;
-  if (entry.count >= MAX_ATTEMPTS) {
-    entry.blockedUntil = now + BLOCK_MS;
-    entry.count = 0;
-  }
-  attempts.set(key, entry);
-}
 
-export function clearFailures(key: string): void {
-  attempts.delete(key);
-}
 
-/** Test seam. */
-export function resetThrottle(): void {
-  attempts.clear();
-}

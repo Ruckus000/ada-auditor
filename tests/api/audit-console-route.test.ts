@@ -1,7 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { POST } from '../../src/app/api/audit/console/route';
-import { isSameOriginConsoleRequest } from '../../src/app/api/_lib/same-origin';
-import { CONSOLE_COOKIE, createSessionValue } from '../../src/app/api/_lib/console-session';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { auditReport } from '../helpers/audit-report';
+
+const { runBrowserAudit } = vi.hoisted(() => ({ runBrowserAudit: vi.fn() }));
+vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserAudit }));
+
+const { POST } = await import('../../src/app/api/audit/console/route');
+const { isSameOriginConsoleRequest } = await import('../../src/app/api/_lib/same-origin');
+const { CONSOLE_COOKIE, createSessionValue } = await import(
+  '../../src/app/api/_lib/console-session'
+);
 
 const TOKEN = 'test-console-token-long-enough';
 
@@ -12,12 +19,16 @@ function runRequest(headers: Record<string, string>) {
     body: JSON.stringify({
       journeyId: 'demo-login',
       environment: 'staging',
-      html: '<main></main>',
     }),
   });
 }
 
 describe('audit console route', () => {
+  beforeEach(() => {
+    runBrowserAudit.mockReset();
+    runBrowserAudit.mockResolvedValue(auditReport());
+  });
+
   afterEach(() => {
     delete process.env.AUDITOR_RUN_TOKEN;
   });
@@ -57,7 +68,6 @@ describe('audit console route', () => {
       body: JSON.stringify({
         journeyId: 'demo-login',
         environment: 'staging',
-        html: '<main></main>',
       }),
     });
 
@@ -79,7 +89,6 @@ describe('audit console route', () => {
       body: JSON.stringify({
         journeyId: 'demo-login',
         environment: 'staging',
-        html: '<main></main>',
       }),
     });
 

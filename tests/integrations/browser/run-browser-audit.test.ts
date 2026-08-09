@@ -42,7 +42,11 @@ describe('runBrowserAudit', () => {
 
       expect(report.evidenceStatus).toBe('complete');
       expect(report.ciStatus).toBe('fail');
-      expect(report.findings.some((finding) => finding.code === 'missing-image-alt')).toBe(true);
+      // `image-alt` is axe's rule id; the old hand-rolled code was
+      // `missing-image-alt` and carried no selector to go with it.
+      const imageAlt = report.findings.find((finding) => finding.code === 'image-alt');
+      expect(imageAlt).toBeDefined();
+      expect(imageAlt?.selector).toBeTruthy();
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });
     }

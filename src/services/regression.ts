@@ -14,8 +14,23 @@ function deterministicFindings(findings: StoredFinding[]): StoredFinding[] {
   return findings.filter((finding) => finding.source === 'deterministic');
 }
 
+/**
+ * Identity of a finding for diffing purposes.
+ *
+ * The selector is part of the key because the rule engine reports one finding
+ * per offending element. Keying on the rule alone would collapse every
+ * occurrence into a single entry, so fixing nine of ten broken images would
+ * show up as no change at all, and breaking a tenth would show up as nothing
+ * new.
+ *
+ * The page is part of the key for exactly the same reason one level up. A run
+ * audits every page a journey walks through, and two pages routinely share a
+ * template — so `#nav-logo` failing `image-alt` on both is two separate fixes.
+ * Without the page they collapse into one entry, and fixing one of them reads
+ * as fixing both.
+ */
 function findingKey(finding: StoredFinding): string {
-  return `${finding.source}:${finding.code}`;
+  return `${finding.source}:${finding.code}:${finding.pageUrl ?? ''}:${finding.selector ?? ''}`;
 }
 
 export function compareToBaseline(
