@@ -1,35 +1,18 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import type { Audience, FindingStatus } from './data';
-import type { FindingFilter, FindingOverrides } from './derive';
+import type { FindingStatus } from './data';
+import type { FindingOverrides } from './derive';
+import type { Audience, ClientTab, FindingFilter, SettingsTab, WorkspaceScreen } from './params';
 
-export type WorkspaceScreen =
-  | 'portfolio'
-  | 'reports'
-  | 'activity'
-  | 'settings'
-  | 'states'
-  | 'coverage'
-  | 'clientLink';
-
-export type ClientTab =
-  | 'overview'
-  | 'journeys'
-  | 'findings'
-  | 'finding'
-  | 'reports'
-  | 'activity'
-  | 'settings';
-
-export type SettingsTab =
-  | 'people'
-  | 'tools'
-  | 'reportDefaults'
-  | 'display'
-  | 'scanning'
-  | 'standard'
-  | 'schedule';
+/**
+ * The route vocabulary lives in `params.ts` now, because the URL is what
+ * defines it — two copies would let a screen name exist that no path can
+ * reach, which is exactly what happened to `states`, `coverage` and
+ * `clientLink`. The first two were design-review surfaces and are deleted; the
+ * third became its own screen on the way to `/r/[token]`.
+ */
+export type { ClientTab, SettingsTab, WorkspaceScreen } from './params';
 
 export type ModalName = 'generate' | 'audit' | 'dismiss' | 'undo' | 'invite' | null;
 

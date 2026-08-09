@@ -13,11 +13,6 @@ const WORKSPACE_TABS: Array<[WorkspaceScreen, string]> = [
   ['settings', 'Settings'],
 ];
 
-const REVIEW_TABS: Array<[WorkspaceScreen, string]> = [
-  ['states', 'States'],
-  ['coverage', 'Coverage'],
-];
-
 const CLIENT_TABS: Array<[ClientTab, string]> = [
   ['overview', 'Overview'],
   ['journeys', 'Journeys'],
@@ -113,38 +108,6 @@ export function PlatformHeader() {
             {label}
           </button>
         ))}
-        {state.showReview ? (
-          <>
-            <span
-              aria-hidden="true"
-              style={{ width: 1, height: 20, background: T.rule, margin: '0 10px' }}
-            />
-            {REVIEW_TABS.map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => actions.goWorkspace(key)}
-                aria-current={!inClient && state.screen === key ? 'page' : undefined}
-                className="ph-nav"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '0 10px',
-                  height: '100%',
-                  border: 'none',
-                  background: 'none',
-                  fontFamily: FONT.sans,
-                  fontSize: 12.5,
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer',
-                  ...tabStyle(!inClient && state.screen === key),
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </>
-        ) : null}
       </nav>
 
       <span

@@ -230,13 +230,11 @@ export function ReportsLibraryScreen({ client }: { client: ClientView | null }) 
                     type="button"
                     title="Preview the client link"
                     onClick={() =>
-                      actions.patch({
-                        scope: 'ws',
-                        screen: 'clientLink',
-                        modal: null,
-                        linkClient: report.client,
-                        linkReturn: state.scope === 'client' ? 'client' : 'ws',
-                      })
+                      // The share preview is a route of its own now, on its way
+                      // to `/r/[token]`. Disabled until that route exists
+                      // rather than left pointing at a screen the router can no
+                      // longer reach.
+                      actions.flash('The client link preview arrives with share tokens.')
                     }
                     className="ph-ghost-info"
                     style={{
