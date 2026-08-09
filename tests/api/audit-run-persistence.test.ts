@@ -1,6 +1,3 @@
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RunStore } from '../../src/domain/persistence';
 import { auditReport, criticalFinding } from '../helpers/audit-report';
@@ -9,7 +6,7 @@ const { runBrowserAudit } = vi.hoisted(() => ({ runBrowserAudit: vi.fn() }));
 vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserAudit }));
 
 const { handleAuditRun } = await import('../../src/app/api/_lib/audit-run-handler');
-const { createRunStore, resetRunStore, setRunStore } = await import(
+const { MemoryRunStore, resetRunStore, setRunStore } = await import(
   '../../src/integrations/persistence'
 );
 
@@ -22,22 +19,16 @@ function runRequest(): Request {
 }
 
 describe('handleAuditRun persistence', () => {
-  let storeDir: string;
-
   beforeEach(() => {
     runBrowserAudit.mockReset();
+    setRunStore(new MemoryRunStore());
   });
 
   afterEach(async () => {
-    if (storeDir) {
-      await rm(storeDir, { recursive: true, force: true });
-    }
     resetRunStore();
   });
 
   it('persists runs and returns regression on a subsequent audit', async () => {
-    storeDir = await mkdtemp(join(tmpdir(), 'ada-run-store-'));
-    setRunStore(createRunStore(storeDir));
 
     runBrowserAudit.mockResolvedValue(auditReport({ findings: [] }));
     const baseline = await handleAuditRun(runRequest(), 'req-persist-1');
@@ -57,8 +48,7 @@ describe('handleAuditRun persistence', () => {
   it('persists the fields needed to act on a finding later', async () => {
     // A stored finding used to keep only {code, severity, source}, which meant a
     // saved run could not say which element failed or which criterion it broke.
-    storeDir = await mkdtemp(join(tmpdir(), 'ada-run-store-'));
-    const store = createRunStore(storeDir);
+    const store = new MemoryRunStore();
     setRunStore(store);
 
     runBrowserAudit.mockResolvedValue(auditReport({ findings: [criticalFinding()] }));
@@ -80,8 +70,6 @@ describe('handleAuditRun persistence', () => {
   it('distinguishes two occurrences of the same rule on different elements', async () => {
     // Regression diffing keys on rule + selector. Keying on the rule alone
     // would collapse every occurrence into one entry and lose the diff.
-    storeDir = await mkdtemp(join(tmpdir(), 'ada-run-store-'));
-    setRunStore(createRunStore(storeDir));
 
     runBrowserAudit.mockResolvedValue(
       auditReport({ findings: [criticalFinding({ selector: '#a' })] }),
@@ -108,16 +96,12 @@ describe('handleAuditRun persistence', () => {
 });
 
 describe('handleAuditRun async mode', () => {
-  let storeDir: string;
-
   beforeEach(() => {
     runBrowserAudit.mockReset();
+    setRunStore(new MemoryRunStore());
   });
 
   afterEach(async () => {
-    if (storeDir) {
-      await rm(storeDir, { recursive: true, force: true });
-    }
     resetRunStore();
   });
 
@@ -144,8 +128,7 @@ describe('handleAuditRun async mode', () => {
   }
 
   it('returns 202 with a poll URL instead of blocking', async () => {
-    storeDir = await mkdtemp(join(tmpdir(), 'ada-run-store-'));
-    const store = createRunStore(storeDir);
+    const store = new MemoryRunStore();
     setRunStore(store);
     runBrowserAudit.mockResolvedValue(auditReport());
 
@@ -167,8 +150,7 @@ describe('handleAuditRun async mode', () => {
     // A run that times out or crashes must leave a trace. Records used to be
     // written only on success, so a run that died mid-flight was
     // indistinguishable from one that never happened.
-    storeDir = await mkdtemp(join(tmpdir(), 'ada-run-store-'));
-    const store = createRunStore(storeDir);
+    const store = new MemoryRunStore();
     setRunStore(store);
 
     let release: () => void = () => {};
@@ -188,8 +170,7 @@ describe('handleAuditRun async mode', () => {
   });
 
   it('a poll eventually sees the completed run', async () => {
-    storeDir = await mkdtemp(join(tmpdir(), 'ada-run-store-'));
-    const store = createRunStore(storeDir);
+    const store = new MemoryRunStore();
     setRunStore(store);
     runBrowserAudit.mockResolvedValue(auditReport({ findings: [criticalFinding()] }));
 
@@ -204,8 +185,7 @@ describe('handleAuditRun async mode', () => {
   });
 
   it('records a failed run so a poll gets an answer rather than hanging', async () => {
-    storeDir = await mkdtemp(join(tmpdir(), 'ada-run-store-'));
-    const store = createRunStore(storeDir);
+    const store = new MemoryRunStore();
     setRunStore(store);
     runBrowserAudit.mockRejectedValue(
       new Error('ENOENT: no such file, open /Users/someone/.secrets/db.json'),

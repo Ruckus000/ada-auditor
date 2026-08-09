@@ -150,6 +150,7 @@ async function executeRun(
       durationMs,
       browserMode: true,
       pages,
+      truncatedPages: report.truncatedPages,
       status: 'complete',
     });
     await store.saveRun(storedRun);

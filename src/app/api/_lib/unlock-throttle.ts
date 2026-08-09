@@ -1,5 +1,4 @@
 import { Redis } from '@upstash/redis';
-import { isKvConfigured } from '../../../integrations/persistence';
 
 /**
  * Rate limit on console unlock attempts.
@@ -9,9 +8,13 @@ import { isKvConfigured } from '../../../integrations/persistence';
  * attempts across instances met no limit at all, and the control read as
  * protection while providing close to none.
  *
- * It is durable now when Redis is configured (required on Vercel anyway for
- * the run store), and falls back to memory locally and in tests, where a
- * single process makes that accurate rather than misleading.
+ * It is durable when Redis is configured, and falls back to memory locally and
+ * in tests, where a single process makes that accurate rather than misleading.
+ *
+ * Redis used to be required on Vercel because the run store needed it. The run
+ * store is Postgres now, so nothing else forces Redis to exist — which means
+ * a deploy can reach production with this silently in memory-only mode. That
+ * is a real gap, recorded in `AGENTS.md`, not a design.
  *
  * Still a speed bump rather than a guarantee: the real defence is a
  * high-entropy token, which is why `docs/env.md` tells you to generate one with
@@ -20,6 +23,21 @@ import { isKvConfigured } from '../../../integrations/persistence';
 
 const MAX_ATTEMPTS = 8;
 const WINDOW_SECONDS = 5 * 60;
+
+/**
+ * Whether a Redis/KV endpoint is configured for the throttle.
+ *
+ * This lived in the persistence package while the run store was KV-backed. It
+ * moved here when that store was replaced by Postgres: the throttle is now the
+ * only thing that wants Redis, and a shared helper implied a coupling that no
+ * longer exists.
+ */
+export function isThrottleKvConfigured(): boolean {
+  return Boolean(
+    (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
+      (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
+  );
+}
 
 export interface ThrottleStore {
   isThrottled(key: string): Promise<boolean>;
@@ -96,7 +114,7 @@ let store: ThrottleStore | undefined;
 
 export function getThrottleStore(): ThrottleStore {
   if (!store) {
-    store = isKvConfigured()
+    store = isThrottleKvConfigured()
       ? new KvThrottleStore(
           new Redis({
             url: (process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL)!,

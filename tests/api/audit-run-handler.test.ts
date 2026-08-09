@@ -5,6 +5,9 @@ const { runBrowserAudit } = vi.hoisted(() => ({ runBrowserAudit: vi.fn() }));
 vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserAudit }));
 
 const { handleAuditRun } = await import('../../src/app/api/_lib/audit-run-handler');
+const { MemoryRunStore, resetRunStore, setRunStore } = await import(
+  '../../src/integrations/persistence'
+);
 
 /** Synchronous mode: these assert on the run's outcome, not on the 202 shape. */
 function runRequest(body: Record<string, unknown>): Request {
@@ -19,10 +22,15 @@ describe('handleAuditRun', () => {
   beforeEach(() => {
     runBrowserAudit.mockReset();
     runBrowserAudit.mockResolvedValue(auditReport());
+    // The store used to fall back to the filesystem when nothing was
+    // configured. It fails loudly without a database now, so every test that
+    // reaches persistence injects the in-process double explicitly.
+    setRunStore(new MemoryRunStore());
   });
 
   afterEach(() => {
     delete process.env.CHAOS_ENABLED;
+    resetRunStore();
   });
 
   it('runs an audit and returns a structured response', async () => {

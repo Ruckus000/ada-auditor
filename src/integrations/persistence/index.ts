@@ -1,52 +1,40 @@
-import { join } from 'node:path';
-import { Redis } from '@upstash/redis';
+import { neon } from '@neondatabase/serverless';
 import type { RunStore } from '../../domain/persistence';
-import { FileRunStore } from './file-run-store';
-import { KvRunStore, type KvClient } from './kv-run-store';
+import { PostgresRunStore, type SqlClient } from './postgres-run-store';
 
 let defaultStore: RunStore | undefined;
 
-export function isKvConfigured(): boolean {
-  return Boolean(
-    (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
-      (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
-  );
-}
-
-function createConfiguredKvClient(): KvClient {
-  const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) {
-    throw new Error('Redis/KV REST credentials are not configured.');
-  }
-  return new Redis({ url, token });
+export function isDatabaseConfigured(): boolean {
+  return Boolean(process.env.DATABASE_URL);
 }
 
 /**
- * Build a run store. Explicit `storeDir` always uses the filesystem adapter
- * (local/CI). Otherwise Upstash Redis/KV wins when REST credentials are present.
+ * Builds the run store.
+ *
+ * There is one, and it needs a database. The filesystem and KV stores that
+ * used to sit behind this factory are gone: keeping a local fallback would
+ * mean two persistence behaviours to keep correct, and — worse — a
+ * misconfigured deploy would quietly write runs to a serverless filesystem
+ * that disappears with the invocation instead of failing where someone can
+ * see it. Tests inject `MemoryRunStore` through `setRunStore`.
  */
-export function createRunStore(storeDir?: string, kvClient?: KvClient): RunStore {
-  if (storeDir) {
-    return new FileRunStore(storeDir);
+export function createRunStore(sql?: SqlClient): RunStore {
+  if (sql) {
+    return new PostgresRunStore(sql);
   }
 
-  if (kvClient) {
-    return new KvRunStore(kvClient);
-  }
-
-  if (isKvConfigured()) {
-    return new KvRunStore(createConfiguredKvClient());
-  }
-
-  if (process.env.VERCEL) {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
     throw new Error(
-      'Durable run store required on Vercel: set KV_REST_API_URL/TOKEN or UPSTASH_REDIS_REST_*',
+      'DATABASE_URL is not set. Provision Neon (`vercel integration add neon`) and run `vercel env pull`.',
     );
   }
 
-  const resolvedDir = process.env.RUN_STORE_PATH ?? join(process.cwd(), 'data/runs');
-  return new FileRunStore(resolvedDir);
+  // Constructed lazily, inside the factory: `neon()` throws without a URL, and
+  // Next evaluates top-level module code at build time, so a module-scope
+  // client would crash `next build` on any deploy where the variable is not
+  // set yet.
+  return new PostgresRunStore(neon(url) as SqlClient);
 }
 
 export function getRunStore(): RunStore {
@@ -64,5 +52,5 @@ export function resetRunStore(): void {
   defaultStore = undefined;
 }
 
-export { FileRunStore } from './file-run-store';
-export { KvRunStore } from './kv-run-store';
+export { PostgresRunStore } from './postgres-run-store';
+export { MemoryRunStore } from './memory-run-store';

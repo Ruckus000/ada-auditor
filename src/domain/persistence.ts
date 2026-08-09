@@ -77,9 +77,22 @@ export type StoredRunRecord = {
    * past.
    */
   pages?: StoredRunPage[];
+  /**
+   * Pages the run's page cap refused to audit. Non-zero means this run did not
+   * cover the whole journey — persisted because a partial audit must never
+   * read as a complete one once the log line that recorded it is gone.
+   */
+  truncatedPages?: number;
   status?: RunStatus;
   /** Populated when `status` is `failed`; a stable code, never raw error text. */
   failureReason?: string;
+};
+
+export type ListRunsOptions = {
+  journeyId?: string;
+  environment?: Environment;
+  /** Clamped by the store. A caller cannot ask for the whole table. */
+  limit?: number;
 };
 
 export interface RunStore {
@@ -90,4 +103,12 @@ export interface RunStore {
     environment: Environment,
     excludeRequestId?: string,
   ): Promise<StoredRunRecord | null>;
+  /**
+   * Run history, newest first.
+   *
+   * Called out in the Phase 1 plan and never delivered, so until now there was
+   * no way to enumerate history at all — every screen showing "past runs" had
+   * to invent them.
+   */
+  list(options?: ListRunsOptions): Promise<StoredRunRecord[]>;
 }

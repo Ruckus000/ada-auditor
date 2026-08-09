@@ -9,6 +9,9 @@ const { isSameOriginConsoleRequest } = await import('../../src/app/api/_lib/same
 const { CONSOLE_COOKIE, createSessionValue } = await import(
   '../../src/app/api/_lib/console-session'
 );
+const { MemoryRunStore, resetRunStore, setRunStore } = await import(
+  '../../src/integrations/persistence'
+);
 
 const TOKEN = 'test-console-token-long-enough';
 
@@ -27,10 +30,12 @@ describe('audit console route', () => {
   beforeEach(() => {
     runBrowserAudit.mockReset();
     runBrowserAudit.mockResolvedValue(auditReport());
+    setRunStore(new MemoryRunStore());
   });
 
   afterEach(() => {
     delete process.env.AUDITOR_RUN_TOKEN;
+    resetRunStore();
   });
 
   it('accepts same-origin sec-fetch-site', () => {
