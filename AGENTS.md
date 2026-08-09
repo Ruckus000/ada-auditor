@@ -76,9 +76,14 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - Domain/service unit tests required for contract and reporting changes
 - Chaos-style regressions required for steady-state claims (incomplete evidence, hint conflicts, scope fail-closed, complete-evidence CI fail path)
 - Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos` and `npm run build` evidence
-- The fast suite launches no browser and opens no socket. A new `RunStore`
-  behaviour goes in the shared contract (`tests/support/run-store-contract.ts`)
-  so the in-memory double and Postgres cannot drift apart
+- The fast suite launches no browser and opens no socket. New store behaviour
+  goes in a shared contract (`tests/support/run-store-contract.ts`,
+  `platform-store-contract.ts`) so the in-memory doubles and Postgres cannot
+  drift apart — a double that quietly disagrees makes the fast suite green
+  about behaviour production does not have
+- Shared contracts run against a database that already holds real rows, so
+  scope every assertion. `listClients()` and `listEvents()` take no filter that
+  can isolate them: assert with `toContain`, never `toEqual`/`toHaveLength`
 - Keep browser launches out of the unit suite. Handler tests mock the audit; the real browser is covered by `tests/integrations/browser/**` and by chaos.
 - When adding Vercel routes: add route/handler tests or chaos script assertions for terminal statuses
 - Before claiming a change works end to end, run one real audit through
@@ -113,6 +118,17 @@ Implemented and verified locally + on Vercel preview:
   and cross-page issues only exist in aggregate.
 - Reporting (`pass|fail|inconclusive`), regression comparison keyed on
   rule + page + selector
+- **Vocabulary mapping lives in `services/presentation/`**, not beside the
+  components: deciding whether the product says `pass` or "we could not tell"
+  is a business rule with a steady-state contract behind it. `VerdictKind`
+  carries `inconclusive` as a first-class outcome, and severity maps 5→5 —
+  folding `needs-review` into a low-priority bucket would delete the
+  human-review queue, and folding `advisory` anywhere would contradict
+  `gateable: false`.
+- **Triage is keyed on finding identity, per client** (`finding_triage`), never
+  on the per-run `findings` row: `saveRun` deletes and reinserts a run's
+  children on every write, so triage stored there would not survive one run.
+  `fixed` is derived from the next run's absence, never stored.
 - **Persistence: Neon Postgres** (Vercel Marketplace), schema in
   `src/integrations/persistence/schema.sql`, applied by `npm run migrate`.
   `run_pages` is a first-class table because a run is a journey and a journey
@@ -150,11 +166,13 @@ Read this before claiming something works.
   console shows it. It does not gate readiness, because a degraded security
   speed bump is not a reason to serve 503 to every operator. The real defence
   remains a high-entropy token.
-- **Six of the eight tables are empty.** `runs`, `run_pages` and `findings` are
-  written by every audit. `clients`, `journeys`, `reports`, `activity_events`
-  and `client_config` exist because Phase 2C wires the screens to them
-  immediately; until it does, they are schema without a writer. If 2C slips,
-  they should be dropped rather than left as furniture.
+- **The catalog tables still have no UI behind them.** `clients`, `journeys`,
+  `client_config`, `reports`, `activity_events` and `finding_triage` now have a
+  store and a tested contract, and `journeys` materialises on every run — but
+  only the screens read or write the rest, and the screens land slice by slice
+  through Phase 2C. Until then they are reachable but mostly empty.
+- **The UI at `/` is still a fixture prototype.** Phase 2C replaces it; see
+  `docs/superpowers/plans/2026-08-07-phase-2.md`.
 - **A page cap of 20 is a guess, not a measurement.** No real journey has been
   run against it. If real journeys exceed it, that is the signal for a
   container worker rather than a bigger number.

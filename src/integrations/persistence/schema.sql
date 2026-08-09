@@ -17,6 +17,10 @@
 create table if not exists clients (
   id          text primary key,
   name        text not null,
+  -- A free-text name, not a foreign key — the same shape as
+  -- `activity_events.actor`, and for the same reason: there is no per-user
+  -- identity in this product and adding one here would smuggle it in.
+  owner       text,
   created_at  timestamptz not null default now()
 );
 
@@ -170,6 +174,59 @@ create table if not exists activity_events (
 create index if not exists activity_events_created_idx
   on activity_events (created_at desc);
 
+-- --------------------------------------------------------- finding triage --
+--
+-- Triage is keyed on the IDENTITY of a defect, not on the findings row that
+-- happened to observe it.
+--
+-- `PostgresRunStore.saveRun` deletes and reinserts a run's findings on every
+-- write — including the write that turns a `running` placeholder into a
+-- finished run. Triage stored on that row would not survive a single run, let
+-- alone a re-audit. And a dismissal that does not survive re-measurement is
+-- not a professional judgement, it is a UI toggle.
+--
+-- `finding_key` is `source:code:page_url:selector`, produced by `findingKey`
+-- in `services/regression.ts` and deliberately NOT recomputed here. One
+-- definition of a finding's identity, shared by the regression diff and by
+-- triage — two copies would drift and a dismissal would silently stop
+-- matching.
+--
+-- Scoped to the client rather than the journey: two journeys on one site
+-- routinely traverse the same page, and an operator who dismissed a contrast
+-- failure on a shared header should not have to dismiss it again per journey.
+--
+-- Only human decisions live here. `fixed` does not: a finding is fixed when
+-- the next run stops reporting it, which `compareToBaseline` already computes.
+-- A stored `fixed` flag can disagree with the evidence, and when it does the
+-- evidence is right.
+create table if not exists finding_triage (
+  client_id    text not null references clients (id) on delete cascade,
+  finding_key  text not null,
+
+  -- Denormalised components of the key, so the table is legible in psql and
+  -- queryable by page. The key remains authoritative.
+  source       text not null,
+  code         text not null,
+  page_url     text,
+  selector     text,
+
+  state        text not null
+                 check (state in ('dismissed', 'accepted-risk', 'assigned')),
+  -- Required by the UI for `dismissed` and `accepted-risk`, enforced there
+  -- rather than by a check constraint — an `assigned` row legitimately has no
+  -- note, and a constraint covering only two of three states reads as a bug.
+  note         text,
+  assignee     text,
+  actor        text not null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+
+  primary key (client_id, finding_key)
+);
+
+create index if not exists finding_triage_client_idx
+  on finding_triage (client_id, updated_at desc);
+
 -- ------------------------------------------------------------ adjustments --
 --
 -- `create table if not exists` does nothing to a table that already exists, so
@@ -178,7 +235,85 @@ create index if not exists activity_events_created_idx
 -- already correct.
 --
 -- When one of these stops being expressible as an idempotent `alter`, that is
--- the moment to adopt a real migration tool — not before.
+-- the moment to adopt a real migration tool — not before. Phase 2C added the
+-- first non-additive changes (two `drop column`s); `drop column if exists` is
+-- still idempotent, so that threshold is not yet crossed.
 
 alter table findings alter column wcag_criteria drop not null;
 alter table findings alter column wcag_criteria drop default;
+
+alter table clients add column if not exists owner text;
+
+-- The columns `finding_triage` replaces. Never written, never read. Leaving
+-- them is the furniture AGENTS.md warns about — and leaving them beside a
+-- table that means the same thing is worse, because the next reader has to
+-- work out which one is live.
+alter table findings drop column if exists status;
+alter table findings drop column if exists note;
+
+-- --- Linkage: make the chain client -> journey -> run total ----------------
+--
+-- `runs.journey_id` has always been free text from the request body, so there
+-- was no path from a run to a client and the Portfolio screen had no query to
+-- run. Rather than making the API stricter — which would break the run
+-- contract suite, chaos, and every existing caller — journeys materialise on
+-- demand: `ensureJourney` upserts a row before each run is recorded, and the
+-- rows below backfill everything that already exists.
+
+insert into clients (id, name)
+values ('client-unassigned', 'Unassigned')
+on conflict (id) do nothing;
+
+insert into journeys (id, client_id, name)
+select distinct r.journey_id, 'client-unassigned', r.journey_id
+from runs r
+where not exists (select 1 from journeys j where j.id = r.journey_id)
+on conflict (id) do nothing;
+
+update journeys set client_id = 'client-unassigned' where client_id is null;
+alter table journeys alter column client_id set not null;
+
+-- Archived rather than deleted, because `runs` cascades from here: a delete
+-- button on a journey would destroy its audit history.
+alter table journeys add column if not exists archived_at timestamptz;
+
+-- `add constraint` has no `if not exists`, so it is guarded rather than
+-- skipped — re-running this file must stay a no-op.
+do $$ begin
+  alter table runs
+    add constraint runs_journey_fk
+    foreign key (journey_id) references journeys (id) on delete cascade;
+exception when duplicate_object then null; end $$;
+
+-- --- Score -----------------------------------------------------------------
+--
+-- A conformance rate over the checks actually evaluated: passed / (passed +
+-- failed). Nullable on purpose — an inconclusive run has no denominator, and
+-- printing a number would assert a measurement nobody made. The ring renders
+-- an em dash instead.
+alter table runs add column if not exists score integer
+  check (score is null or (score >= 0 and score <= 100));
+
+-- Which formula produced it. A score is a claim in a client report, so
+-- changing how it is computed must not silently reinterpret every historical
+-- run.
+alter table runs add column if not exists score_version smallint not null default 1;
+
+-- The score's inputs, per page. `checks_passed` is new evidence: axe reports
+-- passes and `scanPageWithAxe` discarded them, so until now there was no
+-- denominator anywhere. `checks_incomplete` is counted separately and never as
+-- a pass — which is what the product already tells clients.
+alter table run_pages add column if not exists checks_passed integer;
+alter table run_pages add column if not exists checks_failed integer;
+alter table run_pages add column if not exists checks_incomplete integer;
+
+-- --- Reports ---------------------------------------------------------------
+--
+-- The report screens branch on audience, and a shared link must render from
+-- the run it was issued against — never "the latest run", or a link sent to a
+-- regulator changes meaning after the next nightly.
+alter table reports add column if not exists audience text
+  check (audience is null or audience in ('legal', 'dev', 'exec'));
+alter table reports add column if not exists title text;
+alter table reports add column if not exists issued_by text;
+alter table reports add column if not exists revoked_at timestamptz;

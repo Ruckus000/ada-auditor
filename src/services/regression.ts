@@ -28,8 +28,13 @@ function deterministicFindings(findings: StoredFinding[]): StoredFinding[] {
  * template — so `#nav-logo` failing `image-alt` on both is two separate fixes.
  * Without the page they collapse into one entry, and fixing one of them reads
  * as fixing both.
+ *
+ * Exported because triage keys on it too: a dismissal is a decision about a
+ * defect's identity, and that identity has exactly one definition. Two copies
+ * would drift, and the day they did, a dismissal would silently stop matching
+ * the finding it was recorded against.
  */
-function findingKey(finding: StoredFinding): string {
+export function findingKey(finding: StoredFinding): string {
   return `${finding.source}:${finding.code}:${finding.pageUrl ?? ''}:${finding.selector ?? ''}`;
 }
 

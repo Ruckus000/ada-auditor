@@ -152,6 +152,23 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     expect(stored?.pages).toHaveLength(1);
   });
 
+  it('keeps findings across the running-to-complete rewrite', async () => {
+    // The regression guard for where triage lives. `saveRun` deletes and
+    // reinserts a run's children on every write, so anything stored ON a
+    // findings row — a dismissal, a note — is destroyed by the ordinary
+    // lifecycle of a single run, before any re-audit. Triage therefore lives
+    // in `finding_triage`, keyed on the finding's identity. If this test ever
+    // starts failing, that decision has been quietly reversed.
+    const store = await makeStore();
+    await store.saveRun(runRecord({ requestId: 'contract-rewrite', status: 'running' }));
+    await store.saveRun({ ...FULL_RECORD, requestId: 'contract-rewrite' });
+
+    const stored = await store.getRun('contract-rewrite');
+    expect(stored?.findings).toHaveLength(FULL_RECORD.findings.length);
+    expect(stored?.findings[0].selector).toBe('#hero');
+    expect(stored?.pages).toHaveLength(2);
+  });
+
   it('does not leave children behind from an earlier write', async () => {
     // The placeholder has no pages and the finished record has several. A
     // rewrite that only upserts the parent leaves a run holding pages from an

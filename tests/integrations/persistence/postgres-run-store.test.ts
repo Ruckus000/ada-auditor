@@ -28,6 +28,10 @@ const sql = neon(process.env.DATABASE_URL!) as SqlClient;
  */
 async function clearContractRows(): Promise<void> {
   await sql`delete from runs where request_id like 'contract-%'`;
+  // `saveRun` materialises a journey row for every run, so the contract leaves
+  // journeys behind too. Left alone they show up on the Portfolio under
+  // "Unassigned" — test litter appearing in the product.
+  await sql`delete from journeys where id like 'contract-%'`;
 }
 
 describe('PostgresRunStore', () => {
