@@ -1,12 +1,20 @@
+import { getPlatformStore, getRunStore } from '../../integrations/persistence';
+import { buildPortfolio } from '../../services/portfolio';
 import { PortfolioRoute } from '../platform/components/routes/portfolio-route';
 
 /**
  * The portfolio, and the product's front door.
  *
- * A Server Component with nothing to load yet: the screens still read
- * fixtures. This is the boundary the query lands at in the next slice, which
- * is why it exists now rather than being added later.
+ * It starts empty: operators add clients, nothing is seeded. This is the first
+ * screen reading the database rather than `data.ts`.
  */
-export default function PortfolioPage() {
-  return <PortfolioRoute />;
+export default async function PortfolioPage() {
+  const platform = getPlatformStore();
+  const clients = await buildPortfolio({
+    clients: platform,
+    journeys: platform,
+    runs: getRunStore(),
+  });
+
+  return <PortfolioRoute clients={clients} />;
 }

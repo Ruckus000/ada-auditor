@@ -9,7 +9,7 @@ import { useClientView } from './use-client-view';
  * reached by opening a report from the library, and the URL says which one is
  * open (`/reports/2`).
  */
-export function ReportsRoute({ workspace = false }: { workspace?: boolean }) {
+export function ReportsRoute() {
   const { state } = usePlatform();
   const client = useClientView();
 
@@ -17,5 +17,5 @@ export function ReportsRoute({ workspace = false }: { workspace?: boolean }) {
     return <ReportBuilderScreen client={client} />;
   }
 
-  return <ReportsLibraryScreen client={workspace ? null : client} />;
+  return <ReportsLibraryScreen client={null} />;
 }

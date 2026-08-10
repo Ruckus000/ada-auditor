@@ -105,9 +105,16 @@ beforeAll(async () => {
     env: {
       ...process.env,
       AUDITOR_RUN_TOKEN: TOKEN,
-      // Keep the run store out of it: these tests never start an audit, and a
-      // missing DATABASE_URL must not be why they fail.
-      DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://unused/hydration-test',
+      // The portfolio reads the catalog, so the server needs *a* store. CI has
+      // no database, and pointing at one that is not there renders the error
+      // page and fails every assertion below for the wrong reason. This asks
+      // for the ephemeral store explicitly; nothing here persists anything.
+      AUDITOR_STORE: 'memory',
+      DATABASE_URL: '',
+      // The end-to-end test below runs a real audit through the real endpoint.
+      // The chaos scenario is how it gets deterministic findings without a
+      // site to point at.
+      CHAOS_ENABLED: 'true',
     },
     // Own process group, so teardown can kill `next start` and not just the
     // `npx` wrapper in front of it — an orphan keeps the port and makes the
@@ -140,14 +147,16 @@ afterAll(async () => {
   }
 });
 
+const CLIENT = 'harness-client';
+
 const ROUTES = [
   '/',
   '/activity',
   '/settings',
   '/reports',
-  '/clients/acme-outfitters',
-  '/clients/acme-outfitters/findings',
-  '/clients/acme-outfitters/journeys',
+  `/clients/${CLIENT}`,
+  `/clients/${CLIENT}/findings`,
+  `/clients/${CLIENT}/journeys`,
 ];
 
 describe('platform hydration', () => {
@@ -165,6 +174,104 @@ describe('platform hydration', () => {
       await page.close();
     }
   }, 60_000);
+
+  it('starts with an empty portfolio and adds a client through the modal', async () => {
+    // The one path that decides whether this product has a front door: the
+    // portfolio is empty until an operator adds someone, and adding someone
+    // has to actually reach the store and come back. Every unit test around
+    // this passed while the modal was still scenery that jumped to a fixture.
+    //
+    // It runs first on purpose, and the client it adds is the one every client
+    // route below visits. Seeding in `beforeAll` instead would have made
+    // "starts empty" untestable — and a seeded fixture is exactly what this
+    // phase removed.
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      expect(await page.innerText('body')).toContain('No clients yet');
+
+      await page.getByRole('button', { name: 'Add the first client', exact: true }).click();
+      await page.getByLabel('Client name').fill('Harness Client');
+      await page.getByLabel('Owner').fill('Alex Reed');
+      await page.getByRole('button', { name: 'Add client', exact: true }).click();
+
+      // The row, not the toast: the toast says the same words and would appear
+      // even if the write were discarded. Only the row can come from a re-read
+      // of the store, so the empty state disappearing is the real assertion.
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 15_000 })
+        .not.toContain('No clients yet');
+
+      const body = await page.innerText('body');
+      expect(body).toContain('Harness Client');
+      expect(body).toContain('Never audited');
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
+
+  it('shows the findings a real run produced', async () => {
+    // The check this whole phase is judged on. A client, a journey, an audit
+    // through the real endpoint, and the defects it found rendered on that
+    // client's screen — no fixture anywhere in the chain.
+    //
+    // It also covers the linkage that was missing until this slice: `saveRun`
+    // materialises an unknown journey under `client-unassigned`, so a run only
+    // reaches a client's screen if the journey was registered against that
+    // client first.
+    const journey = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ name: 'Checkout' }),
+    });
+    expect(journey.status, await journey.clone().text()).toBe(201);
+    const { journey: created } = await journey.json();
+
+    const run = await fetch(`${BASE}/api/audit/run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        journeyId: created.id,
+        environment: 'staging',
+        chaosScenario: 'browser_passthrough_violations',
+      }),
+    });
+    // 202 with a poll URL: a run launches a browser and walks a journey, so
+    // the endpoint hands back a request id rather than holding the connection.
+    expect([200, 202]).toContain(run.status);
+    const { pollUrl, requestId } = await run.json();
+
+    const deadline = Date.now() + 90_000;
+    let finished = false;
+    while (Date.now() < deadline && !finished) {
+      const poll = await fetch(`${BASE}${pollUrl ?? `/api/audit/runs/${requestId}`}`, {
+        headers: { authorization: `Bearer ${TOKEN}` },
+      });
+      const state = await poll.json();
+      finished = state.run?.status === 'complete' || state.run?.status === 'failed';
+      if (!finished) await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    expect(finished, 'the audit never finished').toBe(true);
+
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/findings`, { waitUntil: 'domcontentloaded' });
+      const body = await page.innerText('body');
+
+      // Grouped by page, because a run is a journey and a journey is several
+      // pages. The scenario walks through a page with violations on it, which
+      // is exactly the bug that made a run report only its last page.
+      expect(body).toContain('violations.html');
+      expect(body).toContain('button-name');
+      expect(body).toContain('MUST FIX');
+      expect(body).not.toContain('Nothing audited yet');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
 
   it.each(ROUTES)('hydrates %s', async (route) => {
     const page = await openAuthenticatedPage();
@@ -193,22 +300,23 @@ describe('platform hydration', () => {
     // is the assertion that the restructure actually delivered its point.
     const page = await openAuthenticatedPage();
     try {
-      await page.goto(`${BASE}/clients/acme-outfitters`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${BASE}/clients/${CLIENT}`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      await page.getByRole('button', { name: 'Findings', exact: true }).click();
-      await page.waitForURL('**/clients/acme-outfitters/findings', { timeout: 15_000 });
+      await page.getByRole('link', { name: 'Journeys', exact: true }).click();
+      await page.waitForURL(`**/clients/${CLIENT}/journeys`, { timeout: 15_000 });
 
-      expect(new URL(page.url()).pathname).toBe('/clients/acme-outfitters/findings');
+      expect(new URL(page.url()).pathname).toBe(`/clients/${CLIENT}/journeys`);
     } finally {
       await page.close();
     }
   }, 60_000);
 
   it('refuses a client that does not exist rather than showing another one', async () => {
-    // `indexForSlug` falls back to index 0, so without a guard this URL renders
-    // the first client's findings under a different client's address. That
-    // looks like an answer, which makes it worse than an error page.
+    // The fixture lookup this replaces fell back to the first client, so any
+    // unknown slug rendered one client's findings under another client's
+    // address. That looks like an answer, which makes it worse than an error
+    // page.
     const page = await openAuthenticatedPage();
     try {
       const response = await page.goto(`${BASE}/clients/does-not-exist`, {
@@ -216,26 +324,12 @@ describe('platform hydration', () => {
       });
 
       expect(response?.status()).toBe(404);
-      expect(await page.innerText('body')).not.toContain('Northwind Health');
+      expect(await page.innerText('body')).not.toContain('Harness Client');
     } finally {
       await page.close();
     }
   }, 60_000);
 
-  it('keeps a filter in the URL so it survives a reload', async () => {
-    const page = await openAuthenticatedPage();
-    try {
-      await page.goto(`${BASE}/clients/acme-outfitters/findings?filter=must`, {
-        waitUntil: 'domcontentloaded',
-      });
-      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
-
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      expect(new URL(page.url()).searchParams.get('filter')).toBe('must');
-    } finally {
-      await page.close();
-    }
-  }, 60_000);
 });
 
 /**

@@ -1,0 +1,123 @@
+import { z } from 'zod';
+import { operatorName } from '../../../../../../domain/operator';
+import { getPlatformStore } from '../../../../../../integrations/persistence';
+import { clientIdFromName } from '../../../../../../services/portfolio';
+import { hasOperatorSession } from '../../../../_lib/operator-session';
+import { isRunAuthorized } from '../../../../_lib/auth';
+import { isSameOriginConsoleRequest } from '../../../../_lib/same-origin';
+import { createRequestId } from '../../../../_lib/request-id';
+
+/**
+ * A client's journeys.
+ *
+ * This is the link that was missing. `saveRun` materialises a journey row for
+ * any `journeyId` it has never seen, under the placeholder client
+ * `client-unassigned` — which keeps `saveRun` total but means a run posted to
+ * `/api/audit/run` belongs to nobody. Registering the journey here first, with
+ * the client that owns it, is what makes a run show up on that client's
+ * findings screen; `saveRun`'s insert is `on conflict do nothing`, so it
+ * leaves the real owner alone.
+ */
+async function authorize(request: Request): Promise<boolean> {
+  if (isRunAuthorized(request)) {
+    return true;
+  }
+  // A cookie alone is not enough for a state-changing request: it travels on
+  // cross-site form posts too.
+  return isSameOriginConsoleRequest(request) && (await hasOperatorSession());
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ clientId: string }> },
+) {
+  const requestId = createRequestId();
+
+  if (!(await authorize(request))) {
+    return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
+  }
+
+  const { clientId } = await params;
+  const platform = getPlatformStore();
+
+  if (!(await platform.getClient(clientId))) {
+    return Response.json({ error: 'client_not_found', requestId }, { status: 404 });
+  }
+
+  const journeys = await platform.listJourneys(clientId);
+
+  return Response.json({ requestId, journeys, count: journeys.length }, { status: 200 });
+}
+
+const createJourneySchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  targetUrl: z.string().url().max(2048).optional(),
+  /**
+   * The steps the runner walks, stored whole and unvalidated here.
+   *
+   * `/api/audit/run` owns the step contract and validates it there; duplicating
+   * that schema would give two places to disagree about what a step is. What
+   * this route will not accept is a credential *value* — a step references one
+   * by name and the value is resolved server-side, so a literal here would be a
+   * secret written into a database column.
+   */
+  steps: z.array(z.record(z.string(), z.unknown())).max(200).optional(),
+});
+
+/** Rejects a step that carries a password rather than a reference to one. */
+function containsInlineCredential(steps: Array<Record<string, unknown>>): boolean {
+  return steps.some((step) =>
+    Object.keys(step).some((key) => /^(password|pass|secret|token)$/i.test(key)),
+  );
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ clientId: string }> },
+) {
+  const requestId = createRequestId();
+
+  if (!(await authorize(request))) {
+    return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
+  }
+
+  const { clientId } = await params;
+  const platform = getPlatformStore();
+
+  if (!(await platform.getClient(clientId))) {
+    return Response.json({ error: 'client_not_found', requestId }, { status: 404 });
+  }
+
+  let parsed: z.infer<typeof createJourneySchema>;
+  try {
+    parsed = createJourneySchema.parse(await request.json());
+  } catch {
+    return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
+  }
+
+  if (parsed.steps && containsInlineCredential(parsed.steps)) {
+    return Response.json({ error: 'inline_credential', requestId }, { status: 400 });
+  }
+
+  // Scoped to the client, because the id is global: two clients may both have
+  // a journey called "Checkout" and they are not the same journey.
+  const taken = (await platform.listJourneys()).map((journey) => journey.id);
+  const id = clientIdFromName(`${clientId} ${parsed.name}`, taken);
+
+  await platform.upsertJourney({
+    id,
+    clientId,
+    name: parsed.name,
+    ...(parsed.targetUrl ? { targetUrl: parsed.targetUrl } : {}),
+    steps: parsed.steps ?? [],
+  });
+
+  await platform.recordEvent({
+    clientId,
+    actor: operatorName(),
+    action: 'recorded a journey',
+    subject: parsed.name,
+  });
+
+  return Response.json({ requestId, journey: { id, name: parsed.name } }, { status: 201 });
+}

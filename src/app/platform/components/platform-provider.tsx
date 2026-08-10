@@ -24,7 +24,6 @@ import {
   workspaceHref,
   type MenuKey,
 } from '../lib/params';
-import { slugForIndex, indexForSlug } from '../lib/client-slugs';
 
 /**
  * Holds what the URL cannot, and derives everything else from it.
@@ -105,25 +104,18 @@ export function PlatformProvider({
     setEphemeral((prev) => ({ ...prev, showReview, firstRun }));
   }, [showReview, firstRun]);
 
-  const clientIndex = indexForSlug(route.clientSlug);
-
   const state: PlatformState = useMemo(
     () => ({
       ...ephemeral,
-      scope: route.scope,
       screen: route.screen,
-      clientTab: route.clientTab,
-      client: clientIndex,
       findIndex: route.findIndex,
       reportOpen: route.reportOpen,
       settingsTab: search.settingsTab,
       audience: search.audience,
       findFilter: search.filter,
     }),
-    [ephemeral, route, search, clientIndex],
+    [ephemeral, route, search],
   );
-
-  const currentSlug = route.clientSlug ?? slugForIndex(clientIndex);
 
   const flash = useCallback((message: string) => {
     toastId.current += 1;
@@ -186,26 +178,6 @@ export function PlatformProvider({
         settingsTab: merged.settingsTab,
       };
 
-      const slug = merged.client === clientIndex ? currentSlug : slugForIndex(merged.client);
-
-      if (merged.scope === 'client') {
-        // No slug means the client index does not resolve. Falling through
-        // would navigate to a workspace screen — silently leaving the client
-        // the operator was looking at, which is worse than ignoring the patch.
-        if (!slug) return;
-
-        if (merged.clientTab === 'finding') {
-          router.push(findingHref(slug, merged.findIndex, nextSearch));
-          return;
-        }
-        if (merged.clientTab === 'reports' && merged.reportOpen !== null) {
-          router.push(reportHref(slug, merged.reportOpen, nextSearch));
-          return;
-        }
-        router.push(clientHref(slug, merged.clientTab, nextSearch));
-        return;
-      }
-
       if (merged.screen === 'reports' && merged.reportOpen !== null) {
         router.push(reportHref(null, merged.reportOpen, nextSearch));
         return;
@@ -213,7 +185,7 @@ export function PlatformProvider({
 
       router.push(workspaceHref(merged.screen, nextSearch));
     },
-    [router, state, clientIndex, currentSlug],
+    [router, state],
   );
 
   const actions = useMemo<PlatformActions>(
@@ -268,29 +240,6 @@ export function PlatformProvider({
           workspaceHref(screen, screen === 'settings' ? { settingsTab: 'people' } : {}),
         );
       },
-      goClientTab: (tab: ClientTab) => {
-        setEphemeral((prev) => ({ ...prev, modal: null, draft: false }));
-        if (!currentSlug) return;
-        router.push(
-          clientHref(currentSlug, tab, tab === 'settings' ? { settingsTab: 'scanning' } : {}),
-        );
-      },
-      openClient: (index: number) => {
-        setEphemeral((prev) => ({ ...prev, modal: null }));
-        const slug = slugForIndex(index);
-        if (slug) router.push(clientHref(slug));
-      },
-      setFindingStatus: (index: number, status: FindingStatus) =>
-        setEphemeral((prev) => {
-          const name = clientView(clientIndex, prev.findOverrides).name;
-          return {
-            ...prev,
-            findOverrides: {
-              ...prev.findOverrides,
-              [name]: { ...(prev.findOverrides[name] ?? {}), [index]: status },
-            },
-          };
-        }),
     }),
     [
       patch,
@@ -301,8 +250,6 @@ export function PlatformProvider({
       pathname,
       router,
       search.settingsTab,
-      currentSlug,
-      clientIndex,
     ],
   );
 

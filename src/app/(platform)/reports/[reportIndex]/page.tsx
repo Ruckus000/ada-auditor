@@ -22,5 +22,5 @@ export default async function WorkspaceReportBuilderPage({
     notFound();
   }
 
-  return <ReportsRoute workspace />;
+  return <ReportsRoute />;
 }

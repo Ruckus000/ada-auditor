@@ -1,6 +1,8 @@
 import { neon } from '@neondatabase/serverless';
 import type { RunStore } from '../../domain/persistence';
 import type { PlatformStore } from '../../domain/platform';
+import { MemoryPlatformStore } from './memory-platform-store';
+import { MemoryRunStore } from './memory-run-store';
 import { PostgresPlatformStore } from './postgres-platform-store';
 import { PostgresRunStore, type SqlClient } from './postgres-run-store';
 
@@ -9,6 +11,49 @@ let defaultPlatformStore: PlatformStore | undefined;
 
 export function isDatabaseConfigured(): boolean {
   return Boolean(process.env.DATABASE_URL);
+}
+
+/**
+ * An explicit, opt-in ephemeral mode for harnesses that boot the real server.
+ *
+ * This is deliberately **not** a fallback for a missing `DATABASE_URL`. A
+ * fallback would let a misconfigured deploy serve an empty portfolio and
+ * silently discard every run, which is exactly the failure the loud throw
+ * below exists to prevent. `AUDITOR_STORE=memory` has to be typed by someone
+ * who meant it, and it says so on the way past.
+ */
+function memoryStoreRequested(): boolean {
+  if (process.env.AUDITOR_STORE !== 'memory') {
+    return false;
+  }
+
+  console.warn(
+    JSON.stringify({
+      event: 'store_memory_mode',
+      note: 'AUDITOR_STORE=memory — nothing is persisted. Never set this in a deployed environment.',
+    }),
+  );
+  return true;
+}
+
+/**
+ * The ephemeral stores live on `globalThis`, not in a module variable.
+ *
+ * Next bundles route handlers and page components into separate server chunks,
+ * so a module-level singleton is not one singleton — the API route and the
+ * screen that reads it each get their own. Postgres does not care, because the
+ * state is in the database. The memory stores very much do: a client added
+ * through the API never appeared on the page, which looks exactly like a
+ * broken write and is not one. One process, one store.
+ */
+const EPHEMERAL = Symbol.for('ada-auditor.ephemeral-stores');
+
+type EphemeralStores = { runs?: RunStore; platform?: PlatformStore };
+
+function ephemeral(): EphemeralStores {
+  const host = globalThis as { [EPHEMERAL]?: EphemeralStores };
+  host[EPHEMERAL] ??= {};
+  return host[EPHEMERAL];
 }
 
 /**
@@ -24,6 +69,12 @@ export function isDatabaseConfigured(): boolean {
 export function createRunStore(sql?: SqlClient): RunStore {
   if (sql) {
     return new PostgresRunStore(sql);
+  }
+
+  if (memoryStoreRequested()) {
+    const stores = ephemeral();
+    stores.runs ??= new MemoryRunStore();
+    return stores.runs;
   }
 
   const url = process.env.DATABASE_URL;
@@ -63,6 +114,12 @@ export function resetRunStore(): void {
 export function createPlatformStore(sql?: SqlClient): PlatformStore {
   if (sql) {
     return new PostgresPlatformStore(sql);
+  }
+
+  if (memoryStoreRequested()) {
+    const stores = ephemeral();
+    stores.platform ??= new MemoryPlatformStore();
+    return stores.platform;
   }
 
   const url = process.env.DATABASE_URL;

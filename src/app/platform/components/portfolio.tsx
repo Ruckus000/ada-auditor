@@ -1,19 +1,34 @@
 'use client';
 
-import { KPIS } from '../lib/data';
-import { siteViews } from '../lib/derive';
+import { useRouter } from 'next/navigation';
+import type { PortfolioRow } from '../../../services/portfolio';
+import { VERDICT_CHIP, verdictWords } from '../lib/verdict-chip';
 import { usePlatform } from '../lib/state';
 import { T } from '../lib/tokens';
 import { FONT } from '../lib/tokens';
-import { Avatar, ChevronRight, DropMenu, Pill, ScreenHeading, TableHead, TableShell } from './ui';
+import { Avatar, ChevronRight, Pill, ScreenHeading, TableHead, TableShell } from './ui';
 
 const COLUMNS =
-  'minmax(150px,2.1fr) minmax(88px,0.9fr) minmax(58px,0.7fr) minmax(50px,0.7fr) minmax(84px,1fr) minmax(78px,1fr) minmax(52px,0.8fr) 44px';
+  'minmax(160px,2.4fr) minmax(96px,1fr) minmax(64px,0.7fr) minmax(56px,0.7fr) minmax(70px,0.8fr) minmax(90px,1.1fr) minmax(56px,0.8fr) 44px';
 
-export function PortfolioScreen() {
-  const { state, actions } = usePlatform();
-  const sites = siteViews(state.findOverrides);
-  const hasClients = !state.firstRun;
+/** Initials for the owner avatar; the column is blank when nobody owns it. */
+function initials(owner: string | undefined): string {
+  if (!owner) return '—';
+  const words = owner.split(/\s+/).filter(Boolean);
+  return `${words[0]?.[0] ?? ''}${words.length > 1 ? words[words.length - 1][0] : ''}`.toUpperCase();
+}
+
+/** Absolute date rather than "2h ago": a relative string rendered on the
+ *  server is wrong the moment the page sits open, and rendering it on the
+ *  client is a hydration mismatch waiting to happen. */
+function runDate(iso: string): string {
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
+  const { actions } = usePlatform();
+  const router = useRouter();
+  const hasClients = clients.length > 0;
 
   return (
     <div
@@ -23,81 +38,16 @@ export function PortfolioScreen() {
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <ScreenHeading
           title="Portfolio"
-          lede="Sorted so the work that has to happen this week is at the top."
+          lede={
+            hasClients
+              ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}, newest run first.`
+              : 'Nobody yet.'
+          }
         />
-        {hasClients ? (
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <DropMenu
-              menu={actions.menu('sort', 'Sort: most urgent', [
-                'Sort: most urgent',
-                'Sort: lowest score',
-                'Sort: recently run',
-                'Sort: name A–Z',
-              ])}
-            />
-            <DropMenu
-              menu={{
-                ...actions.menu('owner', 'All owners', [
-                  'All owners',
-                  'Jules Reyes',
-                  'Mira Sato',
-                  'Tomás Lund',
-                ]),
-                width: 180,
-              }}
-            />
-          </span>
-        ) : null}
       </div>
 
       {hasClients ? (
         <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))',
-              gap: 14,
-            }}
-          >
-            {KPIS.map((kpi) => (
-              <div
-                key={kpi.label}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 6,
-                  padding: '16px 18px',
-                  border: `1px solid ${T.rule}`,
-                  borderRadius: 12,
-                  background: T.surface,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 11.5,
-                    fontWeight: 650,
-                    letterSpacing: '0.06em',
-                    color: T.inkMuted,
-                  }}
-                >
-                  {kpi.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: 30,
-                    fontWeight: 700,
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1,
-                    color: kpi.color,
-                  }}
-                >
-                  {kpi.value}
-                </span>
-                <span style={{ fontSize: 12, color: T.inkMuted }}>{kpi.note}</span>
-              </div>
-            ))}
-          </div>
-
           <TableShell>
             <TableHead
               template={COLUMNS}
@@ -106,76 +56,86 @@ export function PortfolioScreen() {
                 'VERDICT',
                 'MUST FIX',
                 'SCORE',
-                'SINCE LAST RUN',
+                'PAGES',
                 'LAST RUN',
                 'OWNER',
                 '',
               ]}
             />
-            {sites.map((site) => (
-              <button
-                key={site.name}
-                type="button"
-                onClick={() => actions.openClient(site.index)}
-                // The visible row is a grid of cells; without this the button's
-                // name would be every cell run together.
-                aria-label={`${site.name} — ${site.chipLabel.replace(/[^A-Za-z ]/g, '').trim()}, ${site.must} must fix, score ${site.score}`}
-                className="ph-row"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: COLUMNS,
-                  gap: 'clamp(8px,0.8vw,12px)',
-                  alignItems: 'center',
-                  width: '100%',
-                  padding: '13px 18px',
-                  border: 'none',
-                  borderBottom: `1px solid ${T.ruleFaint}`,
-                  background: 'transparent',
-                  textAlign: 'left',
-                  fontFamily: FONT.sans,
-                  color: T.ink,
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                  <span style={{ fontSize: 13.5, fontWeight: 650 }}>{site.name}</span>
-                  <span style={{ fontFamily: FONT.mono, fontSize: 11, color: T.inkMuted }}>
-                    {site.domain}
-                  </span>
-                </span>
-                <span>
-                  <Pill bg={site.chipBg} color={site.chipColor} border={site.chipBorder}>
-                    {site.chipLabel}
-                  </Pill>
-                </span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: site.mustColor }}>
-                  {site.must}
-                </span>
-                <span style={{ fontSize: 14, fontWeight: 650, color: site.scoreColor }}>
-                  {site.score}
-                </span>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: site.deltaColor }}>
-                  {site.deltaLong}
-                </span>
-                <span style={{ fontSize: 12.5, color: T.inkMuted }}>{site.last}</span>
-                <Avatar initials={site.owner} />
-                <span
+            {clients.map((client) => {
+              const badge = VERDICT_CHIP[client.lastRun?.verdict ?? 'scan'];
+              const mustFix = client.lastRun?.mustFix ?? 0;
+
+              return (
+                <button
+                  key={client.id}
+                  type="button"
+                  onClick={() => router.push(`/clients/${client.id}`)}
+                  // The visible row is a grid of cells; without this the
+                  // button's name would be every cell run together.
+                  aria-label={`${client.name} — ${
+                    client.lastRun ? verdictWords(client.lastRun.verdict) : 'never audited'
+                  }, ${mustFix} must fix`}
+                  className="ph-row"
                   style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
+                    display: 'grid',
+                    gridTemplateColumns: COLUMNS,
+                    gap: 'clamp(8px,0.8vw,12px)',
                     alignItems: 'center',
-                    gap: 9,
+                    width: '100%',
+                    padding: '13px 18px',
+                    border: 'none',
+                    borderBottom: `1px solid ${T.ruleFaint}`,
+                    background: 'transparent',
+                    textAlign: 'left',
+                    fontFamily: FONT.sans,
+                    color: T.ink,
+                    cursor: 'pointer',
                   }}
                 >
-                  {site.flagged ? (
-                    <span title={site.flag} style={{ color: T.fail, fontSize: 17, lineHeight: 1 }}>
-                      ⚑
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 650 }}>{client.name}</span>
+                    <span style={{ fontFamily: FONT.mono, fontSize: 11, color: T.inkMuted }}>
+                      {client.journeyCount === 1 ? '1 journey' : `${client.journeyCount} journeys`}
                     </span>
-                  ) : null}
-                  <ChevronRight />
-                </span>
-              </button>
-            ))}
+                  </span>
+
+                  <span>
+                    {client.lastRun ? (
+                      <Pill bg={badge.bg} color={badge.color} border={badge.border}>
+                        {badge.label}
+                      </Pill>
+                    ) : (
+                      <span style={{ fontSize: 12.5, color: T.inkMuted }}>Never audited</span>
+                    )}
+                  </span>
+
+                  <span style={{ fontSize: 14, fontWeight: 700, color: mustFix > 0 ? T.fail : T.inkMuted }}>
+                    {client.lastRun ? mustFix : '—'}
+                  </span>
+
+                  {/* An em dash, not a zero: a run we could not score is not a
+                      run that scored badly. */}
+                  <span style={{ fontSize: 14, fontWeight: 650, color: T.inkSoft }}>
+                    {client.lastRun?.score ?? '—'}
+                  </span>
+
+                  <span style={{ fontSize: 12.5, color: T.inkMuted }}>
+                    {client.lastRun ? client.lastRun.pagesAudited : '—'}
+                  </span>
+
+                  <span style={{ fontSize: 12.5, color: T.inkMuted }}>
+                    {client.lastRun ? runDate(client.lastRun.createdAt) : '—'}
+                  </span>
+
+                  <Avatar initials={initials(client.owner)} />
+
+                  <span style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <ChevronRight />
+                  </span>
+                </button>
+              );
+            })}
           </TableShell>
         </>
       ) : (
@@ -209,7 +169,7 @@ export function PortfolioScreen() {
             ◷
           </span>
           <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em' }}>
-            No runs yet
+            No clients yet
           </span>
           <span
             style={{
@@ -220,12 +180,12 @@ export function PortfolioScreen() {
               textWrap: 'pretty',
             }}
           >
-            Add your first client site and we will crawl it, follow the journeys you care about, and
-            come back with findings in plain language. The first run usually takes four minutes.
+            Add the first one. Then record a journey through their site — a checkout, a booking, a
+            sign-in — and every run walks it and reports what a real user would hit.
           </span>
           <button
             type="button"
-            onClick={() => actions.patch({ modal: 'audit' })}
+            onClick={() => actions.patch({ modal: 'addClient' })}
             className="ph-primary"
             style={{
               marginTop: 4,
@@ -240,7 +200,7 @@ export function PortfolioScreen() {
               cursor: 'pointer',
             }}
           >
-            Add a client site
+            Add the first client
           </button>
         </div>
       )}
