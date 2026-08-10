@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import { hasOperatorSession } from '../api/_lib/operator-session';
 import { PlatformProvider } from '../platform/components/platform-provider';
 import { PlatformLocked, PlatformShell } from '../platform/components/platform-shell';
@@ -18,8 +17,15 @@ export const metadata: Metadata = {
  * `/console` sits outside this group and keeps its own gate; `/r/[token]` is
  * outside too and unauthenticated by design.
  *
- * `Suspense` wraps the provider because it reads `useSearchParams`, which opts
- * a subtree out of static rendering unless it has a boundary above it.
+ * There is deliberately no `<Suspense>` here. One was added because the
+ * provider reads `useSearchParams`, but wrapping the whole app in a boundary
+ * is the anti-pattern Next's own docs warn about twice: "place the boundary as
+ * close to the hook call as possible — wrapping a large subtree forces the
+ * entire subtree into the fallback", and "do not pass `{children}` through in
+ * the fallback". This layout did both. It is also unnecessary: the boundary
+ * only matters for routes that prerender, and `hasOperatorSession()` reads
+ * cookies below, which makes every route here dynamic — and on a dynamic route
+ * `useSearchParams` is available during the server render.
  */
 export default async function PlatformLayout({
   children,
@@ -31,10 +37,8 @@ export default async function PlatformLayout({
   }
 
   return (
-    <Suspense>
-      <PlatformProvider>
-        <PlatformShell>{children}</PlatformShell>
-      </PlatformProvider>
-    </Suspense>
+    <PlatformProvider>
+      <PlatformShell>{children}</PlatformShell>
+    </PlatformProvider>
   );
 }

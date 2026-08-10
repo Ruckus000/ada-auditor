@@ -19,7 +19,8 @@
     "playwright:install": "playwright install chromium",
     "prune:artifacts": "tsx scripts/prune-artifacts.ts",
     "migrate": "tsx scripts/migrate.ts",
-    "test:db": "vitest run --config vitest.db.config.ts"
+    "test:db": "vitest run --config vitest.db.config.ts",
+    "test:hydration": "vitest run --config vitest.hydration.config.ts"
   },
   "keywords": [],
   "author": "",

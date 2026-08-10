@@ -89,6 +89,11 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - Before claiming a change works end to end, run one real audit through
   `next start` (not just `next dev`). Vitest loads modules unbundled, so
   packaging faults reach production with every suite green
+- UI changes additionally need `npm run test:hydration` (after `npm run
+  build`). It drives the built app in a real browser and asserts the pages are
+  *alive* — React attached, navigation changes the URL. An entirely inert UI
+  once passed `tsc`, 453 unit tests and a clean build, because none of them
+  can see whether a page hydrated
 
 ## Current status
 
@@ -171,8 +176,14 @@ Read this before claiming something works.
   store and a tested contract, and `journeys` materialises on every run — but
   only the screens read or write the rest, and the screens land slice by slice
   through Phase 2C. Until then they are reachable but mostly empty.
-- **The UI at `/` is still a fixture prototype.** Phase 2C replaces it; see
+- **The UI at `/` is still a fixture prototype**, now on real routes behind the
+  operator session. It reads `src/app/platform/lib/data.ts`, not the database;
+  Phase 2C slice 2 onward wires the screens to real data. See
   `docs/superpowers/plans/2026-08-07-phase-2.md`.
+- **Every platform route ships every screen's JavaScript.** All 13 route pages
+  import the `screen-routes.tsx` barrel, which imports all seven screens, so
+  the router's code splitting does nothing. Cheap to fix (one module per
+  wrapper); worth doing before the screens grow.
 - **A page cap of 20 is a guess, not a measurement.** No real journey has been
   run against it. If real journeys exceed it, that is the signal for a
   container worker rather than a bigger number.

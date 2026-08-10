@@ -23,6 +23,9 @@ jobs:
         env:
           CHAOS_ENABLED: 'true'
       - run: npm run build
+      # Drives the built app in a real browser. The unit suite, the type
+      # checker and the build are all blind to whether a page hydrates.
+      - run: npm run test:hydration
 
   browser:
     name: Browser journey tests
