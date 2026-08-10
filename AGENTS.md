@@ -75,7 +75,11 @@ Follow `YAGNI → KISS → SRP → DRY`.
 
 - Domain/service unit tests required for contract and reporting changes
 - Chaos-style regressions required for steady-state claims (incomplete evidence, hint conflicts, scope fail-closed, complete-evidence CI fail path)
-- Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos` and `npm run build` evidence
+- Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos`, `npm run build` and `npm run test:hydration` evidence
+- Structured events go through `services/logger`. `tests/services/log-shape.test.ts`
+  greps the tree for hand-built JSON envelopes, because five call sites had
+  already drifted — one keyed its event `event` instead of `type`, so a pipeline
+  filtering on `type` silently missed the loudest warning in the product
 - The fast suite launches no browser and opens no socket. New store behaviour
   goes in a shared contract (`tests/support/run-store-contract.ts`,
   `platform-store-contract.ts`) so the in-memory doubles and Postgres cannot
@@ -203,7 +207,7 @@ Slices 2 and 4-6 follow from that.
 
 Read this before claiming something works.
 
-- **The unlock throttle can be memory-only.** Redis used to be required on
+- **The unlock throttle and the run budget can both be memory-only.** Redis used to be required on
   Vercel because the run store needed it. The run store is Postgres now, so
   nothing forces Upstash to exist, and without it the throttle counts attempts
   in process memory — per-instance, reset on every cold start. No longer
@@ -260,15 +264,27 @@ Read this before claiming something works.
   naming a AAA criterion would imply a claim it does not make. An unknown
   number renders as the bare number — a wrong criterion name in an audit report
   is worse than an unfamiliar one, because the number is checkable.
-- **Triage is dismiss and reopen only.** `assigned` is in the schema, the
-  store, the contract and the route, but no control offers it — there is no
-  per-user identity to assign *to*, which is the same gap `AUDITOR_OPERATOR_NAME`
-  papers over elsewhere. The API accepts it for a caller that has somewhere to
-  put a name.
+- **Triage can assign, now that there is somebody to assign to.** The control
+  appears only when operator accounts exist, and the route refuses an assignee
+  who does not exist or is disabled — a dangling assignee reads as handled by
+  nobody. `assignee` keeps the name, `assignee_operator_id` the account, the
+  same split as `activity_events`.
+  Coverage gap: the hydration suite runs on the memory store with no accounts,
+  so the zero-violation axe pass never renders this control.
 - **A dismissal is free text, not a taxonomy.** The prototype offered five
   canned reasons ("handled elsewhere", "accepted risk, signed off"). Nobody has
   agreed to that vocabulary, and a wrong one becomes the record an auditor
   defends later, so the note stays free text until somebody has.
+- **Run evidence can be read back.** `GET /api/audit/runs/<id>/artifacts/
+  <position>/<kind>` streams it to an authenticated caller. The URL is read
+  from the run record, never from the caller — `addRandomSuffix` means the
+  stored URL is the only handle, which is also why there is no request-forgery
+  surface. Streamed rather than redirected, because a redirect hands out a
+  handle that outlives the session. DOM snapshots are served `attachment` +
+  `nosniff` + sandbox: inline from our origin, a client's captured markup would
+  execute there. Pruned evidence answers **410**, not 404, and
+  `prune:artifacts` now clears the database pointers after deleting the bytes.
+  Deliberately **not** linked from `/r/<token>`; the hydration suite asserts it.
 - **Run evidence is written to a private Blob store.** Screenshots and DOM
   snapshots of a client's *authenticated* pages hold whatever real end-user
   data was on screen, and their URLs are stored in the database and travel
@@ -289,16 +305,24 @@ Read this before claiming something works.
   portfolio.** `/console` and `/api/audit/runs` report it. Registering the
   journey against a client first (`POST /api/platform/clients/<id>/journeys`)
   is what puts a run on a client's screens.
-- **A page cap of 20 is a guess, not a measurement.** No real journey has been
-  run against it. If real journeys exceed it, that is the signal for a
-  container worker rather than a bigger number.
-- **Neither test suite exercises the app's own bundle.** Vitest loads modules
-  unbundled, so a packaging fault in the Next build is invisible to all 344
-  tests — which is exactly how `@axe-core/playwright` shipped with its
-  injected source mangled by the bundler and every run through the app failing
-  while the suites stayed green. The only thing that catches this class of bug
-  is running a real audit through `next start`. Do that before claiming a
-  change works end to end.
+- **A page cap of 20 is still a guess — but it is now measurable.** Runs record
+  `started_at` and `phase_ms`; every page records `duration_ms` and `scan_ms`;
+  `audit_run_log` carries `pagesAudited`, `slowestPageMs` and `headroomMs`
+  (what was left of the 300s budget). `npm run smoke:real -- --url <site>`
+  against a running `next start` prints all of it and suggests a cap.
+  **Nobody has run it against a real third-party site yet**, so do not treat
+  the number as measured until somebody has. It cannot be run from a sandbox
+  with allowlisted egress, and it cannot be pointed at localhost — the SSRF
+  guard correctly refuses loopback and private addresses.
+- **The unit suites still do not exercise the app's own bundle — but the
+  hydration suite does.** Vitest loads modules unbundled, so a packaging fault
+  is invisible to it; that is how `@axe-core/playwright` shipped with its
+  injected source mangled while every suite stayed green. `npm run
+  test:hydration` now closes that: it drives the built app under `next start`
+  and runs a real audit through `POST /api/audit/run`, asserting the findings
+  render. A bundler fault that breaks axe injection fails there.
+  What it does **not** cover is a real third-party site — see the page cap
+  above. Run `npm run smoke:real` before claiming a change works against one.
 
 - **A run still cannot outlive one function invocation.** `maxDuration` is 300s
   (the Hobby ceiling; Pro allows 800s). The 202 + poll shape unblocks the caller
@@ -306,12 +330,36 @@ Read this before claiming something works.
   real site-wide crawl needs a container worker, not a bigger number here.
 - **The console still blocks.** It calls `?wait=1`, because its run flow renders
   a result rather than polling. The async shape is there for API and CI callers.
-- **No tenancy.** One shared `AUDITOR_RUN_TOKEN`, a flat `journeyId:environment`
-  keyspace, and `accountId: 'acct-demo'` hardcoded. Any authenticated caller can
-  read any run by guessing a journeyId.
-- **Starting a run is still a `/console` or API job.** Every platform screen
-  reads the database, but nothing on them launches an audit — the button that
-  appeared to was fixture scenery and went with it.
+- **Named operators, one organisation.** People sign in with an email and a
+  password (`operators`, scrypt from `node:crypto`); the session cookie carries
+  the operator id and a `session_epoch`, so bumping the epoch revokes one
+  person's sessions and nobody else's. `AUDITOR_RUN_TOKEN` survives as a
+  *machine* credential — CI, scripts, the scheduler, and the way in before the
+  first account exists (`npm run operator -- add`). Set `AUDITOR_SESSION_SECRET`
+  separately, or rotating the machine token still signs every human out;
+  `/api/ready` warns while they are the same value.
+  There is still **no tenancy**, and that is the design: one organisation, every
+  operator sees every client, so "any authenticated caller can read any run" is
+  intended rather than a hole. No table has a tenant column. If that changes, it
+  changes in `schema.sql` first.
+  **At cutover, rotate `AUDITOR_RUN_TOKEN`.** If operators still know it,
+  disabling an operator revokes nothing.
+- **A run starts from the client's journeys screen.** `POST /api/platform/
+  clients/<id>/journeys/<id>/runs` walks the stored journey. It requires a
+  `targetUrl` even though `/api/audit/run` does not: without one the runner
+  resolves every `goto` against the fixture directory over `file://`, which
+  through this route would file a green audit of our own demo pages under a
+  real client's name. Recording a journey is still console and API work.
+- **Journeys re-run on a schedule.** `off | daily | weekly` plus a UTC hour on
+  the journey, an hourly Vercel Cron at `/api/cron/tick`. The tick claims due
+  journeys in one `update … returning` (Neon has no transactions) and
+  *dispatches* each to `/api/audit/run` so every run gets its own invocation —
+  it never audits anything itself. Needs `CRON_SECRET`; without it the tick
+  refuses everything and `/api/ready` says so.
+- **Runs are capped.** `AUDITOR_MAX_RUNS_PER_HOUR` / `_PER_DAY`, global rather
+  than per-operator because the bill is shared, enforced inside `startRun` so
+  every caller inherits it. It **fails open**: a cost control that becomes an
+  outage has made things worse.
 
 ## Agent behavior
 
