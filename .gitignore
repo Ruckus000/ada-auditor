@@ -16,3 +16,4 @@ tsconfig.tsbuildinfo
 /data/runs/
 .designops/
 .DS_Store
+.env*

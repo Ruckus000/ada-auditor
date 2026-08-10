@@ -90,6 +90,23 @@ describe('BlobArtifactStore', () => {
     expect(result.axTreeUrl).toContain('dashboard.ax.json');
   });
 
+  it('uploads evidence privately, never publicly', async () => {
+    // This is a screenshot of a *signed-in* page on a client's system, so it
+    // holds whatever real end-user data was on screen. A public blob is
+    // readable by anyone holding its URL — and these URLs are stored in our
+    // database and travel through logs, which would make "nobody will guess
+    // it" the only thing protecting a client's authenticated screens.
+    const put = vi.fn().mockResolvedValue({ url: 'https://blob.test/x' });
+    const store = new BlobArtifactStore(put);
+
+    await store.upload('req-1', await fixtureArtifacts());
+
+    expect(put).toHaveBeenCalled();
+    for (const call of put.mock.calls) {
+      expect(call[2].access).toBe('private');
+    }
+  });
+
   it('makes URLs unguessable so a requestId does not enumerate evidence', async () => {
     const put = vi.fn().mockResolvedValue({ url: 'https://blob.test/x' });
     const store = new BlobArtifactStore(put);
