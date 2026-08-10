@@ -398,7 +398,13 @@ export function ClientBar({ client }: { client: ClientView }) {
   const { state, actions } = usePlatform();
 
   return (
-    <div
+    // A labelled region, not a bare div: this bar sits between the banner and
+    // <main>, so without a landmark its content — the client's name, verdict
+    // and last-run time — belongs to none, and a screen-reader user moving by
+    // landmark skips straight past it. Our own engine reported it as `region`
+    // on every client route.
+    <section
+      aria-label={`${client.name} summary`}
       style={{
         position: 'sticky',
         top: 56,
@@ -546,6 +552,6 @@ export function ClientBar({ client }: { client: ClientView }) {
           );
         })}
       </nav>
-    </div>
+    </section>
   );
 }

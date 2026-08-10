@@ -16,7 +16,12 @@ export const T = {
   ink: '#131a1f',
   inkSoft: '#3a464e',
   inkMuted: '#55636b',
-  inkFaint: '#a9a294',
+  // Darkened from #a9a294, which our own engine flagged: 2.36:1 on the sunk
+  // surface and 2.49:1 on the raised one, against a 4.5:1 requirement. This
+  // clears 4.64:1 and 4.89:1 and stays in the same warm-grey family. An
+  // accessibility auditor failing contrast on its own chrome is the one bug
+  // it cannot ship.
+  inkFaint: '#74705f',
   chevron: '#8d8778',
 
   rule: '#ddd6c8',

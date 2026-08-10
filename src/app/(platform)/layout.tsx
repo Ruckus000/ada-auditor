@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { hasOperatorSession } from '../api/_lib/operator-session';
 import { PlatformProvider } from '../platform/components/platform-provider';
 import { PlatformLocked, PlatformShell } from '../platform/components/platform-shell';
@@ -32,6 +33,21 @@ export default async function PlatformLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Nothing below this line may be prerendered.
+  //
+  // Reading `cookies()` is supposed to be enough, and locally it was: every
+  // route built as dynamic. CI built `/`, `/activity`, `/settings` and
+  // `/reports` as STATIC and baked the gate's output into the shell — so the
+  // build, which has no cookie, shipped the locked screen to every visitor
+  // including authenticated ones. The inverse is the dangerous direction: a
+  // shell prerendered from an authenticated render would serve the portfolio,
+  // with real client names in it, to anyone who asked.
+  //
+  // `connection()` is the documented way to say "wait for an actual request",
+  // and it states the requirement instead of relying on a side effect of
+  // `cookies()` that turned out to be environment-dependent.
+  await connection();
+
   if (!(await hasOperatorSession())) {
     return <PlatformLocked />;
   }
