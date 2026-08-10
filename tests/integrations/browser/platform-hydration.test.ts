@@ -42,6 +42,8 @@ const TOKEN = 'platform-hydration-test-token';
 
 let server: ChildProcess;
 let browser: Browser;
+/** Kept so a startup failure reports what the server said, not just a timeout. */
+let serverOutput = '';
 
 async function waitForServer(timeoutMs = 60_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
@@ -54,7 +56,11 @@ async function waitForServer(timeoutMs = 60_000): Promise<void> {
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  throw new Error(`next start did not answer on ${BASE} within ${timeoutMs}ms`);
+  throw new Error(
+    `next start did not answer on ${BASE} within ${timeoutMs}ms.\n` +
+      `Usually a stale build, or port ${PORT} already held by an earlier run.\n` +
+      `Server output:\n${serverOutput || '(none)'}`,
+  );
 }
 
 /**
@@ -102,7 +108,18 @@ beforeAll(async () => {
       // missing DATABASE_URL must not be why they fail.
       DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://unused/hydration-test',
     },
-    stdio: 'ignore',
+    // Own process group, so teardown can kill `next start` and not just the
+    // `npx` wrapper in front of it — an orphan keeps the port and makes the
+    // next run fail against a stale server.
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  server.stdout?.on('data', (chunk) => {
+    serverOutput += String(chunk);
+  });
+  server.stderr?.on('data', (chunk) => {
+    serverOutput += String(chunk);
   });
 
   await waitForServer();
@@ -111,7 +128,15 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await browser?.close();
-  server?.kill();
+
+  if (server?.pid) {
+    try {
+      // Negative pid targets the whole group.
+      process.kill(-server.pid, 'SIGTERM');
+    } catch {
+      server.kill('SIGTERM');
+    }
+  }
 });
 
 const ROUTES = [

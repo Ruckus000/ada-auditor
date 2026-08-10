@@ -60,6 +60,17 @@ export function findingDisplayStatus(input: {
   inLatestRun: boolean;
   /** Present in the run being compared against. */
   inBaseline: boolean;
+  /**
+   * Observed, then gone, and now back.
+   *
+   * This cannot be inferred from the two flags above: "absent from the
+   * baseline" describes a brand-new finding and a returning one identically.
+   * Guessing from two booleans labelled every finding on a client's first-ever
+   * audit "Retest due" — telling an operator a fix had regressed when nothing
+   * had ever been fixed. A caller that only holds two runs passes `false` and
+   * gets `Open`, which is true rather than merely unalarming.
+   */
+  previouslyFixed?: boolean;
   triage: TriageState | null;
 }): FindingDisplayStatus {
   // A dismissal outranks everything: an operator has said this is not a
@@ -78,11 +89,11 @@ export function findingDisplayStatus(input: {
     return 'Assigned';
   }
 
-  // Present now, absent from the baseline: it came back after being gone, so
-  // whatever fixed it did not hold. That is worth distinguishing from a
-  // finding that has simply always been there — it means a regression, not a
-  // backlog item.
-  return input.inBaseline ? 'Open' : 'Retest due';
+  // Only a finding known to have been fixed once is a retest — that is a
+  // regression, and it deserves a different word from a backlog item. Anything
+  // else present in the latest run is simply open, including a finding seen
+  // for the first time.
+  return input.previouslyFixed ? 'Retest due' : 'Open';
 }
 
 /** Whether a stored finding is one the engine proved rather than judged. */

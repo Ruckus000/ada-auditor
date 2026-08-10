@@ -36,7 +36,3 @@ export function indexForSlug(slug: string | null): number {
 export function knownSlug(slug: string): boolean {
   return SLUGS.includes(slug);
 }
-
-export function allClientSlugs(): string[] {
-  return [...SLUGS];
-}

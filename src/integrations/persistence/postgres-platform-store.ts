@@ -35,6 +35,50 @@ function optional<T extends object, K extends string, V>(
   return (value === null || value === undefined ? {} : { [key]: value }) as Record<K, V>;
 }
 
+/**
+ * Row shapes, named so the queries can be typed.
+ *
+ * These were `sql<never>`, which types every row as `never` — assignable to
+ * any mapper parameter, so a renamed column would have compiled cleanly and
+ * produced `undefined` at runtime.
+ */
+type JourneyRow = {
+  id: string;
+  client_id: string;
+  name: string;
+  target_url: string | null;
+  steps: unknown[];
+  archived_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type TriageRow = {
+  client_id: string;
+  finding_key: string;
+  source: string;
+  code: string;
+  page_url: string | null;
+  selector: string | null;
+  state: string;
+  note: string | null;
+  assignee: string | null;
+  actor: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+type ReportRow = {
+  id: string;
+  request_id: string;
+  audience: string | null;
+  title: string | null;
+  issued_by: string | null;
+  share_token: string | null;
+  revoked_at: Date | string | null;
+  created_at: Date | string;
+};
+
 export class PostgresPlatformStore implements PlatformStore {
   constructor(private readonly sql: SqlClient) {}
 
@@ -100,16 +144,7 @@ export class PostgresPlatformStore implements PlatformStore {
 
   // ------------------------------------------------------------ journeys --
 
-  private mapJourney(row: {
-    id: string;
-    client_id: string;
-    name: string;
-    target_url: string | null;
-    steps: unknown[];
-    archived_at: Date | string | null;
-    created_at: Date | string;
-    updated_at: Date | string;
-  }): StoredJourney {
+  private mapJourney(row: JourneyRow): StoredJourney {
     return {
       id: row.id,
       clientId: row.client_id,
@@ -127,12 +162,12 @@ export class PostgresPlatformStore implements PlatformStore {
     // screen that forgets the filter would show journeys an operator retired,
     // and the archive would read as a no-op.
     const rows = clientId
-      ? await this.sql<never>`
+      ? await this.sql<JourneyRow>`
           select * from journeys
           where client_id = ${clientId} and archived_at is null
           order by name asc
         `
-      : await this.sql<never>`
+      : await this.sql<JourneyRow>`
           select * from journeys where archived_at is null order by name asc
         `;
 
@@ -140,7 +175,7 @@ export class PostgresPlatformStore implements PlatformStore {
   }
 
   async getJourney(id: string): Promise<StoredJourney | null> {
-    const rows = await this.sql<never>`select * from journeys where id = ${id}`;
+    const rows = await this.sql<JourneyRow>`select * from journeys where id = ${id}`;
     return rows.length === 0 ? null : this.mapJourney(rows[0]);
   }
 
@@ -168,20 +203,7 @@ export class PostgresPlatformStore implements PlatformStore {
 
   // -------------------------------------------------------------- triage --
 
-  private mapTriage(row: {
-    client_id: string;
-    finding_key: string;
-    source: string;
-    code: string;
-    page_url: string | null;
-    selector: string | null;
-    state: string;
-    note: string | null;
-    assignee: string | null;
-    actor: string;
-    created_at: Date | string;
-    updated_at: Date | string;
-  }): TriageEntry {
+  private mapTriage(row: TriageRow): TriageEntry {
     return {
       clientId: row.client_id,
       findingKey: row.finding_key,
@@ -199,7 +221,7 @@ export class PostgresPlatformStore implements PlatformStore {
   }
 
   async listTriage(clientId: string): Promise<TriageEntry[]> {
-    const rows = await this.sql<never>`
+    const rows = await this.sql<TriageRow>`
       select * from finding_triage where client_id = ${clientId}
       order by updated_at desc
     `;
@@ -234,16 +256,7 @@ export class PostgresPlatformStore implements PlatformStore {
 
   // ------------------------------------------------------------- reports --
 
-  private mapReport(row: {
-    id: string;
-    request_id: string;
-    audience: string | null;
-    title: string | null;
-    issued_by: string | null;
-    share_token: string | null;
-    revoked_at: Date | string | null;
-    created_at: Date | string;
-  }): StoredReport {
+  private mapReport(row: ReportRow): StoredReport {
     return {
       id: row.id,
       requestId: row.request_id,
@@ -272,7 +285,7 @@ export class PostgresPlatformStore implements PlatformStore {
   }
 
   async getReport(id: string): Promise<StoredReport | null> {
-    const rows = await this.sql<never>`select * from reports where id = ${id}`;
+    const rows = await this.sql<ReportRow>`select * from reports where id = ${id}`;
     return rows.length === 0 ? null : this.mapReport(rows[0]);
   }
 
@@ -280,7 +293,7 @@ export class PostgresPlatformStore implements PlatformStore {
     // A revoked report is not findable by its old token. Revocation nulls the
     // token, so this cannot match one — but the explicit guard keeps that true
     // even if revocation ever starts keeping the token for audit purposes.
-    const rows = await this.sql<never>`
+    const rows = await this.sql<ReportRow>`
       select * from reports where share_token = ${token} and revoked_at is null
     `;
     return rows.length === 0 ? null : this.mapReport(rows[0]);
@@ -294,7 +307,7 @@ export class PostgresPlatformStore implements PlatformStore {
 
   async listReports(requestIds: string[]): Promise<StoredReport[]> {
     if (requestIds.length === 0) return [];
-    const rows = await this.sql<never>`
+    const rows = await this.sql<ReportRow>`
       select * from reports where request_id = any(${requestIds})
       order by created_at desc
     `;

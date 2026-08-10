@@ -188,7 +188,12 @@ export function PlatformProvider({
 
       const slug = merged.client === clientIndex ? currentSlug : slugForIndex(merged.client);
 
-      if (merged.scope === 'client' && slug) {
+      if (merged.scope === 'client') {
+        // No slug means the client index does not resolve. Falling through
+        // would navigate to a workspace screen — silently leaving the client
+        // the operator was looking at, which is worse than ignoring the patch.
+        if (!slug) return;
+
         if (merged.clientTab === 'finding') {
           router.push(findingHref(slug, merged.findIndex, nextSearch));
           return;
@@ -255,21 +260,19 @@ export function PlatformProvider({
       },
       goWorkspace: (screen: WorkspaceScreen) => {
         setEphemeral((prev) => ({ ...prev, modal: null, draft: false }));
+        // Only settings carries a sub-tab. Passing it on every screen put
+        // `?tab=` on URLs that never read it — noise on something an operator
+        // may share, and against this module's own rule that a URL carries
+        // only what was chosen.
         router.push(
-          workspaceHref(screen, {
-            // The prototype reset the settings tab on entry; a URL that says
-            // otherwise wins, which is what makes a settings deep link work.
-            settingsTab: screen === 'settings' ? 'people' : search.settingsTab,
-          }),
+          workspaceHref(screen, screen === 'settings' ? { settingsTab: 'people' } : {}),
         );
       },
       goClientTab: (tab: ClientTab) => {
         setEphemeral((prev) => ({ ...prev, modal: null, draft: false }));
         if (!currentSlug) return;
         router.push(
-          clientHref(currentSlug, tab, {
-            settingsTab: tab === 'settings' ? 'scanning' : search.settingsTab,
-          }),
+          clientHref(currentSlug, tab, tab === 'settings' ? { settingsTab: 'scanning' } : {}),
         );
       },
       openClient: (index: number) => {

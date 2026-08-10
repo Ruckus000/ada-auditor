@@ -61,13 +61,27 @@ describe('findingDisplayStatus', () => {
     ).toBe('Fixed');
   });
 
-  it('flags a finding that came back as retest due, not as merely open', () => {
-    // Absent from the baseline and present now means the fix did not hold.
-    // That is a regression, not a backlog item, and the two deserve different
-    // words.
+  it('flags a finding that was fixed and came back as retest due', () => {
+    // A fix that did not hold is a regression, not a backlog item, and the two
+    // deserve different words.
+    expect(
+      findingDisplayStatus({
+        inLatestRun: true,
+        inBaseline: false,
+        previouslyFixed: true,
+        triage: null,
+      }),
+    ).toBe('Retest due');
+  });
+
+  it('does not call a brand-new finding a retest', () => {
+    // Absence from the baseline describes a new finding and a returning one
+    // identically. Guessing from that alone labelled every finding on a
+    // client's first-ever audit "Retest due" — reporting a regression where
+    // nothing had ever been fixed.
     expect(
       findingDisplayStatus({ inLatestRun: true, inBaseline: false, triage: null }),
-    ).toBe('Retest due');
+    ).toBe('Open');
   });
 
   it.each(['dismissed', 'accepted-risk'] as const)(
