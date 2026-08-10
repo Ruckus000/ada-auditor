@@ -124,11 +124,45 @@ describe('buildPortfolio', () => {
 
   it('shows a run still in flight as scanning', async () => {
     // Yesterday's verdict beside a running audit reads as current. It is not.
+    //
+    // The timestamp has to be *now*, not the fixture's fixed date: a run left
+    // `running` past the staleness threshold is reconciled to failed on read,
+    // which is a different (and also correct) answer. This test is about a run
+    // that is genuinely still going.
     await seedClient('acme', 'Acme');
     await platform.upsertJourney({ id: 'j1', clientId: 'acme', name: 'Checkout', steps: [] });
-    await runs.saveRun(run({ requestId: 'r1', status: 'running', ciStatus: 'inconclusive' }));
+    const startedAt = new Date().toISOString();
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        status: 'running',
+        ciStatus: 'inconclusive',
+        createdAt: startedAt,
+        startedAt,
+      }),
+    );
 
     expect((await buildPortfolio(deps()))[0].lastRun?.verdict).toBe('scan');
+  });
+
+  // The other half of the same rule: a run nothing ever finished must stop
+  // claiming to be in progress, or the screen shows a scan that has apparently
+  // been going since Tuesday.
+  it('shows a run abandoned mid-flight as inconclusive, not scanning', async () => {
+    await seedClient('acme', 'Acme');
+    await platform.upsertJourney({ id: 'j1', clientId: 'acme', name: 'Checkout', steps: [] });
+    const longAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        status: 'running',
+        ciStatus: 'inconclusive',
+        createdAt: longAgo,
+        startedAt: longAgo,
+      }),
+    );
+
+    expect((await buildPortfolio(deps()))[0].lastRun?.verdict).toBe('inconclusive');
   });
 
   it('counts only deterministic findings toward the fix counts', async () => {

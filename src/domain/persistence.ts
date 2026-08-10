@@ -153,6 +153,16 @@ export type ListRunsOptions = {
 
 export interface RunStore {
   saveRun(record: StoredRunRecord): Promise<void>;
+  /**
+   * Writes the truth about runs that died mid-flight, and returns how many.
+   *
+   * Reads already reconcile — see `domain/run-staleness.ts` — so a screen is
+   * never wrong. This is the other half: without it the database goes on
+   * disagreeing with the screen, and anything querying it directly (a report,
+   * a later migration, a human in psql) sees runs that have been in progress
+   * for weeks.
+   */
+  reconcileStaleRuns(olderThanMs: number): Promise<number>;
   getRun(requestId: string): Promise<StoredRunRecord | null>;
   getLatestRun(
     journeyId: string,

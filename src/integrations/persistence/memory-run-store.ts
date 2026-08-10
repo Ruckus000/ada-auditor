@@ -1,4 +1,5 @@
 import type { Environment } from '../../domain/contracts';
+import { isAbandoned, reconcileRunStatus } from '../../domain/run-staleness';
 import type { ListRunsOptions, RunStore, StoredRunRecord } from '../../domain/persistence';
 
 /**
@@ -28,7 +29,7 @@ export class MemoryRunStore implements RunStore {
 
   async getRun(requestId: string): Promise<StoredRunRecord | null> {
     const record = this.runs.get(requestId);
-    return record ? structuredClone(record) : null;
+    return record ? reconcileRunStatus(structuredClone(record)) : null;
   }
 
   async getLatestRun(
@@ -43,7 +44,7 @@ export class MemoryRunStore implements RunStore {
         run.requestId !== excludeRequestId,
     );
 
-    return latest ? structuredClone(latest) : null;
+    return latest ? reconcileRunStatus(structuredClone(latest)) : null;
   }
 
   async list(options: ListRunsOptions = {}): Promise<StoredRunRecord[]> {
@@ -56,7 +57,24 @@ export class MemoryRunStore implements RunStore {
           (options.environment === undefined || run.environment === options.environment),
       )
       .slice(0, limit)
-      .map((run) => structuredClone(run));
+      .map((run) => reconcileRunStatus(structuredClone(run)));
+  }
+
+  async reconcileStaleRuns(olderThanMs: number): Promise<number> {
+    const now = Date.now();
+    let reconciled = 0;
+
+    for (const [requestId, record] of this.runs) {
+      if (!isAbandoned(record, now, olderThanMs)) continue;
+      this.runs.set(requestId, {
+        ...record,
+        status: 'failed',
+        failureReason: 'run_timed_out',
+      });
+      reconciled += 1;
+    }
+
+    return reconciled;
   }
 
   /**

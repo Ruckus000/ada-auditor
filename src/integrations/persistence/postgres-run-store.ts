@@ -1,4 +1,5 @@
 import type { Environment } from '../../domain/contracts';
+import { reconcileRunStatus } from '../../domain/run-staleness';
 import type {
   RunStore,
   StoredFinding,
@@ -165,7 +166,11 @@ function toRecord(
   if (run.started_at !== null) record.startedAt = toIso(run.started_at);
   if (run.phase_ms !== null) record.phaseMs = run.phase_ms;
 
-  return record;
+  // Applied on the way out, so a run that died mid-flight never reads as still
+  // in progress — not even in the window before the scheduled sweep rewrites
+  // it. The sweep is what stops the *database* disagreeing; this is what stops
+  // the screen doing so.
+  return reconcileRunStatus(record);
 }
 
 export class PostgresRunStore implements RunStore {
@@ -353,6 +358,25 @@ export class PostgresRunStore implements RunStore {
     `;
 
     return this.hydrate(runs);
+  }
+
+  /**
+   * Writes the truth about runs that died mid-flight.
+   *
+   * One statement, because the Neon HTTP driver is one statement per request
+   * and has no transactions — a read-then-write would race the sweep against
+   * a run legitimately finishing.
+   */
+  async reconcileStaleRuns(olderThanMs: number): Promise<number> {
+    const seconds = Math.floor(olderThanMs / 1000);
+    const rows = await this.sql<{ request_id: string }>`
+      update runs
+      set status = 'failed', failure_reason = 'run_timed_out'
+      where status = 'running'
+        and coalesce(started_at, created_at) < now() - make_interval(secs => ${seconds})
+      returning request_id
+    `;
+    return rows.length;
   }
 
   private async hydrateOne(run: RunRow): Promise<StoredRunRecord> {

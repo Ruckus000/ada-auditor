@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import type { RunStore, StoredRunRecord } from '../../src/domain/persistence';
+import { RUN_STALE_AFTER_MS } from '../../src/domain/run-staleness';
 
 /**
  * The behaviour every `RunStore` owes its callers, run against each
@@ -333,5 +334,74 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     const [run] = await store.list({ journeyId: CONTRACT_JOURNEY });
     expect(run.pages).toHaveLength(2);
     expect(run.findings).toHaveLength(2);
+  });
+
+  /**
+   * A run that died mid-flight.
+   *
+   * `executeRun` is the only thing that overwrites the `running` placeholder,
+   * so a timeout or a crash leaves the row `running` forever and the client
+   * screen shows a scan that has apparently been going since Tuesday. Both
+   * halves are pinned here: reads must never report it as still running, and
+   * the sweep must actually write the correction down. A double that did only
+   * one of them would make the fast suite green about behaviour production
+   * does not have.
+   */
+  it('reports a run abandoned past the staleness threshold as failed', async () => {
+    const store = await makeStore();
+    const longAgo = new Date(Date.now() - 3 * RUN_STALE_AFTER_MS).toISOString();
+
+    await store.saveRun(
+      runRecord({
+        requestId: 'contract-abandoned',
+        status: 'running',
+        createdAt: longAgo,
+        startedAt: longAgo,
+      }),
+    );
+
+    const read = await store.getRun('contract-abandoned');
+    expect(read?.status).toBe('failed');
+    expect(read?.failureReason).toBe('run_timed_out');
+  });
+
+  it('leaves a run still inside the threshold alone', async () => {
+    const store = await makeStore();
+    const justNow = new Date().toISOString();
+
+    await store.saveRun(
+      runRecord({
+        requestId: 'contract-inflight',
+        status: 'running',
+        createdAt: justNow,
+        startedAt: justNow,
+      }),
+    );
+
+    expect((await store.getRun('contract-inflight'))?.status).toBe('running');
+  });
+
+  /**
+   * `reconcileStaleRuns` takes no filter that could scope it to `contract-%`,
+   * so against Postgres it corrects every abandoned run in the database — the
+   * same caveat this file already records for `listClients`/`listEvents`, and
+   * the same consequence: assert with `toBeGreaterThanOrEqual`, never an exact
+   * count. Correcting real abandoned rows is the sweep doing its job, which is
+   * also why the CI job points at a dedicated Neon branch and not production.
+   */
+  it('sweeps abandoned runs and reports how many it corrected', async () => {
+    const store = await makeStore();
+    const longAgo = new Date(Date.now() - 3 * RUN_STALE_AFTER_MS).toISOString();
+
+    await store.saveRun(
+      runRecord({ requestId: 'contract-sweep-a', status: 'running', createdAt: longAgo, startedAt: longAgo }),
+    );
+    await store.saveRun(
+      runRecord({ requestId: 'contract-sweep-b', status: 'complete', createdAt: longAgo, startedAt: longAgo }),
+    );
+
+    expect(await store.reconcileStaleRuns(RUN_STALE_AFTER_MS)).toBeGreaterThanOrEqual(1);
+    // A finished run is not touched, whatever its age.
+    expect((await store.getRun('contract-sweep-b'))?.status).toBe('complete');
   });
 }
