@@ -117,6 +117,10 @@ create table if not exists findings (
   code               text not null,
   severity           text not null,
   source             text not null,
+  -- What the rule checks, in the engine's own words. Nullable because every
+  -- run stored before this column existed has none, and a backfill would have
+  -- to invent the sentence for rules whose wording has since changed.
+  title              text,
   message            text,
   -- Nullable, and deliberately without a default: an advisory finding has no
   -- criteria at all, while a best-practice rule has an empty list. A `not null
@@ -243,6 +247,12 @@ alter table findings alter column wcag_criteria drop not null;
 alter table findings alter column wcag_criteria drop default;
 
 alter table clients add column if not exists owner text;
+
+-- Existing rows keep a null title. Not backfilled: the sentence belongs to the
+-- rule version that produced the finding, and axe's wording changes between
+-- releases — writing today's text onto last month's audit would put words in
+-- the mouth of a run that never said them.
+alter table findings add column if not exists title text;
 
 -- The columns `finding_triage` replaces. Never written, never read. Leaving
 -- them is the furniture AGENTS.md warns about — and leaving them beside a

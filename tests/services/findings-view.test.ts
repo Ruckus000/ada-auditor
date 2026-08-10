@@ -23,6 +23,7 @@ function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
     code: 'image-alt',
     severity: 'critical',
     source: 'deterministic',
+    title: 'Images must have alternate text',
     pageUrl: 'https://acme.test/one',
     selector: 'img',
     ...overrides,
@@ -126,6 +127,24 @@ describe('buildFindingsView', () => {
       'm-major',
       'z-minor',
     ]);
+  });
+
+  it("carries the rule's own sentence, and copes without one", async () => {
+    // The title is quoted from the engine, never authored here. A run stored
+    // before the column existed has none, and the screen falls back to the
+    // rule code rather than rendering a blank heading.
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        findings: [finding(), { code: 'label', severity: 'major', source: 'deterministic',
+          pageUrl: 'https://acme.test/one', selector: 'input' }],
+      }),
+    );
+
+    const [titled, untitled] = (await buildFindingsView('acme', deps()))!.pages[0].findings;
+
+    expect(titled.title).toBe('Images must have alternate text');
+    expect(untitled.title).toBeUndefined();
   });
 
   it('keeps advisory findings out of the pages', async () => {

@@ -71,7 +71,8 @@ const FULL_RECORD = runRecord({
       code: 'image-alt',
       severity: 'critical',
       source: 'deterministic',
-      message: 'Images must have alternate text',
+      title: 'Images must have alternate text',
+      message: 'Element does not have an alt attribute',
       wcagCriteria: ['1.1.1'],
       conformanceLevel: 'A',
       pageUrl: 'https://app.example.com/checkout',
@@ -104,6 +105,34 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     await store.saveRun(FULL_RECORD);
 
     expect(await store.getRun(FULL_RECORD.requestId)).toEqual(FULL_RECORD);
+  });
+
+  it('round-trips a finding that has no title', async () => {
+    // Every run stored before the column existed has none, and nothing
+    // backfilled them — axe's wording changes between releases, so writing
+    // today's sentence onto last month's audit would put words in the mouth
+    // of a run that never said them. Absent has to come back absent, not as
+    // an empty string a screen would render as a blank heading.
+    const store = await makeStore();
+    const untitled = {
+      ...FULL_RECORD,
+      requestId: `${FULL_RECORD.requestId}-untitled`,
+      findings: [
+        {
+          code: 'image-alt',
+          severity: 'critical',
+          source: 'deterministic',
+          message: 'Element does not have an alt attribute',
+          pageUrl: 'https://app.example.com/checkout',
+          selector: '#hero',
+        },
+      ],
+    };
+
+    await store.saveRun(untitled);
+
+    const read = await store.getRun(untitled.requestId);
+    expect(read?.findings[0]).not.toHaveProperty('title');
   });
 
   it('round-trips the score and the counts behind it', async () => {

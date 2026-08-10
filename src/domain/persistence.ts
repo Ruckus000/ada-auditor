@@ -26,6 +26,13 @@ export type StoredFinding = {
   code: string;
   severity: string;
   source: string;
+  /**
+   * What the rule checks, in the engine's own words.
+   *
+   * Optional because every run stored before the column existed has none, and
+   * a screen has to render those without pretending otherwise.
+   */
+  title?: string;
   message?: string;
   wcagCriteria?: string[];
   conformanceLevel?: string | null;

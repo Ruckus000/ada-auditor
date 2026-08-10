@@ -112,7 +112,8 @@ function renderFinding(finding: StoredFinding): string {
         <span class="badge">${escapeHtml(
           SEVERITY_LABEL[finding.severity] ?? finding.severity,
         )}</span>
-        <h4>${escapeHtml(finding.code)}</h4>
+        <h4>${escapeHtml(finding.title ?? finding.code)}</h4>
+        ${finding.title ? `<p class="code">${escapeHtml(finding.code)}</p>` : ''}
         <p class="criteria">${criteria}</p>
       </header>
       ${renderMessage(finding.message ?? '')}
@@ -265,6 +266,7 @@ export function renderRunReport(run: StoredRunRecord): string {
     background: #f4f5f8; border: 1px solid #e2e5ea; border-radius: 4px;
     padding: 6pt 8pt; margin: 0; white-space: pre-wrap; word-break: break-word;
   }
+  .code { margin: 1pt 0 0; font-family: ui-monospace, monospace; font-size: 8.5pt; color: #55606a; }
   .help { margin: 9pt 0 0; font-size: 9.5pt; }
   a { color: #2a5db0; }
   footer { margin-top: 24pt; padding-top: 8pt; border-top: 1px solid #d8dce3; color: #5b6272; font-size: 8.5pt; }

@@ -234,14 +234,20 @@ Read this before claiming something works.
   environment settings; a form that appeared to change them from a web page
   would be lying about where the truth lives. It marks a degraded run store,
   local-disk evidence, an in-memory throttle and enabled chaos injection.
-- **Findings name their criteria but still have no per-finding prose.**
-  `services/wcag-reference.ts` names and levels every WCAG 2.2 A/AA criterion,
-  so a finding reads "1.1.1 Non-text Content (A)" rather than "1.1.1". Those
-  are quoted facts, checkable against the specification — which is exactly why
-  they are allowed to exist where the fixture screen's per-finding explanation,
-  code fix and effort estimate were deleted. axe's own `help` sentence is the
-  obvious next addition, and it needs a column: today it is only a fallback
-  inside `message`.
+- **A finding's words are all quoted, none authored.** `title` is axe's own
+  sentence for the rule ("Images must have alternate text"), stored in its own
+  column; `message` is what went wrong with *this* node;
+  `services/wcag-reference.ts` names and levels every WCAG 2.2 A/AA criterion.
+  All three are checkable against a source — which is exactly why they are
+  allowed to exist where the fixture screen's per-finding explanation, code fix
+  and effort estimate were deleted. **What is still missing is how to fix it**,
+  beyond the `helpUrl` link. That one cannot be quoted from anywhere, so it
+  stays missing rather than being invented.
+- **`findings.title` is not backfilled, and should not be.** axe's wording
+  changes between releases, so writing today's sentence onto last month's audit
+  would put words in the mouth of a run that never said them. Runs from before
+  the column render their rule code instead; the store contract has a test that
+  absent comes back absent rather than as an empty string.
 - **The reference table is A and AA only.** This product audits to AA, so
   naming a AAA criterion would imply a claim it does not make. An unknown
   number renders as the bare number — a wrong criterion name in an audit report

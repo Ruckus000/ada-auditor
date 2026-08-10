@@ -198,6 +198,31 @@ describe('runDeterministicAudit', () => {
     expect(finding.message).toContain('no alt attribute');
   });
 
+  it("keeps the rule's own sentence as the title, beside the node's failure", () => {
+    // These are two different things and the finding needs both: the title
+    // says what the rule checks, the message says what went wrong with this
+    // node. `help` used to be reachable only as a fallback inside `message`,
+    // so the readable half disappeared exactly when the technical half was
+    // longest.
+    const [finding] = runDeterministicAudit({
+      violations: [
+        rule({
+          nodes: [
+            {
+              html: '<img>',
+              target: ['#a'],
+              failureSummary: 'Fix any of the following:\n  Element has no alt attribute',
+            },
+          ],
+        }),
+      ],
+      incomplete: [],
+    }, PAGE_URL);
+
+    expect(finding.title).toBe('Images must have alternate text');
+    expect(finding.message).toContain('no alt attribute');
+  });
+
   it('falls back to rule help when the summary is blank', () => {
     const [finding] = runDeterministicAudit({
       violations: [rule({ nodes: [{ html: '<img>', target: ['#a'], failureSummary: '   ' }] })],

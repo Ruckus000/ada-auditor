@@ -189,9 +189,18 @@ function FindingRow({
         >
           {SEVERITY_LABEL[finding.severity]}
         </span>
-        <span style={{ fontFamily: FONT.mono, fontSize: 13, fontWeight: 650, color: T.ink }}>
-          {finding.code}
+        {/* The rule's own sentence leads, and the code follows it. `image-alt`
+            is the stable identity a developer greps for; "Images must have
+            alternate text" is what anyone else needs to read first. Older runs
+            have no title, so the code leads for those rather than a blank. */}
+        <span style={{ fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 650, color: T.ink }}>
+          {finding.title ?? finding.code}
         </span>
+        {finding.title ? (
+          <span style={{ fontFamily: FONT.mono, fontSize: 12, color: T.inkMuted }}>
+            {finding.code}
+          </span>
+        ) : null}
         <span style={{ fontFamily: FONT.sans, fontSize: 11.5, color: T.inkMuted }}>
           {finding.status}
         </span>

@@ -13,11 +13,11 @@ import { summariseRun, type RunSummary } from './client-detail';
  * A client's findings, as the findings screen needs them.
  *
  * This is the screen the phase is judged on, so it is worth being explicit
- * about what it will not do. It does not invent a title, a plain-language
- * explanation, a code fix or an effort estimate — the prototype had all four
- * for every finding, written by hand for eight fictional clients. What a run
- * actually stores is a rule code, a severity, the WCAG criteria, a selector, a
- * snippet of the offending HTML and a help URL. That is what appears.
+ * about where its words come from. The title is the rule engine's own sentence
+ * and the criterion names are quoted from the specification; neither is
+ * authored here. What is still absent is the prototype's per-finding
+ * explanation, code fix and effort estimate — hand-written for eight fictional
+ * clients, and not replaced with hand-written ones for real clients.
  *
  * Findings are grouped by page because a run is a journey and a journey is
  * several pages: an operator fixes a page, not a run. Pages whose evidence was
@@ -29,6 +29,8 @@ export type FindingView = {
   /** `source:code:pageUrl:selector`, the same key triage and regression use. */
   key: string;
   code: string;
+  /** What the rule checks, in the engine's words. Absent on older runs. */
+  title?: string;
   message?: string;
   severity: DisplaySeverity;
   wcagCriteria: string[];
@@ -140,6 +142,7 @@ export async function buildFindingsView(
     return {
       key,
       code: finding.code,
+      ...(finding.title === undefined ? {} : { title: finding.title }),
       ...(finding.message === undefined ? {} : { message: finding.message }),
       severity: displaySeverity(finding.severity),
       wcagCriteria: finding.wcagCriteria ?? [],

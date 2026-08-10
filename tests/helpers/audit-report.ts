@@ -16,7 +16,8 @@ export function criticalFinding(
   return {
     code: 'image-alt',
     severity: 'critical',
-    message: 'Images must have alternate text',
+    title: 'Images must have alternate text',
+    message: 'Element does not have an alt attribute',
     source: 'deterministic',
     wcagCriteria: ['1.1.1'],
     conformanceLevel: 'A',

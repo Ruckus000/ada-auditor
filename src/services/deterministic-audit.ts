@@ -14,6 +14,17 @@ export type DeterministicFinding = {
   /** axe rule id, e.g. `image-alt`. The stable identity of a finding. */
   code: string;
   severity: FindingSeverity;
+  /**
+   * What the rule checks, in axe's own words: "Images must have alternate
+   * text".
+   *
+   * Quoted, never authored. It used to be a fallback inside `message` and so
+   * was only ever seen when a node had no failure summary — which meant the
+   * readable half of a finding disappeared exactly when the technical half
+   * was longest. `message` says what went wrong with *this* node; this says
+   * what the rule is.
+   */
+  title: string;
   message: string;
   source: 'deterministic';
   /** WCAG success criteria, e.g. `['1.1.1']`. Empty for best-practice rules. */
@@ -172,6 +183,7 @@ function toFindings(
       findings.push({
         code: rule.id,
         severity,
+        title: rule.help,
         message: node.failureSummary?.trim() || rule.help,
         source: 'deterministic',
         wcagCriteria,
