@@ -40,7 +40,7 @@ export async function GET() {
 
   if (!checks.unlockThrottleDurable) {
     warnings.push(
-      'unlock_throttle_in_memory: no Redis configured, so console sign-in attempts are counted per instance and reset on cold start.',
+      'counters_in_memory: no Redis configured, so console sign-in attempts and the run budget are counted per instance and reset on cold start. The effective run ceiling is the limit times however many instances are warm.',
     );
   }
 

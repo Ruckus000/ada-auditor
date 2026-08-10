@@ -28,6 +28,11 @@ async function main(): Promise<void> {
     const expected = expectedCiStatusForScenario(scenario);
 
     try {
+      // Calls the runner directly rather than going through `startRun`, so the
+      // run budget does not apply. Deliberate: chaos asserts steady-state
+      // behaviour and must not start failing because an earlier suite used up
+      // an hourly ceiling. A budget that makes chaos flaky is worse than no
+      // budget, because it teaches people to re-run red.
       const report = await runBrowserAudit({
         journeyId: params.journeyId,
         environment: params.environment,

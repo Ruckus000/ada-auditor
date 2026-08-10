@@ -12,6 +12,7 @@ const { CONSOLE_COOKIE, createSessionValue } = await import(
 const { MemoryRunStore, resetRunStore, setRunStore } = await import(
   '../../src/integrations/persistence'
 );
+const { resetRunCounter } = await import('../../src/app/api/_lib/run-counter');
 
 const TOKEN = 'test-console-token-long-enough';
 
@@ -34,6 +35,9 @@ describe('audit console route', () => {
   });
 
   afterEach(() => {
+    // The run budget counter is a module singleton; without this it
+    // accumulates across tests in this file and eventually refuses one.
+    resetRunCounter();
     delete process.env.AUDITOR_RUN_TOKEN;
     resetRunStore();
   });

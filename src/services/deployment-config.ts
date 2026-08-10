@@ -1,3 +1,5 @@
+import { runBudgetLimits } from './run-budget';
+
 /**
  * What this deployment is actually configured to do.
  *
@@ -39,6 +41,9 @@ function intFromEnv(env: Env, name: string, fallback: number): number {
 }
 
 export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
+  const budget = runBudgetLimits(env);
+  const countersDurable = Boolean(env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL);
+
   const settings: ConfigSetting[] = [
     {
       key: 'operator',
@@ -74,6 +79,17 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
       detail:
         'Screenshots, DOM snapshots and accessibility trees. On serverless the local filesystem disappears with the invocation, so evidence written there is unreachable afterwards.',
       degraded: !env.BLOB_READ_WRITE_TOKEN,
+    },
+    {
+      key: 'runBudget',
+      label: 'Run budget',
+      value: `${budget.perHour}/hour, ${budget.perDay}/day`,
+      detail:
+        (countersDurable
+          ? 'Counted in Redis, so the ceiling holds across instances. '
+          : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
+        'A run launches a browser and makes a model call; without a ceiling a loop in a caller spends real money unattended. It fails open — a cost control that becomes an outage has made things worse.',
+      degraded: !countersDurable,
     },
     {
       key: 'throttle',

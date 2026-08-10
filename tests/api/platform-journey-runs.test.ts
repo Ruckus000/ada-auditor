@@ -18,6 +18,7 @@ const {
   setPlatformStore,
   setRunStore,
 } = await import('../../src/integrations/persistence');
+const { resetRunCounter } = await import('../../src/app/api/_lib/run-counter');
 
 const OPERATOR = {
   kind: 'operator' as const,
@@ -73,6 +74,9 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/runs', () =
   });
 
   afterEach(() => {
+    // The run budget counter is a module singleton; without this it
+    // accumulates across tests in this file and eventually refuses one.
+    resetRunCounter();
     resetPlatformStore();
     resetRunStore();
   });

@@ -16,6 +16,9 @@ import {
 } from './chaos';
 import { createRequestId } from './request-id';
 import { classifyRunFailure } from './run-failure';
+import { getRunCounter } from './run-counter';
+import { consumeRunBudget } from '../../../services/run-budget';
+import { logWarn } from '../../../services/logger';
 
 const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 
@@ -351,6 +354,39 @@ export async function startRun(
 
       return { ok: false, status: 400, body: { error: 'invalid_chaos_scenario', requestId } };
     }
+  }
+
+  /**
+   * The budget, checked here rather than in a route.
+   *
+   * Every caller funnels through `startRun` — the HTTP endpoint, the console,
+   * the platform's Run now button, and the scheduler — so putting the check
+   * here covers all of them by construction. A route-level check would be four
+   * copies and would miss whichever one gets added next.
+   *
+   * After the chaos gating and before the placeholder write: a refused run must
+   * leave no row behind, because it never started. That is also why this is not
+   * a `RunFailureCode` — nothing failed, the run was declined.
+   */
+  const budget = await consumeRunBudget(getRunCounter());
+  if (!budget.allowed) {
+    logWarn('run_budget_exceeded', {
+      requestId,
+      journeyId: parsedBody.journeyId,
+      window: budget.window,
+      resetsInSeconds: budget.resetsInSeconds,
+    });
+
+    return {
+      ok: false,
+      status: 429,
+      body: {
+        error: 'run_budget_exceeded',
+        requestId,
+        window: budget.window,
+        resetsInSeconds: budget.resetsInSeconds,
+      },
+    };
   }
 
   // Two response modes.

@@ -8,6 +8,9 @@ const { handleAuditRun, startRun } = await import('../../src/app/api/_lib/audit-
 const { MemoryRunStore, resetRunStore, setRunStore } = await import(
   '../../src/integrations/persistence'
 );
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
 
 /** Synchronous mode: these assert on the run's outcome, not on the 202 shape. */
 function runRequest(body: Record<string, unknown>): Request {
@@ -29,6 +32,9 @@ describe('handleAuditRun', () => {
   });
 
   afterEach(() => {
+    // The run budget counter is a module singleton; without this it
+    // accumulates across tests in this file and eventually refuses one.
+    resetRunCounter();
     delete process.env.CHAOS_ENABLED;
     resetRunStore();
   });
@@ -388,5 +394,54 @@ describe('startRun', () => {
     expect(result.status).toBe(403);
     expect(result.body.error).toBe('chaos_not_enabled');
     expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The budget lives inside `startRun`, so every caller inherits it — the HTTP
+ * endpoint, the console, the Run now button and the scheduler. A route-level
+ * check would be four copies and would miss whichever one is added next.
+ */
+describe('run budget', () => {
+  beforeEach(() => {
+    runBrowserAudit.mockReset();
+    runBrowserAudit.mockResolvedValue(auditReport());
+    setRunStore(new MemoryRunStore());
+    setRunCounter(new MemoryRunCounter());
+  });
+
+  afterEach(() => {
+    resetRunCounter();
+    resetRunStore();
+    delete process.env.AUDITOR_MAX_RUNS_PER_HOUR;
+  });
+
+  it('refuses a run past the limit with a stable code and a reset hint', async () => {
+    process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
+
+    await startRun({ journeyId: 'demo-login', environment: 'staging', wait: true }, 'req-budget-1');
+    const second = await startRun(
+      { journeyId: 'demo-login', environment: 'staging', wait: true },
+      'req-budget-2',
+    );
+
+    expect(second.status).toBe(429);
+    expect(second.body.error).toBe('run_budget_exceeded');
+    expect(second.body.resetsInSeconds).toBeTypeOf('number');
+  });
+
+  // A refused run never started, so it must leave no trace — a `running` row
+  // for a run nobody ran would then be reconciled to `failed` and read as an
+  // audit that broke rather than one that was declined.
+  it('writes no run record for a refused run', async () => {
+    process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
+    const store = new MemoryRunStore();
+    setRunStore(store);
+
+    await startRun({ journeyId: 'demo-login', environment: 'staging' }, 'req-budget-3');
+    await startRun({ journeyId: 'demo-login', environment: 'staging' }, 'req-budget-4');
+
+    expect(await store.getRun('req-budget-4')).toBeNull();
+    expect(runBrowserAudit).toHaveBeenCalledOnce();
   });
 });

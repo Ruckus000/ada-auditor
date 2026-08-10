@@ -70,7 +70,7 @@ describe('GET /api/ready', () => {
     const body = await response.json();
     expect(body.status).toBe('ready');
     expect(body.checks.unlockThrottleDurable).toBe(false);
-    expect(body.warnings.join(' ')).toContain('unlock_throttle_in_memory');
+    expect(body.warnings.join(' ')).toContain('counters_in_memory');
   });
 
   it('reports no warning once everything degradable is configured', async () => {
