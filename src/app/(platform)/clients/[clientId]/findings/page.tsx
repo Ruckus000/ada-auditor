@@ -1,4 +1,4 @@
-import { FindingsRoute } from '../../../../platform/components/screen-routes';
+import { FindingsRoute } from '../../../../platform/components/routes/findings-route';
 
 export default function ClientFindingsPage() {
   return <FindingsRoute />;

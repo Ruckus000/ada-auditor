@@ -72,5 +72,10 @@ export async function scanPageWithAxe(page: Page): Promise<AxeScanResult> {
   return {
     violations: results.violations.map(normalizeRule),
     incomplete: results.incomplete.map(normalizeRule),
+    // Only the count crosses the boundary. axe reports every passing node, and
+    // on a real page that is megabytes of DOM nobody reads — but without the
+    // number there is no denominator, and the conformance score had nothing to
+    // divide by.
+    passCount: results.passes.reduce((total, rule) => total + rule.nodes.length, 0),
   };
 }

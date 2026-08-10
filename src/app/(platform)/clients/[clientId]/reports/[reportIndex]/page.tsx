@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { reportCount } from '../../../../../platform/lib/derive';
-import { ReportsRoute } from '../../../../../platform/components/screen-routes';
+import { ReportsRoute } from '../../../../../platform/components/routes/reports-route';
 
 /** Same index guard as the workspace builder — see that route for why. */
 export default async function ClientReportBuilderPage({

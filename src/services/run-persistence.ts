@@ -19,6 +19,8 @@ type PersistRunInput = {
   browserMode?: boolean;
   pages?: StoredRunPage[];
   truncatedPages?: number;
+  score?: number | null;
+  scoreVersion?: number;
   status?: RunStatus;
   failureReason?: string;
 };
@@ -75,6 +77,11 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     // does not survive the invocation, and a partial audit read back later
     // would otherwise be indistinguishable from a complete one.
     ...(input.truncatedPages ? { truncatedPages: input.truncatedPages } : {}),
+    // A null score means "not measured" — omitted rather than stored as 0,
+    // which is the worst possible score rather than the absence of one.
+    ...(input.score !== null && input.score !== undefined
+      ? { score: input.score, scoreVersion: input.scoreVersion ?? 1 }
+      : {}),
     ...(input.status ? { status: input.status } : {}),
     ...(input.failureReason ? { failureReason: input.failureReason } : {}),
   };

@@ -128,6 +128,14 @@ Implemented and verified locally + on Vercel preview:
   and cross-page issues only exist in aggregate.
 - Reporting (`pass|fail|inconclusive`), regression comparison keyed on
   rule + page + selector
+- **Conformance score**: `passed / (passed + failed)` over the checks axe
+  actually evaluated (`services/score.ts`, pure). Undecided checks are in
+  neither term — they are the human-review queue — advisory findings never
+  touch it, and a run without complete evidence scores `null` rather than
+  zero, because the denominator is unknown. Stored with `score_version` so a
+  formula change cannot silently reinterpret historical runs. Note a run can
+  score well and still fail CI: one critical finding fails a run regardless of
+  the rate.
 - **Vocabulary mapping lives in `services/presentation/`**, not beside the
   components: deciding whether the product says `pass` or "we could not tell"
   is a business rule with a steady-state contract behind it. `VerdictKind`
@@ -185,10 +193,10 @@ Read this before claiming something works.
   operator session. It reads `src/app/platform/lib/data.ts`, not the database;
   Phase 2C slice 2 onward wires the screens to real data. See
   `docs/superpowers/plans/2026-08-07-phase-2.md`.
-- **Every platform route ships every screen's JavaScript.** All 13 route pages
-  import the `screen-routes.tsx` barrel, which imports all seven screens, so
-  the router's code splitting does nothing. Cheap to fix (one module per
-  wrapper); worth doing before the screens grow.
+- **The screens are still ~700 KB of shared client JavaScript**, most of it
+  `data.ts` plus `ui.tsx`, `header.tsx` and `derive.ts`. The fixture half goes
+  when `data.ts` does in slice 6. Route-specific code is split correctly
+  (`components/routes/*`, one module per screen) — measured, not assumed.
 - **A page cap of 20 is a guess, not a measurement.** No real journey has been
   run against it. If real journeys exceed it, that is the signal for a
   container worker rather than a bigger number.

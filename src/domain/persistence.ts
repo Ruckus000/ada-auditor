@@ -56,6 +56,14 @@ export type StoredRunPage = {
   title: string;
   evidenceStatus: string;
   artifacts?: StoredArtifacts;
+  /**
+   * The conformance score's inputs, per page. Absent on runs recorded before
+   * check counting existed — which must read as "not measured", never as zero.
+   */
+  checksPassed?: number;
+  checksFailed?: number;
+  /** Counted in neither term of the score; the human-review queue. */
+  checksIncomplete?: number;
 };
 
 export type StoredRunRecord = {
@@ -83,6 +91,13 @@ export type StoredRunRecord = {
    * read as a complete one once the log line that recorded it is gone.
    */
   truncatedPages?: number;
+  /**
+   * Conformance rate over the checks evaluated, or absent when the run could
+   * not be scored — incomplete evidence has no denominator.
+   */
+  score?: number;
+  /** Which formula produced `score`. See `services/score.ts`. */
+  scoreVersion?: number;
   status?: RunStatus;
   /** Populated when `status` is `failed`; a stable code, never raw error text. */
   failureReason?: string;

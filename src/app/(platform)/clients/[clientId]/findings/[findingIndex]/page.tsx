@@ -1,4 +1,4 @@
-import { FindingDetailRoute } from '../../../../../platform/components/screen-routes';
+import { FindingDetailRoute } from '../../../../../platform/components/routes/findings-route';
 
 /**
  * One finding, addressable.

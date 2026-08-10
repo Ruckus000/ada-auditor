@@ -1,4 +1,4 @@
-import { ActivityRoute } from '../../platform/components/screen-routes';
+import { ActivityRoute } from '../../platform/components/routes/activity-route';
 
 export default function WorkspaceActivityPage() {
   return <ActivityRoute workspace />;
