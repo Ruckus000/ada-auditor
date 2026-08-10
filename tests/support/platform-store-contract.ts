@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { UNASSIGNED_CLIENT_ID } from '../../src/domain/platform';
 import type { PlatformStore, TriageEntry } from '../../src/domain/platform';
 
 /**
@@ -90,6 +91,28 @@ export function platformStoreContract(
       const listed = (await store.listClients()).filter((c) => c.id === CONTRACT_CLIENT);
       expect(listed).toHaveLength(1);
       expect(listed[0].name).toBe('Second');
+    });
+
+    it('does not list the placeholder that anchors unowned journeys', async () => {
+      // `saveRun` files any journey it has never seen under this id so the
+      // foreign key holds. It is not a client anybody added, and the portfolio
+      // is supposed to start empty — it showed "Unassigned" on a fresh
+      // deployment before this.
+      const store = await makeStore();
+      await store.upsertClient({ id: UNASSIGNED_CLIENT_ID, name: 'Unassigned' });
+
+      expect((await store.listClients()).map((c) => c.id)).not.toContain(UNASSIGNED_CLIENT_ID);
+    });
+
+    it('still resolves the placeholder by id, because a foreign key points at it', async () => {
+      // Hidden from the catalog, not from the product: `/clients/<id>` has to
+      // keep working, and `saveRun` has to keep succeeding.
+      const store = await makeStore();
+      await store.upsertClient({ id: UNASSIGNED_CLIENT_ID, name: 'Unassigned' });
+
+      expect(await store.getClient(UNASSIGNED_CLIENT_ID)).toMatchObject({
+        id: UNASSIGNED_CLIENT_ID,
+      });
     });
 
     it('keeps an owner the caller did not mention', async () => {

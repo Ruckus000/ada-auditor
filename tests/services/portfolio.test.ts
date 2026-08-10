@@ -46,6 +46,23 @@ describe('buildPortfolio', () => {
     expect(await buildPortfolio(deps())).toEqual([]);
   });
 
+  it('leaves out the placeholder that anchors unowned journeys', async () => {
+    // A run posted straight to /api/audit/run materialises its journey under
+    // `client-unassigned` so the foreign key holds. That is plumbing, not a
+    // client somebody added, and it was appearing on the portfolio as a row
+    // with its own verdict on a deployment where nobody had added anything.
+    await platform.upsertClient({ id: 'client-unassigned', name: 'Unassigned' });
+    await platform.upsertJourney({
+      id: 'stray',
+      clientId: 'client-unassigned',
+      name: 'stray',
+      steps: [],
+    });
+    await runs.saveRun(run({ requestId: 'r1', journeyId: 'stray' }));
+
+    expect(await buildPortfolio(deps())).toEqual([]);
+  });
+
   it('lists a client that has never been audited', async () => {
     // Adding a client and running an audit are separate acts. A client with no
     // run yet is a normal state, not a broken row.

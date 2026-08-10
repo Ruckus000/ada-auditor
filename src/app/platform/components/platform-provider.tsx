@@ -23,7 +23,14 @@ import { parseRoute, workspaceHref } from '../lib/params';
  * screen comes from the pathname, and a modal and a toast live here because
  * neither belongs in a URL.
  */
-export function PlatformProvider({ children }: { children: React.ReactNode }) {
+export function PlatformProvider({
+  operator,
+  children,
+}: {
+  /** Resolved on the server: this component cannot read the environment. */
+  operator: PlatformState['operator'];
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname() ?? '/';
 
@@ -34,8 +41,8 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const state: PlatformState = useMemo(
-    () => ({ ...ephemeral, screen: route.screen }),
-    [ephemeral, route.screen],
+    () => ({ ...ephemeral, scope: route.scope, screen: route.screen, operator }),
+    [ephemeral, operator, route.scope, route.screen],
   );
 
   const flash = useCallback((message: string) => {

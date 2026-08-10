@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SCORE_VERSION, scoreDelta, scoreRun } from '../../src/services/score';
+import { SCORE_VERSION, scoreRun } from '../../src/services/score';
 
 describe('scoreRun', () => {
   it('is a rate over the checks actually evaluated', () => {
@@ -85,20 +85,5 @@ describe('scoreRun', () => {
     });
 
     expect(result.score).toBe(50);
-  });
-});
-
-describe('scoreDelta', () => {
-  it('reports the change between two scored runs', () => {
-    expect(scoreDelta(75, 72)).toBe(3);
-    expect(scoreDelta(70, 76)).toBe(-6);
-    expect(scoreDelta(80, 80)).toBe(0);
-  });
-
-  it('is unknown rather than zero when either run has no score', () => {
-    // "No change" and "we could not tell" are different claims, and the screens
-    // render them differently.
-    expect(scoreDelta(75, null)).toBeNull();
-    expect(scoreDelta(null, 75)).toBeNull();
   });
 });

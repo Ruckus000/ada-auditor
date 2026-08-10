@@ -110,6 +110,7 @@ beforeAll(async () => {
       // page and fails every assertion below for the wrong reason. This asks
       // for the ephemeral store explicitly; nothing here persists anything.
       AUDITOR_STORE: 'memory',
+      AUDITOR_OPERATOR_NAME: 'Harness Operator',
       DATABASE_URL: '',
       // The end-to-end test below runs a real audit through the real endpoint.
       // The chaos scenario is how it gets deterministic findings without a
@@ -227,6 +228,12 @@ describe('platform hydration', () => {
       const body = await page.innerText('body');
       expect(body).toContain('Harness Client');
       expect(body).toContain('Never audited');
+      // The operator comes from the environment, not from a person we
+      // invented — the header said "Jules Reyes" on every screen until it did.
+      // Asserted on the accessible name, because the avatar renders initials
+      // and the name is what a screen reader announces.
+      expect(await page.getByLabel('Signed in as Harness Operator').innerText()).toBe('HO');
+      expect(body).not.toContain('Jules Reyes');
     } finally {
       await page.close();
     }
@@ -424,6 +431,27 @@ describe('platform hydration', () => {
       await page.waitForURL(`**/clients/${CLIENT}/journeys`, { timeout: 15_000 });
 
       expect(new URL(page.url()).pathname).toBe(`/clients/${CLIENT}/journeys`);
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
+  it('marks no workspace tab as current while on a client screen', async () => {
+    // `parseRoute` resolves anything that is not a workspace path to the
+    // portfolio, so this said `aria-current="page"` on Portfolio — and painted
+    // it accented — while the operator was looking at a client.
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}`, { waitUntil: 'domcontentloaded' });
+
+      const current = await page.locator('nav[aria-label="Workspace"] [aria-current]').count();
+      expect(current).toBe(0);
+
+      // And it comes back on a workspace screen, or the marker means nothing.
+      await page.goto(`${BASE}/activity`, { waitUntil: 'domcontentloaded' });
+      expect(
+        await page.locator('nav[aria-label="Workspace"] [aria-current="page"]').innerText(),
+      ).toBe('Activity');
     } finally {
       await page.close();
     }

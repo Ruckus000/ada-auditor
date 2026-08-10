@@ -90,14 +90,3 @@ export function runVerdict(input: VerdictInput): VerdictKind {
 
   return unresolved ? 'risk' : 'pass';
 }
-
-/**
- * Whether a verdict permits showing a score.
- *
- * An inconclusive or in-flight run has no denominator — the evidence it would
- * be computed from is missing — so the screens render `—` rather than a
- * number we did not measure.
- */
-export function verdictHasScore(verdict: VerdictKind): boolean {
-  return verdict !== 'inconclusive' && verdict !== 'scan';
-}

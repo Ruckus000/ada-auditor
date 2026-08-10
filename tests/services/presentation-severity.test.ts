@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  countsTowardScore,
   displaySeverity,
   findingDisplayStatus,
 } from '../../src/services/presentation/severity';
@@ -27,22 +26,6 @@ describe('displaySeverity', () => {
     // A finding we cannot categorise needs a human. Filing it as low-priority
     // is how it never gets looked at.
     expect(displaySeverity('some-future-severity')).toBe('review');
-  });
-});
-
-describe('countsTowardScore', () => {
-  it('excludes review and advisory', () => {
-    // Neither is a proven failure: one is undecided, the other is a judgement
-    // that never gates. Counting either against a score would contradict what
-    // the product tells clients about both.
-    expect(countsTowardScore('review')).toBe(false);
-    expect(countsTowardScore('advisory')).toBe(false);
-  });
-
-  it('includes the three proven severities', () => {
-    expect(countsTowardScore('must')).toBe(true);
-    expect(countsTowardScore('should')).toBe(true);
-    expect(countsTowardScore('nice')).toBe(true);
   });
 });
 

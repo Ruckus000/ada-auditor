@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ClientDetail } from '../../../../services/client-detail';
+import { clientHref } from '../../lib/params';
 import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
@@ -10,9 +11,9 @@ import { Pill } from '../ui';
 /**
  * The bar and tabs above every client screen.
  *
- * Replaces `ClientBar`, which took a `ClientView` off the fixtures and showed a
- * domain, a trend arrow, a coverage percentage and a next-run time. None of
- * those exist in the record. What is here is what a run actually reports.
+ * The bar this replaced showed a domain, a trend arrow, a coverage percentage
+ * and a next-run time, none of which exist in the record — nothing in this
+ * system schedules anything. What is here is what a run actually reports.
  *
  * The tabs are `<Link>`s rather than buttons that call the router: a client
  * screen is a place, and a place you cannot open in a new tab or copy out of
@@ -27,10 +28,13 @@ export function ClientShell({
 }) {
   const pathname = usePathname();
 
+  // Built by `params.ts` rather than by template literal here. It owns the
+  // route grammar and its round-trip test proves the builder and the parser
+  // agree; a second copy in this file would be free to drift from both.
   const tabs: Array<[label: string, href: string]> = [
-    ['Overview', `/clients/${detail.id}`],
-    ['Findings', `/clients/${detail.id}/findings`],
-    ['Journeys', `/clients/${detail.id}/journeys`],
+    ['Overview', clientHref(detail.id)],
+    ['Findings', clientHref(detail.id, 'findings')],
+    ['Journeys', clientHref(detail.id, 'journeys')],
   ];
 
   const badge = VERDICT_CHIP[detail.lastRun?.verdict ?? 'scan'];

@@ -107,8 +107,3 @@ export function getArtifactStore(): ArtifactStore {
   }
   return store;
 }
-
-/** Test seam. */
-export function setArtifactStore(next: ArtifactStore | undefined): void {
-  store = next;
-}

@@ -1,3 +1,4 @@
+import { UNASSIGNED_CLIENT_ID } from '../../domain/platform';
 import type {
   ActivityEvent,
   PlatformStore,
@@ -90,7 +91,11 @@ export class PostgresPlatformStore implements PlatformStore {
       name: string;
       owner: string | null;
       created_at: Date | string;
-    }>`select id, name, owner, created_at from clients order by name asc`;
+    }>`
+      select id, name, owner, created_at from clients
+      where id <> ${UNASSIGNED_CLIENT_ID}
+      order by name asc
+    `;
 
     return rows.map((row) => ({
       id: row.id,
