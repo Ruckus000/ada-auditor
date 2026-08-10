@@ -9,6 +9,9 @@ export default defineConfig({
   },
   test: {
     include: ['tests/integrations/browser/**/*.test.ts'],
+    // The hydration suite needs a build and its own server, so it runs from
+    // `npm run test:hydration` rather than here.
+    exclude: ['tests/integrations/browser/platform-hydration.test.ts'],
     environment: 'node',
   },
 });

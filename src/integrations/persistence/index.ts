@@ -1,8 +1,11 @@
 import { neon } from '@neondatabase/serverless';
 import type { RunStore } from '../../domain/persistence';
+import type { PlatformStore } from '../../domain/platform';
+import { PostgresPlatformStore } from './postgres-platform-store';
 import { PostgresRunStore, type SqlClient } from './postgres-run-store';
 
 let defaultStore: RunStore | undefined;
+let defaultPlatformStore: PlatformStore | undefined;
 
 export function isDatabaseConfigured(): boolean {
   return Boolean(process.env.DATABASE_URL);
@@ -52,5 +55,42 @@ export function resetRunStore(): void {
   defaultStore = undefined;
 }
 
+/**
+ * The catalog store, built the same way and for the same reasons: lazily, so
+ * `next build` does not evaluate `neon()` before the variable exists, and
+ * failing loudly rather than degrading to something ephemeral.
+ */
+export function createPlatformStore(sql?: SqlClient): PlatformStore {
+  if (sql) {
+    return new PostgresPlatformStore(sql);
+  }
+
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      'DATABASE_URL is not set. Provision Neon (`vercel integration add neon`) and run `vercel env pull`.',
+    );
+  }
+
+  return new PostgresPlatformStore(neon(url) as SqlClient);
+}
+
+export function getPlatformStore(): PlatformStore {
+  if (!defaultPlatformStore) {
+    defaultPlatformStore = createPlatformStore();
+  }
+  return defaultPlatformStore;
+}
+
+export function setPlatformStore(store: PlatformStore): void {
+  defaultPlatformStore = store;
+}
+
+export function resetPlatformStore(): void {
+  defaultPlatformStore = undefined;
+}
+
 export { PostgresRunStore } from './postgres-run-store';
 export { MemoryRunStore } from './memory-run-store';
+export { PostgresPlatformStore } from './postgres-platform-store';
+export { MemoryPlatformStore } from './memory-platform-store';

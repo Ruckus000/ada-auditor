@@ -650,6 +650,16 @@ export function draftReport(client: ClientView, records: FindingRecord[]): Repor
 
 export const reportPaper = (index: number): ReportPaper => REPORT_DEFS[index];
 
+/**
+ * How many reports exist, so a route can refuse an index that does not.
+ *
+ * `reportPaper` indexes straight into the fixture, and the index now comes
+ * from the URL — `/reports/6` would hand the builder `undefined` and it would
+ * throw on the first field it read. `findingDetail` already clamps for the
+ * same reason; reports were the one addressable index without a guard.
+ */
+export const reportCount = (): number => REPORT_DEFS.length;
+
 export const AUDIENCES: Array<[Audience, string, string]> = [
   ['legal', 'Compliance and legal', 'Formal ACR wording, criterion by criterion, with dates and method.'],
   ['dev', 'The client’s developers', 'Code, file paths and the fix for each finding. No conformance language.'],

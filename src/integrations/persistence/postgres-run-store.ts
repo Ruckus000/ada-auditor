@@ -158,6 +158,24 @@ export class PostgresRunStore implements RunStore {
   async saveRun(record: StoredRunRecord): Promise<void> {
     const sql = this.sql;
 
+    // A run implies a journey.
+    //
+    // `runs.journey_id` is a foreign key now, so this row has to exist before
+    // the run does. Doing it here rather than only in the API handler keeps
+    // `saveRun` total: `journeyId` arrives as free text from a request body,
+    // and every other caller — chaos, the store contract, a future script —
+    // would otherwise hit a foreign-key violation for a precondition nothing
+    // told them about.
+    //
+    // The name defaults to the id and the client to `client-unassigned`. The
+    // catalog screens overwrite both; `on conflict do nothing` is what stops
+    // this from clobbering them on the next run.
+    await sql`
+      insert into journeys (id, client_id, name)
+      values (${record.journeyId}, 'client-unassigned', ${record.journeyId})
+      on conflict (id) do nothing
+    `;
+
     await sql`
       insert into runs (
         request_id, journey_id, environment, platform, evidence_status,
