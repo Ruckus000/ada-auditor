@@ -119,11 +119,22 @@ export class PostgresPlatformStore implements PlatformStore {
     } as StoredClient;
   }
 
+  /**
+   * `owner` is left alone when the caller does not supply one.
+   *
+   * It is optional on the input type, so a rename — `upsertClient({ id, name })`
+   * — used to set it to null and silently drop the value the portfolio column
+   * and its `?owner=` filter both read. Preserving it means an owner cannot be
+   * *cleared* through this method; clearing needs its own call rather than
+   * falling out of an omitted field.
+   */
   async upsertClient(client: Omit<StoredClient, 'createdAt'>): Promise<void> {
     await this.sql`
       insert into clients (id, name, owner)
       values (${client.id}, ${client.name}, ${client.owner ?? null})
-      on conflict (id) do update set name = excluded.name, owner = excluded.owner
+      on conflict (id) do update set
+        name = excluded.name,
+        owner = coalesce(excluded.owner, clients.owner)
     `;
   }
 
