@@ -4,7 +4,7 @@ import { auditReport, criticalFinding } from '../helpers/audit-report';
 const { runBrowserAudit } = vi.hoisted(() => ({ runBrowserAudit: vi.fn() }));
 vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserAudit }));
 
-const { handleAuditRun } = await import('../../src/app/api/_lib/audit-run-handler');
+const { handleAuditRun, startRun } = await import('../../src/app/api/_lib/audit-run-handler');
 const { MemoryRunStore, resetRunStore, setRunStore } = await import(
   '../../src/integrations/persistence'
 );
@@ -310,6 +310,83 @@ describe('handleAuditRun', () => {
 
     expect(result.ok).toBe(false);
     expect(result.status).toBe(400);
+    expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * `startRun` is the seam every server-side caller uses. Its whole point is that
+ * reaching a run no longer requires a `Request` — before it existed,
+ * /api/audit/console had to manufacture one with the server's own token forged
+ * into an Authorization header, because an HTTP handler was the only door.
+ *
+ * These tests therefore pass params directly and never build a Request.
+ */
+describe('startRun', () => {
+  beforeEach(() => {
+    runBrowserAudit.mockReset();
+    runBrowserAudit.mockResolvedValue(auditReport());
+    setRunStore(new MemoryRunStore());
+  });
+
+  afterEach(() => {
+    delete process.env.CHAOS_ENABLED;
+    resetRunStore();
+  });
+
+  it('runs synchronously when asked to wait', async () => {
+    const result = await startRun(
+      { journeyId: 'demo-login', environment: 'staging', wait: true },
+      'req-start-sync',
+    );
+
+    expect(result.status).toBe(200);
+    expect(result.body.ciStatus).toBe('pass');
+    expect(result.body.requestId).toBe('req-start-sync');
+  });
+
+  it('returns 202 and a poll URL by default', async () => {
+    const result = await startRun(
+      { journeyId: 'demo-login', environment: 'staging' },
+      'req-start-async',
+    );
+
+    expect(result.status).toBe(202);
+    expect(result.body.status).toBe('running');
+    expect(result.body.pollUrl).toBe('/api/audit/runs/req-start-async');
+  });
+
+  // The placeholder is what makes a run that dies mid-flight distinguishable
+  // from one that never happened. It must be written before the work starts,
+  // not after it finishes.
+  it('persists a running placeholder before the work starts', async () => {
+    const store = new MemoryRunStore();
+    setRunStore(store);
+
+    await startRun({ journeyId: 'demo-login', environment: 'staging' }, 'req-start-placeholder');
+
+    const stored = await store.getRun('req-start-placeholder');
+    expect(stored?.journeyId).toBe('demo-login');
+  });
+
+  // Chaos gating lives in startRun rather than in the HTTP handler, so every
+  // caller inherits it — a server-side caller cannot reach a chaos scenario on
+  // a deployment where chaos is switched off.
+  it('refuses a chaos scenario when chaos is disabled, whoever the caller is', async () => {
+    delete process.env.CHAOS_ENABLED;
+
+    const result = await startRun(
+      {
+        journeyId: 'demo-login',
+        environment: 'staging',
+        chaosScenario: 'browser_complete_clean',
+        wait: true,
+      },
+      'req-start-chaos',
+    );
+
+    expect(result.status).toBe(403);
+    expect(result.body.error).toBe('chaos_not_enabled');
     expect(runBrowserAudit).not.toHaveBeenCalled();
   });
 });

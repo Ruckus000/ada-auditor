@@ -38,6 +38,30 @@ describe('audit console route', () => {
     resetRunStore();
   });
 
+  // The route reaches `startRun` in-process now instead of rebuilding the
+  // request with the server's own token forged into an Authorization header.
+  // A body that never reaches the schema is the route's own 400, not one
+  // borrowed from an HTTP handler it no longer calls.
+  it('rejects a malformed body itself, without launching a browser', async () => {
+    process.env.AUDITOR_RUN_TOKEN = TOKEN;
+
+    const response = await POST(
+      new Request('http://localhost:3000/api/audit/console', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'sec-fetch-site': 'same-origin',
+          cookie: `${CONSOLE_COOKIE}=${createSessionValue(TOKEN)}`,
+        },
+        body: JSON.stringify({ journeyId: '', environment: 'staging' }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('invalid_request_body');
+    expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+
   it('accepts same-origin sec-fetch-site', () => {
     const request = new Request('http://localhost:3000/api/audit/console', {
       headers: { 'sec-fetch-site': 'same-origin' },
