@@ -216,19 +216,27 @@ Read this before claiming something works.
   store and a tested contract, and `journeys` materialises on every run — but
   only the screens read or write the rest, and the screens land slice by slice
   through Phase 2C. Until then they are reachable but mostly empty.
-- **The UI is real down to the client page; below that it is not.** The
-  portfolio and `/clients/<id>` (overview and journeys) read the database and
-  start empty. `/reports`, `/activity` and `/settings` are still `data.ts`, and
-  so is the report builder — slice 5. **There is no findings screen**: the
-  fixture one invented its own defects and was deleted rather than left looking
-  functional, and slice 2 builds the real one. Until then a run's findings are
-  visible only through `/console` and the API. See
+- **The UI is real down to the findings screen; the workspace is not.** The
+  portfolio and `/clients/<id>` (overview, findings, journeys) read the
+  database and start empty. `/reports`, `/activity` and `/settings` are still
+  `data.ts`, and so is the report builder — slice 5. See
   `docs/superpowers/plans/2026-08-07-phase-2.md`.
-- **`ClientTab` still names tabs that do not exist** (`findings`, `finding`,
-  `reports`, `activity`, `settings`). Kept deliberately, because slice 2 lands
-  the findings routes in this same phase — but if slice 2 slips, trim
-  `params.ts` rather than leaving route vocabulary no path can reach. That is
-  how `states` and `coverage` survived as screens nobody could open.
+- **The findings screen shows no prose, and that is a real gap.** A run stores
+  a rule code, a severity, WCAG criteria, a selector, a snippet and a help URL.
+  The fixture screen also had a plain-language title, an explanation, a code
+  fix and an effort estimate for every finding — all hand-written for eight
+  fictional clients. They are not there rather than invented. Writing real ones
+  means a rule-code → guidance table, which is `services/wcag-reference.ts` in
+  slice 6.
+- **Findings are read-only.** `finding_triage` has a store, a contract and a
+  place on the screen (a dismissed finding renders dimmed, with its note), but
+  no route writes it yet — so nothing an operator can click will dismiss a
+  finding. Triage lands with the API for it, not before.
+- **`ClientTab` still names tabs that do not exist** (`finding`, `reports`,
+  `activity`, `settings`). Kept for slice 5, which lands the reports and
+  activity routes — but if that slips, trim `params.ts` rather than leaving
+  route vocabulary no path can reach. That is how `states` and `coverage`
+  survived as screens nobody could open.
 - **The screens are still ~700 KB of shared client JavaScript**, most of it
   `data.ts` plus `ui.tsx`, `header.tsx` and `derive.ts`. The fixture half goes
   when `data.ts` does in slice 6. Route-specific code is split correctly

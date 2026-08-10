@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ClientDetail } from '../../../../services/client-detail';
 import { FONT, T } from '../../lib/tokens';
-import { VERDICT_CHIP, verdictWords } from '../../lib/verdict-chip';
+import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
 
 /**
@@ -29,6 +29,7 @@ export function ClientShell({
 
   const tabs: Array<[label: string, href: string]> = [
     ['Overview', `/clients/${detail.id}`],
+    ['Findings', `/clients/${detail.id}/findings`],
     ['Journeys', `/clients/${detail.id}/journeys`],
   ];
 

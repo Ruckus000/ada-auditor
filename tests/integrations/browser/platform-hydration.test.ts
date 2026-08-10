@@ -111,6 +111,10 @@ beforeAll(async () => {
       // for the ephemeral store explicitly; nothing here persists anything.
       AUDITOR_STORE: 'memory',
       DATABASE_URL: '',
+      // The end-to-end test below runs a real audit through the real endpoint.
+      // The chaos scenario is how it gets deterministic findings without a
+      // site to point at.
+      CHAOS_ENABLED: 'true',
     },
     // Own process group, so teardown can kill `next start` and not just the
     // `npx` wrapper in front of it — an orphan keeps the port and makes the
@@ -151,6 +155,7 @@ const ROUTES = [
   '/settings',
   '/reports',
   `/clients/${CLIENT}`,
+  `/clients/${CLIENT}/findings`,
   `/clients/${CLIENT}/journeys`,
 ];
 
@@ -207,6 +212,66 @@ describe('platform hydration', () => {
     }
   }, 60_000);
 
+
+  it('shows the findings a real run produced', async () => {
+    // The check this whole phase is judged on. A client, a journey, an audit
+    // through the real endpoint, and the defects it found rendered on that
+    // client's screen — no fixture anywhere in the chain.
+    //
+    // It also covers the linkage that was missing until this slice: `saveRun`
+    // materialises an unknown journey under `client-unassigned`, so a run only
+    // reaches a client's screen if the journey was registered against that
+    // client first.
+    const journey = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ name: 'Checkout' }),
+    });
+    expect(journey.status, await journey.clone().text()).toBe(201);
+    const { journey: created } = await journey.json();
+
+    const run = await fetch(`${BASE}/api/audit/run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        journeyId: created.id,
+        environment: 'staging',
+        chaosScenario: 'browser_passthrough_violations',
+      }),
+    });
+    // 202 with a poll URL: a run launches a browser and walks a journey, so
+    // the endpoint hands back a request id rather than holding the connection.
+    expect([200, 202]).toContain(run.status);
+    const { pollUrl, requestId } = await run.json();
+
+    const deadline = Date.now() + 90_000;
+    let finished = false;
+    while (Date.now() < deadline && !finished) {
+      const poll = await fetch(`${BASE}${pollUrl ?? `/api/audit/runs/${requestId}`}`, {
+        headers: { authorization: `Bearer ${TOKEN}` },
+      });
+      const state = await poll.json();
+      finished = state.run?.status === 'complete' || state.run?.status === 'failed';
+      if (!finished) await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    expect(finished, 'the audit never finished').toBe(true);
+
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/findings`, { waitUntil: 'domcontentloaded' });
+      const body = await page.innerText('body');
+
+      // Grouped by page, because a run is a journey and a journey is several
+      // pages. The scenario walks through a page with violations on it, which
+      // is exactly the bug that made a run report only its last page.
+      expect(body).toContain('violations.html');
+      expect(body).toContain('button-name');
+      expect(body).toContain('MUST FIX');
+      expect(body).not.toContain('Nothing audited yet');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
 
   it.each(ROUTES)('hydrates %s', async (route) => {
     const page = await openAuthenticatedPage();
