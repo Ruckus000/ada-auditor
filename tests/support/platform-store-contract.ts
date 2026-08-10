@@ -92,6 +92,20 @@ export function platformStoreContract(
       expect(listed[0].name).toBe('Second');
     });
 
+    it('keeps an owner the caller did not mention', async () => {
+      // `owner` is optional on the input, so a rename passes only id and name.
+      // Writing it unconditionally set it to null and silently dropped the
+      // value the portfolio column and its `?owner=` filter both read.
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'First', owner: 'Alex Reed' });
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Renamed' });
+
+      expect(await store.getClient(CONTRACT_CLIENT)).toMatchObject({
+        name: 'Renamed',
+        owner: 'Alex Reed',
+      });
+    });
+
     it('returns null for a client that does not exist', async () => {
       const store = await makeStore();
       expect(await store.getClient('pc-missing')).toBeNull();
