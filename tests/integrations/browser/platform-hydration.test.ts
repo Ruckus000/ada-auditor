@@ -436,6 +436,60 @@ describe('platform hydration', () => {
     }
   }, 60_000);
 
+  /**
+   * The journeys screen can now start a run.
+   *
+   * Asserted against the *built* bundle, because that is the only thing that
+   * catches the class of fault this suite exists for. The journey seeded here
+   * names a target that is not reachable from CI, so the run is expected to
+   * fail — the assertion is that the click reached the server and the journey
+   * stopped reading "Never run", not that an audit of a real site succeeded.
+   *
+   * It uses its own journey and asserts only on the journeys screen, so it
+   * cannot change which run is "latest" for the findings assertions above.
+   */
+  it('starts a run from the journeys screen', async () => {
+    await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        name: 'Run Now Journey',
+        targetUrl: 'https://run-now.invalid/',
+      }),
+    });
+
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      // The per-row accessible name — without it every row is another
+      // identical "Run now" in a screen reader's list.
+      const button = page.getByRole('button', { name: 'Run Now Journey now' });
+      await expect.poll(() => button.count(), { timeout: 15_000 }).toBe(1);
+
+      await button.click();
+
+      // Server truth, not the optimistic label: reload and assert the row
+      // reports a run rather than "Never run".
+      await expect
+        .poll(
+          async () => {
+            await page.reload({ waitUntil: 'domcontentloaded' });
+            const row = await page
+              .locator('li', { hasText: 'Run Now Journey' })
+              .first()
+              .innerText();
+            return row.includes('Never run');
+          },
+          { timeout: 60_000, intervals: [3000] },
+        )
+        .toBe(false);
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
   it('marks no workspace tab as current while on a client screen', async () => {
     // `parseRoute` resolves anything that is not a workspace path to the
     // portfolio, so this said `aria-current="page"` on Portfolio — and painted

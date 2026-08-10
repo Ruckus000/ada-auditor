@@ -38,6 +38,12 @@ export type StoredJourney = {
   name: string;
   targetUrl?: string;
   /**
+   * Which action policy a run against this journey gets. Absent on rows
+   * written before it existed; callers treat that as `production`, the
+   * strictest set — widening is a deliberate act, never a default.
+   */
+  environment?: string;
+  /**
    * The `JourneyStep[]` the runner walks, stored whole. A credential is
    * referenced here, never inlined — the same rule that keeps secrets out of
    * request bodies keeps them out of this column.

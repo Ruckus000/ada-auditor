@@ -22,6 +22,14 @@ export type JourneySummary = {
   name: string;
   targetUrl?: string;
   stepCount: number;
+  /**
+   * Whether "Run now" can do anything with this journey.
+   *
+   * Requires a target URL. Without one the runner walks our own fixture app
+   * over `file://` and files a green audit of demo pages under a real client's
+   * name. The route refuses it; the screen should not offer it either.
+   */
+  runnable: boolean;
   lastRun: RunSummary | null;
 };
 
@@ -114,6 +122,7 @@ export async function buildClientDetail(
         name: journey.name,
         ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
         stepCount: journey.steps.length,
+        runnable: Boolean(journey.targetUrl),
         lastRun: run ? summariseRun(run) : null,
       };
     }),

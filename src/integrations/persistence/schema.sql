@@ -433,3 +433,18 @@ alter table run_pages add column if not exists scan_ms integer;
 -- guessed forward, not left null — a null here would read as "not measured"
 -- on runs that predate measurement, which is exactly what it is.
 update runs set started_at = created_at where started_at is null;
+
+-- --- Journey environment ---------------------------------------------------
+--
+-- Which action policy a run against this journey gets. It lived only in a
+-- request body, so a stored journey could not be run at all — there was no
+-- answer to "run this" without someone typing the environment again.
+--
+-- Backfilled to `production`, the strictest set in `domain/policy.ts`: no
+-- `submit-safe`, no `mutate-test-data`. A tool that walks other people's sites
+-- defaults to read-only and makes widening a deliberate, recorded act.
+--
+-- No check constraint: `environmentSchema` validates at the boundary, and a
+-- constraint here is a future `alter` to fight when the set changes.
+alter table journeys add column if not exists environment text;
+update journeys set environment = 'production' where environment is null;

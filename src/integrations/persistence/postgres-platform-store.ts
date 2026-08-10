@@ -60,6 +60,7 @@ type JourneyRow = {
   client_id: string;
   name: string;
   target_url: string | null;
+  environment: string | null;
   steps: unknown[];
   archived_at: Date | string | null;
   created_at: Date | string;
@@ -272,6 +273,7 @@ export class PostgresPlatformStore implements PlatformStore {
       clientId: row.client_id,
       name: row.name,
       ...optional('targetUrl', row.target_url),
+      ...optional('environment', row.environment),
       steps: row.steps ?? [],
       ...optional('archivedAt', row.archived_at ? toIso(row.archived_at) : null),
       createdAt: toIso(row.created_at),
@@ -305,15 +307,17 @@ export class PostgresPlatformStore implements PlatformStore {
     journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,
   ): Promise<void> {
     await this.sql`
-      insert into journeys (id, client_id, name, target_url, steps, updated_at)
+      insert into journeys (id, client_id, name, target_url, environment, steps, updated_at)
       values (
         ${journey.id}, ${journey.clientId}, ${journey.name},
-        ${journey.targetUrl ?? null}, ${JSON.stringify(journey.steps ?? [])}::jsonb, now()
+        ${journey.targetUrl ?? null}, ${journey.environment ?? 'production'},
+        ${JSON.stringify(journey.steps ?? [])}::jsonb, now()
       )
       on conflict (id) do update set
         client_id = excluded.client_id,
         name = excluded.name,
         target_url = excluded.target_url,
+        environment = excluded.environment,
         steps = excluded.steps,
         updated_at = now()
     `;
