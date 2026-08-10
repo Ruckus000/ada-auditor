@@ -254,12 +254,23 @@ describe('platform accessibility', () => {
       const results = await new AxeBuilder({ page }).analyze();
 
       // Name the rule and the element on failure: "expected 0, got 2" would
-      // send the next reader back to a browser to find out what broke.
+      // send the next reader back to a browser to find out what broke. The
+      // landmark outline comes along because a landmark rule is meaningless
+      // without knowing what the page actually rendered — CI once failed
+      // `landmark-one-main` on routes that were green locally, and the bare
+      // rule id said nothing about why.
+      const outline = await page.evaluate(() => ({
+        mains: document.querySelectorAll('main').length,
+        banners: document.querySelectorAll('header').length,
+        locked: document.body.innerText.includes('Unlock the console'),
+        bodyChars: document.body.innerHTML.length,
+      }));
+
       const detail = results.violations
         .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
         .join('\n');
 
-      expect(detail).toBe('');
+      expect(detail, `page outline: ${JSON.stringify(outline)}`).toBe('');
     } finally {
       await page.close();
     }
