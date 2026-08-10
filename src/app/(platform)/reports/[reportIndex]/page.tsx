@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { reportCount } from '../../../platform/lib/derive';
-import { ReportsRoute } from '../../../platform/components/screen-routes';
+import { ReportsRoute } from '../../../platform/components/routes/reports-route';
 
 /**
  * The builder open on one report. Same component as the library — the URL says

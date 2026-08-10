@@ -1,4 +1,4 @@
-import { JourneysRoute } from '../../../../platform/components/screen-routes';
+import { JourneysRoute } from '../../../../platform/components/routes/journeys-route';
 
 export default function ClientJourneysPage() {
   return <JourneysRoute />;

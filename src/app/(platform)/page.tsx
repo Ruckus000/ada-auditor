@@ -1,4 +1,4 @@
-import { PortfolioRoute } from '../platform/components/screen-routes';
+import { PortfolioRoute } from '../platform/components/routes/portfolio-route';
 
 /**
  * The portfolio, and the product's front door.
