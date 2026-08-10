@@ -149,6 +149,26 @@ afterAll(async () => {
 
 const CLIENT = 'harness-client';
 
+/**
+ * The report id behind a share URL.
+ *
+ * The share link deliberately carries only the token — the id is an internal
+ * handle and putting it in a public URL would hand a holder of the link a
+ * second thing to guess with.
+ */
+async function reportIdFor(shareUrl: string): Promise<string> {
+  const token = shareUrl.replace('/r/', '');
+  const response = await fetch(`${BASE}/api/platform/clients/${CLIENT}/reports`, {
+    headers: { authorization: `Bearer ${TOKEN}` },
+  });
+  const { reports } = (await response.json()) as {
+    reports: Array<{ id: string; shareToken?: string }>;
+  };
+  const match = reports.find((report) => report.shareToken === token);
+  if (!match) throw new Error(`No report found for ${shareUrl}`);
+  return match.id;
+}
+
 const ROUTES = [
   '/',
   '/activity',
@@ -297,6 +317,60 @@ describe('platform hydration', () => {
       expect(body).toContain('Reopen this finding');
     } finally {
       await page.close();
+    }
+  }, 60_000);
+
+  it('issues a shareable report that anyone can read, until it is revoked', async () => {
+    // The one surface outside the auth gate. The token is the whole access
+    // story, so this checks both halves of it: the link works without a
+    // session, and it stops working when revoked.
+    const page = await openAuthenticatedPage();
+    let shareUrl: string;
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/findings`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByRole('button', { name: 'Issue a shareable report' }).click();
+      await page.waitForSelector('a[href^="/r/"]', { timeout: 15_000 });
+      shareUrl = (await page.getAttribute('a[href^="/r/"]', 'href')) ?? '';
+      expect(shareUrl).toMatch(/^\/r\/.{40,}$/);
+    } finally {
+      await page.close();
+    }
+
+    // A fresh context: no cookie, no session, nothing but the URL.
+    const anonymous = await browser.newPage();
+    try {
+      const response = await anonymous.goto(`${BASE}${shareUrl}`, {
+        waitUntil: 'domcontentloaded',
+      });
+      expect(response?.status()).toBe(200);
+
+      const body = await anonymous.innerText('body');
+      expect(body).toContain('Harness Client');
+      expect(body).toContain('button-name');
+      // The shared page is the audit and nothing else: no way into the console
+      // from it, and no other client's name on it.
+      expect(body).not.toContain('Portfolio');
+    } finally {
+      await anonymous.close();
+    }
+
+    const reports = await fetch(`${BASE}/api/platform/clients/${CLIENT}/reports`, {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ id: await reportIdFor(shareUrl) }),
+    });
+    expect(reports.status, await reports.clone().text()).toBe(200);
+
+    const afterRevoke = await browser.newPage();
+    try {
+      const response = await afterRevoke.goto(`${BASE}${shareUrl}`, {
+        waitUntil: 'domcontentloaded',
+      });
+      expect(response?.status()).toBe(404);
+    } finally {
+      await afterRevoke.close();
     }
   }, 60_000);
 

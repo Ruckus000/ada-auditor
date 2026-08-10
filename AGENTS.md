@@ -216,11 +216,24 @@ Read this before claiming something works.
   store and a tested contract, and `journeys` materialises on every run — but
   only the screens read or write the rest, and the screens land slice by slice
   through Phase 2C. Until then they are reachable but mostly empty.
-- **The UI is real down to the findings screen; the workspace is not.** The
-  portfolio and `/clients/<id>` (overview, findings, journeys) read the
-  database and start empty. `/reports`, `/activity` and `/settings` are still
-  `data.ts`, and so is the report builder — slice 5. See
-  `docs/superpowers/plans/2026-08-07-phase-2.md`.
+- **`data.ts` and `derive.ts` are gone.** Every screen reads the database.
+  What that cost is worth knowing: the fixture screens carried features that
+  had nothing behind them, and rather than port them they were deleted — the
+  report *builder* (audience tabs, section editor, live preview), the ⌘K
+  search, scan schedules, notification rules, seats and SSO. Nothing in this
+  system schedules a run or has a second user.
+- **`/r/<token>` is the only surface outside the auth gate.** The token is the
+  entire access-control story: 32 random bytes, `noindex`, no navigation back
+  into the console, and revocation nulls the token so the old URL 404s. A
+  report pins a `requestId` and never "the latest" — a link sent to a
+  regulator must not change meaning after tonight's run. Triage is
+  deliberately not applied to it: publishing a dismissal would leak the note,
+  and hiding the finding would make the shared document disagree with the
+  audit it reports.
+- **Settings is read-only, and that is the design.** These are deploy-time
+  environment settings; a form that appeared to change them from a web page
+  would be lying about where the truth lives. It marks a degraded run store,
+  local-disk evidence, an in-memory throttle and enabled chaos injection.
 - **The findings screen shows no prose, and that is a real gap.** A run stores
   a rule code, a severity, WCAG criteria, a selector, a snippet and a help URL.
   The fixture screen also had a plain-language title, an explanation, a code
