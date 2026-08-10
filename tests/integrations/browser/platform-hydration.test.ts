@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { AxeBuilder } from '@axe-core/playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Browser, Page } from 'playwright-core';
 import { launchChromium } from '../../../src/integrations/browser/launch';
@@ -225,6 +226,40 @@ describe('platform hydration', () => {
 
       await page.reload({ waitUntil: 'domcontentloaded' });
       expect(new URL(page.url()).searchParams.get('filter')).toBe('must');
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+});
+
+/**
+ * We audit other people's sites for a living.
+ *
+ * Running our own engine against our own screens is the cheapest possible
+ * answer to "who audits the auditor", and it found real defects the first time
+ * it ran: the client bar sat between the banner and `<main>` so its content
+ * belonged to no landmark, and the search control's placeholder ink was
+ * 2.36:1 against a 4.5:1 requirement.
+ *
+ * Asserted at zero deliberately. A threshold ("no more than five") is a budget
+ * for shipping barriers, which is not a position this product can hold.
+ */
+describe('platform accessibility', () => {
+  it.each([...ROUTES, '/console'])('has no axe violations on %s', async (route) => {
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      const results = await new AxeBuilder({ page }).analyze();
+
+      // Name the rule and the element on failure: "expected 0, got 2" would
+      // send the next reader back to a browser to find out what broke.
+      const detail = results.violations
+        .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
+        .join('\n');
+
+      expect(detail).toBe('');
     } finally {
       await page.close();
     }
