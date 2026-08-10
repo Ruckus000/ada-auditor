@@ -177,6 +177,12 @@ describe('platform hydration', () => {
       await expect
         .poll(() => isHydrated(page, 'button'), { timeout: 15_000 })
         .toBe(true);
+
+      // The unlock card has buttons too, so every assertion above passes
+      // happily against a locked page. CI proved that is not hypothetical:
+      // these tests went green while four routes were serving the locked
+      // shell from a prerender.
+      expect(await page.innerText('body')).not.toContain('Unlock the console');
     } finally {
       await page.close();
     }
