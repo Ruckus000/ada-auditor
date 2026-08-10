@@ -1,4 +1,4 @@
-import { isRunAuthorized } from '../../../_lib/auth';
+import { authorizePrincipal } from '../../../_lib/authorize';
 import { createRequestId } from '../../../_lib/request-id';
 import { getRunStore } from '../../../../../integrations/persistence';
 
@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const traceId = createRequestId();
 
-  if (!isRunAuthorized(request)) {
+  if (!(await authorizePrincipal(request))) {
     return Response.json({ error: 'unauthorized', requestId: traceId }, { status: 401 });
   }
 

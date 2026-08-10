@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FONT, T } from '../../lib/tokens';
 
@@ -23,8 +23,10 @@ const POLL_INTERVAL_MS = 3000;
 const MAX_POLLS = 100;
 
 const MESSAGES: Record<string, string> = {
-  journey_not_runnable:
-    'This journey has no target URL and no steps, so there is nothing to walk.',
+  // A target URL is what this route requires — steps alone would walk our own
+  // fixture app. Saying "and no steps" sent an operator to add steps that
+  // could not have helped.
+  journey_not_runnable: 'This journey has no target URL, so there is no site to walk.',
   invalid_journey_steps: 'This journey’s stored steps are not valid. Record it again.',
   journey_not_found: 'That journey is no longer on this client.',
   unauthorized: 'Your session expired. Reload and sign in again.',
@@ -49,12 +51,22 @@ export function RunJourneyButton({
   const [error, setError] = useState<string | null>(null);
   const cancelled = useRef(false);
 
+  // Stops the poll when the operator navigates away mid-run. Without this the
+  // loop kept running against an unmounted component and called `setPhase` on
+  // it — the ref was read but nothing ever set it, so it read as if it
+  // cancelled something and did not.
+  useEffect(() => {
+    return () => {
+      cancelled.current = true;
+    };
+  }, []);
+
   if (!runnable) {
     // Said rather than hidden: an operator looking for the button needs to know
     // why it is not there, and "nothing to walk" is the actionable answer.
     return (
       <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-        Not runnable — no target or steps
+        Not runnable — no target URL
       </span>
     );
   }

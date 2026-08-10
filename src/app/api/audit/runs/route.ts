@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isRunAuthorized } from '../../_lib/auth';
+import { authorizePrincipal } from '../../_lib/authorize';
 import { createRequestId } from '../../_lib/request-id';
 import { getRunStore } from '../../../../integrations/persistence';
 
@@ -22,7 +22,7 @@ const querySchema = z.object({
 export async function GET(request: Request) {
   const requestId = createRequestId();
 
-  if (!isRunAuthorized(request)) {
+  if (!(await authorizePrincipal(request))) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
