@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   runVerdict,
-  verdictHasScore,
   type VerdictFinding,
 } from '../../src/services/presentation/verdict';
 
@@ -102,18 +101,5 @@ describe('runVerdict', () => {
   it('does not require a status', () => {
     // Records written before `status` existed still have to render.
     expect(runVerdict({ ciStatus: 'pass', findings: [] })).toBe('pass');
-  });
-});
-
-describe('verdictHasScore', () => {
-  it('withholds a score where there is no denominator', () => {
-    expect(verdictHasScore('inconclusive')).toBe(false);
-    expect(verdictHasScore('scan')).toBe(false);
-  });
-
-  it('allows a score for every judged run', () => {
-    expect(verdictHasScore('pass')).toBe(true);
-    expect(verdictHasScore('risk')).toBe(true);
-    expect(verdictHasScore('fail')).toBe(true);
   });
 });

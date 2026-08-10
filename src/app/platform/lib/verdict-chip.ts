@@ -4,10 +4,10 @@ import { T } from './tokens';
 /**
  * The verdict badge, keyed on the real `VerdictKind`.
  *
- * `derive.ts` has a `CHIPS` map too, but it is keyed on the fixture's four-value
- * union and has no `inconclusive` — the very verdict this product treats as
- * load-bearing. Screens reading the database use this one; `derive.ts` goes
- * when the last fixture screen does.
+ * The map this replaced was keyed on the fixture's four-value union and had no
+ * `inconclusive` — the very verdict this product treats as load-bearing. An
+ * audit that could not gather its evidence has not passed and has not failed,
+ * and the badge must not let an operator read it as either.
  */
 export interface VerdictChip {
   bg: string;

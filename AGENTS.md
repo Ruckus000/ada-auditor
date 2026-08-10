@@ -188,9 +188,9 @@ Implemented and verified locally + on Vercel preview:
 Slices 0, 1 and 3 are merged. Slice 2 onward is blocked on one product
 decision nobody has made:
 
-**How does a real client get into the system?** The database has one
-`client-unassigned` row and whatever journeys runs have materialised. The
-screens still read eight invented clients from `data.ts`.
+**How does a real client get into the system?** The database had one
+`client-unassigned` row and whatever journeys runs had materialised, and the
+screens read eight invented clients from `data.ts`.
 
 **Answered:** the portfolio starts **empty** and an operator adds clients. The
 alternative — seeding the eight fixture clients as real rows — is a faster demo
@@ -269,15 +269,19 @@ Read this before claiming something works.
   canned reasons ("handled elsewhere", "accepted risk, signed off"). Nobody has
   agreed to that vocabulary, and a wrong one becomes the record an auditor
   defends later, so the note stays free text until somebody has.
-- **`ClientTab` still names tabs that do not exist** (`finding`, `reports`,
-  `activity`, `settings`). Kept for slice 5, which lands the reports and
-  activity routes — but if that slips, trim `params.ts` rather than leaving
-  route vocabulary no path can reach. That is how `states` and `coverage`
-  survived as screens nobody could open.
-- **The screens are still ~700 KB of shared client JavaScript**, most of it
-  `data.ts` plus `ui.tsx`, `header.tsx` and `derive.ts`. The fixture half goes
-  when `data.ts` does in slice 6. Route-specific code is split correctly
-  (`components/routes/*`, one module per screen) — measured, not assumed.
+- **`client-unassigned` is a foreign-key anchor, not a client.** `saveRun`
+  materialises a journey for any `journeyId` it has never seen, and
+  `journeys.client_id` is a foreign key, so the row has to exist. It is left
+  out of `listClients()` in both stores — it was appearing on the portfolio as
+  a client called "Unassigned" that nobody had added, on a screen whose whole
+  premise is that it starts empty. `getClient()` still resolves it, so
+  `/clients/client-unassigned` stays reachable for an operator who knows the
+  id: hidden from the catalog, not from the product. The store contract tests
+  both halves; do not "fix" one without the other.
+- **A run not attached to a client is still visible, just not in the
+  portfolio.** `/console` and `/api/audit/runs` report it. Registering the
+  journey against a client first (`POST /api/platform/clients/<id>/journeys`)
+  is what puts a run on a client's screens.
 - **A page cap of 20 is a guess, not a measurement.** No real journey has been
   run against it. If real journeys exceed it, that is the signal for a
   container worker rather than a bigger number.
@@ -298,9 +302,9 @@ Read this before claiming something works.
 - **No tenancy.** One shared `AUDITOR_RUN_TOKEN`, a flat `journeyId:environment`
   keyspace, and `accountId: 'acct-demo'` hardcoded. Any authenticated caller can
   read any run by guessing a journeyId.
-- **The UI at `/` is mostly a fixture prototype.** The portfolio reads the
-  database; the client screens behind it do not. The working surface for a real
-  audit is still `/console`.
+- **Starting a run is still a `/console` or API job.** Every platform screen
+  reads the database, but nothing on them launches an audit — the button that
+  appeared to was fixture scenery and went with it.
 
 ## Agent behavior
 

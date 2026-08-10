@@ -16,8 +16,6 @@
 import type { TriageState } from '../../domain/platform';
 import type { DeterministicFinding } from '../deterministic-audit';
 
-export type { TriageState };
-
 export type DisplaySeverity = 'must' | 'should' | 'nice' | 'review' | 'advisory';
 
 /**
@@ -39,11 +37,6 @@ export function displaySeverity(severity: string): DisplaySeverity {
   // cannot categorise needs a human to look at it, and quietly filing it as
   // low-priority is how it never gets looked at.
   return DISPLAY_BY_SEVERITY[severity] ?? 'review';
-}
-
-/** Severities that count toward the blocking total and the score. */
-export function countsTowardScore(severity: DisplaySeverity): boolean {
-  return severity === 'must' || severity === 'should' || severity === 'nice';
 }
 
 /**

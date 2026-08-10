@@ -76,16 +76,3 @@ export function scoreRun(input: ScoreInput): RunScore {
 
   return { score, scoreVersion: SCORE_VERSION, passed, failed, needsReview };
 }
-
-/**
- * The change since the previous run, or null when either end is unscored.
- *
- * A delta against a run that could not be scored is not zero — it is unknown,
- * and the screens render it as an em dash rather than as "no change".
- */
-export function scoreDelta(current: number | null, previous: number | null): number | null {
-  if (current === null || previous === null) {
-    return null;
-  }
-  return current - previous;
-}

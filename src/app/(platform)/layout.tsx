@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
+import { operatorInitials, operatorName } from '../../domain/operator';
 import { hasOperatorSession } from '../api/_lib/operator-session';
 import { PlatformProvider } from '../platform/components/platform-provider';
 import { PlatformLocked, PlatformShell } from '../platform/components/platform-shell';
@@ -52,8 +53,12 @@ export default async function PlatformLayout({
     return <PlatformLocked />;
   }
 
+  // Resolved here because this is the only server component above the header,
+  // and the header cannot read the environment for itself.
+  const name = operatorName();
+
   return (
-    <PlatformProvider>
+    <PlatformProvider operator={{ name, initials: operatorInitials(name) }}>
       <PlatformShell>{children}</PlatformShell>
     </PlatformProvider>
   );

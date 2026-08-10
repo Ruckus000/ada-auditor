@@ -9,6 +9,21 @@
  * twenty methods the engine never calls.
  */
 
+/**
+ * The client row that anchors journeys nobody registered.
+ *
+ * `saveRun` materialises a journey for any `journeyId` it has never seen, and
+ * `journeys.client_id` is a foreign key, so *some* client row has to exist for
+ * that write to succeed. This is it.
+ *
+ * It is a foreign-key anchor, not a catalog entry, so `listClients` leaves it
+ * out — the portfolio starts empty, and a run posted straight to
+ * `/api/audit/run` must not put a client on it that nobody added. `getClient`
+ * still resolves it, so `/clients/client-unassigned` remains reachable by an
+ * operator who knows the id: hidden from the catalog, not from the product.
+ */
+export const UNASSIGNED_CLIENT_ID = 'client-unassigned';
+
 export type StoredClient = {
   id: string;
   name: string;

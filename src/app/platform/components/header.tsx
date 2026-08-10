@@ -64,12 +64,19 @@ export function PlatformHeader() {
         aria-label="Workspace"
         style={{ display: 'flex', alignItems: 'center', gap: 2, height: '100%', minWidth: 0 }}
       >
-        {WORKSPACE_TABS.map(([key, label]) => (
+        {WORKSPACE_TABS.map(([key, label]) => {
+          // `parseRoute` resolves anything that is not a workspace path to the
+          // portfolio, so on `/clients/acme` this marked Portfolio as the
+          // current page and painted it accented. A client screen is not any
+          // of these tabs.
+          const on = state.scope === 'ws' && state.screen === key;
+
+          return (
           <button
             key={key}
             type="button"
             onClick={() => actions.goWorkspace(key)}
-            aria-current={state.screen === key ? 'page' : undefined}
+            aria-current={on ? 'page' : undefined}
             className="ph-nav"
             style={{
               display: 'flex',
@@ -82,12 +89,13 @@ export function PlatformHeader() {
               fontSize: 13.5,
               whiteSpace: 'nowrap',
               cursor: 'pointer',
-              ...tabStyle(state.screen === key),
+              ...tabStyle(on),
             }}
           >
             {label}
           </button>
-        ))}
+          );
+        })}
       </nav>
 
       <span
@@ -99,11 +107,10 @@ export function PlatformHeader() {
           minWidth: 0,
         }}
       >
-        {/* The ⌘K client search lived here. It searched the eight invented
-            clients in `data.ts` and navigated by fixture index, so against
-            real clients every result was a 404. Deleted rather than left
-            looking functional; it returns when there is a real index to
-            search. */}
+        {/* The ⌘K client search lived here. It searched eight invented
+            clients and navigated by fixture index, so against real clients
+            every result was a 404. Deleted rather than left looking
+            functional; it returns when there is a real index to search. */}
 
         {/* Not in the source design, which specifies this header exactly and
             gives the avatar no menu. Added because moving the console to
@@ -145,8 +152,17 @@ export function PlatformHeader() {
           Add a client
         </button>
 
+        {/* The configured operator, not a person we made up. There is no
+            per-user identity in this product — one shared token, one trusted
+            group — so this is a name from the environment, and it renders
+            "Operator" when nobody set one.
+
+            The initials had a `title` attribute, which most assistive
+            technology never announces on a non-interactive element: the name
+            was effectively absent rather than merely wrong. */}
         <span
-          title="Signed in as Jules Reyes, lead auditor"
+          aria-label={`Signed in as ${state.operator.name}`}
+          role="img"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -162,7 +178,7 @@ export function PlatformHeader() {
             border: `1px solid ${T.ruleStrong}`,
           }}
         >
-          JR
+          {state.operator.initials}
         </span>
       </span>
     </header>

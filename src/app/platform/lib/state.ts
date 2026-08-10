@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import type { WorkspaceScreen } from './params';
+import type { Scope, WorkspaceScreen } from './params';
 
 /**
  * The little that is not in the URL.
@@ -16,19 +16,39 @@ import type { WorkspaceScreen } from './params';
  * it in the URL would make the back button close a dialog instead of
  * navigating.
  */
-export type { WorkspaceScreen } from './params';
+export type { Scope, WorkspaceScreen } from './params';
 
 export type ModalName = 'addClient' | null;
 
 export interface PlatformState {
+  /**
+   * Whether the current route is a workspace screen or a client screen.
+   *
+   * Derived from the pathname. The header needs it because `parseRoute` falls
+   * back to `portfolio` for anything that is not a workspace path — so without
+   * this, standing on `/clients/acme` marked the Portfolio tab as the current
+   * page and highlighted it.
+   */
+  scope: Scope;
   /** Derived from the pathname; here so the header can highlight a tab. */
   screen: WorkspaceScreen;
+  /**
+   * Who the header says is signed in.
+   *
+   * Read from `AUDITOR_OPERATOR_NAME` on the server and passed down, because
+   * the header is a client component and cannot read the environment. It said
+   * "Jules Reyes" until now — a fabricated identity on every screen, in the
+   * phase whose whole point was removing those.
+   */
+  operator: { name: string; initials: string };
   modal: ModalName;
   toast: { id: number; message: string } | null;
 }
 
 export const INITIAL_STATE: PlatformState = {
+  scope: 'ws',
   screen: 'portfolio',
+  operator: { name: 'Operator', initials: 'O' },
   modal: null,
   toast: null,
 };

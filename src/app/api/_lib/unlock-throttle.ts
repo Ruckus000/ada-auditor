@@ -125,8 +125,3 @@ export function getThrottleStore(): ThrottleStore {
   }
   return store;
 }
-
-/** Test seam. */
-export function setThrottleStore(next: ThrottleStore | undefined): void {
-  store = next;
-}
