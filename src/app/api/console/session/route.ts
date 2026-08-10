@@ -54,6 +54,9 @@ export async function GET(request: Request) {
 }
 
 
+/** Never matches, and costs the same as one that could. See the note below. */
+const UNKNOWN_ACCOUNT_HASH = 'scrypt$16384$8$1$bm90LWEtcmVhbC1zYWx0LQ==$eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA==';
+
 export async function POST(request: Request) {
   const requestId = createRequestId();
   const configuredToken = process.env.AUDITOR_RUN_TOKEN;
@@ -117,10 +120,12 @@ export async function POST(request: Request) {
     // match. Skipping the work would answer "is this an account?" in the
     // response time, which is a user-enumeration oracle on the one endpoint
     // where it matters.
-    const matched = await verifyPassword(
-      password,
-      operator?.passwordHash ?? 'scrypt$16384$8$1$bm90LWEtc2FsdA==$bm90LWEtaGFzaA==',
-    );
+    // The dummy derives 64 bytes because every real hash does, and
+    // `verifyPassword` passes the stored length to scrypt. A shorter dummy
+    // would make the unknown-account path measurably cheaper than the known
+    // one — a control that is only *nearly* constant-time, which is the one
+    // property it exists to have.
+    const matched = await verifyPassword(password, operator?.passwordHash ?? UNKNOWN_ACCOUNT_HASH);
 
     if (!operator || !matched) {
       await recordFailure();

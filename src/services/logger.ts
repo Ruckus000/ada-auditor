@@ -116,6 +116,6 @@ export function logWarn(type: string, fields: LogFields = {}): void {
   logEvent('warn', type, fields);
 }
 
-export function logError(type: string, fields: LogFields = {}): void {
-  logEvent('error', type, fields);
-}
+// No `logError` shorthand: nothing emits at error level yet, and `logEvent`
+// takes the level directly. A wrapper exercised only by its own test is the
+// "code without a caller" this repo has already deleted once.

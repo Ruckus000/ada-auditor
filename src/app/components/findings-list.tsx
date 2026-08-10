@@ -124,9 +124,19 @@ function ArtifactChecklist({
                 target="_blank"
                 rel="noreferrer"
               >
-                {/* Named per page, or every row is another "View" in a screen
-                    reader's list of links. */}
-                View<span className="sr-only"> {item.label} for {page?.route ?? 'this page'}</span>
+                {/*
+                  Named per page, or every row is another "View" in a screen
+                  reader's list of links — and the new tab is announced rather
+                  than sprung. axe does not flag an unannounced `target=_blank`
+                  and it is not an AA failure, which is exactly why it needs
+                  saying here: this product cannot ship the accessibility bug
+                  its own engine would not catch.
+                */}
+                View
+                <span className="sr-only">
+                  {' '}
+                  {item.label} for {page?.route ?? 'this page'}, opens in a new tab
+                </span>
               </a>
             ) : (
               <span className="artifact-state">

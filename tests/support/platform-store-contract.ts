@@ -503,6 +503,29 @@ export function platformStoreContract(
       expect(second.map((journey) => journey.id)).not.toContain('pc-journey-once');
     });
 
+    /**
+     * The sequential case above passes without any locking at all — by the time
+     * the second call runs, the first has already stamped the row. This one is
+     * the case that fails without `for update skip locked`: two ticks in flight
+     * at once, both evaluating the subquery before either commits.
+     *
+     * Overlap is not hypothetical. The tick accepts a manual trigger with the
+     * run token, so an operator proving a new schedule while the hour rolls
+     * over is exactly this. A double claim means one journey audited twice and
+     * a client billed for it.
+     */
+    it('does not hand the same journey to two concurrent claims', async () => {
+      await scheduled('pc-journey-race');
+
+      const [first, second] = await Promise.all([
+        store_.claimDueJourneys(10),
+        store_.claimDueJourneys(10),
+      ]);
+
+      const claims = [...first, ...second].filter((journey) => journey.id === 'pc-journey-race');
+      expect(claims).toHaveLength(1);
+    });
+
     it('leaves an unscheduled journey alone', async () => {
       await scheduled('pc-journey-off', { schedule: 'off' });
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { REDACTED, logError, logEvent, logInfo, logWarn } from '../../src/services/logger';
+import { REDACTED, logEvent, logInfo, logWarn } from '../../src/services/logger';
 
 /** Parses the single line the logger wrote to the given spy. */
 function emitted(spy: ReturnType<typeof vi.spyOn>): Record<string, unknown> {
@@ -56,7 +56,7 @@ describe('logEvent', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     logWarn('audit_page_cap_reached', { pagesSkipped: 2 });
-    logError('run_failed', { requestId: 'req-2' });
+    logEvent('error', 'run_failed', { requestId: 'req-2' });
 
     expect(emitted(warn).type).toBe('audit_page_cap_reached');
     expect(emitted(error).type).toBe('run_failed');

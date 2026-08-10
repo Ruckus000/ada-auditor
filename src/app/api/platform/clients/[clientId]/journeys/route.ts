@@ -29,7 +29,7 @@ export async function GET(
   return Response.json({ requestId, journeys, count: journeys.length }, { status: 200 });
 }
 
-export const scheduleSchema = z.enum(['off', 'daily', 'weekly']);
+const scheduleSchema = z.enum(['off', 'daily', 'weekly']);
 
 const createJourneySchema = z.object({
   name: z.string().trim().min(1).max(120),

@@ -343,6 +343,19 @@ export class PostgresPlatformStore implements PlatformStore {
    * a select followed by an update would let two overlapping ticks both claim
    * the same journey and start it twice.
    *
+   * `for update skip locked` is what actually makes that true, and it is not
+   * decoration. Without it, two concurrent updates can both evaluate the
+   * subquery before either commits; the second then blocks on the row lock and
+   * re-checks the outer qual against the new row version — behaviour subtle
+   * enough that no scheduler should depend on it implicitly. `skip locked`
+   * makes the second tick pass over a claimed row instead of queueing behind
+   * it, which is also what keeps a slow claim from serialising the whole tick.
+   *
+   * Overlap is unlikely on an hourly cron but entirely reachable: the route
+   * accepts a manual tick with the run token, so an operator proving a new
+   * schedule as the hour rolls over is the collision. A double claim means one
+   * journey audited twice and a client billed for it.
+   *
    * The slack in the intervals — 23 hours for daily, 6 days for weekly — is
    * what stops hour-boundary jitter from skipping a day entirely. Without it,
    * a tick that runs a few seconds late means `last_scheduled_at` is not quite
@@ -368,6 +381,7 @@ export class PostgresPlatformStore implements PlatformStore {
           )
         order by last_scheduled_at asc nulls first
         limit ${Math.max(1, Math.floor(limit))}
+        for update skip locked
       )
       returning *
     `;
