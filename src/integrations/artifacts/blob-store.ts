@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
-import type { ArtifactStore, StoredArtifacts } from '../../domain/artifacts';
+import type { ArtifactRead, ArtifactStore, StoredArtifacts } from '../../domain/artifacts';
 import type { JourneyArtifacts } from '../browser/types';
 
 /**
@@ -50,7 +50,37 @@ function contentTypeFor(path: string): string | undefined {
 }
 
 export class BlobArtifactStore implements ArtifactStore {
-  constructor(private readonly put: PutFn) {}
+  constructor(
+    private readonly put: PutFn,
+    private readonly get: GetFn = defaultGet,
+  ) {}
+
+  async read(url: string): Promise<ArtifactRead> {
+    // Private blobs are not readable by URL alone, which is the point of
+    // storing them that way — the token is what authorises this, server-side,
+    // and the bytes are streamed rather than the URL handed out. A redirect
+    // would give the browser a handle that outlives the session and can be
+    // forwarded out of band.
+    let result: Awaited<ReturnType<GetFn>>;
+    try {
+      result = await this.get(url);
+    } catch {
+      // The SDK throws its own not-found rather than returning null in some
+      // versions. Both mean the same thing here, and retention makes that the
+      // expected steady state rather than an error.
+      return { status: 'pruned' };
+    }
+
+    if (!result || result.statusCode !== 200 || !result.stream) {
+      return { status: 'pruned' };
+    }
+
+    return {
+      status: 'ok',
+      contentType: result.blob?.contentType ?? 'application/octet-stream',
+      body: result.stream,
+    };
+  }
 
   async upload(
     requestId: string,
@@ -98,9 +128,24 @@ export class BlobArtifactStore implements ArtifactStore {
  * Used when no blob store is configured — local development and CI, where the
  * artifacts on disk are already reachable and re-uploading them is pure cost.
  */
+type GetFn = (url: string) => Promise<{
+  statusCode: number;
+  stream?: ReadableStream<Uint8Array> | null;
+  blob?: { contentType?: string };
+} | null>;
+
+const defaultGet: GetFn = async (url) => {
+  const { get } = await import('@vercel/blob');
+  return get(url, { access: 'private' }) as ReturnType<GetFn>;
+};
+
 export class NoopArtifactStore implements ArtifactStore {
   async upload(): Promise<StoredArtifacts> {
     return {};
+  }
+
+  async read(): Promise<ArtifactRead> {
+    return { status: 'pruned' };
   }
 }
 

@@ -404,4 +404,71 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // A finished run is not touched, whatever its age.
     expect((await store.getRun('contract-sweep-b'))?.status).toBe('complete');
   });
+
+
+  /**
+   * Retention has to reach the database, not only the blob store.
+   *
+   * `prune-artifacts` deleted the bytes and never touched these columns, so a
+   * pruned run kept URLs that 404 forever with nothing to say why. A page with
+   * no artifacts now reads as "no evidence" rather than as a broken link.
+   */
+  it('clears artifact pointers for runs older than the cutoff', async () => {
+    const store = await makeStore();
+    const old = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+    await store.saveRun(
+      runRecord({
+        requestId: 'contract-pruned',
+        createdAt: old,
+        pages: [
+          {
+            url: 'https://a.example/',
+            route: '/',
+            title: 'Home',
+            evidenceStatus: 'complete',
+            artifacts: { screenshotUrl: 'https://blob.test/old.png' },
+          },
+        ],
+      }),
+    );
+
+    const cleared = await store.clearArtifactsBefore(
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    );
+
+    expect(cleared).toBeGreaterThanOrEqual(1);
+    // Absent, not empty: the page never had evidence as far as anyone reading
+    // it later is concerned, and `{}` versus missing is a distinction this
+    // store already keeps everywhere else.
+    expect((await store.getRun('contract-pruned'))?.pages?.[0]).not.toHaveProperty('artifacts');
+  });
+
+  it('leaves evidence inside the retention window alone', async () => {
+    const store = await makeStore();
+
+    await store.saveRun(
+      runRecord({
+        requestId: 'contract-fresh',
+        createdAt: new Date().toISOString(),
+        pages: [
+          {
+            url: 'https://a.example/',
+            route: '/',
+            title: 'Home',
+            evidenceStatus: 'complete',
+            artifacts: { screenshotUrl: 'https://blob.test/fresh.png' },
+          },
+        ],
+      }),
+    );
+
+    await store.clearArtifactsBefore(
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    );
+
+    expect((await store.getRun('contract-fresh'))?.pages?.[0]?.artifacts).toEqual({
+      screenshotUrl: 'https://blob.test/fresh.png',
+    });
+  });
 }

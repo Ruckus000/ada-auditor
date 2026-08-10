@@ -490,6 +490,46 @@ describe('platform hydration', () => {
     }
   }, 120_000);
 
+  /**
+   * Evidence links must never appear on the public report.
+   *
+   * `/r/<token>` is deliberately outside the auth gate — the token is the whole
+   * access-control story. The evidence behind a finding is screenshots and DOM
+   * snapshots of a client's *authenticated* pages, so linking it from a page
+   * anyone with the URL can read would hand those out with it. The shared
+   * report is the sanitised view and has to stay that way.
+   */
+  it('never links run evidence from the public report page', async () => {
+    // Issues its own report rather than borrowing one, so it does not depend
+    // on the order of the tests above.
+    const runs = await fetch(`${BASE}/api/audit/runs?limit=1`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    });
+    const { runs: recent } = (await runs.json()) as { runs: Array<{ requestId: string }> };
+    expect(recent.length).toBeGreaterThan(0);
+
+    const issued = await fetch(`${BASE}/api/platform/clients/${CLIENT}/reports`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ requestId: recent[0]!.requestId }),
+    });
+    const { report } = (await issued.json()) as { report?: { shareUrl?: string } };
+    expect(report?.shareUrl).toBeTruthy();
+
+    const page = await browser.newPage();
+    try {
+      await page.goto(`${BASE}${report!.shareUrl}`, { waitUntil: 'domcontentloaded' });
+
+      const hrefs = await page.evaluate(() =>
+        [...document.querySelectorAll('a')].map((anchor) => anchor.getAttribute('href') ?? ''),
+      );
+
+      expect(hrefs.some((href) => href.includes('/artifacts/'))).toBe(false);
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
   it('marks no workspace tab as current while on a client screen', async () => {
     // `parseRoute` resolves anything that is not a workspace path to the
     // portfolio, so this said `aria-current="page"` on Portfolio — and painted

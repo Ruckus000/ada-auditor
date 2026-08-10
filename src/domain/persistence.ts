@@ -163,6 +163,16 @@ export interface RunStore {
    * for weeks.
    */
   reconcileStaleRuns(olderThanMs: number): Promise<number>;
+  /**
+   * Clears artifact URLs for runs older than the cutoff, returning how many
+   * pages were cleared.
+   *
+   * `prune-artifacts` deletes the blobs but never touched the database, so a
+   * pruned run kept URLs that 404 forever and nothing said why. Now the
+   * pointers go with the bytes, and a page with no artifacts reads as "no
+   * evidence" rather than as a broken link.
+   */
+  clearArtifactsBefore(cutoffIso: string): Promise<number>;
   getRun(requestId: string): Promise<StoredRunRecord | null>;
   getLatestRun(
     journeyId: string,

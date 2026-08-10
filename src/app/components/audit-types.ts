@@ -29,6 +29,15 @@ export interface AuditPage {
   route: string;
   title: string;
   evidenceStatus?: EvidenceStatus;
+  /**
+   * Which artifacts were actually captured for this page.
+   *
+   * Derived from the presence of each stored URL rather than from
+   * `evidenceStatus`. The rolled-up status says "one of the three is missing"
+   * without saying which — so the checklist used to guess, marking all three
+   * unknown whenever any one was. These are the real answers.
+   */
+  artifacts?: { screenshot: boolean; dom: boolean; axTree: boolean };
 }
 
 export interface RegressionSummary {
@@ -98,6 +107,15 @@ function toPage(value: unknown): AuditPage | null {
       raw.evidenceStatus === 'complete' || raw.evidenceStatus === 'degraded'
         ? raw.evidenceStatus
         : undefined,
+    ...(raw.artifacts && typeof raw.artifacts === 'object'
+      ? {
+          artifacts: {
+            screenshot: typeof (raw.artifacts as Record<string, unknown>).screenshotUrl === 'string',
+            dom: typeof (raw.artifacts as Record<string, unknown>).domSnapshotUrl === 'string',
+            axTree: typeof (raw.artifacts as Record<string, unknown>).axTreeUrl === 'string',
+          },
+        }
+      : {}),
   };
 }
 

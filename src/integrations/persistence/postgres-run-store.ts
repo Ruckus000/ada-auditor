@@ -379,6 +379,16 @@ export class PostgresRunStore implements RunStore {
     return rows.length;
   }
 
+  async clearArtifactsBefore(cutoffIso: string): Promise<number> {
+    const rows = await this.sql<{ request_id: string }>`
+      update run_pages set artifacts = '{}'::jsonb
+      where artifacts <> '{}'::jsonb
+        and request_id in (select request_id from runs where created_at < ${cutoffIso})
+      returning request_id
+    `;
+    return rows.length;
+  }
+
   private async hydrateOne(run: RunRow): Promise<StoredRunRecord> {
     return (await this.hydrate([run]))[0];
   }

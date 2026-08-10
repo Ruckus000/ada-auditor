@@ -23,3 +23,8 @@ jobs:
         env:
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
           ARTIFACT_RETENTION_DAYS: ${{ vars.ARTIFACT_RETENTION_DAYS }}
+          # Deleting the blobs without clearing the pointers leaves the
+          # database holding URLs that 404 forever. Without this the script
+          # still prunes, and says `databaseCleared: false` so the gap is
+          # visible rather than silent.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

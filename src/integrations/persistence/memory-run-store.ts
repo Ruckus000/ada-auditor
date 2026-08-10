@@ -77,6 +77,23 @@ export class MemoryRunStore implements RunStore {
     return reconciled;
   }
 
+  async clearArtifactsBefore(cutoffIso: string): Promise<number> {
+    const cutoff = Date.parse(cutoffIso);
+    let cleared = 0;
+
+    for (const record of this.runs.values()) {
+      if (Date.parse(record.createdAt) >= cutoff) continue;
+      for (const page of record.pages ?? []) {
+        if (page.artifacts && Object.keys(page.artifacts).length > 0) {
+          delete page.artifacts;
+          cleared += 1;
+        }
+      }
+    }
+
+    return cleared;
+  }
+
   /**
    * Newest first, breaking ties on requestId — the same total order the
    * Postgres store's index gives, so a test cannot pass against one and fail

@@ -61,30 +61,81 @@ function FindingCard({ finding, showPage }: { finding: Finding; showPage?: boole
   );
 }
 
-const ARTIFACT_ITEMS: Array<{ key: 'screenshot' | 'domSnapshot' | 'axTree'; label: string }> = [
-  { key: 'screenshot', label: 'Screenshot' },
-  { key: 'domSnapshot', label: 'DOM snapshot' },
-  { key: 'axTree', label: 'Accessibility tree' },
+const ARTIFACT_ITEMS: Array<{
+  key: 'screenshot' | 'domSnapshot' | 'axTree';
+  label: string;
+  /** Field on the page's reported artifact set. */
+  stored: 'screenshot' | 'dom' | 'axTree';
+  /** The `kind` segment this artifact is served under. */
+  path: string;
+}> = [
+  { key: 'screenshot', label: 'Screenshot', stored: 'screenshot', path: 'screenshot' },
+  { key: 'domSnapshot', label: 'DOM snapshot', stored: 'dom', path: 'dom' },
+  { key: 'axTree', label: 'Accessibility tree', stored: 'axTree', path: 'axtree' },
 ];
 
-function ArtifactChecklist({ status }: { status: 'complete' | 'degraded' }) {
-  // The API reports one rolled-up status per page. Under `complete` all three
-  // artifacts are guaranteed present; under `degraded` at least one is missing
-  // and the response does not say which, so we say exactly that rather than
-  // guessing.
+/**
+ * What was captured for one page, and a way to open it.
+ *
+ * Two sources, in order of honesty. When the run reports which artifacts it
+ * actually stored, that is used and each present one becomes a link — the
+ * evidence a finding rests on is now reachable from the finding. When it does
+ * not (an error response, or a run recorded before this existed), we fall back
+ * to the rolled-up status, which says "one of these is missing" without saying
+ * which, and the checklist says exactly that rather than guessing.
+ */
+function ArtifactChecklist({
+  status,
+  page,
+  requestId,
+  position,
+}: {
+  status: 'complete' | 'degraded';
+  page?: AuditPage;
+  requestId?: string;
+  position?: number;
+}) {
+  const stored = page?.artifacts;
   const complete = status === 'complete';
+  const linkable = requestId !== undefined && position !== undefined;
 
   return (
     <ul className="evidence-list">
-      {ARTIFACT_ITEMS.map((item) => (
-        <li key={item.key} className={complete ? 'artifact is-present' : 'artifact is-unknown'}>
-          <span className="artifact-mark" aria-hidden="true">
-            {complete ? '✓' : '?'}
-          </span>
-          <TermLabel termKey={item.key}>{item.label}</TermLabel>
-          <span className="artifact-state">{complete ? 'captured' : 'not confirmed'}</span>
-        </li>
-      ))}
+      {ARTIFACT_ITEMS.map((item) => {
+        const present = stored ? stored[item.stored] : complete;
+        const known = Boolean(stored) || complete;
+
+        return (
+          <li
+            key={item.key}
+            className={present ? 'artifact is-present' : known ? 'artifact' : 'artifact is-unknown'}
+          >
+            <span className="artifact-mark" aria-hidden="true">
+              {present ? '✓' : known ? '—' : '?'}
+            </span>
+            <TermLabel termKey={item.key}>{item.label}</TermLabel>
+            {present && linkable ? (
+              <a
+                className="artifact-state"
+                href={`/api/audit/runs/${requestId}/artifacts/${position}/${item.path}`}
+                // A DOM snapshot is markup from someone else's site, served as
+                // an attachment so the browser cannot execute it on our origin.
+                // Opening it in a new tab keeps the run result on screen.
+                target="_blank"
+                rel="noreferrer"
+              >
+                {/* Named per page, or every row is another "View" in a screen
+                    reader's list of links. */}
+                View<span className="sr-only"> {item.label} for {page?.route ?? 'this page'}</span>
+              </a>
+            ) : (
+              <span className="artifact-state">
+                {present ? 'captured' : known ? 'not captured' : 'not confirmed'}
+              </span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -125,7 +176,7 @@ function EvidenceBlock({ result }: { result: AuditResult }) {
 
       {pages.length > 0 ? (
         <ul className="evidence-pages">
-          {pages.map((page) => (
+          {pages.map((page, index) => (
             <li key={page.url} className="evidence-page">
               <p className="evidence-page-name">
                 <PageLabel page={page} />
@@ -135,7 +186,12 @@ function EvidenceBlock({ result }: { result: AuditResult }) {
                   </span>
                 )}
               </p>
-              <ArtifactChecklist status={page.evidenceStatus ?? status} />
+              <ArtifactChecklist
+                status={page.evidenceStatus ?? status}
+                page={page}
+                requestId={result.requestId}
+                position={index}
+              />
             </li>
           ))}
         </ul>
