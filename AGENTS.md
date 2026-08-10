@@ -128,6 +128,14 @@ Implemented and verified locally + on Vercel preview:
   and cross-page issues only exist in aggregate.
 - Reporting (`pass|fail|inconclusive`), regression comparison keyed on
   rule + page + selector
+- **Conformance score**: `passed / (passed + failed)` over the checks axe
+  actually evaluated (`services/score.ts`, pure). Undecided checks are in
+  neither term — they are the human-review queue — advisory findings never
+  touch it, and a run without complete evidence scores `null` rather than
+  zero, because the denominator is unknown. Stored with `score_version` so a
+  formula change cannot silently reinterpret historical runs. Note a run can
+  score well and still fail CI: one critical finding fails a run regardless of
+  the rate.
 - **Vocabulary mapping lives in `services/presentation/`**, not beside the
   components: deciding whether the product says `pass` or "we could not tell"
   is a business rule with a steady-state contract behind it. `VerdictKind`

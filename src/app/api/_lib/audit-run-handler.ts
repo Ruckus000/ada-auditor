@@ -128,6 +128,9 @@ async function executeRun(
         route: audited.page.route,
         title: audited.page.title,
         evidenceStatus: audited.evidenceStatus,
+        checksPassed: audited.checks?.passed,
+        checksFailed: audited.checks?.failed,
+        checksIncomplete: audited.checks?.incomplete,
         artifacts: await artifactStore.upload(
           requestId,
           audited.artifacts,
@@ -151,6 +154,8 @@ async function executeRun(
       browserMode: true,
       pages,
       truncatedPages: report.truncatedPages,
+      score: report.score,
+      scoreVersion: report.scoreVersion,
       status: 'complete',
     });
     await store.saveRun(storedRun);
@@ -187,6 +192,12 @@ async function executeRun(
         browserMode: true,
         status: 'complete',
         pages,
+        // Null means not measured — sent as-is rather than coerced, so a
+        // caller can tell "we could not score this" from "it scored zero".
+        score: report.score,
+        checksPassed: report.checksPassed,
+        checksFailed: report.checksFailed,
+        checksNeedingReview: report.checksNeedingReview,
         ...(report.truncatedPages > 0 ? { truncatedPages: report.truncatedPages } : {}),
         ...(regression ? { regression } : {}),
       },

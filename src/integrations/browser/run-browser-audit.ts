@@ -6,6 +6,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { requestAiAdvisory } from '../../services/ai-advisory';
 import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
+import { scoreRun } from '../../services/score';
 import { buildDefaultDemoJourneySteps, runJourney } from './journey-runner';
 import type { JourneyRunnerInput } from './types';
 
@@ -106,6 +107,15 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   });
 
   const evidenceStatus = worstEvidenceStatus(auditedPages.map((p) => p.evidenceStatus));
+
+  // A conformance rate over the checks axe actually evaluated. Withheld
+  // entirely when evidence is incomplete — see `services/score.ts`.
+  const checkCounts = auditedPages.map((pageAudit) => ({
+    passed: pageAudit.axe.passCount,
+    failed: pageAudit.axe.violations.reduce((total, rule) => total + rule.nodes.length, 0),
+    incomplete: pageAudit.axe.incomplete.reduce((total, rule) => total + rule.nodes.length, 0),
+  }));
+  const score = scoreRun({ pages: checkCounts, evidenceStatus });
   const deterministicFindings = auditedPages.flatMap((p) => p.findings);
 
   // One call for the whole journey, not one per page: N× the cost otherwise,
@@ -140,13 +150,19 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     findings,
     platform,
     contract,
-    pages: auditedPages.map((pageAudit) => ({
+    pages: auditedPages.map((pageAudit, index) => ({
       page: pageAudit.page,
       pageKey: pageAudit.pageKey,
       evidenceStatus: pageAudit.evidenceStatus,
       artifacts: pageAudit.artifacts,
+      checks: checkCounts[index],
     })),
     truncatedPages: journeyResult.truncatedPages,
+    score: score.score,
+    scoreVersion: score.scoreVersion,
+    checksPassed: score.passed,
+    checksFailed: score.failed,
+    checksNeedingReview: score.needsReview,
     ...report,
   };
 }

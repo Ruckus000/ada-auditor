@@ -46,6 +46,8 @@ const FULL_RECORD = runRecord({
   browserMode: true,
   status: 'complete',
   truncatedPages: 2,
+  score: 87,
+  scoreVersion: 1,
   pages: [
     {
       url: 'https://app.example.com/login',
@@ -53,6 +55,9 @@ const FULL_RECORD = runRecord({
       title: 'Login',
       evidenceStatus: 'complete',
       artifacts: { screenshotUrl: 'https://blob.test/login.png' },
+      checksPassed: 80,
+      checksFailed: 10,
+      checksIncomplete: 5,
     },
     {
       url: 'https://app.example.com/checkout',
@@ -99,6 +104,23 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     await store.saveRun(FULL_RECORD);
 
     expect(await store.getRun(FULL_RECORD.requestId)).toEqual(FULL_RECORD);
+  });
+
+  it('round-trips the score and the counts behind it', async () => {
+    // A score is a claim in a client report. Losing the version would let a
+    // formula change silently reinterpret history, and losing the per-page
+    // counts would leave the number unexplainable.
+    const store = await makeStore();
+    await store.saveRun(FULL_RECORD);
+
+    const stored = await store.getRun(FULL_RECORD.requestId);
+    expect(stored?.score).toBe(87);
+    expect(stored?.scoreVersion).toBe(1);
+    expect(stored?.pages?.[0]).toMatchObject({
+      checksPassed: 80,
+      checksFailed: 10,
+      checksIncomplete: 5,
+    });
   });
 
   it('keeps pages in visit order, not in whatever order they come back', async () => {

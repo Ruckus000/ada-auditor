@@ -60,6 +60,15 @@ export type AxeScanResult = {
   violations: AxeRuleResult[];
   /** Rules axe could not decide — the manual-review worklist. */
   incomplete: AxeRuleResult[];
+  /**
+   * How many rule checks the page satisfied.
+   *
+   * A count rather than the nodes: the score needs a denominator, and axe's
+   * full `passes` array on a real page is megabytes that nothing would read.
+   * Optional because runs recorded before this existed have no value for it,
+   * and those must score as "not measured" rather than as zero.
+   */
+  passCount?: number;
 };
 
 /**
