@@ -4,6 +4,7 @@ import type { Page } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, type AxNodeSummary } from '../../services/ax-tree';
+import { logWarn } from '../../services/logger';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
@@ -259,16 +260,13 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     // the only record that the run was truncated, so it is emitted here rather
     // than left to a caller that might not look.
     if (truncatedPages > 0) {
-      console.warn(
-        JSON.stringify({
-          type: 'audit_page_cap_reached',
-          journeyId: input.journeyId,
-          stepId: input.stepId,
-          maxPages,
-          pagesAudited: pages.length,
-          pagesSkipped: truncatedPages,
-        }),
-      );
+      logWarn('audit_page_cap_reached', {
+        journeyId: input.journeyId,
+        stepId: input.stepId,
+        maxPages,
+        pagesAudited: pages.length,
+        pagesSkipped: truncatedPages,
+      });
     }
 
     return { pages, truncatedPages };

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { neon } from '@neondatabase/serverless';
 import { loadEnvLocal } from './load-env';
 import { splitStatements } from './split-statements';
+import { logInfo } from '../src/services/logger';
 
 /**
  * Applies `src/integrations/persistence/schema.sql`.
@@ -42,13 +43,10 @@ async function main(): Promise<void> {
     order by table_name
   `;
 
-  console.log(
-    JSON.stringify({
-      type: 'migrate',
-      statements: statements.length,
-      tables: tables.map((row) => row.table_name),
-    }),
-  );
+  logInfo('migrate', {
+    statements: statements.length,
+    tables: tables.map((row) => row.table_name),
+  });
 }
 
 main().catch((error) => {

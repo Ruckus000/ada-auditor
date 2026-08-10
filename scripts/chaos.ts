@@ -8,6 +8,7 @@ import {
   resolveChaosRunParams,
 } from '../src/app/api/_lib/chaos';
 import { runBrowserAudit } from '../src/integrations/browser/run-browser-audit';
+import { logInfo } from '../src/services/logger';
 
 function fail(message: string): never {
   console.error(`CHAOS FAIL: ${message}`);
@@ -57,18 +58,15 @@ async function main(): Promise<void> {
         }
       }
 
-      console.log(
-        JSON.stringify({
-          type: 'chaos_result',
-          scenario,
-          evidenceStatus: report.evidenceStatus,
-          ciStatus: report.ciStatus,
-          expectedCiStatus: expected,
-          findings: report.findings.length,
-          pagesScanned: report.pages.length,
-          pass: true,
-        }),
-      );
+      logInfo('chaos_result', {
+        scenario,
+        evidenceStatus: report.evidenceStatus,
+        ciStatus: report.ciStatus,
+        expectedCiStatus: expected,
+        findings: report.findings.length,
+        pagesScanned: report.pages.length,
+        pass: true,
+      });
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });
     }

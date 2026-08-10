@@ -18,6 +18,16 @@ import { isSameOriginConsoleRequest } from '../../_lib/same-origin';
  *
  * External integrations still call POST /api/audit/run with Bearer auth.
  */
+
+// This route launches Chromium, exactly like /api/audit/run — and until now it
+// declared neither of the things that makes that work. Without `runtime` it can
+// be placed on a runtime that cannot spawn a browser at all, and without
+// `maxDuration` a real multi-page journey is cut off at the platform default
+// while the same journey through /api/audit/run gets 300 seconds. Every
+// browser-launching route needs both.
+export const runtime = 'nodejs';
+export const maxDuration = 300;
+
 export async function POST(request: Request) {
   const requestId = createRequestId();
   const configuredToken = process.env.AUDITOR_RUN_TOKEN;

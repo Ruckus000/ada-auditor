@@ -1,5 +1,6 @@
 import { del, list } from '@vercel/blob';
 import { retentionDays } from '../src/integrations/artifacts/blob-store';
+import { logInfo } from '../src/services/logger';
 
 /**
  * Deletes run evidence past its retention window.
@@ -37,15 +38,12 @@ async function main(): Promise<void> {
     cursor = page.hasMore ? page.cursor : undefined;
   } while (cursor);
 
-  console.log(
-    JSON.stringify({
-      type: 'artifact_prune',
-      retentionDays: days,
-      cutoff: cutoff.toISOString(),
-      scanned,
-      deleted,
-    }),
-  );
+  logInfo('artifact_prune', {
+    retentionDays: days,
+    cutoff: cutoff.toISOString(),
+    scanned,
+    deleted,
+  });
 }
 
 main().catch((error) => {

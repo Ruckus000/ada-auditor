@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import { logWarn } from '../../services/logger';
 import type { RunStore } from '../../domain/persistence';
 import type { PlatformStore } from '../../domain/platform';
 import { MemoryPlatformStore } from './memory-platform-store';
@@ -27,12 +28,9 @@ function memoryStoreRequested(): boolean {
     return false;
   }
 
-  console.warn(
-    JSON.stringify({
-      event: 'store_memory_mode',
-      note: 'AUDITOR_STORE=memory — nothing is persisted. Never set this in a deployed environment.',
-    }),
-  );
+  logWarn('store_memory_mode', {
+    note: 'AUDITOR_STORE=memory — nothing is persisted. Never set this in a deployed environment.',
+  });
   return true;
 }
 
