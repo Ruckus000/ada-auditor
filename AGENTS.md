@@ -228,10 +228,15 @@ Read this before claiming something works.
   fictional clients. They are not there rather than invented. Writing real ones
   means a rule-code → guidance table, which is `services/wcag-reference.ts` in
   slice 6.
-- **Findings are read-only.** `finding_triage` has a store, a contract and a
-  place on the screen (a dismissed finding renders dimmed, with its note), but
-  no route writes it yet — so nothing an operator can click will dismiss a
-  finding. Triage lands with the API for it, not before.
+- **Triage is dismiss and reopen only.** `assigned` is in the schema, the
+  store, the contract and the route, but no control offers it — there is no
+  per-user identity to assign *to*, which is the same gap `AUDITOR_OPERATOR_NAME`
+  papers over elsewhere. The API accepts it for a caller that has somewhere to
+  put a name.
+- **A dismissal is free text, not a taxonomy.** The prototype offered five
+  canned reasons ("handled elsewhere", "accepted risk, signed off"). Nobody has
+  agreed to that vocabulary, and a wrong one becomes the record an auditor
+  defends later, so the note stays free text until somebody has.
 - **`ClientTab` still names tabs that do not exist** (`finding`, `reports`,
   `activity`, `settings`). Kept for slice 5, which lands the reports and
   activity routes — but if that slips, trim `params.ts` rather than leaving
