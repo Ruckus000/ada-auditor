@@ -415,6 +415,49 @@ export function platformStoreContract(
     });
   });
 
+  describe('triage assignment', () => {
+    // `assigned` has existed in the schema since Phase 2C with nothing able to
+    // reach it, because one shared token meant there was nobody to assign to.
+    it('round-trips an assignment to a real operator', async () => {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+      await store.upsertOperator({
+        id: CONTRACT_OPERATOR,
+        email: CONTRACT_OPERATOR_EMAIL,
+        name: 'Contract Operator',
+        passwordHash: 'scrypt$16384$8$1$c2FsdA==$aGFzaA==',
+      });
+
+      await store.setTriage(
+        triageEntry({
+          state: 'assigned',
+          note: undefined,
+          assignee: 'Contract Operator',
+          assigneeOperatorId: CONTRACT_OPERATOR,
+        }),
+      );
+
+      const [entry] = await store.listTriage(CONTRACT_CLIENT);
+      expect(entry).toMatchObject({
+        state: 'assigned',
+        assignee: 'Contract Operator',
+        assigneeOperatorId: CONTRACT_OPERATOR,
+      });
+    });
+
+    // A dismissal has no assignee, and absent must stay absent — `undefined`
+    // and "assigned to nobody" are different facts.
+    it('leaves the assignee absent on a dismissal', async () => {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+
+      await store.setTriage(triageEntry());
+
+      const [entry] = await store.listTriage(CONTRACT_CLIENT);
+      expect(entry).not.toHaveProperty('assigneeOperatorId');
+    });
+  });
+
   describe('scheduling', () => {
     const thisHour = new Date().getUTCHours();
 

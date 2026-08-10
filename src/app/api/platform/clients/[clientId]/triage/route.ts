@@ -24,6 +24,7 @@ const triageSchema = z
     state: z.enum(['dismissed', 'accepted-risk', 'assigned']),
     note: z.string().trim().max(2000).optional(),
     assignee: z.string().trim().max(120).optional(),
+    assigneeOperatorId: z.string().trim().max(64).optional(),
     pageUrl: z.string().max(2048).optional(),
     selector: z.string().max(1024).optional(),
   })
@@ -61,6 +62,16 @@ export async function POST(
     return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
 
+  // A dangling assignee is worse than none: the finding would read as handled
+  // by somebody who does not exist, and the foreign key would reject it in
+  // Postgres while the in-memory double accepted it.
+  if (parsed.assigneeOperatorId) {
+    const assignee = await platform.getOperator(parsed.assigneeOperatorId);
+    if (!assignee || assignee.disabledAt) {
+      return Response.json({ error: 'unknown_assignee', requestId }, { status: 422 });
+    }
+  }
+
   const [source, code] = parsed.findingKey.split(':');
 
   await platform.setTriage({
@@ -73,6 +84,7 @@ export async function POST(
     state: parsed.state,
     ...(parsed.note ? { note: parsed.note } : {}),
     ...(parsed.assignee ? { assignee: parsed.assignee } : {}),
+    ...(parsed.assigneeOperatorId ? { assigneeOperatorId: parsed.assigneeOperatorId } : {}),
     ...actorFields(principal),
   });
 

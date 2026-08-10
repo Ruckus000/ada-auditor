@@ -80,6 +80,7 @@ type TriageRow = {
   state: string;
   note: string | null;
   assignee: string | null;
+  assignee_operator_id: string | null;
   actor: string;
   created_at: Date | string;
   updated_at: Date | string;
@@ -390,6 +391,7 @@ export class PostgresPlatformStore implements PlatformStore {
       state: row.state as TriageState,
       ...optional('note', row.note),
       ...optional('assignee', row.assignee),
+      ...optional('assigneeOperatorId', row.assignee_operator_id),
       actor: row.actor,
       createdAt: toIso(row.created_at),
       updatedAt: toIso(row.updated_at),
@@ -408,16 +410,18 @@ export class PostgresPlatformStore implements PlatformStore {
     await this.sql`
       insert into finding_triage (
         client_id, finding_key, source, code, page_url, selector,
-        state, note, assignee, actor, updated_at
+        state, note, assignee, assignee_operator_id, actor, updated_at
       ) values (
         ${entry.clientId}, ${entry.findingKey}, ${entry.source}, ${entry.code},
         ${entry.pageUrl ?? null}, ${entry.selector ?? null}, ${entry.state},
-        ${entry.note ?? null}, ${entry.assignee ?? null}, ${entry.actor}, now()
+        ${entry.note ?? null}, ${entry.assignee ?? null},
+        ${entry.assigneeOperatorId ?? null}, ${entry.actor}, now()
       )
       on conflict (client_id, finding_key) do update set
         state = excluded.state,
         note = excluded.note,
         assignee = excluded.assignee,
+        assignee_operator_id = excluded.assignee_operator_id,
         actor = excluded.actor,
         updated_at = now()
     `;

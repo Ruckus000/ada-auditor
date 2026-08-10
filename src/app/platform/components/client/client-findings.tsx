@@ -4,6 +4,7 @@ import { describeCriterion } from '../../../../services/wcag-reference';
 import { FONT, T } from '../../lib/tokens';
 import { Empty } from './client-overview';
 import { IssueReport } from './issue-report';
+import { AssignControl } from './assign-control';
 import { TriageControl } from './triage-control';
 
 /**
@@ -301,6 +302,21 @@ function FindingRow({
           </a>
         ) : null}
         <TriageControl clientId={clientId} finding={finding} pageUrl={pageUrl} />
+        {/*
+          `assigned` has been in the schema, the store, the contract and the
+          route since Phase 2C with nothing to reach it, because one shared
+          token meant there was nobody to assign to. Named accounts changed
+          that; this is the control.
+        */}
+        {finding.triage === null ? (
+          <AssignControl
+            clientId={clientId}
+            findingKey={finding.key}
+            findingCode={finding.code}
+            {...(pageUrl ? { pageUrl } : {})}
+            {...(finding.selector ? { selector: finding.selector } : {})}
+          />
+        ) : null}
       </div>
     </article>
   );

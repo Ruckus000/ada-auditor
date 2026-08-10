@@ -88,7 +88,10 @@ export type TriageEntry = {
   state: TriageState;
   /** Required by the UI for `dismissed` and `accepted-risk`. */
   note?: string;
+  /** The assignee's name as it read at assignment time. */
   assignee?: string;
+  /** The account, when the assignee is a real operator. */
+  assigneeOperatorId?: string;
   actor: string;
   createdAt?: string;
   updatedAt?: string;
