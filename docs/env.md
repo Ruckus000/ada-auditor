@@ -11,7 +11,7 @@ Required for Phase 1 Vercel control plane operation.
 | `DATABASE_URL` | Yes | Neon Postgres connection string, injected by the Vercel Marketplace integration (`vercel integration add neon`). The run store needs it everywhere, including locally — there is no filesystem fallback, because one would mean a misconfigured deploy quietly writing runs to a disk that disappears with the invocation. Apply the schema with `npm run migrate`. |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | No | Upstash Redis REST credentials. Used **only** by the console unlock throttle now that runs live in Postgres. Unset means the throttle counts attempts in process memory, which on serverless resets on every cold start and is per-instance — a speed bump, not a limit. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | No | Alternate Upstash env names; accepted if `KV_REST_API_*` is unset. |
-| `BLOB_READ_WRITE_TOKEN` | Required on Vercel | Vercel Blob credentials, for run evidence (screenshot, DOM snapshot, accessibility tree). Unset means artifacts stay on local disk — fine locally and in CI, but on serverless the filesystem disappears with the invocation, so evidence would be unreachable. Provision Blob from the Vercel dashboard and the token is injected automatically. |
+| `BLOB_READ_WRITE_TOKEN` | Required on Vercel | Vercel Blob credentials, for run evidence (screenshot, DOM snapshot, accessibility tree). Unset means artifacts stay on local disk — fine locally and in CI, but on serverless the filesystem disappears with the invocation, so evidence would be unreachable. Provision with `vercel blob create-store <name> --access private` and the token is injected automatically. **The store must be private**: this evidence is authenticated pages on a client's system, and uploads are written with `access: 'private'` — a public store would leave the stored URL as the only thing protecting it. |
 | `ARTIFACT_RETENTION_DAYS` | No | How long run evidence is kept. Default 30. These are screenshots of authenticated pages on client systems and contain real end-user data, so `npm run prune:artifacts` sweeps anything older; a missing or nonsensical value falls back to the default rather than to keeping them forever. |
 | `ANTHROPIC_API_KEY` | No | Enables the AI advisory pass, which judges what a rule engine cannot — alt text that exists but says nothing, headings used for size rather than structure, error messages that do not say what to fix. Unset means the run completes with deterministic findings only; it is never a run failure. Advisory findings are always `gateable: false` and never affect `ciStatus`. |
 | `AUDIT_CREDENTIAL_<REF>_USER` / `_PASS` | Per authenticated journey | Credentials for a client login. A journey step names a reference (`{ credentialRef: "acme", field: "pass" }`) and the value is resolved server-side, so the secret never travels in a request body, never persists with the journey, and never reaches a run log. Reference `acme` reads `AUDIT_CREDENTIAL_ACME_USER` / `AUDIT_CREDENTIAL_ACME_PASS`. Replaced the single global `AUDIT_DEMO_USER` / `AUDIT_DEMO_PASS` pair, which could only ever describe one login. |
@@ -75,7 +75,10 @@ that could not answer "list runs" at all).
 - **Artifacts** go to Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set, keyed per
   audited page, and their URLs are stored on the run's page rows so a finding
   can always be traced back to the screenshot and DOM it came from. Locally and
-  in CI they stay on disk, where they are already reachable.
+  in CI they stay on disk, where they are already reachable. They are written
+  **private**: a stored URL is a pointer, not a capability, so reading one back
+  needs an authenticated fetch. Nothing in the product does that yet — no screen
+  links to evidence — which is why nothing broke when this changed.
 
 ## Running an audit
 

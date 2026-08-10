@@ -35,7 +35,7 @@ export function isBlobConfigured(): boolean {
 type PutFn = (
   path: string,
   body: Buffer,
-  options: { access: 'public'; addRandomSuffix: boolean; contentType?: string },
+  options: { access: 'private'; addRandomSuffix: boolean; contentType?: string },
 ) => Promise<{ url: string }>;
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -68,10 +68,20 @@ export class BlobArtifactStore implements ArtifactStore {
 
     for (const [kind, localPath] of entries) {
       const body = await readFile(localPath);
-      // `addRandomSuffix` makes the URL unguessable, so knowing a requestId is
-      // not enough to enumerate another run's evidence.
+      // Private, not public.
+      //
+      // This evidence is screenshots and DOM snapshots of *authenticated*
+      // pages on a client's system, so it contains whatever real end-user data
+      // was on screen. A public blob is readable by anyone holding its URL,
+      // and those URLs are stored in our database and travel through logs —
+      // which makes "nobody will guess it" the only thing standing between a
+      // client's signed-in screens and whoever ends up with the string.
+      //
+      // `addRandomSuffix` stays, because defence in depth costs nothing here:
+      // knowing a requestId must not be enough to name another run's evidence
+      // even for a caller that *is* authorised.
       const { url } = await this.put(`${prefix}/${basename(localPath)}`, body, {
-        access: 'public',
+        access: 'private',
         addRandomSuffix: true,
         contentType: contentTypeFor(localPath),
       });

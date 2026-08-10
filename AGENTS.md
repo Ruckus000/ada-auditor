@@ -269,6 +269,13 @@ Read this before claiming something works.
   canned reasons ("handled elsewhere", "accepted risk, signed off"). Nobody has
   agreed to that vocabulary, and a wrong one becomes the record an auditor
   defends later, so the note stays free text until somebody has.
+- **Run evidence is written to a private Blob store.** Screenshots and DOM
+  snapshots of a client's *authenticated* pages hold whatever real end-user
+  data was on screen, and their URLs are stored in the database and travel
+  through logs — so `access: 'public'` would make the URL itself the only
+  protection. `blob-store.ts` uploads with `access: 'private'` and a test
+  asserts it. Reading evidence back therefore needs an authenticated fetch;
+  nothing does that yet, because no screen links to it.
 - **`client-unassigned` is a foreign-key anchor, not a client.** `saveRun`
   materialises a journey for any `journeyId` it has never seen, and
   `journeys.client_id` is a foreign key, so the row has to exist. It is left
