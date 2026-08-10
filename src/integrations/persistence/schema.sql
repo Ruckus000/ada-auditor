@@ -122,6 +122,13 @@ create table if not exists findings (
   -- to invent the sentence for rules whose wording has since changed.
   title              text,
   message            text,
+  -- axe's per-check fix messages, kept in the two groups it evaluates them in:
+  -- any ONE entry in `remediation_any` clears the finding, every entry in
+  -- `remediation_all` has to be done. Nullable for runs stored before these
+  -- columns; an empty array means the engine had nothing to add, which is not
+  -- the same thing.
+  remediation_any    text[],
+  remediation_all    text[],
   -- Nullable, and deliberately without a default: an advisory finding has no
   -- criteria at all, while a best-practice rule has an empty list. A `not null
   -- default '{}'` collapsed those two into one, so a finding saved without the
@@ -253,6 +260,8 @@ alter table clients add column if not exists owner text;
 -- releases — writing today's text onto last month's audit would put words in
 -- the mouth of a run that never said them.
 alter table findings add column if not exists title text;
+alter table findings add column if not exists remediation_any text[];
+alter table findings add column if not exists remediation_all text[];
 
 -- The columns `finding_triage` replaces. Never written, never read. Leaving
 -- them is the furniture AGENTS.md warns about — and leaving them beside a

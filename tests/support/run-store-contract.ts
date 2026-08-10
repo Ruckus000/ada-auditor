@@ -73,6 +73,11 @@ const FULL_RECORD = runRecord({
       source: 'deterministic',
       title: 'Images must have alternate text',
       message: 'Element does not have an alt attribute',
+      remediationAnyOf: [
+        'Element does not have an alt attribute',
+        'aria-label attribute does not exist',
+      ],
+      remediationAllOf: [],
       wcagCriteria: ['1.1.1'],
       conformanceLevel: 'A',
       pageUrl: 'https://app.example.com/checkout',
@@ -133,6 +138,9 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     const read = await store.getRun(untitled.requestId);
     expect(read?.findings[0]).not.toHaveProperty('title');
+    // Same distinction for the fix list: nothing stored is not an empty fix
+    // list, and a screen has to be able to tell them apart.
+    expect(read?.findings[0]).not.toHaveProperty('remediationAnyOf');
   });
 
   it('round-trips the score and the counts behind it', async () => {

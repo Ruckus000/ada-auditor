@@ -18,6 +18,10 @@ export function criticalFinding(
     severity: 'critical',
     title: 'Images must have alternate text',
     message: 'Element does not have an alt attribute',
+    remediation: {
+      anyOf: ['Element does not have an alt attribute', 'Element has no title attribute'],
+      allOf: [],
+    },
     source: 'deterministic',
     wcagCriteria: ['1.1.1'],
     conformanceLevel: 'A',

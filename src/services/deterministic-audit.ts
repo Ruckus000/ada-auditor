@@ -26,6 +26,14 @@ export type DeterministicFinding = {
    */
   title: string;
   message: string;
+  /**
+   * How to fix it, in axe's words.
+   *
+   * Quoted from the per-check messages rather than authored, and split the way
+   * axe evaluates them: any **one** entry in `anyOf` clears the node, every
+   * entry in `allOf` has to be done.
+   */
+  remediation: Remediation;
   source: 'deterministic';
   /** WCAG success criteria, e.g. `['1.1.1']`. Empty for best-practice rules. */
   wcagCriteria: string[];
@@ -47,15 +55,41 @@ export type DeterministicFinding = {
   helpUrl: string;
 };
 
+export type Remediation = {
+  /** Fix any one of these. */
+  anyOf: string[];
+  /** Fix all of these. */
+  allOf: string[];
+};
+
 export type ConformanceLevel = 'A' | 'AA' | 'AAA';
 
 export type AxeImpact = 'minor' | 'moderate' | 'serious' | 'critical';
+
+/** One check axe ran against a node, and what it says about the result. */
+export type AxeCheckResult = {
+  id: string;
+  message: string;
+};
 
 export type AxeNodeResult = {
   html: string;
   /** Nested arrays occur when the node lives inside an iframe. */
   target: Array<string | string[]>;
   failureSummary?: string;
+  /**
+   * axe's three check groups, which carry the remediation.
+   *
+   * The distinction between them is load-bearing and is exactly what gets lost
+   * when `failureSummary` is treated as one blob of prose: `any` is satisfied
+   * by fixing **one** of its entries (an image needs alt *or* aria-label *or*
+   * role="presentation"), while `all` and `none` each have to be satisfied in
+   * full. Telling a developer to do all three when one will do is how a fix
+   * list stops being trusted.
+   */
+  any?: AxeCheckResult[];
+  all?: AxeCheckResult[];
+  none?: AxeCheckResult[];
 };
 
 export type AxeRuleResult = {
@@ -185,6 +219,7 @@ function toFindings(
         severity,
         title: rule.help,
         message: node.failureSummary?.trim() || rule.help,
+        remediation: remediationFor(node),
         source: 'deterministic',
         wcagCriteria,
         conformanceLevel,
@@ -197,6 +232,34 @@ function toFindings(
   }
 
   return findings;
+}
+
+/**
+ * The fix list for one node.
+ *
+ * `none` joins `allOf` rather than getting a group of its own: axe's own
+ * summary presents them together, and "this must not be true" and "this must
+ * be true" are both things a developer has to do something about, unlike the
+ * pick-one semantics of `any`.
+ *
+ * Deduplicated, because a node can fail two checks that say the same sentence,
+ * and a fix list that repeats itself reads as though there are more things to
+ * do than there are.
+ */
+function remediationFor(node: AxeNodeResult): Remediation {
+  const messages = (checks: AxeCheckResult[] | undefined): string[] => {
+    const seen = new Set<string>();
+    for (const check of checks ?? []) {
+      const message = check.message?.trim();
+      if (message) seen.add(message);
+    }
+    return [...seen];
+  };
+
+  const anyOf = messages(node.any);
+  const allOf = [...new Set([...messages(node.all), ...messages(node.none)])];
+
+  return { anyOf, allOf };
 }
 
 /**

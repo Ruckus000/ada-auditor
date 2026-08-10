@@ -49,6 +49,11 @@ function toStoredFinding(finding: AuditFinding): StoredFinding {
     source: finding.source,
     title: finding.title,
     message: finding.message,
+    // Stored even when empty, so a run recorded after the columns existed is
+    // distinguishable from one recorded before them: `[]` means axe had
+    // nothing to add, `undefined` means we never asked.
+    remediationAnyOf: finding.remediation.anyOf,
+    remediationAllOf: finding.remediation.allOf,
     wcagCriteria: finding.wcagCriteria,
     conformanceLevel: finding.conformanceLevel,
     // Without this a multi-page run stores findings that cannot say which page

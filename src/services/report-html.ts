@@ -79,6 +79,28 @@ function severityRank(severity: string): number {
  * exactly the part of the report a developer is supposed to act on. Split it
  * back into the list it already is.
  */
+/**
+ * The fix list, when the run stored one.
+ *
+ * Preferred over splitting `failureSummary` on newlines below: that heuristic
+ * depends on axe's prose staying in the shape it was in, and it loses the
+ * difference between "any one of these" and "all of these" — the only part a
+ * developer has to get right.
+ */
+function renderRemediation(finding: StoredFinding): string {
+  const group = (label: string, items: string[] | undefined) =>
+    items && items.length > 0
+      ? `<p class="label">${label}</p><ul class="remedies">${items
+          .map((item) => `<li>${escapeHtml(item)}</li>`)
+          .join('')}</ul>`
+      : '';
+
+  return (
+    group('Fix any one of these', finding.remediationAnyOf) +
+    group('Fix all of these', finding.remediationAllOf)
+  );
+}
+
 function renderMessage(message: string): string {
   const lines = message
     .split('\n')
@@ -116,7 +138,11 @@ function renderFinding(finding: StoredFinding): string {
         ${finding.title ? `<p class="code">${escapeHtml(finding.code)}</p>` : ''}
         <p class="criteria">${criteria}</p>
       </header>
-      ${renderMessage(finding.message ?? '')}
+      ${
+        (finding.remediationAnyOf?.length ?? 0) + (finding.remediationAllOf?.length ?? 0) > 0
+          ? renderRemediation(finding)
+          : renderMessage(finding.message ?? '')
+      }
       ${
         finding.selector
           ? `<p class="label">Element</p><pre class="selector">${escapeHtml(finding.selector)}</pre>`

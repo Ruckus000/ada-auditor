@@ -94,6 +94,28 @@ export function ClientFindings({ view }: { view: FindingsView }) {
   );
 }
 
+function FixList({ label, items }: { label: string; items: string[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 650, color: T.inkSoft }}>
+        {label}
+      </span>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        {items.map((item) => (
+          <li
+            key={item}
+            style={{ fontFamily: FONT.sans, fontSize: 13, color: T.inkSoft, lineHeight: 1.5 }}
+          >
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PageSection({ page, clientId }: { page: PageFindings; clientId: string }) {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -214,7 +236,17 @@ function FindingRow({
         ) : null}
       </div>
 
-      {finding.message ? (
+      {/* The fix list replaces the raw failure summary when there is one.
+          They say the same thing, but the summary is a single blob of prose
+          that hides the difference between "do any one of these" and "do all
+          of these" — which is the only part of it a developer has to get
+          right. */}
+      {finding.fixAnyOf.length > 0 || finding.fixAllOf.length > 0 ? (
+        <>
+          <FixList label="Fix any one of these" items={finding.fixAnyOf} />
+          <FixList label="Fix all of these" items={finding.fixAllOf} />
+        </>
+      ) : finding.message ? (
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, color: T.inkSoft }}>
           {finding.message}
         </p>

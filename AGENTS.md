@@ -238,16 +238,24 @@ Read this before claiming something works.
   sentence for the rule ("Images must have alternate text"), stored in its own
   column; `message` is what went wrong with *this* node;
   `services/wcag-reference.ts` names and levels every WCAG 2.2 A/AA criterion.
-  All three are checkable against a source — which is exactly why they are
-  allowed to exist where the fixture screen's per-finding explanation, code fix
-  and effort estimate were deleted. **What is still missing is how to fix it**,
-  beyond the `helpUrl` link. That one cannot be quoted from anywhere, so it
-  stays missing rather than being invented.
-- **`findings.title` is not backfilled, and should not be.** axe's wording
-  changes between releases, so writing today's sentence onto last month's audit
-  would put words in the mouth of a run that never said them. Runs from before
-  the column render their rule code instead; the store contract has a test that
-  absent comes back absent rather than as an empty string.
+  The fix is quoted too: `remediation_any` / `remediation_all` hold axe's
+  per-check messages. All of it is checkable against a source — which is why it
+  is allowed to exist where the fixture screen's per-finding explanation, code
+  fix and effort estimate were deleted. What is still absent is an **effort
+  estimate**, and it should stay absent: nothing can measure it, so a number
+  there would be a guess an operator would quote to a client.
+- **The two fix groups must not be merged.** `remediation_any` is satisfied by
+  doing **one** of its entries (`button-name` accepts inner text *or*
+  aria-label *or* title); `remediation_all` has to be done in full. A screen
+  that flattened them would ask for three fixes where one is the fix, and a
+  list that overstates the work stops being read. `none` checks join
+  `remediation_all`, matching how axe's own summary presents them.
+- **Neither `title` nor the fix lists are backfilled, and should not be.**
+  axe's wording changes between releases, so writing today's sentence onto last
+  month's audit would put words in the mouth of a run that never said them.
+  Older runs render their rule code and fall back to the failure summary; the
+  store contract has a test that absent comes back absent, because `[]` (the
+  engine had nothing to add) and missing (we never asked) are different facts.
 - **The reference table is A and AA only.** This product audits to AA, so
   naming a AAA criterion would imply a claim it does not make. An unknown
   number renders as the bare number — a wrong criterion name in an audit report

@@ -151,6 +151,8 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
                       </code>
                     </>
                   ) : null}
+                  <Fix label="Fix any one of these" items={finding.fixAnyOf} />
+                  <Fix label="Fix all of these" items={finding.fixAllOf} />
                 </li>
               ))}
             </ul>
@@ -172,6 +174,30 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
         link to it still means what it meant when it was sent.
       </footer>
     </main>
+  );
+}
+
+/**
+ * The remediation, in the engine's words.
+ *
+ * The two groups stay apart here for the same reason they do on the console
+ * screen: any one entry in the first clears the finding, and merging them
+ * would ask a client's developer to do three things when one is the fix.
+ */
+function Fix({ label, items }: { label: string; items: string[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div style={{ margin: '4px 0 0' }}>
+      <span style={{ fontSize: 12, fontWeight: 650, color: T.inkSoft }}>{label}</span>
+      <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>
+        {items.map((item) => (
+          <li key={item} style={{ fontSize: 12.5, color: T.inkSoft, lineHeight: 1.5 }}>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
