@@ -34,6 +34,18 @@ export type StoredFinding = {
    */
   title?: string;
   message?: string;
+  /**
+   * How to fix it, in the engine's words.
+   *
+   * Two lists because the engine evaluates them differently: any **one** entry
+   * in `remediationAnyOf` clears the finding, every entry in
+   * `remediationAllOf` has to be done. Flattening them into one list would tell
+   * a developer to do three things when one would do.
+   *
+   * Optional: runs stored before these columns existed have none.
+   */
+  remediationAnyOf?: string[];
+  remediationAllOf?: string[];
   wcagCriteria?: string[];
   conformanceLevel?: string | null;
   /**

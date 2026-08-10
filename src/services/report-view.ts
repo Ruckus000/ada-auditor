@@ -117,6 +117,10 @@ export type SharedReport = {
       severity: string;
       wcagCriteria: string[];
       selector?: string;
+      /** Any one of these clears it. */
+      fixAnyOf: string[];
+      /** All of these have to be done. */
+      fixAllOf: string[];
     }>;
   }>;
 };
@@ -155,6 +159,10 @@ export async function buildSharedReport(
       ...(finding.title === undefined ? {} : { title: finding.title }),
       severity: finding.severity,
       wcagCriteria: finding.wcagCriteria ?? [],
+      // The shared report carries the fix, not just the failure: the people
+      // who open this link are usually the ones who have to act on it.
+      fixAnyOf: finding.remediationAnyOf ?? [],
+      fixAllOf: finding.remediationAllOf ?? [],
       ...(finding.selector === undefined ? {} : { selector: finding.selector }),
     });
     byPage.set(finding.pageUrl ?? '', list);

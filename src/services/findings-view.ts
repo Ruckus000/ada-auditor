@@ -32,6 +32,16 @@ export type FindingView = {
   /** What the rule checks, in the engine's words. Absent on older runs. */
   title?: string;
   message?: string;
+  /**
+   * How to fix it, in the engine's words.
+   *
+   * Two lists, because any **one** entry in `fixAnyOf` clears the finding
+   * while every entry in `fixAllOf` has to be done. A screen that merged them
+   * would tell a developer to add an alt attribute *and* an aria-label *and* a
+   * presentation role, when any one of the three is the fix.
+   */
+  fixAnyOf: string[];
+  fixAllOf: string[];
   severity: DisplaySeverity;
   wcagCriteria: string[];
   conformanceLevel?: string;
@@ -144,6 +154,8 @@ export async function buildFindingsView(
       code: finding.code,
       ...(finding.title === undefined ? {} : { title: finding.title }),
       ...(finding.message === undefined ? {} : { message: finding.message }),
+      fixAnyOf: finding.remediationAnyOf ?? [],
+      fixAllOf: finding.remediationAllOf ?? [],
       severity: displaySeverity(finding.severity),
       wcagCriteria: finding.wcagCriteria ?? [],
       ...(finding.conformanceLevel ? { conformanceLevel: finding.conformanceLevel } : {}),

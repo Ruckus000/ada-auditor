@@ -67,6 +67,8 @@ type FindingRow = {
   source: string;
   title: string | null;
   message: string | null;
+  remediation_any: string[] | null;
+  remediation_all: string[] | null;
   wcag_criteria: string[] | null;
   conformance_level: string | null;
   selector: string | null;
@@ -96,6 +98,8 @@ function toFinding(row: FindingRow): StoredFinding {
 
   if (row.title !== null) finding.title = row.title;
   if (row.message !== null) finding.message = row.message;
+  if (row.remediation_any !== null) finding.remediationAnyOf = row.remediation_any;
+  if (row.remediation_all !== null) finding.remediationAllOf = row.remediation_all;
   if (row.wcag_criteria !== null) finding.wcagCriteria = row.wcag_criteria;
   if (row.conformance_level !== null) finding.conformanceLevel = row.conformance_level;
   if (row.page_url !== null) finding.pageUrl = row.page_url;
@@ -242,13 +246,16 @@ export class PostgresRunStore implements RunStore {
       await sql`
         insert into findings (
           request_id, position, page_url, code, severity, source, title,
-          message, wcag_criteria, conformance_level, selector, html_snippet,
-          help_url, gateable, confidence
+          message, remediation_any, remediation_all, wcag_criteria,
+          conformance_level, selector, html_snippet, help_url, gateable,
+          confidence
         ) values (
           ${record.requestId}, ${position}, ${finding.pageUrl ?? null},
           ${finding.code}, ${finding.severity}, ${finding.source},
           ${finding.title ?? null},
-          ${finding.message ?? null}, ${finding.wcagCriteria ?? null},
+          ${finding.message ?? null},
+          ${finding.remediationAnyOf ?? null}, ${finding.remediationAllOf ?? null},
+          ${finding.wcagCriteria ?? null},
           ${finding.conformanceLevel ?? null}, ${finding.selector ?? null},
           ${finding.htmlSnippet ?? null}, ${finding.helpUrl ?? null},
           ${finding.gateable ?? null}, ${finding.confidence ?? null}

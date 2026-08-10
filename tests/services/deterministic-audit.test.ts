@@ -223,6 +223,76 @@ describe('runDeterministicAudit', () => {
     expect(finding.message).toContain('no alt attribute');
   });
 
+  it('keeps the fix groups apart, because axe evaluates them differently', () => {
+    // Any ONE `any` entry clears the node; every `all` and `none` entry has to
+    // be dealt with. Flattening them tells a developer to add an alt attribute
+    // *and* an aria-label *and* a presentation role, when one of the three is
+    // the fix — and a list that overstates the work stops being read.
+    const [finding] = runDeterministicAudit({
+      violations: [
+        rule({
+          nodes: [
+            {
+              html: '<img>',
+              target: ['#a'],
+              any: [
+                { id: 'has-alt', message: 'Element does not have an alt attribute' },
+                { id: 'aria-label', message: 'aria-label attribute does not exist' },
+              ],
+              all: [],
+              none: [{ id: 'alt-space', message: 'Element has an alt attribute of only whitespace' }],
+            },
+          ],
+        }),
+      ],
+      incomplete: [],
+    }, PAGE_URL);
+
+    expect(finding.remediation.anyOf).toEqual([
+      'Element does not have an alt attribute',
+      'aria-label attribute does not exist',
+    ]);
+    expect(finding.remediation.allOf).toEqual([
+      'Element has an alt attribute of only whitespace',
+    ]);
+  });
+
+  it('does not repeat a message two checks happen to share', () => {
+    // A fix list that says the same sentence twice reads as though there is
+    // more to do than there is.
+    const [finding] = runDeterministicAudit({
+      violations: [
+        rule({
+          nodes: [
+            {
+              html: '<img>',
+              target: ['#a'],
+              any: [
+                { id: 'a', message: 'Element has no accessible name' },
+                { id: 'b', message: 'Element has no accessible name' },
+                { id: 'c', message: '   ' },
+              ],
+            },
+          ],
+        }),
+      ],
+      incomplete: [],
+    }, PAGE_URL);
+
+    expect(finding.remediation.anyOf).toEqual(['Element has no accessible name']);
+  });
+
+  it('is empty rather than absent when the engine offers no checks', () => {
+    // `[]` means axe had nothing to add. That has to stay distinguishable from
+    // a run recorded before we captured any of this.
+    const [finding] = runDeterministicAudit({
+      violations: [rule({ nodes: [{ html: '<img>', target: ['#a'] }] })],
+      incomplete: [],
+    }, PAGE_URL);
+
+    expect(finding.remediation).toEqual({ anyOf: [], allOf: [] });
+  });
+
   it('falls back to rule help when the summary is blank', () => {
     const [finding] = runDeterministicAudit({
       violations: [rule({ nodes: [{ html: '<img>', target: ['#a'], failureSummary: '   ' }] })],

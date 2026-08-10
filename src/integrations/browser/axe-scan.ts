@@ -1,6 +1,7 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Page } from 'playwright-core';
 import type {
+  AxeCheckResult,
   AxeNodeResult,
   AxeRuleResult,
   AxeScanResult,
@@ -26,6 +27,16 @@ function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+/** Narrows axe's `CheckResult[]` to the two fields that cross the boundary. */
+function normalizeChecks(value: unknown): AxeCheckResult[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((entry) => asRecord(entry))
+    .map((check) => ({ id: asString(check.id), message: asString(check.message) }))
+    .filter((check) => check.message !== '');
+}
+
 function normalizeNode(value: unknown): AxeNodeResult {
   const node = asRecord(value);
   const target = Array.isArray(node.target)
@@ -41,6 +52,9 @@ function normalizeNode(value: unknown): AxeNodeResult {
     target,
     failureSummary:
       typeof node.failureSummary === 'string' ? node.failureSummary : undefined,
+    any: normalizeChecks(node.any),
+    all: normalizeChecks(node.all),
+    none: normalizeChecks(node.none),
   };
 }
 

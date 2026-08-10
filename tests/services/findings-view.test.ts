@@ -24,6 +24,8 @@ function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
     severity: 'critical',
     source: 'deterministic',
     title: 'Images must have alternate text',
+    remediationAnyOf: ['Element does not have an alt attribute'],
+    remediationAllOf: [],
     pageUrl: 'https://acme.test/one',
     selector: 'img',
     ...overrides,
@@ -145,6 +147,38 @@ describe('buildFindingsView', () => {
 
     expect(titled.title).toBe('Images must have alternate text');
     expect(untitled.title).toBeUndefined();
+  });
+
+  it('carries the fix groups separately, and defaults them for an older run', async () => {
+    // Any one entry in the first list clears the finding; the second has to be
+    // done in full. A run stored before the columns existed has neither, and
+    // the screen falls back to the failure summary rather than showing an
+    // empty "how to fix" heading.
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        findings: [
+          finding({
+            remediationAnyOf: ['Add an alt attribute'],
+            remediationAllOf: ['Remove aria-hidden'],
+          }),
+          {
+            code: 'label',
+            severity: 'major',
+            source: 'deterministic',
+            pageUrl: 'https://acme.test/one',
+            selector: 'input',
+          },
+        ],
+      }),
+    );
+
+    const [withFix, without] = (await buildFindingsView('acme', deps()))!.pages[0].findings;
+
+    expect(withFix.fixAnyOf).toEqual(['Add an alt attribute']);
+    expect(withFix.fixAllOf).toEqual(['Remove aria-hidden']);
+    expect(without.fixAnyOf).toEqual([]);
+    expect(without.fixAllOf).toEqual([]);
   });
 
   it('keeps advisory findings out of the pages', async () => {

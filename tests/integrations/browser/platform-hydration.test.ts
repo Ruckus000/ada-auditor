@@ -290,6 +290,11 @@ describe('platform hydration', () => {
       // axe's own sentence for the rule, carried from the engine through the
       // store to the screen. Nothing in this string was written by us.
       expect(body).toContain('Buttons must have discernible text');
+      // And the fix, in the group axe put it in. `button-name` is an any-of
+      // rule — inner text *or* aria-label *or* title will do — so a screen
+      // that merged the groups would tell a developer to do all of them.
+      expect(body).toContain('Fix any one of these');
+      expect(body).toContain('aria-label attribute does not exist');
       expect(body).not.toContain('Nothing audited yet');
     } finally {
       await page.close();
@@ -357,6 +362,9 @@ describe('platform hydration', () => {
       expect(body).toContain('Name, Role, Value');
       expect(body).toContain('Success criteria not met');
       expect(body).toContain('Buttons must have discernible text');
+      // The people who open this link are usually the ones who have to act on
+      // it, so it carries the fix and not just the failure.
+      expect(body).toContain('Fix any one of these');
       // The shared page is the audit and nothing else: no way into the console
       // from it, and no other client's name on it.
       expect(body).not.toContain('Portfolio');
