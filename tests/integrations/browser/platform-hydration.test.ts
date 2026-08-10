@@ -189,7 +189,7 @@ describe('platform hydration', () => {
     try {
       await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
       const text = await page.innerText('body');
-      expect(text).toContain('Unlock the console');
+      expect(text).toContain('Sign in');
       expect(text).not.toContain('Portfolio');
     } finally {
       await page.close();
@@ -413,7 +413,7 @@ describe('platform hydration', () => {
       // happily against a locked page. CI proved that is not hypothetical:
       // these tests went green while four routes were serving the locked
       // shell from a prerender.
-      expect(await page.innerText('body')).not.toContain('Unlock the console');
+      expect(await page.innerText('body')).not.toContain('Sign in');
     } finally {
       await page.close();
     }
@@ -507,7 +507,7 @@ describe('platform accessibility', () => {
       const outline = await page.evaluate(() => ({
         mains: document.querySelectorAll('main').length,
         banners: document.querySelectorAll('header').length,
-        locked: document.body.innerText.includes('Unlock the console'),
+        locked: document.body.innerText.includes('Sign in'),
         bodyChars: document.body.innerHTML.length,
       }));
 

@@ -1,6 +1,7 @@
 import { MIN_TOKEN_LENGTH } from '../_lib/console-session';
 import { isThrottleKvConfigured } from '../_lib/unlock-throttle';
 import { isDatabaseConfigured } from '../../../integrations/persistence';
+import { sessionSecretIsShared } from '../_lib/principal';
 
 /**
  * Deploy-time readiness.
@@ -29,16 +30,30 @@ export async function GET() {
     auditorRunTokenConfigured: typeof token === 'string' && token.length >= MIN_TOKEN_LENGTH,
     runStoreConfigured: isDatabaseConfigured(),
     unlockThrottleDurable: isThrottleKvConfigured(),
+    sessionSecretDedicated: !sessionSecretIsShared(),
     chaosEnabled: process.env.CHAOS_ENABLED === 'true',
   };
 
   const ready = checks.auditorRunTokenConfigured && checks.runStoreConfigured;
 
-  const warnings = checks.unlockThrottleDurable
-    ? []
-    : [
-        'unlock_throttle_in_memory: no Redis configured, so console unlock attempts are counted per instance and reset on cold start.',
-      ];
+  const warnings: string[] = [];
+
+  if (!checks.unlockThrottleDurable) {
+    warnings.push(
+      'unlock_throttle_in_memory: no Redis configured, so console sign-in attempts are counted per instance and reset on cold start.',
+    );
+  }
+
+  // Reported, not gating — and gating would be wrong. A deployment with no
+  // operator accounts at all, driven entirely by CI with the run token, is
+  // working. What is degraded is that the two secrets are the same value, so
+  // rotating the machine token still signs every human out, which is the exact
+  // coupling operator accounts exist to break.
+  if (!checks.sessionSecretDedicated) {
+    warnings.push(
+      'session_secret_shared_with_run_token: no AUDITOR_SESSION_SECRET, so operator sessions are signed with AUDITOR_RUN_TOKEN and rotating it signs everyone out.',
+    );
+  }
 
   return Response.json(
     {

@@ -1,29 +1,13 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { operatorName } from '../../../../../../domain/operator';
+import { actorFields } from '../../../../../../domain/operator';
 import { getPlatformStore, getRunStore } from '../../../../../../integrations/persistence';
-import { hasOperatorSession } from '../../../../_lib/operator-session';
-import { isRunAuthorized } from '../../../../_lib/auth';
-import { isSameOriginConsoleRequest } from '../../../../_lib/same-origin';
+import { authorizePrincipal } from '../../../../_lib/authorize';
 import { createRequestId } from '../../../../_lib/request-id';
 
 /** Chromium is not involved, but `node:crypto` is: this cannot run on edge. */
 export const runtime = 'nodejs';
 
-/**
- * Issuing a report, and revoking one.
- *
- * A report pins a run. It names a `requestId`, never "the latest", because a
- * link sent to a client's legal team must not change meaning after tonight's
- * audit — a regulator reading it next month would otherwise see a different
- * document from the one that was sent, with no way to tell.
- */
-async function authorize(request: Request): Promise<boolean> {
-  if (isRunAuthorized(request)) {
-    return true;
-  }
-  return isSameOriginConsoleRequest(request) && (await hasOperatorSession());
-}
 
 /**
  * The reports issued for one client.
@@ -37,7 +21,8 @@ export async function GET(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -69,7 +54,8 @@ export async function POST(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -112,13 +98,13 @@ export async function POST(
     requestId: parsed.requestId,
     ...(parsed.audience ? { audience: parsed.audience } : {}),
     ...(parsed.title ? { title: parsed.title } : {}),
-    issuedBy: operatorName(),
+    issuedBy: principal.name,
     shareToken,
   });
 
   await platform.recordEvent({
     clientId,
-    actor: operatorName(),
+    ...actorFields(principal),
     action: 'issued a report',
     subject: parsed.title ?? parsed.requestId,
     metadata: { reportId: id, requestId: parsed.requestId },
@@ -139,7 +125,8 @@ export async function DELETE(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -175,7 +162,7 @@ export async function DELETE(
 
   await platform.recordEvent({
     clientId,
-    actor: operatorName(),
+    ...actorFields(principal),
     action: 'revoked a report link',
     subject: report.title ?? report.requestId,
     metadata: { reportId: parsed.id },

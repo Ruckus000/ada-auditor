@@ -1,31 +1,9 @@
 import { z } from 'zod';
-import { operatorName } from '../../../../../../domain/operator';
+import { actorFields } from '../../../../../../domain/operator';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
-import { hasOperatorSession } from '../../../../_lib/operator-session';
-import { isRunAuthorized } from '../../../../_lib/auth';
-import { isSameOriginConsoleRequest } from '../../../../_lib/same-origin';
+import { authorizePrincipal } from '../../../../_lib/authorize';
 import { createRequestId } from '../../../../_lib/request-id';
 
-/**
- * One human decision about one defect.
- *
- * The findings screen has shown triage since it was built — a dismissed
- * finding renders dimmed with its reason — but nothing could write it, so the
- * whole column was theoretical. This is that write.
- *
- * There is no `fixed` state and this route will not accept one. A finding is
- * fixed when the next run stops reporting it; storing that as a human decision
- * lets the flag and the evidence contradict each other, and when they do the
- * evidence is right.
- */
-async function authorize(request: Request): Promise<boolean> {
-  if (isRunAuthorized(request)) {
-    return true;
-  }
-  // A cookie alone is not enough for a state-changing request: it travels on
-  // cross-site form posts too.
-  return isSameOriginConsoleRequest(request) && (await hasOperatorSession());
-}
 
 /**
  * `source:code:pageUrl:selector`, produced by `findingKey`.
@@ -64,7 +42,8 @@ export async function POST(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -94,12 +73,12 @@ export async function POST(
     state: parsed.state,
     ...(parsed.note ? { note: parsed.note } : {}),
     ...(parsed.assignee ? { assignee: parsed.assignee } : {}),
-    actor: operatorName(),
+    ...actorFields(principal),
   });
 
   await platform.recordEvent({
     clientId,
-    actor: operatorName(),
+    ...actorFields(principal),
     action: parsed.state === 'assigned' ? 'assigned a finding' : 'dismissed a finding',
     subject: code,
     metadata: { findingKey: parsed.findingKey, state: parsed.state },
@@ -119,7 +98,8 @@ export async function DELETE(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -141,7 +121,7 @@ export async function DELETE(
 
   await platform.recordEvent({
     clientId,
-    actor: operatorName(),
+    ...actorFields(principal),
     action: 'reopened a finding',
     metadata: { findingKey: parsed.findingKey },
   });

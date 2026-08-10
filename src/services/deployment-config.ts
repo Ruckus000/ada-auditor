@@ -42,11 +42,20 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
   const settings: ConfigSetting[] = [
     {
       key: 'operator',
-      label: 'Operator name',
+      label: 'Automation name',
       value: env.AUDITOR_OPERATOR_NAME?.trim() || 'Operator',
       detail:
-        'Attributed on every activity event. There is no per-user identity in this product — one shared token, one trusted group — so this is a name, not an account.',
+        'What activity is attributed to when the caller is a machine rather than a person — CI, a script, the scheduler. People sign in with their own accounts and are recorded under their own names.',
       degraded: false,
+    },
+    {
+      key: 'sessionSecret',
+      label: 'Session signing key',
+      value: env.AUDITOR_SESSION_SECRET?.trim() ? 'dedicated' : 'shared with the run token',
+      detail: env.AUDITOR_SESSION_SECRET?.trim()
+        ? 'AUDITOR_SESSION_SECRET. Rotating it signs every operator out, which is the deliberate "log everyone out" lever; rotating the run token no longer does.'
+        : 'No AUDITOR_SESSION_SECRET, so operator sessions are signed with AUDITOR_RUN_TOKEN. Rotating the machine token therefore still signs every human out — the exact coupling operator accounts exist to break. Set a separate value.',
+      degraded: !env.AUDITOR_SESSION_SECRET?.trim(),
     },
     {
       key: 'database',

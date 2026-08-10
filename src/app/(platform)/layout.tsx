@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
-import { operatorInitials, operatorName } from '../../domain/operator';
-import { hasOperatorSession } from '../api/_lib/operator-session';
+import { operatorInitials } from '../../domain/operator';
+import { currentPrincipal } from '../api/_lib/principal';
 import { PlatformProvider } from '../platform/components/platform-provider';
 import { PlatformLocked, PlatformShell } from '../platform/components/platform-shell';
 
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
  * close to the hook call as possible — wrapping a large subtree forces the
  * entire subtree into the fallback", and "do not pass `{children}` through in
  * the fallback". This layout did both. It is also unnecessary: the boundary
- * only matters for routes that prerender, and `hasOperatorSession()` reads
+ * only matters for routes that prerender, and `currentPrincipal()` reads
  * cookies below, which makes every route here dynamic — and on a dynamic route
  * `useSearchParams` is available during the server render.
  */
@@ -49,13 +49,17 @@ export default async function PlatformLayout({
   // `cookies()` that turned out to be environment-dependent.
   await connection();
 
-  if (!(await hasOperatorSession())) {
+  const principal = await currentPrincipal();
+  if (!principal) {
     return <PlatformLocked />;
   }
 
   // Resolved here because this is the only server component above the header,
-  // and the header cannot read the environment for itself.
-  const name = operatorName();
+  // and the header cannot resolve a principal for itself. The name is now the
+  // signed-in operator's rather than a configured string — and for a machine
+  // principal it is still that configured string, which is what keeps CI and
+  // the harness rendering something sensible.
+  const name = principal.name;
 
   return (
     <PlatformProvider operator={{ name, initials: operatorInitials(name) }}>

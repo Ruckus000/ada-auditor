@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { StoredRunRecord } from '../../src/domain/persistence';
 
-const { hasOperatorSession } = vi.hoisted(() => ({ hasOperatorSession: vi.fn() }));
-vi.mock('../../src/app/api/_lib/operator-session', () => ({ hasOperatorSession }));
+// The routes resolve a principal now rather than asking "is there a
+// session?". Mocking that seam keeps these tests about the routes; the
+// cookie/token machinery has its own suite in tests/api/principal.test.ts.
+const { principalFromRequest } = vi.hoisted(() => ({ principalFromRequest: vi.fn() }));
+vi.mock('../../src/app/api/_lib/principal', () => ({ principalFromRequest }));
+
+const OPERATOR = { kind: 'operator' as const, id: 'op-1', name: 'Alex Reed', email: 'alex@example.com' };
 
 const { DELETE, POST } = await import(
   '../../src/app/api/platform/clients/[clientId]/reports/route'
@@ -32,7 +37,7 @@ function request(body: unknown, method = 'POST', headers: Record<string, string>
 }
 
 function fromBrowser(body: unknown, method = 'POST'): Request {
-  hasOperatorSession.mockResolvedValue(true);
+  principalFromRequest.mockResolvedValue(OPERATOR);
   return request(body, method, { origin: 'http://localhost', 'sec-fetch-site': 'same-origin' });
 }
 
@@ -70,8 +75,8 @@ describe('/api/platform/clients/[clientId]/reports', () => {
 
   beforeEach(async () => {
     process.env.AUDITOR_RUN_TOKEN = TOKEN;
-    hasOperatorSession.mockReset();
-    hasOperatorSession.mockResolvedValue(false);
+    principalFromRequest.mockReset();
+    principalFromRequest.mockResolvedValue(null);
     platform = new MemoryPlatformStore();
     runs = new MemoryRunStore();
     setPlatformStore(platform);
@@ -106,7 +111,7 @@ describe('/api/platform/clients/[clientId]/reports', () => {
     // Issuing a report mints a URL that reads a client's audit without any
     // authentication at all. It is the last thing that should be reachable by
     // a cross-site form post.
-    hasOperatorSession.mockResolvedValue(true);
+    principalFromRequest.mockResolvedValue(OPERATOR);
     const response = await POST(
       request({ requestId: 'r1' }, 'POST', {
         origin: 'https://evil.example',
@@ -179,19 +184,14 @@ describe('/api/platform/clients/[clientId]/reports', () => {
   });
 
   it('records issuing and revoking', async () => {
-    process.env.AUDITOR_OPERATOR_NAME = 'Alex Reed';
-    try {
-      const { report } = await (
-        await POST(fromBrowser({ requestId: 'r1' }), params('acme'))
-      ).json();
-      await DELETE(fromBrowser({ id: report.id }, 'DELETE'), params('acme'));
+    const { report } = await (
+      await POST(fromBrowser({ requestId: 'r1' }), params('acme'))
+    ).json();
+    await DELETE(fromBrowser({ id: report.id }, 'DELETE'), params('acme'));
 
-      const actions = (await platform.listEvents({ clientId: 'acme' })).map((e) => e.action);
-      expect(actions).toContain('issued a report');
-      expect(actions).toContain('revoked a report link');
-    } finally {
-      delete process.env.AUDITOR_OPERATOR_NAME;
-    }
+    const actions = (await platform.listEvents({ clientId: 'acme' })).map((e) => e.action);
+    expect(actions).toContain('issued a report');
+    expect(actions).toContain('revoked a report link');
   });
 
   it('does not publish a dismissal or its note', async () => {

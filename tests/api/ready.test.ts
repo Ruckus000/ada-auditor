@@ -7,6 +7,7 @@ describe('GET /api/ready', () => {
   const originalDatabase = process.env.DATABASE_URL;
   const originalKvUrl = process.env.KV_REST_API_URL;
   const originalKvToken = process.env.KV_REST_API_TOKEN;
+  const originalSessionSecret = process.env.AUDITOR_SESSION_SECRET;
 
   beforeEach(() => {
     process.env.DATABASE_URL = 'postgres://test/db';
@@ -23,6 +24,8 @@ describe('GET /api/ready', () => {
     else process.env.KV_REST_API_URL = originalKvUrl;
     if (originalKvToken === undefined) delete process.env.KV_REST_API_TOKEN;
     else process.env.KV_REST_API_TOKEN = originalKvToken;
+    if (originalSessionSecret === undefined) delete process.env.AUDITOR_SESSION_SECRET;
+    else process.env.AUDITOR_SESSION_SECRET = originalSessionSecret;
   });
 
   it('is ready when AUDITOR_RUN_TOKEN meets MIN_TOKEN_LENGTH', async () => {
@@ -70,14 +73,30 @@ describe('GET /api/ready', () => {
     expect(body.warnings.join(' ')).toContain('unlock_throttle_in_memory');
   });
 
-  it('reports no warning once the throttle is durable', async () => {
+  it('reports no warning once everything degradable is configured', async () => {
     process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    process.env.AUDITOR_SESSION_SECRET = 'session-secret-16chars';
     process.env.KV_REST_API_URL = 'https://kv.test';
     process.env.KV_REST_API_TOKEN = 'kv-token';
 
     const body = await (await GET()).json();
     expect(body.checks.unlockThrottleDurable).toBe(true);
+    expect(body.checks.sessionSecretDedicated).toBe(true);
     expect(body.warnings).toEqual([]);
+  });
+
+  // Reported, never gating. A deployment with no operator accounts at all,
+  // driven entirely by CI with the run token, is working — not down.
+  it('warns but stays ready when the session key is borrowed from the run token', async () => {
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    delete process.env.AUDITOR_SESSION_SECRET;
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(body.checks.sessionSecretDedicated).toBe(false);
+    expect(body.warnings.join(' ')).toContain('session_secret_shared_with_run_token');
+    expect(response.status).not.toBe(503);
   });
 
   it('is not ready when the configured token is too short for auth', async () => {

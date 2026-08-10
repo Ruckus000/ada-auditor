@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { hasOperatorSession } = vi.hoisted(() => ({ hasOperatorSession: vi.fn() }));
-vi.mock('../../src/app/api/_lib/operator-session', () => ({ hasOperatorSession }));
+// The routes resolve a principal now rather than asking "is there a
+// session?". Mocking that seam keeps these tests about the routes; the
+// cookie/token machinery has its own suite in tests/api/principal.test.ts.
+const { principalFromRequest } = vi.hoisted(() => ({ principalFromRequest: vi.fn() }));
+vi.mock('../../src/app/api/_lib/principal', () => ({ principalFromRequest }));
+
+const OPERATOR = { kind: 'operator' as const, id: 'op-1', name: 'Alex Reed', email: 'alex@example.com' };
 
 const { GET, POST } = await import('../../src/app/api/platform/clients/route');
 const {
@@ -25,7 +30,7 @@ function request(body?: unknown, headers: Record<string, string> = {}): Request 
 
 /** Same-origin plus a session: how the screens call it. */
 function fromBrowser(body?: unknown): Request {
-  hasOperatorSession.mockResolvedValue(true);
+  principalFromRequest.mockResolvedValue(OPERATOR);
   return request(body, { origin: 'http://localhost', 'sec-fetch-site': 'same-origin' });
 }
 
@@ -41,8 +46,8 @@ describe('/api/platform/clients', () => {
 
   beforeEach(() => {
     process.env.AUDITOR_RUN_TOKEN = TOKEN;
-    hasOperatorSession.mockReset();
-    hasOperatorSession.mockResolvedValue(false);
+    principalFromRequest.mockReset();
+    principalFromRequest.mockResolvedValue(null);
     platform = new MemoryPlatformStore();
     setPlatformStore(platform);
     setRunStore(new MemoryRunStore());
@@ -65,7 +70,7 @@ describe('/api/platform/clients', () => {
   it('refuses a cookie carried cross-origin', async () => {
     // A session cookie travels on cross-site posts too. Without the
     // same-origin check, any page could add clients to the operator's account.
-    hasOperatorSession.mockResolvedValue(true);
+    principalFromRequest.mockResolvedValue(OPERATOR);
     const response = await POST(
       request({ name: 'Acme' }, { origin: 'https://evil.example', 'sec-fetch-site': 'cross-site' }),
     );
@@ -107,15 +112,10 @@ describe('/api/platform/clients', () => {
   it('records who added the client', async () => {
     // Activity is attributed to the configured operator name; there is no
     // per-user identity to attribute it to.
-    process.env.AUDITOR_OPERATOR_NAME = 'Alex Reed';
-    try {
-      await POST(fromBrowser({ name: 'Acme' }));
+    await POST(fromBrowser({ name: 'Acme' }));
 
-      const [event] = await platform.listEvents({ clientId: 'acme' });
-      expect(event).toMatchObject({ actor: 'Alex Reed', action: 'added a client', subject: 'Acme' });
-    } finally {
-      delete process.env.AUDITOR_OPERATOR_NAME;
-    }
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event).toMatchObject({ actor: 'Alex Reed', action: 'added a client', subject: 'Acme' });
   });
 
   it.each([

@@ -106,13 +106,82 @@ export type StoredReport = {
 export type ActivityEvent = {
   id?: number;
   clientId?: string;
-  /** The configured operator name. A name, not a foreign key. */
+  /**
+   * The name as it read at the time. Still text, still not a foreign key.
+   *
+   * `actorOperatorId` beside it is the account, when there was one. The name
+   * stays authoritative for display and is never backfilled or rewritten: an
+   * activity feed is a historical record, and an operator who has since been
+   * renamed did not do the thing under their new name. It is also what keeps
+   * events written by automation legible, since those have no account at all.
+   */
   actor: string;
+  /** Absent for anything done by CI, a script, or the scheduler. */
+  actorOperatorId?: string;
   action: string;
   subject?: string;
   metadata?: Record<string, unknown>;
   createdAt?: string;
 };
+
+/**
+ * A person who signs in.
+ *
+ * The product ran on one shared `AUDITOR_RUN_TOKEN` that was simultaneously
+ * identity, authentication, authorization and the session signing key. That
+ * made three things impossible at once: attributing an action to a person,
+ * assigning a finding to anyone, and revoking one operator without logging out
+ * everybody. This type is what makes all three possible.
+ *
+ * There is still exactly one organisation. Every operator sees every client —
+ * that is the product, not an oversight — so nothing here scopes data. What it
+ * scopes is *who did it*.
+ *
+ * `passwordHash` never leaves the store. `listOperators` omits it entirely
+ * rather than blanking it, so there is no shape in which a hash can be
+ * accidentally serialised into a response.
+ */
+export type StoredOperator = {
+  id: string;
+  email: string;
+  name: string;
+  /**
+   * Bumped to invalidate that operator's outstanding sessions without touching
+   * anyone else's. The session cookie carries the epoch it was minted at, so a
+   * bump is a revocation with no server-side session table to keep.
+   */
+  sessionEpoch: number;
+  disabledAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** As above, plus the hash. Returned only by the lookups that verify a sign-in. */
+export type StoredOperatorWithSecret = StoredOperator & { passwordHash: string };
+
+export interface OperatorStore {
+  listOperators(): Promise<StoredOperator[]>;
+  getOperator(id: string): Promise<StoredOperator | null>;
+  /** Case-insensitive: an email address is not case-sensitive to its owner. */
+  getOperatorByEmail(email: string): Promise<StoredOperatorWithSecret | null>;
+  /**
+   * Creates or updates by **email**, not by id.
+   *
+   * `email` is unique and a disabled operator keeps their row, so an insert
+   * would fail for anyone ever disabled — turning "re-hire" into a manual psql
+   * session. Upserting on email also means re-enabling is `disabledAt: undefined`
+   * rather than a second code path.
+   */
+  upsertOperator(input: {
+    id: string;
+    email: string;
+    name: string;
+    passwordHash: string;
+    disabledAt?: string;
+  }): Promise<void>;
+  bumpSessionEpoch(id: string): Promise<void>;
+  setOperatorDisabled(id: string, disabled: boolean): Promise<void>;
+}
 
 export interface ClientStore {
   listClients(): Promise<StoredClient[]>;
@@ -151,7 +220,8 @@ export interface ActivityStore {
   listEvents(options?: { clientId?: string; limit?: number }): Promise<ActivityEvent[]>;
 }
 
-export type PlatformStore = ClientStore &
+export type PlatformStore = OperatorStore &
+  ClientStore &
   JourneyStore &
   TriageStore &
   ReportStore &

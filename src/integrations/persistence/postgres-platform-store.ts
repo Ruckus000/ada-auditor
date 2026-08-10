@@ -5,6 +5,8 @@ import type {
   ReportAudience,
   StoredClient,
   StoredJourney,
+  StoredOperator,
+  StoredOperatorWithSecret,
   StoredReport,
   TriageEntry,
   TriageState,
@@ -43,6 +45,16 @@ function optional<T extends object, K extends string, V>(
  * any mapper parameter, so a renamed column would have compiled cleanly and
  * produced `undefined` at runtime.
  */
+type OperatorRow = {
+  id: string;
+  email: string;
+  name: string;
+  session_epoch: number;
+  disabled_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
 type JourneyRow = {
   id: string;
   client_id: string;
@@ -82,6 +94,100 @@ type ReportRow = {
 
 export class PostgresPlatformStore implements PlatformStore {
   constructor(private readonly sql: SqlClient) {}
+
+  // ----------------------------------------------------------- operators --
+
+  /** Without the hash, by construction — there is no shape here that carries it. */
+  private mapOperator(row: OperatorRow): StoredOperator {
+    return {
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      sessionEpoch: Number(row.session_epoch),
+      ...optional('disabledAt', row.disabled_at ? toIso(row.disabled_at) : null),
+      createdAt: toIso(row.created_at),
+      updatedAt: toIso(row.updated_at),
+    } as StoredOperator;
+  }
+
+  async listOperators(): Promise<StoredOperator[]> {
+    // Columns named rather than `select *`: this result feeds an API response,
+    // and `select *` would carry `password_hash` into a shape one careless
+    // spread away from being serialised.
+    const rows = await this.sql<OperatorRow>`
+      select id, email, name, session_epoch, disabled_at, created_at, updated_at
+      from operators order by name asc
+    `;
+    return rows.map((row) => this.mapOperator(row));
+  }
+
+  async getOperator(id: string): Promise<StoredOperator | null> {
+    const rows = await this.sql<OperatorRow>`
+      select id, email, name, session_epoch, disabled_at, created_at, updated_at
+      from operators where id = ${id}
+    `;
+    return rows[0] ? this.mapOperator(rows[0]) : null;
+  }
+
+  async getOperatorByEmail(email: string): Promise<StoredOperatorWithSecret | null> {
+    const rows = await this.sql<OperatorRow & { password_hash: string }>`
+      select id, email, name, session_epoch, disabled_at, created_at, updated_at, password_hash
+      from operators where lower(email) = lower(${email})
+    `;
+    return rows[0]
+      ? { ...this.mapOperator(rows[0]), passwordHash: rows[0].password_hash }
+      : null;
+  }
+
+  async upsertOperator(input: {
+    id: string;
+    email: string;
+    name: string;
+    passwordHash: string;
+    disabledAt?: string;
+  }): Promise<void> {
+    // Conflict on email, not id: email is the unique human identifier and a
+    // disabled operator keeps their row, so inserting by id would fail for
+    // anyone ever disabled. The existing id wins so activity attribution
+    // survives a re-add.
+    //
+    // The conflict target is `lower(email)`, matching the index rather than
+    // the column's own unique constraint. Targeting the column would update on
+    // an exact-case match but raise a unique violation on a differently-cased
+    // one — so re-adding "Sam@example.com" over "sam@example.com" would throw
+    // here while the in-memory double, which compares case-insensitively,
+    // quietly succeeded.
+    await this.sql`
+      insert into operators (id, email, name, password_hash, disabled_at)
+      values (${input.id}, ${input.email}, ${input.name}, ${input.passwordHash},
+              ${input.disabledAt ?? null})
+      on conflict (lower(email)) do update set
+        name = excluded.name,
+        password_hash = excluded.password_hash,
+        disabled_at = excluded.disabled_at,
+        updated_at = now()
+    `;
+  }
+
+  async bumpSessionEpoch(id: string): Promise<void> {
+    await this.sql`
+      update operators set session_epoch = session_epoch + 1, updated_at = now()
+      where id = ${id}
+    `;
+  }
+
+  async setOperatorDisabled(id: string, disabled: boolean): Promise<void> {
+    // Disabling also bumps the epoch. Without that, a disabled operator keeps
+    // a valid cookie until it expires, and "disabled" would mean "cannot sign
+    // in again" rather than "is out now".
+    await this.sql`
+      update operators
+      set disabled_at = ${disabled ? new Date().toISOString() : null},
+          session_epoch = session_epoch + 1,
+          updated_at = now()
+      where id = ${id}
+    `;
+  }
 
   // ------------------------------------------------------------- clients --
 
@@ -334,10 +440,12 @@ export class PostgresPlatformStore implements PlatformStore {
 
   async recordEvent(event: ActivityEvent): Promise<void> {
     await this.sql`
-      insert into activity_events (client_id, actor, action, subject, metadata)
+      insert into activity_events
+        (client_id, actor, actor_operator_id, action, subject, metadata)
       values (
-        ${event.clientId ?? null}, ${event.actor}, ${event.action},
-        ${event.subject ?? null}, ${JSON.stringify(event.metadata ?? {})}::jsonb
+        ${event.clientId ?? null}, ${event.actor}, ${event.actorOperatorId ?? null},
+        ${event.action}, ${event.subject ?? null},
+        ${JSON.stringify(event.metadata ?? {})}::jsonb
       )
     `;
   }
@@ -352,6 +460,7 @@ export class PostgresPlatformStore implements PlatformStore {
       id: number;
       client_id: string | null;
       actor: string;
+      actor_operator_id: string | null;
       action: string;
       subject: string | null;
       metadata: Record<string, unknown>;
@@ -367,6 +476,7 @@ export class PostgresPlatformStore implements PlatformStore {
       id: Number(row.id),
       ...optional('clientId', row.client_id),
       actor: row.actor,
+      ...optional('actorOperatorId', row.actor_operator_id),
       action: row.action,
       ...optional('subject', row.subject),
       metadata: row.metadata ?? {},

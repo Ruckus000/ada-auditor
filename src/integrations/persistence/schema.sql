@@ -336,3 +336,70 @@ alter table reports add column if not exists audience text
 alter table reports add column if not exists title text;
 alter table reports add column if not exists issued_by text;
 alter table reports add column if not exists revoked_at timestamptz;
+
+-- --- Operators -------------------------------------------------------------
+--
+-- The Phase 2 decision that `activity_events.actor` "must not grow into a
+-- foreign key without that decision being revisited" is hereby revisited, and
+-- the answer is: it still does not. Here is what changed and what did not.
+--
+-- What changed: there are real accounts now. One shared `AUDITOR_RUN_TOKEN`
+-- was identity, authentication, authorization and the session signing key all
+-- at once, which made three things impossible together — attributing an action
+-- to a person, assigning a finding to anyone, and revoking one operator
+-- without logging out everybody.
+--
+-- What did not: there is still exactly ONE organisation. Every operator sees
+-- every client. No table gets a tenant column, because there are no mutually
+-- distrustful tenants — only people. If that ever changes, it changes here
+-- first, exactly as the header of this file says.
+--
+-- And `actor` stays text. `actor_operator_id` is added *beside* it, nullable,
+-- never backfilled. An activity feed is a historical record: an operator who
+-- has since been renamed did not do the thing under their new name, and events
+-- written by CI or the scheduler have no account to point at. A name and an
+-- account are different facts and the table now holds both.
+--
+-- Re-evaluated against the idempotence threshold at the top of this section:
+-- every statement below is `create table if not exists`, `add column if not
+-- exists`, or a guarded `add constraint`. Nothing backfills a not-null column
+-- and nothing changes a primary key, so the threshold is still not crossed and
+-- a migration tool is still not warranted.
+create table if not exists operators (
+  id             text primary key,
+  email          text not null unique,
+  name           text not null,
+  -- `scrypt$N$r$p$salt$hash`. The cost parameters live in the value so raising
+  -- them later does not invalidate every existing row.
+  password_hash  text not null,
+  -- Bumped to invalidate one operator's outstanding sessions. The cookie
+  -- carries the epoch it was minted at, so revocation needs no session table.
+  session_epoch  integer not null default 1,
+  -- Disabled, never deleted: `activity_events` points here, and deleting an
+  -- operator would erase who did what.
+  disabled_at    timestamptz,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+-- Lookup at sign-in is by email, case-insensitively — an address is not
+-- case-sensitive to the person who owns it.
+create unique index if not exists operators_email_lower_idx on operators (lower(email));
+
+alter table activity_events add column if not exists actor_operator_id text;
+alter table finding_triage  add column if not exists assignee_operator_id text;
+
+-- `on delete set null` rather than cascade: an operator row should never be
+-- deleted, but if one ever is, losing the account link is survivable and
+-- losing the event is not.
+do $$ begin
+  alter table activity_events
+    add constraint activity_events_operator_fk
+    foreign key (actor_operator_id) references operators (id) on delete set null;
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter table finding_triage
+    add constraint finding_triage_operator_fk
+    foreign key (assignee_operator_id) references operators (id) on delete set null;
+exception when duplicate_object then null; end $$;

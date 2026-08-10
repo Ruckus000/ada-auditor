@@ -1,15 +1,42 @@
 /**
  * Who did it.
  *
- * There is no per-user identity in this product and no auth vendor — one
- * shared token, one trusted operator group. That was a deliberate Phase 2
- * decision, so activity is attributed to a configured *name* rather than to an
- * account: `activity_events.actor` is text, not a foreign key, and must not
- * grow into one without that decision being revisited.
+ * There are two kinds of caller and they are not the same thing:
  *
- * This replaces the string `"Jules Reyes"`, which was hardcoded in four
- * components and read as though the product knew who was signed in.
+ *  - an **operator**, a person with an account, who signed in with an email
+ *    and a password;
+ *  - a **machine**, holding `AUDITOR_RUN_TOKEN` — CI, the chaos scripts, the
+ *    scheduler, and an operator using the token as a way back in.
+ *
+ * Both are legitimate and both do real work, which is why `activity_events`
+ * records a *name* in every case and an account id only when there was one.
+ * A name and an account are different facts and the product needs both: the
+ * name is what an activity feed reads back, the account is what makes
+ * "assigned to" and per-operator revocation possible.
+ *
+ * `AUDITOR_OPERATOR_NAME` survives with a narrowed meaning — it names the
+ * machine principal, so a scheduled run reads as something other than a blank.
+ * It is no longer "the operator", because now there can be several.
  */
+
+export type Principal =
+  | { kind: 'operator'; id: string; name: string; email: string }
+  | { kind: 'machine'; id?: undefined; name: string };
+
+/** What `activity_events` stores: always a name, an account id when there is one. */
+export function actorFields(principal: Principal): {
+  actor: string;
+  actorOperatorId?: string;
+} {
+  return {
+    actor: principal.name,
+    ...(principal.kind === 'operator' ? { actorOperatorId: principal.id } : {}),
+  };
+}
+
+export function machinePrincipal(): Principal {
+  return { kind: 'machine', name: operatorName() };
+}
 
 const DEFAULT_OPERATOR = 'Operator';
 
