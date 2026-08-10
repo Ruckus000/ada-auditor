@@ -2,6 +2,7 @@ import type { DisplaySeverity } from '../../../../services/presentation/severity
 import type { FindingView, FindingsView, PageFindings } from '../../../../services/findings-view';
 import { FONT, T } from '../../lib/tokens';
 import { Empty } from './client-overview';
+import { TriageControl } from './triage-control';
 
 /**
  * What the last run found, page by page.
@@ -12,9 +13,9 @@ import { Empty } from './client-overview';
  * a selector, the offending HTML and a help URL, so that is what is here. The
  * missing prose is a real gap and stated as one, not filled with invention.
  *
- * A Server Component: nothing here is interactive yet. Triage is the next
- * thing to land, and it arrives as its own control rather than by making this
- * whole tree a client component.
+ * A Server Component. The only interactive part is `TriageControl`, which is a
+ * client component on its own rather than a `'use client'` at the top of this
+ * file — that would ship every finding on the page to the browser twice.
  */
 export function ClientFindings({ view }: { view: FindingsView }) {
   if (!view.run) {
@@ -70,7 +71,7 @@ export function ClientFindings({ view }: { view: FindingsView }) {
       </p>
 
       {view.pages.map((page) => (
-        <PageSection key={page.url} page={page} />
+        <PageSection key={page.url} page={page} clientId={view.clientId} />
       ))}
 
       {view.advisory.length > 0 ? (
@@ -81,7 +82,7 @@ export function ClientFindings({ view }: { view: FindingsView }) {
             affect the verdict.
           </p>
           {view.advisory.map((finding) => (
-            <FindingRow key={finding.key} finding={finding} />
+            <FindingRow key={finding.key} finding={finding} clientId={view.clientId} />
           ))}
         </section>
       ) : null}
@@ -89,7 +90,7 @@ export function ClientFindings({ view }: { view: FindingsView }) {
   );
 }
 
-function PageSection({ page }: { page: PageFindings }) {
+function PageSection({ page, clientId }: { page: PageFindings; clientId: string }) {
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
@@ -118,7 +119,9 @@ function PageSection({ page }: { page: PageFindings }) {
           Nothing found on this page.
         </p>
       ) : (
-        page.findings.map((finding) => <FindingRow key={finding.key} finding={finding} />)
+        page.findings.map((finding) => (
+          <FindingRow key={finding.key} finding={finding} clientId={clientId} pageUrl={page.url} />
+        ))
       )}
     </section>
   );
@@ -140,7 +143,15 @@ const SEVERITY_COLOR: Record<DisplaySeverity, string> = {
   advisory: '#4b3f68',
 };
 
-function FindingRow({ finding }: { finding: FindingView }) {
+function FindingRow({
+  finding,
+  clientId,
+  pageUrl,
+}: {
+  finding: FindingView;
+  clientId: string;
+  pageUrl?: string;
+}) {
   const dimmed = finding.triage !== null;
 
   return (
@@ -151,12 +162,15 @@ function FindingRow({ finding }: { finding: FindingView }) {
         gap: 7,
         padding: '13px 16px',
         borderRadius: 10,
-        border: `1px solid ${T.rule}`,
-        background: T.surface,
         // A dismissed finding is kept visible rather than hidden: the decision
         // to ignore a barrier is itself something an auditor has to be able to
-        // review.
-        opacity: dimmed ? 0.62 : 1,
+        // review. It is set back with a tint and a rule rather than with
+        // `opacity`, which our own engine caught failing contrast on the code
+        // snippet — an accessibility auditor cannot dim text below 4.5:1 to
+        // say "this one matters less".
+        border: `1px solid ${dimmed ? T.ruleFaint : T.rule}`,
+        borderLeft: dimmed ? `3px solid ${T.ruleStrong}` : `1px solid ${T.rule}`,
+        background: dimmed ? T.surfaceSunk : T.surface,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
@@ -228,16 +242,19 @@ function FindingRow({ finding }: { finding: FindingView }) {
         </p>
       ) : null}
 
-      {finding.helpUrl ? (
-        <a
-          href={finding.helpUrl}
-          rel="noreferrer noopener"
-          target="_blank"
-          style={{ fontFamily: FONT.sans, fontSize: 12, color: T.accent }}
-        >
-          What this rule checks ↗
-        </a>
-      ) : null}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        {finding.helpUrl ? (
+          <a
+            href={finding.helpUrl}
+            rel="noreferrer noopener"
+            target="_blank"
+            style={{ fontFamily: FONT.sans, fontSize: 12, color: T.accent }}
+          >
+            What this rule checks ↗
+          </a>
+        ) : null}
+        <TriageControl clientId={clientId} finding={finding} pageUrl={pageUrl} />
+      </div>
     </article>
   );
 }

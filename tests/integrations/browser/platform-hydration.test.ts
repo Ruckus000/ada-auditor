@@ -273,6 +273,33 @@ describe('platform hydration', () => {
     }
   }, 120_000);
 
+  it('dismisses a finding, with a reason, and it sticks', async () => {
+    // `finding_triage` had a store, a contract and a place on the screen for
+    // three slices before anything could write it. This is the write.
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/findings`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByRole('button', { name: /^Dismiss button-name/ }).first().click();
+      await page.getByLabel('Why is this not a barrier?').fill('Decorative, hidden from the tree.');
+      await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
+
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 15_000 })
+        .toContain('Decorative, hidden from the tree.');
+
+      // Re-read from the server rather than trusting the optimistic-looking
+      // DOM: the point of the decision is that it survives.
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      const body = await page.innerText('body');
+      expect(body).toContain('Dismissed: Decorative, hidden from the tree.');
+      expect(body).toContain('Reopen this finding');
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
   it.each(ROUTES)('hydrates %s', async (route) => {
     const page = await openAuthenticatedPage();
     try {
