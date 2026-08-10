@@ -31,6 +31,7 @@ export async function GET() {
     runStoreConfigured: isDatabaseConfigured(),
     unlockThrottleDurable: isThrottleKvConfigured(),
     sessionSecretDedicated: !sessionSecretIsShared(),
+    cronSecretConfigured: Boolean(process.env.CRON_SECRET),
     chaosEnabled: process.env.CHAOS_ENABLED === 'true',
   };
 
@@ -41,6 +42,15 @@ export async function GET() {
   if (!checks.unlockThrottleDurable) {
     warnings.push(
       'counters_in_memory: no Redis configured, so console sign-in attempts and the run budget are counted per instance and reset on cold start. The effective run ceiling is the limit times however many instances are warm.',
+    );
+  }
+
+  // Also reported rather than gating: an auditor driven entirely by hand, with
+  // nothing scheduled, is a working deployment. What is worth saying is that
+  // any schedule an operator sets will not fire.
+  if (!checks.cronSecretConfigured) {
+    warnings.push(
+      'cron_secret_not_configured: no CRON_SECRET, so the scheduled-run tick refuses every request and journey schedules never fire.',
     );
   }
 

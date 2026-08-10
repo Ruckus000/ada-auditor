@@ -109,6 +109,15 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
       degraded: false,
     },
     {
+      key: 'schedule',
+      label: 'Scheduled runs',
+      value: env.CRON_SECRET ? 'hourly tick' : 'not configured',
+      detail: env.CRON_SECRET
+        ? 'Vercel Cron calls /api/cron/tick hourly. It claims the journeys due this hour and dispatches each to its own invocation — it does not audit anything itself, because one function cannot walk several journeys through a browser.'
+        : 'No CRON_SECRET, so the tick refuses every request and any schedule set on a journey never fires. Set it in the Vercel project; Vercel sends it as a bearer token.',
+      degraded: !env.CRON_SECRET,
+    },
+    {
       key: 'pageCap',
       label: 'Pages per run',
       value: String(intFromEnv(env, 'AUDITOR_MAX_PAGES_PER_RUN', 20)),

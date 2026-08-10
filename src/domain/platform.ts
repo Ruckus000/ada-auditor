@@ -32,6 +32,8 @@ export type StoredClient = {
   createdAt: string;
 };
 
+export type JourneySchedule = 'off' | 'daily' | 'weekly';
+
 export type StoredJourney = {
   id: string;
   clientId: string;
@@ -49,6 +51,16 @@ export type StoredJourney = {
    * request bodies keeps them out of this column.
    */
   steps: unknown[];
+  /**
+   * How often this journey re-runs. `off` unless somebody chose otherwise —
+   * a tool that walks other people's sites does not start doing so on a timer
+   * because a row defaulted.
+   */
+  schedule?: JourneySchedule;
+  /** UTC hour the daily/weekly tick fires in. Defaults to 3 when unset. */
+  scheduleHour?: number;
+  /** Stamped when the scheduler claims this journey. Idempotence hangs on it. */
+  lastScheduledAt?: string;
   /** Journeys archive rather than delete: `runs` cascades from them. */
   archivedAt?: string;
   createdAt: string;
@@ -205,6 +217,16 @@ export interface JourneyStore {
   ): Promise<void>;
   /** Archive, never delete: deleting a journey cascades away its run history. */
   archiveJourney(id: string): Promise<void>;
+  /**
+   * Claims the journeys due to run now, stamping `lastScheduledAt` as it goes.
+   *
+   * Claim and select in one operation, because the Neon HTTP driver runs one
+   * statement per request and has no transactions: a select-then-update would
+   * let two overlapping ticks both start the same journey. Only claimed rows
+   * are returned, so a tick that crashes after claiming loses one cycle rather
+   * than looping on one journey forever.
+   */
+  claimDueJourneys(limit: number, now?: Date): Promise<StoredJourney[]>;
 }
 
 export interface TriageStore {

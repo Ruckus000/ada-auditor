@@ -415,6 +415,96 @@ export function platformStoreContract(
     });
   });
 
+  describe('scheduling', () => {
+    const thisHour = new Date().getUTCHours();
+
+    async function scheduled(id: string, overrides: Record<string, unknown> = {}) {
+      await store_.upsertJourney({
+        id,
+        clientId: CONTRACT_CLIENT,
+        name: id,
+        targetUrl: `https://${id}.test/`,
+        schedule: 'daily',
+        scheduleHour: thisHour,
+        steps: [],
+        ...overrides,
+      });
+    }
+
+    let store_: PlatformStore;
+
+    beforeEach(async () => {
+      store_ = await makeStore();
+      await store_.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+    });
+
+    it('claims a journey due this hour', async () => {
+      await scheduled('pc-journey-due');
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).toContain('pc-journey-due');
+    });
+
+    /**
+     * Claim and stamp are one operation, because the Neon HTTP driver has no
+     * transactions: a select followed by an update would let two overlapping
+     * ticks both start the same journey.
+     */
+    it('does not claim the same journey twice in a window', async () => {
+      await scheduled('pc-journey-once');
+
+      await store_.claimDueJourneys(10);
+      const second = await store_.claimDueJourneys(10);
+
+      expect(second.map((journey) => journey.id)).not.toContain('pc-journey-once');
+    });
+
+    it('leaves an unscheduled journey alone', async () => {
+      await scheduled('pc-journey-off', { schedule: 'off' });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-off');
+    });
+
+    it('leaves a journey scheduled for a different hour alone', async () => {
+      await scheduled('pc-journey-later', { scheduleHour: (thisHour + 5) % 24 });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-later');
+    });
+
+    // Scheduling a journey with no target would book a recurring failure.
+    it('never claims a journey with no target URL', async () => {
+      await scheduled('pc-journey-targetless', { targetUrl: undefined });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-targetless');
+    });
+
+    it('never claims an archived journey', async () => {
+      await scheduled('pc-journey-archived');
+      await store_.archiveJourney('pc-journey-archived');
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-archived');
+    });
+
+    // The Postgres store claims across the whole table, so this asserts the
+    // cap holds rather than an exact set — same caveat as `listClients`.
+    it('honours the limit', async () => {
+      await scheduled('pc-journey-a');
+      await scheduled('pc-journey-b');
+      await scheduled('pc-journey-c');
+
+      expect((await store_.claimDueJourneys(2)).length).toBeLessThanOrEqual(2);
+    });
+  });
+
   describe('operators', () => {
     const hash = 'scrypt$16384$8$1$c2FsdA==$aGFzaA==';
 

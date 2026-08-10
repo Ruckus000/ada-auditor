@@ -61,6 +61,9 @@ type JourneyRow = {
   name: string;
   target_url: string | null;
   environment: string | null;
+  schedule: string | null;
+  schedule_hour: number | null;
+  last_scheduled_at: Date | string | null;
   steps: unknown[];
   archived_at: Date | string | null;
   created_at: Date | string;
@@ -274,6 +277,9 @@ export class PostgresPlatformStore implements PlatformStore {
       name: row.name,
       ...optional('targetUrl', row.target_url),
       ...optional('environment', row.environment),
+      ...optional('schedule', row.schedule),
+      ...optional('scheduleHour', row.schedule_hour),
+      ...optional('lastScheduledAt', row.last_scheduled_at ? toIso(row.last_scheduled_at) : null),
       steps: row.steps ?? [],
       ...optional('archivedAt', row.archived_at ? toIso(row.archived_at) : null),
       createdAt: toIso(row.created_at),
@@ -307,10 +313,14 @@ export class PostgresPlatformStore implements PlatformStore {
     journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,
   ): Promise<void> {
     await this.sql`
-      insert into journeys (id, client_id, name, target_url, environment, steps, updated_at)
+      insert into journeys (
+        id, client_id, name, target_url, environment, schedule, schedule_hour,
+        steps, updated_at
+      )
       values (
         ${journey.id}, ${journey.clientId}, ${journey.name},
         ${journey.targetUrl ?? null}, ${journey.environment ?? 'production'},
+        ${journey.schedule ?? 'off'}, ${journey.scheduleHour ?? null},
         ${JSON.stringify(journey.steps ?? [])}::jsonb, now()
       )
       on conflict (id) do update set
@@ -318,9 +328,49 @@ export class PostgresPlatformStore implements PlatformStore {
         name = excluded.name,
         target_url = excluded.target_url,
         environment = excluded.environment,
+        schedule = excluded.schedule,
+        schedule_hour = excluded.schedule_hour,
         steps = excluded.steps,
         updated_at = now()
     `;
+  }
+
+  /**
+   * One statement: select the due rows and stamp them in the same breath.
+   *
+   * The Neon HTTP driver is one statement per request with no transactions, so
+   * a select followed by an update would let two overlapping ticks both claim
+   * the same journey and start it twice.
+   *
+   * The slack in the intervals — 23 hours for daily, 6 days for weekly — is
+   * what stops hour-boundary jitter from skipping a day entirely. Without it,
+   * a tick that runs a few seconds late means `last_scheduled_at` is not quite
+   * 24 hours old and the journey waits another full day.
+   */
+  async claimDueJourneys(limit: number, now: Date = new Date()): Promise<StoredJourney[]> {
+    const hour = now.getUTCHours();
+    const rows = await this.sql<JourneyRow>`
+      update journeys set last_scheduled_at = now()
+      where id in (
+        select id from journeys
+        where schedule is not null
+          and schedule <> 'off'
+          and archived_at is null
+          and target_url is not null
+          and coalesce(schedule_hour, 3) = ${hour}
+          and (
+            last_scheduled_at is null
+            or last_scheduled_at < now() - (
+              case schedule when 'weekly' then interval '6 days'
+                            else interval '23 hours' end
+            )
+          )
+        order by last_scheduled_at asc nulls first
+        limit ${Math.max(1, Math.floor(limit))}
+      )
+      returning *
+    `;
+    return rows.map((row) => this.mapJourney(row));
   }
 
   async archiveJourney(id: string): Promise<void> {

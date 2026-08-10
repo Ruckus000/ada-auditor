@@ -8,6 +8,7 @@ describe('GET /api/ready', () => {
   const originalKvUrl = process.env.KV_REST_API_URL;
   const originalKvToken = process.env.KV_REST_API_TOKEN;
   const originalSessionSecret = process.env.AUDITOR_SESSION_SECRET;
+  const originalCronSecret = process.env.CRON_SECRET;
 
   beforeEach(() => {
     process.env.DATABASE_URL = 'postgres://test/db';
@@ -26,6 +27,8 @@ describe('GET /api/ready', () => {
     else process.env.KV_REST_API_TOKEN = originalKvToken;
     if (originalSessionSecret === undefined) delete process.env.AUDITOR_SESSION_SECRET;
     else process.env.AUDITOR_SESSION_SECRET = originalSessionSecret;
+    if (originalCronSecret === undefined) delete process.env.CRON_SECRET;
+    else process.env.CRON_SECRET = originalCronSecret;
   });
 
   it('is ready when AUDITOR_RUN_TOKEN meets MIN_TOKEN_LENGTH', async () => {
@@ -76,6 +79,7 @@ describe('GET /api/ready', () => {
   it('reports no warning once everything degradable is configured', async () => {
     process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
     process.env.AUDITOR_SESSION_SECRET = 'session-secret-16chars';
+    process.env.CRON_SECRET = 'cron-secret-16chars';
     process.env.KV_REST_API_URL = 'https://kv.test';
     process.env.KV_REST_API_TOKEN = 'kv-token';
 

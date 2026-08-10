@@ -30,6 +30,8 @@ export type JourneySummary = {
    * name. The route refuses it; the screen should not offer it either.
    */
   runnable: boolean;
+  /** How often this journey re-runs. `off` unless somebody chose otherwise. */
+  schedule: 'off' | 'daily' | 'weekly';
   lastRun: RunSummary | null;
 };
 
@@ -123,6 +125,7 @@ export async function buildClientDetail(
         ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
         stepCount: journey.steps.length,
         runnable: Boolean(journey.targetUrl),
+        schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
         lastRun: run ? summariseRun(run) : null,
       };
     }),

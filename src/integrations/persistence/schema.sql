@@ -448,3 +448,25 @@ update runs set started_at = created_at where started_at is null;
 -- constraint here is a future `alter` to fight when the set changes.
 alter table journeys add column if not exists environment text;
 update journeys set environment = 'production' where environment is null;
+
+-- --- Schedule --------------------------------------------------------------
+--
+-- Cadence lives on the journey, not in a `schedules` table: it is one-to-one
+-- with a journey and read every time a journey is read, so a separate table
+-- would be a join for one column.
+--
+-- Three words rather than a cron expression. A per-journey cron string is a
+-- parser plus a timezone story, and nobody asked to audit at 03:17 on
+-- Tuesdays. `schedule_hour` is UTC, so what "daily" means is answerable.
+--
+-- `last_scheduled_at` is what makes the tick idempotent. The cron fires
+-- hourly, and a journey is claimed by *stamping* this column in the same
+-- statement that selects it — there are no transactions on the Neon HTTP
+-- driver, so claim-then-work is the only shape available.
+alter table journeys add column if not exists schedule text;
+alter table journeys add column if not exists schedule_hour smallint;
+alter table journeys add column if not exists last_scheduled_at timestamptz;
+update journeys set schedule = 'off' where schedule is null;
+
+create index if not exists journeys_schedule_idx
+  on journeys (schedule, schedule_hour) where schedule <> 'off';

@@ -29,6 +29,8 @@ export async function GET(
   return Response.json({ requestId, journeys, count: journeys.length }, { status: 200 });
 }
 
+export const scheduleSchema = z.enum(['off', 'daily', 'weekly']);
+
 const createJourneySchema = z.object({
   name: z.string().trim().min(1).max(120),
   targetUrl: z.string().url().max(2048).optional(),
@@ -41,6 +43,8 @@ const createJourneySchema = z.object({
    * by name and the value is resolved server-side, so a literal here would be a
    * secret written into a database column.
    */
+  schedule: scheduleSchema.optional(),
+  scheduleHour: z.number().int().min(0).max(23).optional(),
   steps: z.array(z.record(z.string(), z.unknown())).max(200).optional(),
 });
 
@@ -90,6 +94,8 @@ export async function POST(
     clientId,
     name: parsed.name,
     ...(parsed.targetUrl ? { targetUrl: parsed.targetUrl } : {}),
+    ...(parsed.schedule ? { schedule: parsed.schedule } : {}),
+    ...(parsed.scheduleHour === undefined ? {} : { scheduleHour: parsed.scheduleHour }),
     steps: parsed.steps ?? [],
   });
 
