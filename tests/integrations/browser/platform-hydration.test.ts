@@ -349,6 +349,10 @@ describe('platform hydration', () => {
       const body = await anonymous.innerText('body');
       expect(body).toContain('Harness Client');
       expect(body).toContain('button-name');
+      // The criterion by name, not just its number: this is the page read by
+      // people who do not know what 4.1.2 is.
+      expect(body).toContain('Name, Role, Value');
+      expect(body).toContain('Success criteria not met');
       // The shared page is the audit and nothing else: no way into the console
       // from it, and no other client's name on it.
       expect(body).not.toContain('Portfolio');

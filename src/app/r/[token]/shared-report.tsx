@@ -1,4 +1,5 @@
 import type { SharedReport } from '../../../services/report-view';
+import { describeCriterion, summariseCriteria } from '../../../services/wcag-reference';
 import { FONT, T } from '../../platform/lib/tokens';
 
 /**
@@ -14,6 +15,9 @@ import { FONT, T } from '../../platform/lib/tokens';
  */
 export function SharedReportPage({ report }: { report: SharedReport }) {
   const total = report.pages.reduce((sum, page) => sum + page.findings.length, 0);
+  const failed = summariseCriteria(
+    report.pages.flatMap((page) => page.findings.flatMap((finding) => finding.wcagCriteria)),
+  );
 
   return (
     <main
@@ -84,6 +88,27 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
         </p>
       </section>
 
+      {failed.length > 0 ? (
+        <section style={{ marginTop: 24 }}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>
+            Success criteria not met
+          </h2>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: T.inkMuted, lineHeight: 1.55 }}>
+            A conformance claim is made against criteria, not against rule names, so these are the
+            ones this audit found failing. Criteria not listed were not necessarily met — only
+            those we could test automatically appear here.
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {failed.map((criterion) => (
+              <li key={criterion.number} style={{ fontSize: 13.5 }}>
+                {criterion.number} {criterion.name}{' '}
+                <span style={{ color: T.inkMuted }}>(Level {criterion.level})</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {report.pages.map((page) => (
         <section key={page.url} style={{ marginTop: 24 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700 }}>
@@ -104,7 +129,10 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
                 <li key={`${finding.code}-${finding.selector ?? index}`} style={{ fontSize: 13.5 }}>
                   <span style={{ fontFamily: FONT.mono, fontWeight: 650 }}>{finding.code}</span>
                   {finding.wcagCriteria.length > 0 ? (
-                    <span style={{ color: T.inkMuted }}> · WCAG {finding.wcagCriteria.join(', ')}</span>
+                    <span style={{ color: T.inkMuted }}>
+                      {' '}
+                      · WCAG {finding.wcagCriteria.map(describeCriterion).join(' · ')}
+                    </span>
                   ) : null}
                   {finding.selector ? (
                     <>

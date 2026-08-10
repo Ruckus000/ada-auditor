@@ -1,5 +1,6 @@
 import type { DisplaySeverity } from '../../../../services/presentation/severity';
 import type { FindingView, FindingsView, PageFindings } from '../../../../services/findings-view';
+import { describeCriterion } from '../../../../services/wcag-reference';
 import { FONT, T } from '../../lib/tokens';
 import { Empty } from './client-overview';
 import { IssueReport } from './issue-report';
@@ -196,8 +197,10 @@ function FindingRow({
         </span>
         {finding.wcagCriteria.length > 0 ? (
           <span style={{ fontFamily: FONT.sans, fontSize: 11.5, color: T.inkMuted }}>
-            WCAG {finding.wcagCriteria.join(', ')}
-            {finding.conformanceLevel ? ` (${finding.conformanceLevel})` : ''}
+            {/* The criterion's name, not just its number. `1.4.3` means
+                nothing to most people reading a finding, and the name is a
+                quoted fact rather than authored prose. */}
+            WCAG {finding.wcagCriteria.map(describeCriterion).join(' · ')}
           </span>
         ) : null}
       </div>

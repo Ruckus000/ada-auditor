@@ -234,13 +234,18 @@ Read this before claiming something works.
   environment settings; a form that appeared to change them from a web page
   would be lying about where the truth lives. It marks a degraded run store,
   local-disk evidence, an in-memory throttle and enabled chaos injection.
-- **The findings screen shows no prose, and that is a real gap.** A run stores
-  a rule code, a severity, WCAG criteria, a selector, a snippet and a help URL.
-  The fixture screen also had a plain-language title, an explanation, a code
-  fix and an effort estimate for every finding — all hand-written for eight
-  fictional clients. They are not there rather than invented. Writing real ones
-  means a rule-code → guidance table, which is `services/wcag-reference.ts` in
-  slice 6.
+- **Findings name their criteria but still have no per-finding prose.**
+  `services/wcag-reference.ts` names and levels every WCAG 2.2 A/AA criterion,
+  so a finding reads "1.1.1 Non-text Content (A)" rather than "1.1.1". Those
+  are quoted facts, checkable against the specification — which is exactly why
+  they are allowed to exist where the fixture screen's per-finding explanation,
+  code fix and effort estimate were deleted. axe's own `help` sentence is the
+  obvious next addition, and it needs a column: today it is only a fallback
+  inside `message`.
+- **The reference table is A and AA only.** This product audits to AA, so
+  naming a AAA criterion would imply a claim it does not make. An unknown
+  number renders as the bare number — a wrong criterion name in an audit report
+  is worse than an unfamiliar one, because the number is checkable.
 - **Triage is dismiss and reopen only.** `assigned` is in the schema, the
   store, the contract and the route, but no control offers it — there is no
   per-user identity to assign *to*, which is the same gap `AUDITOR_OPERATOR_NAME`
