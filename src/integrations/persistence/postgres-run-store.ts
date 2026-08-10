@@ -45,6 +45,8 @@ type RunRow = {
   score: number | null;
   score_version: number | null;
   created_at: Date | string;
+  started_at: Date | string | null;
+  phase_ms: Record<string, number> | null;
 };
 
 type PageRow = {
@@ -57,6 +59,8 @@ type PageRow = {
   checks_passed: number | null;
   checks_failed: number | null;
   checks_incomplete: number | null;
+  duration_ms: number | null;
+  scan_ms: number | null;
 };
 
 type FindingRow = {
@@ -126,6 +130,8 @@ function toPage(row: PageRow): StoredRunPage {
   if (row.checks_passed !== null) page.checksPassed = row.checks_passed;
   if (row.checks_failed !== null) page.checksFailed = row.checks_failed;
   if (row.checks_incomplete !== null) page.checksIncomplete = row.checks_incomplete;
+  if (row.duration_ms !== null) page.durationMs = row.duration_ms;
+  if (row.scan_ms !== null) page.scanMs = row.scan_ms;
 
   return page;
 }
@@ -156,6 +162,8 @@ function toRecord(
   }
   if (run.status) record.status = run.status as StoredRunRecord['status'];
   if (run.failure_reason !== null) record.failureReason = run.failure_reason;
+  if (run.started_at !== null) record.startedAt = toIso(run.started_at);
+  if (run.phase_ms !== null) record.phaseMs = run.phase_ms;
 
   return record;
 }
@@ -198,14 +206,16 @@ export class PostgresRunStore implements RunStore {
       insert into runs (
         request_id, journey_id, environment, platform, evidence_status,
         ci_status, status, failure_reason, duration_ms, browser_mode,
-        truncated_pages, score, score_version, created_at
+        truncated_pages, score, score_version, created_at, started_at, phase_ms
       ) values (
         ${record.requestId}, ${record.journeyId}, ${record.environment},
         ${record.platform}, ${record.evidenceStatus}, ${record.ciStatus},
         ${record.status ?? 'complete'}, ${record.failureReason ?? null},
         ${record.durationMs}, ${record.browserMode ?? false},
         ${record.truncatedPages ?? 0}, ${record.score ?? null},
-        ${record.scoreVersion ?? 1}, ${record.createdAt}
+        ${record.scoreVersion ?? 1}, ${record.createdAt},
+        ${record.startedAt ?? record.createdAt},
+        ${record.phaseMs ? JSON.stringify(record.phaseMs) : null}
       )
       on conflict (request_id) do update set
         journey_id = excluded.journey_id,
@@ -220,7 +230,14 @@ export class PostgresRunStore implements RunStore {
         truncated_pages = excluded.truncated_pages,
         score = excluded.score,
         score_version = excluded.score_version,
-        created_at = excluded.created_at
+        -- The earliest write wins. toStoredRunRecord mints a fresh createdAt
+        -- on every call, so taking excluded here moved the timestamp to
+        -- completion time on the write that finishes a run -- making the
+        -- column mean "finished" for a complete run and "started" for one
+        -- that died, while getLatestRun ordered baselines by it.
+        created_at = least(runs.created_at, excluded.created_at),
+        started_at = least(coalesce(runs.started_at, excluded.started_at), excluded.started_at),
+        phase_ms = coalesce(excluded.phase_ms, runs.phase_ms)
     `;
 
     await sql`delete from run_pages where request_id = ${record.requestId}`;
@@ -231,13 +248,14 @@ export class PostgresRunStore implements RunStore {
       await sql`
         insert into run_pages (
           request_id, position, url, route, title, evidence_status, artifacts,
-          checks_passed, checks_failed, checks_incomplete
+          checks_passed, checks_failed, checks_incomplete, duration_ms, scan_ms
         ) values (
           ${record.requestId}, ${position}, ${page.url}, ${page.route},
           ${page.title}, ${page.evidenceStatus},
           ${JSON.stringify(page.artifacts ?? {})}::jsonb,
           ${page.checksPassed ?? null}, ${page.checksFailed ?? null},
-          ${page.checksIncomplete ?? null}
+          ${page.checksIncomplete ?? null},
+          ${page.durationMs ?? null}, ${page.scanMs ?? null}
         )
       `;
     }

@@ -403,3 +403,33 @@ do $$ begin
     add constraint finding_triage_operator_fk
     foreign key (assignee_operator_id) references operators (id) on delete set null;
 exception when duplicate_object then null; end $$;
+
+-- --- Timing ----------------------------------------------------------------
+--
+-- The page cap of 20 and the 300s function limit were both set by guess. These
+-- columns are what turns the next decision about them into a measurement.
+--
+-- `started_at` is also a correctness fix, not only instrumentation.
+-- `toStoredRunRecord` mints a fresh `createdAt` on every call and this file's
+-- upsert took `excluded.created_at`, so the write that turns a `running`
+-- placeholder into a finished run *moved* `created_at` to the completion time.
+-- The column therefore meant "when it finished" for a complete run and "when it
+-- started" for one that died — and `getLatestRun` orders by it, so baselines
+-- were ordered by finish time while the runs they described were ordered by
+-- start. `created_at` is now pinned to the earliest write and `started_at`
+-- holds the start explicitly.
+alter table runs add column if not exists started_at timestamptz;
+
+-- Phase timings as jsonb rather than columns: the phase names will change
+-- while we are still learning where a run spends itself, and this is
+-- measurement data, not a contract. Contrast `checks_passed`, which is a score
+-- input and therefore got real columns.
+alter table runs add column if not exists phase_ms jsonb;
+
+alter table run_pages add column if not exists duration_ms integer;
+alter table run_pages add column if not exists scan_ms integer;
+
+-- Existing rows: the best available answer is the timestamp we have. Not
+-- guessed forward, not left null — a null here would read as "not measured"
+-- on runs that predate measurement, which is exactly what it is.
+update runs set started_at = created_at where started_at is null;

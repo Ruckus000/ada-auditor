@@ -43,6 +43,8 @@ const FULL_RECORD = runRecord({
   ciStatus: 'fail',
   evidenceStatus: 'complete',
   durationMs: 1234,
+  startedAt: '2026-01-01T00:00:00.000Z',
+  phaseMs: { journey: 900, advisory: 200, upload: 100 },
   browserMode: true,
   status: 'complete',
   truncatedPages: 2,
@@ -58,6 +60,8 @@ const FULL_RECORD = runRecord({
       checksPassed: 80,
       checksFailed: 10,
       checksIncomplete: 5,
+      durationMs: 4200,
+      scanMs: 1800,
     },
     {
       url: 'https://app.example.com/checkout',

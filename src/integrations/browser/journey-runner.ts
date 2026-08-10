@@ -171,6 +171,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         return;
       }
 
+      const startedAt = Date.now();
       const route = routeFromPageUrl(url);
       const pageKey = pageKeyFor(pages.length, route);
       const artifactPrefix = resolveArtifactPrefix(
@@ -179,7 +180,9 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       );
       await mkdir(dirname(artifactPrefix), { recursive: true });
 
+      const scanStartedAt = Date.now();
       const axe = await scanPageWithAxe(page);
+      const scanMs = Date.now() - scanStartedAt;
 
       const html = await page.content();
       const title = await page.title();
@@ -205,6 +208,10 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         axTree,
         artifacts,
         pageKey,
+        // Measured across navigate-settle to artifacts-written, because that
+        // is the unit the page cap is denominated in: the question this
+        // answers is how many of these fit inside one function invocation.
+        timing: { totalMs: Date.now() - startedAt, scanMs },
       });
     };
 

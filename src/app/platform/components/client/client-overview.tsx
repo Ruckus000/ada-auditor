@@ -61,6 +61,21 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
           <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
             Last run {new Date(lastRun.createdAt).toISOString().slice(0, 10)} ·{' '}
             <span style={{ fontFamily: FONT.mono }}>{lastRun.requestId}</span>
+            {/*
+              Shown because the operator's real question about a journey is
+              whether it still fits inside one function invocation. Omitted
+              rather than zeroed on runs recorded before this was measured:
+              "we did not measure" and "it was instant" are different claims.
+            */}
+            {lastRun.durationMs !== null ? (
+              <>
+                {' · took '}
+                {Math.round(lastRun.durationMs / 1000)}s
+                {lastRun.slowestPageMs !== null
+                  ? `, slowest page ${(lastRun.slowestPageMs / 1000).toFixed(1)}s`
+                  : ''}
+              </>
+            ) : null}
           </p>
         </>
       ) : (

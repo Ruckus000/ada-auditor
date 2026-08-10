@@ -20,6 +20,14 @@ import { classifyRunFailure } from './run-failure';
 const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 
 /**
+ * The ceiling a run has to fit inside, mirroring `maxDuration` on the routes.
+ *
+ * Only used to report headroom. A run is not stopped at this number — the
+ * platform stops it, and rather more abruptly.
+ */
+const MAX_RUN_DURATION_MS = 300_000;
+
+/**
  * A `fill` step carries either a literal value or a credential reference.
  * Passwords must use the reference: steps travel in this request body, get
  * persisted with the journey, and would otherwise be recoverable from both.
@@ -121,6 +129,7 @@ async function executeRun(
     // audited page, each keyed by that page so they cannot overwrite one
     // another.
     const artifactStore = getArtifactStore();
+    const uploadStartedAt = Date.now();
     const pages = [];
     for (const audited of report.pages) {
       pages.push({
@@ -131,6 +140,8 @@ async function executeRun(
         checksPassed: audited.checks?.passed,
         checksFailed: audited.checks?.failed,
         checksIncomplete: audited.checks?.incomplete,
+        durationMs: audited.timing?.totalMs,
+        scanMs: audited.timing?.scanMs,
         artifacts: await artifactStore.upload(
           requestId,
           audited.artifacts,
@@ -139,8 +150,15 @@ async function executeRun(
       });
     }
 
+    const uploadMs = Date.now() - uploadStartedAt;
     const durationMs = Date.now() - startedAt;
     const baseline = await store.getLatestRun(report.journeyId, report.environment, requestId);
+
+    const phaseMs = { ...(report.phaseMs ?? {}), upload: uploadMs };
+    const slowestPageMs = pages.reduce(
+      (slowest, page) => Math.max(slowest, page.durationMs ?? 0),
+      0,
+    );
 
     const storedRun = toStoredRunRecord({
       requestId,
@@ -151,6 +169,8 @@ async function executeRun(
       ciStatus: report.ciStatus,
       findings: report.findings,
       durationMs,
+      startedAt: new Date(startedAt).toISOString(),
+      phaseMs,
       browserMode: true,
       pages,
       truncatedPages: report.truncatedPages,
@@ -172,6 +192,14 @@ async function executeRun(
         durationMs,
         requestId,
         browserMode: true,
+        // The dataset the page-cap decision gets made from. `headroomMs` is
+        // what was left of the function's budget: the number that says whether
+        // twenty pages was ever a realistic ceiling.
+        phaseMs,
+        pagesAudited: pages.length,
+        truncatedPages: report.truncatedPages,
+        slowestPageMs,
+        headroomMs: MAX_RUN_DURATION_MS - durationMs,
       }),
     );
 

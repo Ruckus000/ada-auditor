@@ -10,6 +10,18 @@ export type AuditRunLog = {
   failureReason?: string;
   requestId: string;
   browserMode?: boolean;
+  /**
+   * Timing, present on a run that completed. This is the dataset the page cap
+   * and the function limit get re-decided from — `AGENTS.md` calls the current
+   * cap "a guess, not a measurement", and these fields are how it stops being
+   * one.
+   */
+  phaseMs?: Record<string, number>;
+  pagesAudited?: number;
+  truncatedPages?: number;
+  slowestPageMs?: number;
+  /** What was left of the function's budget. Negative is a run that got lucky. */
+  headroomMs?: number;
 };
 
 export function createAuditRunLog(fields: AuditRunLog): AuditRunLog {

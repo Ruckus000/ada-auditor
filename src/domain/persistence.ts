@@ -83,6 +83,15 @@ export type StoredRunPage = {
   checksFailed?: number;
   /** Counted in neither term of the score; the human-review queue. */
   checksIncomplete?: number;
+  /**
+   * Wall clock for this page: navigate, scan, write artifacts. Absent means
+   * not measured — the distinction that decides whether the page cap and the
+   * 300s function limit are the right numbers, so a zero here would be a
+   * measurement nobody made.
+   */
+  durationMs?: number;
+  /** The axe scan alone, within `durationMs`. */
+  scanMs?: number;
 };
 
 export type StoredRunRecord = {
@@ -95,6 +104,19 @@ export type StoredRunRecord = {
   findings: StoredFinding[];
   durationMs: number;
   createdAt: string;
+  /**
+   * When the run began, as distinct from when this record was written.
+   *
+   * `createdAt` used to carry both meanings depending on how the run ended —
+   * see the note in `schema.sql`. Absent on runs recorded before this existed.
+   */
+  startedAt?: string;
+  /**
+   * Where the run spent itself: launch, journey, upload, advisory, persist.
+   * Open-ended on purpose — these names will change while we are still
+   * learning, and this is measurement data rather than a contract.
+   */
+  phaseMs?: Record<string, number>;
   browserMode?: boolean;
   /**
    * Every page the journey walked through, in visit order, each with its own
