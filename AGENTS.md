@@ -176,6 +176,25 @@ Implemented and verified locally + on Vercel preview:
   a truncated run says so.
 - Tests: Vitest unit + browser suites green; `npm run chaos` green
 
+### Phase 2C — where it stopped
+
+Slices 0, 1 and 3 are merged. Slice 2 onward is blocked on one product
+decision nobody has made:
+
+**How does a real client get into the system?** The database has one
+`client-unassigned` row and whatever journeys runs have materialised. The
+screens still read eight invented clients from `data.ts`. Wiring Findings,
+Portfolio or Reports to real data means choosing between:
+
+- the portfolio starts **empty** and an operator adds clients — honest, and it
+  makes the first-run state the normal state; or
+- the fixture clients are **seeded** as real rows — a fast demo, but it puts
+  invented client names in a real database, which is the exact thing this
+  phase exists to remove.
+
+Everything else in slices 2 and 4-6 follows from that answer, which is why it
+was left rather than guessed.
+
 ### Known gaps
 
 Read this before claiming something works.
