@@ -1,9 +1,8 @@
 'use client';
 
 import { SettingsScreen } from '../settings';
-import { useClientView } from './use-client-view';
 
-export function SettingsRoute({ workspace = false }: { workspace?: boolean }) {
-  const client = useClientView();
-  return <SettingsScreen client={workspace ? null : client} />;
+/** Workspace-only: the client-scoped settings tab is gone with the fixtures. */
+export function SettingsRoute() {
+  return <SettingsScreen client={null} />;
 }

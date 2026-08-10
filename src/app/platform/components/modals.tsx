@@ -186,8 +186,9 @@ export function GenerateReportModal({ client }: { client: ClientView }) {
           onClick={() =>
             actions.patch({
               modal: null,
-              scope: 'client',
-              clientTab: 'reports',
+              // Workspace reports: the client-scoped reports tab went with the
+              // fixture client screens, and comes back real in slice 5.
+              screen: 'reports',
               reportOpen: 0,
               dirty: true,
               draft: true,
@@ -199,153 +200,6 @@ export function GenerateReportModal({ client }: { client: ClientView }) {
           Generate and open the draft
         </button>
       </div>
-    </Modal>
-  );
-}
-
-export function NewAuditModal() {
-  const { actions } = usePlatform();
-  const close = () => actions.patch({ modal: null });
-
-  return (
-    <Modal
-      screenLabel="New audit modal"
-      title="Add a client site"
-      subtitle="The first run usually takes about four minutes."
-      onClose={close}
-      width={560}
-    >
-      <ReadOnlyField label="Client name" value="e.g. Rosewood Dental" placeholder />
-      <ReadOnlyField label="Starting URL" value="https://" mono accentBorder />
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))',
-          gap: 12,
-        }}
-      >
-        <ReadOnlyField label="Standard" value="WCAG 2.2 AA" caret />
-        <ReadOnlyField label="Schedule" value="Nightly" caret />
-      </div>
-      <span style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Eyebrow>ALSO SET UP</Eyebrow>
-        {AUDIT_OPTIONS.map(([key, fallback, label, note]) => {
-          const t = actions.toggle(key, fallback);
-          return <SwitchRow key={key} on={t.on} label={label} note={note} onFlip={t.flip} />;
-        })}
-      </span>
-      <div
-        style={{ display: 'flex', gap: 8, paddingTop: 14, borderTop: `1px solid ${T.ruleFaint}` }}
-      >
-        <button type="button" onClick={close} className="ph-ghost" style={cancelButton}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            // Lands on Brightside Clinic, the fixture that is mid-scan, so the
-            // "first run" state the operator was promised is what they see.
-            actions.patch({ modal: null, scope: 'client', client: 4, clientTab: 'overview' });
-            actions.flash('Site added. The first run is walking the site now.');
-          }}
-          className="ph-primary"
-          style={confirmButton}
-        >
-          Start the first run
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
-export function DismissModal({ client }: { client: ClientView }) {
-  const { state, actions } = usePlatform();
-  const close = () => actions.patch({ modal: null });
-  const records = findingsFor(client.name, state.findOverrides);
-  const safeIndex = Math.min(state.findIndex, Math.max(0, records.length - 1));
-  const finding = findingDetail(client.name, records, safeIndex, client.run);
-
-  return (
-    <Modal
-      screenLabel="Dismiss finding modal"
-      title="Dismiss this finding"
-      subtitle={finding?.what}
-      onClose={close}
-      width={560}
-    >
-      <span
-        role="radiogroup"
-        aria-label="Why"
-        style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-      >
-        <Eyebrow>WHY</Eyebrow>
-        {DISMISS_REASONS.map(([key, label, note]) => (
-          <RadioCard
-            key={key}
-            on={state.dismissReason === key}
-            label={label}
-            note={note}
-            onPick={() => actions.patch({ dismissReason: key })}
-          />
-        ))}
-      </span>
-      <span style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: T.inkSoft }}>
-          Note for the record <span style={{ color: T.fail }}>· required</span>
-        </span>
-        <span
-          style={{
-            padding: '11px 12px',
-            border: `1px solid ${T.ruleStrong}`,
-            borderRadius: 9,
-            background: T.surface,
-            fontSize: 12.5,
-            color: T.inkFaint,
-            minHeight: 62,
-            lineHeight: 1.5,
-          }}
-        >
-          Say what you checked and why this is not a barrier. Counsel reads this if the audit is
-          challenged.
-        </span>
-      </span>
-      <span
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 9,
-          padding: '11px 13px',
-          borderRadius: 10,
-          background: T.failWashDeep,
-          border: `1px solid ${T.failEdge}`,
-          fontSize: 11.5,
-          color: T.fail,
-          lineHeight: 1.45,
-          textWrap: 'pretty',
-        }}
-      >
-        Dismissing a must-fix does not change the verdict. It stays counted as unresolved on the
-        report cover, and this decision is logged in Activity with your name.
-      </span>
-      <ModalFooter>
-        <button type="button" onClick={close} className="ph-ghost" style={cancelButton}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            actions.setFindingStatus(safeIndex, 'Dismissed');
-            actions.patch({ modal: null, clientTab: 'findings' });
-            actions.flash(
-              'Finding dismissed and logged in Activity. The verdict is unchanged.',
-            );
-          }}
-          className="ph-primary-danger"
-          style={{ ...confirmButton, background: T.fail }}
-        >
-          Dismiss and log it
-        </button>
-      </ModalFooter>
     </Modal>
   );
 }

@@ -216,14 +216,19 @@ Read this before claiming something works.
   store and a tested contract, and `journeys` materialises on every run — but
   only the screens read or write the rest, and the screens land slice by slice
   through Phase 2C. Until then they are reachable but mostly empty.
-- **The UI at `/` is still mostly a fixture prototype.** The portfolio is real
-  — it lists what `clients` holds, starts empty, and the add-client modal posts
-  to `/api/platform/clients`. Everything under `/clients/<slug>` is still
-  `data.ts`, which is why the `[clientId]` layout only accepts fixture slugs:
-  **a client added through the UI has nowhere to click through to yet.** Slice 4
-  builds that page. Until it lands, do not remove the `knownSlug` guard — its
-  fallback renders the *first* fixture client under any address. See
+- **The UI is real down to the client page; below that it is not.** The
+  portfolio and `/clients/<id>` (overview and journeys) read the database and
+  start empty. `/reports`, `/activity` and `/settings` are still `data.ts`, and
+  so is the report builder — slice 5. **There is no findings screen**: the
+  fixture one invented its own defects and was deleted rather than left looking
+  functional, and slice 2 builds the real one. Until then a run's findings are
+  visible only through `/console` and the API. See
   `docs/superpowers/plans/2026-08-07-phase-2.md`.
+- **`ClientTab` still names tabs that do not exist** (`findings`, `finding`,
+  `reports`, `activity`, `settings`). Kept deliberately, because slice 2 lands
+  the findings routes in this same phase — but if slice 2 slips, trim
+  `params.ts` rather than leaving route vocabulary no path can reach. That is
+  how `states` and `coverage` survived as screens nobody could open.
 - **The screens are still ~700 KB of shared client JavaScript**, most of it
   `data.ts` plus `ui.tsx`, `header.tsx` and `derive.ts`. The fixture half goes
   when `data.ts` does in slice 6. Route-specific code is split correctly

@@ -16,7 +16,6 @@ export type { ClientTab, SettingsTab, WorkspaceScreen } from './params';
 
 export type ModalName =
   | 'generate'
-  | 'audit'
   | 'dismiss'
   | 'undo'
   | 'invite'
@@ -115,9 +114,6 @@ export interface PlatformActions {
     options: Array<{ label: string; selected: boolean; onPick: () => void }>;
   };
   goWorkspace: (screen: WorkspaceScreen) => void;
-  goClientTab: (tab: ClientTab) => void;
-  openClient: (index: number) => void;
-  setFindingStatus: (index: number, status: FindingStatus) => void;
 }
 
 export interface PlatformContextValue {

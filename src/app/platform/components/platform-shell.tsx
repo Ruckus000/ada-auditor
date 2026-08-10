@@ -5,12 +5,10 @@ import { clientView } from '../lib/derive';
 import { usePlatform } from '../lib/state';
 import { T } from '../lib/tokens';
 import { AddClientModal } from './add-client-modal';
-import { ClientBar, PlatformHeader } from './header';
+import { PlatformHeader } from './header';
 import {
-  DismissModal,
   GenerateReportModal,
   InviteModal,
-  NewAuditModal,
   UndoModal,
 } from './modals';
 import { Toast } from './toast';
@@ -21,20 +19,19 @@ import { UnlockCard } from '../../components/unlock-card';
  *
  * Split from the provider so that the provider is about state and this is
  * about layout. The route pages render only their screen; the header, the
- * client bar, the toast and the modal host live here once rather than in nine
- * pages.
+ * toast and the modal host live here once rather than in every page. The
+ * client bar is not here — it belongs to the client routes, which is where it
+ * can be driven by a record instead of by `state.client`.
  */
 export function PlatformShell({ children }: { children: React.ReactNode }) {
   const { state, actions } = usePlatform();
 
   const client = clientView(state.client, state.findOverrides);
-  const inClient = state.scope === 'client';
 
   return (
     <div className="ph-shell">
       <div className="ph-zoom">
         <PlatformHeader />
-        {inClient ? <ClientBar client={client} /> : null}
 
         <main
           style={{
@@ -61,9 +58,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         <Toast />
 
         {state.modal === 'generate' ? <GenerateReportModal client={client} /> : null}
-        {state.modal === 'audit' ? <NewAuditModal /> : null}
         {state.modal === 'addClient' ? <AddClientModal /> : null}
-        {state.modal === 'dismiss' ? <DismissModal client={client} /> : null}
         {state.modal === 'undo' ? <UndoModal /> : null}
         {state.modal === 'invite' ? <InviteModal client={client} /> : null}
       </div>

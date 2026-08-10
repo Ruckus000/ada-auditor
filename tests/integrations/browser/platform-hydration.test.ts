@@ -143,14 +143,15 @@ afterAll(async () => {
   }
 });
 
+const CLIENT = 'harness-client';
+
 const ROUTES = [
   '/',
   '/activity',
   '/settings',
   '/reports',
-  '/clients/acme-outfitters',
-  '/clients/acme-outfitters/findings',
-  '/clients/acme-outfitters/journeys',
+  `/clients/${CLIENT}`,
+  `/clients/${CLIENT}/journeys`,
 ];
 
 describe('platform hydration', () => {
@@ -168,6 +169,44 @@ describe('platform hydration', () => {
       await page.close();
     }
   }, 60_000);
+
+  it('starts with an empty portfolio and adds a client through the modal', async () => {
+    // The one path that decides whether this product has a front door: the
+    // portfolio is empty until an operator adds someone, and adding someone
+    // has to actually reach the store and come back. Every unit test around
+    // this passed while the modal was still scenery that jumped to a fixture.
+    //
+    // It runs first on purpose, and the client it adds is the one every client
+    // route below visits. Seeding in `beforeAll` instead would have made
+    // "starts empty" untestable — and a seeded fixture is exactly what this
+    // phase removed.
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      expect(await page.innerText('body')).toContain('No clients yet');
+
+      await page.getByRole('button', { name: 'Add the first client', exact: true }).click();
+      await page.getByLabel('Client name').fill('Harness Client');
+      await page.getByLabel('Owner').fill('Alex Reed');
+      await page.getByRole('button', { name: 'Add client', exact: true }).click();
+
+      // The row, not the toast: the toast says the same words and would appear
+      // even if the write were discarded. Only the row can come from a re-read
+      // of the store, so the empty state disappearing is the real assertion.
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 15_000 })
+        .not.toContain('No clients yet');
+
+      const body = await page.innerText('body');
+      expect(body).toContain('Harness Client');
+      expect(body).toContain('Never audited');
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
 
   it.each(ROUTES)('hydrates %s', async (route) => {
     const page = await openAuthenticatedPage();
@@ -191,59 +230,28 @@ describe('platform hydration', () => {
     }
   }, 60_000);
 
-  it('starts with an empty portfolio and adds a client through the modal', async () => {
-    // The one path that decides whether this product has a front door: the
-    // portfolio is empty until an operator adds someone, and adding someone
-    // has to actually reach the database and come back. Every unit test around
-    // this passed while the modal was still scenery that jumped to a fixture.
-    const page = await openAuthenticatedPage();
-    try {
-      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
-      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
-
-      expect(await page.innerText('body')).toContain('No clients yet');
-
-      await page.getByRole('button', { name: 'Add the first client', exact: true }).click();
-      await page.getByLabel('Client name').fill('Rosewood Dental');
-      await page.getByLabel('Owner').fill('Alex Reed');
-      await page.getByRole('button', { name: 'Add client', exact: true }).click();
-
-      // The row, not the toast: the toast says the same words and would appear
-      // even if the write were discarded. Only the row can come from a re-read
-      // of the store, so the empty state disappearing is the real assertion.
-      await expect
-        .poll(() => page.innerText('body'), { timeout: 15_000 })
-        .not.toContain('No clients yet');
-
-      const body = await page.innerText('body');
-      expect(body).toContain('Rosewood Dental');
-      expect(body).toContain('Never audited');
-    } finally {
-      await page.close();
-    }
-  }, 60_000);
-
   it('navigates by changing the URL, not by swapping state', async () => {
     // The prototype navigated with `useState`, so nothing was linkable. This
     // is the assertion that the restructure actually delivered its point.
     const page = await openAuthenticatedPage();
     try {
-      await page.goto(`${BASE}/clients/acme-outfitters`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${BASE}/clients/${CLIENT}`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      await page.getByRole('button', { name: 'Findings', exact: true }).click();
-      await page.waitForURL('**/clients/acme-outfitters/findings', { timeout: 15_000 });
+      await page.getByRole('link', { name: 'Journeys', exact: true }).click();
+      await page.waitForURL(`**/clients/${CLIENT}/journeys`, { timeout: 15_000 });
 
-      expect(new URL(page.url()).pathname).toBe('/clients/acme-outfitters/findings');
+      expect(new URL(page.url()).pathname).toBe(`/clients/${CLIENT}/journeys`);
     } finally {
       await page.close();
     }
   }, 60_000);
 
   it('refuses a client that does not exist rather than showing another one', async () => {
-    // `indexForSlug` falls back to index 0, so without a guard this URL renders
-    // the first client's findings under a different client's address. That
-    // looks like an answer, which makes it worse than an error page.
+    // The fixture lookup this replaces fell back to the first client, so any
+    // unknown slug rendered one client's findings under another client's
+    // address. That looks like an answer, which makes it worse than an error
+    // page.
     const page = await openAuthenticatedPage();
     try {
       const response = await page.goto(`${BASE}/clients/does-not-exist`, {
@@ -251,26 +259,12 @@ describe('platform hydration', () => {
       });
 
       expect(response?.status()).toBe(404);
-      expect(await page.innerText('body')).not.toContain('Northwind Health');
+      expect(await page.innerText('body')).not.toContain('Harness Client');
     } finally {
       await page.close();
     }
   }, 60_000);
 
-  it('keeps a filter in the URL so it survives a reload', async () => {
-    const page = await openAuthenticatedPage();
-    try {
-      await page.goto(`${BASE}/clients/acme-outfitters/findings?filter=must`, {
-        waitUntil: 'domcontentloaded',
-      });
-      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
-
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      expect(new URL(page.url()).searchParams.get('filter')).toBe('must');
-    } finally {
-      await page.close();
-    }
-  }, 60_000);
 });
 
 /**
