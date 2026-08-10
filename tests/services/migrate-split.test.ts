@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { splitStatements } from '../../scripts/migrate';
+import { splitStatements } from '../../scripts/split-statements';
 
 /**
  * The schema is shipped one statement per request (Neon's HTTP driver), so the
  * splitter is load-bearing: get it wrong and `npm run migrate` fails halfway
  * through, leaving a database in a state no file describes.
+ *
+ * Imported from its own module rather than from `migrate.ts`, which runs
+ * `main()` on import — reaching into it for this one pure function executed a
+ * real migration as a side effect of running the unit suite.
  */
 describe('splitStatements', () => {
   it('splits plain statements', () => {

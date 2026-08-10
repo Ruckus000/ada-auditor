@@ -89,6 +89,11 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - Before claiming a change works end to end, run one real audit through
   `next start` (not just `next dev`). Vitest loads modules unbundled, so
   packaging faults reach production with every suite green
+- Never import a `scripts/*` entry point from a test. They call `main()` at
+  import, so the test runs the script: importing `migrate.ts` for one pure
+  helper silently migrated the real database on every local `npm test`, and
+  failed CI outright where no database exists. Extract the pure part into its
+  own module and test that
 - UI changes additionally need `npm run test:hydration` (after `npm run
   build`). It drives the built app in a real browser and asserts the pages are
   *alive* — React attached, navigation changes the URL. An entirely inert UI

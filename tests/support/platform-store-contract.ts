@@ -11,8 +11,11 @@ import type { PlatformStore, TriageEntry } from '../../src/domain/platform';
  *
  * ## Isolation
  *
- * Everything here is prefixed `contract-`, and the Postgres suite deletes
- * exactly those rows. Note that `listClients()` and `listEvents()` take no
+ * Everything here is prefixed `pc-`, and the Postgres suite deletes exactly
+ * those rows. The prefix is deliberately different from the run-store
+ * contract's `contract-`: both suites run against one database and both delete
+ * their namespace from `journeys`, so a shared prefix lets one suite remove
+ * the other's fixtures mid-run. Note that `listClients()` and `listEvents()` take no
  * filter that can scope them, so their assertions use `toContain` and never
  * `toEqual`/`toHaveLength` — the Postgres store runs against a database that
  * already holds real rows, and "these are all the clients" is only true of an
@@ -20,7 +23,7 @@ import type { PlatformStore, TriageEntry } from '../../src/domain/platform';
  * the run-store contract red for reasons that had nothing to do with the store.
  */
 
-export const CONTRACT_CLIENT = 'contract-client-a';
+export const CONTRACT_CLIENT = 'pc-client-a';
 
 /**
  * The runs the report cases attach to.
@@ -30,7 +33,7 @@ export const CONTRACT_CLIENT = 'contract-client-a';
  * Postgres rejected every report insert — precisely the drift this shared
  * contract exists to surface. Each harness makes them exist its own way.
  */
-export const CONTRACT_RUN_IDS = ['contract-run-a', 'contract-run-b'];
+export const CONTRACT_RUN_IDS = ['pc-run-a', 'pc-run-b'];
 
 export type PlatformContractOptions = {
   /** Called before the report cases. A no-op where nothing enforces the FK. */
@@ -91,7 +94,7 @@ export function platformStoreContract(
 
     it('returns null for a client that does not exist', async () => {
       const store = await makeStore();
-      expect(await store.getClient('contract-missing')).toBeNull();
+      expect(await store.getClient('pc-missing')).toBeNull();
     });
 
     it('round-trips client config', async () => {
@@ -125,14 +128,14 @@ export function platformStoreContract(
     it('round-trips a journey with its steps', async () => {
       const store = await seeded();
       await store.upsertJourney({
-        id: 'contract-journey-a',
+        id: 'pc-journey-a',
         clientId: CONTRACT_CLIENT,
         name: 'Checkout',
         targetUrl: 'https://a.example',
         steps: [{ action: 'navigate', type: 'goto', path: '/' }],
       });
 
-      const journey = await store.getJourney('contract-journey-a');
+      const journey = await store.getJourney('pc-journey-a');
       expect(journey).toMatchObject({ name: 'Checkout', clientId: CONTRACT_CLIENT });
       expect(journey?.steps).toEqual([{ action: 'navigate', type: 'goto', path: '/' }]);
     });
@@ -142,38 +145,38 @@ export function platformStoreContract(
       // history. Archiving hides the journey from the catalog and keeps it.
       const store = await seeded();
       await store.upsertJourney({
-        id: 'contract-journey-a',
+        id: 'pc-journey-a',
         clientId: CONTRACT_CLIENT,
         name: 'Checkout',
         steps: [],
       });
-      await store.archiveJourney('contract-journey-a');
+      await store.archiveJourney('pc-journey-a');
 
-      expect(await store.getJourney('contract-journey-a')).not.toBeNull();
+      expect(await store.getJourney('pc-journey-a')).not.toBeNull();
       expect(
         (await store.listJourneys(CONTRACT_CLIENT)).map((j) => j.id),
-      ).not.toContain('contract-journey-a');
+      ).not.toContain('pc-journey-a');
     });
 
     it('filters a listing by client', async () => {
       const store = await seeded();
-      await store.upsertClient({ id: 'contract-client-b', name: 'Other' });
+      await store.upsertClient({ id: 'pc-client-b', name: 'Other' });
       await store.upsertJourney({
-        id: 'contract-journey-a',
+        id: 'pc-journey-a',
         clientId: CONTRACT_CLIENT,
         name: 'A',
         steps: [],
       });
       await store.upsertJourney({
-        id: 'contract-journey-b',
-        clientId: 'contract-client-b',
+        id: 'pc-journey-b',
+        clientId: 'pc-client-b',
         name: 'B',
         steps: [],
       });
 
       const ids = (await store.listJourneys(CONTRACT_CLIENT)).map((j) => j.id);
-      expect(ids).toContain('contract-journey-a');
-      expect(ids).not.toContain('contract-journey-b');
+      expect(ids).toContain('pc-journey-a');
+      expect(ids).not.toContain('pc-journey-b');
     });
   });
 
@@ -217,10 +220,10 @@ export function platformStoreContract(
 
     it('scopes triage to its client', async () => {
       const store = await seeded();
-      await store.upsertClient({ id: 'contract-client-b', name: 'Other' });
+      await store.upsertClient({ id: 'pc-client-b', name: 'Other' });
       await store.setTriage(triageEntry());
 
-      expect(await store.listTriage('contract-client-b')).toEqual([]);
+      expect(await store.listTriage('pc-client-b')).toEqual([]);
     });
 
     it('clears a decision', async () => {
@@ -241,16 +244,16 @@ export function platformStoreContract(
     it('finds a report by its share token', async () => {
       const store = await makeStore();
       await store.createReport({
-        id: 'contract-report-a',
-        requestId: 'contract-run-a',
-        shareToken: 'contract-token-a',
+        id: 'pc-report-a',
+        requestId: 'pc-run-a',
+        shareToken: 'pc-token-a',
         audience: 'legal',
         title: 'Contract report',
       });
 
-      expect(await store.getReportByToken('contract-token-a')).toMatchObject({
-        id: 'contract-report-a',
-        requestId: 'contract-run-a',
+      expect(await store.getReportByToken('pc-token-a')).toMatchObject({
+        id: 'pc-report-a',
+        requestId: 'pc-run-a',
         audience: 'legal',
       });
     });
@@ -260,28 +263,28 @@ export function platformStoreContract(
       // a speed bump. A revoked token must stop resolving immediately.
       const store = await makeStore();
       await store.createReport({
-        id: 'contract-report-a',
-        requestId: 'contract-run-a',
-        shareToken: 'contract-token-a',
+        id: 'pc-report-a',
+        requestId: 'pc-run-a',
+        shareToken: 'pc-token-a',
       });
-      await store.revokeShareToken('contract-report-a');
+      await store.revokeShareToken('pc-report-a');
 
-      expect(await store.getReportByToken('contract-token-a')).toBeNull();
-      expect(await store.getReport('contract-report-a')).not.toBeNull();
+      expect(await store.getReportByToken('pc-token-a')).toBeNull();
+      expect(await store.getReport('pc-report-a')).not.toBeNull();
     });
 
     it('returns null for an unknown token rather than throwing', async () => {
       const store = await makeStore();
-      expect(await store.getReportByToken('contract-token-nope')).toBeNull();
+      expect(await store.getReportByToken('pc-token-nope')).toBeNull();
     });
 
     it('lists reports for the runs asked for', async () => {
       const store = await makeStore();
-      await store.createReport({ id: 'contract-report-a', requestId: 'contract-run-a' });
-      await store.createReport({ id: 'contract-report-b', requestId: 'contract-run-b' });
+      await store.createReport({ id: 'pc-report-a', requestId: 'pc-run-a' });
+      await store.createReport({ id: 'pc-report-b', requestId: 'pc-run-b' });
 
-      const ids = (await store.listReports(['contract-run-a'])).map((r) => r.id);
-      expect(ids).toEqual(['contract-report-a']);
+      const ids = (await store.listReports(['pc-run-a'])).map((r) => r.id);
+      expect(ids).toEqual(['pc-report-a']);
     });
 
     it('returns nothing for an empty request list without querying', async () => {

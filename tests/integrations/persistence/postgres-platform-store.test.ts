@@ -25,13 +25,13 @@ const sql = neon(process.env.DATABASE_URL!) as SqlClient;
  * cleanup honest about what the contract touches.
  */
 async function clearContractRows(): Promise<void> {
-  await sql`delete from finding_triage where client_id like 'contract-%'`;
-  await sql`delete from activity_events where client_id like 'contract-%'`;
-  await sql`delete from reports where id like 'contract-%'`;
-  await sql`delete from runs where request_id like 'contract-%'`;
-  await sql`delete from journeys where id like 'contract-%'`;
-  await sql`delete from client_config where client_id like 'contract-%'`;
-  await sql`delete from clients where id like 'contract-%'`;
+  await sql`delete from finding_triage where client_id like 'pc-%'`;
+  await sql`delete from activity_events where client_id like 'pc-%'`;
+  await sql`delete from reports where id like 'pc-%'`;
+  await sql`delete from runs where request_id like 'pc-%'`;
+  await sql`delete from journeys where id like 'pc-%'`;
+  await sql`delete from client_config where client_id like 'pc-%'`;
+  await sql`delete from clients where id like 'pc-%'`;
 }
 
 /**
@@ -43,7 +43,7 @@ async function clearContractRows(): Promise<void> {
 async function seedRuns(): Promise<void> {
   await sql`
     insert into journeys (id, client_id, name)
-    values ('contract-journey-seed', 'client-unassigned', 'contract-journey-seed')
+    values ('pc-journey-seed', 'client-unassigned', 'pc-journey-seed')
     on conflict (id) do nothing
   `;
 
@@ -53,7 +53,7 @@ async function seedRuns(): Promise<void> {
         request_id, journey_id, environment, platform,
         evidence_status, ci_status, status
       ) values (
-        ${requestId}, 'contract-journey-seed', 'staging', 'generic',
+        ${requestId}, 'pc-journey-seed', 'staging', 'generic',
         'complete', 'pass', 'complete'
       )
       on conflict (request_id) do nothing
