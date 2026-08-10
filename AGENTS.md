@@ -75,7 +75,10 @@ Follow `YAGNI → KISS → SRP → DRY`.
 
 - Domain/service unit tests required for contract and reporting changes
 - Chaos-style regressions required for steady-state claims (incomplete evidence, hint conflicts, scope fail-closed, complete-evidence CI fail path)
-- Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run chaos` and `npm run build` evidence
+- Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos` and `npm run build` evidence
+- The fast suite launches no browser and opens no socket. A new `RunStore`
+  behaviour goes in the shared contract (`tests/support/run-store-contract.ts`)
+  so the in-memory double and Postgres cannot drift apart
 - Keep browser launches out of the unit suite. Handler tests mock the audit; the real browser is covered by `tests/integrations/browser/**` and by chaos.
 - When adding Vercel routes: add route/handler tests or chaos script assertions for terminal statuses
 - Before claiming a change works end to end, run one real audit through
@@ -109,8 +112,21 @@ Implemented and verified locally + on Vercel preview:
   advisory runs **once over the aggregate**, not per page — N× cost otherwise,
   and cross-page issues only exist in aggregate.
 - Reporting (`pass|fail|inconclusive`), regression comparison keyed on
-  rule + page + selector, `FileRunStore` + Upstash `KvRunStore`,
-  `GET /api/audit/runs/latest`
+  rule + page + selector
+- **Persistence: Neon Postgres** (Vercel Marketplace), schema in
+  `src/integrations/persistence/schema.sql`, applied by `npm run migrate`.
+  `run_pages` is a first-class table because a run is a journey and a journey
+  is several pages. `RunStore` gained `list` — the gap called out in the
+  Phase 1 plan — served by `GET /api/audit/runs`. `FileRunStore` and
+  `KvRunStore` are deleted, not deprecated; `MemoryRunStore` is a test double
+  only, and both stores are held to one shared contract.
+- `GET /api/audit/runs`, `runs/latest`, `runs/[requestId]`
+- **Readiness distinguishes broken from degraded.** `/api/ready` gates on the
+  run token and the run store — `createRunStore()` fails closed without
+  `DATABASE_URL`, but only on the first audit, long after the deploy that broke
+  it. Anything non-fatal is reported in `warnings` instead, and the console
+  renders `needs-store` rather than "cannot reach the service", which would
+  send an operator to check the wrong thing.
 - Chromium everywhere: the installed browser locally and in CI,
   `@sparticuz/chromium` on Vercel (`integrations/browser/launch.ts`).
   `@axe-core/playwright` and `axe-core` are in `serverExternalPackages`
@@ -126,10 +142,19 @@ Implemented and verified locally + on Vercel preview:
 
 Read this before claiming something works.
 
-- **`RunStore` cannot list.** The interface is `saveRun` / `getRun` /
-  `getLatestRun`; there is no way to enumerate run history. It lands with the
-  Postgres store in Phase 2B — see
-  `docs/superpowers/plans/2026-08-07-phase-2.md`.
+- **The unlock throttle can be memory-only.** Redis used to be required on
+  Vercel because the run store needed it. The run store is Postgres now, so
+  nothing forces Upstash to exist, and without it the throttle counts attempts
+  in process memory — per-instance, reset on every cold start. No longer
+  silent: `/api/ready` reports `unlockThrottleDurable` and warns, and the
+  console shows it. It does not gate readiness, because a degraded security
+  speed bump is not a reason to serve 503 to every operator. The real defence
+  remains a high-entropy token.
+- **Six of the eight tables are empty.** `runs`, `run_pages` and `findings` are
+  written by every audit. `clients`, `journeys`, `reports`, `activity_events`
+  and `client_config` exist because Phase 2C wires the screens to them
+  immediately; until it does, they are schema without a writer. If 2C slips,
+  they should be dropped rather than left as furniture.
 - **A page cap of 20 is a guess, not a measurement.** No real journey has been
   run against it. If real journeys exceed it, that is the signal for a
   container worker rather than a bigger number.

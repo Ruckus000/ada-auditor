@@ -36,3 +36,36 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium --with-deps
       - run: npm run test:browser
+
+  database:
+    # The unit suite runs the store contract against the in-memory double, so
+    # it needs no database. This job runs the SAME contract against real
+    # Postgres, which is the only thing that can catch the two drifting apart
+    # — a round trip that silently changes a record is invisible to a double
+    # that stores the object verbatim.
+    #
+    # Skipped rather than failed without a secret: a fork's pull request has no
+    # access to it, and a job that fails for everyone outside the repo trains
+    # people to ignore red.
+    #
+    # Point the secret at a dedicated Neon branch, NOT at production. The
+    # contract writes and deletes rows; it namespaces them under `contract-%`
+    # and cleans up after itself, but a test suite with delete rights on the
+    # database holding real client evidence is a blast radius nobody needs.
+    name: Database store contract
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Apply schema and run the store contract
+        if: env.DATABASE_URL != ''
+        run: npm run migrate && npm run test:db
+      - name: Report that the contract was skipped
+        if: env.DATABASE_URL == ''
+        run: echo "::warning::DATABASE_URL not set — the Postgres store contract did not run."

@@ -3,18 +3,28 @@
 import { useEffect, useState } from 'react';
 import { InfoTip } from './info-tip';
 
-export type ReadyState = 'loading' | 'ok' | 'needs-token' | 'unreachable';
+export type ReadyState = 'loading' | 'ok' | 'needs-token' | 'needs-store' | 'unreachable';
 
 export interface SystemStatus {
   state: ReadyState;
   chaosEnabled: boolean;
   checkedAt: number | null;
+  /**
+   * Problems that do not stop the service. Reported rather than gating,
+   * because a degraded security speed bump is not a reason to tell every
+   * operator the auditor is down.
+   */
+  warnings: string[];
 }
 
 const COPY: Record<ReadyState, { headline: string; tone: string }> = {
   loading: { headline: 'Checking the auditor service…', tone: 'loading' },
   ok: { headline: 'Ready to run audits.', tone: 'ok' },
   'needs-token': { headline: 'Almost ready — the server needs a run token.', tone: 'warn' },
+  // Distinct from `unreachable` on purpose. The server answered; it simply has
+  // nowhere to record a run. Saying "cannot reach the service" would send an
+  // operator to check the wrong thing entirely.
+  'needs-store': { headline: 'Almost ready — the server has no database.', tone: 'warn' },
   unreachable: { headline: 'Cannot reach the auditor service.', tone: 'bad' },
 };
 
@@ -76,6 +86,37 @@ export function StatusRail({
             </li>
           </ol>
         </div>
+      )}
+
+      {status.state === 'needs-store' && (
+        <div className="status-fix">
+          <p>
+            The server is running but has no database to record runs in, so an audit would fail
+            partway through. To fix it:
+          </p>
+          <ol>
+            <li>
+              Provision Postgres: <code>vercel integration add neon</code>
+            </li>
+            <li>
+              Pull the credentials: <code>vercel env pull .env.local --yes</code>
+            </li>
+            <li>
+              Apply the schema: <code>npm run migrate</code>
+            </li>
+            <li>
+              Restart the app, then press <strong>Re-check</strong>.
+            </li>
+          </ol>
+        </div>
+      )}
+
+      {status.warnings.length > 0 && (
+        <ul className="status-warnings">
+          {status.warnings.map((warning) => (
+            <li key={warning}>{warning}</li>
+          ))}
+        </ul>
       )}
 
       {status.state === 'unreachable' && (

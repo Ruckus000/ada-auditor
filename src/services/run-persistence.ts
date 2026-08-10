@@ -18,6 +18,7 @@ type PersistRunInput = {
   durationMs: number;
   browserMode?: boolean;
   pages?: StoredRunPage[];
+  truncatedPages?: number;
   status?: RunStatus;
   failureReason?: string;
 };
@@ -70,6 +71,10 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     createdAt: new Date().toISOString(),
     ...(input.browserMode ? { browserMode: true } : {}),
     ...(input.pages && input.pages.length > 0 ? { pages: input.pages } : {}),
+    // Persisted, not just logged: the log line that recorded the truncation
+    // does not survive the invocation, and a partial audit read back later
+    // would otherwise be indistinguishable from a complete one.
+    ...(input.truncatedPages ? { truncatedPages: input.truncatedPages } : {}),
     ...(input.status ? { status: input.status } : {}),
     ...(input.failureReason ? { failureReason: input.failureReason } : {}),
   };

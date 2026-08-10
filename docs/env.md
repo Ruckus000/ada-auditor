@@ -6,8 +6,8 @@ Required for Phase 1 Vercel control plane operation.
 |---|---|---|
 | `AUDITOR_RUN_TOKEN` | Yes (for audit runs + readiness) | Server secret, and the console's unlock password. Must be at least 16 characters — use `openssl rand -hex 32`. The operator enters it once per browser to unlock the console; external callers send it to `POST /api/audit/run` as `Authorization: Bearer <token>` or `x-auditor-run-token`. Rotating it locks every console session. |
 | `CHAOS_ENABLED` | No | Set to `true` to allow chaos scenario injection via API (`chaosScenario` body field) and to run `npm run chaos`. Default: disabled. Preview only recommended. |
-| `RUN_STORE_PATH` | No | Directory for persisted audit run records (filesystem adapter). Default: `data/runs` under project root. Used for local/CI when Redis/KV is not configured. |
-| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Required on Vercel | Upstash Redis REST credentials (also set by Vercel Redis/KV marketplace). When both are set, run metadata uses durable `KvRunStore` instead of the filesystem. |
+| `DATABASE_URL` | Yes | Neon Postgres connection string, injected by the Vercel Marketplace integration (`vercel integration add neon`). The run store needs it everywhere, including locally — there is no filesystem fallback, because one would mean a misconfigured deploy quietly writing runs to a disk that disappears with the invocation. Apply the schema with `npm run migrate`. |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | No | Upstash Redis REST credentials. Used **only** by the console unlock throttle now that runs live in Postgres. Unset means the throttle counts attempts in process memory, which on serverless resets on every cold start and is per-instance — a speed bump, not a limit. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | No | Alternate Upstash env names; accepted if `KV_REST_API_*` is unset. |
 | `BLOB_READ_WRITE_TOKEN` | Required on Vercel | Vercel Blob credentials, for run evidence (screenshot, DOM snapshot, accessibility tree). Unset means artifacts stay on local disk — fine locally and in CI, but on serverless the filesystem disappears with the invocation, so evidence would be unreachable. Provision Blob from the Vercel dashboard and the token is injected automatically. |
 | `ARTIFACT_RETENTION_DAYS` | No | How long run evidence is kept. Default 30. These are screenshots of authenticated pages on client systems and contain real end-user data, so `npm run prune:artifacts` sweeps anything older; a missing or nonsensical value falls back to the default rather than to keeping them forever. |
@@ -52,8 +52,28 @@ Do **not** symlink env files — Vercel stores secrets in the cloud; `vercel env
 
 ## Persistence
 
-- **Local/CI:** `FileRunStore` under `RUN_STORE_PATH` (default `data/runs`).
-- **Vercel:** Redis/KV is required. `createRunStore()` fails closed when `VERCEL` is set and neither `KV_REST_API_*` nor `UPSTASH_REDIS_REST_*` is configured (no silent ephemeral filesystem). Provision Upstash Redis from the [Vercel Marketplace](https://vercel.com/marketplace?category=storage&search=redis) and link it so credentials are present. Run JSON metadata is durable. Artifacts go to Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set, and their URLs are stored on the run record so a finding can always be traced back to the screenshot and DOM it came from. Locally and in CI they stay on disk, where they are already reachable.
+**Neon Postgres, everywhere.** `createRunStore()` throws without `DATABASE_URL`
+rather than falling back, so a misconfigured deploy fails where someone can see
+it instead of writing runs to a filesystem that disappears with the invocation.
+The filesystem and KV stores that used to sit behind this factory are gone;
+their weaknesses went with them (a full-directory read and a JSON parse of
+every record to answer one query; a two-deep `latest`/`previous` pointer chain
+that could not answer "list runs" at all).
+
+- **Schema:** `src/integrations/persistence/schema.sql`, applied by
+  `npm run migrate`. Idempotent, so re-running it against a current database is
+  a no-op. A run is a journey and a journey is several pages, so `run_pages` is
+  a first-class table and every deterministic finding carries the page it was
+  found on.
+- **Tests:** the in-process `MemoryRunStore` backs the unit suite so it needs no
+  database. Both stores are held to the same contract
+  (`tests/support/run-store-contract.ts`) — a double that quietly disagrees
+  with the real store means every handler test is green about behaviour
+  production does not have. Run the real one with `npm run test:db`.
+- **Artifacts** go to Vercel Blob when `BLOB_READ_WRITE_TOKEN` is set, keyed per
+  audited page, and their URLs are stored on the run's page rows so a finding
+  can always be traced back to the screenshot and DOM it came from. Locally and
+  in CI they stay on disk, where they are already reachable.
 
 ## Running an audit
 

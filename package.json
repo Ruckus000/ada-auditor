@@ -17,7 +17,9 @@
     "chaos": "tsx scripts/chaos.ts",
     "lint": "next lint",
     "playwright:install": "playwright install chromium",
-    "prune:artifacts": "tsx scripts/prune-artifacts.ts"
+    "prune:artifacts": "tsx scripts/prune-artifacts.ts",
+    "migrate": "tsx scripts/migrate.ts",
+    "test:db": "vitest run --config vitest.db.config.ts"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +28,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "@axe-core/playwright": "^4.12.1",
+    "@neondatabase/serverless": "^1.1.0",
     "@sparticuz/chromium": "^147.0.0",
     "@upstash/redis": "^1.38.0",
     "@vercel/blob": "^2.7.0",

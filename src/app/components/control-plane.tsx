@@ -25,6 +25,7 @@ export function ControlPlane() {
     state: 'loading',
     chaosEnabled: false,
     checkedAt: null,
+    warnings: [],
   });
 
   const [config, setConfig] = useState<RunConfig>({
@@ -49,19 +50,32 @@ export function ControlPlane() {
       const res = await fetch('/api/ready');
       const body = await res.json();
       const chaosEnabled = body?.checks?.chaosEnabled === true;
+      const warnings: string[] = Array.isArray(body?.warnings)
+        ? body.warnings.filter((warning: unknown): warning is string => typeof warning === 'string')
+        : [];
 
       let state: ReadyState;
       if (res.ok && body?.status === 'ready') {
         state = 'ok';
       } else if (body?.checks?.auditorRunTokenConfigured === false) {
         state = 'needs-token';
+      } else if (body?.checks?.runStoreConfigured === false) {
+        // The server answered and is missing its database. Reporting this as
+        // `unreachable` would send an operator to check whether the app is
+        // running, which it is.
+        state = 'needs-store';
       } else {
         state = 'unreachable';
       }
 
-      setStatus({ state, chaosEnabled, checkedAt: Date.now() });
+      setStatus({ state, chaosEnabled, checkedAt: Date.now(), warnings });
     } catch {
-      setStatus({ state: 'unreachable', chaosEnabled: false, checkedAt: Date.now() });
+      setStatus({
+        state: 'unreachable',
+        chaosEnabled: false,
+        checkedAt: Date.now(),
+        warnings: [],
+      });
     }
   }, []);
 
