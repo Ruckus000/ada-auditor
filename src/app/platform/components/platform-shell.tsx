@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { clientView } from '../lib/derive';
 import { usePlatform } from '../lib/state';
 import { T } from '../lib/tokens';
+import { AddClientModal } from './add-client-modal';
 import { ClientBar, PlatformHeader } from './header';
 import {
   DismissModal,
@@ -61,6 +62,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
 
         {state.modal === 'generate' ? <GenerateReportModal client={client} /> : null}
         {state.modal === 'audit' ? <NewAuditModal /> : null}
+        {state.modal === 'addClient' ? <AddClientModal /> : null}
         {state.modal === 'dismiss' ? <DismissModal client={client} /> : null}
         {state.modal === 'undo' ? <UndoModal /> : null}
         {state.modal === 'invite' ? <InviteModal client={client} /> : null}

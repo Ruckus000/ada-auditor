@@ -105,9 +105,12 @@ beforeAll(async () => {
     env: {
       ...process.env,
       AUDITOR_RUN_TOKEN: TOKEN,
-      // Keep the run store out of it: these tests never start an audit, and a
-      // missing DATABASE_URL must not be why they fail.
-      DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://unused/hydration-test',
+      // The portfolio reads the catalog, so the server needs *a* store. CI has
+      // no database, and pointing at one that is not there renders the error
+      // page and fails every assertion below for the wrong reason. This asks
+      // for the ephemeral store explicitly; nothing here persists anything.
+      AUDITOR_STORE: 'memory',
+      DATABASE_URL: '',
     },
     // Own process group, so teardown can kill `next start` and not just the
     // `npx` wrapper in front of it — an orphan keeps the port and makes the
@@ -183,6 +186,38 @@ describe('platform hydration', () => {
       // these tests went green while four routes were serving the locked
       // shell from a prerender.
       expect(await page.innerText('body')).not.toContain('Unlock the console');
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
+  it('starts with an empty portfolio and adds a client through the modal', async () => {
+    // The one path that decides whether this product has a front door: the
+    // portfolio is empty until an operator adds someone, and adding someone
+    // has to actually reach the database and come back. Every unit test around
+    // this passed while the modal was still scenery that jumped to a fixture.
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      expect(await page.innerText('body')).toContain('No clients yet');
+
+      await page.getByRole('button', { name: 'Add the first client', exact: true }).click();
+      await page.getByLabel('Client name').fill('Rosewood Dental');
+      await page.getByLabel('Owner').fill('Alex Reed');
+      await page.getByRole('button', { name: 'Add client', exact: true }).click();
+
+      // The row, not the toast: the toast says the same words and would appear
+      // even if the write were discarded. Only the row can come from a re-read
+      // of the store, so the empty state disappearing is the real assertion.
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 15_000 })
+        .not.toContain('No clients yet');
+
+      const body = await page.innerText('body');
+      expect(body).toContain('Rosewood Dental');
+      expect(body).toContain('Never audited');
     } finally {
       await page.close();
     }

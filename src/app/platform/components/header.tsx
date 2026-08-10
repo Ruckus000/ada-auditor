@@ -351,7 +351,7 @@ export function PlatformHeader() {
 
         <button
           type="button"
-          onClick={() => actions.patch({ modal: 'audit' })}
+          onClick={() => actions.patch({ modal: 'addClient' })}
           className="ph-primary"
           style={{
             padding: '8px clamp(11px,1.1vw,16px)',
@@ -367,7 +367,7 @@ export function PlatformHeader() {
             flexShrink: 0,
           }}
         >
-          Add a client site
+          Add a client
         </button>
 
         <span

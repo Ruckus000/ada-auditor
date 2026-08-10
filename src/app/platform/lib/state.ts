@@ -14,7 +14,14 @@ import type { Audience, ClientTab, FindingFilter, SettingsTab, WorkspaceScreen }
  */
 export type { ClientTab, SettingsTab, WorkspaceScreen } from './params';
 
-export type ModalName = 'generate' | 'audit' | 'dismiss' | 'undo' | 'invite' | null;
+export type ModalName =
+  | 'generate'
+  | 'audit'
+  | 'dismiss'
+  | 'undo'
+  | 'invite'
+  | 'addClient'
+  | null;
 
 export interface UndoRow {
   who: string;
