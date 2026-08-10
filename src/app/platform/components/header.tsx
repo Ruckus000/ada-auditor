@@ -21,7 +21,6 @@ function tabStyle(on: boolean) {
 
 export function PlatformHeader() {
   const { state, actions } = usePlatform();
-  const inClient = state.scope === 'client';
   return (
     <header
       style={{
@@ -70,7 +69,7 @@ export function PlatformHeader() {
             key={key}
             type="button"
             onClick={() => actions.goWorkspace(key)}
-            aria-current={!inClient && state.screen === key ? 'page' : undefined}
+            aria-current={state.screen === key ? 'page' : undefined}
             className="ph-nav"
             style={{
               display: 'flex',
@@ -83,7 +82,7 @@ export function PlatformHeader() {
               fontSize: 13.5,
               whiteSpace: 'nowrap',
               cursor: 'pointer',
-              ...tabStyle(!inClient && state.screen === key),
+              ...tabStyle(state.screen === key),
             }}
           >
             {label}
@@ -105,16 +104,6 @@ export function PlatformHeader() {
             real clients every result was a 404. Deleted rather than left
             looking functional; it returns when there is a real index to
             search. */}
-
-        {inClient ? (
-          <a
-            href="#annotated-ledger"
-            className="ph-quiet-link"
-            style={{ fontSize: 12.5, color: T.inkMuted, textDecoration: 'none' }}
-          >
-            Audit view ↗
-          </a>
-        ) : null}
 
         {/* Not in the source design, which specifies this header exactly and
             gives the avatar no menu. Added because moving the console to

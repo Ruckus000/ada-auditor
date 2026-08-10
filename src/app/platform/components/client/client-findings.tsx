@@ -2,6 +2,7 @@ import type { DisplaySeverity } from '../../../../services/presentation/severity
 import type { FindingView, FindingsView, PageFindings } from '../../../../services/findings-view';
 import { FONT, T } from '../../lib/tokens';
 import { Empty } from './client-overview';
+import { IssueReport } from './issue-report';
 import { TriageControl } from './triage-control';
 
 /**
@@ -69,6 +70,8 @@ export function ClientFindings({ view }: { view: FindingsView }) {
             `${view.counts.must} must fix, ${view.counts.should} should fix, ` +
             `${view.counts.nice} nice to fix, ${view.counts.review} to review.`}
       </p>
+
+      <IssueReport clientId={view.clientId} requestId={view.run.requestId} />
 
       {view.pages.map((page) => (
         <PageSection key={page.url} page={page} clientId={view.clientId} />

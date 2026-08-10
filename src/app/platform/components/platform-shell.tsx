@@ -1,16 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { clientView } from '../lib/derive';
 import { usePlatform } from '../lib/state';
 import { T } from '../lib/tokens';
 import { AddClientModal } from './add-client-modal';
 import { PlatformHeader } from './header';
-import {
-  GenerateReportModal,
-  InviteModal,
-  UndoModal,
-} from './modals';
 import { Toast } from './toast';
 import { UnlockCard } from '../../components/unlock-card';
 
@@ -25,8 +19,6 @@ import { UnlockCard } from '../../components/unlock-card';
  */
 export function PlatformShell({ children }: { children: React.ReactNode }) {
   const { state, actions } = usePlatform();
-
-  const client = clientView(state.client, state.findOverrides);
 
   return (
     <div className="ph-shell">
@@ -46,21 +38,9 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
-        {/* Click-anywhere-else closes an open menu without stealing the click
-            from the control that opened it. */}
-        {state.menu ? (
-          <div
-            onClick={() => actions.patch({ menu: null })}
-            style={{ position: 'fixed', inset: 0, zIndex: 32 }}
-          />
-        ) : null}
-
         <Toast />
 
-        {state.modal === 'generate' ? <GenerateReportModal client={client} /> : null}
         {state.modal === 'addClient' ? <AddClientModal /> : null}
-        {state.modal === 'undo' ? <UndoModal /> : null}
-        {state.modal === 'invite' ? <InviteModal client={client} /> : null}
       </div>
     </div>
   );
