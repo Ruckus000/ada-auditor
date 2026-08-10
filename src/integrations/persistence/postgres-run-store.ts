@@ -65,6 +65,7 @@ type FindingRow = {
   code: string;
   severity: string;
   source: string;
+  title: string | null;
   message: string | null;
   wcag_criteria: string[] | null;
   conformance_level: string | null;
@@ -93,6 +94,7 @@ function toFinding(row: FindingRow): StoredFinding {
     source: row.source,
   };
 
+  if (row.title !== null) finding.title = row.title;
   if (row.message !== null) finding.message = row.message;
   if (row.wcag_criteria !== null) finding.wcagCriteria = row.wcag_criteria;
   if (row.conformance_level !== null) finding.conformanceLevel = row.conformance_level;
@@ -239,12 +241,13 @@ export class PostgresRunStore implements RunStore {
     for (const [position, finding] of record.findings.entries()) {
       await sql`
         insert into findings (
-          request_id, position, page_url, code, severity, source, message,
-          wcag_criteria, conformance_level, selector, html_snippet, help_url,
-          gateable, confidence
+          request_id, position, page_url, code, severity, source, title,
+          message, wcag_criteria, conformance_level, selector, html_snippet,
+          help_url, gateable, confidence
         ) values (
           ${record.requestId}, ${position}, ${finding.pageUrl ?? null},
           ${finding.code}, ${finding.severity}, ${finding.source},
+          ${finding.title ?? null},
           ${finding.message ?? null}, ${finding.wcagCriteria ?? null},
           ${finding.conformanceLevel ?? null}, ${finding.selector ?? null},
           ${finding.htmlSnippet ?? null}, ${finding.helpUrl ?? null},

@@ -287,6 +287,9 @@ describe('platform hydration', () => {
       expect(body).toContain('violations.html');
       expect(body).toContain('button-name');
       expect(body).toContain('MUST FIX');
+      // axe's own sentence for the rule, carried from the engine through the
+      // store to the screen. Nothing in this string was written by us.
+      expect(body).toContain('Buttons must have discernible text');
       expect(body).not.toContain('Nothing audited yet');
     } finally {
       await page.close();
@@ -353,6 +356,7 @@ describe('platform hydration', () => {
       // people who do not know what 4.1.2 is.
       expect(body).toContain('Name, Role, Value');
       expect(body).toContain('Success criteria not met');
+      expect(body).toContain('Buttons must have discernible text');
       // The shared page is the audit and nothing else: no way into the console
       // from it, and no other client's name on it.
       expect(body).not.toContain('Portfolio');

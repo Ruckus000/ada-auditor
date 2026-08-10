@@ -47,6 +47,7 @@ function toStoredFinding(finding: AuditFinding): StoredFinding {
     code: finding.code,
     severity: finding.severity,
     source: finding.source,
+    title: finding.title,
     message: finding.message,
     wcagCriteria: finding.wcagCriteria,
     conformanceLevel: finding.conformanceLevel,

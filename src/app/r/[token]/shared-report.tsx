@@ -127,7 +127,16 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
             <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {page.findings.map((finding, index) => (
                 <li key={`${finding.code}-${finding.selector ?? index}`} style={{ fontSize: 13.5 }}>
-                  <span style={{ fontFamily: FONT.mono, fontWeight: 650 }}>{finding.code}</span>
+                  {/* On the page a client's legal team reads, the rule's
+                      sentence has to come first; `image-alt` is our word for
+                      it, not theirs. */}
+                  <span style={{ fontWeight: 650 }}>{finding.title ?? finding.code}</span>
+                  {finding.title ? (
+                    <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
+                      {' '}
+                      {finding.code}
+                    </span>
+                  ) : null}
                   {finding.wcagCriteria.length > 0 ? (
                     <span style={{ color: T.inkMuted }}>
                       {' '}

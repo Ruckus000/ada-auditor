@@ -111,7 +111,13 @@ export type SharedReport = {
     route: string;
     title?: string;
     evidenceStatus: string;
-    findings: Array<{ code: string; severity: string; wcagCriteria: string[]; selector?: string }>;
+    findings: Array<{
+      code: string;
+      title?: string;
+      severity: string;
+      wcagCriteria: string[];
+      selector?: string;
+    }>;
   }>;
 };
 
@@ -146,6 +152,7 @@ export async function buildSharedReport(
     const list = byPage.get(finding.pageUrl ?? '') ?? [];
     list.push({
       code: finding.code,
+      ...(finding.title === undefined ? {} : { title: finding.title }),
       severity: finding.severity,
       wcagCriteria: finding.wcagCriteria ?? [],
       ...(finding.selector === undefined ? {} : { selector: finding.selector }),
