@@ -47,12 +47,35 @@ async function main(): Promise<void> {
   // A journey that actually walks: land, then follow in-scope links. The point
   // is several pages, because a one-page run measures nothing about the cap.
   const stepCount = Number(flag('steps', '5'));
+
+  // Land on the page `--url` names, not on the site root.
+  //
+  // Navigation paths resolve against the target as a base, and a leading
+  // slash is origin-absolute, so a literal '/' discarded the path every time:
+  // `--url https://www.w3.org/WAI/` audited `https://www.w3.org/`. The run
+  // still looked healthy — six pages, evidence complete — while measuring a
+  // page nobody had asked for.
+  const entry = new URL(target);
+  const entryPath = `${entry.pathname}${entry.search}`;
+
   const steps = [
-    { action: 'navigate', type: 'goto', path: '/' },
-    ...Array.from({ length: Math.max(0, stepCount - 1) }, () => ({
+    { action: 'navigate', type: 'goto', path: entryPath },
+    // Each step takes a link further down the page than the last.
+    //
+    // Clicking the first link every time walked in a circle: the first link
+    // on `https://www.w3.org/` is a language switcher to `/ja`, whose own
+    // first link points back. Six captures, two pages, three visits each —
+    // and the run reported `pagesAudited: 6` with the findings on those two
+    // pages counted three times over.
+    //
+    // Advancing the index is a heuristic, not a crawler; it just has to stop
+    // the walk retracing one edge. A page with fewer links than the step
+    // index fails the click, which is loud and is the right way for a
+    // synthetic journey to run out of road.
+    ...Array.from({ length: Math.max(0, stepCount - 1) }, (_step, index) => ({
       action: 'navigate',
       type: 'click',
-      selector: 'a[href]:not([href^="#"]):not([href^="mailto:"])',
+      selector: `a[href]:not([href^="#"]):not([href^="mailto:"]) >> nth=${index}`,
     })),
   ];
 

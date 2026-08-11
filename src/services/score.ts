@@ -28,8 +28,13 @@ import type { EvidenceStatus } from '../domain/evidence';
  *    such a run `inconclusive` rather than `pass` or `fail`.
  */
 
-/** Bumped when the formula changes, so old runs are not silently reinterpreted. */
-export const SCORE_VERSION = 1;
+/**
+ * Bumped when the formula changes, so old runs are not silently reinterpreted.
+ *
+ * 2 — 100 is reserved for a run with no failing check; a rounded 100 with
+ * failures present is reported as 99.
+ */
+export const SCORE_VERSION = 2;
 
 export type PageCheckCounts = {
   /** Rules axe evaluated and the page satisfied. */
@@ -69,10 +74,22 @@ export function scoreRun(input: ScoreInput): RunScore {
   // No score without complete evidence, and no score without a denominator.
   // The second case covers a run whose pages predate check counting, which
   // must read as "not measured" rather than as zero.
+  // A perfect score has to mean no failing check.
+  //
+  // Rounding alone does not guarantee that: a real run of 15 violations
+  // against thousands of node-level checks came out at 99.6%, and the report
+  // printed `score 100` beside a `fail` verdict and fifteen listed
+  // violations. Whichever of those a reader believes, the document
+  // contradicts itself, and it is a document written for a client's counsel.
+  // 100 is now reserved for a run that failed nothing.
   const score =
     input.evidenceStatus !== 'complete' || evaluated === 0
       ? null
-      : Math.round((100 * passed) / evaluated);
+      : capBelowPerfect(Math.round((100 * passed) / evaluated), failed);
 
   return { score, scoreVersion: SCORE_VERSION, passed, failed, needsReview };
+}
+
+function capBelowPerfect(rounded: number, failed: number): number {
+  return failed > 0 ? Math.min(rounded, 99) : rounded;
 }

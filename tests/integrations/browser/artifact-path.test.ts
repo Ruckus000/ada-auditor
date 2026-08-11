@@ -4,7 +4,9 @@ import { join, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  pageKeyFor,
   resolveArtifactPrefix,
+  routeFromPageUrl,
   runJourney,
 } from '../../../src/integrations/browser/journey-runner';
 
@@ -44,6 +46,65 @@ describe('resolveArtifactPrefix', () => {
   it('allows a nested path that stays inside', () => {
     const prefix = resolveArtifactPrefix(ARTIFACTS, 'steps/dashboard');
     expect(prefix.startsWith(resolve(ARTIFACTS) + sep)).toBe(true);
+  });
+});
+
+describe('routeFromPageUrl', () => {
+  it('names a directory-style URL by its path, not by nothing at all', () => {
+    // The regression this suite exists for. Every one of these ends in a
+    // slash, so the old "last path segment" rule popped the empty string and
+    // labelled all of them `/`. A real run against `https://www.w3.org/WAI/`
+    // reported six pages, every one called `/`, which is what a client would
+    // have read in the report.
+    expect(routeFromPageUrl('https://www.w3.org/WAI/')).toBe('/WAI');
+    expect(routeFromPageUrl('https://acme.test/products/checkout/')).toBe('/products/checkout');
+    expect(routeFromPageUrl('https://acme.test/a/b/c/')).toBe('/a/b/c');
+  });
+
+  it('keeps distinct pages distinct', () => {
+    // The property that actually matters: two different pages must not share
+    // a label, or the findings list cannot say which page a violation is on.
+    const routes = [
+      'https://www.w3.org/WAI/',
+      'https://www.w3.org/WAI/standards-guidelines/',
+      'https://www.w3.org/WAI/test-evaluate/',
+    ].map(routeFromPageUrl);
+
+    expect(new Set(routes).size).toBe(routes.length);
+  });
+
+  it('treats a directory, its index and the bare path as one page', () => {
+    for (const url of [
+      'https://acme.test/help/',
+      'https://acme.test/help/index.html',
+      'https://acme.test/help',
+    ]) {
+      expect(routeFromPageUrl(url)).toBe('/help');
+    }
+  });
+
+  it('calls the site root `/`', () => {
+    expect(routeFromPageUrl('https://acme.test/')).toBe('/');
+    expect(routeFromPageUrl('https://acme.test')).toBe('/');
+    expect(routeFromPageUrl('https://acme.test/index.html')).toBe('/');
+  });
+
+  it('keeps a file URL to its basename', () => {
+    // A file pathname is an absolute path on whoever ran the audit. Reporting
+    // it would put a home directory in the client's report and in an artifact
+    // filename; the fixtures are the only thing that uses this shape.
+    expect(routeFromPageUrl('file:///home/someone/fixtures/login.html')).toBe('/login.html');
+    expect(routeFromPageUrl('file:///home/someone/fixtures/index.html')).toBe('/');
+  });
+
+  it('survives being turned into an artifact filename', () => {
+    // `route` is not only a label: it becomes part of a path on disk. A
+    // deeper route must still slugify to something safe and unique.
+    expect(pageKeyFor(0, routeFromPageUrl('https://www.w3.org/WAI/'))).toBe('01-wai');
+    expect(pageKeyFor(1, routeFromPageUrl('https://acme.test/products/checkout/'))).toBe(
+      '02-products-checkout',
+    );
+    expect(pageKeyFor(2, routeFromPageUrl('https://acme.test/'))).toBe('03');
   });
 });
 
