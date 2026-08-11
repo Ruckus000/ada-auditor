@@ -211,6 +211,14 @@ export class MemoryPlatformStore implements PlatformStore {
     });
   }
 
+  async releaseJourneyClaim(journeyId: string): Promise<void> {
+    const journey = this.journeys.get(journeyId);
+    if (!journey) return;
+
+    const { lastScheduledAt: _released, ...rest } = journey;
+    this.journeys.set(journeyId, structuredClone(rest));
+  }
+
   async archiveJourney(id: string): Promise<void> {
     const journey = this.journeys.get(id);
     if (!journey) return;

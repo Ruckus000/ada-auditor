@@ -33,7 +33,7 @@ export class MemoryRunCounter implements RunCounter {
   }
 }
 
-export class RedisRunCounter implements RunCounter {
+class RedisRunCounter implements RunCounter {
   constructor(private readonly redis: RedisLike) {}
 
   async increment(key: string, windowSeconds: number): Promise<number> {

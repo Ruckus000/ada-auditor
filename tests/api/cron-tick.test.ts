@@ -198,6 +198,41 @@ describe('GET /api/cron/tick', () => {
     expect(body.failed).toEqual(['checkout']);
   });
 
+  /**
+   * A failed dispatch must not consume the journey's turn.
+   *
+   * The claim stamps `lastScheduledAt` before anything is sent, so without a
+   * release a run that never started looked exactly like one that did — the
+   * journey was stamped as done by a dispatch that never landed. For a
+   * scheduler whose only job is that a site gets re-audited, that is the
+   * failure that matters.
+   */
+  it('gives the journey back when the dispatch fails, so a tick in the same window can pick it up', async () => {
+    fetchMock.mockResolvedValue(new Response('nope', { status: 500 }));
+    await seedDueJourney('checkout');
+
+    await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+    // Claimable again immediately. Not on the next hourly tick — the claim
+    // query gates on `schedule_hour` — but by any tick inside this window,
+    // including the manual one the deploy checklist runs.
+    expect((await platform.claimDueJourneys(10)).map((journey) => journey.id)).toEqual([
+      'checkout',
+    ]);
+  });
+
+  it('gives the journey back when the dispatch throws', async () => {
+    fetchMock.mockRejectedValue(new Error('connect ECONNREFUSED'));
+    await seedDueJourney('checkout');
+
+    const body = await (await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }))).json();
+
+    expect(body.failed).toEqual(['checkout']);
+    expect((await platform.claimDueJourneys(10)).map((journey) => journey.id)).toEqual([
+      'checkout',
+    ]);
+  });
+
   // The token is attached to whatever this posts to, so the destination can
   // never come from a request header.
   it('refuses to dispatch when it cannot determine its own URL', async () => {
@@ -211,6 +246,13 @@ describe('GET /api/cron/tick', () => {
 
     expect(response.status).toBe(503);
     expect(fetchMock).not.toHaveBeenCalled();
+
+    // And it claimed nothing on the way out. Resolving the URL after claiming
+    // meant every due journey was stamped by a tick that could not dispatch
+    // one of them — marked done without ever having run.
+    expect((await platform.claimDueJourneys(10)).map((journey) => journey.id)).toEqual([
+      'checkout',
+    ]);
     warn.mockRestore();
   });
 

@@ -117,7 +117,9 @@ Follow `YAGNI → KISS → SRP → DRY`.
 
 ## Current status
 
-Implemented and verified locally + on Vercel preview:
+Implemented and verified locally. What has and has not been exercised in the
+deployed environment is recorded under "Known gaps" — in particular, whether
+Chromium launches on a Vercel function:
 
 - Domain contracts, evidence, policy, platforms
 - **Rule engine: axe-core (~100 rules) against the live page.** One finding per
@@ -131,8 +133,14 @@ Implemented and verified locally + on Vercel preview:
   does not say what to fix. Gated on `ANTHROPIC_API_KEY`; absent or failing, the
   run completes without it. Always `gateable: false`.
 - **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
-  target is checked on scheme, host, all resolved addresses, and again on the
-  URL the page settled on after each navigation.
+  target is checked four ways: scheme and host; every resolved address; the URL
+  the page settled on after each navigation; and the address the browser
+  actually connected to. The fourth is not redundant — it is the only one that
+  closes DNS rebinding, because after a rebind the hostname is unchanged and it
+  is the hostname the allowlist was derived from. The check is bound to the
+  browser *context*, so a `window.open` popup's navigations are checked too —
+  but a popup is never audited, and the run does not report that one opened.
+  Subresource requests are not checked at all.
 - **Multi-page runs.** `runJourney` scans after every navigation and returns
   `{ pages, truncatedPages }`; each page carries its own axe results, AX tree
   and artifact set under `runs/<requestId>/<pageKey>/`. Findings carry
@@ -160,7 +168,8 @@ Implemented and verified locally + on Vercel preview:
   `gateable: false`.
 - **Triage is keyed on finding identity, per client** (`finding_triage`), never
   on the per-run `findings` row: `saveRun` deletes and reinserts a run's
-  children on every write, so triage stored there would not survive one run.
+  children on every write — inside one transaction, so a reader never sees the
+  gap — and triage stored there would not survive one run.
   `fixed` is derived from the next run's absence, never stored.
 - **Persistence: Neon Postgres** (Vercel Marketplace), schema in
   `src/integrations/persistence/schema.sql`, applied by `npm run migrate`.
@@ -224,8 +233,10 @@ Read this before claiming something works.
   What that cost is worth knowing: the fixture screens carried features that
   had nothing behind them, and rather than port them they were deleted — the
   report *builder* (audience tabs, section editor, live preview), the ⌘K
-  search, scan schedules, notification rules, seats and SSO. Nothing in this
-  system schedules a run or has a second user.
+  search, notification rules, seats and SSO. Scan schedules and a second user
+  are no longer among them: `/api/cron/tick` schedules runs and `operators`
+  gives the system named people — see the scheduling and operator entries
+  below.
 - **`/r/<token>` is the only surface outside the auth gate.** The token is the
   entire access-control story: 32 random bytes, `noindex`, no navigation back
   into the console, and revocation nulls the token so the old URL 404s. A
@@ -290,8 +301,10 @@ Read this before claiming something works.
   data was on screen, and their URLs are stored in the database and travel
   through logs — so `access: 'public'` would make the URL itself the only
   protection. `blob-store.ts` uploads with `access: 'private'` and a test
-  asserts it. Reading evidence back therefore needs an authenticated fetch;
-  nothing does that yet, because no screen links to it.
+  asserts it. Reading evidence back therefore needs an authenticated fetch,
+  which `findings-list.tsx` does — it links each artifact through
+  `/api/audit/runs/<id>/artifacts/<position>/<kind>`, a route that reads the
+  blob URL from the run record and never from the caller.
 - **`client-unassigned` is a foreign-key anchor, not a client.** `saveRun`
   materialises a journey for any `journeyId` it has never seen, and
   `journeys.client_id` is a foreign key, so the row has to exist. It is left

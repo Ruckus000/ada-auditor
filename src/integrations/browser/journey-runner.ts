@@ -170,9 +170,21 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   const navigationChecks: Array<Promise<void>> = [];
   let navigationViolation: Error | undefined;
 
-  page.on('response', (response) => {
+  // Bound to the context, not to a page.
+  //
+  // A page-level listener cannot cover popups, and attaching one when a popup
+  // appears is always too late: both `context.on('page')` and
+  // `page.on('popup')` are delivered asynchronously, after the popup has been
+  // created and — measured — after it has already navigated and had its
+  // response dispatched. A direct `window.open('http://169.254.169.254/…')`
+  // was fetched and never checked. The context listener is registered before
+  // any page exists, so there is no window to lose: every main-frame
+  // navigation in the session passes through it, whichever page made it.
+  context.on('response', (response) => {
     if (!input.targetUrl) return;
-    if (response.frame() !== page.mainFrame()) return;
+
+    const frame = response.frame();
+    if (frame !== frame.page()?.mainFrame()) return;
     if (!response.request().isNavigationRequest()) return;
 
     navigationChecks.push(
@@ -347,6 +359,14 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     if (pages.length === 0) {
       await capturePage();
     }
+
+    // Once more, after the loop.
+    //
+    // Every other call site sits before a capture, and a popup's navigation
+    // lands after the click that opened it — so a violation raised by the last
+    // step's popup was recorded into `navigationViolation` and then never
+    // read, because nothing looked again. A check nobody reads is not a check.
+    await assertNavigationsWereSafe();
 
     // A silent cap reads as "we audited everything" when we did not. This is
     // the only record that the run was truncated, so it is emitted here rather

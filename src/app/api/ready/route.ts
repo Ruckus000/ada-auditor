@@ -65,6 +65,16 @@ export async function GET() {
     );
   }
 
+  // The deploy checklist tells an operator to look for an empty warnings
+  // array, so anything that makes results untrustworthy has to appear in it.
+  // Chaos was reported in `checks` and nowhere else, which meant a production
+  // deployment able to serve scripted audit outcomes passed the checklist.
+  if (checks.chaosEnabled) {
+    warnings.push(
+      'chaos_enabled: CHAOS_ENABLED is set, so callers can request scripted audit outcomes. This must not be set in production.',
+    );
+  }
+
   return Response.json(
     {
       status: ready ? 'ready' : 'not_ready',

@@ -100,11 +100,12 @@ export async function principalFromRequest(request: Request): Promise<Principal 
  * For Server Components, which do not.
  *
  * Memoised per render with React `cache`, the same trick `clients/[clientId]/load.ts`
- * uses: the platform layout resolves the principal to decide whether to render
- * at all, and the header wants the name, and neither should cost its own
- * database round trip. Reading `cookies()` also keeps the route dynamic, which
- * the layout depends on — a prerendered auth gate has shipped from this
- * codebase before.
+ * uses. It is now called more than twice per render — every screen in the
+ * `(platform)` group calls it through `guarded()`, and the layout calls it
+ * again for the header's name — so memoising is what keeps a page from paying
+ * for several identical lookups. Reading `cookies()` also keeps the route
+ * dynamic, which the gate depends on: a prerendered auth gate has shipped from
+ * this codebase before.
  */
 export const currentPrincipal = cache(async (): Promise<Principal | null> => {
   const store = await cookies();
