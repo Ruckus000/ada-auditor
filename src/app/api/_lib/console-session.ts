@@ -41,6 +41,87 @@ export function createSessionValue(secret: string, now = Date.now()): string {
   return `${expiresAt}.${sign(secret, expiresAt)}`;
 }
 
+/**
+ * The operator session: the same cookie, now carrying who it is.
+ *
+ * `v2.<operatorId>.<epoch>.<expiresAt>.<hmac>`, signed over the whole payload
+ * so none of it can be edited. The old format above stays valid and stays
+ * meaningful — it proves the holder knows the run token, which is a machine
+ * credential, not a person. Keeping both is what lets CI, the chaos scripts
+ * and the hydration harness go on working untouched while humans get accounts.
+ *
+ * `epoch` is the operator's `sessionEpoch` at mint time. Bumping it in the
+ * database invalidates that operator's outstanding cookies and nobody else's,
+ * which is per-operator revocation with no server-side session table to keep.
+ * Rotating the signing secret remains the "log everyone out" lever.
+ *
+ * The delimiter is `.` and operator ids are generated to exclude it, asserted
+ * here rather than assumed: an id containing a dot would let one field bleed
+ * into the next and change which account a signature covers.
+ */
+const V2_PREFIX = 'v2';
+
+export const OPERATOR_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
+export type OperatorSessionClaims = { operatorId: string; epoch: number; expiresAt: number };
+
+function signV2(secret: string, claims: OperatorSessionClaims): string {
+  return createHmac('sha256', secret)
+    .update(`${V2_PREFIX}|${claims.operatorId}|${claims.epoch}|${claims.expiresAt}`)
+    .digest('hex');
+}
+
+export function createOperatorSessionValue(
+  secret: string,
+  operator: { id: string; sessionEpoch: number },
+  now = Date.now(),
+): string {
+  if (!OPERATOR_ID_PATTERN.test(operator.id)) {
+    throw new Error('Operator id must be a bare token: letters, numbers, hyphen, underscore.');
+  }
+
+  const claims = {
+    operatorId: operator.id,
+    epoch: operator.sessionEpoch,
+    expiresAt: Math.floor(now / 1000) + SESSION_TTL_SECONDS,
+  };
+
+  return [V2_PREFIX, claims.operatorId, claims.epoch, claims.expiresAt, signV2(secret, claims)].join(
+    '.',
+  );
+}
+
+/**
+ * Verifies an operator cookie's signature and expiry.
+ *
+ * Returns the claims, not a verdict: whether the *account* is still valid —
+ * not disabled, epoch unchanged — needs the database, and that check belongs
+ * where the store is, not here. Keeping this module free of persistence keeps
+ * it importable by the session endpoint without dragging a database client
+ * along, which is the same reasoning that put the CSRF helper in its own file.
+ */
+export function readOperatorSessionClaims(
+  value: string | null | undefined,
+  secret: string,
+  now = Date.now(),
+): OperatorSessionClaims | null {
+  if (!value) return null;
+
+  const parts = value.split('.');
+  if (parts.length !== 5 || parts[0] !== V2_PREFIX) return null;
+
+  const [, operatorId, rawEpoch, rawExpiresAt, signature] = parts;
+  if (!OPERATOR_ID_PATTERN.test(operatorId!)) return null;
+
+  const epoch = Number(rawEpoch);
+  const expiresAt = Number(rawExpiresAt);
+  if (!Number.isSafeInteger(epoch) || !Number.isSafeInteger(expiresAt)) return null;
+  if (expiresAt <= Math.floor(now / 1000)) return null;
+
+  const claims = { operatorId: operatorId!, epoch, expiresAt };
+  return safeEqual(signature!, signV2(secret, claims)) ? claims : null;
+}
+
 export function isValidSessionValue(
   value: string | null | undefined,
   secret: string,

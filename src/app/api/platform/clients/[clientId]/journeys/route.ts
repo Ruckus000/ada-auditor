@@ -1,31 +1,10 @@
 import { z } from 'zod';
-import { operatorName } from '../../../../../../domain/operator';
+import { actorFields } from '../../../../../../domain/operator';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { clientIdFromName } from '../../../../../../services/portfolio';
-import { hasOperatorSession } from '../../../../_lib/operator-session';
-import { isRunAuthorized } from '../../../../_lib/auth';
-import { isSameOriginConsoleRequest } from '../../../../_lib/same-origin';
+import { authorizePrincipal } from '../../../../_lib/authorize';
 import { createRequestId } from '../../../../_lib/request-id';
 
-/**
- * A client's journeys.
- *
- * This is the link that was missing. `saveRun` materialises a journey row for
- * any `journeyId` it has never seen, under the placeholder client
- * `client-unassigned` — which keeps `saveRun` total but means a run posted to
- * `/api/audit/run` belongs to nobody. Registering the journey here first, with
- * the client that owns it, is what makes a run show up on that client's
- * findings screen; `saveRun`'s insert is `on conflict do nothing`, so it
- * leaves the real owner alone.
- */
-async function authorize(request: Request): Promise<boolean> {
-  if (isRunAuthorized(request)) {
-    return true;
-  }
-  // A cookie alone is not enough for a state-changing request: it travels on
-  // cross-site form posts too.
-  return isSameOriginConsoleRequest(request) && (await hasOperatorSession());
-}
 
 export async function GET(
   request: Request,
@@ -33,7 +12,8 @@ export async function GET(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -49,6 +29,8 @@ export async function GET(
   return Response.json({ requestId, journeys, count: journeys.length }, { status: 200 });
 }
 
+const scheduleSchema = z.enum(['off', 'daily', 'weekly']);
+
 const createJourneySchema = z.object({
   name: z.string().trim().min(1).max(120),
   targetUrl: z.string().url().max(2048).optional(),
@@ -61,6 +43,8 @@ const createJourneySchema = z.object({
    * by name and the value is resolved server-side, so a literal here would be a
    * secret written into a database column.
    */
+  schedule: scheduleSchema.optional(),
+  scheduleHour: z.number().int().min(0).max(23).optional(),
   steps: z.array(z.record(z.string(), z.unknown())).max(200).optional(),
 });
 
@@ -77,7 +61,8 @@ export async function POST(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -109,12 +94,14 @@ export async function POST(
     clientId,
     name: parsed.name,
     ...(parsed.targetUrl ? { targetUrl: parsed.targetUrl } : {}),
+    ...(parsed.schedule ? { schedule: parsed.schedule } : {}),
+    ...(parsed.scheduleHour === undefined ? {} : { scheduleHour: parsed.scheduleHour }),
     steps: parsed.steps ?? [],
   });
 
   await platform.recordEvent({
     clientId,
-    actor: operatorName(),
+    ...actorFields(principal),
     action: 'recorded a journey',
     subject: parsed.name,
   });

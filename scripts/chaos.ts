@@ -8,6 +8,7 @@ import {
   resolveChaosRunParams,
 } from '../src/app/api/_lib/chaos';
 import { runBrowserAudit } from '../src/integrations/browser/run-browser-audit';
+import { logInfo } from '../src/services/logger';
 
 function fail(message: string): never {
   console.error(`CHAOS FAIL: ${message}`);
@@ -27,6 +28,11 @@ async function main(): Promise<void> {
     const expected = expectedCiStatusForScenario(scenario);
 
     try {
+      // Calls the runner directly rather than going through `startRun`, so the
+      // run budget does not apply. Deliberate: chaos asserts steady-state
+      // behaviour and must not start failing because an earlier suite used up
+      // an hourly ceiling. A budget that makes chaos flaky is worse than no
+      // budget, because it teaches people to re-run red.
       const report = await runBrowserAudit({
         journeyId: params.journeyId,
         environment: params.environment,
@@ -57,18 +63,44 @@ async function main(): Promise<void> {
         }
       }
 
-      console.log(
-        JSON.stringify({
-          type: 'chaos_result',
-          scenario,
-          evidenceStatus: report.evidenceStatus,
-          ciStatus: report.ciStatus,
-          expectedCiStatus: expected,
-          findings: report.findings.length,
-          pagesScanned: report.pages.length,
-          pass: true,
-        }),
+      /**
+       * Timing has to be real, and internally consistent.
+       *
+       * Presence and consistency only — never a wall-clock threshold. A
+       * threshold in CI is a flaky test that fails on a busy runner and
+       * teaches people to re-run red, while a *missing* measurement is a real
+       * regression: the page cap and the function limit are about to be
+       * re-decided from these numbers, and silently reporting zero would be
+       * worse than reporting nothing.
+       */
+      const untimed = report.pages.filter((page) => !(page.timing?.totalMs > 0));
+      if (untimed.length > 0) {
+        fail(`scenario ${scenario}: ${untimed.length} page(s) carry no duration`);
+      }
+
+      const slowerThanScan = report.pages.filter(
+        (page) => page.timing.scanMs > page.timing.totalMs,
       );
+      if (slowerThanScan.length > 0) {
+        fail(`scenario ${scenario}: a page's axe scan is timed longer than the page itself`);
+      }
+
+      const pageTotal = report.pages.reduce((sum, page) => sum + page.timing.totalMs, 0);
+      if (report.phaseMs.journey < pageTotal) {
+        fail(
+          `scenario ${scenario}: journey phase (${report.phaseMs.journey}ms) is shorter than the pages it contains (${pageTotal}ms)`,
+        );
+      }
+
+      logInfo('chaos_result', {
+        scenario,
+        evidenceStatus: report.evidenceStatus,
+        ciStatus: report.ciStatus,
+        expectedCiStatus: expected,
+        findings: report.findings.length,
+        pagesScanned: report.pages.length,
+        pass: true,
+      });
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });
     }

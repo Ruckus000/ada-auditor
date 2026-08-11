@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { hasOperatorSession } = vi.hoisted(() => ({ hasOperatorSession: vi.fn() }));
-vi.mock('../../src/app/api/_lib/operator-session', () => ({ hasOperatorSession }));
+// The routes resolve a principal now rather than asking "is there a
+// session?". Mocking that seam keeps these tests about the routes; the
+// cookie/token machinery has its own suite in tests/api/principal.test.ts.
+const { principalFromRequest } = vi.hoisted(() => ({ principalFromRequest: vi.fn() }));
+vi.mock('../../src/app/api/_lib/principal', () => ({ principalFromRequest }));
+
+const OPERATOR = { kind: 'operator' as const, id: 'op-1', name: 'Alex Reed', email: 'alex@example.com' };
 
 const { DELETE, POST } = await import(
   '../../src/app/api/platform/clients/[clientId]/triage/route'
@@ -27,7 +32,7 @@ function request(body: unknown, method = 'POST', headers: Record<string, string>
 
 /** Same-origin plus a session: how the screens call it. */
 function fromBrowser(body: unknown, method = 'POST'): Request {
-  hasOperatorSession.mockResolvedValue(true);
+  principalFromRequest.mockResolvedValue(OPERATOR);
   return request(body, method, { origin: 'http://localhost', 'sec-fetch-site': 'same-origin' });
 }
 
@@ -38,8 +43,8 @@ describe('/api/platform/clients/[clientId]/triage', () => {
 
   beforeEach(async () => {
     process.env.AUDITOR_RUN_TOKEN = TOKEN;
-    hasOperatorSession.mockReset();
-    hasOperatorSession.mockResolvedValue(false);
+    principalFromRequest.mockReset();
+    principalFromRequest.mockResolvedValue(null);
     platform = new MemoryPlatformStore();
     setPlatformStore(platform);
     await platform.upsertClient({ id: 'acme', name: 'Acme' });
@@ -60,7 +65,7 @@ describe('/api/platform/clients/[clientId]/triage', () => {
   it('refuses a cookie carried cross-origin', async () => {
     // Dismissing a finding is how a barrier stops being reported. A cross-site
     // page must not be able to do it with a session cookie it did not earn.
-    hasOperatorSession.mockResolvedValue(true);
+    principalFromRequest.mockResolvedValue(OPERATOR);
     const response = await POST(
       request({ findingKey: KEY, state: 'dismissed', note: 'why' }, 'POST', {
         origin: 'https://evil.example',
@@ -178,20 +183,35 @@ describe('/api/platform/clients/[clientId]/triage', () => {
     expect(await platform.listTriage('acme')).toEqual([]);
   });
 
-  it('records who decided', async () => {
-    process.env.AUDITOR_OPERATOR_NAME = 'Alex Reed';
-    try {
-      await POST(fromBrowser({ findingKey: KEY, state: 'dismissed', note: 'why' }), params('acme'));
+  // The name is what the activity feed reads back; the id is what makes it an
+  // account rather than a string. Both, because they are different facts —
+  // this used to be a configured environment variable and could name only one
+  // person however many were working.
+  it('records who decided, by name and by account', async () => {
+    await POST(fromBrowser({ findingKey: KEY, state: 'dismissed', note: 'why' }), params('acme'));
 
-      const [event] = await platform.listEvents({ clientId: 'acme' });
-      expect(event).toMatchObject({
-        actor: 'Alex Reed',
-        action: 'dismissed a finding',
-        subject: 'image-alt',
-      });
-    } finally {
-      delete process.env.AUDITOR_OPERATOR_NAME;
-    }
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event).toMatchObject({
+      actor: 'Alex Reed',
+      actorOperatorId: 'op-1',
+      action: 'dismissed a finding',
+      subject: 'image-alt',
+    });
+  });
+
+  // Automation is a legitimate caller with no account. The event still has to
+  // say who, or a scheduled dismissal reads as though nobody did it.
+  it('records a machine caller by name, with no account id', async () => {
+    // Built first: `fromBrowser` sets the principal itself, so overriding it
+    // has to come after.
+    const call = fromBrowser({ findingKey: KEY, state: 'dismissed', note: 'why' });
+    principalFromRequest.mockResolvedValue({ kind: 'machine', name: 'Operator' });
+
+    await POST(call, params('acme'));
+
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event?.actor).toBe('Operator');
+    expect(event).not.toHaveProperty('actorOperatorId');
   });
 
   it("does not let one client's decision apply to another's finding", async () => {

@@ -22,6 +22,16 @@ export type JourneySummary = {
   name: string;
   targetUrl?: string;
   stepCount: number;
+  /**
+   * Whether "Run now" can do anything with this journey.
+   *
+   * Requires a target URL. Without one the runner walks our own fixture app
+   * over `file://` and files a green audit of demo pages under a real client's
+   * name. The route refuses it; the screen should not offer it either.
+   */
+  runnable: boolean;
+  /** How often this journey re-runs. `off` unless somebody chose otherwise. */
+  schedule: 'off' | 'daily' | 'weekly';
   lastRun: RunSummary | null;
 };
 
@@ -35,6 +45,13 @@ export type RunSummary = {
   shouldFix: number;
   pagesAudited: number;
   evidenceStatus: string;
+  /**
+   * How long the run took. Null on runs recorded before it was measured —
+   * never 0, which would claim a run that took no time.
+   */
+  durationMs: number | null;
+  /** The slowest single page, which is what the page cap is denominated in. */
+  slowestPageMs: number | null;
 };
 
 export type ClientDetail = {
@@ -46,6 +63,14 @@ export type ClientDetail = {
   /** The newest run across every journey, or null before the first one. */
   lastRun: RunSummary | null;
 };
+
+/** The slowest page's wall clock, or null when no page carries a measurement. */
+function slowestPage(run: StoredRunRecord): number | null {
+  const measured = (run.pages ?? [])
+    .map((page) => page.durationMs)
+    .filter((ms): ms is number => typeof ms === 'number');
+  return measured.length > 0 ? Math.max(...measured) : null;
+}
 
 export function summariseRun(run: StoredRunRecord): RunSummary {
   const deterministic = run.findings.filter((finding) => finding.source === 'deterministic');
@@ -59,6 +84,8 @@ export function summariseRun(run: StoredRunRecord): RunSummary {
     shouldFix: deterministic.filter((f) => displaySeverity(f.severity) === 'should').length,
     pagesAudited: run.pages?.length ?? 0,
     evidenceStatus: run.evidenceStatus,
+    durationMs: run.durationMs || null,
+    slowestPageMs: slowestPage(run),
   };
 }
 
@@ -97,6 +124,8 @@ export async function buildClientDetail(
         name: journey.name,
         ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
         stepCount: journey.steps.length,
+        runnable: Boolean(journey.targetUrl),
+        schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
         lastRun: run ? summariseRun(run) : null,
       };
     }),

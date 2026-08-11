@@ -74,6 +74,15 @@ export type PageAudit = {
   artifacts: JourneyArtifacts;
   /** Filesystem- and URL-safe id for this page's artifact set within the run. */
   pageKey: string;
+  /**
+   * What this page cost, in wall clock.
+   *
+   * The page cap and the 300s function limit were both set by guess. This is
+   * the measurement that decides whether they are the right numbers — and the
+   * unit is deliberately the whole capture, navigate-settle through
+   * artifacts-written, because that is what the cap is denominated in.
+   */
+  timing: { totalMs: number; scanMs: number };
 };
 
 export type JourneyRunnerResult = {

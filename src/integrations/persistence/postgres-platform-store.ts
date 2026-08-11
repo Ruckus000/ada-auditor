@@ -5,6 +5,8 @@ import type {
   ReportAudience,
   StoredClient,
   StoredJourney,
+  StoredOperator,
+  StoredOperatorWithSecret,
   StoredReport,
   TriageEntry,
   TriageState,
@@ -43,11 +45,25 @@ function optional<T extends object, K extends string, V>(
  * any mapper parameter, so a renamed column would have compiled cleanly and
  * produced `undefined` at runtime.
  */
+type OperatorRow = {
+  id: string;
+  email: string;
+  name: string;
+  session_epoch: number;
+  disabled_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
 type JourneyRow = {
   id: string;
   client_id: string;
   name: string;
   target_url: string | null;
+  environment: string | null;
+  schedule: string | null;
+  schedule_hour: number | null;
+  last_scheduled_at: Date | string | null;
   steps: unknown[];
   archived_at: Date | string | null;
   created_at: Date | string;
@@ -64,6 +80,7 @@ type TriageRow = {
   state: string;
   note: string | null;
   assignee: string | null;
+  assignee_operator_id: string | null;
   actor: string;
   created_at: Date | string;
   updated_at: Date | string;
@@ -82,6 +99,100 @@ type ReportRow = {
 
 export class PostgresPlatformStore implements PlatformStore {
   constructor(private readonly sql: SqlClient) {}
+
+  // ----------------------------------------------------------- operators --
+
+  /** Without the hash, by construction — there is no shape here that carries it. */
+  private mapOperator(row: OperatorRow): StoredOperator {
+    return {
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      sessionEpoch: Number(row.session_epoch),
+      ...optional('disabledAt', row.disabled_at ? toIso(row.disabled_at) : null),
+      createdAt: toIso(row.created_at),
+      updatedAt: toIso(row.updated_at),
+    } as StoredOperator;
+  }
+
+  async listOperators(): Promise<StoredOperator[]> {
+    // Columns named rather than `select *`: this result feeds an API response,
+    // and `select *` would carry `password_hash` into a shape one careless
+    // spread away from being serialised.
+    const rows = await this.sql<OperatorRow>`
+      select id, email, name, session_epoch, disabled_at, created_at, updated_at
+      from operators order by name asc
+    `;
+    return rows.map((row) => this.mapOperator(row));
+  }
+
+  async getOperator(id: string): Promise<StoredOperator | null> {
+    const rows = await this.sql<OperatorRow>`
+      select id, email, name, session_epoch, disabled_at, created_at, updated_at
+      from operators where id = ${id}
+    `;
+    return rows[0] ? this.mapOperator(rows[0]) : null;
+  }
+
+  async getOperatorByEmail(email: string): Promise<StoredOperatorWithSecret | null> {
+    const rows = await this.sql<OperatorRow & { password_hash: string }>`
+      select id, email, name, session_epoch, disabled_at, created_at, updated_at, password_hash
+      from operators where lower(email) = lower(${email})
+    `;
+    return rows[0]
+      ? { ...this.mapOperator(rows[0]), passwordHash: rows[0].password_hash }
+      : null;
+  }
+
+  async upsertOperator(input: {
+    id: string;
+    email: string;
+    name: string;
+    passwordHash: string;
+    disabledAt?: string;
+  }): Promise<void> {
+    // Conflict on email, not id: email is the unique human identifier and a
+    // disabled operator keeps their row, so inserting by id would fail for
+    // anyone ever disabled. The existing id wins so activity attribution
+    // survives a re-add.
+    //
+    // The conflict target is `lower(email)`, matching the index rather than
+    // the column's own unique constraint. Targeting the column would update on
+    // an exact-case match but raise a unique violation on a differently-cased
+    // one — so re-adding "Sam@example.com" over "sam@example.com" would throw
+    // here while the in-memory double, which compares case-insensitively,
+    // quietly succeeded.
+    await this.sql`
+      insert into operators (id, email, name, password_hash, disabled_at)
+      values (${input.id}, ${input.email}, ${input.name}, ${input.passwordHash},
+              ${input.disabledAt ?? null})
+      on conflict (lower(email)) do update set
+        name = excluded.name,
+        password_hash = excluded.password_hash,
+        disabled_at = excluded.disabled_at,
+        updated_at = now()
+    `;
+  }
+
+  async bumpSessionEpoch(id: string): Promise<void> {
+    await this.sql`
+      update operators set session_epoch = session_epoch + 1, updated_at = now()
+      where id = ${id}
+    `;
+  }
+
+  async setOperatorDisabled(id: string, disabled: boolean): Promise<void> {
+    // Disabling also bumps the epoch. Without that, a disabled operator keeps
+    // a valid cookie until it expires, and "disabled" would mean "cannot sign
+    // in again" rather than "is out now".
+    await this.sql`
+      update operators
+      set disabled_at = ${disabled ? new Date().toISOString() : null},
+          session_epoch = session_epoch + 1,
+          updated_at = now()
+      where id = ${id}
+    `;
+  }
 
   // ------------------------------------------------------------- clients --
 
@@ -166,6 +277,10 @@ export class PostgresPlatformStore implements PlatformStore {
       clientId: row.client_id,
       name: row.name,
       ...optional('targetUrl', row.target_url),
+      ...optional('environment', row.environment),
+      ...optional('schedule', row.schedule),
+      ...optional('scheduleHour', row.schedule_hour),
+      ...optional('lastScheduledAt', row.last_scheduled_at ? toIso(row.last_scheduled_at) : null),
       steps: row.steps ?? [],
       ...optional('archivedAt', row.archived_at ? toIso(row.archived_at) : null),
       createdAt: toIso(row.created_at),
@@ -199,18 +314,78 @@ export class PostgresPlatformStore implements PlatformStore {
     journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,
   ): Promise<void> {
     await this.sql`
-      insert into journeys (id, client_id, name, target_url, steps, updated_at)
+      insert into journeys (
+        id, client_id, name, target_url, environment, schedule, schedule_hour,
+        steps, updated_at
+      )
       values (
         ${journey.id}, ${journey.clientId}, ${journey.name},
-        ${journey.targetUrl ?? null}, ${JSON.stringify(journey.steps ?? [])}::jsonb, now()
+        ${journey.targetUrl ?? null}, ${journey.environment ?? 'production'},
+        ${journey.schedule ?? 'off'}, ${journey.scheduleHour ?? null},
+        ${JSON.stringify(journey.steps ?? [])}::jsonb, now()
       )
       on conflict (id) do update set
         client_id = excluded.client_id,
         name = excluded.name,
         target_url = excluded.target_url,
+        environment = excluded.environment,
+        schedule = excluded.schedule,
+        schedule_hour = excluded.schedule_hour,
         steps = excluded.steps,
         updated_at = now()
     `;
+  }
+
+  /**
+   * One statement: select the due rows and stamp them in the same breath.
+   *
+   * The Neon HTTP driver is one statement per request with no transactions, so
+   * a select followed by an update would let two overlapping ticks both claim
+   * the same journey and start it twice.
+   *
+   * `for update skip locked` is what actually makes that true, and it is not
+   * decoration. Without it, two concurrent updates can both evaluate the
+   * subquery before either commits; the second then blocks on the row lock and
+   * re-checks the outer qual against the new row version — behaviour subtle
+   * enough that no scheduler should depend on it implicitly. `skip locked`
+   * makes the second tick pass over a claimed row instead of queueing behind
+   * it, which is also what keeps a slow claim from serialising the whole tick.
+   *
+   * Overlap is unlikely on an hourly cron but entirely reachable: the route
+   * accepts a manual tick with the run token, so an operator proving a new
+   * schedule as the hour rolls over is the collision. A double claim means one
+   * journey audited twice and a client billed for it.
+   *
+   * The slack in the intervals — 23 hours for daily, 6 days for weekly — is
+   * what stops hour-boundary jitter from skipping a day entirely. Without it,
+   * a tick that runs a few seconds late means `last_scheduled_at` is not quite
+   * 24 hours old and the journey waits another full day.
+   */
+  async claimDueJourneys(limit: number, now: Date = new Date()): Promise<StoredJourney[]> {
+    const hour = now.getUTCHours();
+    const rows = await this.sql<JourneyRow>`
+      update journeys set last_scheduled_at = now()
+      where id in (
+        select id from journeys
+        where schedule is not null
+          and schedule <> 'off'
+          and archived_at is null
+          and target_url is not null
+          and coalesce(schedule_hour, 3) = ${hour}
+          and (
+            last_scheduled_at is null
+            or last_scheduled_at < now() - (
+              case schedule when 'weekly' then interval '6 days'
+                            else interval '23 hours' end
+            )
+          )
+        order by last_scheduled_at asc nulls first
+        limit ${Math.max(1, Math.floor(limit))}
+        for update skip locked
+      )
+      returning *
+    `;
+    return rows.map((row) => this.mapJourney(row));
   }
 
   async archiveJourney(id: string): Promise<void> {
@@ -230,6 +405,7 @@ export class PostgresPlatformStore implements PlatformStore {
       state: row.state as TriageState,
       ...optional('note', row.note),
       ...optional('assignee', row.assignee),
+      ...optional('assigneeOperatorId', row.assignee_operator_id),
       actor: row.actor,
       createdAt: toIso(row.created_at),
       updatedAt: toIso(row.updated_at),
@@ -248,16 +424,18 @@ export class PostgresPlatformStore implements PlatformStore {
     await this.sql`
       insert into finding_triage (
         client_id, finding_key, source, code, page_url, selector,
-        state, note, assignee, actor, updated_at
+        state, note, assignee, assignee_operator_id, actor, updated_at
       ) values (
         ${entry.clientId}, ${entry.findingKey}, ${entry.source}, ${entry.code},
         ${entry.pageUrl ?? null}, ${entry.selector ?? null}, ${entry.state},
-        ${entry.note ?? null}, ${entry.assignee ?? null}, ${entry.actor}, now()
+        ${entry.note ?? null}, ${entry.assignee ?? null},
+        ${entry.assigneeOperatorId ?? null}, ${entry.actor}, now()
       )
       on conflict (client_id, finding_key) do update set
         state = excluded.state,
         note = excluded.note,
         assignee = excluded.assignee,
+        assignee_operator_id = excluded.assignee_operator_id,
         actor = excluded.actor,
         updated_at = now()
     `;
@@ -334,10 +512,12 @@ export class PostgresPlatformStore implements PlatformStore {
 
   async recordEvent(event: ActivityEvent): Promise<void> {
     await this.sql`
-      insert into activity_events (client_id, actor, action, subject, metadata)
+      insert into activity_events
+        (client_id, actor, actor_operator_id, action, subject, metadata)
       values (
-        ${event.clientId ?? null}, ${event.actor}, ${event.action},
-        ${event.subject ?? null}, ${JSON.stringify(event.metadata ?? {})}::jsonb
+        ${event.clientId ?? null}, ${event.actor}, ${event.actorOperatorId ?? null},
+        ${event.action}, ${event.subject ?? null},
+        ${JSON.stringify(event.metadata ?? {})}::jsonb
       )
     `;
   }
@@ -352,6 +532,7 @@ export class PostgresPlatformStore implements PlatformStore {
       id: number;
       client_id: string | null;
       actor: string;
+      actor_operator_id: string | null;
       action: string;
       subject: string | null;
       metadata: Record<string, unknown>;
@@ -367,6 +548,7 @@ export class PostgresPlatformStore implements PlatformStore {
       id: Number(row.id),
       ...optional('clientId', row.client_id),
       actor: row.actor,
+      ...optional('actorOperatorId', row.actor_operator_id),
       action: row.action,
       ...optional('subject', row.subject),
       metadata: row.metadata ?? {},

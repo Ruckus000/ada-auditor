@@ -336,3 +336,137 @@ alter table reports add column if not exists audience text
 alter table reports add column if not exists title text;
 alter table reports add column if not exists issued_by text;
 alter table reports add column if not exists revoked_at timestamptz;
+
+-- --- Operators -------------------------------------------------------------
+--
+-- The Phase 2 decision that `activity_events.actor` "must not grow into a
+-- foreign key without that decision being revisited" is hereby revisited, and
+-- the answer is: it still does not. Here is what changed and what did not.
+--
+-- What changed: there are real accounts now. One shared `AUDITOR_RUN_TOKEN`
+-- was identity, authentication, authorization and the session signing key all
+-- at once, which made three things impossible together — attributing an action
+-- to a person, assigning a finding to anyone, and revoking one operator
+-- without logging out everybody.
+--
+-- What did not: there is still exactly ONE organisation. Every operator sees
+-- every client. No table gets a tenant column, because there are no mutually
+-- distrustful tenants — only people. If that ever changes, it changes here
+-- first, exactly as the header of this file says.
+--
+-- And `actor` stays text. `actor_operator_id` is added *beside* it, nullable,
+-- never backfilled. An activity feed is a historical record: an operator who
+-- has since been renamed did not do the thing under their new name, and events
+-- written by CI or the scheduler have no account to point at. A name and an
+-- account are different facts and the table now holds both.
+--
+-- Re-evaluated against the idempotence threshold at the top of this section:
+-- every statement below is `create table if not exists`, `add column if not
+-- exists`, or a guarded `add constraint`. Nothing backfills a not-null column
+-- and nothing changes a primary key, so the threshold is still not crossed and
+-- a migration tool is still not warranted.
+create table if not exists operators (
+  id             text primary key,
+  email          text not null unique,
+  name           text not null,
+  -- `scrypt$N$r$p$salt$hash`. The cost parameters live in the value so raising
+  -- them later does not invalidate every existing row.
+  password_hash  text not null,
+  -- Bumped to invalidate one operator's outstanding sessions. The cookie
+  -- carries the epoch it was minted at, so revocation needs no session table.
+  session_epoch  integer not null default 1,
+  -- Disabled, never deleted: `activity_events` points here, and deleting an
+  -- operator would erase who did what.
+  disabled_at    timestamptz,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+-- Lookup at sign-in is by email, case-insensitively — an address is not
+-- case-sensitive to the person who owns it.
+create unique index if not exists operators_email_lower_idx on operators (lower(email));
+
+alter table activity_events add column if not exists actor_operator_id text;
+alter table finding_triage  add column if not exists assignee_operator_id text;
+
+-- `on delete set null` rather than cascade: an operator row should never be
+-- deleted, but if one ever is, losing the account link is survivable and
+-- losing the event is not.
+do $$ begin
+  alter table activity_events
+    add constraint activity_events_operator_fk
+    foreign key (actor_operator_id) references operators (id) on delete set null;
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter table finding_triage
+    add constraint finding_triage_operator_fk
+    foreign key (assignee_operator_id) references operators (id) on delete set null;
+exception when duplicate_object then null; end $$;
+
+-- --- Timing ----------------------------------------------------------------
+--
+-- The page cap of 20 and the 300s function limit were both set by guess. These
+-- columns are what turns the next decision about them into a measurement.
+--
+-- `started_at` is also a correctness fix, not only instrumentation.
+-- `toStoredRunRecord` mints a fresh `createdAt` on every call and this file's
+-- upsert took `excluded.created_at`, so the write that turns a `running`
+-- placeholder into a finished run *moved* `created_at` to the completion time.
+-- The column therefore meant "when it finished" for a complete run and "when it
+-- started" for one that died — and `getLatestRun` orders by it, so baselines
+-- were ordered by finish time while the runs they described were ordered by
+-- start. `created_at` is now pinned to the earliest write and `started_at`
+-- holds the start explicitly.
+alter table runs add column if not exists started_at timestamptz;
+
+-- Phase timings as jsonb rather than columns: the phase names will change
+-- while we are still learning where a run spends itself, and this is
+-- measurement data, not a contract. Contrast `checks_passed`, which is a score
+-- input and therefore got real columns.
+alter table runs add column if not exists phase_ms jsonb;
+
+alter table run_pages add column if not exists duration_ms integer;
+alter table run_pages add column if not exists scan_ms integer;
+
+-- Existing rows: the best available answer is the timestamp we have. Not
+-- guessed forward, not left null — a null here would read as "not measured"
+-- on runs that predate measurement, which is exactly what it is.
+update runs set started_at = created_at where started_at is null;
+
+-- --- Journey environment ---------------------------------------------------
+--
+-- Which action policy a run against this journey gets. It lived only in a
+-- request body, so a stored journey could not be run at all — there was no
+-- answer to "run this" without someone typing the environment again.
+--
+-- Backfilled to `production`, the strictest set in `domain/policy.ts`: no
+-- `submit-safe`, no `mutate-test-data`. A tool that walks other people's sites
+-- defaults to read-only and makes widening a deliberate, recorded act.
+--
+-- No check constraint: `environmentSchema` validates at the boundary, and a
+-- constraint here is a future `alter` to fight when the set changes.
+alter table journeys add column if not exists environment text;
+update journeys set environment = 'production' where environment is null;
+
+-- --- Schedule --------------------------------------------------------------
+--
+-- Cadence lives on the journey, not in a `schedules` table: it is one-to-one
+-- with a journey and read every time a journey is read, so a separate table
+-- would be a join for one column.
+--
+-- Three words rather than a cron expression. A per-journey cron string is a
+-- parser plus a timezone story, and nobody asked to audit at 03:17 on
+-- Tuesdays. `schedule_hour` is UTC, so what "daily" means is answerable.
+--
+-- `last_scheduled_at` is what makes the tick idempotent. The cron fires
+-- hourly, and a journey is claimed by *stamping* this column in the same
+-- statement that selects it — there are no transactions on the Neon HTTP
+-- driver, so claim-then-work is the only shape available.
+alter table journeys add column if not exists schedule text;
+alter table journeys add column if not exists schedule_hour smallint;
+alter table journeys add column if not exists last_scheduled_at timestamptz;
+update journeys set schedule = 'off' where schedule is null;
+
+create index if not exists journeys_schedule_idx
+  on journeys (schedule, schedule_hour) where schedule <> 'off';

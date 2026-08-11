@@ -4,9 +4,12 @@ import { auditReport, criticalFinding } from '../helpers/audit-report';
 const { runBrowserAudit } = vi.hoisted(() => ({ runBrowserAudit: vi.fn() }));
 vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserAudit }));
 
-const { handleAuditRun } = await import('../../src/app/api/_lib/audit-run-handler');
+const { handleAuditRun, startRun } = await import('../../src/app/api/_lib/audit-run-handler');
 const { MemoryRunStore, resetRunStore, setRunStore } = await import(
   '../../src/integrations/persistence'
+);
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
 );
 
 /** Synchronous mode: these assert on the run's outcome, not on the 202 shape. */
@@ -29,6 +32,9 @@ describe('handleAuditRun', () => {
   });
 
   afterEach(() => {
+    // The run budget counter is a module singleton; without this it
+    // accumulates across tests in this file and eventually refuses one.
+    resetRunCounter();
     delete process.env.CHAOS_ENABLED;
     resetRunStore();
   });
@@ -311,5 +317,131 @@ describe('handleAuditRun', () => {
     expect(result.ok).toBe(false);
     expect(result.status).toBe(400);
     expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * `startRun` is the seam every server-side caller uses. Its whole point is that
+ * reaching a run no longer requires a `Request` — before it existed,
+ * /api/audit/console had to manufacture one with the server's own token forged
+ * into an Authorization header, because an HTTP handler was the only door.
+ *
+ * These tests therefore pass params directly and never build a Request.
+ */
+describe('startRun', () => {
+  beforeEach(() => {
+    runBrowserAudit.mockReset();
+    runBrowserAudit.mockResolvedValue(auditReport());
+    setRunStore(new MemoryRunStore());
+  });
+
+  afterEach(() => {
+    delete process.env.CHAOS_ENABLED;
+    resetRunStore();
+  });
+
+  it('runs synchronously when asked to wait', async () => {
+    const result = await startRun(
+      { journeyId: 'demo-login', environment: 'staging', wait: true },
+      'req-start-sync',
+    );
+
+    expect(result.status).toBe(200);
+    expect(result.body.ciStatus).toBe('pass');
+    expect(result.body.requestId).toBe('req-start-sync');
+  });
+
+  it('returns 202 and a poll URL by default', async () => {
+    const result = await startRun(
+      { journeyId: 'demo-login', environment: 'staging' },
+      'req-start-async',
+    );
+
+    expect(result.status).toBe(202);
+    expect(result.body.status).toBe('running');
+    expect(result.body.pollUrl).toBe('/api/audit/runs/req-start-async');
+  });
+
+  // The placeholder is what makes a run that dies mid-flight distinguishable
+  // from one that never happened. It must be written before the work starts,
+  // not after it finishes.
+  it('persists a running placeholder before the work starts', async () => {
+    const store = new MemoryRunStore();
+    setRunStore(store);
+
+    await startRun({ journeyId: 'demo-login', environment: 'staging' }, 'req-start-placeholder');
+
+    const stored = await store.getRun('req-start-placeholder');
+    expect(stored?.journeyId).toBe('demo-login');
+  });
+
+  // Chaos gating lives in startRun rather than in the HTTP handler, so every
+  // caller inherits it — a server-side caller cannot reach a chaos scenario on
+  // a deployment where chaos is switched off.
+  it('refuses a chaos scenario when chaos is disabled, whoever the caller is', async () => {
+    delete process.env.CHAOS_ENABLED;
+
+    const result = await startRun(
+      {
+        journeyId: 'demo-login',
+        environment: 'staging',
+        chaosScenario: 'browser_complete_clean',
+        wait: true,
+      },
+      'req-start-chaos',
+    );
+
+    expect(result.status).toBe(403);
+    expect(result.body.error).toBe('chaos_not_enabled');
+    expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The budget lives inside `startRun`, so every caller inherits it — the HTTP
+ * endpoint, the console, the Run now button and the scheduler. A route-level
+ * check would be four copies and would miss whichever one is added next.
+ */
+describe('run budget', () => {
+  beforeEach(() => {
+    runBrowserAudit.mockReset();
+    runBrowserAudit.mockResolvedValue(auditReport());
+    setRunStore(new MemoryRunStore());
+    setRunCounter(new MemoryRunCounter());
+  });
+
+  afterEach(() => {
+    resetRunCounter();
+    resetRunStore();
+    delete process.env.AUDITOR_MAX_RUNS_PER_HOUR;
+  });
+
+  it('refuses a run past the limit with a stable code and a reset hint', async () => {
+    process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
+
+    await startRun({ journeyId: 'demo-login', environment: 'staging', wait: true }, 'req-budget-1');
+    const second = await startRun(
+      { journeyId: 'demo-login', environment: 'staging', wait: true },
+      'req-budget-2',
+    );
+
+    expect(second.status).toBe(429);
+    expect(second.body.error).toBe('run_budget_exceeded');
+    expect(second.body.resetsInSeconds).toBeTypeOf('number');
+  });
+
+  // A refused run never started, so it must leave no trace — a `running` row
+  // for a run nobody ran would then be reconciled to `failed` and read as an
+  // audit that broke rather than one that was declined.
+  it('writes no run record for a refused run', async () => {
+    process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
+    const store = new MemoryRunStore();
+    setRunStore(store);
+
+    await startRun({ journeyId: 'demo-login', environment: 'staging' }, 'req-budget-3');
+    await startRun({ journeyId: 'demo-login', environment: 'staging' }, 'req-budget-4');
+
+    expect(await store.getRun('req-budget-4')).toBeNull();
+    expect(runBrowserAudit).toHaveBeenCalledOnce();
   });
 });

@@ -12,6 +12,7 @@ const { CONSOLE_COOKIE, createSessionValue } = await import(
 const { MemoryRunStore, resetRunStore, setRunStore } = await import(
   '../../src/integrations/persistence'
 );
+const { resetRunCounter } = await import('../../src/app/api/_lib/run-counter');
 
 const TOKEN = 'test-console-token-long-enough';
 
@@ -34,8 +35,35 @@ describe('audit console route', () => {
   });
 
   afterEach(() => {
+    // The run budget counter is a module singleton; without this it
+    // accumulates across tests in this file and eventually refuses one.
+    resetRunCounter();
     delete process.env.AUDITOR_RUN_TOKEN;
     resetRunStore();
+  });
+
+  // The route reaches `startRun` in-process now instead of rebuilding the
+  // request with the server's own token forged into an Authorization header.
+  // A body that never reaches the schema is the route's own 400, not one
+  // borrowed from an HTTP handler it no longer calls.
+  it('rejects a malformed body itself, without launching a browser', async () => {
+    process.env.AUDITOR_RUN_TOKEN = TOKEN;
+
+    const response = await POST(
+      new Request('http://localhost:3000/api/audit/console', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'sec-fetch-site': 'same-origin',
+          cookie: `${CONSOLE_COOKIE}=${createSessionValue(TOKEN)}`,
+        },
+        body: JSON.stringify({ journeyId: '', environment: 'staging' }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('invalid_request_body');
+    expect(runBrowserAudit).not.toHaveBeenCalled();
   });
 
   it('accepts same-origin sec-fetch-site', () => {

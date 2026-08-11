@@ -1,4 +1,4 @@
-import { Redis } from '@upstash/redis';
+import { createRedisClient, isRedisConfigured, type RedisLike } from './redis';
 
 /**
  * Rate limit on console unlock attempts.
@@ -33,10 +33,7 @@ const WINDOW_SECONDS = 5 * 60;
  * longer exists.
  */
 export function isThrottleKvConfigured(): boolean {
-  return Boolean(
-    (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
-      (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
-  );
+  return isRedisConfigured();
 }
 
 export interface ThrottleStore {
@@ -75,15 +72,8 @@ export class MemoryThrottleStore implements ThrottleStore {
   }
 }
 
-type ThrottleKv = {
-  get<T>(key: string): Promise<T | null>;
-  incr(key: string): Promise<number>;
-  expire(key: string, seconds: number): Promise<unknown>;
-  del(key: string): Promise<unknown>;
-};
-
 export class KvThrottleStore implements ThrottleStore {
-  constructor(private readonly kv: ThrottleKv) {}
+  constructor(private readonly kv: RedisLike) {}
 
   private key(key: string): string {
     return `unlock:attempts:${key}`;
@@ -114,13 +104,8 @@ let store: ThrottleStore | undefined;
 
 export function getThrottleStore(): ThrottleStore {
   if (!store) {
-    store = isThrottleKvConfigured()
-      ? new KvThrottleStore(
-          new Redis({
-            url: (process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL)!,
-            token: (process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN)!,
-          }),
-        )
+    store = isRedisConfigured()
+      ? new KvThrottleStore(createRedisClient())
       : new MemoryThrottleStore();
   }
   return store;

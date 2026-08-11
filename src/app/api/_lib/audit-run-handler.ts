@@ -16,15 +16,26 @@ import {
 } from './chaos';
 import { createRequestId } from './request-id';
 import { classifyRunFailure } from './run-failure';
+import { getRunCounter } from './run-counter';
+import { consumeRunBudget } from '../../../services/run-budget';
+import { logWarn } from '../../../services/logger';
 
 const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
+
+/**
+ * The ceiling a run has to fit inside, mirroring `maxDuration` on the routes.
+ *
+ * Only used to report headroom. A run is not stopped at this number — the
+ * platform stops it, and rather more abruptly.
+ */
+const MAX_RUN_DURATION_MS = 300_000;
 
 /**
  * A `fill` step carries either a literal value or a credential reference.
  * Passwords must use the reference: steps travel in this request body, get
  * persisted with the journey, and would otherwise be recoverable from both.
  */
-const journeyStepSchema = z.union([
+export const journeyStepSchema = z.union([
   z.object({ action: z.string().min(1), type: z.literal('goto'), path: z.string().min(1) }),
   z.object({ action: z.string().min(1), type: z.literal('click'), selector: z.string().min(1) }),
   // Two `fill` shapes, so these are a plain union rather than a discriminated
@@ -44,7 +55,7 @@ const journeyStepSchema = z.union([
   }),
 ]);
 
-const auditRunBodySchema = z.object({
+export const auditRunBodySchema = z.object({
   journeyId: z.string().min(1),
   environment: environmentSchema,
   platformHint: z.string().min(1).optional(),
@@ -121,6 +132,7 @@ async function executeRun(
     // audited page, each keyed by that page so they cannot overwrite one
     // another.
     const artifactStore = getArtifactStore();
+    const uploadStartedAt = Date.now();
     const pages = [];
     for (const audited of report.pages) {
       pages.push({
@@ -131,6 +143,8 @@ async function executeRun(
         checksPassed: audited.checks?.passed,
         checksFailed: audited.checks?.failed,
         checksIncomplete: audited.checks?.incomplete,
+        durationMs: audited.timing?.totalMs,
+        scanMs: audited.timing?.scanMs,
         artifacts: await artifactStore.upload(
           requestId,
           audited.artifacts,
@@ -139,8 +153,15 @@ async function executeRun(
       });
     }
 
+    const uploadMs = Date.now() - uploadStartedAt;
     const durationMs = Date.now() - startedAt;
     const baseline = await store.getLatestRun(report.journeyId, report.environment, requestId);
+
+    const phaseMs = { ...(report.phaseMs ?? {}), upload: uploadMs };
+    const slowestPageMs = pages.reduce(
+      (slowest, page) => Math.max(slowest, page.durationMs ?? 0),
+      0,
+    );
 
     const storedRun = toStoredRunRecord({
       requestId,
@@ -151,6 +172,8 @@ async function executeRun(
       ciStatus: report.ciStatus,
       findings: report.findings,
       durationMs,
+      startedAt: new Date(startedAt).toISOString(),
+      phaseMs,
       browserMode: true,
       pages,
       truncatedPages: report.truncatedPages,
@@ -172,6 +195,14 @@ async function executeRun(
         durationMs,
         requestId,
         browserMode: true,
+        // The dataset the page-cap decision gets made from. `headroomMs` is
+        // what was left of the function's budget: the number that says whether
+        // twenty pages was ever a realistic ceiling.
+        phaseMs,
+        pagesAudited: pages.length,
+        truncatedPages: report.truncatedPages,
+        slowestPageMs,
+        headroomMs: MAX_RUN_DURATION_MS - durationMs,
       }),
     );
 
@@ -255,42 +286,37 @@ async function executeRun(
   }
 }
 
+/** An already-validated run request, plus the caller's choice of mode. */
+export type AuditRunParams = z.infer<typeof auditRunBodySchema> & {
+  /** Block and return the result, rather than 202 + a poll URL. */
+  wait?: boolean;
+};
+
 /**
- * Entry point for `POST /api/audit/run`.
+ * Start a run. **This is the entry point every caller should use.**
  *
- * There is a single execution path: drive a real browser through the journey
- * and evaluate the rendered page. The HTML-string path that used to sit
- * alongside it was removed — it evaluated markup with no stylesheet and no
- * layout, and reported complete evidence while naming artifact files it never
- * wrote.
+ * It takes a validated body rather than a `Request` on purpose. When the only
+ * way in was an HTTP handler, a server-side caller that already held the
+ * operator's trust had to manufacture one — `/api/audit/console` built a
+ * synthetic `Request` with `authorization: Bearer <the server's own token>`
+ * forged onto it, because that was the only shape `handleAuditRun` accepted.
+ * Forging a credential onto a user's request to reach your own code is an
+ * anti-pattern that gets worse the moment identity is per-user, since there is
+ * then a real principal being impersonated rather than a shared secret being
+ * passed along.
+ *
+ * The distinction worth keeping straight: a server holding its own machine
+ * credential and issuing a *fresh* HTTP request to obtain a separate compute
+ * budget is not this anti-pattern — that is fan-out, and the scheduler does it
+ * deliberately. What was wrong here was reaching in-process code through a
+ * fabricated request.
  */
-export async function handleAuditRun(
-  request: Request,
+export async function startRun(
+  params: AuditRunParams,
   requestId = createRequestId(),
+  startedAt = Date.now(),
 ): Promise<AuditRunHandlerResult> {
-  const startedAt = Date.now();
-
-  let parsedBody: z.infer<typeof auditRunBodySchema>;
-  try {
-    const json = await request.json();
-    parsedBody = auditRunBodySchema.parse(json);
-  } catch {
-    const durationMs = Date.now() - startedAt;
-    emitAuditRunLog(
-      createAuditRunLog({
-        journey: 'unknown',
-        env: 'unknown',
-        platform: 'unknown',
-        evidenceStatus: 'unknown',
-        ciStatus: 'unknown',
-        durationMs,
-        failureReason: 'invalid_request_body',
-        requestId,
-      }),
-    );
-
-    return { ok: false, status: 400, body: { error: 'invalid_request_body', requestId } };
-  }
+  const { wait, ...parsedBody } = params;
 
   if (parsedBody.chaosScenario) {
     if (!isChaosEnabled()) {
@@ -330,6 +356,39 @@ export async function handleAuditRun(
     }
   }
 
+  /**
+   * The budget, checked here rather than in a route.
+   *
+   * Every caller funnels through `startRun` — the HTTP endpoint, the console,
+   * the platform's Run now button, and the scheduler — so putting the check
+   * here covers all of them by construction. A route-level check would be four
+   * copies and would miss whichever one gets added next.
+   *
+   * After the chaos gating and before the placeholder write: a refused run must
+   * leave no row behind, because it never started. That is also why this is not
+   * a `RunFailureCode` — nothing failed, the run was declined.
+   */
+  const budget = await consumeRunBudget(getRunCounter());
+  if (!budget.allowed) {
+    logWarn('run_budget_exceeded', {
+      requestId,
+      journeyId: parsedBody.journeyId,
+      window: budget.window,
+      resetsInSeconds: budget.resetsInSeconds,
+    });
+
+    return {
+      ok: false,
+      status: 429,
+      body: {
+        error: 'run_budget_exceeded',
+        requestId,
+        window: budget.window,
+        resetsInSeconds: budget.resetsInSeconds,
+      },
+    };
+  }
+
   // Two response modes.
   //
   // Async (default): persist a `running` placeholder, hand back 202 and a
@@ -339,11 +398,9 @@ export async function handleAuditRun(
   // compute: background work is bounded by the same `maxDuration` as the
   // request. Nothing here makes a long crawl fit where it otherwise would not.
   //
-  // Sync (`?wait=1`): block and return the result. CI wants a single call with
-  // a pass/fail, and the chaos script and handler tests want determinism.
-  const wantsSync = new URL(request.url).searchParams.get('wait') === '1';
-
-  if (wantsSync) {
+  // Sync (`wait`): block and return the result. CI wants a single call with a
+  // pass/fail, and the chaos script and handler tests want determinism.
+  if (wait) {
     return executeRun(parsedBody, requestId, startedAt);
   }
 
@@ -379,4 +436,49 @@ export async function handleAuditRun(
       pollUrl: `/api/audit/runs/${requestId}`,
     },
   };
+}
+
+/**
+ * HTTP entry point for `POST /api/audit/run`.
+ *
+ * Nothing but a boundary: parse the body, read the mode off the query string,
+ * hand both to `startRun`. Everything that decides what a run *does* lives
+ * there, so a server-side caller gets identical behaviour without inventing a
+ * request to carry it.
+ *
+ * There is a single execution path: drive a real browser through the journey
+ * and evaluate the rendered page. The HTML-string path that used to sit
+ * alongside it was removed — it evaluated markup with no stylesheet and no
+ * layout, and reported complete evidence while naming artifact files it never
+ * wrote.
+ */
+export async function handleAuditRun(
+  request: Request,
+  requestId = createRequestId(),
+): Promise<AuditRunHandlerResult> {
+  const startedAt = Date.now();
+
+  let parsedBody: z.infer<typeof auditRunBodySchema>;
+  try {
+    parsedBody = auditRunBodySchema.parse(await request.json());
+  } catch {
+    emitAuditRunLog(
+      createAuditRunLog({
+        journey: 'unknown',
+        env: 'unknown',
+        platform: 'unknown',
+        evidenceStatus: 'unknown',
+        ciStatus: 'unknown',
+        durationMs: Date.now() - startedAt,
+        failureReason: 'invalid_request_body',
+        requestId,
+      }),
+    );
+
+    return { ok: false, status: 400, body: { error: 'invalid_request_body', requestId } };
+  }
+
+  const wait = new URL(request.url).searchParams.get('wait') === '1';
+
+  return startRun({ ...parsedBody, wait }, requestId, startedAt);
 }

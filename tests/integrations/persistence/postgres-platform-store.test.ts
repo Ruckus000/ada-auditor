@@ -32,6 +32,10 @@ async function clearContractRows(): Promise<void> {
   await sql`delete from journeys where id like 'pc-%'`;
   await sql`delete from client_config where client_id like 'pc-%'`;
   await sql`delete from clients where id like 'pc-%'`;
+  // Last: `activity_events.actor_operator_id` and
+  // `finding_triage.assignee_operator_id` both reference this table, so the
+  // rows pointing at it have to go first.
+  await sql`delete from operators where id like 'pc-%'`;
 }
 
 /**

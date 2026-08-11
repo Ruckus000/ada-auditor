@@ -34,11 +34,13 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const allowedHosts =
     input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
 
+  const journeyStartedAt = Date.now();
   const journeyResult = await runJourney({
     ...input,
     allowedHosts,
     steps: input.steps ?? buildDefaultDemoJourneySteps(),
   });
+  const journeyMs = Date.now() - journeyStartedAt;
 
   // Platform is a property of the site, not of a page, so it is detected once
   // from the journey's entry point rather than re-litigated on every page.
@@ -125,6 +127,7 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   //
   // Independent of the deterministic result, per the steady-state rule: the
   // advisory is not a commentary on what the rules found, and never gates.
+  const advisoryStartedAt = Date.now();
   const aiFindings = await requestAiAdvisory({
     pages: journeyResult.pages.map((pageAudit) => ({
       page: pageAudit.page,
@@ -134,6 +137,7 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     minConfidence: contract.confidencePolicy.minReport,
     client: input.anthropicClient,
   });
+  const advisoryMs = Date.now() - advisoryStartedAt;
 
   const findings = [...deterministicFindings, ...aiFindings];
   const report = summarizeRun({
@@ -156,8 +160,13 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
       evidenceStatus: pageAudit.evidenceStatus,
       artifacts: pageAudit.artifacts,
       checks: checkCounts[index],
+      timing: pageAudit.timing,
     })),
     truncatedPages: journeyResult.truncatedPages,
+    // Where the run went. The browser work and the advisory call are the two
+    // things that can plausibly grow past the function limit, so they are
+    // timed apart rather than rolled into one number.
+    phaseMs: { journey: journeyMs, advisory: advisoryMs },
     score: score.score,
     scoreVersion: score.scoreVersion,
     checksPassed: score.passed,

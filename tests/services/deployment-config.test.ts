@@ -66,6 +66,8 @@ describe('readDeploymentConfig', () => {
       DATABASE_URL: 'postgres://host/db',
       BLOB_READ_WRITE_TOKEN: 'x',
       KV_REST_API_URL: 'https://kv',
+      AUDITOR_SESSION_SECRET: 'session-secret-16chars',
+      CRON_SECRET: 'cron-secret-16chars',
     });
 
     expect(clean.degradedCount).toBe(0);

@@ -16,6 +16,8 @@ type PersistRunInput = {
   ciStatus: CiStatus;
   findings: AuditFinding[];
   durationMs: number;
+  startedAt?: string;
+  phaseMs?: Record<string, number>;
   browserMode?: boolean;
   pages?: StoredRunPage[];
   truncatedPages?: number;
@@ -77,6 +79,11 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     findings: input.findings.map(toStoredFinding),
     durationMs: input.durationMs,
     createdAt: new Date().toISOString(),
+    // Absent means not measured, and stays absent — the same rule the check
+    // counts follow. A run recorded before timing existed did not take zero
+    // milliseconds.
+    ...(input.startedAt ? { startedAt: input.startedAt } : {}),
+    ...(input.phaseMs ? { phaseMs: input.phaseMs } : {}),
     ...(input.browserMode ? { browserMode: true } : {}),
     ...(input.pages && input.pages.length > 0 ? { pages: input.pages } : {}),
     // Persisted, not just logged: the log line that recorded the truncation

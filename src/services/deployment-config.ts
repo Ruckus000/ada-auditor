@@ -1,3 +1,5 @@
+import { runBudgetLimits } from './run-budget';
+
 /**
  * What this deployment is actually configured to do.
  *
@@ -39,14 +41,26 @@ function intFromEnv(env: Env, name: string, fallback: number): number {
 }
 
 export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
+  const budget = runBudgetLimits(env);
+  const countersDurable = Boolean(env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL);
+
   const settings: ConfigSetting[] = [
     {
       key: 'operator',
-      label: 'Operator name',
+      label: 'Automation name',
       value: env.AUDITOR_OPERATOR_NAME?.trim() || 'Operator',
       detail:
-        'Attributed on every activity event. There is no per-user identity in this product — one shared token, one trusted group — so this is a name, not an account.',
+        'What activity is attributed to when the caller is a machine rather than a person — CI, a script, the scheduler. People sign in with their own accounts and are recorded under their own names.',
       degraded: false,
+    },
+    {
+      key: 'sessionSecret',
+      label: 'Session signing key',
+      value: env.AUDITOR_SESSION_SECRET?.trim() ? 'dedicated' : 'shared with the run token',
+      detail: env.AUDITOR_SESSION_SECRET?.trim()
+        ? 'AUDITOR_SESSION_SECRET. Rotating it signs every operator out, which is the deliberate "log everyone out" lever; rotating the run token no longer does.'
+        : 'No AUDITOR_SESSION_SECRET, so operator sessions are signed with AUDITOR_RUN_TOKEN. Rotating the machine token therefore still signs every human out — the exact coupling operator accounts exist to break. Set a separate value.',
+      degraded: !env.AUDITOR_SESSION_SECRET?.trim(),
     },
     {
       key: 'database',
@@ -67,6 +81,17 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
       degraded: !env.BLOB_READ_WRITE_TOKEN,
     },
     {
+      key: 'runBudget',
+      label: 'Run budget',
+      value: `${budget.perHour}/hour, ${budget.perDay}/day`,
+      detail:
+        (countersDurable
+          ? 'Counted in Redis, so the ceiling holds across instances. '
+          : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
+        'A run launches a browser and makes a model call; without a ceiling a loop in a caller spends real money unattended. It fails open — a cost control that becomes an outage has made things worse.',
+      degraded: !countersDurable,
+    },
+    {
       key: 'throttle',
       label: 'Unlock throttle',
       value:
@@ -82,6 +107,15 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
       detail:
         'Judges what a rule engine cannot — alt text that says nothing, headings used for size. Advisory findings never gate a build, and their absence is never a run failure.',
       degraded: false,
+    },
+    {
+      key: 'schedule',
+      label: 'Scheduled runs',
+      value: env.CRON_SECRET ? 'hourly tick' : 'not configured',
+      detail: env.CRON_SECRET
+        ? 'Vercel Cron calls /api/cron/tick hourly. It claims the journeys due this hour and dispatches each to its own invocation — it does not audit anything itself, because one function cannot walk several journeys through a browser.'
+        : 'No CRON_SECRET, so the tick refuses every request and any schedule set on a journey never fires. Set it in the Vercel project; Vercel sends it as a bearer token.',
+      degraded: !env.CRON_SECRET,
     },
     {
       key: 'pageCap',

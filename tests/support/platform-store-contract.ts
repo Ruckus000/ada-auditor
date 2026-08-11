@@ -36,6 +36,9 @@ export const CONTRACT_CLIENT = 'pc-client-a';
  */
 export const CONTRACT_RUN_IDS = ['pc-run-a', 'pc-run-b'];
 
+export const CONTRACT_OPERATOR = 'pc-op-a';
+export const CONTRACT_OPERATOR_EMAIL = 'pc-operator@example.com';
+
 export type PlatformContractOptions = {
   /** Called before the report cases. A no-op where nothing enforces the FK. */
   seedRuns?: () => Promise<void>;
@@ -375,6 +378,332 @@ export function platformStoreContract(
       expect(
         (await store.listEvents({ clientId: CONTRACT_CLIENT, limit: 100_000 })).length,
       ).toBeLessThanOrEqual(200);
+    });
+
+    // The account behind the name, when there was one. Automation has none,
+    // which is why the column is nullable and this is asserted both ways.
+    it('records the operator account alongside the name, and copes without one', async () => {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+      await store.upsertOperator({
+        id: CONTRACT_OPERATOR,
+        email: 'pc-actor@example.com',
+        name: 'Contract Actor',
+        passwordHash: 'scrypt$16384$8$1$c2FsdA==$aGFzaA==',
+      });
+
+      await store.recordEvent({
+        clientId: CONTRACT_CLIENT,
+        actor: 'Contract Actor',
+        actorOperatorId: CONTRACT_OPERATOR,
+        action: 'signed in',
+      });
+      await store.recordEvent({
+        clientId: CONTRACT_CLIENT,
+        actor: 'Scheduler',
+        action: 'started a scheduled run',
+      });
+
+      const events = await store.listEvents({ clientId: CONTRACT_CLIENT });
+      const byOperator = events.find((event) => event.action === 'signed in');
+      const byMachine = events.find((event) => event.action === 'started a scheduled run');
+
+      expect(byOperator?.actorOperatorId).toBe(CONTRACT_OPERATOR);
+      // Absent, not null: "no account" and "we did not record one" would be
+      // the same value otherwise, and only one of those is a fact.
+      expect(byMachine).not.toHaveProperty('actorOperatorId');
+    });
+  });
+
+  describe('triage assignment', () => {
+    // `assigned` has existed in the schema since Phase 2C with nothing able to
+    // reach it, because one shared token meant there was nobody to assign to.
+    it('round-trips an assignment to a real operator', async () => {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+      await store.upsertOperator({
+        id: CONTRACT_OPERATOR,
+        email: CONTRACT_OPERATOR_EMAIL,
+        name: 'Contract Operator',
+        passwordHash: 'scrypt$16384$8$1$c2FsdA==$aGFzaA==',
+      });
+
+      await store.setTriage(
+        triageEntry({
+          state: 'assigned',
+          note: undefined,
+          assignee: 'Contract Operator',
+          assigneeOperatorId: CONTRACT_OPERATOR,
+        }),
+      );
+
+      const [entry] = await store.listTriage(CONTRACT_CLIENT);
+      expect(entry).toMatchObject({
+        state: 'assigned',
+        assignee: 'Contract Operator',
+        assigneeOperatorId: CONTRACT_OPERATOR,
+      });
+    });
+
+    // A dismissal has no assignee, and absent must stay absent — `undefined`
+    // and "assigned to nobody" are different facts.
+    it('leaves the assignee absent on a dismissal', async () => {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+
+      await store.setTriage(triageEntry());
+
+      const [entry] = await store.listTriage(CONTRACT_CLIENT);
+      expect(entry).not.toHaveProperty('assigneeOperatorId');
+    });
+  });
+
+  describe('scheduling', () => {
+    const thisHour = new Date().getUTCHours();
+
+    async function scheduled(id: string, overrides: Record<string, unknown> = {}) {
+      await store_.upsertJourney({
+        id,
+        clientId: CONTRACT_CLIENT,
+        name: id,
+        targetUrl: `https://${id}.test/`,
+        schedule: 'daily',
+        scheduleHour: thisHour,
+        steps: [],
+        ...overrides,
+      });
+    }
+
+    let store_: PlatformStore;
+
+    beforeEach(async () => {
+      store_ = await makeStore();
+      await store_.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+    });
+
+    it('claims a journey due this hour', async () => {
+      await scheduled('pc-journey-due');
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).toContain('pc-journey-due');
+    });
+
+    /**
+     * Claim and stamp are one operation, because the Neon HTTP driver has no
+     * transactions: a select followed by an update would let two overlapping
+     * ticks both start the same journey.
+     */
+    it('does not claim the same journey twice in a window', async () => {
+      await scheduled('pc-journey-once');
+
+      await store_.claimDueJourneys(10);
+      const second = await store_.claimDueJourneys(10);
+
+      expect(second.map((journey) => journey.id)).not.toContain('pc-journey-once');
+    });
+
+    /**
+     * The sequential case above passes without any locking at all — by the time
+     * the second call runs, the first has already stamped the row. This one is
+     * the case that fails without `for update skip locked`: two ticks in flight
+     * at once, both evaluating the subquery before either commits.
+     *
+     * Overlap is not hypothetical. The tick accepts a manual trigger with the
+     * run token, so an operator proving a new schedule while the hour rolls
+     * over is exactly this. A double claim means one journey audited twice and
+     * a client billed for it.
+     */
+    it('does not hand the same journey to two concurrent claims', async () => {
+      await scheduled('pc-journey-race');
+
+      const [first, second] = await Promise.all([
+        store_.claimDueJourneys(10),
+        store_.claimDueJourneys(10),
+      ]);
+
+      const claims = [...first, ...second].filter((journey) => journey.id === 'pc-journey-race');
+      expect(claims).toHaveLength(1);
+    });
+
+    it('leaves an unscheduled journey alone', async () => {
+      await scheduled('pc-journey-off', { schedule: 'off' });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-off');
+    });
+
+    it('leaves a journey scheduled for a different hour alone', async () => {
+      await scheduled('pc-journey-later', { scheduleHour: (thisHour + 5) % 24 });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-later');
+    });
+
+    // Scheduling a journey with no target would book a recurring failure.
+    it('never claims a journey with no target URL', async () => {
+      await scheduled('pc-journey-targetless', { targetUrl: undefined });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-targetless');
+    });
+
+    it('never claims an archived journey', async () => {
+      await scheduled('pc-journey-archived');
+      await store_.archiveJourney('pc-journey-archived');
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-archived');
+    });
+
+    // The Postgres store claims across the whole table, so this asserts the
+    // cap holds rather than an exact set — same caveat as `listClients`.
+    it('honours the limit', async () => {
+      await scheduled('pc-journey-a');
+      await scheduled('pc-journey-b');
+      await scheduled('pc-journey-c');
+
+      expect((await store_.claimDueJourneys(2)).length).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe('operators', () => {
+    const hash = 'scrypt$16384$8$1$c2FsdA==$aGFzaA==';
+
+    async function seedOperator(store: PlatformStore, overrides: Partial<{ name: string }> = {}) {
+      await store.upsertOperator({
+        id: CONTRACT_OPERATOR,
+        email: CONTRACT_OPERATOR_EMAIL,
+        name: overrides.name ?? 'Contract Operator',
+        passwordHash: hash,
+      });
+    }
+
+    it('round-trips an operator', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+
+      const found = await store.getOperator(CONTRACT_OPERATOR);
+      expect(found?.email).toBe(CONTRACT_OPERATOR_EMAIL);
+      expect(found?.name).toBe('Contract Operator');
+      expect(found?.sessionEpoch).toBe(1);
+      expect(found).not.toHaveProperty('disabledAt');
+    });
+
+    // The hash must not have a shape it can leak through. `listOperators`
+    // feeds an API response, so this is asserted rather than assumed.
+    it('never returns a password hash from the listing or the id lookup', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+
+      expect(await store.getOperator(CONTRACT_OPERATOR)).not.toHaveProperty('passwordHash');
+      const listed = (await store.listOperators()).find((o) => o.id === CONTRACT_OPERATOR);
+      expect(listed).toBeDefined();
+      expect(listed).not.toHaveProperty('passwordHash');
+    });
+
+    it('returns the hash only from the sign-in lookup', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+
+      expect((await store.getOperatorByEmail(CONTRACT_OPERATOR_EMAIL))?.passwordHash).toBe(hash);
+    });
+
+    // An email address is not case-sensitive to the person who owns it, and a
+    // sign-in form is where that gets tested in anger.
+    it('looks an operator up by email regardless of case', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+
+      expect(
+        (await store.getOperatorByEmail(CONTRACT_OPERATOR_EMAIL.toUpperCase()))?.id,
+      ).toBe(CONTRACT_OPERATOR);
+    });
+
+    it('reports an unknown operator as absent rather than throwing', async () => {
+      const store = await makeStore();
+      expect(await store.getOperator('pc-op-nobody')).toBeNull();
+      expect(await store.getOperatorByEmail('pc-nobody@example.com')).toBeNull();
+    });
+
+    // Upsert is by email, not id: a disabled operator keeps their row, so an
+    // insert keyed on id would fail for anyone ever disabled — making "re-hire"
+    // a manual psql session.
+    it('updates in place when the same email is added again', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+      await store.upsertOperator({
+        id: 'pc-op-a-different-id',
+        email: CONTRACT_OPERATOR_EMAIL,
+        name: 'Renamed Operator',
+        passwordHash: hash,
+      });
+
+      const all = (await store.listOperators()).filter(
+        (o) => o.email.toLowerCase() === CONTRACT_OPERATOR_EMAIL,
+      );
+      expect(all).toHaveLength(1);
+      expect(all[0]!.id).toBe(CONTRACT_OPERATOR);
+      expect(all[0]!.name).toBe('Renamed Operator');
+    });
+
+    // The unique index is on `lower(email)`, so a differently-cased re-add
+    // must update rather than collide. This is the case where the two stores
+    // most easily disagree: the double compares case-insensitively for free,
+    // while Postgres only does if the conflict target names the index.
+    it('updates in place when the same email is added in a different case', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+
+      await store.upsertOperator({
+        id: 'pc-op-a-shouted',
+        email: CONTRACT_OPERATOR_EMAIL.toUpperCase(),
+        name: 'Shouted Operator',
+        passwordHash: hash,
+      });
+
+      const all = (await store.listOperators()).filter(
+        (o) => o.email.toLowerCase() === CONTRACT_OPERATOR_EMAIL,
+      );
+      expect(all).toHaveLength(1);
+      expect(all[0]!.id).toBe(CONTRACT_OPERATOR);
+      expect(all[0]!.name).toBe('Shouted Operator');
+    });
+
+    it('bumps the session epoch', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+
+      await store.bumpSessionEpoch(CONTRACT_OPERATOR);
+
+      expect((await store.getOperator(CONTRACT_OPERATOR))?.sessionEpoch).toBe(2);
+    });
+
+    // Disabling has to end the sessions that already exist, or "disabled"
+    // means "cannot sign in again" rather than "is out now".
+    it('disabling stamps disabledAt and invalidates outstanding sessions', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+
+      await store.setOperatorDisabled(CONTRACT_OPERATOR, true);
+
+      const disabled = await store.getOperator(CONTRACT_OPERATOR);
+      expect(disabled?.disabledAt).toBeDefined();
+      expect(disabled?.sessionEpoch).toBe(2);
+    });
+
+    it('re-enabling clears disabledAt rather than blanking it', async () => {
+      const store = await makeStore();
+      await seedOperator(store);
+      await store.setOperatorDisabled(CONTRACT_OPERATOR, true);
+
+      await store.setOperatorDisabled(CONTRACT_OPERATOR, false);
+
+      expect(await store.getOperator(CONTRACT_OPERATOR)).not.toHaveProperty('disabledAt');
     });
   });
 }

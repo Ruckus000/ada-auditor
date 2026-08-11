@@ -1,10 +1,8 @@
 import { z } from 'zod';
-import { operatorName } from '../../../../domain/operator';
+import { actorFields } from '../../../../domain/operator';
 import { getPlatformStore, getRunStore } from '../../../../integrations/persistence';
 import { buildPortfolio, clientIdFromName } from '../../../../services/portfolio';
-import { hasOperatorSession } from '../../_lib/operator-session';
-import { isRunAuthorized } from '../../_lib/auth';
-import { isSameOriginConsoleRequest } from '../../_lib/same-origin';
+import { authorizePrincipal } from '../../_lib/authorize';
 import { createRequestId } from '../../_lib/request-id';
 
 /**
@@ -14,24 +12,17 @@ import { createRequestId } from '../../_lib/request-id';
  * is why this route exists at all — without it the product's front door would
  * be a screen with no way forward.
  *
- * Two ways to authenticate, and both are needed. The screens are a browser
- * calling same-origin with the operator session cookie; CI and scripts send
- * the bearer token. The layout's auth gate protects *rendering* only — an API
- * route is reachable directly and has to check for itself.
+ * Authentication is `authorizePrincipal`, shared with every other platform
+ * route — it owns the reasoning about cookies, bearer tokens and CSRF. What
+ * matters here is that the layout's auth gate protects *rendering* only: an
+ * API route is reachable directly and has to check for itself.
  */
-async function authorize(request: Request): Promise<boolean> {
-  if (isRunAuthorized(request)) {
-    return true;
-  }
-  // A cookie alone is not enough for a state-changing request: it travels on
-  // cross-site form posts too, which is what the same-origin check stops.
-  return isSameOriginConsoleRequest(request) && (await hasOperatorSession());
-}
 
 export async function GET(request: Request) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -55,7 +46,8 @@ const createClientSchema = z.object({
 export async function POST(request: Request) {
   const requestId = createRequestId();
 
-  if (!(await authorize(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -81,7 +73,7 @@ export async function POST(request: Request) {
 
   await platform.recordEvent({
     clientId: id,
-    actor: operatorName(),
+    ...actorFields(principal),
     action: 'added a client',
     subject: parsed.name,
   });

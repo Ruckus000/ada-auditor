@@ -3,14 +3,21 @@ import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
 import { Empty } from './client-overview';
+import { JourneySchedule } from './journey-schedule';
+import { RunJourneyButton } from './run-journey-button';
 
 /**
- * The journeys recorded for one client, and how each last fared.
+ * The journeys recorded for one client, how each last fared, and the button
+ * that runs one.
  *
- * A Server Component, like the overview: this is a list of records with no
- * interaction in it yet. Recording a journey still happens through the console
- * and the API — this page reports, it does not yet author, and it says so
- * rather than offering a button that does nothing.
+ * Still a Server Component; the one interactive control is extracted as a
+ * client child, the way the findings screen extracts `TriageControl`.
+ *
+ * This page used to say, in this comment, that it "reports, it does not yet
+ * author" — because a stored journey was inert, and nothing anywhere read its
+ * steps to build a run. That is no longer true: `POST /api/platform/clients/
+ * <id>/journeys/<id>/runs` walks the stored journey, so the button is offered
+ * rather than withheld. *Recording* a journey is still console and API work.
  */
 export function ClientJourneys({ detail }: { detail: ClientDetail }) {
   return (
@@ -22,7 +29,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
       {detail.journeys.length === 0 ? (
         <Empty
           title="No journeys yet"
-          body="A journey is the path we re-walk on every run. Record one through the console or POST it to /api/audit/run, and it appears here with its last result."
+          body="A journey is the path we re-walk on every run. Record one through the console or POST it to /api/platform/clients/<id>/journeys, and it appears here with a button to run it."
           action={null}
         />
       ) : (
@@ -56,6 +63,19 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                 </span>
 
                 <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <JourneySchedule
+                    clientId={detail.id}
+                    journeyId={journey.id}
+                    journeyName={journey.name}
+                    schedule={journey.schedule}
+                    runnable={journey.runnable}
+                  />
+                  <RunJourneyButton
+                    clientId={detail.id}
+                    journeyId={journey.id}
+                    journeyName={journey.name}
+                    runnable={journey.runnable}
+                  />
                   {journey.lastRun ? (
                     <>
                       <Pill bg={badge.bg} color={badge.color} border={badge.border}>

@@ -54,6 +54,8 @@ export type FindingView = {
   status: FindingDisplayStatus;
   triage: TriageState | null;
   triageNote?: string;
+  /** Who it is assigned to, by name. Absent unless the state is `assigned`. */
+  assignee?: string;
 };
 
 export type PageFindings = {
@@ -168,6 +170,7 @@ export async function buildFindingsView(
         inLatestRun: true,
         inBaseline: baselineKeys.has(key),
         triage: entry?.state ?? null,
+        ...(entry?.assignee ? { assignee: entry.assignee } : {}),
       }),
       triage: entry?.state ?? null,
       ...(entry?.note === undefined ? {} : { triageNote: entry.note }),

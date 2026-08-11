@@ -17,6 +17,10 @@ export type RunFailureCode =
   | 'action_not_allowed'
   | 'invalid_step_id'
   | 'incomplete_evidence'
+  // Not produced by `classifyRunFailure`: nothing throws it, because the
+  // invocation that would have caught it is gone. `reconcileRunStatus` writes
+  // it onto a run left `running` past the point where it could still be alive.
+  | 'run_timed_out'
   | 'audit_run_failed';
 
 export function classifyRunFailure(message: string): RunFailureCode {
