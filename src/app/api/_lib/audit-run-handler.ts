@@ -63,7 +63,8 @@ export const auditRunBodySchema = z.object({
   /**
    * Origin of the site to audit. Absent means the built-in fixture app.
    * The scheme, host, and every resolved address are checked before a browser
-   * launches, and the settled URL is re-checked after each navigation — see
+   * launches; after each navigation both the settled URL and the address the
+   * browser actually connected to are checked — see
    * `integrations/browser/target-url.ts`.
    */
   targetUrl: z.url().optional(),

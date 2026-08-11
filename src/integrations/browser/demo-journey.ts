@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { JourneyStep } from './types';
 
@@ -28,9 +28,17 @@ export function buildDefaultDemoJourneySteps(): JourneyStep[] {
  * Resolves a step's path against the run's target.
  *
  * With a target origin the path joins onto it; without one the run is against
- * local fixtures and the path becomes a `file://` URL. The caller is
- * responsible for putting the result through the target-url guard — this
- * function only builds the string.
+ * local fixtures and the path becomes a `file://` URL. A remote result still
+ * has to go through the target-url guard — this function does not do that.
+ *
+ * The fixture branch does its own containment check, because nothing else
+ * will. `path` arrives from the request body, `join` resolves `..` happily,
+ * and the remote guard is skipped entirely when there is no `targetUrl` — so
+ * `{"type":"goto","path":"../../../../etc/passwd"}` on a fixture run was an
+ * arbitrary local file read, rendered into the DOM snapshot and served back
+ * through the artifacts route. `audit-run-handler` already refuses to take
+ * `fixtureDir` over HTTP for exactly this reason, calling it a local file read
+ * primitive; `path` was the same primitive one field over.
  */
 export function resolveNavigationUrl(
   fixtureDir: string,
@@ -42,5 +50,13 @@ export function resolveNavigationUrl(
     return new URL(path, normalized).href;
   }
 
-  return pathToFileURL(join(fixtureDir, path)).href;
+  // The same containment shape `resolveArtifactPrefix` uses on `stepId`.
+  const root = resolve(fixtureDir);
+  const target = resolve(root, path);
+
+  if (target !== root && !target.startsWith(root + sep)) {
+    throw new Error('Navigation path must not escape the fixture directory.');
+  }
+
+  return pathToFileURL(target).href;
 }

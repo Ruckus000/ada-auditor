@@ -128,12 +128,16 @@ trace rather than vanishing.
 `POST /api/audit/run` takes an optional `targetUrl` plus `steps`. Absent a
 `targetUrl` the run uses the built-in `file://` fixtures.
 
-Every target is checked three ways before and during a run
+Every target is checked four ways before and during a run
 (`src/integrations/browser/target-url.ts`): scheme and host up front; every
 address the host resolves to, so a friendly name pointing into private space is
-refused; and the URL the page actually settled on after each navigation, which
-is what catches a redirect or a rebinding host. Blocked ranges include loopback,
-RFC1918, carrier-grade NAT, IPv6 unique- and link-local, IPv4-mapped IPv6, and
+refused; the URL the page actually settled on after each navigation, which
+catches a redirect; and the address the browser actually connected to, which is
+what catches a rebinding host. That last one is separate because the settled URL
+cannot catch a rebind — the hostname is unchanged, and it is the hostname the
+allowlist was derived from. Blocked ranges include loopback, RFC1918,
+carrier-grade NAT, IPv6 unique- and link-local, every IPv6 range that embeds an
+IPv4 address (IPv4-mapped, IPv4-compatible, NAT64, 6to4), and
 `169.254.169.254` — the cloud metadata endpoint.
 
 A run may only navigate to the target's own host. Off-origin navigation aborts

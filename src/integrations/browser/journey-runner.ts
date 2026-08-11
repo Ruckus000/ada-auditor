@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
-import type { Page } from 'playwright-core';
+import type { Page, Response } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, type AxNodeSummary } from '../../services/ax-tree';
@@ -8,7 +8,11 @@ import { logWarn } from '../../services/logger';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
-import { assertAllowedUrl, assertSafeTargetUrl } from './target-url';
+import {
+  assertAllowedUrl,
+  assertPeerAddressAllowed,
+  assertSafeTargetUrl,
+} from './target-url';
 import {
   buildDefaultDemoJourneySteps,
   resolveNavigationUrl,
@@ -145,6 +149,58 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   const context = await browser.newContext({ bypassCSP: true });
   const page = await context.newPage();
 
+  // Every main-frame document the browser fetched, judged as it arrives.
+  //
+  // Watching responses rather than checking the page afterwards, because the
+  // page does not hold still. Three ways it moves:
+  //
+  //  - A redirect chain. Only the hop that survived used to be checked, so
+  //    public -> internal -> public passed while the internal request was
+  //    issued from inside our network.
+  //  - A `meta refresh` or `setTimeout(() => location = …)`. The attacker
+  //    serves the page, so they choose the delay — and `capturePage` spends
+  //    seconds on an axe scan, a full-page screenshot and an AX tree. A guard
+  //    that ran before all that was reading the previous document.
+  //  - The address behind an unchanged hostname, which is the rebinding case.
+  //
+  // So each response is checked on arrival and the failure is remembered.
+  // `assertNavigationsWereSafe` is what turns it into a thrown error, and it
+  // runs after the capture as well as before it — anything the page did during
+  // the capture has to invalidate that capture.
+  const navigationChecks: Array<Promise<void>> = [];
+  let navigationViolation: Error | undefined;
+
+  page.on('response', (response) => {
+    if (!input.targetUrl) return;
+    if (response.frame() !== page.mainFrame()) return;
+    if (!response.request().isNavigationRequest()) return;
+
+    navigationChecks.push(
+      (async () => {
+        // The address, not the allowlist.
+        //
+        // A redirect through a host that is not the target is ordinary — SSO,
+        // consent walls, apex-to-www — and those are the journeys this product
+        // exists to audit, so refusing every off-origin hop would break the
+        // normal case to stop an abnormal one. The allowlist still governs
+        // where the journey *settles*, which is the question it was written
+        // for. What matters on the way there is whether a hop reached inside
+        // our network, and that is an address question.
+        const peer = await response.serverAddr();
+        assertPeerAddressAllowed(response.url(), peer?.ipAddress);
+      })().catch((error: unknown) => {
+        // Recorded, never thrown from here. These promises are created inside
+        // an event handler with nothing awaiting them yet, so a rejection
+        // escaping this callback is an unhandled rejection — which on Node 20
+        // kills the process. It very nearly did: the first version of this
+        // threw for a cross-host redirect, so an audit of `https://youtu.be/`
+        // took the whole function down, taking any concurrent background run
+        // with it.
+        navigationViolation ??= error instanceof Error ? error : new Error(String(error));
+      }),
+    );
+  });
+
   try {
     const steps = input.steps ?? buildDefaultDemoJourneySteps();
 
@@ -201,6 +257,15 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         artifacts.axTreePath = axTreePath;
       }
 
+      // Again, now that the capture is done.
+      //
+      // Everything above takes seconds, and the audited page is free to
+      // navigate during them — a timed redirect lands mid-screenshot and the
+      // evidence written above is of a page nothing ever checked. A guard that
+      // runs on our schedule cannot contain a page that moves on its own, so
+      // the capture is only accepted if the run is still safe afterwards.
+      await assertNavigationsWereSafe();
+
       pages.push({
         page: { url, route, title },
         html,
@@ -215,14 +280,34 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       });
     };
 
-    // A redirect can land somewhere the pre-navigation checks never saw, and a
-    // rebinding host can answer differently for the browser than it did for our
-    // resolver. Re-checking the URL the page actually settled on is what closes
-    // both. Only applies to remote targets; fixture runs are file:// and local.
-    const guardCurrentUrl = () => {
+    // A redirect can land somewhere the pre-navigation checks never saw. That
+    // is what re-checking the settled URL catches.
+    //
+    // It does *not* catch DNS rebinding, and this used to claim it did. The
+    // settled URL still carries the hostname the caller supplied, which is on
+    // the allowlist by construction — the allowlist defaults to that very host
+    // — and it is not a literal IP, so nothing about it is range-checked. A
+    // hostile resolver answering our `lookup()` with a public address and
+    // Chromium's with 127.0.0.1 passed every check and had the internal page
+    // archived as evidence.
+    //
+    // No re-inspection of a string can close that, because the string is not
+    // where the answer is. The address the browser actually connected to is,
+    // so that is what is checked here.
+    const assertNavigationsWereSafe = async (): Promise<void> => {
       if (!input.targetUrl) {
         return;
       }
+
+      // Settled first, so a violation on any hop is reported even when the
+      // page came to rest somewhere unremarkable. Ordered before the check on
+      // `page.url()` deliberately: a synchronous throw above this line would
+      // leave the recorded violations unread.
+      await Promise.all(navigationChecks);
+      if (navigationViolation) {
+        throw navigationViolation;
+      }
+
       assertAllowedUrl(page.url(), allowedHosts);
     };
 
@@ -237,7 +322,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
           await assertSafeTargetUrl(url, allowedHosts);
         }
         await page.goto(url);
-        guardCurrentUrl();
+        await assertNavigationsWereSafe();
         await capturePage();
         continue;
       }
@@ -253,7 +338,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
 
       await page.click(step.selector);
       await page.waitForLoadState('domcontentloaded');
-      guardCurrentUrl();
+      await assertNavigationsWereSafe();
       await capturePage();
     }
 
