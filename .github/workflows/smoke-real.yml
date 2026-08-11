@@ -1,0 +1,100 @@
+name: Smoke (real site)
+
+# One real audit, against a real site, through the built application.
+#
+# This is the only check that exercises the *built* app. Vitest loads modules
+# unbundled, so a packaging fault is invisible to every other suite — which is
+# exactly how `@axe-core/playwright` once shipped with its injected source
+# mangled while every run through the app failed and CI stayed green. The
+# chaos suite calls the runner directly, so it cannot see that class of fault
+# either.
+#
+# Manual only, and deliberately so: this depends on somebody else's site
+# staying up, and a job that goes red for a third party's outage trains people
+# to ignore red. `scripts/smoke-real.ts` says the same at the top of the file;
+# this workflow is the "run it on demand" half of that decision.
+#
+# It also produces the numbers the page cap is supposed to be set from —
+# `slowestPageMs`, `headroomMs`, `suggestedPageCap` — which is why the run
+# needs a real site with real images, third-party scripts and network latency.
+# A local fixture measures nothing about whether twenty pages fit in 300s.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Public, multi-page site to audit'
+        required: true
+        default: 'https://www.w3.org/WAI/'
+      steps:
+        description: 'Navigations to attempt (the first is the landing page)'
+        required: false
+        default: '6'
+
+jobs:
+  smoke:
+    name: One real audit through `next start`
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - run: npm run build
+
+      # Minted per run rather than read from a secret. The only server this
+      # token guards is started and discarded inside this job, so a repository
+      # secret would buy nothing and would be one more long-lived credential
+      # to rotate. Masked so a stray log line cannot echo it.
+      - name: Mint a throwaway run token
+        run: |
+          token="$(openssl rand -hex 32)"
+          echo "::add-mask::$token"
+          echo "AUDITOR_RUN_TOKEN=$token" >> "$GITHUB_ENV"
+
+      - name: Start the built app
+        env:
+          # No DATABASE_URL, on purpose. This job must not write to the
+          # database holding real client evidence, and `memory` is the
+          # explicit opt-in the store requires rather than a silent fallback.
+          # Nothing here needs to outlive the job.
+          AUDITOR_STORE: memory
+          # Artifacts fall back to local disk without a blob token, which is
+          # enough to prove the run captured its evidence.
+          #
+          # Empty means the advisory pass is skipped, which is a supported
+          # configuration and not a failure. Set the secret only if you want
+          # the smoke run to exercise — and pay for — the model call too.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npm start -- --port 3000 > "$RUNNER_TEMP/server.log" 2>&1 &
+          for _ in $(seq 1 60); do
+            # Any HTTP response means it is listening. `/api/ready` answers 503
+            # without a database, which is correct in memory mode and is not
+            # what this loop is waiting for.
+            if curl -s -o /dev/null http://127.0.0.1:3000/api/ready; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::the built app never started listening"
+          cat "$RUNNER_TEMP/server.log"
+          exit 1
+
+      # Through the shell environment, not interpolated into the script: the
+      # inputs are attacker-controlled text as far as the runner is concerned.
+      - name: Run one real audit
+        env:
+          SMOKE_URL: ${{ inputs.url }}
+          SMOKE_STEPS: ${{ inputs.steps }}
+        run: npm run smoke:real -- --url "$SMOKE_URL" --steps "$SMOKE_STEPS"
+
+      # The interesting failures — a mangled axe bundle, a Chromium that will
+      # not launch, a page cap hit — are logged by the server, not by the
+      # client that dispatched the run. Print it either way.
+      - name: Server log
+        if: always()
+        run: cat "$RUNNER_TEMP/server.log"
