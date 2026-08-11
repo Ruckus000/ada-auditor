@@ -397,6 +397,78 @@ describe('platform hydration', () => {
     }
   }, 60_000);
 
+  it('serves an anonymous request no data at all — in the bytes, not just on screen', async () => {
+    // The gap the test above could not see.
+    //
+    // `locks every route behind the operator session` asserts on
+    // `innerText`, and it was green while every one of these routes shipped
+    // the portfolio to anonymous callers. The group was gated in its layout,
+    // and a layout cannot stop a page from running — only from being
+    // composed. So the queries ran, and Next serialised the results into the
+    // RSC flight payload embedded in the same response that rendered the
+    // unlock card. A browser showed "Sign in". `curl` showed the client list.
+    //
+    // This reads the raw bytes for that reason, and issues a live report
+    // first, because the worst of it was at `/reports`: `buildReports`
+    // carries each report's `shareToken`, and that token is the only thing
+    // protecting the unauthenticated `/r/[token]` page. Anonymous read of
+    // that payload was a working key to every published report.
+    const runs = await fetch(`${BASE}/api/audit/runs?limit=1`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    });
+    const { runs: recent } = (await runs.json()) as { runs: Array<{ requestId: string }> };
+    expect(recent.length).toBeGreaterThan(0);
+
+    const issued = await fetch(`${BASE}/api/platform/clients/${CLIENT}/reports`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ requestId: recent[0]!.requestId }),
+    });
+    const { report } = (await issued.json()) as { report?: { shareUrl?: string } };
+    const shareToken = (report?.shareUrl ?? '').replace('/r/', '');
+    expect(shareToken.length).toBeGreaterThan(20);
+
+    // No cookie, and both request shapes: the plain document and the RSC
+    // fetch a client navigation makes. Both leaked.
+    for (const route of ROUTES) {
+      for (const headers of [{}, { RSC: '1' }]) {
+        const response = await fetch(`${BASE}${route}`, { headers });
+        const body = await response.text();
+        const where = `${route} ${JSON.stringify(headers)}`;
+
+        expect(response.status, where).toBeLessThan(400);
+
+        // The client's display name. It exists only in the store, so its
+        // presence means `buildPortfolio`, `buildActivity`,
+        // `buildClientDetail` or `buildFindingsView` ran for this caller.
+        expect(body, where).not.toContain('Harness Client');
+
+        // The slug too, but only where the caller did not supply it: a client
+        // route echoes its own path segment back in the router state, which
+        // tells an anonymous caller nothing it did not already type.
+        if (!route.startsWith('/clients/')) {
+          expect(body, where).not.toContain(CLIENT);
+        }
+
+        // A live key to a published report.
+        expect(body, where).not.toContain(shareToken);
+
+        // Findings are the substance of the product and the most sensitive
+        // thing here: a client's unfixed accessibility barriers.
+        expect(body, where).not.toContain('button-name');
+
+        // And it must still be the locked screen rather than an error page: a
+        // guard that threw would satisfy every assertion above. `PlatformLocked`
+        // is a client component, so the plain document carries its rendered
+        // text while the flight response carries only the module reference.
+        expect(body, where).toContain('PlatformLocked');
+        if (!('RSC' in headers)) {
+          expect(body, where).toContain('Sign in');
+        }
+      }
+    }
+  }, 120_000);
+
   it.each(ROUTES)('hydrates %s', async (route) => {
     const page = await openAuthenticatedPage();
     try {

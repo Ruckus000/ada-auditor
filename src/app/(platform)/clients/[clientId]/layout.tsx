@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { ClientShell } from '../../../platform/components/client/client-shell';
 import { loadClient } from './load';
+import { guarded } from '../../guard';
 
 /**
  * Refuses a client that does not exist.
@@ -12,7 +13,7 @@ import { loadClient } from './load';
  * client's findings under another client's address. In an auditor product that
  * is the worst available failure, because it looks like an answer.
  */
-export default async function ClientLayout({
+export default guarded(async function ClientLayout({
   children,
   params,
 }: {
@@ -27,4 +28,4 @@ export default async function ClientLayout({
   }
 
   return <ClientShell detail={detail}>{children}</ClientShell>;
-}
+});

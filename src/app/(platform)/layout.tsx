@@ -12,10 +12,21 @@ export const metadata: Metadata = {
 };
 
 /**
- * The gate, and the chrome.
+ * The chrome, and what an unauthenticated visitor sees.
  *
- * Checked here rather than in each page so a new screen cannot be added
- * unprotected — the failure mode of per-page auth is the page somebody forgot.
+ * This check used to be the *only* one, on the reasoning that a single gate
+ * cannot be forgotten by the next screen. It does not hold: a layout cannot
+ * gate its children. Next runs a page segment in parallel with its parent
+ * layout, so returning `<PlatformLocked />` here removed the page from the
+ * composition while its Server Component still ran, still queried, and still
+ * had its result serialised into the flight payload. `curl` with no cookie
+ * returned the client list. See `guard.tsx`, which now holds the real check,
+ * and the test that proves every screen in this group applies it.
+ *
+ * What remains here is honest: this is the screen an anonymous visitor
+ * actually gets, and a second check costs nothing because `currentPrincipal()`
+ * is memoised per render.
+ *
  * `/console` sits outside this group and keeps its own gate; `/r/[token]` is
  * outside too and unauthenticated by design.
  *

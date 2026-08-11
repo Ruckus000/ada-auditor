@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 import { getPlatformStore, getRunStore } from '../../../../../integrations/persistence';
 import { buildFindingsView } from '../../../../../services/findings-view';
 import { ClientFindings } from '../../../../platform/components/client/client-findings';
+import { guarded } from '../../../guard';
 
-export default async function ClientFindingsPage({
+export default guarded(async function ClientFindingsPage({
   params,
 }: {
   params: Promise<{ clientId: string }>;
@@ -23,4 +24,4 @@ export default async function ClientFindingsPage({
   if (!view) notFound();
 
   return <ClientFindings view={view} />;
-}
+});

@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
 import { ClientJourneys } from '../../../../platform/components/client/client-journeys';
 import { loadClient } from '../load';
+import { guarded } from '../../../guard';
 
-export default async function ClientJourneysPage({
+export default guarded(async function ClientJourneysPage({
   params,
 }: {
   params: Promise<{ clientId: string }>;
@@ -13,4 +14,4 @@ export default async function ClientJourneysPage({
   if (!detail) notFound();
 
   return <ClientJourneys detail={detail} />;
-}
+});

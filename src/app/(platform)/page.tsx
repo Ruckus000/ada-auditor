@@ -1,6 +1,7 @@
 import { getPlatformStore, getRunStore } from '../../integrations/persistence';
 import { buildPortfolio } from '../../services/portfolio';
 import { PortfolioRoute } from '../platform/components/routes/portfolio-route';
+import { guarded } from './guard';
 
 /**
  * The portfolio, and the product's front door.
@@ -9,7 +10,7 @@ import { PortfolioRoute } from '../platform/components/routes/portfolio-route';
  * `client-unassigned` row that anchors journeys nobody registered, which
  * `listClients` leaves out.
  */
-export default async function PortfolioPage() {
+export default guarded(async function PortfolioPage() {
   const platform = getPlatformStore();
   const clients = await buildPortfolio({
     clients: platform,
@@ -18,4 +19,4 @@ export default async function PortfolioPage() {
   });
 
   return <PortfolioRoute clients={clients} />;
-}
+});

@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
 import { ClientOverview } from '../../../platform/components/client/client-overview';
 import { loadClient } from './load';
+import { guarded } from '../../guard';
 
-export default async function ClientOverviewPage({
+export default guarded(async function ClientOverviewPage({
   params,
 }: {
   params: Promise<{ clientId: string }>;
@@ -15,4 +16,4 @@ export default async function ClientOverviewPage({
   if (!detail) notFound();
 
   return <ClientOverview detail={detail} />;
-}
+});
