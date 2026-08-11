@@ -63,13 +63,34 @@ export function resolveArtifactPrefix(artifactsDir: string, stepId: string): str
   return prefix;
 }
 
-function routeFromPageUrl(url: string): string {
-  const pathname = new URL(url).pathname;
-  const fileName = pathname.split('/').pop() ?? '';
-  if (!fileName || fileName === 'index.html') {
-    return '/';
+/**
+ * A short, human-readable label for one captured page.
+ *
+ * For an http(s) page the label is the site's own path, because that is what
+ * the operator and the client reading the report call the page.
+ *
+ * This used to keep only the last path segment, which collapsed every
+ * directory-style URL to `/`: the pathname `/WAI/` splits to `['', 'WAI', '']`
+ * and pops the empty string after the trailing slash. The first real audit run
+ * through this code — six pages of `https://www.w3.org/WAI/` — reported every
+ * one of them as `/`, and any site with clean URLs would have done the same.
+ * It only ever looked correct because the fixtures are `.html` files.
+ *
+ * `file:` URLs keep the basename. Their pathname is an absolute path on
+ * whichever machine ran the audit, which is noise in a report and would write
+ * somebody's home directory into an artifact filename.
+ */
+export function routeFromPageUrl(url: string): string {
+  const { protocol, pathname } = new URL(url);
+
+  if (protocol === 'file:') {
+    const fileName = pathname.split('/').pop() ?? '';
+    return fileName && fileName !== 'index.html' ? `/${fileName}` : '/';
   }
-  return `/${fileName}`;
+
+  // `/a/`, `/a/index.html` and `/a` are one page; all three read best as `/a`.
+  const trimmed = pathname.replace(/\/index\.html?$/i, '/').replace(/\/+$/, '');
+  return trimmed === '' ? '/' : trimmed;
 }
 
 /**
