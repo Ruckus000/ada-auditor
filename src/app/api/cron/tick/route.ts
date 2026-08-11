@@ -97,13 +97,15 @@ export async function GET(request: Request) {
 
   const platform = getPlatformStore();
   const limit = maxStartsPerTick();
-  const due = await platform.claimDueJourneys(limit);
 
+  // Resolved before anything is claimed. Claiming first meant a tick with no
+  // self URL stamped every due journey and then returned 503 without
+  // dispatching one of them — the journeys were marked done by a tick that
+  // could never have started them.
   const base = selfUrl();
-  if (due.length > 0 && !base) {
+  if (!base) {
     logWarn('cron_tick_no_self_url', {
       requestId,
-      claimed: due.length,
       note: 'AUDITOR_SELF_URL is unset and no Vercel URL is available, so nothing could be dispatched.',
     });
     return Response.json(
@@ -112,8 +114,36 @@ export async function GET(request: Request) {
     );
   }
 
+  const due = await platform.claimDueJourneys(limit);
+
   const started: string[] = [];
   const failed: string[] = [];
+
+  /**
+   * Undoes a claim whose dispatch did not land.
+   *
+   * `claimDueJourneys` stamps the journey before anything is dispatched, so
+   * without this a failed dispatch reads as a completed one and the journey
+   * waits for its next window having never run. Releasing is best-effort: if
+   * it throws, the tick has already recorded the dispatch as failed, and
+   * turning that into a 500 would lose the journeys that did start.
+   *
+   * Released on a thrown `fetch` as well as on a non-ok response, even though
+   * a throw cannot prove the run did not start — a timeout after the run
+   * endpoint accepted the request leaves it in flight. The alternative is
+   * worse: a genuine connection failure would silently cost the journey its
+   * turn. What bounds the risk is that a release does not make the journey due
+   * again on the next tick — the claim query gates on `schedule_hour`, so only
+   * a second tick inside the same hour, which in practice means a manual one,
+   * can pick it up.
+   */
+  const releaseClaim = async (journeyId: string): Promise<void> => {
+    try {
+      await platform.releaseJourneyClaim(journeyId);
+    } catch {
+      logWarn('cron_tick_release_failed', { requestId, journeyId });
+    }
+  };
 
   for (const journey of due) {
     try {
@@ -135,6 +165,7 @@ export async function GET(request: Request) {
 
       if (!response.ok) {
         failed.push(journey.id);
+        await releaseClaim(journey.id);
         continue;
       }
 
@@ -152,6 +183,7 @@ export async function GET(request: Request) {
       });
     } catch {
       failed.push(journey.id);
+      await releaseClaim(journey.id);
     }
   }
 

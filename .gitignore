@@ -17,3 +17,8 @@ tsconfig.tsbuildinfo
 .designops/
 .DS_Store
 .env*
+
+# Vendored agent-skill definitions and their lockfile. Tooling, not product:
+# nothing in src/, tests/ or CI reads them.
+.agents/
+skills-lock.json

@@ -32,10 +32,13 @@ import { isIP } from 'node:net';
  * `[::ffff:169.254.169.254]` through.
  *
  * What this does NOT cover, so nobody reads more into it than is there:
- * subresource requests, and navigations in a popup the audited page opened
- * with `window.open`. Both can reach an internal address; neither returns
- * anything to the caller or is captured as evidence, so they are blind. The
- * containing fix for both is request-level interception, which is not here.
+ * subresource requests. They can reach an internal address, but nothing is
+ * returned to the caller and nothing is captured as evidence, so it is blind.
+ * The containing fix is request-level interception, which is not here.
+ *
+ * Popups *are* covered — `journey-runner` binds the response check to the
+ * browser context rather than to a page, so a `window.open` navigation passes
+ * through it — but a popup is never audited.
  */
 
 export class UnsafeTargetError extends Error {

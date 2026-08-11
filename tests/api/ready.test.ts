@@ -122,4 +122,18 @@ describe('GET /api/ready', () => {
     expect(body.status).toBe('not_ready');
     expect(body.checks.auditorRunTokenConfigured).toBe(false);
   });
+  it('warns, because the checklist is "an empty warnings array"', async () => {
+    // `docs/env.md` tells the operator to verify exactly that, and chaos was
+    // reported in `checks` but produced no warning — so a production
+    // deployment able to serve scripted audit outcomes passed the check. The
+    // shared `afterEach` restores CHAOS_ENABLED, so this does not clean up
+    // after itself and stay dirty when an expectation throws.
+    process.env.CHAOS_ENABLED = 'true';
+
+    const body = await (await GET()).json();
+
+    expect(body.checks.chaosEnabled).toBe(true);
+    expect(body.warnings.join(' ')).toContain('chaos_enabled');
+  });
+
 });

@@ -147,12 +147,33 @@ the run rather than following it.
 the run token returns the latest stored run plus optional regression against the
 prior baseline.
 
+## Function memory
+
+`vercel.json` sets `memory: 3009` on the routes that launch Chromium and 2048
+on the PDF route. It is the only place memory can be declared — `maxDuration`
+lives in the route files and is deliberately not repeated here, so the number
+has one home.
+
+3009 MB is the smallest Vercel size that reliably fits `@sparticuz/chromium`:
+the binary is unpacked to `/tmp` on first use and a browser plus a page's DOM,
+screenshot and accessibility tree live in the same invocation. The default is
+smaller, and a Chromium that cannot allocate fails at launch rather than
+degrading — so a too-small setting looks like "audits do not work" rather than
+"audits are slow".
+
+The two wildcard patterns are wildcards on purpose: `functions` keys are globs,
+and `[clientId]` in a literal path would be read as a character class and match
+nothing, which Vercel reports as a build error.
+
 ## Scheduling
 
 `vercel.json` points Vercel Cron at `GET /api/cron/tick`, hourly. Each tick:
 
-1. Claims the journeys whose cadence is due (`for update skip locked`, so two
-   overlapping ticks cannot both claim one and bill a client twice).
+1. Claims the journeys whose cadence is due, in one statement — a CTE
+   carrying `for update skip locked`, so two overlapping ticks cannot both
+   claim one and bill a client twice. The CTE is load-bearing, not stylistic:
+   the `where id in (select … limit n for update skip locked)` form the query
+   started as is re-executed per outer row and silently exceeds its limit.
 2. Posts each to `/api/audit/run` with the machine token — it **dispatches**
    rather than audits, because one 300s function cannot walk N journeys through
    a browser, and each dispatch needs its own invocation and its own Chromium.
@@ -161,8 +182,16 @@ prior baseline.
    failure mode is a scheduler that reports success and audits nothing.
 3. Reconciles runs stuck in `running` past `AUDITOR_RUN_STALE_SECONDS`.
 
-`last_scheduled_at` is written only after a dispatch is accepted, so a dropped
-tick retries next hour rather than being marked done. Per-journey cadence lives
+`last_scheduled_at` is stamped inside the claiming statement, before anything
+is dispatched — the claim has to be atomic with the selection or two ticks
+would both take the same journey. A dispatch that then fails **gives the claim
+back** (`releaseJourneyClaim`), so a repeat tick in the same hour — including
+the manual one in the checklist below — picks the journey up instead of
+finding it stamped as done by a dispatch that never landed. It does not pull
+the next *scheduled* attempt forward: the claim query also gates on
+`schedule_hour`, so the following hourly tick skips the journey either way.
+The self URL is resolved before any of this: a tick that cannot dispatch
+claims nothing. Per-journey cadence lives
 in our own code off one uniform tick — Hobby allows a limited number of cron
 entries, and a per-journey cron expression would not survive that.
 
@@ -192,7 +221,7 @@ still sign in as the machine.
 ### Verify deploy checklist
 
 1. `GET /api/health` → 200
-2. `GET /api/ready` → 200, with an empty `warnings` array. It gates only on the run token and the database; a shared session secret, a missing `CRON_SECRET` and in-memory counters are reported rather than gating, because none of them stops the control plane doing its job.
+2. `GET /api/ready` → 200, with an empty `warnings` array. It gates only on the run token and the database; a shared session secret, a missing `CRON_SECRET`, in-memory counters and `CHAOS_ENABLED` are reported rather than gating, because none of them stops the control plane doing its job — but an empty array is the check, so every one of them has to appear there. Chaos in particular: it lets a caller request scripted audit outcomes and must never be set in production.
 3. `npm run operator -- add` against the deployment's `DATABASE_URL` (`vercel env pull`), then sign in with that email and password
 4. Run a fixture audit from the control plane, and open a piece of evidence from the findings list
 5. Press **Run now** on a journey with a target URL and watch it reach a terminal status

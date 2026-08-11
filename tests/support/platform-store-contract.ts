@@ -490,6 +490,40 @@ export function platformStoreContract(
     });
 
     /**
+     * A claim is a promise to dispatch, and a dispatch can fail.
+     *
+     * `claimDueJourneys` stamps the journey inside the claiming statement,
+     * before anything has been sent. Without a way to give the claim back, a
+     * dispatch that failed was indistinguishable from one that succeeded: the
+     * journey was marked done and waited for its next window having never run.
+     * The scheduler's whole job is that a site gets re-audited, so a silently
+     * dropped run is the failure that matters most here.
+     */
+    it('makes a released journey claimable again', async () => {
+      await scheduled('pc-journey-released');
+
+      await store_.claimDueJourneys(10);
+      expect(
+        (await store_.claimDueJourneys(10)).map((journey) => journey.id),
+      ).not.toContain('pc-journey-released');
+
+      await store_.releaseJourneyClaim('pc-journey-released');
+
+      expect((await store_.claimDueJourneys(10)).map((journey) => journey.id)).toContain(
+        'pc-journey-released',
+      );
+    });
+
+    it('releases a journey that was never claimed without complaining', async () => {
+      // The tick releases on any dispatch failure and cannot know whether the
+      // claim landed. Throwing here would turn a failed run into a failed tick.
+      await scheduled('pc-journey-unclaimed');
+
+      await expect(store_.releaseJourneyClaim('pc-journey-unclaimed')).resolves.toBeUndefined();
+      await expect(store_.releaseJourneyClaim('pc-journey-missing')).resolves.toBeUndefined();
+    });
+
+    /**
      * Claim and stamp are one operation, because the Neon HTTP driver has no
      * transactions: a select followed by an update would let two overlapping
      * ticks both start the same journey.

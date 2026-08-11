@@ -230,6 +230,19 @@ export interface JourneyStore {
    * than looping on one journey forever.
    */
   claimDueJourneys(limit: number, now?: Date): Promise<StoredJourney[]>;
+  /**
+   * Gives a claimed journey back, because dispatching it failed.
+   *
+   * Without this a claim was permanent: `claimDueJourneys` stamps
+   * `lastScheduledAt` inside the claiming statement, before anything has been
+   * dispatched, and a failed dispatch left the stamp — so a run that never
+   * started was recorded as done and waited for its next window.
+   *
+   * Releases to null rather than to the previous timestamp. Nothing reads this
+   * column except the claim query itself, so the only question it has to
+   * answer is "is this journey claimable", and null is the unambiguous yes.
+   */
+  releaseJourneyClaim(journeyId: string): Promise<void>;
 }
 
 export interface TriageStore {

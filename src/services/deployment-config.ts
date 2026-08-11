@@ -5,9 +5,10 @@ import { runBudgetLimits } from './run-budget';
  *
  * The settings screen this replaces had nine hundred lines of controls: scan
  * schedules, notification rules, WCAG level pickers, seat management, SSO. Not
- * one of them was wired to anything, and most described features that do not
- * exist — nothing in this system schedules a run, sends a notification, or has
- * a second user to give a seat to.
+ * one of them was wired to anything, and most described features that did not
+ * exist. Two since do: runs are scheduled and operators are real people, and
+ * both appear below as settings that report rather than controls that pretend.
+ * Notifications and seats remain fiction, and so remain absent.
  *
  * What an operator can genuinely ask is "what is this deployment doing, and
  * what is degraded". That is environment configuration, so the screen shows it

@@ -7,7 +7,7 @@ Playwright journey runner that captures real evidence artifacts for `createEvide
 After Phase 1 lands, wire **one call site** in `src/app/api/_lib/audit-run-handler.ts` (or equivalent):
 
 ```typescript
-import { runBrowserAudit } from '@/integrations/browser';
+import { runBrowserAudit } from '@/integrations/browser/run-browser-audit';
 import { join } from 'node:path';
 
 // When request body includes browserMode: true (or similar):

@@ -21,8 +21,11 @@ import { isSameOriginConsoleRequest } from './same-origin';
  *    defence only — `sec-fetch-site` and `Origin` are trustworthy from a
  *    browser and forged freely by anything else — so it never stands alone.
  *
- * The layout's auth gate protects *rendering*. An API route is reachable
- * directly and has to check for itself.
+ * The screens' auth gate (`(platform)/guard.tsx`) protects *rendering*. An API
+ * route is reachable directly and has to check for itself — which is the same
+ * reasoning that turned out to apply to the screens too: the gate used to live
+ * in the route-group layout, and a layout cannot stop the pages beneath it
+ * from running.
  */
 export async function authorizePrincipal(request: Request): Promise<Principal | null> {
   if (isRunAuthorized(request)) {

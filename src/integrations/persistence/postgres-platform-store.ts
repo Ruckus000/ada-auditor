@@ -305,6 +305,12 @@ export class PostgresPlatformStore implements PlatformStore {
     return rows.map((row) => this.mapJourney(row));
   }
 
+  async releaseJourneyClaim(journeyId: string): Promise<void> {
+    await this.sql`
+      update journeys set last_scheduled_at = null where id = ${journeyId}
+    `;
+  }
+
   async getJourney(id: string): Promise<StoredJourney | null> {
     const rows = await this.sql<JourneyRow>`select * from journeys where id = ${id}`;
     return rows.length === 0 ? null : this.mapJourney(rows[0]);
