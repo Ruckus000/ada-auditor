@@ -339,9 +339,10 @@ export class PostgresPlatformStore implements PlatformStore {
   /**
    * One statement: select the due rows and stamp them in the same breath.
    *
-   * The Neon HTTP driver is one statement per request with no transactions, so
-   * a select followed by an update would let two overlapping ticks both claim
-   * the same journey and start it twice.
+   * A select followed by an update would let two overlapping ticks both claim
+   * the same journey and start it twice. A transaction would not settle it
+   * either: under Postgres's default read-committed isolation both ticks can
+   * read the row as due before either writes.
    *
    * `for update skip locked` is what actually makes that true, and it is not
    * decoration. Without it, two concurrent updates can both evaluate the

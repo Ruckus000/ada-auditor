@@ -352,7 +352,8 @@ Read this before claiming something works.
   real client's name. Recording a journey is still console and API work.
 - **Journeys re-run on a schedule.** `off | daily | weekly` plus a UTC hour on
   the journey, an hourly Vercel Cron at `/api/cron/tick`. The tick claims due
-  journeys in one `update … returning` (Neon has no transactions) and
+  journeys in one `update … returning` — one statement, so two overlapping
+  ticks cannot both claim the same journey — and
   *dispatches* each to `/api/audit/run` so every run gets its own invocation —
   it never audits anything itself. Needs `CRON_SECRET`; without it the tick
   refuses everything and `/api/ready` says so.

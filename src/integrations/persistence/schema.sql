@@ -461,8 +461,9 @@ update journeys set environment = 'production' where environment is null;
 --
 -- `last_scheduled_at` is what makes the tick idempotent. The cron fires
 -- hourly, and a journey is claimed by *stamping* this column in the same
--- statement that selects it — there are no transactions on the Neon HTTP
--- driver, so claim-then-work is the only shape available.
+-- statement that selects it. Claim-then-work is the shape because a claim that
+-- is not atomic with the select lets two overlapping ticks start one journey
+-- twice.
 alter table journeys add column if not exists schedule text;
 alter table journeys add column if not exists schedule_hour smallint;
 alter table journeys add column if not exists last_scheduled_at timestamptz;
