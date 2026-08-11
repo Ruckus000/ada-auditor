@@ -345,7 +345,7 @@ export class PostgresPlatformStore implements PlatformStore {
    *
    * `for update skip locked` is what actually makes that true, and it is not
    * decoration. Without it, two concurrent updates can both evaluate the
-   * subquery before either commits; the second then blocks on the row lock and
+   * selection before either commits; the second then blocks on the row lock and
    * re-checks the outer qual against the new row version — behaviour subtle
    * enough that no scheduler should depend on it implicitly. `skip locked`
    * makes the second tick pass over a claimed row instead of queueing behind
@@ -356,6 +356,21 @@ export class PostgresPlatformStore implements PlatformStore {
    * schedule as the hour rolls over is the collision. A double claim means one
    * journey audited twice and a client billed for it.
    *
+   * ## Why a CTE and not `where id in (select … limit n for update skip locked)`
+   *
+   * Because that form silently breaks the limit, and real Postgres is the only
+   * thing that says so. The planner turns the sublink into a semi-join whose
+   * inner side — `Limit` over `LockRows` — is re-executed **per outer row**.
+   * Each re-execution skips the rows this same statement has already locked, so
+   * a different row qualifies each time: `limit 2` against three due journeys
+   * updates all three. A CTE carrying a locking clause cannot be inlined, so it
+   * is evaluated exactly once and the limit means what it says.
+   *
+   * The limit is not cosmetic. It is `CRON_MAX_STARTS_PER_TICK`, and every
+   * claimed journey becomes its own function invocation with its own Chromium —
+   * so an over-claim is a tick launching more browsers than the bound that
+   * exists to stop exactly that.
+   *
    * The slack in the intervals — 23 hours for daily, 6 days for weekly — is
    * what stops hour-boundary jitter from skipping a day entirely. Without it,
    * a tick that runs a few seconds late means `last_scheduled_at` is not quite
@@ -364,8 +379,7 @@ export class PostgresPlatformStore implements PlatformStore {
   async claimDueJourneys(limit: number, now: Date = new Date()): Promise<StoredJourney[]> {
     const hour = now.getUTCHours();
     const rows = await this.sql<JourneyRow>`
-      update journeys set last_scheduled_at = now()
-      where id in (
+      with due as (
         select id from journeys
         where schedule is not null
           and schedule <> 'off'
@@ -383,7 +397,10 @@ export class PostgresPlatformStore implements PlatformStore {
         limit ${Math.max(1, Math.floor(limit))}
         for update skip locked
       )
-      returning *
+      update journeys set last_scheduled_at = now()
+      from due
+      where journeys.id = due.id
+      returning journeys.*
     `;
     return rows.map((row) => this.mapJourney(row));
   }
