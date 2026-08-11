@@ -60,10 +60,22 @@ async function main(): Promise<void> {
 
   const steps = [
     { action: 'navigate', type: 'goto', path: entryPath },
-    ...Array.from({ length: Math.max(0, stepCount - 1) }, () => ({
+    // Each step takes a link further down the page than the last.
+    //
+    // Clicking the first link every time walked in a circle: the first link
+    // on `https://www.w3.org/` is a language switcher to `/ja`, whose own
+    // first link points back. Six captures, two pages, three visits each —
+    // and the run reported `pagesAudited: 6` with the findings on those two
+    // pages counted three times over.
+    //
+    // Advancing the index is a heuristic, not a crawler; it just has to stop
+    // the walk retracing one edge. A page with fewer links than the step
+    // index fails the click, which is loud and is the right way for a
+    // synthetic journey to run out of road.
+    ...Array.from({ length: Math.max(0, stepCount - 1) }, (_step, index) => ({
       action: 'navigate',
       type: 'click',
-      selector: 'a[href]:not([href^="#"]):not([href^="mailto:"])',
+      selector: `a[href]:not([href^="#"]):not([href^="mailto:"]) >> nth=${index}`,
     })),
   ];
 

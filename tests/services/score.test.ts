@@ -26,6 +26,41 @@ describe('scoreRun', () => {
     expect(result.score).toBe(67);
   });
 
+  it('never prints 100 while a check is failing', () => {
+    // The case that prompted this: a real run of `https://www.w3.org/`
+    // reported `score 100` next to `ciStatus: fail` and fifteen listed
+    // violations, because 2489/2504 rounds to 100. Whichever number a reader
+    // believes, the report contradicts itself — and it is written for a
+    // client's counsel.
+    const result = scoreRun({
+      pages: [{ passed: 2489, failed: 15 }],
+      evidenceStatus: 'complete',
+    });
+
+    expect(result.score).toBe(99);
+    expect(result.failed).toBe(15);
+  });
+
+  it('still reaches 100 when nothing failed', () => {
+    // The cap must not cost a clean run its perfect score, or it would just
+    // be a different lie.
+    const result = scoreRun({
+      pages: [{ passed: 2504, failed: 0, incomplete: 40 }],
+      evidenceStatus: 'complete',
+    });
+
+    expect(result.score).toBe(100);
+  });
+
+  it('does not disturb a score that was never near the top', () => {
+    const result = scoreRun({
+      pages: [{ passed: 80, failed: 20 }],
+      evidenceStatus: 'complete',
+    });
+
+    expect(result.score).toBe(80);
+  });
+
   it('keeps undecided checks out of both terms', () => {
     // axe's `incomplete` results are the human-review queue. Counting them as
     // passes would inflate the score; counting them as failures would punish a
