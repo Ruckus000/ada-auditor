@@ -47,8 +47,19 @@ async function main(): Promise<void> {
   // A journey that actually walks: land, then follow in-scope links. The point
   // is several pages, because a one-page run measures nothing about the cap.
   const stepCount = Number(flag('steps', '5'));
+
+  // Land on the page `--url` names, not on the site root.
+  //
+  // Navigation paths resolve against the target as a base, and a leading
+  // slash is origin-absolute, so a literal '/' discarded the path every time:
+  // `--url https://www.w3.org/WAI/` audited `https://www.w3.org/`. The run
+  // still looked healthy — six pages, evidence complete — while measuring a
+  // page nobody had asked for.
+  const entry = new URL(target);
+  const entryPath = `${entry.pathname}${entry.search}`;
+
   const steps = [
-    { action: 'navigate', type: 'goto', path: '/' },
+    { action: 'navigate', type: 'goto', path: entryPath },
     ...Array.from({ length: Math.max(0, stepCount - 1) }, () => ({
       action: 'navigate',
       type: 'click',
