@@ -26,10 +26,25 @@ import type {
  */
 
 /** The subset of `@neondatabase/serverless`'s tagged-template client we use. */
-export type SqlClient = <T = Record<string, unknown>>(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-) => Promise<T[]>;
+export type SqlClient = {
+  <T = Record<string, unknown>>(
+    strings: TemplateStringsArray,
+    ...values: unknown[]
+  ): Promise<T[]>;
+
+  /**
+   * Several statements as one Postgres transaction, in one HTTP request.
+   *
+   * The driver speaks HTTP, so a bare `sql`…`` is its own transaction and
+   * there is no session to hold `begin` open across. `transaction()` is the
+   * only way to make a multi-statement write atomic, and `saveRun` — which
+   * deletes a run's children and reinserts them — is not correct without it.
+   *
+   * The queries are built but not awaited: the driver's tagged template is
+   * lazy, so `sql`…`` describes a statement and `transaction()` sends it.
+   */
+  transaction(queries: readonly Promise<unknown>[]): Promise<unknown[]>;
+};
 
 type RunRow = {
   request_id: string;
@@ -177,7 +192,7 @@ export class PostgresRunStore implements RunStore {
   constructor(private readonly sql: SqlClient) {}
 
   /**
-   * Writes a run and its children.
+   * Writes a run and its children, atomically.
    *
    * An upsert, not an insert: a run is written as `running` before the audit
    * starts and rewritten when it finishes, so the second write must replace
@@ -185,9 +200,32 @@ export class PostgresRunStore implements RunStore {
    * for the same reason — the placeholder has none, the finished record has
    * all of them, and a partial overwrite would leave a run holding pages from
    * an earlier attempt.
+   *
+   * ## Why one transaction and not a sequence of awaits
+   *
+   * This used to await each statement in turn. The driver speaks HTTP, so
+   * every one of those was its own transaction, and the first real audit — 4
+   * pages, 239 findings — was 245 of them. A poll during that window returned
+   * the run as `complete` holding 16 findings, because the `runs` row
+   * committed before its children did.
+   *
+   * The dangerous direction is the re-save. `delete from findings` committed
+   * on its own, so for the length of the reinsert a failing run read as a run
+   * with no findings at all — and a CI gate that polls until
+   * `status === 'complete'` would pass a build it should have blocked. That is
+   * the one mistake this product exists to prevent.
+   *
+   * Every statement is now sent together, so a reader sees the run as it was
+   * before this save or as it is after it, never part-way through. It is also
+   * one round trip instead of hundreds.
    */
   async saveRun(record: StoredRunRecord): Promise<void> {
     const sql = this.sql;
+
+    // Built, not awaited. The driver's tagged template is lazy, so each of
+    // these describes a statement; `transaction` below runs them, in this
+    // order, inside one `begin`/`commit`.
+    const statements: Promise<unknown>[] = [];
 
     // A run implies a journey.
     //
@@ -201,13 +239,13 @@ export class PostgresRunStore implements RunStore {
     // The name defaults to the id and the client to `client-unassigned`. The
     // catalog screens overwrite both; `on conflict do nothing` is what stops
     // this from clobbering them on the next run.
-    await sql`
+    statements.push(sql`
       insert into journeys (id, client_id, name)
       values (${record.journeyId}, 'client-unassigned', ${record.journeyId})
       on conflict (id) do nothing
-    `;
+    `);
 
-    await sql`
+    statements.push(sql`
       insert into runs (
         request_id, journey_id, environment, platform, evidence_status,
         ci_status, status, failure_reason, duration_ms, browser_mode,
@@ -243,14 +281,14 @@ export class PostgresRunStore implements RunStore {
         created_at = least(runs.created_at, excluded.created_at),
         started_at = least(coalesce(runs.started_at, excluded.started_at), excluded.started_at),
         phase_ms = coalesce(excluded.phase_ms, runs.phase_ms)
-    `;
+    `);
 
-    await sql`delete from run_pages where request_id = ${record.requestId}`;
-    await sql`delete from findings where request_id = ${record.requestId}`;
+    statements.push(sql`delete from run_pages where request_id = ${record.requestId}`);
+    statements.push(sql`delete from findings where request_id = ${record.requestId}`);
 
     const pages = record.pages ?? [];
     for (const [position, page] of pages.entries()) {
-      await sql`
+      statements.push(sql`
         insert into run_pages (
           request_id, position, url, route, title, evidence_status, artifacts,
           checks_passed, checks_failed, checks_incomplete, duration_ms, scan_ms
@@ -262,11 +300,11 @@ export class PostgresRunStore implements RunStore {
           ${page.checksIncomplete ?? null},
           ${page.durationMs ?? null}, ${page.scanMs ?? null}
         )
-      `;
+      `);
     }
 
     for (const [position, finding] of record.findings.entries()) {
-      await sql`
+      statements.push(sql`
         insert into findings (
           request_id, position, page_url, code, severity, source, title,
           message, remediation_any, remediation_all, wcag_criteria,
@@ -283,8 +321,10 @@ export class PostgresRunStore implements RunStore {
           ${finding.htmlSnippet ?? null}, ${finding.helpUrl ?? null},
           ${finding.gateable ?? null}, ${finding.confidence ?? null}
         )
-      `;
+      `);
     }
+
+    await sql.transaction(statements);
   }
 
   async getRun(requestId: string): Promise<StoredRunRecord | null> {
@@ -363,9 +403,12 @@ export class PostgresRunStore implements RunStore {
   /**
    * Writes the truth about runs that died mid-flight.
    *
-   * One statement, because the Neon HTTP driver is one statement per request
-   * and has no transactions — a read-then-write would race the sweep against
-   * a run legitimately finishing.
+   * One statement, because a read-then-write would race the sweep against a
+   * run legitimately finishing: the row could turn `complete` between the
+   * select and the update, and the sweep would then mark a finished run
+   * failed. Wrapping the pair in a transaction would not fix that — it is a
+   * lost-update race, not an atomicity one — so the single statement is the
+   * fix, not a workaround for the driver.
    */
   async reconcileStaleRuns(olderThanMs: number): Promise<number> {
     const seconds = Math.floor(olderThanMs / 1000);

@@ -223,9 +223,9 @@ export interface JourneyStore {
   /**
    * Claims the journeys due to run now, stamping `lastScheduledAt` as it goes.
    *
-   * Claim and select in one operation, because the Neon HTTP driver runs one
-   * statement per request and has no transactions: a select-then-update would
-   * let two overlapping ticks both start the same journey. Only claimed rows
+   * Claim and select in one operation: a select-then-update would let two
+   * overlapping ticks both start the same journey, and read-committed
+   * isolation means a transaction around the pair would not stop them. Only claimed rows
    * are returned, so a tick that crashes after claiming loses one cycle rather
    * than looping on one journey forever.
    */
