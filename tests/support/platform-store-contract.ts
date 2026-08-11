@@ -562,6 +562,12 @@ export function platformStoreContract(
 
     // The Postgres store claims across the whole table, so this asserts the
     // cap holds rather than an exact set — same caveat as `listClients`.
+    //
+    // Not a formality: this is the case that caught `where id in (select …
+    // limit n for update skip locked)` updating all three of these. The limit
+    // is `CRON_MAX_STARTS_PER_TICK`, and each claimed journey becomes its own
+    // invocation with its own browser. Only real Postgres can fail it — the
+    // memory double slices the array and is right by construction.
     it('honours the limit', async () => {
       await scheduled('pc-journey-a');
       await scheduled('pc-journey-b');
