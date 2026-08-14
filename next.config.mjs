@@ -32,9 +32,20 @@ const nextConfig = {
   // package is listed rather than that one file: the same class of miss
   // applies to anything else it reads by path, and a second production-only
   // failure discovered a week later is worth more than the bytes.
+  //
+  // `@sparticuz/chromium` is here for the same reason and cost a second
+  // deployment to learn: its `bin/` holds the brotli-compressed browser, which
+  // no `import` mentions, so the tracer left it behind and the run failed with
+  // "The input directory …/@sparticuz/chromium/bin does not exist."
   outputFileTracingIncludes: {
-    '/api/audit/**': ['./node_modules/playwright-core/**'],
-    '/api/platform/clients/**': ['./node_modules/playwright-core/**'],
+    '/api/audit/**': [
+      './node_modules/playwright-core/**',
+      './node_modules/@sparticuz/chromium/**',
+    ],
+    '/api/platform/clients/**': [
+      './node_modules/playwright-core/**',
+      './node_modules/@sparticuz/chromium/**',
+    ],
   },
   experimental: {
     useTypeScriptCli: true,
