@@ -1,5 +1,28 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { GET } from '../../src/app/api/ready/route';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+/**
+ * The readiness probe asks the throttle store whether it answers, so this
+ * stands in for the network. `redisAnswers` is what the endpoint is now able
+ * to distinguish: a deployment pointed at Redis, and a deployment pointed at
+ * Redis that is actually there. Production had the first while reporting the
+ * second, and every sign-in returned 500 behind an empty `warnings` array.
+ */
+const redis = vi.hoisted(() => ({ answers: true }));
+
+vi.mock('../../src/app/api/_lib/redis', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/app/api/_lib/redis')>()),
+  createRedisClient: () => ({
+    get: async () => {
+      if (!redis.answers) throw new Error('getaddrinfo ENOTFOUND kv.test');
+      return null;
+    },
+    incr: async () => 1,
+    expire: async () => undefined,
+    del: async () => undefined,
+  }),
+}));
+
+const { GET } = await import('../../src/app/api/ready/route');
 
 describe('GET /api/ready', () => {
   const originalToken = process.env.AUDITOR_RUN_TOKEN;
@@ -12,6 +35,7 @@ describe('GET /api/ready', () => {
 
   beforeEach(() => {
     process.env.DATABASE_URL = 'postgres://test/db';
+    redis.answers = true;
   });
 
   afterEach(() => {
@@ -85,8 +109,30 @@ describe('GET /api/ready', () => {
 
     const body = await (await GET()).json();
     expect(body.checks.unlockThrottleDurable).toBe(true);
+    expect(body.checks.unlockThrottleReachable).toBe(true);
     expect(body.checks.sessionSecretDedicated).toBe(true);
     expect(body.warnings).toEqual([]);
+  });
+
+  it('warns when the configured throttle store does not answer', async () => {
+    // The gap that let production report `ready` with an empty warnings array
+    // while every sign-in returned 500: the variables were set, and nothing
+    // ever asked the host they named whether it was there.
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    process.env.AUDITOR_SESSION_SECRET = 'session-secret-16chars';
+    process.env.CRON_SECRET = 'cron-secret-16chars';
+    process.env.KV_REST_API_URL = 'https://kv.test';
+    process.env.KV_REST_API_TOKEN = 'kv-token';
+    redis.answers = false;
+
+    const body = await (await GET()).json();
+
+    expect(body.checks.unlockThrottleDurable).toBe(true);
+    expect(body.checks.unlockThrottleReachable).toBe(false);
+    expect(body.warnings.join(' ')).toContain('unlock_throttle_unreachable');
+    // Still ready: the throttle degrades to memory rather than failing, so
+    // this is a hole rather than an outage.
+    expect(body.status).toBe('ready');
   });
 
   // Reported, never gating. A deployment with no operator accounts at all,

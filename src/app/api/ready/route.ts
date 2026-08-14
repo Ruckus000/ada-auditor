@@ -1,5 +1,6 @@
 import { MIN_TOKEN_LENGTH } from '../_lib/console-session';
-import { isThrottleKvConfigured } from '../_lib/unlock-throttle';
+import { createRedisClient } from '../_lib/redis';
+import { isThrottleKvConfigured, KvThrottleStore } from '../_lib/unlock-throttle';
 import { isDatabaseConfigured } from '../../../integrations/persistence';
 import { sessionSecretIsShared } from '../_lib/principal';
 
@@ -22,7 +23,39 @@ import { sessionSecretIsShared } from '../_lib/principal';
  * throttle counting attempts in process memory — per-instance, reset on every
  * cold start. That is a real weakness and it should be visible, but it is not
  * an outage.
+ *
+ * `unlockThrottleReachable` is *asked*, not inferred from configuration. The
+ * two came apart in production: the variables were set, so this endpoint said
+ * `ready` with an empty `warnings` array, while the Upstash host they named had
+ * stopped resolving and every sign-in returned 500. A readiness check that only
+ * reads its own configuration cannot tell "pointed at Redis" from "pointed at
+ * Redis that answers", and it is the second one that matters.
  */
+/**
+ * Does the throttle store actually answer?
+ *
+ * A read, never a write — asking must not count as a failed attempt against
+ * whoever owns this key. `getThrottleStore` returns the resilient wrapper,
+ * which swallows the error and falls back, so the probe goes at the underlying
+ * store: the question here is whether the durable one is alive, and the
+ * wrapper is designed to hide exactly that.
+ */
+async function throttleAnswers(): Promise<boolean> {
+  if (!isThrottleKvConfigured()) {
+    // Memory always answers. Reporting `true` would make an unconfigured
+    // deployment look healthier than a misconfigured one; the separate
+    // `unlockThrottleDurable` check is what describes this case.
+    return false;
+  }
+
+  try {
+    await new KvThrottleStore(createRedisClient()).isThrottled('readiness-probe');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET() {
   const token = process.env.AUDITOR_RUN_TOKEN;
 
@@ -30,6 +63,7 @@ export async function GET() {
     auditorRunTokenConfigured: typeof token === 'string' && token.length >= MIN_TOKEN_LENGTH,
     runStoreConfigured: isDatabaseConfigured(),
     unlockThrottleDurable: isThrottleKvConfigured(),
+    unlockThrottleReachable: await throttleAnswers(),
     sessionSecretDedicated: !sessionSecretIsShared(),
     cronSecretConfigured: Boolean(process.env.CRON_SECRET),
     chaosEnabled: process.env.CHAOS_ENABLED === 'true',
@@ -38,6 +72,15 @@ export async function GET() {
   const ready = checks.auditorRunTokenConfigured && checks.runStoreConfigured;
 
   const warnings: string[] = [];
+
+  // Not gating: the throttle degrades to memory rather than failing, so a
+  // dead Redis is no longer an outage. It is still a hole — the limit becomes
+  // per-instance — and the operator is the only one who can fix it.
+  if (checks.unlockThrottleDurable && !checks.unlockThrottleReachable) {
+    warnings.push(
+      'unlock_throttle_unreachable: a Redis endpoint is configured but did not answer, so sign-in attempts are being counted per instance. Check KV_REST_API_URL still points at a live store.',
+    );
+  }
 
   if (!checks.unlockThrottleDurable) {
     warnings.push(

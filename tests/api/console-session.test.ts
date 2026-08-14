@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildSessionCookie,
   CONSOLE_COOKIE,
@@ -14,6 +14,8 @@ import {
 import {
   KvThrottleStore,
   MemoryThrottleStore,
+  ResilientThrottleStore,
+  type ThrottleStore,
 } from '../../src/app/api/_lib/unlock-throttle';
 
 const SECRET = 'a'.repeat(32);
@@ -251,5 +253,71 @@ describe('KvThrottleStore', () => {
     await store.clearFailures('1.2.3.4');
 
     expect(values.has('unlock:attempts:1.2.3.4')).toBe(false);
+  });
+});
+
+describe('ResilientThrottleStore', () => {
+  /**
+   * A dead cache must not become a locked door.
+   *
+   * The configured Upstash instance stopped resolving and `isThrottled` threw
+   * `ENOTFOUND` on the first line of the sign-in route — before any credential
+   * is read — so every sign-in returned 500 regardless of who was signing in
+   * or what they typed. The rate limiter had become the thing standing between
+   * the operators and their own product.
+   */
+  const dead: ThrottleStore = {
+    isThrottled: () => Promise.reject(new Error('getaddrinfo ENOTFOUND redis.example')),
+    recordFailure: () => Promise.reject(new Error('getaddrinfo ENOTFOUND redis.example')),
+    clearFailures: () => Promise.reject(new Error('getaddrinfo ENOTFOUND redis.example')),
+  };
+
+  it('answers instead of throwing when the durable store is unreachable', async () => {
+    const store = new ResilientThrottleStore(dead);
+
+    await expect(store.isThrottled('anybody')).resolves.toBe(false);
+    await expect(store.recordFailure('anybody')).resolves.toBeUndefined();
+    await expect(store.clearFailures('anybody')).resolves.toBeUndefined();
+  });
+
+  it('still limits, in memory, once it has degraded', async () => {
+    // Weaker than the durable store — per instance rather than global — but a
+    // degraded limiter is worth more than no product.
+    const store = new ResilientThrottleStore(dead);
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      await store.recordFailure('one-address');
+    }
+
+    expect(await store.isThrottled('one-address')).toBe(true);
+    expect(await store.isThrottled('another-address')).toBe(false);
+  });
+
+  it('says so once, not once per request', async () => {
+    // A dead host would otherwise bury the log line it is trying to raise.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const store = new ResilientThrottleStore(dead);
+
+    await store.isThrottled('a');
+    await store.isThrottled('b');
+    await store.recordFailure('c');
+
+    const degraded = warn.mock.calls.filter((call) =>
+      String(call[0]).includes('unlock_throttle_degraded'),
+    );
+    expect(degraded).toHaveLength(1);
+    warn.mockRestore();
+  });
+
+  it('uses the durable store while it is healthy', async () => {
+    const healthy = new MemoryThrottleStore();
+    const store = new ResilientThrottleStore(healthy, new MemoryThrottleStore());
+
+    await store.recordFailure('key');
+
+    // Recorded in the durable store, not the fallback.
+    expect(await healthy.isThrottled('key')).toBe(false);
+    await Promise.all(Array.from({ length: 7 }, () => store.recordFailure('key')));
+    expect(await healthy.isThrottled('key')).toBe(true);
   });
 });

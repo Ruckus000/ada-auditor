@@ -1,3 +1,4 @@
+import { logWarn } from '../../../services/logger';
 import { createRedisClient, isRedisConfigured, type RedisLike } from './redis';
 
 /**
@@ -100,12 +101,85 @@ export class KvThrottleStore implements ThrottleStore {
   }
 }
 
+/**
+ * A throttle that survives its Redis going away.
+ *
+ * Without this, an unreachable Redis is a total outage of the only way into
+ * the product. It happened: the configured Upstash instance stopped resolving,
+ * `isThrottled` threw `ENOTFOUND` on the first line of the sign-in route —
+ * before any credential is read — and every attempt returned 500, whoever was
+ * signing in and whatever they typed. A rate limiter had become the thing
+ * standing between the operators and their own product.
+ *
+ * So a failure degrades to the in-process limiter rather than propagating. That
+ * is weaker — per instance rather than global, which is exactly the weakness
+ * the durable store exists to remove — but it still limits, and a degraded
+ * limiter is worth more than a locked door. The `run_budget` counter already
+ * made this trade; this now matches it.
+ *
+ * The switch latches for the life of the instance. Retrying the dead host on
+ * every request would pay a DNS or connect timeout per sign-in, turning an
+ * outage into something merely slow, which is harder to notice and worse to
+ * use. Serverless instances are short-lived, so recovery costs nothing.
+ */
+export class ResilientThrottleStore implements ThrottleStore {
+  private degraded = false;
+
+  constructor(
+    private readonly durable: ThrottleStore,
+    private readonly fallback: ThrottleStore = new MemoryThrottleStore(),
+  ) {}
+
+  private async attempt<T>(
+    operation: () => Promise<T>,
+    degradedOperation: () => Promise<T>,
+  ): Promise<T> {
+    if (this.degraded) {
+      return degradedOperation();
+    }
+
+    try {
+      return await operation();
+    } catch (error) {
+      this.degraded = true;
+      // Once per instance, not once per request: a dead host would otherwise
+      // bury the log it is trying to raise.
+      logWarn('unlock_throttle_degraded', {
+        note: 'The unlock throttle store is unreachable, so attempts are being counted in memory, per instance.',
+        reason: error instanceof Error ? error.message : String(error),
+      });
+      return degradedOperation();
+    }
+  }
+
+  async isThrottled(key: string): Promise<boolean> {
+    return this.attempt(
+      () => this.durable.isThrottled(key),
+      () => this.fallback.isThrottled(key),
+    );
+  }
+
+  async recordFailure(key: string): Promise<void> {
+    return this.attempt(
+      () => this.durable.recordFailure(key),
+      () => this.fallback.recordFailure(key),
+    );
+  }
+
+  async clearFailures(key: string): Promise<void> {
+    return this.attempt(
+      () => this.durable.clearFailures(key),
+      () => this.fallback.clearFailures(key),
+    );
+  }
+}
+
 let store: ThrottleStore | undefined;
 
 export function getThrottleStore(): ThrottleStore {
   if (!store) {
     store = isRedisConfigured()
-      ? new KvThrottleStore(createRedisClient())
+      ? new ResilientThrottleStore(new KvThrottleStore(createRedisClient()))
       : new MemoryThrottleStore();
   }
   return store;
