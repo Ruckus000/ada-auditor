@@ -28,9 +28,20 @@ export function isRedisConfigured(): boolean {
   );
 }
 
-export function createRedisClient(): RedisLike {
+/**
+ * `retries` exists for the readiness probe.
+ *
+ * The client defaults to five attempts with exponential backoff, so a single
+ * call against a host that does not resolve spends well over a second before
+ * it gives up — fine for a counter that runs once per sign-in, wrong for a
+ * probe on an endpoint the console banner polls. A probe that hangs turns a
+ * non-gating warning into an apparently dead control plane, which is the
+ * failure this whole check was added to prevent.
+ */
+export function createRedisClient(options: { retries?: number } = {}): RedisLike {
   return new Redis({
     url: (process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL)!,
     token: (process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN)!,
+    ...(options.retries === undefined ? {} : { retry: { retries: options.retries } }),
   });
 }

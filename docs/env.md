@@ -221,7 +221,12 @@ still sign in as the machine.
 ### Verify deploy checklist
 
 1. `GET /api/health` → 200
-2. `GET /api/ready` → 200, with an empty `warnings` array. It gates only on the run token and the database; a shared session secret, a missing `CRON_SECRET`, in-memory counters and `CHAOS_ENABLED` are reported rather than gating, because none of them stops the control plane doing its job — but an empty array is the check, so every one of them has to appear there. Chaos in particular: it lets a caller request scripted audit outcomes and must never be set in production.
+2. `GET /api/ready` → 200, with an empty `warnings` array. It asks the throttle
+   store whether it answers rather than trusting that the variables are set —
+   a configured-but-dead Redis is reported as `unlock_throttle_unreachable`,
+   which is the state that once returned `ready` with no warnings while every
+   sign-in was failing. The probe is a read with no retries and a two-second
+   ceiling, so a store that hangs slows nothing but itself. It gates only on the run token and the database; a shared session secret, a missing `CRON_SECRET`, in-memory counters and `CHAOS_ENABLED` are reported rather than gating, because none of them stops the control plane doing its job — but an empty array is the check, so every one of them has to appear there. Chaos in particular: it lets a caller request scripted audit outcomes and must never be set in production.
 3. `npm run operator -- add` against the deployment's `DATABASE_URL` (`vercel env pull`), then sign in with that email and password
 4. Run a fixture audit from the control plane, and open a piece of evidence from the findings list
 5. Press **Run now** on a journey with a target URL and watch it reach a terminal status
