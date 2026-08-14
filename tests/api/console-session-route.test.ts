@@ -5,7 +5,7 @@ const { MemoryPlatformStore, resetPlatformStore, setPlatformStore } = await impo
   '../../src/integrations/persistence'
 );
 const { hashPassword } = await import('../../src/domain/operator-credentials');
-const { CONSOLE_COOKIE, readOperatorSessionClaims } = await import(
+const { CONSOLE_COOKIE, isValidSessionValue, readOperatorSessionClaims } = await import(
   '../../src/app/api/_lib/console-session'
 );
 
@@ -64,6 +64,21 @@ function signIn(body: unknown, headers: Record<string, string> = {}) {
 
 beforeEach(async () => {
   bucket += 1;
+
+  // The throttle store is memoised on first use with no reset seam, and it
+  // picks Redis whenever these are set. A developer who ran `vercel env pull`
+  // into their shell would get a fast suite that opens a socket, and counters
+  // that outlive the process for five minutes — green once, 429 on the second
+  // `npm test`.
+  for (const key of [
+    'KV_REST_API_URL',
+    'KV_REST_API_TOKEN',
+    'UPSTASH_REDIS_REST_URL',
+    'UPSTASH_REDIS_REST_TOKEN',
+  ]) {
+    delete process.env[key];
+  }
+
   process.env.AUDITOR_RUN_TOKEN = RUN_TOKEN;
   process.env.AUDITOR_SESSION_SECRET = SESSION_SECRET;
 
@@ -138,12 +153,12 @@ describe('POST /api/console/session, as an operator', () => {
     await expect(response.json()).resolves.toMatchObject({ error: 'operator_disabled' });
   });
 
-  it.each([
-    ['a different case', 'SAM@Example.TEST'],
-    ['surrounding whitespace', `  ${EMAIL}  `],
-  ])('accepts an email with %s', async (_label, typed) => {
-    // Email is what a person types, and they type it inconsistently.
-    expect((await signIn({ email: typed, password: PASSWORD })).status).toBe(200);
+  it('accepts an email with surrounding whitespace', async () => {
+    // The route trims; that is route behaviour. Case-insensitivity is the
+    // store's, and `platform-store-contract` already holds both
+    // implementations to it — testing it again here would only re-test the
+    // double.
+    expect((await signIn({ email: `  ${EMAIL}  `, password: PASSWORD })).status).toBe(200);
   });
 });
 
@@ -155,6 +170,15 @@ describe('POST /api/console/session, as a machine', () => {
     // No operator: a machine credential resolves to nobody in particular, and
     // that is the whole reason operator accounts exist beside it.
     await expect(response.json()).resolves.not.toHaveProperty('operator');
+
+    // Signed with the run token, not the session secret. Now that two keys
+    // exist in this function, swapping them is a one-character edit that
+    // leaves the status and body identical and breaks every CI, chaos and
+    // harness session — a sign-in that succeeds and authenticates nobody.
+    const cookie = response.headers.get('set-cookie') ?? '';
+    const value = cookie.split(`${CONSOLE_COOKIE}=`)[1]?.split(';')[0] ?? '';
+
+    expect(isValidSessionValue(decodeURIComponent(value), RUN_TOKEN)).toBe(true);
   });
 
   it('refuses a wrong token', async () => {
@@ -206,10 +230,25 @@ describe('POST /api/console/session, refusals that are not about credentials', (
     expect((await signIn({ email: EMAIL, password: PASSWORD })).status).toBe(200);
   });
 
+  it('names a too-weak run token as its own misconfiguration', async () => {
+    // A deployer who pasted a truncated token needs a different fix from one
+    // who set none, and this also pins the ordering: it is checked after the
+    // same-origin guard, not before.
+    process.env.AUDITOR_RUN_TOKEN = 'short';
+
+    const response = await signIn({ email: EMAIL, password: PASSWORD });
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'auditor_run_token_too_weak',
+    });
+  });
+
   it('refuses everything when no run token is configured', async () => {
-    // Fail closed: with nothing to authenticate against, nobody is
-    // authenticated — including the operator path, which does not use the run
-    // token but does depend on a signing key derived from it.
+    // Fail closed: the run token is the machine credential, and with none
+    // configured the route refuses before looking at anything else —
+    // including an operator sign-in that has a perfectly good session secret
+    // of its own behind it.
     delete process.env.AUDITOR_RUN_TOKEN;
 
     const response = await signIn({ email: EMAIL, password: PASSWORD });
