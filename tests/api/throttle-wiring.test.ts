@@ -51,9 +51,12 @@ describe('getThrottleStore, with a configured but dead Redis', () => {
     const store = getThrottleStore();
 
     // The first line of the sign-in route. A rejection here is a 500 before
-    // any credential has been looked at.
-    await expect(store.isThrottled('anybody')).resolves.toBe(false);
+    // any credential has been looked at — which is exactly what happened.
+    // The request that discovers the outage is denied rather than granted, so
+    // this first call is `true`; what matters is that it answers at all.
+    await expect(store.isThrottled('anybody')).resolves.toBe(true);
     await expect(store.recordFailure('anybody')).resolves.toBeUndefined();
+    await expect(store.isThrottled('anybody')).resolves.toBe(false);
 
     warn.mockRestore();
   });

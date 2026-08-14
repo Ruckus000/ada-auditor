@@ -31,6 +31,8 @@ import { sessionSecretIsShared } from '../_lib/principal';
  * reads its own configuration cannot tell "pointed at Redis" from "pointed at
  * Redis that answers", and it is the second one that matters.
  */
+const PROBE_TIMEOUT_MS = 2_000;
+
 /**
  * Does the throttle store actually answer?
  *
@@ -48,12 +50,25 @@ async function throttleAnswers(): Promise<boolean> {
     return false;
   }
 
-  try {
-    await new KvThrottleStore(createRedisClient()).isThrottled('readiness-probe');
-    return true;
-  } catch {
-    return false;
-  }
+  // Bounded twice: no client-side retries, and a wall-clock ceiling for a host
+  // that accepts the connection and never answers. Unbounded, this endpoint
+  // would hang for as long as the platform allows — and the console banner
+  // polls it, so the operator would see a dead control plane rather than the
+  // warning this check exists to raise.
+  const timeout = new Promise<false>((resolve) => {
+    setTimeout(() => resolve(false), PROBE_TIMEOUT_MS).unref?.();
+  });
+
+  const probe = (async () => {
+    try {
+      await new KvThrottleStore(createRedisClient({ retries: 0 })).isThrottled('readiness-probe');
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+
+  return Promise.race([probe, timeout]);
 }
 
 export async function GET() {

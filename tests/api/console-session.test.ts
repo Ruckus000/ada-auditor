@@ -266,14 +266,35 @@ describe('ResilientThrottleStore', () => {
    * or what they typed. The rate limiter had become the thing standing between
    * the operators and their own product.
    */
+  const unreachable = () => Promise.reject(new Error('getaddrinfo ENOTFOUND redis.example'));
+
   const dead: ThrottleStore = {
-    isThrottled: () => Promise.reject(new Error('getaddrinfo ENOTFOUND redis.example')),
-    recordFailure: () => Promise.reject(new Error('getaddrinfo ENOTFOUND redis.example')),
-    clearFailures: () => Promise.reject(new Error('getaddrinfo ENOTFOUND redis.example')),
+    isThrottled: unreachable,
+    recordFailure: unreachable,
+    clearFailures: unreachable,
   };
 
-  it('answers instead of throwing when the durable store is unreachable', async () => {
+  /** Alive, and saying it is being hammered. Not the same thing at all. */
+  const rateLimited: ThrottleStore = {
+    isThrottled: () => Promise.reject(new Error('max requests limit exceeded')),
+    recordFailure: () => Promise.reject(new Error('max requests limit exceeded')),
+    clearFailures: () => Promise.reject(new Error('max requests limit exceeded')),
+  };
+
+  it('denies the request that discovers the outage rather than granting one', async () => {
+    // The fallback map starts empty, so answering from it here would hand
+    // whoever triggered the failure a fresh budget — an attacker sitting at
+    // the limit could induce one error and start again. One retry for a
+    // legitimate operator is the cheaper side of that trade.
     const store = new ResilientThrottleStore(dead);
+
+    expect(await store.isThrottled('anybody')).toBe(true);
+  });
+
+  it('serves later requests from memory instead of throwing', async () => {
+    const store = new ResilientThrottleStore(dead);
+
+    await store.isThrottled('anybody');
 
     await expect(store.isThrottled('anybody')).resolves.toBe(false);
     await expect(store.recordFailure('anybody')).resolves.toBeUndefined();
@@ -293,14 +314,61 @@ describe('ResilientThrottleStore', () => {
     expect(await store.isThrottled('another-address')).toBe(false);
   });
 
-  it('says so once, not once per request', async () => {
-    // A dead host would otherwise bury the log line it is trying to raise.
+  it('keeps counting the failure that could not be written durably', async () => {
+    // Dropping it because the store is unwell is how a limiter quietly stops
+    // limiting.
+    const store = new ResilientThrottleStore(dead);
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      await store.recordFailure('key');
+    }
+
+    expect(await store.isThrottled('key')).toBe(true);
+  });
+
+  it('does not degrade because the store said it is being hammered', async () => {
+    // A rate-limit response is the moment the limiter is most needed.
+    // Switching the durable one off there inverts the control under load.
+    const store = new ResilientThrottleStore(rateLimited);
+
+    expect(await store.isThrottled('attacker')).toBe(true);
+    // Still not degraded, so the next call goes to the durable store again and
+    // is refused the same way, rather than being served from an empty map.
+    expect(await store.isThrottled('attacker')).toBe(true);
+  });
+
+  it('retries the durable store after the cooldown', async () => {
+    // A latch for the life of the instance costs the global limiter on the
+    // strength of one transient error, and a warm instance is long-lived.
+    let clock = 0;
+    let alive = false;
+    const flaky: ThrottleStore = {
+      isThrottled: () => (alive ? Promise.resolve(true) : unreachable()),
+      recordFailure: () => Promise.resolve(),
+      clearFailures: () => Promise.resolve(),
+    };
+
+    const store = new ResilientThrottleStore(flaky, new MemoryThrottleStore(), () => clock);
+
+    expect(await store.isThrottled('key')).toBe(true); // discovered, denied
+    expect(await store.isThrottled('key')).toBe(false); // memory, empty
+
+    alive = true;
+    clock += 31_000;
+
+    // Back to the durable store, which knows this key is throttled.
+    expect(await store.isThrottled('key')).toBe(true);
+  });
+
+  it('says so once, even when two keys fail at the same instant', async () => {
+    // The sign-in route records both throttle keys with `Promise.all`, so both
+    // calls are in flight when the first failure lands. Guarding the log on
+    // the degraded window rather than its own flag logged twice here.
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const store = new ResilientThrottleStore(dead);
 
-    await store.isThrottled('a');
-    await store.isThrottled('b');
-    await store.recordFailure('c');
+    await Promise.all([store.recordFailure('ip'), store.recordFailure('ip|someone')]);
+    await store.isThrottled('ip');
 
     const degraded = warn.mock.calls.filter((call) =>
       String(call[0]).includes('unlock_throttle_degraded'),
@@ -313,11 +381,10 @@ describe('ResilientThrottleStore', () => {
     const healthy = new MemoryThrottleStore();
     const store = new ResilientThrottleStore(healthy, new MemoryThrottleStore());
 
-    await store.recordFailure('key');
+    await Promise.all(Array.from({ length: 8 }, () => store.recordFailure('key')));
 
-    // Recorded in the durable store, not the fallback.
-    expect(await healthy.isThrottled('key')).toBe(false);
-    await Promise.all(Array.from({ length: 7 }, () => store.recordFailure('key')));
+    // In the durable store, not the fallback: this is the assertion that would
+    // fail if the wrapper quietly wrote to memory all along.
     expect(await healthy.isThrottled('key')).toBe(true);
   });
 });
