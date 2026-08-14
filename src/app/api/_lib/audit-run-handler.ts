@@ -1,3 +1,4 @@
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { waitUntil } from '@vercel/functions';
 import { environmentSchema } from '../../../domain/contracts';
@@ -54,6 +55,25 @@ export const journeyStepSchema = z.union([
     field: z.enum(['user', 'pass']),
   }),
 ]);
+
+/**
+ * Where a run may write its evidence.
+ *
+ * `process.cwd()` is `/var/task` on a serverless function and that filesystem
+ * is read-only, so the first real audit on the deployment died at
+ *
+ *   ENOENT: no such file or directory, mkdir '/var/task/artifacts/<id>'
+ *
+ * before a page was ever opened. `/tmp` is the one writable path there, and it
+ * is the right one anyway: these files are uploaded to the blob store and the
+ * invocation's disk does not outlive the request. Locally the repo's own
+ * `artifacts/` is kept, because being able to open the last run's screenshot
+ * without a network round trip is worth more than the symmetry.
+ */
+function artifactsRoot(): string {
+  const serverless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  return serverless ? join(tmpdir(), 'artifacts') : join(process.cwd(), 'artifacts');
+}
 
 export const auditRunBodySchema = z.object({
   journeyId: z.string().min(1),
@@ -121,7 +141,7 @@ async function executeRun(
       environment: parsedBody.environment,
       stepId: chaosParams?.stepId ?? parsedBody.stepId ?? 'dashboard',
       fixtureDir: DEFAULT_FIXTURE_DIR,
-      artifactsDir: join(process.cwd(), 'artifacts', requestId),
+      artifactsDir: join(artifactsRoot(), requestId),
       omitAxTree: chaosParams?.omitAxTree ?? parsedBody.omitAxTree,
       steps: chaosParams?.steps ?? parsedBody.steps,
       targetUrl: chaosParams ? undefined : parsedBody.targetUrl,
