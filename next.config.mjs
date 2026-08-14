@@ -20,6 +20,33 @@ const nextConfig = {
     '@axe-core/playwright',
     'axe-core',
   ],
+  // `serverExternalPackages` keeps these out of the bundle, but it does not
+  // make the tracer copy everything they need: only the JavaScript reachable
+  // by static analysis comes along. `playwright-core/lib/coreBundle.js`
+  // requires `browsers.json` at runtime by path, so the deployed function had
+  // the code and not the data, and every audit run died at
+  //
+  //   Cannot find module '/var/task/node_modules/playwright-core/browsers.json'
+  //
+  // in under a second — before Chromium was ever asked to launch. The whole
+  // package is listed rather than that one file: the same class of miss
+  // applies to anything else it reads by path, and a second production-only
+  // failure discovered a week later is worth more than the bytes.
+  //
+  // `@sparticuz/chromium` is here for the same reason and cost a second
+  // deployment to learn: its `bin/` holds the brotli-compressed browser, which
+  // no `import` mentions, so the tracer left it behind and the run failed with
+  // "The input directory …/@sparticuz/chromium/bin does not exist."
+  outputFileTracingIncludes: {
+    '/api/audit/**': [
+      './node_modules/playwright-core/**',
+      './node_modules/@sparticuz/chromium/**',
+    ],
+    '/api/platform/clients/**': [
+      './node_modules/playwright-core/**',
+      './node_modules/@sparticuz/chromium/**',
+    ],
+  },
   experimental: {
     useTypeScriptCli: true,
   },
