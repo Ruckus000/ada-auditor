@@ -97,9 +97,20 @@ export function routeFromPageUrl(url: string): string {
  * Ceiling on pages per run.
  *
  * Every page costs an axe scan, a full-page screenshot and an AX tree against
- * the same 300s `maxDuration`. Twenty is a starting point, not a law of
- * nature: if real journeys exceed it, that is the signal for a container
- * worker rather than a bigger number here.
+ * the same 300s `maxDuration`. Twenty was a starting point rather than a law
+ * of nature, and there is now one real datapoint behind it: a four-page run
+ * of the W3C BAD demo on a production function
+ * (`d62f13f4-4a33-4f14-b592-4b243c4f3e62`, 2026-08-15) took 23.0s — 20.5s of
+ * journey plus 1.5s of upload — with the slowest page at 4.0s, of which 2.9s
+ * was the axe scan. Twenty of that page is about 80s, comfortably inside the
+ * ceiling.
+ *
+ * Read that as a floor, not a budget. It is one run, against four small static
+ * documents with no framework, no login and nothing deferred; a real client
+ * app renders more, waits on more, and will cost more per page. The number to
+ * re-decide this from is `slowestPageMs` on an actual client run, not this
+ * one. If real journeys exceed the cap, that is still the signal for a
+ * container worker rather than a bigger number here.
  */
 const DEFAULT_MAX_PAGES = 20;
 
