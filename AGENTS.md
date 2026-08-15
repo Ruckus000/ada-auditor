@@ -318,15 +318,22 @@ Read this before claiming something works.
   portfolio.** `/console` and `/api/audit/runs` report it. Registering the
   journey against a client first (`POST /api/platform/clients/<id>/journeys`)
   is what puts a run on a client's screens.
-- **A page cap of 20 is still a guess — but it is now measurable.** Runs record
+- **A page cap of 20, with one measurement behind it.** Runs record
   `started_at` and `phase_ms`; every page records `duration_ms` and `scan_ms`;
   `audit_run_log` carries `pagesAudited`, `slowestPageMs` and `headroomMs`
   (what was left of the 300s budget). `npm run smoke:real -- --url <site>`
   against a running `next start` prints all of it and suggests a cap.
-  **Nobody has run it against a real third-party site yet**, so do not treat
-  the number as measured until somebody has. It cannot be run from a sandbox
-  with allowlisted egress, and it cannot be pointed at localhost — the SSRF
-  guard correctly refuses loopback and private addresses.
+  A four-page run of the W3C BAD demo through the deployed function
+  (`d62f13f4-4a33-4f14-b592-4b243c4f3e62`, 2026-08-15) took 23.0s: journey
+  20.5s, upload 1.5s, slowest page 4.0s of which 2.9s was the axe scan. Twenty
+  such pages is about 80s.
+  **That is a floor, not a budget.** Four small static documents with no
+  framework, no login and nothing deferred are the easy case; a real client app
+  renders more and waits longer, and no run against one has happened. Re-decide
+  the cap from `slowestPageMs` on a client run, not from this one. `smoke:real`
+  still cannot be driven from a sandbox with allowlisted egress, and it cannot
+  be pointed at localhost — the SSRF guard correctly refuses loopback and
+  private addresses.
 - **The unit suites still do not exercise the app's own bundle — but the
   hydration suite does.** Vitest loads modules unbundled, so a packaging fault
   is invisible to it; that is how `@axe-core/playwright` shipped with its

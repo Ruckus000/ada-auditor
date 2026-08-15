@@ -12,9 +12,10 @@ export type AuditRunLog = {
   browserMode?: boolean;
   /**
    * Timing, present on a run that completed. This is the dataset the page cap
-   * and the function limit get re-decided from — `AGENTS.md` calls the current
-   * cap "a guess, not a measurement", and these fields are how it stops being
-   * one.
+   * and the function limit get re-decided from, and it has now produced its
+   * first number — see `DEFAULT_MAX_PAGES` in `journey-runner.ts`. It came
+   * from four static pages, so the interesting reading is still ahead: what
+   * `slowestPageMs` says on a real client app.
    */
   phaseMs?: Record<string, number>;
   pagesAudited?: number;

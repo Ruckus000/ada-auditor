@@ -123,7 +123,7 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
       label: 'Pages per run',
       value: String(intFromEnv(env, 'AUDITOR_MAX_PAGES_PER_RUN', 20)),
       detail:
-        'A journey longer than this is truncated, and the run says so. The default is a guess, not a measurement: if real journeys exceed it, that is the signal for a container worker rather than a bigger number.',
+        'A journey longer than this is truncated, and the run says so. The default has one measurement behind it — four static pages cost 4.0s each at their slowest on a production function, so twenty is roughly 80s of a 300s ceiling — but nothing has measured a real client app, which renders more and waits longer. If real journeys exceed it, that is the signal for a container worker rather than a bigger number.',
       degraded: false,
     },
     {
