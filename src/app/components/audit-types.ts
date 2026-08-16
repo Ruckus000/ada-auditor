@@ -27,7 +27,15 @@ export type EvidenceStatus = 'complete' | 'degraded';
 export interface AuditPage {
   url: string;
   route: string;
-  title: string;
+  /**
+   * Absent when the page has none, which is a thing a page can be.
+   *
+   * Required and non-nullable until an untitled page stopped killing the run,
+   * at which point `''` started arriving here — and `''` is a string, so it
+   * flowed through every `?? page.route` untouched and rendered as a blank
+   * where a page's name goes. Optional is what makes those fallbacks fire.
+   */
+  title?: string;
   evidenceStatus?: EvidenceStatus;
   /**
    * Which artifacts were actually captured for this page.
@@ -102,7 +110,11 @@ function toPage(value: unknown): AuditPage | null {
   return {
     url: raw.url,
     route: typeof raw.route === 'string' ? raw.route : raw.url,
-    title: typeof raw.title === 'string' ? raw.title : raw.url,
+    // Omitted when empty, so "this page has no title" survives the parse
+    // instead of becoming `''`. The URL is no longer the fallback: one place
+    // decides the label now, and it picks the route, which is shorter and is
+    // what the rest of the screen names pages by.
+    ...(typeof raw.title === 'string' && raw.title !== '' ? { title: raw.title } : {}),
     evidenceStatus:
       raw.evidenceStatus === 'complete' || raw.evidenceStatus === 'degraded'
         ? raw.evidenceStatus

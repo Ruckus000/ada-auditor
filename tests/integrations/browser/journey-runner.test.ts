@@ -192,3 +192,47 @@ describe('runJourney', () => {
     }
   });
 });
+
+describe('runJourney, against a page with a hostile title', () => {
+  /**
+   * The bound has to be wired, not merely written.
+   *
+   * `boundTitle` has its own unit tests, and they all passed with the call in
+   * `journey-runner` deleted — 767 unit and 30 browser green against a page
+   * title that was no longer bounded at all. That is the same defect this
+   * branch already shipped twice: a change that looks like it does something.
+   * So this drives a real Chromium against a real page whose `<title>` is 699
+   * code units, and asserts on what came back.
+   *
+   * The fixture's title puts a surrogate pair on the cut deliberately. A naive
+   * `slice` leaves half of one behind, which is not valid UTF-8 and reaches a
+   * client's report as `�`.
+   */
+  it('records a bounded title, and does not leave half a character behind', async () => {
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'long-title',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        steps: [{ action: 'navigate', type: 'goto', path: 'long-title.html' }],
+      });
+
+      const title = result.pages[0].page.title;
+
+      // Bounded, and marked as bounded.
+      expect(title.length).toBeLessThan(400);
+      expect(title.endsWith('…')).toBe(true);
+
+      // The property that survives the wire: no lone surrogate. `isWellFormed`
+      // is false for exactly the string a naive slice produces here.
+      expect(title.isWellFormed()).toBe(true);
+      expect(Buffer.from(title, 'utf8').toString('utf8')).toBe(title);
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+});

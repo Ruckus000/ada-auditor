@@ -178,7 +178,9 @@ export async function buildSharedReport(
     pages: (run.pages ?? []).map((page) => ({
       url: page.url,
       route: page.route,
-      ...(page.title === undefined ? {} : { title: page.title }),
+      // Empty is absent, matching `findings-view`: a page with no title falls
+      // back to its route rather than rendering a blank where a name goes.
+      ...(page.title ? { title: page.title } : {}),
       evidenceStatus: page.evidenceStatus,
       findings: byPage.get(page.url) ?? [],
     })),

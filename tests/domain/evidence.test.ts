@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEvidenceBundle, worstEvidenceStatus } from '../../src/domain/evidence';
+import { boundTitle, createEvidenceBundle, worstEvidenceStatus } from '../../src/domain/evidence';
 
 describe('createEvidenceBundle', () => {
   it('marks incomplete evidence as degraded', () => {
@@ -25,6 +25,35 @@ describe('createEvidenceBundle', () => {
 
     expect(evidence.status).toBe('complete');
   });
+
+  /**
+   * The auditor must not die on the defect it exists to find.
+   *
+   * `title` was `.min(1)` and this function parses rather than safe-parses, so
+   * a page whose `document.title` came back empty — an unhydrated shell, an
+   * error page, or simply a page nobody titled — threw from inside the page
+   * loop and took the entire run with it. Every other page's findings went
+   * with it, and the run reported `audit_run_failed`.
+   *
+   * A page with no title is a WCAG 2.4.2 failure that axe reports as
+   * `document-title`. It has to be recorded, and recorded as *complete*
+   * evidence: degrading it would drop its findings, and the missing title is
+   * one of them.
+   */
+  it('records a page with no title, as complete evidence, rather than throwing', () => {
+    const evidence = createEvidenceBundle({
+      page: { url: 'https://app.example.com/dashboard', route: '/dashboard', title: '' },
+      run: { journeyId: 'demo-login', stepId: 'dashboard', environment: 'staging' },
+      artifacts: {
+        screenshotPath: 'shot.png',
+        domSnapshotPath: 'dom.html',
+        axTreePath: 'ax.json',
+      },
+    });
+
+    expect(evidence.status).toBe('complete');
+    expect(evidence.page.title).toBe('');
+  });
 });
 
 describe('worstEvidenceStatus', () => {
@@ -41,5 +70,29 @@ describe('worstEvidenceStatus', () => {
 
   it('treats a run that captured nothing as degraded, not clean', () => {
     expect(worstEvidenceStatus([])).toBe('degraded');
+  });
+});
+
+describe('boundTitle', () => {
+  // Why it exists and why it is not a `.max()` are in the source docblock.
+  // What these pin is the behaviour: pass through, cut with a marker, and do
+  // not mark a title that fits.
+  it('leaves a real title alone', () => {
+    expect(boundTitle('Checkout — Acme')).toBe('Checkout — Acme');
+    expect(boundTitle('')).toBe('');
+  });
+
+  it('cuts a hostile title down and says that it cut it', () => {
+    const bounded = boundTitle('a'.repeat(50_000));
+
+    // The marker matters: a silent cut presents a fragment as the whole title.
+    expect(bounded.endsWith('…')).toBe(true);
+    expect(bounded.length).toBeLessThan(400);
+  });
+
+  it('does not add a marker to a title that fits exactly', () => {
+    const exact = 'a'.repeat(300);
+
+    expect(boundTitle(exact)).toBe(exact);
   });
 });

@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import type { Page, Response } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
+import { boundTitle } from '../../domain/evidence';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, type AxNodeSummary } from '../../services/ax-tree';
 import { logWarn } from '../../services/logger';
@@ -285,7 +286,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       const scanMs = Date.now() - scanStartedAt;
 
       const html = await page.content();
-      const title = await page.title();
+      const title = boundTitle(await page.title());
       const screenshotPath = `${artifactPrefix}.png`;
       const domSnapshotPath = `${artifactPrefix}.html`;
 

@@ -5,7 +5,23 @@ const evidenceInputSchema = z.object({
   page: z.object({
     url: z.url(),
     route: z.string().min(1),
-    title: z.string().min(1),
+    /**
+     * Allowed to be empty, and that is the point.
+     *
+     * This was `.min(1)`, and `createEvidenceBundle` parses rather than
+     * safe-parses, so a page whose `document.title` came back empty threw and
+     * took the whole run with it — every other page's findings lost with it.
+     *
+     * An empty title is not a capture failure. It is a page, and a page with
+     * no title is a WCAG 2.4.2 failure that axe reports as `document-title`.
+     * Refusing to record it meant the auditor died on the exact defect it
+     * exists to find, and reported nothing at all instead of reporting that.
+     *
+     * It is not part of evidence completeness either: `status` below is about
+     * whether the three artifacts were written. Degrading the page would have
+     * discarded its findings — including the missing title itself.
+     */
+    title: z.string(),
   }),
   run: z.object({
     journeyId: z.string().min(1),
@@ -25,6 +41,44 @@ export type EvidenceStatus = 'complete' | 'degraded';
 export type EvidenceBundle = EvidenceBundleInput & {
   status: EvidenceStatus;
 };
+
+/**
+ * Generous for any real title. `deterministic-audit` caps axe's `outerHTML` at
+ * 512 for the same reason; a title is a label rather than markup.
+ */
+const MAX_TITLE_LENGTH = 300;
+
+/**
+ * A page's title is whatever the audited site says it is.
+ *
+ * `document.title` has no length limit, and this one string is stored per page
+ * per run, returned in the API response, rendered on the client screen and on
+ * the public share page outside the auth gate, interpolated into the model
+ * prompt in `services/ai-advisory`, and drawn into a Chromium PDF. A hostile —
+ * or merely broken — page returning megabytes reaches every one of them.
+ *
+ * A function beside the schema rather than a `.max()` inside it, and that
+ * distinction is the whole lesson of the field above: `createEvidenceBundle`
+ * parses rather than safe-parses, so a `.max()` would *throw* on a long title
+ * and destroy the run, exactly as `.min(1)` did on an empty one. Truncate the
+ * page, never kill the run.
+ *
+ * Applied at capture, by the runner, so what is recorded is what was bounded —
+ * a cap the storage layer applied after the fact would leave every other
+ * consumer reading the unbounded string.
+ *
+ * The ellipsis is load-bearing: silently cutting a title presents a fragment as
+ * the whole thing.
+ *
+ * Cutting by code unit can land inside a surrogate pair, and half a pair is not
+ * valid UTF-8: it survives `JSON.stringify` as a lone `\uD83D` escape, which a
+ * strict parser can reject, and it renders as `�` in a client's report. So the
+ * cut drops a trailing high surrogate rather than keeping half a character.
+ */
+export function boundTitle(title: string): string {
+  if (title.length <= MAX_TITLE_LENGTH) return title;
+  return `${title.slice(0, MAX_TITLE_LENGTH).replace(/[\uD800-\uDBFF]$/, '')}…`;
+}
 
 export function createEvidenceBundle(input: EvidenceBundleInput): EvidenceBundle {
   const parsed = evidenceInputSchema.parse(input);

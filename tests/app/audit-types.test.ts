@@ -137,12 +137,26 @@ describe('parsePages', () => {
     expect(pages?.[1].evidenceStatus).toBe('degraded');
   });
 
-  it('falls back to the URL when route or title are missing', () => {
+  it('falls back to the URL for a missing route, and leaves a missing title absent', () => {
     const pages = parsePages([{ url: 'https://a.example/x' }]);
 
     expect(pages?.[0].route).toBe('https://a.example/x');
-    expect(pages?.[0].title).toBe('https://a.example/x');
+    // `title` used to fall back to the URL here too, which put a full URL in
+    // the bold name slot and left the screens no way to tell "no title" from
+    // "titled, and its title happens to be its URL". One place decides the
+    // label now — `pageLabel` in `findings-list` — and it picks the route.
+    expect(pages?.[0].title).toBeUndefined();
     expect(pages?.[0].evidenceStatus).toBeUndefined();
+  });
+
+  it('treats an empty title as no title', () => {
+    // `''` is a string, so it passed the old `typeof raw.title === 'string'`
+    // check untouched and every `?? page.route` on the console screen was
+    // dead. That is the bug the render test in `untitled-page-render` covers
+    // end to end; this pins it at the parse boundary where it starts.
+    const pages = parsePages([{ url: 'https://a.example/x', route: '/x', title: '' }]);
+
+    expect(pages?.[0].title).toBeUndefined();
   });
 
   it('drops entries with no URL and returns undefined for a non-array', () => {
