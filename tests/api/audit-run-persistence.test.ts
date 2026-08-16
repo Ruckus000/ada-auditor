@@ -266,5 +266,11 @@ describe('handleAuditRun async mode', () => {
     // And the counts behind a score travel with the page. These persisted as
     // null on every partial run, because only the success path computed them.
     expect(failed?.pages?.[0]?.checksPassed).toBe(3);
+
+    // The run-level status is the worst of the pages it actually judged, the
+    // same way a finished run computes it. Hardcoded `'unknown'`, the record
+    // said "we do not know" directly above a page of its own saying
+    // `complete` — two claims about one set of data.
+    expect(failed?.evidenceStatus).toBe('complete');
   });
 });

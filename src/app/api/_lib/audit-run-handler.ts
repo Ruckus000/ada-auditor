@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { waitUntil } from '@vercel/functions';
 import { environmentSchema } from '../../../domain/contracts';
 import { getArtifactStore } from '../../../integrations/artifacts/blob-store';
+import { worstEvidenceStatus } from '../../../domain/evidence';
 import { getRunStore } from '../../../integrations/persistence';
 import { runBrowserAudit } from '../../../integrations/browser/run-browser-audit';
 import { PartialAuditError } from '../../../integrations/browser/partial-run';
@@ -369,7 +370,23 @@ async function executeRun(
           journeyId: parsedBody.journeyId,
           environment: parsedBody.environment,
           platform: 'unknown',
-          evidenceStatus: 'unknown',
+          /**
+           * The worst of the pages this run did capture, exactly as a
+           * complete run computes it — not a literal.
+           *
+           * This was hardcoded `'unknown'`, which was true when a failed run
+           * had no pages and became a contradiction the moment it had some:
+           * the record now carries pages that say `complete`, under a run-level
+           * banner saying we do not know. `'unknown'` is also not a member of
+           * `EvidenceStatus`; it survives only because the stored field is
+           * typed `string`. It stays for the case it was written for — a run
+           * that captured nothing has nothing to judge.
+           */
+          evidenceStatus: partial.length
+            ? worstEvidenceStatus(
+                (error as PartialAuditError).auditedPages.map((one) => one.evidenceStatus),
+              )
+            : 'unknown',
           ciStatus: 'inconclusive',
           // Reported, not withheld. These are real violations on real pages
           // that were really visited; the run is `failed` and `inconclusive`

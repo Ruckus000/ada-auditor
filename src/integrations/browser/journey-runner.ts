@@ -284,6 +284,22 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     );
   });
 
+  /**
+   * A silent cap reads as "we audited everything" when we did not, and this is
+   * the only record that the walk was cut short — so both the success and the
+   * failure path call it, rather than one of them forgetting.
+   */
+  const warnIfCapped = () => {
+    if (truncatedPages === 0) return;
+    logWarn('audit_page_cap_reached', {
+      journeyId: input.journeyId,
+      stepId: input.stepId,
+      maxPages,
+      pagesAudited: pages.length,
+      pagesSkipped: truncatedPages,
+    });
+  };
+
   // Declared out here, not inside the `try`, so the catch below can still see
   // what was captured before the throw. This was the first of three places a
   // partial run lost its work.
@@ -461,18 +477,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     // read, because nothing looked again. A check nobody reads is not a check.
     await assertNavigationsWereSafe();
 
-    // A silent cap reads as "we audited everything" when we did not. This is
-    // the only record that the run was truncated, so it is emitted here rather
-    // than left to a caller that might not look.
-    if (truncatedPages > 0) {
-      logWarn('audit_page_cap_reached', {
-        journeyId: input.journeyId,
-        stepId: input.stepId,
-        maxPages,
-        pagesAudited: pages.length,
-        pagesSkipped: truncatedPages,
-      });
-    }
+    warnIfCapped();
 
     return { pages, truncatedPages };
   } catch (error) {
@@ -489,25 +494,22 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     //
     // This asks about the pages and never about the error, deliberately: a
     // rebind on page three and a stale selector on page three take the same
-    // road out. That is also why one error type covers the pages>0 branch —
-    // the SSRF-after-capture pairing has no code of its own, and it is not
-    // constructible against these fixtures anyway, because the peer check
-    // refuses every response the rebind server sends, so no safe page can be
-    // captured from it first.
+    // road out, so one error type exercises the branch for both.
+    //
+    // That pairing is real in production — page one resolves honestly, page
+    // two's connection is rebound — and it is untested. Not because it is
+    // settled: because reaching it needs one page the peer check *allows*
+    // followed by one it refuses, and every server a test can stand up is on
+    // a private address, which is the thing being refused. Serving benign
+    // content first does not help; the address is what fails, not the body. A
+    // journey mixing a `file://` fixture with an http target cannot be
+    // expressed either, since `resolveNavigationUrl` resolves every path
+    // against one base. Recorded here rather than left as a passing test that
+    // proved something else.
     if (pages.length === 0) throw error;
 
-    // The cap warning lives at the end of the `try` and never fired on this
-    // path, so a run that was truncated and then died said nothing about
-    // either. It is the only record that the walk was cut short.
-    if (truncatedPages > 0) {
-      logWarn('audit_page_cap_reached', {
-        journeyId: input.journeyId,
-        stepId: input.stepId,
-        maxPages,
-        pagesAudited: pages.length,
-        pagesSkipped: truncatedPages,
-      });
-    }
+    // Both paths, because a run can be truncated and then die.
+    warnIfCapped();
 
     throw new PartialJourneyError(error, { pages, truncatedPages });
   } finally {

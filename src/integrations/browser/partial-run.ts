@@ -3,6 +3,31 @@ import type { DeterministicFinding } from '../../services/deterministic-audit';
 import type { JourneyRunnerResult, PageAudit } from './types';
 
 /**
+ * Attaches a payload that survives property access and not serialisation.
+ *
+ * A class field is an own *enumerable* property, so declaring these normally
+ * made `JSON.stringify(error)` — which is `{}` for a plain Error — produce the
+ * full captured DOM of an authenticated page, within reach of `logger.ts`'s
+ * five-level redaction walk. Nothing serialises an error today; this is so
+ * nothing can start to.
+ *
+ * `declare` on the field and one `defineProperty` here, rather than a field
+ * plus an assignment plus a redefinition: under `useDefineForClassFields` that
+ * was three writes to one property, and the last of them silently made it
+ * non-writable and non-configurable too, which is more than the comment
+ * claimed. Writable and configurable are explicit now, so the only thing being
+ * changed is visibility.
+ */
+function defineHidden<T>(target: object, key: string, value: T): void {
+  Object.defineProperty(target, key, {
+    value,
+    enumerable: false,
+    writable: true,
+    configurable: true,
+  });
+}
+
+/**
  * What a failed run had already captured, carried out with the error.
  *
  * Its own module, and deliberately a light one: these are thrown by the
@@ -23,16 +48,12 @@ import type { JourneyRunnerResult, PageAudit } from './types';
  * Collapsing them would put the evidence rules in the runner.
  */
 export class PartialJourneyError extends Error {
-  readonly captured: JourneyRunnerResult;
+  declare readonly captured: JourneyRunnerResult;
 
   constructor(cause: unknown, captured: JourneyRunnerResult) {
     super(cause instanceof Error ? cause.message : String(cause), { cause });
     this.name = cause instanceof Error ? cause.name : 'Error';
-    this.captured = captured;
-
-    // See the note on `PartialAuditError`: keeps a captured DOM out of
-    // `JSON.stringify(error)`, which is `{}` for a plain Error.
-    Object.defineProperty(this, 'captured', { enumerable: false, value: captured });
+    defineHidden(this, 'captured', captured);
   }
 }
 
@@ -53,7 +74,7 @@ export type AuditedPage = PageAudit & {
 };
 
 export class PartialAuditError extends Error {
-  readonly auditedPages: AuditedPage[];
+  declare readonly auditedPages: AuditedPage[];
   /**
    * Pages the cap refused, carried across a boundary that used to drop them.
    *
@@ -67,14 +88,7 @@ export class PartialAuditError extends Error {
   constructor(cause: Error, auditedPages: AuditedPage[], truncatedPages: number) {
     super(cause.message, { cause });
     this.name = cause.name;
-    this.auditedPages = auditedPages;
     this.truncatedPages = truncatedPages;
-
-    // Not enumerable. A class field is an own enumerable property, so
-    // `JSON.stringify(error)` — which yields `{}` for a plain Error — would
-    // have produced the full captured DOM of an authenticated page, and
-    // `logger.ts`'s redaction walks five levels deep looking for keys it
-    // knows. Nothing serialises an error today; this is so nothing can.
-    Object.defineProperty(this, 'auditedPages', { enumerable: false, value: auditedPages });
+    defineHidden(this, 'auditedPages', auditedPages);
   }
 }
