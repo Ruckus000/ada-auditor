@@ -42,7 +42,31 @@ export type RunFailureCode =
   | 'run_timed_out'
   | 'audit_run_failed';
 
-export function classifyRunFailure(message: string): RunFailureCode {
+export function classifyRunFailure(message: string, errorName?: string): RunFailureCode {
+  /**
+   * Every refusal from `target-url`, matched by type rather than by prose.
+   *
+   * The first attempt at this matched a message prefix and claimed to cover
+   * "three shapes". `UnsafeTargetError` has **nine** throw sites, and the
+   * regex caught three — leaving `Target URL resolves to a private or
+   * reserved address`, thrown by both the literal-IP check and the post-DNS
+   * check, reporting "a reason it could not categorise". Those are the two
+   * most security-critical refusals the SSRF guard makes, and a typo'd
+   * hostname resolving into a private range is the likeliest way a real
+   * operator meets one.
+   *
+   * The name survives wrapping: `PartialJourneyError` and `PartialAuditError`
+   * both copy `name` from their cause, so a refusal partway through a walk
+   * still classifies here.
+   *
+   * One code for all nine. The distinction an operator acts on is that the
+   * run refused to go somewhere, and the answer is the same in every case:
+   * fix the journey, or widen its allowed hosts deliberately.
+   */
+  if (errorName === 'UnsafeTargetError') {
+    return 'navigation_not_allowed';
+  }
+
   // First, and anchored, because this is the only message here built partly
   // from operator-authored text. The branches below match with `includes`, so
   // a journey whose selector contains "incomplete evidence" would otherwise
@@ -70,23 +94,6 @@ export function classifyRunFailure(message: string): RunFailureCode {
   // loose `includes` lets a stale-selector timeout be reported as "no steps".
   // That misattributes a failure rather than leaking one, but the fix is a
   // keyword.
-  /**
-   * Every refusal from `target-url`, which had none of its own.
-   *
-   * `UnsafeTargetError` covers three shapes — a host outside the allowlist, a
-   * run with no allowlist at all, and a connection to a private or reserved
-   * address — and none matched a branch here, so all three reported "stopped
-   * for a reason it could not categorise". They are the most categorised
-   * failures in the system: the run deliberately refused to go somewhere.
-   *
-   * One code for all three. Which host or address is in the log; the
-   * distinction an operator acts on is that the journey left where it was
-   * allowed to be, and the answer to each is the same — fix the journey or
-   * widen the allowlist deliberately.
-   */
-  if (/^(Navigation to |Host |No allowed hosts)/.test(message)) {
-    return 'navigation_not_allowed';
-  }
   if (message.startsWith('A run against a target URL must name its own steps')) {
     return 'journey_has_no_steps';
   }

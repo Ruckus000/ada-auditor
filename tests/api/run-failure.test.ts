@@ -28,17 +28,32 @@ describe('classifyRunFailure', () => {
     );
   });
 
-  it('classifies every refusal from the navigation guard', () => {
-    // All three shapes `UnsafeTargetError` throws. None matched a branch, so
-    // the most deliberate failures in the system — the run refusing to go
-    // somewhere — reported "a reason it could not categorise".
+  it('classifies every refusal from the navigation guard, by type', () => {
+    // `UnsafeTargetError` has nine throw sites, not the three a message-prefix
+    // regex caught. The two most security-critical — a literal private IP and
+    // a hostname that resolves into a private range — were among the six it
+    // missed, so an SSRF refusal reported "a reason it could not categorise".
+    // Matching the name covers all of them, including any added later.
     for (const message of [
-      'Navigation to http://rebind.example/ connected to 127.0.0.1, a private or reserved address.',
-      'Host evil.example is not in the allowed domains for this run.',
+      'Target URL is not a valid URL.',
+      'Target URL must use http or https.',
+      'Target URL must not embed credentials.',
       'No allowed hosts are configured for this run.',
+      'Host evil.example is not in the allowed domains for this run.',
+      'Target URL resolves to a private or reserved address.',
+      'Target host evil.example could not be resolved.',
+      'Navigation to http://x/ connected to 127.0.0.1, a private or reserved address.',
     ]) {
-      expect(classifyRunFailure(message)).toBe('navigation_not_allowed');
+      expect(classifyRunFailure(message, 'UnsafeTargetError')).toBe('navigation_not_allowed');
     }
+  });
+
+  it('does not classify an ordinary error that happens to read like one', () => {
+    // The name is the signal, not the words. A selector or a page title can
+    // say anything; only `target-url` throws under this name.
+    expect(classifyRunFailure('Host evil.example is not in the allowed domains for this run.')).toBe(
+      'audit_run_failed',
+    );
   });
 
   it('classifies a run that named a target and no steps', () => {

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ClientDetail } from '../../../../services/client-detail';
+import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -55,6 +56,19 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
               Evidence for this run was <strong>{lastRun.evidenceStatus}</strong>, so the result is
               inconclusive rather than a pass or a fail. The counts below cover only what we could
               actually see.
+              {/*
+                The reason, on the screen that is read first.
+                This banner said "evidence was unknown" and stopped there, and
+                `unknown` is what every failed run stores — so the landing tab
+                gave the least information about the runs that need the most.
+                The reason was already on `lastRun`; nothing read it.
+              */}
+              {lastRun.failureReason ? (
+                <>
+                  {' '}
+                  {describeRunFailure(lastRun.failureReason)}
+                </>
+              ) : null}
             </p>
           ) : null}
 

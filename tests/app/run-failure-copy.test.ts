@@ -45,7 +45,8 @@ describe('describeRunFailure', () => {
     // code the classifier really emits is not left on the generic fallback.
     const produced = [
       classifyRunFailure('Step 1 ("login") could not fill "#a": nope.'),
-      classifyRunFailure('Host evil.example is not in the allowed domains for this run.'),
+      // The name is what classifies this one, not the words in it.
+      classifyRunFailure('Target URL resolves to a private or reserved address.', 'UnsafeTargetError'),
       classifyRunFailure('A run against a target URL must name its own steps.'),
       classifyRunFailure('Journey is not allowed by run contract scope.'),
       classifyRunFailure('Action "delete" is not allowed in production.'),
