@@ -1,5 +1,6 @@
 'use client';
 
+import { describePageEvidence } from '../../services/presentation/page-evidence';
 import { InfoTip, TermLabel } from './info-tip';
 import {
   countBySource,
@@ -213,12 +214,12 @@ function EvidenceBlock({ result }: { result: AuditResult }) {
                 <PageLabel page={page} />
                 {page.evidenceStatus && (
                   <span className={`page-evidence page-evidence-${page.evidenceStatus}`}>
-                    {/* The status word itself, not a synonym for it. This said
-                        "incomplete", which named only one of the two ways a
-                        page can now be degraded and contradicted the class
-                        beside it — the other two screens already print the
-                        status verbatim. */}
-                    {page.evidenceStatus}
+                    {/* One phrase, shared with the platform screen and the
+                        public report. This said "incomplete", which named only
+                        one of the two ways a page can be degraded and was
+                        flatly wrong for a page that captured all three
+                        artifacts and came back 500. */}
+                    {describePageEvidence(page.evidenceStatus, page.statusCode)}
                   </span>
                 )}
               </p>

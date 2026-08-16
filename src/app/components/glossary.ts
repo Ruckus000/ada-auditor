@@ -111,7 +111,7 @@ export const GLOSSARY = {
     term: 'Inconclusive',
     short: 'The auditor could not capture enough evidence to judge, so it refuses to say pass or fail.',
     detail:
-      'This is deliberate. A missing screenshot or accessibility tree means the checks were not looking at the whole picture, and reporting a pass from partial evidence would be a false all-clear.',
+      'This is deliberate. A missing screenshot or accessibility tree means the checks were not looking at the whole picture, and a page served as 404 or 500 means they were looking at the wrong thing entirely. Reporting a pass from either would be a false all-clear.',
   },
 
   // --- Evidence ----------------------------------------------------------

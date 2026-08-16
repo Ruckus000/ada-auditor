@@ -1,5 +1,6 @@
 import type { DisplaySeverity } from '../../../../services/presentation/severity';
 import type { FindingView, FindingsView, PageFindings } from '../../../../services/findings-view';
+import { describePageEvidence } from '../../../../services/presentation/page-evidence';
 import { describeCriterion } from '../../../../services/wcag-reference';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
@@ -127,6 +128,8 @@ function PageSection({ page, clientId }: { page: PageFindings; clientId: string 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>{page.title ?? page.route}</h3>
         <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>{page.url}</span>
+        {/* The phrase comes from one place, so this pill, the console and the
+            public report cannot describe the same page differently. */}
         {page.evidenceStatus !== 'complete' ? (
           <span
             style={{
@@ -140,7 +143,7 @@ function PageSection({ page, clientId }: { page: PageFindings; clientId: string 
               color: '#4b3f68',
             }}
           >
-            evidence {page.evidenceStatus}
+            {describePageEvidence(page.evidenceStatus, page.statusCode)}
           </span>
         ) : null}
       </div>

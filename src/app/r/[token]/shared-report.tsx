@@ -1,4 +1,5 @@
 import type { SharedReport } from '../../../services/report-view';
+import { describePageEvidence } from '../../../services/presentation/page-evidence';
 import { describeCriterion, summariseCriteria } from '../../../services/wcag-reference';
 import { FONT, T } from '../../platform/lib/tokens';
 
@@ -116,7 +117,23 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
           </h3>
           <p style={{ margin: '0 0 10px', fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
             {page.url}
-            {page.evidenceStatus !== 'complete' ? ` · evidence ${page.evidenceStatus}` : ''}
+            {/* One phrase, shared with the console and the platform screen.
+                A client reading this document must not be told "evidence
+                degraded" where the truth is that their server returned 500.
+
+                The exact code is shown here, outside the auth gate, and that
+                is a decision rather than an oversight. It is finer-grained
+                than the old wording — 403 says "exists and is gated" where 404
+                says "gone" — so for a host the reader cannot reach themselves
+                this page is a small oracle. Kept anyway: the site is the
+                client's own, the token is unguessable and the route is
+                `noindex`, and "your server returned 503" is the whole reason
+                this slice exists. Coarsening to "served an error" here alone
+                is a one-argument change at this call site if that trade ever
+                stops being worth it. */}
+            {page.evidenceStatus !== 'complete'
+              ? ` · ${describePageEvidence(page.evidenceStatus, page.statusCode)}`
+              : ''}
           </p>
 
           {page.findings.length === 0 ? (

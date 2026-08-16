@@ -38,6 +38,17 @@ export interface AuditPage {
   title?: string;
   evidenceStatus?: EvidenceStatus;
   /**
+   * The HTTP status the page was served with, when one was measured.
+   *
+   * `evidenceStatus` says a page cannot be judged; this says which of the two
+   * reasons it was. Without it a missing screenshot and a 500 render the same
+   * word, and they need different people to do different things.
+   *
+   * Absent means not measured — a `file://` run has none, and neither has any
+   * page recorded before the column existed. Never render it as 200.
+   */
+  statusCode?: number;
+  /**
    * Which artifacts were actually captured for this page.
    *
    * Derived from the presence of each stored URL rather than from
@@ -120,6 +131,12 @@ function toPage(value: unknown): AuditPage | null {
       raw.evidenceStatus === 'complete' || raw.evidenceStatus === 'degraded'
         ? raw.evidenceStatus
         : undefined,
+    // Omitted unless it is a real integer, so a malformed or absent value
+    // reads as "not measured" rather than as `NaN` on the screen. This comes
+    // off a JSON response, so it has to be checked rather than trusted.
+    ...(typeof raw.statusCode === 'number' && Number.isInteger(raw.statusCode)
+      ? { statusCode: raw.statusCode }
+      : {}),
     ...(raw.artifacts && typeof raw.artifacts === 'object'
       ? {
           artifacts: {
