@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEvidenceBundle, worstEvidenceStatus } from '../../src/domain/evidence';
+import { boundTitle, createEvidenceBundle, worstEvidenceStatus } from '../../src/domain/evidence';
 
 describe('createEvidenceBundle', () => {
   it('marks incomplete evidence as degraded', () => {
@@ -70,5 +70,36 @@ describe('worstEvidenceStatus', () => {
 
   it('treats a run that captured nothing as degraded, not clean', () => {
     expect(worstEvidenceStatus([])).toBe('degraded');
+  });
+});
+
+describe('boundTitle', () => {
+  /**
+   * `document.title` comes from the audited site and has no length limit. The
+   * same string is stored per page per run, returned in the API response,
+   * interpolated into the model prompt, and rendered into a PDF.
+   *
+   * Bounded at capture rather than in the schema beside it, deliberately: this
+   * helper exists beside that schema precisely because a `.max()` inside it
+   * would throw and destroy the run, which is the bug the empty-title case
+   * already taught. Truncate the page, never kill the run.
+   */
+  it('leaves a real title alone', () => {
+    expect(boundTitle('Checkout — Acme')).toBe('Checkout — Acme');
+    expect(boundTitle('')).toBe('');
+  });
+
+  it('cuts a hostile title down and says that it cut it', () => {
+    const bounded = boundTitle('a'.repeat(50_000));
+
+    // The marker matters: a silent cut presents a fragment as the whole title.
+    expect(bounded.endsWith('…')).toBe(true);
+    expect(bounded.length).toBeLessThan(400);
+  });
+
+  it('does not add a marker to a title that fits exactly', () => {
+    const exact = 'a'.repeat(300);
+
+    expect(boundTitle(exact)).toBe(exact);
   });
 });

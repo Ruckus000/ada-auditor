@@ -42,6 +42,35 @@ export type EvidenceBundle = EvidenceBundleInput & {
   status: EvidenceStatus;
 };
 
+/**
+ * A page's title is whatever the audited site says it is.
+ *
+ * `document.title` has no length limit, and this one string is stored per page
+ * per run, returned in the API response, interpolated into the model prompt in
+ * `services/ai-advisory`, and rendered into a Chromium PDF. A hostile — or
+ * merely broken — page returning megabytes reaches all four.
+ *
+ * A function beside the schema rather than a `.max()` inside it, and that
+ * distinction is the whole lesson of the field above: `createEvidenceBundle`
+ * parses rather than safe-parses, so a `.max()` would *throw* on a long title
+ * and destroy the run, exactly as `.min(1)` did on an empty one. Truncate the
+ * page, never kill the run.
+ *
+ * Applied at capture, by the runner, so what is recorded is what was bounded —
+ * a cap the storage layer applied after the fact would leave every other
+ * consumer reading the unbounded string.
+ *
+ * The ellipsis is load-bearing: silently cutting a title presents a fragment as
+ * the whole thing. 300 is generous for any real title — `deterministic-audit`
+ * caps axe's `outerHTML` at 512 for the same reason, and a title is a label
+ * rather than markup.
+ */
+const MAX_TITLE_LENGTH = 300;
+
+export function boundTitle(title: string): string {
+  return title.length <= MAX_TITLE_LENGTH ? title : `${title.slice(0, MAX_TITLE_LENGTH)}…`;
+}
+
 export function createEvidenceBundle(input: EvidenceBundleInput): EvidenceBundle {
   const parsed = evidenceInputSchema.parse(input);
   const complete = Boolean(
