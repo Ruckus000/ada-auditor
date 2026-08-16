@@ -58,6 +58,16 @@ export type RunSummary = {
   durationMs: number | null;
   /** The slowest single page, which is what the page cap is denominated in. */
   slowestPageMs: number | null;
+  /**
+   * Why the run stopped, on a run that stopped. Absent on one that finished.
+   *
+   * Stored since failures were first classified, and read by nothing — so
+   * every failure rendered as `? INCONCLUSIVE` with no explanation, and a
+   * stale selector looked exactly like a browser crash. It is the stable
+   * code, never the raw message: `audit-run-handler` stores
+   * `classifyRunFailure`'s output precisely so this can be shown.
+   */
+  failureReason?: string;
 };
 
 export type ClientDetail = {
@@ -92,6 +102,11 @@ export function summariseRun(run: StoredRunRecord): RunSummary {
     evidenceStatus: run.evidenceStatus,
     durationMs: run.durationMs || null,
     slowestPageMs: slowestPage(run),
+    // Only on a run that actually failed. A reason attached to a finished run
+    // would be a leftover from an earlier attempt at the same request id.
+    ...(run.status === 'failed' && run.failureReason
+      ? { failureReason: run.failureReason }
+      : {}),
   };
 }
 

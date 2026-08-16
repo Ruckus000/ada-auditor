@@ -1,4 +1,5 @@
 import type { ClientDetail } from '../../../../services/client-detail';
+import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
@@ -91,6 +92,19 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                       Never run
                     </span>
                   )}
+
+                  {journey.lastRun?.failureReason ? (
+                    <span
+                      style={{
+                        flexBasis: '100%',
+                        fontFamily: FONT.sans,
+                        fontSize: 12.5,
+                        color: T.inkMuted,
+                      }}
+                    >
+                      {describeRunFailure(journey.lastRun.failureReason)}
+                    </span>
+                  ) : null}
                 </span>
               </li>
             );
