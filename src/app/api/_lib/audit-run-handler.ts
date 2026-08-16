@@ -81,6 +81,26 @@ export const journeyStepSchema = z.union([
     credentialRef: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
     field: z.enum(['user', 'pass']),
   }),
+  /**
+   * An expectation, which is also how a journey waits.
+   *
+   * `.refine` rather than two variants, because "at least one of two optional
+   * fields" is what the rule actually is and splitting it into
+   * url-only/selector-only/both triples the shapes to keep in step. The runner
+   * refuses the empty case too — it is reachable by callers that never came
+   * through this route — but refusing it here is what stops a journey being
+   * *stored* asserting nothing while looking as though it asserts something.
+   */
+  z
+    .object({
+      action: STEP_TEXT,
+      type: z.literal('expect'),
+      urlIncludes: STEP_TEXT.optional(),
+      selector: STEP_TEXT.optional(),
+    })
+    .refine((step) => step.urlIncludes !== undefined || step.selector !== undefined, {
+      message: 'An expect step must set urlIncludes, selector, or both.',
+    }),
 ]);
 
 /**

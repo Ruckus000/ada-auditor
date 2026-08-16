@@ -71,9 +71,14 @@ export function classifyRunFailure(message: string, errorName?: string): RunFail
   // from operator-authored text. The branches below match with `includes`, so
   // a journey whose selector contains "incomplete evidence" would otherwise
   // be classified as an evidence failure — an operator naming their own run's
-  // error code by accident, through what they called a CSS class. A message
-  // starting with `Step N ("` can only have come from `attemptStep`, so it is
-  // safe to decide here and stop.
+  // error code by accident, through what they called a CSS class.
+  //
+  // A message starting with `Step N ("` is built by the runner and nowhere
+  // else — `attemptStep` for an interaction, and the `expect` branch, which
+  // deliberately shares the prefix so an unmet expectation is named rather
+  // than reported as uncategorised. Both are ours, so it is safe to decide
+  // here and stop. The `expect` message also interpolates the settled URL, but
+  // only after the `: `, where it cannot reach this anchor.
   if (/^Step \d+ \(".*"\) could not /.test(message)) {
     return 'journey_step_failed';
   }

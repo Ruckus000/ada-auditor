@@ -12,10 +12,42 @@ import type { AxeScanResult } from '../../services/deterministic-audit';
  */
 export type FillValue = { value: string } | { credentialRef: string; field: 'user' | 'pass' };
 
+/**
+ * What "arrived" means, declared by the operator instead of guessed.
+ *
+ * The runner had no way to wait for anything. A click was followed by
+ * `waitForLoadState('domcontentloaded')`, which fires when the document is
+ * parsed and says nothing about whether the app has rendered — so a
+ * single-page app was scanned mid-transition, and a login that failed was
+ * scanned as though it had succeeded. The obvious patch is a settle heuristic
+ * (networkidle, or a fixed delay), and it is a guess dressed as a
+ * measurement: it waits the wrong amount of time on every page and still
+ * cannot tell arriving from failing.
+ *
+ * An expectation is both halves at once. The operator says the dashboard is
+ * where `/dashboard` is in the URL, or where `#account-menu` exists, and the
+ * runner waits for exactly that — then fails naming it when it never happens.
+ * Waiting and asserting are the same act, so there is no separate settle to
+ * get wrong.
+ *
+ * At least one of the two is required, and that is enforced where steps are
+ * accepted rather than here — a type union cannot express "at least one
+ * optional field" without doubling the variants.
+ */
+export type ExpectStep = {
+  action: string;
+  type: 'expect';
+  /** Substring the settled URL must contain. */
+  urlIncludes?: string;
+  /** Selector that must be present and visible. */
+  selector?: string;
+};
+
 export type JourneyStep =
   | { action: string; type: 'goto'; path: string }
   | { action: string; type: 'click'; selector: string }
-  | ({ action: string; type: 'fill'; selector: string } & FillValue);
+  | ({ action: string; type: 'fill'; selector: string } & FillValue)
+  | ExpectStep;
 
 export type JourneyRunnerInput = {
   environment: Environment;
@@ -39,6 +71,13 @@ export type JourneyRunnerInput = {
    * anywhere set one.
    */
   stepTimeoutMs?: number;
+  /**
+   * How long an `expect` step may wait. Defaults to
+   * `AUDITOR_EXPECT_TIMEOUT_MS`, then to thirty seconds — deliberately longer
+   * than `stepTimeoutMs`, because an expectation spans an arrival rather than
+   * finding a control on a page that has already arrived.
+   */
+  expectTimeoutMs?: number;
   omitAxTree?: boolean;
   headless?: boolean;
   /**

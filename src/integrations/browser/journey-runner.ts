@@ -6,6 +6,7 @@ import { boundTitle } from '../../domain/evidence';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/ax-tree';
 import { logWarn } from '../../services/logger';
+import { settledLocation } from '../../services/safe-url';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
@@ -153,6 +154,35 @@ const DEFAULT_MAX_PAGES = 20;
  */
 const DEFAULT_STEP_TIMEOUT_MS = 10_000;
 
+/**
+ * How long an expectation may wait, and why it is not the number above.
+ *
+ * The ten-second figure is justified by an assumption that does not hold here:
+ * "a selector that has not appeared in ten seconds *on a page the runner has
+ * already navigated to and waited for `domcontentloaded` on* is stale, not
+ * slow." An expectation is the opposite case — it usually follows a click and
+ * spans the arrival itself, which is the whole reason the step exists. Reusing
+ * the interaction timeout would reintroduce exactly the mistake the comment
+ * above documents avoiding for `page.goto`: capping a page-load-scale wait at
+ * an interaction-scale number, and manufacturing failures on the heavy real
+ * client apps this product is for.
+ *
+ * Thirty is Playwright's own default for a wait that may span a navigation,
+ * which is the conservative choice for the same reason it is theirs. Override
+ * with `AUDITOR_EXPECT_TIMEOUT_MS` for an app that genuinely settles slower.
+ */
+const DEFAULT_EXPECT_TIMEOUT_MS = 30_000;
+
+export function resolveExpectTimeoutMs(explicit?: number): number {
+  if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
+    return Math.floor(explicit);
+  }
+  const configured = Number(process.env.AUDITOR_EXPECT_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0
+    ? Math.floor(configured)
+    : DEFAULT_EXPECT_TIMEOUT_MS;
+}
+
 export function resolveStepTimeoutMs(explicit?: number): number {
   if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
     return Math.floor(explicit);
@@ -210,6 +240,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   resolveArtifactPrefix(input.artifactsDir, input.stepId);
   const maxPages = resolveMaxPages(input.maxPages);
   const stepTimeoutMs = resolveStepTimeoutMs(input.stepTimeoutMs);
+  const expectTimeoutMs = resolveExpectTimeoutMs(input.expectTimeoutMs);
 
   // Default the allowlist to the target's own host: an audit of one site has no
   // business navigating to another.
@@ -543,6 +574,108 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         await attemptStep(index, step, () =>
           page.fill(step.selector, value, { timeout: stepTimeoutMs }),
         );
+        continue;
+      }
+
+      if (step.type === 'expect') {
+        /**
+         * Wait for what the operator said "arrived" means, and fail naming it.
+         *
+         * Both waits retry natively until the timeout, so this is the settle
+         * primitive as well as the assertion — there is no separate quiet
+         * period to guess at, which is the heuristic this plan refused.
+         * `waitForURL` and `waitForSelector` rather than `expect()`, which
+         * lives in `@playwright/test` and is not a dependency here.
+         *
+         * `state: 'visible'`, not `attached`. A failed login commonly leaves
+         * the destination's markup in the DOM but hidden, and an expectation
+         * satisfied by hidden markup would be the exact false pass this step
+         * exists to prevent.
+         *
+         * No capture. An expectation is not a page: counting it would inflate
+         * `pagesAudited` with something nothing scanned, and whatever page
+         * follows is captured on its own step.
+         *
+         * And no `assertNavigationsWereSafe()` here, which is worth justifying
+         * rather than leaving to luck, because every other branch calls it. It
+         * is not needed *because* nothing is captured: a page that moves
+         * somewhere unsafe while this waits has its response recorded by the
+         * context listener, and the next thing that could store evidence —
+         * the following step's check, `capturePage`'s own trailing check, or
+         * the final one after the loop — reads that record before anything is
+         * written. Adding a fourth call here would buy earlier detection of a
+         * violation that cannot reach an artifact in the meantime.
+         *
+         * Not routed through `attemptStep`, which formats `could not <type>
+         * "<selector>"` — an expectation may carry no selector, and "could not
+         * expect \"undefined\"" is worse than the bare timeout it replaced.
+         * The prefix is kept identical so `classifyRunFailure` still reads it
+         * as `journey_step_failed`.
+         */
+        const expectations: string[] = [];
+        if (step.urlIncludes !== undefined) {
+          expectations.push(`the URL to contain "${step.urlIncludes}"`);
+        }
+        if (step.selector !== undefined) {
+          expectations.push(`"${step.selector}" to be visible`);
+        }
+
+        // Neither given is a journey that asserts nothing while looking as
+        // though it asserts something — worse than having no step at all.
+        // Refused here as well as at the write schema, because `runJourney` is
+        // reached by callers that never went through a route.
+        if (expectations.length === 0) {
+          throw new Error(
+            // Same prefix as every other step failure, so `classifyRunFailure`
+            // reads it as `journey_step_failed` rather than telling an
+            // operator it "could not categorise" the one thing categorised
+            // exactly.
+            `Step ${index + 1} ("${step.action}") could not expect anything: ` +
+              'an expect step must set urlIncludes, selector, or both.',
+          );
+        }
+
+        try {
+          if (step.urlIncludes !== undefined) {
+            const wanted = step.urlIncludes;
+            await page.waitForURL((url) => url.href.includes(wanted), {
+              timeout: expectTimeoutMs,
+            });
+          }
+          if (step.selector !== undefined) {
+            await page.waitForSelector(step.selector, {
+              state: 'visible',
+              timeout: expectTimeoutMs,
+            });
+          }
+        } catch (error) {
+          // Where the run actually was, which is usually the whole answer —
+          // "expected /dashboard" is unactionable next to "and it was
+          // /login?error=1". `page.url()` is read here rather than before the
+          // wait so it reports where the journey came to rest, not where it
+          // set off from.
+          // A violation recorded while this was waiting is the better answer,
+          // so it gets the chance to be thrown first. Without this an SSRF
+          // refusal during the wait surfaced as "a step failed" — true, and
+          // the wrong thing to hand an operator to go and fix.
+          await assertNavigationsWereSafe();
+
+          // Origin and path, never the query or fragment.
+          //
+          // This message is the first in the runner to interpolate a
+          // *site-controlled* URL rather than operator text, and it reaches
+          // the structured log verbatim. The URL a failed journey rests on is
+          // exactly where a session token lives — an SSO `?code=`, a
+          // magic-link, a reset token. None of that is what an operator acts
+          // on: "it was at /login, not /dashboard" is the whole diagnostic,
+          // and it survives the trim intact.
+          throw new Error(
+            `Step ${index + 1} ("${step.action}") could not expect ` +
+              `${expectations.join(' and ')}: the page was at "${settledLocation(page.url())}".`,
+            { cause: error },
+          );
+        }
+
         continue;
       }
 
