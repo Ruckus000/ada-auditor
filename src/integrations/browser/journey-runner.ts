@@ -241,6 +241,39 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   const navigationChecks: Array<Promise<void>> = [];
   let navigationViolation: Error | undefined;
 
+  /**
+   * The status of the most recent main-frame navigation, per page.
+   *
+   * Filled from the response listener below rather than from `page.goto`'s
+   * return value, which is what this looked like at first. `goto` is one of
+   * three ways a capture happens — a click that navigates and the
+   * no-navigation fallback are the others — so reading its return would have
+   * recorded nothing for a journey that clicked its way onto a 500.
+   *
+   * **Keyed by the page, not by the URL, and that is the whole correctness
+   * argument.** The first version was a `Map<url, status>` written with
+   * `response.url()` and read with `page.url()`. Those are different layers:
+   * `response.url()` is what the network fetched, `page.url()` is what the
+   * document currently claims, and the audited site controls the second. A
+   * single line in a 500's body — `location.hash = 'x'`, or
+   * `history.pushState({}, '', '/looks-fine')` — made the lookup miss, and a
+   * miss means "not measured", so the error page went back to counting as
+   * clean evidence. The same trick ran the other way too: visit a good page,
+   * then a 500, then `pushState` back to the good URL, and the map returned
+   * that page's 200 for the error document. Verified in Chromium, not reasoned
+   * about.
+   *
+   * Neither a fragment change nor a `pushState` produces a navigation
+   * response, so keying on the page leaves the last *real* navigation's status
+   * in place — which is exactly the document that is on screen. A redirect
+   * chain overwrites per hop and ends on the settled document. And a popup
+   * cannot poison the main page's entry, which the URL map allowed.
+   *
+   * A `WeakMap` because the key is a live Playwright object; there is one page
+   * in practice, and nothing here should keep it alive.
+   */
+  const mainFrameStatus = new WeakMap<Page, number>();
+
   // Bound to the context, not to a page.
   //
   // A page-level listener cannot cover popups, and attaching one when a popup
@@ -282,6 +315,20 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         navigationViolation ??= error instanceof Error ? error : new Error(String(error));
       }),
     );
+
+    // After the push, deliberately.
+    //
+    // The peer check is the security-critical half of this handler, and
+    // anything that runs before its registration is something that could stop
+    // it being registered at all — a throw here would leave that response
+    // unchecked while the run carried on. These three calls are synchronous
+    // accessors over a response already in hand and do not throw in practice,
+    // so this is ordering as defence rather than a fix for a live bug. It
+    // costs nothing to make the guard unconditionally first.
+    const navigated = frame.page();
+    if (navigated) {
+      mainFrameStatus.set(navigated, response.status());
+    }
   });
 
   /**
@@ -312,8 +359,22 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     /**
      * Scans and captures whatever the page is showing right now.
      *
-     * Ordering matters: the scan runs before the artifacts are written, so the
-     * evidence on disk is the same DOM the findings were derived from.
+     * Ordering: the scan runs first, then the DOM is read, then the screenshot
+     * and the AX tree.
+     *
+     * That used to carry the claim "so the evidence on disk is the same DOM
+     * the findings were derived from", and it does not follow. The scan does
+     * precede the writes, but axe evaluates the live page in-process and never
+     * hands back what it saw; `page.content()`, `page.screenshot()` and
+     * `captureAxTree` are three *fresh reads* taken afterwards. A page that
+     * moves in between — and the comment forty lines below says plainly that
+     * it may — puts a DOM on disk that nothing was ever scanned against.
+     *
+     * The gap cannot be closed from here, so it is described instead of
+     * papered over. Closing it would mean serialising the DOM inside the same
+     * execution turn as the scan, which buys accuracy on a hostile page at the
+     * cost of running our script on one. The reads are ordered tightest-first
+     * to keep the window small, which is all the ordering actually earns.
      */
     const capturePage = async (): Promise<void> => {
       const url = page.url();
@@ -369,7 +430,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       await assertNavigationsWereSafe();
 
       pages.push({
-        page: { url, route, title },
+        page: { url, route, title, statusCode: mainFrameStatus.get(page) },
         html,
         axe,
         axTree,

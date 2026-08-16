@@ -63,6 +63,14 @@ export type JourneyPageMeta = {
   url: string;
   route: string;
   title: string;
+  /**
+   * The main-frame HTTP status this page was served with, when there was one.
+   *
+   * Absent means not measured, not 200: a `file://` fixture run has no HTTP
+   * status, and neither does a capture whose settled URL never appeared as a
+   * main-frame navigation response.
+   */
+  statusCode?: number;
 };
 
 export type JourneyArtifacts = {
