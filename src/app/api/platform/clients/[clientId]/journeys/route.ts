@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { authoredStepSchema } from '../../../../../../domain/journey-step';
+import { authoredStepsSchema } from '../../../../../../domain/journey-step';
+import { containsInlineCredential } from '../../../../_lib/inline-credential';
 import { actorFields } from '../../../../../../domain/operator';
 import { journeyRunRefusal } from '../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
@@ -46,64 +47,18 @@ const createJourneySchema = z.object({
    * schema "would give two places to disagree about what a step is."
    *
    * The objection was right; the conclusion was not. The answer is one module
-   * — `domain/journey-step` — holding both the runner's schema and this
-   * stricter one, with a test proving everything accepted here also parses
-   * there. So there is still exactly one contract, and a journey can no longer
-   * be *stored* in a state that can never run.
+   * — `domain/journey-step` — holding the runner's schema, this stricter one,
+   * and the list form both routes use, with a test proving everything accepted
+   * here also parses there.
    *
    * That state was not hypothetical. Two routes refuse to schedule or run a
    * journey whose stored steps fail the runner's schema, and both carry an
    * `invalid_journey_steps` code for it. An operator wrote `{banana: 1}`, got
    * a 201, and found out weeks later when a scheduled audit refused itself.
-   *
-   * The size bound stays. It is a different question — a payload that large is
-   * not a journey whatever shape it is in.
    */
-  steps: z
-    // Length first, shape second, and the order is load-bearing.
-    //
-    // `.max()` on an array of `authoredStepSchema` is a check that runs *after*
-    // every element has been parsed against a five-branch strict union — so a
-    // 4.5MB body of 100k junk steps was fully parsed before the cap refused it.
-    // Measured at ~2.6s of synchronous work against ~56ms under the old loose
-    // schema: a 50x amplification, on the event loop, from one authenticated
-    // request. Counting before parsing costs nothing and removes it.
-    .array(z.unknown())
-    .max(200)
-    .pipe(z.array(authoredStepSchema))
-    .refine((steps) => JSON.stringify(steps).length <= 64_000, {
-      message: 'steps payload is too large',
-    })
-    .optional(),
+  steps: authoredStepsSchema.optional(),
 });
 
-/**
- * Rejects a step that carries a password rather than a reference to one.
- *
- * Reads the raw body rather than the parsed value, because it now runs *before*
- * the schema — a `.strict()` schema rejects these keys anyway, but as a generic
- * "invalid request body", and the specific answer is worth keeping.
- *
- * Still key names only, and still only the four. It never closed the hole it
- * was written for: a literal's value sits under the key `value`, so
- * `{action:'login', type:'fill', value:'hunter2'}` passed it. That one is
- * closed properly now, by `authoredStepSchema` refusing a `login` fill with a
- * literal — a rule about what the step *is*, not about what a key is called.
- */
-function containsInlineCredential(body: unknown): boolean {
-  if (!body || typeof body !== 'object') return false;
-  const steps = (body as { steps?: unknown }).steps;
-  if (!Array.isArray(steps)) return false;
-
-  return steps.some(
-    (step) =>
-      Boolean(step) &&
-      typeof step === 'object' &&
-      Object.keys(step as Record<string, unknown>).some((key) =>
-        /^(password|pass|secret|token)$/i.test(key),
-      ),
-  );
-}
 
 export async function POST(
   request: Request,
