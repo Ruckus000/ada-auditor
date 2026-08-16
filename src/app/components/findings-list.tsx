@@ -150,12 +150,22 @@ function ArtifactChecklist({
   );
 }
 
+/**
+ * What to call a page.
+ *
+ * One function because three places name pages — the heading, the section's
+ * accessible name, and the "no issues on" sentence — and each read `title`
+ * raw. A page with no title rendered a bold blank, an `aria-label=""`, and the
+ * sentence "No issues on ." Its route is the only honest name available, and
+ * it is the one the rest of the screen uses anyway.
+ */
+function pageLabel(page: AuditPage): string {
+  return page.title ?? page.route;
+}
+
 /** A page's URL, shown only when it says something the title does not. */
 function PageLabel({ page }: { page: AuditPage }) {
-  // A page with no title still needs a name here, and its route is the only
-  // honest one available. Without this the heading was empty for exactly the
-  // pages a titling violation was reported against.
-  const label = page.title ?? page.route;
+  const label = pageLabel(page);
 
   return (
     <>
@@ -291,7 +301,14 @@ function PageFindings({ group }: { group: { page: AuditPage | null; findings: Fi
   const { deterministic, advisory } = countBySource(group.findings);
 
   return (
-    <section className="page-findings" aria-label={group.page ? group.page.title : 'Across the journey'}>
+    // An empty `aria-label` does not fall back to the element's content — it
+    // strips the region from the landmark list entirely. An untitled page
+    // produced exactly that, which is the accessibility bug this product's own
+    // engine would not have caught.
+    <section
+      className="page-findings"
+      aria-label={group.page ? pageLabel(group.page) : 'Across the journey'}
+    >
       <div className="page-findings-head">
         <h4 className="page-findings-title">
           {group.page ? (
@@ -348,7 +365,7 @@ function CleanPages({ result, groups }: { result: AuditResult; groups: Array<{ p
 
   return (
     <p className="pages-clean">
-      No issues on {clean.map((page) => page.title).join(', ')}.
+      No issues on {clean.map(pageLabel).join(', ')}.
     </p>
   );
 }
