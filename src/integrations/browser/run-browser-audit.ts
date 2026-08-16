@@ -34,6 +34,16 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const allowedHosts =
     input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
 
+  // The built-in demo is a *fixture* journey: its paths only mean something
+  // against `fixtureDir`. Substituting it for a run that names a real target
+  // resolved those paths against the client's origin instead — an audit of
+  // whatever `https://their-site/login.html` happens to return, filed under
+  // their name. A caller that names a target and no steps has not described a
+  // journey, so say so rather than inventing one.
+  if (input.targetUrl && !input.steps?.length) {
+    throw new Error('A run against a target URL must name its own steps.');
+  }
+
   const journeyStartedAt = Date.now();
   const journeyResult = await runJourney({
     ...input,

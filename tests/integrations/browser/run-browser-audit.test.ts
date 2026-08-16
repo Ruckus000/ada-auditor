@@ -7,6 +7,29 @@ import { runBrowserAudit } from '../../../src/integrations/browser/run-browser-a
 const FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 
 describe('runBrowserAudit', () => {
+  /**
+   * The backstop under the route guard.
+   *
+   * The built-in demo is a *fixture* journey — its paths only mean anything
+   * against `fixtureDir`. Substituting it for a run that names a real target
+   * resolved those paths against the client's origin instead, so the audit was
+   * of whatever `https://their-site/login.html` returned, filed under their
+   * name. The platform route refuses this now; this refuses it for every other
+   * caller, and launches no browser to do so.
+   */
+  it('refuses a target URL with no steps rather than walking the fixture journey', async () => {
+    await expect(
+      runBrowserAudit({
+        environment: 'staging',
+        journeyId: 'demo-login',
+        stepId: 'dashboard',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir: await mkdtemp(join(tmpdir(), 'ada-no-steps-')),
+        targetUrl: 'https://example.test/',
+      }),
+    ).rejects.toThrow(/must name its own steps/);
+  });
+
   it('returns inconclusive when ax tree evidence is omitted (chaos path)', async () => {
     const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-browser-audit-'));
 

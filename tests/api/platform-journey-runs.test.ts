@@ -173,6 +173,35 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/runs', () =
     },
   );
 
+  /**
+   * The mirror of the refusal above, and the one that was open.
+   *
+   * A journey naming a client's site with no steps reached the runner with
+   * `steps` undefined, and `runBrowserAudit` substituted the built-in fixture
+   * login — whose `goto` paths then resolved against the *client's* origin.
+   * The run fetched `https://acme.test/login.html` and filed whatever came
+   * back under the client's name. Worse than the no-target case, because the
+   * origin is real.
+   */
+  it('refuses a journey that names a site but no steps', async () => {
+    await platform.upsertJourney({
+      id: 'targeted-but-empty',
+      clientId: 'acme',
+      name: 'Targeted but empty',
+      targetUrl: 'https://acme.test/',
+      steps: [],
+    });
+
+    const response = await POST(
+      request('acme', 'targeted-but-empty'),
+      params('acme', 'targeted-but-empty'),
+    );
+
+    expect(response.status).toBe(422);
+    expect((await response.json()).error).toBe('journey_has_no_steps');
+    expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+
   // Steps are stored unvalidated on purpose, so a malformed one has to surface
   // as a 422 naming the journey rather than a 500 from inside the browser.
   it('refuses stored steps that do not match the step contract', async () => {

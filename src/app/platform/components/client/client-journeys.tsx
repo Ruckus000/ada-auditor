@@ -29,7 +29,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
       {detail.journeys.length === 0 ? (
         <Empty
           title="No journeys yet"
-          body="A journey is the path we re-walk on every run. Record one through the console or POST it to /api/platform/clients/<id>/journeys, and it appears here with a button to run it."
+          body="A journey is the path we re-walk on every run. POST one to /api/platform/clients/<id>/journeys with a bearer token and it appears here with a button to run it. There is no way to record one from these screens yet."
           action={null}
         />
       ) : (

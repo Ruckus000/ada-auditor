@@ -28,6 +28,8 @@ const MESSAGES: Record<string, string> = {
   // could not have helped.
   journey_not_runnable: 'This journey has no target URL, so there is no site to walk.',
   invalid_journey_steps: 'This journey’s stored steps are not valid. Record it again.',
+  journey_has_no_steps:
+    'This journey has no steps, so there is nothing to walk. Record the path through the site first.',
   journey_not_found: 'That journey is no longer on this client.',
   unauthorized: 'Your session expired. Reload and sign in again.',
   run_budget_exceeded: 'The run budget for this window is used up. Try again later.',

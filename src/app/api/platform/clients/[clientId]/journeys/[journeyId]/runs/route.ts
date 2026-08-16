@@ -69,11 +69,26 @@ export async function POST(
    * fixture app under a real client's name: not an error, an answer, and a
    * plausible-looking one. Steps alone do not save it, because the steps would
    * simply walk the fixture app instead.
+   *
+   * The mirror of that, which this used to allow: a journey that *does* name a
+   * client's site and has no steps. `hasSteps` was computed here and then used
+   * only to decide whether to validate, so such a journey reached `startRun`
+   * with `steps` undefined, and `runBrowserAudit` substituted the built-in
+   * fixture login — whose `goto` paths then resolved against the *client's*
+   * origin, fetching `https://their-site/login.html`. Worse than the case the
+   * paragraph above refuses, because it is a real origin. Both are refused now.
    */
   const hasSteps = Array.isArray(journey.steps) && journey.steps.length > 0;
   if (!journey.targetUrl) {
     return Response.json(
       { error: 'journey_not_runnable', requestId, journeyId },
+      { status: 422 },
+    );
+  }
+
+  if (!hasSteps) {
+    return Response.json(
+      { error: 'journey_has_no_steps', requestId, journeyId },
       { status: 422 },
     );
   }
