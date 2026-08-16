@@ -67,6 +67,17 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
           evidence.status === 'complete'
             ? runDeterministicAudit(pageAudit.axe, pageAudit.page.url)
             : [],
+        // Counted here so a partial run carries them too. Computed on the
+        // success path alone, every page of a failed run persisted null
+        // counts — the upload reads `checks`, and nothing ever set it.
+        checks: {
+          passed: pageAudit.axe.passCount,
+          failed: pageAudit.axe.violations.reduce((total, rule) => total + rule.nodes.length, 0),
+          incomplete: pageAudit.axe.incomplete.reduce(
+            (total, rule) => total + rule.nodes.length,
+            0,
+          ),
+        },
       };
     });
 
@@ -90,6 +101,15 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   // that knows what the run was actually asked to walk.
   const steps = input.steps ?? buildDefaultDemoJourneySteps();
 
+  // Before the browser, not after it. This sat below `runJourney`, so a
+  // journey outside the run's scope was fully walked and only then refused —
+  // and once a failure could carry pages out, an out-of-scope partial run
+  // could have stored them. It needs nothing the walk produces.
+  const journeyIds = input.allowedJourneyIds ?? [input.journeyId];
+  if (!journeyIds.includes(input.journeyId)) {
+    throw new Error('Journey is not allowed by run contract scope.');
+  }
+
   const journeyStartedAt = Date.now();
   let journeyResult;
   try {
@@ -101,7 +121,11 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     // and upload them with the code it already has. The error is rethrown
     // unchanged in every respect the classifier reads.
     if (error instanceof PartialJourneyError) {
-      throw new PartialAuditError(error, auditPages(error.captured.pages));
+      throw new PartialAuditError(
+        error,
+        auditPages(error.captured.pages),
+        error.captured.truncatedPages,
+      );
     }
     throw error;
   }
@@ -116,8 +140,6 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const platformContext = createPlatformContext({
     platformHint: platform.id,
   });
-
-  const journeyIds = input.allowedJourneyIds ?? [input.journeyId];
 
   const contract = createRunContract({
     environment: input.environment,
@@ -145,21 +167,13 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     platformCapabilities: platformContext.capabilities,
   });
 
-  if (!contract.scope.journeyIds.includes(input.journeyId)) {
-    throw new Error('Journey is not allowed by run contract scope.');
-  }
-
   const auditedPages = auditPages(journeyResult.pages);
 
   const evidenceStatus = worstEvidenceStatus(auditedPages.map((p) => p.evidenceStatus));
 
   // A conformance rate over the checks axe actually evaluated. Withheld
   // entirely when evidence is incomplete — see `services/score.ts`.
-  const checkCounts = auditedPages.map((pageAudit) => ({
-    passed: pageAudit.axe.passCount,
-    failed: pageAudit.axe.violations.reduce((total, rule) => total + rule.nodes.length, 0),
-    incomplete: pageAudit.axe.incomplete.reduce((total, rule) => total + rule.nodes.length, 0),
-  }));
+  const checkCounts = auditedPages.map((pageAudit) => pageAudit.checks);
   const score = scoreRun({ pages: checkCounts, evidenceStatus });
   const deterministicFindings = auditedPages.flatMap((p) => p.findings);
 

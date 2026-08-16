@@ -486,7 +486,29 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     // rebind suite does — stopped recognising an SSRF refusal it had always
     // recognised. Nothing is partial about a run that captured nothing, so
     // those keep throwing exactly what they threw before.
+    //
+    // This asks about the pages and never about the error, deliberately: a
+    // rebind on page three and a stale selector on page three take the same
+    // road out. That is also why one error type covers the pages>0 branch —
+    // the SSRF-after-capture pairing has no code of its own, and it is not
+    // constructible against these fixtures anyway, because the peer check
+    // refuses every response the rebind server sends, so no safe page can be
+    // captured from it first.
     if (pages.length === 0) throw error;
+
+    // The cap warning lives at the end of the `try` and never fired on this
+    // path, so a run that was truncated and then died said nothing about
+    // either. It is the only record that the walk was cut short.
+    if (truncatedPages > 0) {
+      logWarn('audit_page_cap_reached', {
+        journeyId: input.journeyId,
+        stepId: input.stepId,
+        maxPages,
+        pagesAudited: pages.length,
+        pagesSkipped: truncatedPages,
+      });
+    }
+
     throw new PartialJourneyError(error, { pages, truncatedPages });
   } finally {
     await browser.close();

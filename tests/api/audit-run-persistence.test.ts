@@ -234,6 +234,7 @@ describe('handleAuditRun async mode', () => {
       new PartialAuditError(
         new Error('Step 2 ("login") could not fill "#gone": the selector never matched anything.'),
         [captured] as never,
+        2,
       ),
     );
 
@@ -257,5 +258,13 @@ describe('handleAuditRun async mode', () => {
     // Never a score. An incomplete walk has no denominator, and a number here
     // would let a partial run read as a graded one.
     expect(failed?.score).toBeUndefined();
+
+    // Truncated *and* failed. Reported as 0 this reads as "we audited
+    // everything" about a walk that was cut short twice over.
+    expect(failed?.truncatedPages).toBe(2);
+
+    // And the counts behind a score travel with the page. These persisted as
+    // null on every partial run, because only the success path computed them.
+    expect(failed?.pages?.[0]?.checksPassed).toBe(3);
   });
 });

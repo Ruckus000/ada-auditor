@@ -29,21 +29,52 @@ export class PartialJourneyError extends Error {
     super(cause instanceof Error ? cause.message : String(cause), { cause });
     this.name = cause instanceof Error ? cause.name : 'Error';
     this.captured = captured;
+
+    // See the note on `PartialAuditError`: keeps a captured DOM out of
+    // `JSON.stringify(error)`, which is `{}` for a plain Error.
+    Object.defineProperty(this, 'captured', { enumerable: false, value: captured });
   }
 }
 
-/** A captured page with its evidence judged and its findings derived. */
+/**
+ * A captured page with its evidence judged, its findings derived, and the
+ * check counts behind a score.
+ *
+ * `checks` is here rather than computed by the success path alone, because
+ * partial pages were persisting `checks_passed/failed/incomplete = null` — the
+ * upload reads `checks`, and only complete runs ever produced it.
+ */
 export type AuditedPage = PageAudit & {
   evidenceStatus: EvidenceStatus;
   findings: DeterministicFinding[];
+  // `passed` is optional because axe's own `passCount` is: a scan that could
+  // not count passes has no denominator, and zero would claim one.
+  checks: { passed?: number; failed: number; incomplete: number };
 };
 
 export class PartialAuditError extends Error {
   readonly auditedPages: AuditedPage[];
+  /**
+   * Pages the cap refused, carried across a boundary that used to drop them.
+   *
+   * `PartialJourneyError` reported this faithfully and this class had nowhere
+   * to put it, so a run that was both truncated *and* failed stored
+   * `truncated_pages = 0`: "we audited everything" about a walk that was cut
+   * short twice over, which is the one thing the cap must never say quietly.
+   */
+  readonly truncatedPages: number;
 
-  constructor(cause: Error, auditedPages: AuditedPage[]) {
+  constructor(cause: Error, auditedPages: AuditedPage[], truncatedPages: number) {
     super(cause.message, { cause });
     this.name = cause.name;
     this.auditedPages = auditedPages;
+    this.truncatedPages = truncatedPages;
+
+    // Not enumerable. A class field is an own enumerable property, so
+    // `JSON.stringify(error)` — which yields `{}` for a plain Error — would
+    // have produced the full captured DOM of an authenticated page, and
+    // `logger.ts`'s redaction walks five levels deep looking for keys it
+    // knows. Nothing serialises an error today; this is so nothing can.
+    Object.defineProperty(this, 'auditedPages', { enumerable: false, value: auditedPages });
   }
 }

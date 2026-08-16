@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { redactIntent, toStoredRunRecord } from '../../src/services/run-persistence';
+import {
+  PartialAuditError,
+  PartialJourneyError,
+} from '../../src/integrations/browser/partial-run';
 
 /**
  * The wiring, not the function.
@@ -123,5 +127,33 @@ describe('redactIntent, on a step shape it has never seen', () => {
 
     expect(JSON.stringify(redacted)).not.toContain('445566');
     expect(redacted.steps[0]).toEqual({ action: 'login', type: 'fill', selector: '#otp' });
+  });
+});
+
+describe('the partial-run errors, as data', () => {
+  /**
+   * A class field is an own enumerable property, so these carried a captured
+   * DOM into `JSON.stringify(error)` where a plain `Error` yields `{}` — and
+   * `logger.ts`'s redaction walks five levels looking for keys it knows, so an
+   * authenticated page's HTML was five levels from a log line. Nothing
+   * serialises an error today. This is so nothing can start to.
+   */
+  it('does not put a captured page into JSON.stringify', () => {
+    const captured = {
+      pages: [{ page: { url: 'https://acme.test/', route: '/', title: 'A' }, html: '<b>secret-markup</b>' }],
+      truncatedPages: 0,
+    };
+
+    const journey = new PartialJourneyError(new Error('boom'), captured as never);
+    const audit = new PartialAuditError(new Error('boom'), [] as never, 0);
+
+    // The payload is what is hidden, not the whole object: `name` and a page
+    // count still serialise, and neither is anyone's data.
+    expect(JSON.stringify(journey)).not.toContain('secret-markup');
+    expect(JSON.parse(JSON.stringify(journey))).not.toHaveProperty('captured');
+    expect(JSON.parse(JSON.stringify(audit))).not.toHaveProperty('auditedPages');
+
+    // Still reachable for the code that needs it.
+    expect(journey.captured.pages).toHaveLength(1);
   });
 });

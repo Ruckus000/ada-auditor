@@ -328,7 +328,18 @@ async function executeRun(
      */
     const partial =
       error instanceof PartialAuditError
-        ? await uploadPages(requestId, error.auditedPages).catch(() => [])
+        ? await uploadPages(requestId, error.auditedPages).catch((uploadError: unknown) => {
+            // Said, not swallowed. Losing the upload loses the pages and the
+            // findings with them, which puts the record back to "the walk
+            // found nothing" — the exact reading this path exists to prevent,
+            // and indistinguishable from it without a line here.
+            logWarn('partial_run_upload_failed', {
+              requestId,
+              pages: error.auditedPages.length,
+              reason: uploadError instanceof Error ? uploadError.name : 'unknown',
+            });
+            return [];
+          })
         : [];
     const partialFindings = partial.length
       ? (error as PartialAuditError).auditedPages.flatMap((one) => one.findings)
@@ -366,10 +377,31 @@ async function executeRun(
           // has no denominator. Saying nothing was found would be the lie.
           findings: partialFindings,
           ...(partial.length ? { pages: partial } : {}),
+          // A run can be truncated *and* fail. Reported as 0, that reads as
+          // "we audited everything" about a walk cut short twice over.
+          ...(error instanceof PartialAuditError && error.truncatedPages > 0
+            ? { truncatedPages: error.truncatedPages }
+            : {}),
           durationMs,
           browserMode: true,
           status: 'failed',
           failureReason: code,
+          /**
+           * No `intent` here, and that is not an omission.
+           *
+           * `getLatestRun` does not filter on status, so this record is
+           * eligible as the next run's regression baseline — and it now
+           * carries real pages and findings where it used to carry none.
+           * Recording what it walked would make `walkedTheSamePath` compare
+           * it, and a baseline that stopped at page two would report pages
+           * three and four's findings as **resolved**. The product's worst
+           * output, reached by what looks like a completeness fix.
+           *
+           * A partial walk is not a walk of the journey. It stays
+           * incomparable until it is safe to say otherwise, which needs the
+           * diff to know how far each run got — not just what each was asked
+           * to do. `tests/services/regression.test.ts` holds this.
+           */
         }),
       )
       .catch(() => {
