@@ -84,8 +84,10 @@ describe('buildClientDetail', () => {
     expect(checkout).toMatchObject({
       name: 'Checkout',
       targetUrl: 'https://acme.test/cart',
-      stepCount: 2,
     });
+    // The steps themselves now, not a count of them: the screen shows what the
+    // journey does, and a count is `steps.length`.
+    expect(checkout?.steps).toHaveLength(2);
     expect(checkout?.lastRun?.requestId).toBe('old');
 
     expect(detail?.lastRun).toMatchObject({
@@ -159,7 +161,10 @@ describe('buildClientDetail', () => {
 
     const [journey] = (await buildClientDetail('acme', deps()))?.journeys ?? [];
 
-    expect(journey?.stepCount).toBe(0);
+    // `toStepViews` carries the guard the old `stepCount` did — a jsonb column
+    // can hold something that is not an array, and `undefined` must not reach
+    // the screen as "undefined steps".
+    expect(journey?.steps).toEqual([]);
     expect(journey?.runRefusal).toBe('journey_has_no_steps');
   });
 });

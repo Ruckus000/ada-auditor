@@ -1,3 +1,4 @@
+import { toStepViews, type JourneyStepView } from '../domain/journey-step';
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
 import {
   journeyRunRefusal,
@@ -26,7 +27,23 @@ export type JourneySummary = {
   id: string;
   name: string;
   targetUrl?: string;
-  stepCount: number;
+  /**
+   * What the journey actually does, in order.
+   *
+   * The screen showed only `stepCount`, so an operator could not tell what a
+   * journey walked without reading the database — and a step list nobody can
+   * see is the reason no static rule can be trusted to police it.
+   *
+   * Redacted by `toStepViews`: a literal `value` is reported as present and
+   * never echoed, because rows written before `authoredStepSchema` can hold a
+   * real password.
+   *
+   * This replaced a separate `stepCount`. Two fields for one fact is a pair
+   * that drifts, and the count is `steps.length` — including for a row holding
+   * something that is not an array, where `toStepViews` answers `[]` for the
+   * same reason the old guard answered `0`.
+   */
+  steps: JourneyStepView[];
   /**
    * Why "Run now" can do nothing with this journey, or `null` when it can.
    *
@@ -151,12 +168,11 @@ export async function buildClientDetail(
         id: journey.id,
         name: journey.name,
         ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
-        // Guarded for the same reason `journeyRunRefusal` is, two lines down:
-        // `steps` is jsonb written before any validation existed, so a row can
-        // hold something that is not an array. `.length` on an object is
-        // `undefined`, and the journeys screen renders it straight into
-        // "undefined steps".
-        stepCount: Array.isArray(journey.steps) ? journey.steps.length : 0,
+        // `toStepViews` carries the guard `stepCount` used to: `steps` is
+        // jsonb written before any validation existed, so a row can hold
+        // something that is not an array, and it answers `[]` rather than
+        // letting `undefined` reach the screen as "undefined steps".
+        steps: toStepViews(journey.steps),
         runRefusal: journeyRunRefusal(journey),
         schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
         lastRun: run ? summariseRun(run) : null,

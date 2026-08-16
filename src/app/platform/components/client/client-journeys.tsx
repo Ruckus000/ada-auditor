@@ -1,4 +1,5 @@
 import type { ClientDetail } from '../../../../services/client-detail';
+import type { JourneyStepView } from '../../../../domain/journey-step';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
@@ -59,7 +60,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                   </span>
                   <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
                     {journey.targetUrl ?? journey.id} ·{' '}
-                    {journey.stepCount === 1 ? '1 step' : `${journey.stepCount} steps`}
+                    {journey.steps.length === 1 ? '1 step' : `${journey.steps.length} steps`}
                   </span>
                 </span>
 
@@ -103,6 +104,15 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                   pill and the date beside it. The `<li>` is the element that
                   wraps.
                 */}
+                {/*
+                  What the journey actually does.
+
+                  A direct child of the row for the same reason the "Stopped:"
+                  line below is: the right-hand group is `nowrap`, so anything
+                  placed inside it squeezes the controls instead of wrapping.
+                */}
+                <StepList steps={journey.steps} />
+
                 {journey.lastRun?.failureReason ? (
                   <span
                     style={{
@@ -122,5 +132,70 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
         </ul>
       )}
     </div>
+  );
+}
+
+/**
+ * The steps, in order, in words.
+ *
+ * The screen showed a *count*. An operator could not tell whether a journey
+ * logged in and reached a dashboard or fetched one page five times, which is
+ * also why no static rule can be trusted to police what a step does:
+ * `{action:'activate', type:'click', selector:'#delete-account'}` passes every
+ * check in `authoredStepSchema`, and a person reading the list is the defence.
+ *
+ * A literal value is reported as present and never shown — see `toStepViews`.
+ * An unrecognised step is called one rather than dressed up, because it cannot
+ * run and the operator needs to know that before a schedule fires.
+ */
+function StepList({ steps }: { steps: JourneyStepView[] }) {
+  if (steps.length === 0) return null;
+
+  return (
+    <ol
+      style={{
+        flexBasis: '100%',
+        margin: '2px 0 0',
+        padding: 0,
+        listStyle: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}
+    >
+      {steps.map((step) => (
+        <li
+          key={step.position}
+          style={{
+            fontFamily: FONT.mono,
+            fontSize: 11.5,
+            color: step.recognised ? T.inkMuted : '#96231c',
+            display: 'flex',
+            gap: 8,
+            flexWrap: 'wrap',
+          }}
+        >
+          <span style={{ minWidth: 16, textAlign: 'right' }}>{step.position}.</span>
+          <span style={{ fontWeight: 650 }}>{step.type}</span>
+          <span>{step.action}</span>
+          {step.target ? <span>{step.target}</span> : null}
+          {step.credentialRef ? (
+            <span>
+              credential {step.credentialRef} ({step.field})
+            </span>
+          ) : null}
+          {step.hasLiteralValue ? (
+            /*
+              Named, not shown. A row written before `authoredStepSchema` can
+              hold a real password, and moving one from a database column to a
+              screen makes it more exposed rather than less. An operator seeing
+              this on a login step knows to replace it with a credentialRef.
+            */
+            <span>types a literal value</span>
+          ) : null}
+          {step.recognised ? null : <span>· not a runnable step</span>}
+        </li>
+      ))}
+    </ol>
   );
 }
