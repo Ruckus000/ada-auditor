@@ -248,12 +248,6 @@ export interface ApiErrorCopy {
 }
 
 export const API_ERRORS: Record<string, ApiErrorCopy> = {
-  journey_has_no_steps: {
-    title: 'This journey has no steps',
-    cause:
-      'A journey is the path we re-walk on every run, and this one names a site but no path through it. Running it would have walked our own demo pages against that site instead.',
-    fix: 'Record the steps for this journey — POST them to /api/platform/clients/<id>/journeys — then run it again.',
-  },
   auditor_run_token_not_configured: {
     title: 'The server has no run token',
     cause:

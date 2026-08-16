@@ -29,7 +29,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
       {detail.journeys.length === 0 ? (
         <Empty
           title="No journeys yet"
-          body="A journey is the path we re-walk on every run. POST one to /api/platform/clients/<id>/journeys with a bearer token and it appears here with a button to run it. There is no way to record one from these screens yet."
+          body="A journey is the path we re-walk on every run. POST one — its target URL and its steps, both — to /api/platform/clients/<id>/journeys with a bearer token and it appears here with a button to run it. There is no way to record one from these screens yet."
           action={null}
         />
       ) : (
@@ -68,13 +68,13 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                     journeyId={journey.id}
                     journeyName={journey.name}
                     schedule={journey.schedule}
-                    runnable={journey.runnable}
+                    runRefusal={journey.runRefusal}
                   />
                   <RunJourneyButton
                     clientId={detail.id}
                     journeyId={journey.id}
                     journeyName={journey.name}
-                    runnable={journey.runnable}
+                    runRefusal={journey.runRefusal}
                   />
                   {journey.lastRun ? (
                     <>

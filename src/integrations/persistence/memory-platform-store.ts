@@ -1,4 +1,4 @@
-import { UNASSIGNED_CLIENT_ID } from '../../domain/platform';
+import { journeyRunRefusal, UNASSIGNED_CLIENT_ID } from '../../domain/platform';
 import type {
   ActivityEvent,
   PlatformStore,
@@ -193,7 +193,9 @@ export class MemoryPlatformStore implements PlatformStore {
       .filter((journey) => {
         if (!journey.schedule || journey.schedule === 'off') return false;
         if (journey.archivedAt) return false;
-        if (!journey.targetUrl) return false;
+        // The same refusal the run route applies, so the tick cannot claim a
+        // journey that is certain to fail. Postgres spells it out in SQL.
+        if (journeyRunRefusal(journey)) return false;
         if ((journey.scheduleHour ?? 3) !== hour) return false;
         if (!journey.lastScheduledAt) return true;
 

@@ -24,7 +24,9 @@ describe('runBrowserAudit', () => {
         journeyId: 'demo-login',
         stepId: 'dashboard',
         fixtureDir: FIXTURE_DIR,
-        artifactsDir: await mkdtemp(join(tmpdir(), 'ada-no-steps-')),
+        // A literal, not `mkdtemp`: the guard throws before anything creates
+        // this, so making a real directory here would only leak one.
+        artifactsDir: join(tmpdir(), 'ada-no-steps-never-created'),
         targetUrl: 'https://example.test/',
       }),
     ).rejects.toThrow(/must name its own steps/);

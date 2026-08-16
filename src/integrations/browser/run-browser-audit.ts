@@ -8,9 +8,16 @@ import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
 import { scoreRun } from '../../services/score';
 import { buildDefaultDemoJourneySteps, runJourney } from './journey-runner';
-import type { JourneyRunnerInput } from './types';
+import type { JourneyRunnerInput, JourneyStep } from './types';
 
-export type RunBrowserAuditInput = JourneyRunnerInput & {
+export type RunBrowserAuditInput = Omit<JourneyRunnerInput, 'steps'> & {
+  /**
+   * Optional *here* and required on `JourneyRunnerInput`, which is the whole
+   * invariant: this is the only layer allowed to be handed no steps, and the
+   * only one that decides what that means — the fixture journey when there is
+   * no target to walk, a refusal when there is.
+   */
+  steps?: JourneyStep[];
   platformHint?: string;
   allowedJourneyIds?: string[];
   /** Injected in tests so the advisory pass never reaches the network. */

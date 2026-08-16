@@ -1,5 +1,10 @@
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
-import type { ClientStore, JourneyStore } from '../domain/platform';
+import {
+  journeyRunRefusal,
+  type ClientStore,
+  type JourneyRunRefusal,
+  type JourneyStore,
+} from '../domain/platform';
 import { displaySeverity } from './presentation/severity';
 import { runVerdict, type VerdictKind } from './presentation/verdict';
 
@@ -23,13 +28,14 @@ export type JourneySummary = {
   targetUrl?: string;
   stepCount: number;
   /**
-   * Whether "Run now" can do anything with this journey.
+   * Why "Run now" can do nothing with this journey, or `null` when it can.
    *
-   * Requires a target URL. Without one the runner walks our own fixture app
-   * over `file://` and files a green audit of demo pages under a real client's
-   * name. The route refuses it; the screen should not offer it either.
+   * The reason, not a boolean, because there are two of them and the screen
+   * printed one of them unconditionally: a journey with a target and no steps
+   * was offered a button that answered 422, under a label reading "no target
+   * URL" beside the target URL it had.
    */
-  runnable: boolean;
+  runRefusal: JourneyRunRefusal | null;
   /** How often this journey re-runs. `off` unless somebody chose otherwise. */
   schedule: 'off' | 'daily' | 'weekly';
   lastRun: RunSummary | null;
@@ -124,7 +130,7 @@ export async function buildClientDetail(
         name: journey.name,
         ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
         stepCount: journey.steps.length,
-        runnable: Boolean(journey.targetUrl),
+        runRefusal: journeyRunRefusal(journey),
         schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
         lastRun: run ? summariseRun(run) : null,
       };

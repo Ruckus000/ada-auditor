@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { JourneyRunRefusal } from '../../../../domain/platform';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -35,18 +36,30 @@ const MESSAGES: Record<string, string> = {
   run_budget_exceeded: 'The run budget for this window is used up. Try again later.',
 };
 
+/**
+ * Said in place of the button, so it has to say the *right* one.
+ *
+ * These are the same two codes the route answers with, taken from the same
+ * `journeyRunRefusal`, so the label an operator reads before clicking and the
+ * error they would have got by clicking cannot disagree.
+ */
+const REFUSAL_LABELS: Record<JourneyRunRefusal, string> = {
+  journey_not_runnable: 'Not runnable — no target URL',
+  journey_has_no_steps: 'Not runnable — no steps recorded',
+};
+
 type Phase = 'idle' | 'starting' | 'running' | 'slow';
 
 export function RunJourneyButton({
   clientId,
   journeyId,
   journeyName,
-  runnable,
+  runRefusal,
 }: {
   clientId: string;
   journeyId: string;
   journeyName: string;
-  runnable: boolean;
+  runRefusal: JourneyRunRefusal | null;
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('idle');
@@ -63,12 +76,13 @@ export function RunJourneyButton({
     };
   }, []);
 
-  if (!runnable) {
+  if (runRefusal) {
     // Said rather than hidden: an operator looking for the button needs to know
-    // why it is not there, and "nothing to walk" is the actionable answer.
+    // why it is not there, and which of the two things is missing is exactly
+    // what makes the answer actionable.
     return (
       <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-        Not runnable — no target URL
+        {REFUSAL_LABELS[runRefusal]}
       </span>
     );
   }

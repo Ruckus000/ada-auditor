@@ -129,6 +129,8 @@ describe('runJourney artifact containment', () => {
         stepId: '../../ESCAPED',
         fixtureDir: join(process.cwd(), 'fixtures/journey-app'),
         artifactsDir,
+        // Not the subject here, and never walked: the stepId check runs first.
+        steps: [],
       }),
     ).rejects.toThrow(/escape the artifacts/i);
 

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { environmentSchema } from '../../../../../../../../domain/contracts';
 import { actorFields } from '../../../../../../../../domain/operator';
+import { journeyRunRefusal } from '../../../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../../../integrations/persistence';
 import {
   journeyStepSchema,
@@ -59,55 +60,32 @@ export async function POST(
   }
 
   /**
-   * A journey run for a client must name that client's site.
+   * A journey run for a client must name that client's site *and* a path
+   * through it. `journeyRunRefusal` holds both halves and says why.
    *
-   * `targetUrl` is required here even though `/api/audit/run` treats it as
-   * optional, and the difference is the point. When it is absent the runner
-   * resolves every `goto` against `DEFAULT_FIXTURE_DIR` — our own demo pages,
-   * over `file://`. Through the generic endpoint that is a deliberate test
-   * affordance. Through *this* endpoint it would file a green audit of our
-   * fixture app under a real client's name: not an error, an answer, and a
-   * plausible-looking one. Steps alone do not save it, because the steps would
-   * simply walk the fixture app instead.
-   *
-   * The mirror of that, which this used to allow: a journey that *does* name a
-   * client's site and has no steps. `hasSteps` was computed here and then used
-   * only to decide whether to validate, so such a journey reached `startRun`
-   * with `steps` undefined, and `runBrowserAudit` substituted the built-in
-   * fixture login — whose `goto` paths then resolved against the *client's*
-   * origin, fetching `https://their-site/login.html`. Worse than the case the
-   * paragraph above refuses, because it is a real origin. Both are refused now.
+   * `/api/audit/run` treats each as optional and fills the gap with the
+   * fixture app; through the generic endpoint that is a deliberate test
+   * affordance. Through *this* endpoint it would file an audit of our demo
+   * pages — or of `https://their-site/login.html` — under a real client's
+   * name: not an error, an answer, and a plausible-looking one.
    */
-  const hasSteps = Array.isArray(journey.steps) && journey.steps.length > 0;
-  if (!journey.targetUrl) {
-    return Response.json(
-      { error: 'journey_not_runnable', requestId, journeyId },
-      { status: 422 },
-    );
-  }
-
-  if (!hasSteps) {
-    return Response.json(
-      { error: 'journey_has_no_steps', requestId, journeyId },
-      { status: 422 },
-    );
+  const refusal = journeyRunRefusal(journey);
+  if (refusal) {
+    return Response.json({ error: refusal, requestId, journeyId }, { status: 422 });
   }
 
   // Steps were stored unvalidated on purpose — `/api/audit/run` owns the step
   // contract and duplicating it would create two definitions that disagree.
   // The cost is that a malformed stored step must be caught here, as a 422
   // naming the journey, rather than as a 500 from inside the browser.
-  let steps: z.infer<typeof journeyStepSchema>[] | undefined;
-  if (hasSteps) {
-    const validated = z.array(journeyStepSchema).safeParse(journey.steps);
-    if (!validated.success) {
-      return Response.json(
-        { error: 'invalid_journey_steps', requestId, journeyId },
-        { status: 422 },
-      );
-    }
-    steps = validated.data;
+  const validated = z.array(journeyStepSchema).safeParse(journey.steps);
+  if (!validated.success) {
+    return Response.json(
+      { error: 'invalid_journey_steps', requestId, journeyId },
+      { status: 422 },
+    );
   }
+  const steps = validated.data;
 
   // The journey's own environment unless this run says otherwise. Absent on
   // rows written before the column existed, and `production` is the strictest
@@ -119,7 +97,7 @@ export async function POST(
       journeyId: journey.id,
       environment,
       targetUrl: journey.targetUrl,
-      ...(steps ? { steps } : {}),
+      steps,
     },
     requestId,
   );

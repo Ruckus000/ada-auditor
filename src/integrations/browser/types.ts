@@ -23,7 +23,16 @@ export type JourneyRunnerInput = {
   stepId: string;
   fixtureDir: string;
   artifactsDir: string;
-  steps?: JourneyStep[];
+  /**
+   * The path to walk. Required, and deliberately so.
+   *
+   * This was optional, defaulting to `buildDefaultDemoJourneySteps()` inside
+   * the runner — which is how a journey naming a client's site and no steps
+   * came to walk our fixture login against their origin. The default still
+   * exists, but only in `runBrowserAudit`, directly beside the check for the
+   * one case it is legitimate in: a run with no target URL at all.
+   */
+  steps: JourneyStep[];
   omitAxTree?: boolean;
   headless?: boolean;
   /**

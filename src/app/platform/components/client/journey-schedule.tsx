@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { JourneyRunRefusal } from '../../../../domain/platform';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -34,13 +35,13 @@ export function JourneySchedule({
   journeyId,
   journeyName,
   schedule,
-  runnable,
+  runRefusal,
 }: {
   clientId: string;
   journeyId: string;
   journeyName: string;
   schedule: 'off' | 'daily' | 'weekly';
-  runnable: boolean;
+  runRefusal: JourneyRunRefusal | null;
 }) {
   const router = useRouter();
   const selectId = useId();
@@ -49,8 +50,9 @@ export function JourneySchedule({
 
   // Scheduling something that cannot run would book a recurring failure. The
   // route refuses it; saying so here is better than offering a control that
-  // always errors.
-  if (!runnable) return null;
+  // always errors. `RunJourneyButton` prints the reason on the same row, so
+  // this one stays hidden rather than saying it twice.
+  if (runRefusal) return null;
 
   async function change(next: string) {
     setBusy(true);

@@ -17,6 +17,14 @@ export type RunFailureCode =
   | 'action_not_allowed'
   | 'invalid_step_id'
   | 'incomplete_evidence'
+  /**
+   * The same code the platform run route answers with, for the callers that
+   * do not pass through it: a bearer POST to `/api/audit/run` naming a target
+   * and no steps. Without this branch that request got `audit_run_failed` —
+   * "a reason it could not categorise" — about the one failure the runner
+   * categorised exactly.
+   */
+  | 'journey_has_no_steps'
   // Not produced by `classifyRunFailure`: nothing throws it, because the
   // invocation that would have caught it is gone. `reconcileRunStatus` writes
   // it onto a run left `running` past the point where it could still be alive.
@@ -37,6 +45,10 @@ export function classifyRunFailure(message: string): RunFailureCode {
   }
   if (message.includes('incomplete evidence')) {
     return 'incomplete_evidence';
+  }
+  // Thrown by `runBrowserAudit` when a run names a target URL and no steps.
+  if (message.includes('must name its own steps')) {
+    return 'journey_has_no_steps';
   }
   return 'audit_run_failed';
 }

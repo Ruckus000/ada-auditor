@@ -27,7 +27,15 @@ function tick(headers: Record<string, string> = {}) {
   return new Request('http://localhost/api/cron/tick', { headers });
 }
 
-/** A journey due right now: scheduled for this UTC hour, never claimed. */
+/**
+ * A journey due right now: scheduled for this UTC hour, never claimed.
+ *
+ * The steps are not decoration. This seeded `steps: []` — a journey the run
+ * route refuses — and every test here still passed, because the claim query
+ * filtered on `target_url` alone. That is the bug those two facts add up to:
+ * the tick was dispatching journeys that could not run, once per window,
+ * forever. A due journey now looks like one that could actually be walked.
+ */
 async function seedDueJourney(id: string, name = id) {
   await platform.upsertJourney({
     id,
@@ -36,7 +44,7 @@ async function seedDueJourney(id: string, name = id) {
     targetUrl: `https://${id}.test/`,
     schedule: 'daily',
     scheduleHour: new Date().getUTCHours(),
-    steps: [],
+    steps: [{ action: 'navigate', type: 'goto', path: '/' }],
   });
 }
 

@@ -391,7 +391,22 @@ export class PostgresPlatformStore implements PlatformStore {
         where schedule is not null
           and schedule <> 'off'
           and archived_at is null
+          -- journeyRunRefusal in SQL: a journey the run route would refuse
+          -- must not be claimed, or the tick dispatches a guaranteed failure
+          -- every cycle.
+          --
+          -- Neither test may raise, which is why the second is a comparison
+          -- and not jsonb_array_length(steps) > 0. That form reads as if the
+          -- jsonb_typeof guard before it protects the length call. It does
+          -- not: AND in a WHERE clause does not short-circuit, the planner
+          -- orders the operands by cost, and it picked the length call first.
+          -- This column is jsonb written before any validation existed, so one
+          -- row holding an object took down the whole tick with "cannot get
+          -- array length of a non-array" — proven by the contract test, on
+          -- real Postgres, which is the only place it can fail.
           and target_url is not null
+          and jsonb_typeof(steps) = 'array'
+          and steps <> '[]'::jsonb
           and coalesce(schedule_hour, 3) = ${hour}
           and (
             last_scheduled_at is null

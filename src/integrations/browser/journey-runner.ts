@@ -246,7 +246,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   });
 
   try {
-    const steps = input.steps ?? buildDefaultDemoJourneySteps();
+    const { steps } = input;
 
     const pages: PageAudit[] = [];
     let truncatedPages = 0;

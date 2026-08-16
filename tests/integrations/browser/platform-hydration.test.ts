@@ -519,6 +519,12 @@ describe('platform hydration', () => {
    *
    * It uses its own journey and asserts only on the journeys screen, so it
    * cannot change which run is "latest" for the findings assertions above.
+   *
+   * The steps are load-bearing, not decoration. Seeded without them this
+   * journey was the exact shape the fixture-walk bug ran on — a target and no
+   * path through it — and the button it clicks is now correctly absent for
+   * that shape, so the test would have polled a row reading "Never run" for
+   * its full sixty seconds and called it a hydration failure.
    */
   it('starts a run from the journeys screen', async () => {
     await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
@@ -527,6 +533,7 @@ describe('platform hydration', () => {
       body: JSON.stringify({
         name: 'Run Now Journey',
         targetUrl: 'https://run-now.invalid/',
+        steps: [{ action: 'navigate', type: 'goto', path: '/' }],
       }),
     });
 
