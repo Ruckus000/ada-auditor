@@ -1,4 +1,5 @@
 import type {
+  RunIntent,
   RunStatus,
   StoredFinding,
   StoredRunPage,
@@ -8,6 +9,8 @@ import type { AuditFinding } from './reporting';
 import type { CiStatus } from './reporting';
 
 type PersistRunInput = {
+  /** What the run was asked to walk. See `RunIntent`. */
+  intent?: RunIntent;
   requestId: string;
   journeyId: string;
   environment: StoredRunRecord['environment'];
@@ -72,6 +75,7 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
   return {
     requestId: input.requestId,
     journeyId: input.journeyId,
+    ...(input.intent ? { intent: input.intent } : {}),
     environment: input.environment,
     platform: input.platform,
     evidenceStatus: input.evidenceStatus,

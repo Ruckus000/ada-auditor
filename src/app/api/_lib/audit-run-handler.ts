@@ -188,6 +188,11 @@ async function executeRun(
       requestId,
       journeyId: report.journeyId,
       environment: report.environment,
+      // What this run was asked to walk, taken from the runner rather than
+      // from the request: on the fixture path the request names no steps and
+      // the runner substitutes the demo journey, so the request is not a
+      // record of what happened.
+      intent: { steps: report.steps },
       platform: report.platform.id,
       evidenceStatus: report.evidenceStatus,
       ciStatus: report.ciStatus,

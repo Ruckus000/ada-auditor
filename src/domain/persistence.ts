@@ -94,6 +94,21 @@ export type StoredRunPage = {
   scanMs?: number;
 };
 
+/**
+ * The steps a run was given, stored whole.
+ *
+ * `unknown[]`, matching `StoredJourney.steps`: the step contract lives in the
+ * run handler, and a second definition here would be a second thing to
+ * disagree with it. Nothing in the domain reads inside these — the only
+ * question asked of them is whether two runs were given the same ones.
+ *
+ * An object rather than a bare array so that what a run intended can grow
+ * without another nullable column each time.
+ */
+export type RunIntent = {
+  steps: unknown[];
+};
+
 export type StoredRunRecord = {
   requestId: string;
   journeyId: string;
@@ -126,6 +141,26 @@ export type StoredRunRecord = {
    * past.
    */
   pages?: StoredRunPage[];
+  /**
+   * What this run was asked to do, as opposed to what happened.
+   *
+   * Everything else on this record is outcome. Nothing said what the outcome
+   * was supposed to be, so nothing could tell a run that walked five pages
+   * from one that walked five *different* pages — and the regression diff
+   * compares runs by `journeyId` alone (`getLatestRun`). `/api/audit/run`
+   * takes `journeyId` and `steps` independently, so one call naming an
+   * existing journey with a different path becomes the next run's baseline,
+   * and every finding the real journey has that the impostor did not reports
+   * as *resolved*. A clean bill of health, produced by working code.
+   *
+   * Recorded on the run rather than read from the journey, because the journey
+   * is mutable and this is history. A run's own copy is what makes a later
+   * comparison honest, and it is what will survive journeys becoming editable.
+   *
+   * Absent on runs written before this existed. Absent means *not recorded* —
+   * never "the same path as some other run".
+   */
+  intent?: RunIntent;
   /**
    * Pages the run's page cap refused to audit. Non-zero means this run did not
    * cover the whole journey — persisted because a partial audit must never

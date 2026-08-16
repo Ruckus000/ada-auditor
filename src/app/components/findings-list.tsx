@@ -242,6 +242,30 @@ function RegressionBlock({ result }: { result: AuditResult }) {
   const regression = result.regression;
   if (!regression) return null;
 
+  /**
+   * The counts are withheld, not shown as zero.
+   *
+   * When the two runs walked different paths there is no diff, and "0 new, 0
+   * resolved, 0 unchanged" is the most confident way of saying "nothing
+   * changed" — the exact false all-clear that withholding the comparison
+   * exists to prevent. The findings themselves are listed in full below; only
+   * the claim that they got better or worse is refused.
+   */
+  if (regression.status === 'incomparable') {
+    return (
+      <section className="regression-block" aria-labelledby="regression-heading">
+        <div className="ledger-heading">
+          <h3 id="regression-heading">Compared to last run</h3>
+          <InfoTip termKey="regression" />
+        </div>
+        <p className="regression-headline regression-incomparable">
+          Not compared — the last run walked a different path, so anything
+          missing from it would read as fixed rather than as never visited.
+        </p>
+      </section>
+    );
+  }
+
   const headline =
     regression.status === 'fail'
       ? 'Worse than last time — a new critical issue appeared.'
