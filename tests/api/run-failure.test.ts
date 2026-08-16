@@ -45,12 +45,25 @@ describe('classifyRunFailure', () => {
     );
   });
 
+  it('classifies a step that could not be performed', () => {
+    // The shape `attemptStep` builds. A stale selector is the likeliest way a
+    // real journey dies and it is the operator's to fix, so it must not arrive
+    // as the same code as a browser crash.
+    expect(
+      classifyRunFailure(
+        'Step 3 ("sign in") could not fill "#username": the selector never matched anything on the page.',
+      ),
+    ).toBe('journey_step_failed');
+  });
+
   it('collapses anything unrecognised, so new internals are opaque by default', () => {
     // The point of the default: a future error carrying a path or a stack must
     // not reach the client just because nobody remembered to map it.
     for (const message of [
       'ENOENT: no such file or directory, open /Users/someone/secret/config.json',
       'connect ECONNREFUSED 127.0.0.1:9222',
+      // Near the new branch without matching it: no index, no quoted action.
+      'Step over the broken tile could not be avoided',
       'browserType.launch: Executable does not exist at /root/.cache/ms-playwright/chromium/headless_shell',
       '',
     ]) {

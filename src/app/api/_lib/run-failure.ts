@@ -25,6 +25,12 @@ export type RunFailureCode =
    * categorised exactly.
    */
   | 'journey_has_no_steps'
+  /**
+   * A step could not be performed — almost always a selector that no longer
+   * matches. Operator-fixable, and previously indistinguishable from a browser
+   * crash: both arrived as `audit_run_failed`.
+   */
+  | 'journey_step_failed'
   // Not produced by `classifyRunFailure`: nothing throws it, because the
   // invocation that would have caught it is gone. `reconcileRunStatus` writes
   // it onto a run left `running` past the point where it could still be alive.
@@ -54,6 +60,13 @@ export function classifyRunFailure(message: string): RunFailureCode {
   // keyword.
   if (message.startsWith('A run against a target URL must name its own steps')) {
     return 'journey_has_no_steps';
+  }
+  // Built by `attemptStep` in the journey runner, which is the only thing that
+  // produces this shape. The selector it names is the operator's own, but it
+  // stays out of the code for the same reason every other branch does: the
+  // wire gets something stable to branch on, the log gets the detail.
+  if (/^Step \d+ \(".*"\) could not /.test(message)) {
+    return 'journey_step_failed';
   }
   return 'audit_run_failed';
 }

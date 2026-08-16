@@ -115,6 +115,31 @@ export function routeFromPageUrl(url: string): string {
  */
 const DEFAULT_MAX_PAGES = 20;
 
+/**
+ * How long one interaction may wait for its element.
+ *
+ * Nothing set a timeout at all, so Playwright's 30s default applied. The step
+ * loop has no `catch`, so the first stale selector ends the run — one wait, not
+ * one per step — which makes this a smaller win than it looks: ten seconds
+ * instead of thirty on a journey that was going to fail anyway.
+ *
+ * Ten because a selector that has not appeared in ten seconds on a page the
+ * runner has already navigated to and waited for `domcontentloaded` on is
+ * stale, not slow. Raise it with `AUDITOR_STEP_TIMEOUT_MS` for an app that
+ * genuinely takes longer to paint a control.
+ */
+const DEFAULT_STEP_TIMEOUT_MS = 10_000;
+
+export function resolveStepTimeoutMs(explicit?: number): number {
+  if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
+    return Math.floor(explicit);
+  }
+  const configured = Number(process.env.AUDITOR_STEP_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0
+    ? Math.floor(configured)
+    : DEFAULT_STEP_TIMEOUT_MS;
+}
+
 export function resolveMaxPages(explicit?: number): number {
   if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
     return Math.floor(explicit);
@@ -180,6 +205,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // `script-src` CSP would block that injection and silently return no
   // results, so the context opts out of CSP enforcement for the audit session.
   const context = await browser.newContext({ bypassCSP: true });
+  context.setDefaultTimeout(resolveStepTimeoutMs(input.stepTimeoutMs));
   const page = await context.newPage();
 
   // Every main-frame document the browser fetched, judged as it arrives.
@@ -356,7 +382,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       assertAllowedUrl(page.url(), allowedHosts);
     };
 
-    for (const step of steps) {
+    for (const [index, step] of steps.entries()) {
       if (!isActionAllowed(input.environment, step.action)) {
         throw new Error(`Action "${step.action}" is not allowed in ${input.environment}.`);
       }
@@ -377,11 +403,11 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
           'credentialRef' in step
             ? resolveCredential(step.credentialRef, step.field)
             : step.value;
-        await page.fill(step.selector, value);
+        await attemptStep(index, step, () => page.fill(step.selector, value));
         continue;
       }
 
-      await page.click(step.selector);
+      await attemptStep(index, step, () => page.click(step.selector));
       await page.waitForLoadState('domcontentloaded');
       await assertNavigationsWereSafe();
       await capturePage();
@@ -417,6 +443,46 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     return { pages, truncatedPages };
   } finally {
     await browser.close();
+  }
+}
+
+/**
+ * Names the step that failed, because "it failed" is not a fix.
+ *
+ * A stale selector is the most likely way a real journey dies, and it used to
+ * arrive as a bare Playwright timeout that `classifyRunFailure` had no branch
+ * for — so the operator was told the run stopped "for a reason it could not
+ * categorise", about the one failure mode that is entirely theirs to fix. This
+ * says which step, which action, and which selector.
+ *
+ * Only the interactions are wrapped. Navigation, the policy check and the
+ * address assertions throw errors that are *already* classified, and burying
+ * those inside a step message would cost them their codes — an SSRF refusal
+ * reported as "a step failed" is a worse answer than the one it replaced.
+ *
+ * The underlying error is attached as `cause` rather than interpolated. The
+ * value being typed into a `fill` may be a resolved credential, and while
+ * Playwright's message names the selector rather than the value, a message
+ * built from an untrusted library string is not something to put in a log line
+ * on the strength of "it probably does not contain the password".
+ */
+async function attemptStep(
+  index: number,
+  step: { action: string; type: string; selector: string },
+  run: () => Promise<void>,
+): Promise<void> {
+  try {
+    await run();
+  } catch (error) {
+    const timedOut = error instanceof Error && error.name === 'TimeoutError';
+    const because = timedOut
+      ? 'the selector never matched anything on the page'
+      : `it raised ${error instanceof Error ? error.name : 'an unknown error'}`;
+
+    throw new Error(
+      `Step ${index + 1} ("${step.action}") could not ${step.type} "${step.selector}": ${because}.`,
+      { cause: error },
+    );
   }
 }
 

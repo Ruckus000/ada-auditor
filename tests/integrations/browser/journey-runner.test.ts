@@ -236,3 +236,43 @@ describe('runJourney, against a page with a hostile title', () => {
     }
   }, 60_000);
 });
+
+describe('runJourney, when a step cannot be performed', () => {
+  /**
+   * A stale selector is the likeliest way a real journey dies.
+   *
+   * It used to surface as a bare Playwright timeout, which
+   * `classifyRunFailure` had no branch for — so the run reported
+   * `audit_run_failed`, "a reason it could not categorise", about the one
+   * failure that is entirely the operator's to fix and entirely knowable.
+   *
+   * The timeout is cut to a second here so the test does not spend Playwright's
+   * default thirty waiting for an element that was never going to exist.
+   */
+  it('names the step, the action and the selector', async () => {
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const run = runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'stale-selector',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        stepTimeoutMs: 1000,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'login', type: 'fill', selector: '#not-on-this-page', value: 'x' },
+        ],
+      });
+
+      // Which step, which action, which selector — all three, because all
+      // three are what an operator needs to go and fix it.
+      await expect(run).rejects.toThrow(
+        /Step 2 \("login"\) could not fill "#not-on-this-page"/,
+      );
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+});
