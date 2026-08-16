@@ -194,6 +194,35 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     expect(await platform.listJourneys('acme')).toEqual([]);
   });
 
+  it('refuses a steps payload too large to be a journey', async () => {
+    // `steps` is validated loosely here on purpose — the step contract has one
+    // owner, and it is `/api/audit/run`. But `z.unknown()` accepts a
+    // multi-megabyte string in any field, and this row is written permanently
+    // and read on every client screen. Bounded by size rather than by shape,
+    // so the two definitions still cannot disagree about what a step *is*.
+    const response = await POST(
+      fromBrowser({
+        name: 'Huge',
+        steps: [{ action: 'navigate', type: 'goto', path: 'x'.repeat(70_000) }],
+      }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await platform.listJourneys('acme')).toEqual([]);
+  });
+
+  it('still accepts a journey with a realistic number of real steps', async () => {
+    // The bound has to be a bound, not a blanket refusal.
+    const steps = Array.from({ length: 200 }, (_, i) => ({
+      action: 'navigate',
+      type: 'goto',
+      path: `/page-${i}`,
+    }));
+
+    expect((await POST(fromBrowser({ name: 'Long', steps }), params('acme'))).status).toBe(201);
+  });
+
   it('still creates an unrunnable journey when no schedule is asked for', async () => {
     // Recording one before its steps are known is how the API is meant to be
     // used — it is only booking a cadence on it that is a certain failure.

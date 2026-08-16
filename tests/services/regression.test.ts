@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StoredRunRecord } from '../../src/domain/persistence';
 import { compareToBaseline } from '../../src/services/regression';
-import { redactIntent } from '../../src/services/run-persistence';
 
 /**
  * `steps` is a parameter because comparing two runs now depends on it.
@@ -224,55 +223,6 @@ describe('compareToBaseline, when the two runs did not walk the same path', () =
     );
 
     expect(summary.status).toBe('incomparable');
-  });
-});
-
-describe('redactIntent', () => {
-  /**
-   * `runs.intent` is durable and nothing prunes it — `prune-artifacts` clears
-   * evidence blobs and never touches this column — so anything written here is
-   * permanent, in the table and in every backup cut from it.
-   *
-   * A literal `value` reaches it: `journeyStepSchema` still accepts
-   * `{type:'fill', value}`, and `containsInlineCredential` rejects a key
-   * *named* `password` and does not run on the `/api/audit/run` path at all.
-   * `buildDefaultDemoJourneySteps` alone would have written `value:
-   * 'demo-pass'` into production on the first console run.
-   */
-  it('strips what was typed, and keeps everything that says where', () => {
-    const redacted = redactIntent({
-      steps: [
-        { action: 'navigate', type: 'goto', path: '/login' },
-        { action: 'login', type: 'fill', selector: '#password', value: 'hunter2' },
-        { action: 'login', type: 'fill', selector: '#user', credentialRef: 'acme', field: 'user' },
-      ],
-    });
-
-    expect(JSON.stringify(redacted)).not.toContain('hunter2');
-    // The shape survives: the step types are what a later phase derives an
-    // expected page count from, which is why this strips rather than hashes.
-    expect(redacted.steps[1]).toEqual({ action: 'login', type: 'fill', selector: '#password' });
-    expect(redacted.steps[0]).toEqual({ action: 'navigate', type: 'goto', path: '/login' });
-    // A reference is not a secret and is the sanctioned shape.
-    expect(redacted.steps[2]).toHaveProperty('credentialRef', 'acme');
-  });
-
-  it('leaves two runs comparable across a password rotation', () => {
-    // Stripping is not only safer, it is more correct: the same journey walked
-    // either side of a credential change is the same path.
-    const before = redactIntent({
-      steps: [{ action: 'login', type: 'fill', selector: '#p', value: 'old' }],
-    });
-    const after = redactIntent({
-      steps: [{ action: 'login', type: 'fill', selector: '#p', value: 'new' }],
-    });
-
-    expect(JSON.stringify(before.steps)).toBe(JSON.stringify(after.steps));
-  });
-
-  it('passes a step that is not an object through untouched', () => {
-    // `steps` is `unknown[]` off a jsonb column. Nothing guarantees objects.
-    expect(redactIntent({ steps: ['odd', 42, null] }).steps).toEqual(['odd', 42, null]);
   });
 });
 

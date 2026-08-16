@@ -35,12 +35,18 @@ const MAX_RUN_DURATION_MS = 300_000;
  * Every free-text field on a step, bounded.
  *
  * These were `z.string().min(1)` with no ceiling, and a step's `action`,
- * `selector` and `path` are stored — on the journey, and now on the run's
- * `intent` — echoed into failure messages by `attemptStep`, and compared by
- * serialising both sides on every regression diff. One step carrying a
- * multi-megabyte string reached all three, bounded only by the request body
- * limit. 512 is generous for a CSS selector or a path; `deterministic-audit`
- * caps axe's `outerHTML` at the same number.
+ * `selector` and `path` are stored on the run's `intent`, echoed into failure
+ * messages by `attemptStep`, and serialised on both sides of every regression
+ * diff. One step carrying a multi-megabyte string reached all three, bounded
+ * only by the request body limit. 512 is generous for a CSS selector or a
+ * path; `deterministic-audit` caps axe's `outerHTML` at the same number.
+ *
+ * This covers running, not writing. The journeys collection route validates
+ * with its own loose `z.record(z.string(), z.unknown())` — deliberately, so
+ * the step contract has one owner — so a stored journey can still hold a step
+ * this would refuse. It simply cannot be run or scheduled: both routes
+ * re-validate `journey.steps` against this schema first. `journeys.steps` is
+ * bounded separately, by size rather than by shape, for the same reason.
  */
 const STEP_TEXT = z.string().min(1).max(512);
 
@@ -52,8 +58,8 @@ const STEP_TEXT = z.string().min(1).max(512);
  * The literal variant is still accepted, and that is a known hole rather than
  * a decision — `containsInlineCredential` rejects a key *named* `password` and
  * does not run on this route at all. What has changed is that a literal no
- * longer reaches the run record: `redactIntent` strips `value` before anything
- * is stored, so the hole ends at the journey row it already had.
+ * longer reaches the run record: `redactIntent` keeps only the keys that say
+ * *where* a step went, so the hole ends at the journey row it already had.
  */
 export const journeyStepSchema = z.union([
   z.object({ action: STEP_TEXT, type: z.literal('goto'), path: STEP_TEXT }),

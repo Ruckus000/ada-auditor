@@ -46,7 +46,23 @@ const createJourneySchema = z.object({
    */
   schedule: scheduleSchema.optional(),
   scheduleHour: z.number().int().min(0).max(23).optional(),
-  steps: z.array(z.record(z.string(), z.unknown())).max(200).optional(),
+  steps: z
+    .array(z.record(z.string(), z.unknown()))
+    .max(200)
+    /**
+     * Bounded by size, not by shape.
+     *
+     * The shape is `/api/audit/run`'s to own — the comment above says why, and
+     * duplicating it here would give two definitions to disagree. But
+     * `z.unknown()` accepts a multi-megabyte string in any field, and this row
+     * is written permanently and read on every client screen. 200 steps of
+     * genuine selectors and paths do not approach 64KB; a payload that does is
+     * not a journey.
+     */
+    .refine((steps) => JSON.stringify(steps).length <= 64_000, {
+      message: 'steps payload is too large',
+    })
+    .optional(),
 });
 
 /** Rejects a step that carries a password rather than a reference to one. */

@@ -93,18 +93,35 @@ function toStoredFinding(finding: AuditFinding): StoredFinding {
  * writer will forget — this is the single boundary every stored record passes
  * through.
  *
+ * An allowlist, not a denylist. Removing a key called `value` is exhaustive
+ * for today's `JourneyStep` and only for today's: a step type that later
+ * carries a `token`, an `otp` or an `answer` would sail past a rule written
+ * against one word, into a column nothing prunes. Keeping only the keys that
+ * say *where* fails closed instead — a new field is dropped from the intent
+ * until someone decides it belongs there, which is the direction to be wrong
+ * in. The cost is that this list has to be updated when a step gains an
+ * identifying field, and the comparison is what will notice: two runs that
+ * differ only in the dropped field would compare as the same walk.
+ *
  * Comparison is unaffected, and slightly improved: two runs of the same
  * journey either side of a password rotation walked the same path, and should
  * not read as incomparable because a secret changed.
  */
+const STEP_KEYS_THAT_SAY_WHERE = ['action', 'type', 'path', 'selector', 'credentialRef', 'field'];
+
 export function redactIntent(intent: RunIntent): RunIntent {
   return {
     steps: intent.steps.map((step) => {
+      // Not an object: `steps` is `unknown[]` off a jsonb column, so nothing
+      // guarantees one. Passed through — there is no key to keep or drop.
       if (!step || typeof step !== 'object' || Array.isArray(step)) return step;
-      if (!('value' in step)) return step;
 
-      const { value: _typed, ...rest } = step as Record<string, unknown>;
-      return rest;
+      const source = step as Record<string, unknown>;
+      const kept: Record<string, unknown> = {};
+      for (const key of STEP_KEYS_THAT_SAY_WHERE) {
+        if (key in source) kept[key] = source[key];
+      }
+      return kept;
     }),
   };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toStoredRunRecord } from '../../src/services/run-persistence';
+import { redactIntent, toStoredRunRecord } from '../../src/services/run-persistence';
 
 /**
  * The wiring, not the function.
@@ -51,5 +51,77 @@ describe('toStoredRunRecord, for a run whose steps carry a typed value', () => {
     // diff. An `{steps: []}` here would claim the run walked nothing, and two
     // of those compare as equal.
     expect(toStoredRunRecord(BASE)).not.toHaveProperty('intent');
+  });
+});
+
+describe('redactIntent', () => {
+  /**
+   * `runs.intent` is durable and nothing prunes it — `prune-artifacts` clears
+   * evidence blobs and never touches this column — so anything written here is
+   * permanent, in the table and in every backup cut from it.
+   *
+   * A literal `value` reaches it: `journeyStepSchema` still accepts
+   * `{type:'fill', value}`, and `containsInlineCredential` rejects a key
+   * *named* `password` and does not run on the `/api/audit/run` path at all.
+   * `buildDefaultDemoJourneySteps` alone would have written `value:
+   * 'demo-pass'` into production on the first console run.
+   */
+  it('strips what was typed, and keeps everything that says where', () => {
+    const redacted = redactIntent({
+      steps: [
+        { action: 'navigate', type: 'goto', path: '/login' },
+        { action: 'login', type: 'fill', selector: '#password', value: 'hunter2' },
+        { action: 'login', type: 'fill', selector: '#user', credentialRef: 'acme', field: 'user' },
+      ],
+    });
+
+    expect(JSON.stringify(redacted)).not.toContain('hunter2');
+    // The shape survives: the step types are what a later phase derives an
+    // expected page count from, which is why this strips rather than hashes.
+    expect(redacted.steps[1]).toEqual({ action: 'login', type: 'fill', selector: '#password' });
+    expect(redacted.steps[0]).toEqual({ action: 'navigate', type: 'goto', path: '/login' });
+    // A reference is not a secret and is the sanctioned shape.
+    expect(redacted.steps[2]).toHaveProperty('credentialRef', 'acme');
+  });
+
+  it('leaves two runs comparable across a password rotation', () => {
+    // Stripping is not only safer, it is more correct: the same journey walked
+    // either side of a credential change is the same path.
+    const before = redactIntent({
+      steps: [{ action: 'login', type: 'fill', selector: '#p', value: 'old' }],
+    });
+    const after = redactIntent({
+      steps: [{ action: 'login', type: 'fill', selector: '#p', value: 'new' }],
+    });
+
+    expect(JSON.stringify(before.steps)).toBe(JSON.stringify(after.steps));
+  });
+
+  it('passes a step that is not an object through untouched', () => {
+    // `steps` is `unknown[]` off a jsonb column. Nothing guarantees objects.
+    expect(redactIntent({ steps: ['odd', 42, null] }).steps).toEqual(['odd', 42, null]);
+  });
+});
+
+describe('redactIntent, on a step shape it has never seen', () => {
+  /**
+   * An allowlist, so schema growth fails closed.
+   *
+   * Removing a key called `value` is exhaustive for today's `JourneyStep` and
+   * only for today's. A step type that later carries a `token`, an `otp` or an
+   * `answer` would sail past a rule written against one word, into a column
+   * nothing prunes and no retention policy touches. Keeping only the keys that
+   * say *where* means the new field is dropped until someone decides it
+   * belongs — the direction to be wrong in.
+   */
+  it('drops a field it does not recognise, rather than passing it through', () => {
+    const redacted = redactIntent({
+      steps: [
+        { action: 'login', type: 'fill', selector: '#otp', oneTimeCode: '445566' },
+      ],
+    });
+
+    expect(JSON.stringify(redacted)).not.toContain('445566');
+    expect(redacted.steps[0]).toEqual({ action: 'login', type: 'fill', selector: '#otp' });
   });
 });
