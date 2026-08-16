@@ -78,6 +78,12 @@ export function auditReport(overrides: ReportOverrides = {}) {
       : 0;
 
   return {
+    // A real report always names the steps it walked. Without this the helper
+    // produced `intent: {steps: undefined}` — stored as `{}`, read back as a
+    // real intent, and compared equal to any other one. The shape the guard in
+    // `walkedTheSamePath` now refuses, minted by the double that stands in for
+    // the thing it is guarding.
+    steps: [{ action: 'navigate', type: 'goto', path: '/' }],
     journeyId: overrides.journeyId ?? 'demo-login',
     environment: overrides.environment ?? 'staging',
     evidenceStatus,

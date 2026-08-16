@@ -21,10 +21,22 @@ export class MemoryRunStore implements RunStore {
   private readonly runs = new Map<string, StoredRunRecord>();
 
   async saveRun(record: StoredRunRecord): Promise<void> {
+    // Intent survives a re-save that omits it, matching the `coalesce` in the
+    // Postgres upsert. The reachable second write is `executeRun`'s catch,
+    // which records a failure carrying no intent — and blanking the intent of
+    // an already-recorded walk would leave a run that cannot be compared and
+    // cannot say why. Without this the two stores answered differently and the
+    // shared contract, which exists to stop exactly that, did not ask.
+    const existing = this.runs.get(record.requestId);
+    const intent = record.intent ?? existing?.intent;
+
     // Structured-cloned so a caller mutating the object it saved cannot reach
     // back into stored state — the database cannot be mutated that way either,
     // and a double that allows it hides bugs.
-    this.runs.set(record.requestId, structuredClone(record));
+    this.runs.set(
+      record.requestId,
+      structuredClone({ ...record, ...(intent ? { intent } : {}) }),
+    );
   }
 
   async getRun(requestId: string): Promise<StoredRunRecord | null> {

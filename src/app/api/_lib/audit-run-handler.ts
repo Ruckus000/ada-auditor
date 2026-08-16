@@ -32,25 +32,44 @@ const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 const MAX_RUN_DURATION_MS = 300_000;
 
 /**
+ * Every free-text field on a step, bounded.
+ *
+ * These were `z.string().min(1)` with no ceiling, and a step's `action`,
+ * `selector` and `path` are stored — on the journey, and now on the run's
+ * `intent` — echoed into failure messages by `attemptStep`, and compared by
+ * serialising both sides on every regression diff. One step carrying a
+ * multi-megabyte string reached all three, bounded only by the request body
+ * limit. 512 is generous for a CSS selector or a path; `deterministic-audit`
+ * caps axe's `outerHTML` at the same number.
+ */
+const STEP_TEXT = z.string().min(1).max(512);
+
+/**
  * A `fill` step carries either a literal value or a credential reference.
- * Passwords must use the reference: steps travel in this request body, get
+ * Passwords must use the reference: steps travel in this request body and get
  * persisted with the journey, and would otherwise be recoverable from both.
+ *
+ * The literal variant is still accepted, and that is a known hole rather than
+ * a decision — `containsInlineCredential` rejects a key *named* `password` and
+ * does not run on this route at all. What has changed is that a literal no
+ * longer reaches the run record: `redactIntent` strips `value` before anything
+ * is stored, so the hole ends at the journey row it already had.
  */
 export const journeyStepSchema = z.union([
-  z.object({ action: z.string().min(1), type: z.literal('goto'), path: z.string().min(1) }),
-  z.object({ action: z.string().min(1), type: z.literal('click'), selector: z.string().min(1) }),
+  z.object({ action: STEP_TEXT, type: z.literal('goto'), path: STEP_TEXT }),
+  z.object({ action: STEP_TEXT, type: z.literal('click'), selector: STEP_TEXT }),
   // Two `fill` shapes, so these are a plain union rather than a discriminated
   // one — `type` alone does not tell them apart.
   z.object({
-    action: z.string().min(1),
+    action: STEP_TEXT,
     type: z.literal('fill'),
-    selector: z.string().min(1),
-    value: z.string(),
+    selector: STEP_TEXT,
+    value: z.string().max(4096),
   }),
   z.object({
-    action: z.string().min(1),
+    action: STEP_TEXT,
     type: z.literal('fill'),
-    selector: z.string().min(1),
+    selector: STEP_TEXT,
     credentialRef: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
     field: z.enum(['user', 'pass']),
   }),

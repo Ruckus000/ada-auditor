@@ -1264,6 +1264,12 @@ code {
 .regression-warn { color: var(--caution); }
 .regression-fail { color: var(--fail); }
 
+/* Withheld, not good and not bad. Muted rather than coloured: the other three
+   states are a judgement, and this one is the refusal to make one. */
+.regression-incomparable {
+  color: var(--ink-muted);
+}
+
 .regression-counts {
   list-style: none;
   display: flex;

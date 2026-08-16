@@ -506,4 +506,28 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // reordered keys or entries would make two identical runs incomparable.
     expect((await store.getRun('contract-intent'))?.intent).toEqual({ steps });
   });
+
+  /**
+   * A re-save that carries no intent must not erase the one already recorded.
+   *
+   * The reachable second write is `executeRun`'s catch: a run that failed late
+   * records a failure with no intent, over a row that already has one. Losing
+   * it there would leave a run that cannot be compared and cannot say why —
+   * and the two stores disagreed about this, Postgres coalescing while the
+   * memory double overwrote wholesale, with nothing here to notice.
+   */
+  it('keeps a recorded intent when a later save omits it', async () => {
+    const store = await makeStore();
+    const steps = [{ action: 'navigate', type: 'goto', path: '/checkout' }];
+
+    await store.saveRun(runRecord({ requestId: 'contract-intent-resave', intent: { steps } }));
+    await store.saveRun(
+      runRecord({ requestId: 'contract-intent-resave', status: 'failed', failureReason: 'x' }),
+    );
+
+    const read = await store.getRun('contract-intent-resave');
+
+    expect(read?.status).toBe('failed');
+    expect(read?.intent).toEqual({ steps });
+  });
 }

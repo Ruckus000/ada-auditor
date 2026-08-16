@@ -52,7 +52,14 @@ export function findingKey(finding: StoredFinding): string {
  * different journey.
  */
 function walkedTheSamePath(a: StoredRunRecord, b: StoredRunRecord): boolean {
-  if (!a.intent || !b.intent) return false;
+  // `Array.isArray`, not just a truthy `intent`. `{steps: undefined}` is a
+  // truthy object that survives `JSON.stringify` as `{}` and therefore stores
+  // and reads back as a real intent — and then `undefined === undefined`
+  // compares two of them as *equal*, which is the false all-clear this guard
+  // exists to refuse, arriving through the guard itself. `steps` is `unknown[]`
+  // off a jsonb column with no validation between here and the database, so
+  // its shape is checked rather than assumed.
+  if (!Array.isArray(a.intent?.steps) || !Array.isArray(b.intent?.steps)) return false;
   return JSON.stringify(a.intent.steps) === JSON.stringify(b.intent.steps);
 }
 

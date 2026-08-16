@@ -71,11 +71,49 @@ function toStoredFinding(finding: AuditFinding): StoredFinding {
   };
 }
 
+/**
+ * A run's intent, with anything typed into the page taken out.
+ *
+ * `runs.intent` is durable and nothing prunes it — `prune-artifacts` clears
+ * evidence blobs and never touches this column — so a value written here is
+ * permanent, in the table and in every backup and branch cut from it. The
+ * steady-state rule says no secret in a request body, a stored journey, or a
+ * run log; this column would have been a fourth home the rule does not name.
+ *
+ * And it is reachable. `journeyStepSchema` still accepts `{type:'fill',
+ * value}` — `containsInlineCredential` rejects a key *named* `password`, and
+ * is not on the `/api/audit/run` path at all — so a literal posted there
+ * passes every check in the system. `buildDefaultDemoJourneySteps` alone would
+ * have put `value: 'demo-pass'` into production on the first console run.
+ *
+ * Stripped rather than hashed, because the shape has later work to do: what a
+ * run was *supposed* to navigate is derivable from the step types, and a hash
+ * of the array answers only "same or not". Stripped rather than kept and
+ * redacted downstream, because a redaction the writer has to remember is one a
+ * writer will forget — this is the single boundary every stored record passes
+ * through.
+ *
+ * Comparison is unaffected, and slightly improved: two runs of the same
+ * journey either side of a password rotation walked the same path, and should
+ * not read as incomparable because a secret changed.
+ */
+export function redactIntent(intent: RunIntent): RunIntent {
+  return {
+    steps: intent.steps.map((step) => {
+      if (!step || typeof step !== 'object' || Array.isArray(step)) return step;
+      if (!('value' in step)) return step;
+
+      const { value: _typed, ...rest } = step as Record<string, unknown>;
+      return rest;
+    }),
+  };
+}
+
 export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
   return {
     requestId: input.requestId,
     journeyId: input.journeyId,
-    ...(input.intent ? { intent: input.intent } : {}),
+    ...(input.intent ? { intent: redactIntent(input.intent) } : {}),
     environment: input.environment,
     platform: input.platform,
     evidenceStatus: input.evidenceStatus,
