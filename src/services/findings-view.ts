@@ -194,7 +194,11 @@ export async function buildFindingsView(
   const pages: PageFindings[] = (run.pages ?? []).map((page) => ({
     url: page.url,
     route: page.route,
-    ...(page.title === undefined ? {} : { title: page.title }),
+    // An empty title is absent, not a title. A page that has none is a real
+    // page — the runner records it rather than failing the run — and the
+    // screens fall back to the route, so it reads as the page it is instead of
+    // a blank where a name should be.
+    ...(page.title ? { title: page.title } : {}),
     evidenceStatus: page.evidenceStatus,
     findings: sortBySeverity(byPage.get(page.url) ?? []),
   }));

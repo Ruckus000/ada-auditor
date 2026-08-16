@@ -152,10 +152,15 @@ function ArtifactChecklist({
 
 /** A page's URL, shown only when it says something the title does not. */
 function PageLabel({ page }: { page: AuditPage }) {
+  // A page with no title still needs a name here, and its route is the only
+  // honest one available. Without this the heading was empty for exactly the
+  // pages a titling violation was reported against.
+  const label = page.title ?? page.route;
+
   return (
     <>
-      <span className="page-title">{page.title}</span>
-      {page.route !== page.title && <span className="page-route">{page.route}</span>}
+      <span className="page-title">{label}</span>
+      {page.route !== label && <span className="page-route">{page.route}</span>}
     </>
   );
 }

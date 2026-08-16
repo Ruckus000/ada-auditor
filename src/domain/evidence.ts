@@ -5,7 +5,23 @@ const evidenceInputSchema = z.object({
   page: z.object({
     url: z.url(),
     route: z.string().min(1),
-    title: z.string().min(1),
+    /**
+     * Allowed to be empty, and that is the point.
+     *
+     * This was `.min(1)`, and `createEvidenceBundle` parses rather than
+     * safe-parses, so a page whose `document.title` came back empty threw and
+     * took the whole run with it — every other page's findings lost with it.
+     *
+     * An empty title is not a capture failure. It is a page, and a page with
+     * no title is a WCAG 2.4.2 failure that axe reports as `document-title`.
+     * Refusing to record it meant the auditor died on the exact defect it
+     * exists to find, and reported nothing at all instead of reporting that.
+     *
+     * It is not part of evidence completeness either: `status` below is about
+     * whether the three artifacts were written. Degrading the page would have
+     * discarded its findings — including the missing title itself.
+     */
+    title: z.string(),
   }),
   run: z.object({
     journeyId: z.string().min(1),
