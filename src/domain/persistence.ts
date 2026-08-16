@@ -74,6 +74,23 @@ export type StoredRunPage = {
   route: string;
   title: string;
   evidenceStatus: string;
+  /**
+   * The main-frame HTTP status the page was served with.
+   *
+   * Stored because `evidenceStatus` alone cannot say *why* a page was
+   * degraded: a missing screenshot and a 500 both read `degraded`, and those
+   * need different people to do different things. This is the fact;
+   * `evidenceStatus` is the judgement made from it.
+   *
+   * Absent means not measured — a `file://` fixture run has no HTTP status,
+   * and every page recorded before this column existed has none. Never read it
+   * as 200.
+   *
+   * Survives artifact pruning on purpose: `clearArtifactsBefore` drops the
+   * evidence bytes, and this is a measurement about the run rather than
+   * evidence, so a pruned run can still say the page was an error.
+   */
+  statusCode?: number;
   artifacts?: StoredArtifacts;
   /**
    * The conformance score's inputs, per page. Absent on runs recorded before

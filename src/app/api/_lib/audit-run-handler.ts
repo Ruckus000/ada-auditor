@@ -163,7 +163,7 @@ export type AuditRunHandlerResult =
 async function uploadPages(
   requestId: string,
   audited: Array<{
-    page: { url: string; route: string; title: string };
+    page: { url: string; route: string; title: string; statusCode?: number };
     evidenceStatus: string;
     checks?: { passed?: number; failed?: number; incomplete?: number };
     timing?: { totalMs?: number; scanMs?: number };
@@ -180,6 +180,7 @@ async function uploadPages(
       route: one.page.route,
       title: one.page.title,
       evidenceStatus: one.evidenceStatus,
+      statusCode: one.page.statusCode,
       checksPassed: one.checks?.passed,
       checksFailed: one.checks?.failed,
       checksIncomplete: one.checks?.incomplete,

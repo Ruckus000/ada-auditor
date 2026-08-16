@@ -72,6 +72,7 @@ type PageRow = {
   route: string;
   title: string;
   evidence_status: string;
+  status_code: number | null;
   artifacts: Record<string, string> | null;
   checks_passed: number | null;
   checks_failed: number | null;
@@ -144,6 +145,7 @@ function toPage(row: PageRow): StoredRunPage {
   if (row.artifacts && Object.keys(row.artifacts).length > 0) {
     page.artifacts = row.artifacts;
   }
+  if (row.status_code !== null) page.statusCode = row.status_code;
   if (row.checks_passed !== null) page.checksPassed = row.checks_passed;
   if (row.checks_failed !== null) page.checksFailed = row.checks_failed;
   if (row.checks_incomplete !== null) page.checksIncomplete = row.checks_incomplete;
@@ -297,11 +299,12 @@ export class PostgresRunStore implements RunStore {
     for (const [position, page] of pages.entries()) {
       statements.push(sql`
         insert into run_pages (
-          request_id, position, url, route, title, evidence_status, artifacts,
+          request_id, position, url, route, title, evidence_status, status_code,
+          artifacts,
           checks_passed, checks_failed, checks_incomplete, duration_ms, scan_ms
         ) values (
           ${record.requestId}, ${position}, ${page.url}, ${page.route},
-          ${page.title}, ${page.evidenceStatus},
+          ${page.title}, ${page.evidenceStatus}, ${page.statusCode ?? null},
           ${JSON.stringify(page.artifacts ?? {})}::jsonb,
           ${page.checksPassed ?? null}, ${page.checksFailed ?? null},
           ${page.checksIncomplete ?? null},

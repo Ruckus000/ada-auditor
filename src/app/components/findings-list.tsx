@@ -193,11 +193,16 @@ function EvidenceBlock({ result }: { result: AuditResult }) {
       </div>
 
       <p className={`evidence-status evidence-${status}`}>
+        {/* Both branches name the two conditions, because `complete` now
+            answers two questions rather than one. The degraded sentence used
+            to read "at least one artifact is missing, which is why the verdict
+            is inconclusive" — flatly false for a page that captured all three
+            and came back 500, which is the case this became able to catch. */}
         {complete
           ? pages.length > 1
-            ? `Complete — all three artifacts were captured on each of the ${pages.length} pages, so this run could be judged.`
-            : 'Complete — all three artifacts were captured, so this run could be judged.'
-          : 'Incomplete — at least one artifact is missing, which is why the verdict is inconclusive. A single page short of evidence makes the whole run inconclusive.'}
+            ? `Complete — all three artifacts were captured on each of the ${pages.length} pages, and none was served as an error, so this run could be judged.`
+            : 'Complete — all three artifacts were captured and the page was not served as an error, so this run could be judged.'
+          : 'Degraded — a page is missing an artifact or was served as an error, which is why the verdict is inconclusive. A single page short of usable evidence makes the whole run inconclusive.'}
       </p>
 
       {pages.length > 0 ? (
@@ -208,7 +213,12 @@ function EvidenceBlock({ result }: { result: AuditResult }) {
                 <PageLabel page={page} />
                 {page.evidenceStatus && (
                   <span className={`page-evidence page-evidence-${page.evidenceStatus}`}>
-                    {page.evidenceStatus === 'complete' ? 'complete' : 'incomplete'}
+                    {/* The status word itself, not a synonym for it. This said
+                        "incomplete", which named only one of the two ways a
+                        page can now be degraded and contradicted the class
+                        beside it — the other two screens already print the
+                        status verbatim. */}
+                    {page.evidenceStatus}
                   </span>
                 )}
               </p>

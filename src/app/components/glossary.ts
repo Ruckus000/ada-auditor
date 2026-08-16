@@ -118,9 +118,9 @@ export const GLOSSARY = {
 
   evidence: {
     term: 'Evidence',
-    short: 'The three artifacts captured during the run: a screenshot, a DOM snapshot, and an accessibility tree.',
+    short: 'What a page has to produce before anything it shows can be judged: a screenshot, a DOM snapshot, an accessibility tree — and an HTTP status that was not an error.',
     detail:
-      'All three must be present for evidence to count as complete. If any one is missing the evidence is degraded and the verdict becomes inconclusive.',
+      'All three artifacts must be present, and the page must not have been served as 400 or above. If an artifact is missing, or the page came back 404, 403 or 500, the evidence is degraded: its findings are not reported, the run is not scored, and the verdict becomes inconclusive. An error page is small and clean, so counting one would score a run higher than a real audit of the page it stood in for.',
   },
 
   screenshot: {

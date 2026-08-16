@@ -58,6 +58,7 @@ const FULL_RECORD = runRecord({
       route: '/login',
       title: 'Login',
       evidenceStatus: 'complete',
+      statusCode: 200,
       artifacts: { screenshotUrl: 'https://blob.test/login.png' },
       checksPassed: 80,
       checksFailed: 10,
@@ -164,6 +165,23 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
       checksFailed: 10,
       checksIncomplete: 5,
     });
+  });
+
+  it('round-trips the page HTTP status, and leaves absent absent', async () => {
+    // The fact behind the judgement. A page degraded by a missing screenshot
+    // and a page degraded by a 500 read identically without it, and they need
+    // different people to do different things.
+    const store = await makeStore();
+    await store.saveRun(FULL_RECORD);
+
+    const stored = await store.getRun(FULL_RECORD.requestId);
+    expect(stored?.pages?.[0].statusCode).toBe(200);
+
+    // Not zero, and not 200. The second page never carried a status — a
+    // `file://` run has none — and a store that invented one here would be
+    // asserting a measurement nobody took, on the field that decides whether
+    // the page counted.
+    expect(stored?.pages?.[1]).not.toHaveProperty('statusCode');
   });
 
   it('keeps pages in visit order, not in whatever order they come back', async () => {

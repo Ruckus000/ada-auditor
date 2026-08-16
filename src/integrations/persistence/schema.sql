@@ -488,3 +488,23 @@ create index if not exists journeys_schedule_idx
 -- other run". Runs written before this column exist and must not start
 -- comparing as though they agreed.
 alter table runs add column if not exists intent jsonb;
+
+-- --------------------------------------------------- page http status (2026-08) --
+
+-- The main-frame HTTP status a page was served with.
+--
+-- `page.goto`'s response was discarded and nothing anywhere read a status, so
+-- a 500, a 404, an expired-session 403 or a bot challenge was navigated to,
+-- scanned, screenshotted and stored exactly like the page it stood in for.
+-- Error pages are small and clean, so a run that hit one scored *higher* than
+-- a real audit and reported `pass`.
+--
+-- The judgement made from it — 400 and above cannot be complete evidence —
+-- lives in `createEvidenceBundle`, not here. This column is the fact, kept so
+-- that a degraded page can say which kind of degraded it was: a missing
+-- screenshot and a 500 are different problems for different people.
+--
+-- Nullable, and null means "not measured", never 200. A `file://` fixture run
+-- has no HTTP status at all, and every page recorded before this column has
+-- none either.
+alter table run_pages add column if not exists status_code integer;

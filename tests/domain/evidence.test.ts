@@ -27,6 +27,78 @@ describe('createEvidenceBundle', () => {
   });
 
   /**
+   * The page was an error page, so nothing on it is evidence of anything.
+   *
+   * Every artifact is present here — this is not an incomplete capture. It is
+   * a complete capture of the wrong page, which is the case that used to score
+   * *higher* than a real audit because error pages are small and clean.
+   */
+  it.each([400, 401, 403, 404, 429, 500, 503])('refuses to call a %i page complete', (status) => {
+    const evidence = createEvidenceBundle({
+      page: {
+        url: 'https://app.example.com/dashboard',
+        route: '/dashboard',
+        title: 'Error',
+        statusCode: status,
+      },
+      run: { journeyId: 'demo-login', stepId: 'dashboard', environment: 'staging' },
+      artifacts: {
+        screenshotPath: 'shot.png',
+        domSnapshotPath: 'dom.html',
+        axTreePath: 'ax.json',
+      },
+    });
+
+    expect(evidence.status).toBe('degraded');
+  });
+
+  it.each([200, 204, 301, 302, 304, 399])('keeps a %i page complete', (status) => {
+    // 3xx included deliberately. A redirect that was followed ends at the
+    // status of wherever it landed; one that was not is what the page is.
+    // Neither is an error, and treating them as one would degrade every
+    // journey that passes through a login redirect — the normal case.
+    const evidence = createEvidenceBundle({
+      page: {
+        url: 'https://app.example.com/dashboard',
+        route: '/dashboard',
+        title: 'Dashboard',
+        statusCode: status,
+      },
+      run: { journeyId: 'demo-login', stepId: 'dashboard', environment: 'staging' },
+      artifacts: {
+        screenshotPath: 'shot.png',
+        domSnapshotPath: 'dom.html',
+        axTreePath: 'ax.json',
+      },
+    });
+
+    expect(evidence.status).toBe('complete');
+  });
+
+  /**
+   * Absent is not 200.
+   *
+   * A `file://` fixture run has no HTTP status, and so does every page
+   * recorded before the column existed. If absence defaulted to an error the
+   * whole browser suite would degrade; if it defaulted to 200 the field would
+   * be asserting a measurement nobody took. It has to mean neither.
+   */
+  it('treats a missing status as not measured, not as an error', () => {
+    const evidence = createEvidenceBundle({
+      page: { url: 'https://app.example.com/dashboard', route: '/dashboard', title: 'Dashboard' },
+      run: { journeyId: 'demo-login', stepId: 'dashboard', environment: 'staging' },
+      artifacts: {
+        screenshotPath: 'shot.png',
+        domSnapshotPath: 'dom.html',
+        axTreePath: 'ax.json',
+      },
+    });
+
+    expect(evidence.status).toBe('complete');
+    expect(evidence.page.statusCode).toBeUndefined();
+  });
+
+  /**
    * The auditor must not die on the defect it exists to find.
    *
    * `title` was `.min(1)` and this function parses rather than safe-parses, so
