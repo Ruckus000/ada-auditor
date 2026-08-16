@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { actorFields } from '../../../../../../domain/operator';
+import { journeyRunRefusal } from '../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { clientIdFromName } from '../../../../../../services/portfolio';
 import { authorizePrincipal } from '../../../../_lib/authorize';
@@ -82,6 +83,19 @@ export async function POST(
 
   if (parsed.steps && containsInlineCredential(parsed.steps)) {
     return Response.json({ error: 'inline_credential', requestId }, { status: 400 });
+  }
+
+  // Creating is scheduling: this route takes a cadence too, and was the last
+  // place that took one without asking whether the journey could run. A
+  // journey created `daily` with no steps is stored booked and never claimed,
+  // and the screens hide the cadence picker for an unrunnable journey — so the
+  // row would say Daily where nobody could see it or clear it.
+  const refusal = journeyRunRefusal({
+    ...(parsed.targetUrl ? { targetUrl: parsed.targetUrl } : {}),
+    steps: parsed.steps ?? [],
+  });
+  if (parsed.schedule && parsed.schedule !== 'off' && refusal) {
+    return Response.json({ error: refusal, requestId }, { status: 422 });
   }
 
   // Scoped to the client, because the id is global: two clients may both have

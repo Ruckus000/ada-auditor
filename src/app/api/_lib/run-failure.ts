@@ -47,7 +47,12 @@ export function classifyRunFailure(message: string): RunFailureCode {
     return 'incomplete_evidence';
   }
   // Thrown by `runBrowserAudit` when a run names a target URL and no steps.
-  if (message.includes('must name its own steps')) {
+  // Anchored to the start of the whole sentence, not a substring of it: the
+  // messages reaching here carry operator-supplied selectors and URLs, so a
+  // loose `includes` lets a stale-selector timeout be reported as "no steps".
+  // That misattributes a failure rather than leaking one, but the fix is a
+  // keyword.
+  if (message.startsWith('A run against a target URL must name its own steps')) {
     return 'journey_has_no_steps';
   }
   return 'audit_run_failed';

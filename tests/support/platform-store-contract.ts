@@ -586,6 +586,24 @@ export function platformStoreContract(
     });
 
     /**
+     * Falsy, not null.
+     *
+     * The two stores express the same rule in different languages, and this is
+     * the value where they drifted: `journeyRunRefusal` refuses any falsy
+     * `targetUrl`, while the SQL asked `target_url is not null`, which an
+     * empty string satisfies. No writer can store one — both routes take
+     * `z.url()` — so the disagreement was invisible, and stayed invisible
+     * because this contract only ever seeded `undefined`.
+     */
+    it('never claims a journey whose target URL is empty', async () => {
+      await scheduled('pc-journey-blank-target', { targetUrl: '' });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-blank-target');
+    });
+
+    /**
      * The other half of the same rule, and the half that was missing.
      *
      * A journey with a target and no steps is refused by the run route, so

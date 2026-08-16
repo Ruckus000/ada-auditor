@@ -404,7 +404,12 @@ export class PostgresPlatformStore implements PlatformStore {
           -- row holding an object took down the whole tick with "cannot get
           -- array length of a non-array" — proven by the contract test, on
           -- real Postgres, which is the only place it can fail.
-          and target_url is not null
+          --
+          -- coalesce rather than "is not null", so this says what the helper
+          -- says: the helper refuses a falsy targetUrl, and an empty string is
+          -- falsy and not null. No writer can store one today, which is
+          -- exactly why the drift would have gone unnoticed.
+          and coalesce(target_url, '') <> ''
           and jsonb_typeof(steps) = 'array'
           and steps <> '[]'::jsonb
           and coalesce(schedule_hour, 3) = ${hour}

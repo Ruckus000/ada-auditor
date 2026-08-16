@@ -129,7 +129,12 @@ export async function buildClientDetail(
         id: journey.id,
         name: journey.name,
         ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
-        stepCount: journey.steps.length,
+        // Guarded for the same reason `journeyRunRefusal` is, two lines down:
+        // `steps` is jsonb written before any validation existed, so a row can
+        // hold something that is not an array. `.length` on an object is
+        // `undefined`, and the journeys screen renders it straight into
+        // "undefined steps".
+        stepCount: Array.isArray(journey.steps) ? journey.steps.length : 0,
         runRefusal: journeyRunRefusal(journey),
         schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
         lastRun: run ? summariseRun(run) : null,

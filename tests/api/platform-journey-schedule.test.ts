@@ -101,12 +101,34 @@ describe('PATCH /api/platform/clients/[clientId]/journeys/[journeyId]', () => {
   });
 
   /**
-   * Turning one *off* is always allowed, and deliberately so.
+   * Shape is not validity, and the gap between them was a booked failure.
    *
-   * Refusing every edit to an unrunnable journey would trap a schedule already
-   * set on one — the exact rows this fix creates, since the old guard let them
-   * through. An operator has to be able to stop a schedule they can no longer
-   * satisfy.
+   * `journeyRunRefusal` can only ask whether `steps` is a non-empty array —
+   * the step contract lives in the run handler, not the domain. The write
+   * schema accepts `z.record(z.string(), z.unknown())`, so `[{banana: 1}]`
+   * stores fine, clears the refusal, and used to be schedulable. The tick then
+   * claimed it, POSTed to /api/audit/run, and got a 400 at body parse: once a
+   * window, forever, with nothing audited and nothing said.
+   */
+  it('refuses to schedule a journey whose steps are the right shape but not steps', async () => {
+    await seed('nonsense', { targetUrl: 'https://acme.test/', steps: [{ banana: 1 }] });
+
+    const response = await patch('nonsense', 'daily');
+
+    expect(response.status).toBe(422);
+    expect((await response.json()).error).toBe('invalid_journey_steps');
+    expect((await platform.getJourney('nonsense'))?.schedule).toBe('off');
+  });
+
+  /**
+   * Turning one *off* is always allowed, so the refusal cannot trap a booking.
+   *
+   * Nothing needs this today: the creation route refuses the same thing the
+   * schedule route does, and production holds no journey that is both booked
+   * and unrunnable — which is why no screen offers an off switch for one.
+   * What it pins is that the route stays non-trapping if such a row ever
+   * appears by another road, because the alternative is a state with no way
+   * out and this costs one condition.
    */
   it('lets an unrunnable journey be unscheduled', async () => {
     await platform.upsertJourney({

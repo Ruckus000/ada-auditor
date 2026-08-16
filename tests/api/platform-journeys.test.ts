@@ -170,4 +170,39 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     const [event] = await platform.listEvents({ clientId: 'acme' });
     expect(event).toMatchObject({ actor: 'Alex Reed', action: 'recorded a journey' });
   });
+
+  /**
+   * Creating is scheduling, and this route was the last one deciding
+   * runnability on its own.
+   *
+   * The schedule route refuses to book a journey that cannot run; this one
+   * takes a `schedule` too and took it unchecked, so the whole refusal was one
+   * POST away from being bypassed. The tick would not have claimed the row —
+   * the claim query refuses it as well — but the screens hide the cadence
+   * picker for an unrunnable journey, so it would have been stored `daily`
+   * where nobody could see it and nobody could clear it.
+   */
+  it.each([
+    ['no steps', { name: 'Checkout', targetUrl: 'https://acme.test/', schedule: 'daily' }, 'journey_has_no_steps'],
+    ['no target URL', { name: 'Checkout', steps: [{ action: 'navigate', type: 'goto', path: '/' }], schedule: 'weekly' }, 'journey_not_runnable'],
+  ])('refuses to create a journey scheduled with %s', async (_label, body, error) => {
+    const response = await POST(fromBrowser(body), params('acme'));
+
+    expect(response.status).toBe(422);
+    expect((await response.json()).error).toBe(error);
+    // Refused, not stored-then-refused.
+    expect(await platform.listJourneys('acme')).toEqual([]);
+  });
+
+  it('still creates an unrunnable journey when no schedule is asked for', async () => {
+    // Recording one before its steps are known is how the API is meant to be
+    // used — it is only booking a cadence on it that is a certain failure.
+    const response = await POST(
+      fromBrowser({ name: 'Checkout', targetUrl: 'https://acme.test/' }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(201);
+    expect(await platform.listJourneys('acme')).toHaveLength(1);
+  });
 });

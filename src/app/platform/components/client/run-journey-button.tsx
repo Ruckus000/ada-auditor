@@ -23,14 +23,19 @@ const POLL_INTERVAL_MS = 3000;
 /** ~5 minutes: `maxDuration` plus slack. */
 const MAX_POLLS = 100;
 
+/**
+ * What the route can answer *after* a click.
+ *
+ * The two refusal codes belong in `REFUSAL_LABELS` below and nowhere here:
+ * this button only renders when there is no refusal, and no route changes a
+ * journey's target or steps, so it cannot be clicked into one. They were
+ * duplicated here and were dead copy — the same reason the `journey_has_no_
+ * steps` entry came out of `glossary.ts`. `invalid_journey_steps` stays,
+ * because a journey whose steps are the right shape and not valid steps
+ * passes the refusal check and fails at the route.
+ */
 const MESSAGES: Record<string, string> = {
-  // A target URL is what this route requires — steps alone would walk our own
-  // fixture app. Saying "and no steps" sent an operator to add steps that
-  // could not have helped.
-  journey_not_runnable: 'This journey has no target URL, so there is no site to walk.',
   invalid_journey_steps: 'This journey’s stored steps are not valid. Record it again.',
-  journey_has_no_steps:
-    'This journey has no steps, so there is nothing to walk. Record the path through the site first.',
   journey_not_found: 'That journey is no longer on this client.',
   unauthorized: 'Your session expired. Reload and sign in again.',
   run_budget_exceeded: 'The run budget for this window is used up. Try again later.',
