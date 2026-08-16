@@ -9,6 +9,7 @@ import { logWarn } from '../../services/logger';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
+import { PartialJourneyError } from './partial-run';
 import {
   assertAllowedUrl,
   assertPeerAddressAllowed,
@@ -283,11 +284,14 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     );
   });
 
+  // Declared out here, not inside the `try`, so the catch below can still see
+  // what was captured before the throw. This was the first of three places a
+  // partial run lost its work.
+  const pages: PageAudit[] = [];
+  let truncatedPages = 0;
+
   try {
     const { steps } = input;
-
-    const pages: PageAudit[] = [];
-    let truncatedPages = 0;
 
     /**
      * Scans and captures whatever the page is showing right now.
@@ -471,6 +475,19 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     }
 
     return { pages, truncatedPages };
+  } catch (error) {
+    // A journey that died at step five of eight still audited four pages, and
+    // they were thrown away with the stack: `executeRun` stored `findings: []`
+    // and no pages, so a run that found real violations before it failed
+    // reported nothing at all. The pages travel with the error now.
+    //
+    // Only when there are pages. Wrapping unconditionally changed the type of
+    // every failure, and a caller testing `instanceof UnsafeTargetError` — the
+    // rebind suite does — stopped recognising an SSRF refusal it had always
+    // recognised. Nothing is partial about a run that captured nothing, so
+    // those keep throwing exactly what they threw before.
+    if (pages.length === 0) throw error;
+    throw new PartialJourneyError(error, { pages, truncatedPages });
   } finally {
     await browser.close();
   }

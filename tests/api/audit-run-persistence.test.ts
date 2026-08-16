@@ -5,6 +5,8 @@ import { auditReport, criticalFinding } from '../helpers/audit-report';
 const { runBrowserAudit } = vi.hoisted(() => ({ runBrowserAudit: vi.fn() }));
 vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserAudit }));
 
+const { PartialAuditError } = await import('../../src/integrations/browser/partial-run');
+
 const { handleAuditRun } = await import('../../src/app/api/_lib/audit-run-handler');
 const { MemoryRunStore, resetRunStore, setRunStore } = await import(
   '../../src/integrations/persistence'
@@ -200,5 +202,60 @@ describe('handleAuditRun async mode', () => {
     // The stored reason is the stable code, not the raw message with its path.
     expect(failed?.failureReason).toBe('audit_run_failed');
     expect(JSON.stringify(failed)).not.toContain('.secrets');
+  });
+
+  /**
+   * A run that died partway still audited pages, and they are the point.
+   *
+   * This path stored `findings: []` and no pages, so a journey that found real
+   * violations and then hit a stale selector reported nothing at all —
+   * indistinguishable from one that walked cleanly and found nothing. The
+   * difference between those two is the difference an auditor exists to
+   * report.
+   */
+  it('keeps the pages and findings a failed run had already captured', async () => {
+    const store = new MemoryRunStore();
+    setRunStore(store);
+
+    const captured = {
+      page: { url: 'https://acme.test/cart', route: '/cart', title: 'Cart' },
+      pageKey: '01-cart',
+      evidenceStatus: 'complete' as const,
+      artifacts: {},
+      checks: { passed: 3, failed: 1, incomplete: 0 },
+      timing: { totalMs: 120, scanMs: 90 },
+      axe: { violations: [], incomplete: [], passCount: 3 },
+      html: '',
+      axTree: [],
+      findings: [criticalFinding({ pageUrl: 'https://acme.test/cart' })],
+    };
+
+    runBrowserAudit.mockRejectedValue(
+      new PartialAuditError(
+        new Error('Step 2 ("login") could not fill "#gone": the selector never matched anything.'),
+        [captured] as never,
+      ),
+    );
+
+    await handleAuditRun(asyncRequest(), 'req-async-partial');
+    await vi.waitFor(async () => {
+      expect((await store.getRun('req-async-partial'))?.status).toBe('failed');
+    });
+
+    const failed = await store.getRun('req-async-partial');
+
+    // It still failed, and still says why.
+    expect(failed?.status).toBe('failed');
+    expect(failed?.failureReason).toBe('journey_step_failed');
+    expect(failed?.ciStatus).toBe('inconclusive');
+
+    // And it kept what it saw.
+    expect(failed?.pages?.map((page) => page.route)).toEqual(['/cart']);
+    expect(failed?.findings).toHaveLength(1);
+    expect(failed?.findings[0].code).toBe('image-alt');
+
+    // Never a score. An incomplete walk has no denominator, and a number here
+    // would let a partial run read as a graded one.
+    expect(failed?.score).toBeUndefined();
   });
 });

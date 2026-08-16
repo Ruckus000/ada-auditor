@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEvidenceBundle } from '../../../src/domain/evidence';
+import type { PartialJourneyError } from '../../../src/integrations/browser/partial-run';
 import {
   buildDefaultDemoJourneySteps,
   resolveStepTimeoutMs,
@@ -336,7 +337,17 @@ describe('runJourney, when a fill lands on something it cannot fill', () => {
 
       // The original is kept for debugging and does contain the value — which
       // is exactly why it stays off `message` and out of the log line.
-      expect(String((error.cause as Error)?.message ?? '')).toContain(secret);
+      //
+      // Walked rather than indexed: `runJourney` wraps a failure again on the
+      // way out to carry the pages it captured, so the Playwright error is two
+      // links down, and a test that assumed one link would have started
+      // passing for the wrong reason the moment that wrapper appeared.
+      const causes: string[] = [];
+      for (let link: unknown = error.cause; link instanceof Error; link = link.cause) {
+        causes.push(link.message);
+      }
+
+      expect(causes.join('\n')).toContain(secret);
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });
     }
@@ -383,4 +394,59 @@ describe('resolveStepTimeoutMs', () => {
     delete process.env.AUDITOR_STEP_TIMEOUT_MS;
     expect(resolveStepTimeoutMs(-5)).toBe(10_000);
   });
+});
+
+describe('runJourney, when it dies partway through', () => {
+  /**
+   * A journey that failed at step five of eight had still audited four pages.
+   *
+   * They used to go with the stack. `pages` was a local inside the `try`, so
+   * nothing could reach it from the catch; `runBrowserAudit` never saw it; and
+   * `executeRun` stored `findings: []` and no pages. A run that found real
+   * violations and then hit a stale selector reported nothing at all —
+   * indistinguishable from a run that found nothing, which is the difference
+   * that matters most in an auditor.
+   */
+  it('carries the pages it captured out with the error', async () => {
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const error = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'partial',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        stepTimeoutMs: 1000,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'violations.html' },
+          { action: 'login', type: 'fill', selector: '#gone', value: 'x' },
+          { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
+        ],
+      }).then(
+        () => {
+          throw new Error('expected the journey to fail');
+        },
+        (thrown: unknown) => thrown as PartialJourneyError,
+      );
+
+      // The two pages walked before the bad step, and not the one after it.
+      expect(error.captured.pages.map((p) => p.page.route)).toEqual([
+        '/login.html',
+        '/violations.html',
+      ]);
+
+      // Real findings, on a page really visited. This is what was being
+      // thrown away.
+      const violations = error.captured.pages.find((p) => p.page.route === '/violations.html');
+      expect(violations!.axe.violations.length).toBeGreaterThanOrEqual(5);
+
+      // And the failure is unchanged in every respect the classifier reads,
+      // so a partial run still reports why it stopped.
+      expect(error.message).toMatch(/Step 3 \("login"\) could not fill "#gone"/);
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
 });

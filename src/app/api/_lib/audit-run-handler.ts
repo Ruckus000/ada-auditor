@@ -5,6 +5,7 @@ import { environmentSchema } from '../../../domain/contracts';
 import { getArtifactStore } from '../../../integrations/artifacts/blob-store';
 import { getRunStore } from '../../../integrations/persistence';
 import { runBrowserAudit } from '../../../integrations/browser/run-browser-audit';
+import { PartialAuditError } from '../../../integrations/browser/partial-run';
 import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-log';
 import { compareToBaseline } from '../../../services/regression';
 import { toStoredRunRecord } from '../../../services/run-persistence';
@@ -149,6 +150,47 @@ export type AuditRunHandlerResult =
  * Returns the same body either mode would produce, so the async path is purely
  * about when the caller is unblocked — not about what eventually gets stored.
  */
+/**
+ * Uploads one run's evidence and returns the rows to store.
+ *
+ * Extracted because it lived only on the success path, and that was the third
+ * place a partial run lost its work: pages carried out of a failed journey
+ * would have been recorded pointing at a filesystem that vanished with the
+ * invocation. Both paths call this now, so a partial run's evidence is as
+ * durable as a complete one's.
+ */
+async function uploadPages(
+  requestId: string,
+  audited: Array<{
+    page: { url: string; route: string; title: string };
+    evidenceStatus: string;
+    checks?: { passed?: number; failed?: number; incomplete?: number };
+    timing?: { totalMs?: number; scanMs?: number };
+    artifacts: Parameters<ReturnType<typeof getArtifactStore>['upload']>[1];
+    pageKey: string;
+  }>,
+) {
+  const artifactStore = getArtifactStore();
+  const pages = [];
+
+  for (const one of audited) {
+    pages.push({
+      url: one.page.url,
+      route: one.page.route,
+      title: one.page.title,
+      evidenceStatus: one.evidenceStatus,
+      checksPassed: one.checks?.passed,
+      checksFailed: one.checks?.failed,
+      checksIncomplete: one.checks?.incomplete,
+      durationMs: one.timing?.totalMs,
+      scanMs: one.timing?.scanMs,
+      artifacts: await artifactStore.upload(requestId, one.artifacts, one.pageKey),
+    });
+  }
+
+  return pages;
+}
+
 async function executeRun(
   parsedBody: z.infer<typeof auditRunBodySchema>,
   requestId: string,
@@ -177,27 +219,8 @@ async function executeRun(
     // than at a filesystem that disappears with the invocation. One upload per
     // audited page, each keyed by that page so they cannot overwrite one
     // another.
-    const artifactStore = getArtifactStore();
     const uploadStartedAt = Date.now();
-    const pages = [];
-    for (const audited of report.pages) {
-      pages.push({
-        url: audited.page.url,
-        route: audited.page.route,
-        title: audited.page.title,
-        evidenceStatus: audited.evidenceStatus,
-        checksPassed: audited.checks?.passed,
-        checksFailed: audited.checks?.failed,
-        checksIncomplete: audited.checks?.incomplete,
-        durationMs: audited.timing?.totalMs,
-        scanMs: audited.timing?.scanMs,
-        artifacts: await artifactStore.upload(
-          requestId,
-          audited.artifacts,
-          audited.pageKey,
-        ),
-      });
-    }
+    const pages = await uploadPages(requestId, report.pages);
 
     const uploadMs = Date.now() - uploadStartedAt;
     const durationMs = Date.now() - startedAt;
@@ -289,6 +312,28 @@ async function executeRun(
     const failureReason = error instanceof Error ? error.message : 'audit_run_failed';
     const code = classifyRunFailure(failureReason);
 
+    /**
+     * What the run managed to audit before it died.
+     *
+     * A journey that failed at step five of eight had already scanned four
+     * pages, and this path threw them away: `findings: []`, no pages, and the
+     * artifacts left on a filesystem that disappears with the invocation. A
+     * run that found real violations and then hit a stale selector reported
+     * nothing at all — indistinguishable from one that found nothing.
+     *
+     * Uploaded through the same function the success path uses, so partial
+     * evidence is as durable and as strictly judged as complete evidence. If
+     * the upload itself fails there is nothing useful left to do about it: the
+     * run is already failing, and losing the pages is what happened before.
+     */
+    const partial =
+      error instanceof PartialAuditError
+        ? await uploadPages(requestId, error.auditedPages).catch(() => [])
+        : [];
+    const partialFindings = partial.length
+      ? (error as PartialAuditError).auditedPages.flatMap((one) => one.findings)
+      : [];
+
     emitAuditRunLog(
       createAuditRunLog({
         journey: parsedBody.journeyId,
@@ -315,7 +360,12 @@ async function executeRun(
           platform: 'unknown',
           evidenceStatus: 'unknown',
           ciStatus: 'inconclusive',
-          findings: [],
+          // Reported, not withheld. These are real violations on real pages
+          // that were really visited; the run is `failed` and `inconclusive`
+          // either way, and `score` stays absent because an incomplete walk
+          // has no denominator. Saying nothing was found would be the lie.
+          findings: partialFindings,
+          ...(partial.length ? { pages: partial } : {}),
           durationMs,
           browserMode: true,
           status: 'failed',
