@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pruneAxTree } from '../../src/services/ax-tree';
+import { pruneAxTree, redactSecrets, REDACTED_SECRET } from '../../src/services/ax-tree';
 
 /**
  * Node shapes below follow CDP's `Accessibility.getFullAXTree`, where every
@@ -114,5 +114,58 @@ describe('pruneAxTree', () => {
 
     expect(pruned.map((n) => n.role)).toEqual(['RootWebArea', 'heading']);
     expect(JSON.stringify(pruned).length).toBeLessThan(JSON.stringify(raw).length);
+  });
+});
+
+describe('redactSecrets', () => {
+  it('removes a credential that landed as a node value', () => {
+    // The measured shape: Chromium puts a text input's value straight into the
+    // node, and that file is uploaded to blob storage.
+    const nodes = [
+      { role: { value: 'textbox' }, name: { value: 'Username' }, value: { type: 'string', value: 'hunter2' } },
+    ];
+
+    const safe = redactSecrets(nodes, ['hunter2']);
+
+    expect(JSON.stringify(safe)).not.toContain('hunter2');
+    expect(JSON.stringify(safe)).toContain(REDACTED_SECRET);
+    // Everything else survives — this removes a value, it does not blank a tree.
+    expect(JSON.stringify(safe)).toContain('Username');
+  });
+
+  it('reaches a secret at any depth, whatever key it sits under', () => {
+    // Keyed on the value, not on a field name: `logger.ts` can redact by key
+    // because it knows its own shapes, and this walks a structure Chromium
+    // defines and may extend.
+    const safe = redactSecrets({ a: [{ b: { c: 'sekret' } }] }, ['sekret']);
+
+    expect(JSON.stringify(safe)).not.toContain('sekret');
+  });
+
+  /**
+   * The deliberate limit, pinned so nobody "fixes" it into substring matching.
+   *
+   * A client named `acme` with an operator account named `acme` would have the
+   * word struck out of every label and URL in their own report. Corrupting
+   * evidence to hide a name the site displays anyway is the worse failure.
+   */
+  it('leaves a longer string that merely contains the secret alone', () => {
+    const safe = redactSecrets({ label: 'Signed in as acme' }, ['acme']);
+
+    expect((safe as { label: string }).label).toBe('Signed in as acme');
+  });
+
+  it('ignores an empty or one-character secret rather than redacting everything', () => {
+    // A misconfigured credential resolving to '' would otherwise match every
+    // empty string in the tree and destroy the artifact.
+    const tree = { a: '', b: 'x', c: 'kept' };
+
+    expect(redactSecrets(tree, ['', 'x'])).toEqual(tree);
+  });
+
+  it('returns the input untouched when no secrets were resolved', () => {
+    const tree = { a: 'one', b: ['two'] };
+
+    expect(redactSecrets(tree, [])).toEqual(tree);
   });
 });

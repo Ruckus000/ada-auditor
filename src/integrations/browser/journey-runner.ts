@@ -4,7 +4,7 @@ import type { Page, Response } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { boundTitle } from '../../domain/evidence';
 import { isActionAllowed } from '../../domain/policy';
-import { pruneAxTree, type AxNodeSummary } from '../../services/ax-tree';
+import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/ax-tree';
 import { logWarn } from '../../services/logger';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
@@ -35,11 +35,22 @@ export { buildDefaultDemoJourneySteps, resolveNavigationUrl } from './demo-journ
  * advisory pass reads. Previously only the file was produced and nothing ever
  * read it back, so the tree was captured purely to prove it could be.
  */
-async function captureAxTree(page: Page, outputPath: string): Promise<AxNodeSummary[]> {
+async function captureAxTree(
+  page: Page,
+  outputPath: string,
+  secrets: readonly string[],
+): Promise<AxNodeSummary[]> {
   const client = await page.context().newCDPSession(page);
   const { nodes } = await client.send('Accessibility.getFullAXTree');
-  await writeFile(outputPath, JSON.stringify({ nodes }, null, 2), 'utf8');
-  return pruneAxTree(nodes);
+
+  // Before the write, not after: the file is the thing that gets uploaded, and
+  // a redaction applied to the returned summary alone would leave the secret
+  // sitting in blob storage. `pruneAxTree` reads the redacted copy for the
+  // same reason — the summary is what the advisory pass sends to a model.
+  const safe = redactSecrets(nodes, secrets);
+
+  await writeFile(outputPath, JSON.stringify({ nodes: safe }, null, 2), 'utf8');
+  return pruneAxTree(safe);
 }
 
 /**
@@ -274,6 +285,16 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
    */
   const mainFrameStatus = new WeakMap<Page, number>();
 
+  /**
+   * Every credential value this run has resolved, so it can be kept out of
+   * what gets stored.
+   *
+   * Collected as the steps run rather than read from the journey, because the
+   * journey holds only the *reference* — resolving it is the whole point of
+   * `credentialRef`, and the resolved value exists nowhere else.
+   */
+  const resolvedSecrets: string[] = [];
+
   // Bound to the context, not to a page.
   //
   // A page-level listener cannot cover popups, and attaching one when a popup
@@ -416,7 +437,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       let axTree: AxNodeSummary[] = [];
       if (!input.omitAxTree) {
         const axTreePath = `${artifactPrefix}.ax.json`;
-        axTree = await captureAxTree(page, axTreePath);
+        axTree = await captureAxTree(page, axTreePath, resolvedSecrets);
         artifacts.axTreePath = axTreePath;
       }
 
@@ -491,10 +512,34 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       }
 
       if (step.type === 'fill') {
-        const value =
-          'credentialRef' in step
-            ? resolveCredential(step.credentialRef, step.field)
-            : step.value;
+        let value: string;
+        if ('credentialRef' in step) {
+          value = resolveCredential(step.credentialRef, step.field);
+          // Recorded before it is typed, so a capture triggered by this very
+          // step cannot beat the redaction to the disk.
+          resolvedSecrets.push(value);
+        } else {
+          // Not recorded, and the reason is not that a literal is safe.
+          //
+          // An earlier version of this comment said `containsInlineCredential`
+          // refuses inline secrets at write time. It does not: it tests step
+          // *key names* against /^(password|pass|secret|token)$/i, and a
+          // literal's value lives under the key `value`. It also never runs on
+          // the run route. `audit-run-handler.ts` and `run-persistence.ts` both
+          // already say so — the claim here contradicted two true comments.
+          //
+          // The real reason is that a literal fill is ordinary content. Search
+          // terms, filters and postcodes are all typed this way, and treating
+          // every one as a secret would strike legitimate text out of the
+          // evidence for every journey that types anything. `credentialRef` is
+          // the only input this run *knows* is a secret, so it is the only one
+          // redacted.
+          //
+          // So `{type:'fill', value:'hunter2'}` still reaches the AX tree, and
+          // that is a real hole. It is closed at the write end, by refusing the
+          // step, not at the capture end by guessing — Phase 5's job.
+          value = step.value;
+        }
         await attemptStep(index, step, () =>
           page.fill(step.selector, value, { timeout: stepTimeoutMs }),
         );
