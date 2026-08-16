@@ -137,6 +137,42 @@ describe('parsePages', () => {
     expect(pages?.[1].evidenceStatus).toBe('degraded');
   });
 
+  it('reads the HTTP status a page was served with', () => {
+    const pages = parsePages([
+      { url: 'https://a.example/boom', route: '/boom', evidenceStatus: 'degraded', statusCode: 500 },
+    ]);
+
+    expect(pages?.[0].statusCode).toBe(500);
+  });
+
+  /**
+   * Absent has to survive the parse.
+   *
+   * A `file://` run has no HTTP status and neither has any page recorded
+   * before the column existed. If the parser defaulted to 200 the screen would
+   * print a measurement nobody took, on the field that says whether the page
+   * counted.
+   */
+  it('leaves an unmeasured status absent rather than inventing one', () => {
+    const pages = parsePages([
+      { url: 'https://a.example/x', route: '/x', evidenceStatus: 'complete' },
+    ]);
+
+    expect(pages?.[0].statusCode).toBeUndefined();
+  });
+
+  it('refuses a status that is not a whole number', () => {
+    // This comes off a JSON response, so it is checked rather than trusted:
+    // a string or a float would otherwise reach the screen and render as-is.
+    const pages = parsePages([
+      { url: 'https://a.example/a', route: '/a', statusCode: '500' },
+      { url: 'https://a.example/b', route: '/b', statusCode: 4.5 },
+    ]);
+
+    expect(pages?.[0].statusCode).toBeUndefined();
+    expect(pages?.[1].statusCode).toBeUndefined();
+  });
+
   it('falls back to the URL for a missing route, and leaves a missing title absent', () => {
     const pages = parsePages([{ url: 'https://a.example/x' }]);
 

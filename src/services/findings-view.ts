@@ -63,6 +63,13 @@ export type PageFindings = {
   route: string;
   title?: string;
   evidenceStatus: string;
+  /**
+   * The HTTP status this page was served with, when one was measured.
+   *
+   * Carried so a degraded page can say which kind of degraded it was. Absent
+   * means not measured, never 200.
+   */
+  statusCode?: number;
   findings: FindingView[];
 };
 
@@ -200,6 +207,7 @@ export async function buildFindingsView(
     // a blank where a name should be.
     ...(page.title ? { title: page.title } : {}),
     evidenceStatus: page.evidenceStatus,
+    ...(page.statusCode !== undefined ? { statusCode: page.statusCode } : {}),
     findings: sortBySeverity(byPage.get(page.url) ?? []),
   }));
 

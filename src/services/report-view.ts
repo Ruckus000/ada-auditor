@@ -111,6 +111,8 @@ export type SharedReport = {
     route: string;
     title?: string;
     evidenceStatus: string;
+    /** HTTP status served, when measured. Absent means not measured. */
+    statusCode?: number;
     findings: Array<{
       code: string;
       title?: string;
@@ -182,6 +184,7 @@ export async function buildSharedReport(
       // back to its route rather than rendering a blank where a name goes.
       ...(page.title ? { title: page.title } : {}),
       evidenceStatus: page.evidenceStatus,
+      ...(page.statusCode !== undefined ? { statusCode: page.statusCode } : {}),
       findings: byPage.get(page.url) ?? [],
     })),
   };

@@ -39,8 +39,12 @@ const VERDICT_COPY: Record<string, { title: string; detail: string }> = {
   },
   inconclusive: {
     title: 'Inconclusive',
+    // "incomplete" until a page could also be unjudgeable for having been
+    // served as an error, at which point the word named the wrong problem in a
+    // document a client's counsel may read: nothing was incomplete, the site
+    // returned 500. Both reasons are stated rather than the narrower one.
     detail:
-      'Evidence for this run was incomplete, so no conformance judgement is made. Deterministic findings are withheld rather than reported from partial evidence.',
+      'Evidence for this run was not usable — an artifact was missing, or a page was served as an error — so no conformance judgement is made. Deterministic findings are withheld rather than reported from partial evidence.',
   },
 };
 
