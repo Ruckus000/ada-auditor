@@ -153,3 +153,125 @@ export const authoredStepSchema = z.union([
       message: 'An expect step must set urlIncludes, selector, or both.',
     }),
 ]);
+
+/**
+ * One step, shaped for a screen.
+ *
+ * A journey's steps were never shown — the UI printed a *count*, so an
+ * operator could not see what a journey did without reading the database. That
+ * is also the thing carrying the weight no static check could: `{action:
+ * 'activate', type:'click', selector:'#delete-account'}` passes every rule in
+ * this file, and the only real defence is that somebody can read it.
+ */
+export type JourneyStepView = {
+  /** 1-based, because it is a position in a list a person is reading. */
+  position: number;
+  action: string;
+  type: string;
+  /** The path, selector, or expectation — whatever says *where* this step acts. */
+  target?: string;
+  /** The credential's *name*. Never its value; the value is not here to leak. */
+  credentialRef?: string;
+  /** `user` or `pass`, so a transposed login is visible on the screen. */
+  field?: string;
+  /**
+   * That this step types a literal, without saying what.
+   *
+   * Load-bearing. `authoredStepSchema` refuses a `login` fill carrying a
+   * literal, but only for *new* writes — rows stored before that rule exist
+   * and some of them hold a real password. Rendering `value` would take a
+   * secret out of a database column and put it on a screen, which is a worse
+   * place for it. So the screen says a literal is there and never what it is,
+   * and an operator who sees one on a login step knows to replace it with a
+   * `credentialRef`.
+   */
+  hasLiteralValue?: boolean;
+  /**
+   * Whether the runner would recognise this step at all.
+   *
+   * `false` for rows the old free-for-all accepted. Those cannot run — both
+   * the run and schedule routes refuse them — so the screen has to say so
+   * rather than render a plausible-looking row that will never work.
+   */
+  recognised: boolean;
+};
+
+/**
+ * Turns stored steps into something a screen can show, safely.
+ *
+ * Takes `unknown` because that is what `StoredJourney.steps` is: jsonb written
+ * before any validation existed, so a row can hold a non-array, and an element
+ * can be anything at all.
+ */
+/** Bounded because an unvalidated row's fields are whatever jsonb was handed. */
+function looseText(value: unknown): string {
+  return typeof value === 'string' ? value.slice(0, 512) : 'unknown';
+}
+
+export function toStepViews(steps: unknown): JourneyStepView[] {
+  if (!Array.isArray(steps)) return [];
+
+  return steps.map((raw, index) => {
+    const position = index + 1;
+    const parsed = journeyStepSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      // Read what little can be trusted, so the row is identifiable, and mark
+      // it unrecognised. `action` and `type` are echoed only when they really
+      // are strings — a number or an object rendered raw is how "[object
+      // Object]" reaches a screen.
+      const loose = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+      return {
+        position,
+        // Echoed only when really strings, and clipped. A number or an object
+        // rendered raw is how "[object Object]" reaches a screen, and these
+        // are the one path not bounded by `STEP_TEXT` — the row predates it,
+        // so its fields are whatever jsonb was handed.
+        action: looseText(loose.action),
+        type: looseText(loose.type),
+        // Flagged here too, and this is the case that matters most.
+        //
+        // A row that fails the schema can still hold a real password —
+        // `{action:'login', type:'fill', value:'hunter2'}` with no selector is
+        // exactly that shape. Without this it rendered as "not a runnable
+        // step" and nothing else, so the operator review this whole change
+        // exists to enable had its blind spot precisely on the rows from the
+        // era most likely to carry an inline secret.
+        ...(typeof loose.value === 'string' ? { hasLiteralValue: true } : {}),
+        recognised: false,
+      };
+    }
+
+    const step = parsed.data;
+    const view: JourneyStepView = {
+      position,
+      action: step.action,
+      type: step.type,
+      recognised: true,
+    };
+
+    if (step.type === 'goto') view.target = step.path;
+    if (step.type === 'click') view.target = step.selector;
+    if (step.type === 'fill') {
+      view.target = step.selector;
+      if ('credentialRef' in step) {
+        view.credentialRef = step.credentialRef;
+        view.field = step.field;
+      } else {
+        view.hasLiteralValue = true;
+      }
+    }
+    if (step.type === 'expect') {
+      // Both halves, joined, because an expectation that checks the URL *and*
+      // a selector is stronger than either and the screen should show which.
+      view.target = [
+        step.urlIncludes ? `url contains ${step.urlIncludes}` : undefined,
+        step.selector ? `${step.selector} visible` : undefined,
+      ]
+        .filter(Boolean)
+        .join(' and ');
+    }
+
+    return view;
+  });
+}
