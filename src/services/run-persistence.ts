@@ -107,7 +107,21 @@ function toStoredFinding(finding: AuditFinding): StoredFinding {
  * journey either side of a password rotation walked the same path, and should
  * not read as incomparable because a secret changed.
  */
-const STEP_KEYS_THAT_SAY_WHERE = ['action', 'type', 'path', 'selector', 'credentialRef', 'field'];
+const STEP_KEYS_THAT_SAY_WHERE = [
+  'action',
+  'type',
+  'path',
+  'selector',
+  'credentialRef',
+  'field',
+  // Added with the `expect` step, and the comment above predicted the bug it
+  // would otherwise have caused: a URL-only expectation persisted as
+  // `{action, type}`, so two runs asserting *different* destinations
+  // serialised identically and `walkedTheSamePath` called them the same walk.
+  // That is a regression diff run between journeys nobody meant to compare —
+  // the clean bill of health this list exists to prevent.
+  'urlIncludes',
+];
 
 export function redactIntent(intent: RunIntent): RunIntent {
   return {
