@@ -59,9 +59,9 @@ describe('classifyRunFailure', () => {
   it('does not let an operator\u2019s selector pick the code for them', () => {
     // This branch is checked first, and anchored, because it is the only
     // message built partly from text the operator wrote. The branches after it
-    // match with `includes`, so a selector containing another branch's phrase
-    // used to win — a run misfiled as an evidence failure because of what
-    // somebody called a CSS class.
+    // match with `includes`, so without the ordering a selector containing
+    // another branch's phrase wins — a run misfiled as an evidence failure
+    // because of what somebody called a CSS class.
     expect(
       classifyRunFailure(
         'Step 1 ("login") could not click "[data-test=incomplete evidence]": the selector never matched anything on the page.',

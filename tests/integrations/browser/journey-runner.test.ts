@@ -321,6 +321,14 @@ describe('runJourney, when a fill lands on something it cannot fill', () => {
       // It still names the step, so the operator can fix it.
       expect(error.message).toMatch(/Step 2 \("login"\) could not fill "#password"/);
 
+      // And it says what actually went wrong. This case is not a timeout —
+      // Playwright rejects a non-fillable element immediately — so naming the
+      // error's class produced "it raised Error", which told the operator
+      // nothing the step's own type had not. The first line of Playwright's
+      // message is the useful part; the call log below it is the part that
+      // carries the value.
+      expect(error.message).toMatch(/not an <input>/);
+
       // And it says nothing about what was being typed. `stack` too, because
       // that is what an uncaught handler prints.
       expect(error.message).not.toContain(secret);

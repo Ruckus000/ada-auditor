@@ -40,10 +40,11 @@ export type RunFailureCode =
 export function classifyRunFailure(message: string): RunFailureCode {
   // First, and anchored, because this is the only message here built partly
   // from operator-authored text. The branches below match with `includes`, so
-  // a journey whose selector happened to contain "incomplete evidence" was
-  // classified as an evidence failure — the operator naming their own run's
-  // error code by accident. A message starting with `Step N ("` can only have
-  // come from `attemptStep`, so it is safe to decide here and stop.
+  // a journey whose selector contains "incomplete evidence" would otherwise
+  // be classified as an evidence failure — an operator naming their own run's
+  // error code by accident, through what they called a CSS class. A message
+  // starting with `Step N ("` can only have come from `attemptStep`, so it is
+  // safe to decide here and stop.
   if (/^Step \d+ \(".*"\) could not /.test(message)) {
     return 'journey_step_failed';
   }
