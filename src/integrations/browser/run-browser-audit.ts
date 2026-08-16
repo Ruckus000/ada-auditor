@@ -8,7 +8,8 @@ import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
 import { scoreRun } from '../../services/score';
 import { buildDefaultDemoJourneySteps, runJourney } from './journey-runner';
-import type { JourneyRunnerInput, JourneyStep } from './types';
+import { PartialAuditError, PartialJourneyError, type AuditedPage } from './partial-run';
+import type { JourneyRunnerInput, JourneyStep, PageAudit } from './types';
 
 export type RunBrowserAuditInput = Omit<JourneyRunnerInput, 'steps'> & {
   /**
@@ -36,6 +37,50 @@ export type RunBrowserAuditInput = Omit<JourneyRunnerInput, 'steps'> & {
  * were captured in the same session.
  */
 export async function runBrowserAudit(input: RunBrowserAuditInput) {
+  /**
+   * Evidence is per page. A page whose artifacts are incomplete has its
+   * deterministic findings rejected, and drags the whole run to
+   * `inconclusive` — the steady-state rule, applied across the page dimension.
+   *
+   * A local function rather than a top-level one because it needs the run's
+   * identity, and rather than two copies because the failure path has to judge
+   * a partial run's pages by exactly the same rule as the success path. Two
+   * copies is how a partial run comes to report evidence a complete one would
+   * have refused.
+   */
+  const auditPages = (captured: PageAudit[]): AuditedPage[] =>
+    captured.map((pageAudit) => {
+      const evidence = createEvidenceBundle({
+        page: pageAudit.page,
+        run: {
+          journeyId: input.journeyId,
+          stepId: input.stepId,
+          environment: input.environment,
+        },
+        artifacts: pageAudit.artifacts,
+      });
+
+      return {
+        ...pageAudit,
+        evidenceStatus: evidence.status,
+        findings:
+          evidence.status === 'complete'
+            ? runDeterministicAudit(pageAudit.axe, pageAudit.page.url)
+            : [],
+        // Counted here so a partial run carries them too. Computed on the
+        // success path alone, every page of a failed run persisted null
+        // counts — the upload reads `checks`, and nothing ever set it.
+        checks: {
+          passed: pageAudit.axe.passCount,
+          failed: pageAudit.axe.violations.reduce((total, rule) => total + rule.nodes.length, 0),
+          incomplete: pageAudit.axe.incomplete.reduce(
+            (total, rule) => total + rule.nodes.length,
+            0,
+          ),
+        },
+      };
+    });
+
   // The allowlist is the target's own host unless a run says otherwise: an
   // audit of one site has no business navigating to another.
   const allowedHosts =
@@ -56,12 +101,34 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   // that knows what the run was actually asked to walk.
   const steps = input.steps ?? buildDefaultDemoJourneySteps();
 
+  // Before the browser, not after it. This sat below `runJourney`, so a
+  // journey outside the run's scope was fully walked and only then refused —
+  // and once a failure could carry pages out, an out-of-scope partial run
+  // could have stored them. It needs nothing the walk produces.
+  const journeyIds = input.allowedJourneyIds ?? [input.journeyId];
+  if (!journeyIds.includes(input.journeyId)) {
+    throw new Error('Journey is not allowed by run contract scope.');
+  }
+
   const journeyStartedAt = Date.now();
-  const journeyResult = await runJourney({
-    ...input,
-    allowedHosts,
-    steps,
-  });
+  let journeyResult;
+  try {
+    journeyResult = await runJourney({ ...input, allowedHosts, steps });
+  } catch (error) {
+    // The second place a partial run lost its work. `runJourney` carries what
+    // it captured out on the error; this turns those raw captures into the
+    // same audited shape the success path produces, so `executeRun` can store
+    // and upload them with the code it already has. The error is rethrown
+    // unchanged in every respect the classifier reads.
+    if (error instanceof PartialJourneyError) {
+      throw new PartialAuditError(
+        error,
+        auditPages(error.captured.pages),
+        error.captured.truncatedPages,
+      );
+    }
+    throw error;
+  }
   const journeyMs = Date.now() - journeyStartedAt;
 
   // Platform is a property of the site, not of a page, so it is detected once
@@ -73,8 +140,6 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const platformContext = createPlatformContext({
     platformHint: platform.id,
   });
-
-  const journeyIds = input.allowedJourneyIds ?? [input.journeyId];
 
   const contract = createRunContract({
     environment: input.environment,
@@ -102,43 +167,13 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     platformCapabilities: platformContext.capabilities,
   });
 
-  if (!contract.scope.journeyIds.includes(input.journeyId)) {
-    throw new Error('Journey is not allowed by run contract scope.');
-  }
-
-  // Evidence is per page. A page whose artifacts are incomplete has its
-  // deterministic findings rejected, and drags the whole run to `inconclusive`
-  // — the steady-state rule, unchanged, now applied across the page dimension.
-  const auditedPages = journeyResult.pages.map((pageAudit) => {
-    const evidence = createEvidenceBundle({
-      page: pageAudit.page,
-      run: {
-        journeyId: input.journeyId,
-        stepId: input.stepId,
-        environment: input.environment,
-      },
-      artifacts: pageAudit.artifacts,
-    });
-
-    return {
-      ...pageAudit,
-      evidenceStatus: evidence.status,
-      findings:
-        evidence.status === 'complete'
-          ? runDeterministicAudit(pageAudit.axe, pageAudit.page.url)
-          : [],
-    };
-  });
+  const auditedPages = auditPages(journeyResult.pages);
 
   const evidenceStatus = worstEvidenceStatus(auditedPages.map((p) => p.evidenceStatus));
 
   // A conformance rate over the checks axe actually evaluated. Withheld
   // entirely when evidence is incomplete — see `services/score.ts`.
-  const checkCounts = auditedPages.map((pageAudit) => ({
-    passed: pageAudit.axe.passCount,
-    failed: pageAudit.axe.violations.reduce((total, rule) => total + rule.nodes.length, 0),
-    incomplete: pageAudit.axe.incomplete.reduce((total, rule) => total + rule.nodes.length, 0),
-  }));
+  const checkCounts = auditedPages.map((pageAudit) => pageAudit.checks);
   const score = scoreRun({ pages: checkCounts, evidenceStatus });
   const deterministicFindings = auditedPages.flatMap((p) => p.findings);
 

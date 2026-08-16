@@ -9,6 +9,7 @@ import { logWarn } from '../../services/logger';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
+import { PartialJourneyError } from './partial-run';
 import {
   assertAllowedUrl,
   assertPeerAddressAllowed,
@@ -283,11 +284,30 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     );
   });
 
+  /**
+   * A silent cap reads as "we audited everything" when we did not, and this is
+   * the only record that the walk was cut short — so both the success and the
+   * failure path call it, rather than one of them forgetting.
+   */
+  const warnIfCapped = () => {
+    if (truncatedPages === 0) return;
+    logWarn('audit_page_cap_reached', {
+      journeyId: input.journeyId,
+      stepId: input.stepId,
+      maxPages,
+      pagesAudited: pages.length,
+      pagesSkipped: truncatedPages,
+    });
+  };
+
+  // Declared out here, not inside the `try`, so the catch below can still see
+  // what was captured before the throw. This was the first of three places a
+  // partial run lost its work.
+  const pages: PageAudit[] = [];
+  let truncatedPages = 0;
+
   try {
     const { steps } = input;
-
-    const pages: PageAudit[] = [];
-    let truncatedPages = 0;
 
     /**
      * Scans and captures whatever the page is showing right now.
@@ -457,20 +477,41 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     // read, because nothing looked again. A check nobody reads is not a check.
     await assertNavigationsWereSafe();
 
-    // A silent cap reads as "we audited everything" when we did not. This is
-    // the only record that the run was truncated, so it is emitted here rather
-    // than left to a caller that might not look.
-    if (truncatedPages > 0) {
-      logWarn('audit_page_cap_reached', {
-        journeyId: input.journeyId,
-        stepId: input.stepId,
-        maxPages,
-        pagesAudited: pages.length,
-        pagesSkipped: truncatedPages,
-      });
-    }
+    warnIfCapped();
 
     return { pages, truncatedPages };
+  } catch (error) {
+    // A journey that died at step five of eight still audited four pages, and
+    // they were thrown away with the stack: `executeRun` stored `findings: []`
+    // and no pages, so a run that found real violations before it failed
+    // reported nothing at all. The pages travel with the error now.
+    //
+    // Only when there are pages. Wrapping unconditionally changed the type of
+    // every failure, and a caller testing `instanceof UnsafeTargetError` — the
+    // rebind suite does — stopped recognising an SSRF refusal it had always
+    // recognised. Nothing is partial about a run that captured nothing, so
+    // those keep throwing exactly what they threw before.
+    //
+    // This asks about the pages and never about the error, deliberately: a
+    // rebind on page three and a stale selector on page three take the same
+    // road out, so one error type exercises the branch for both.
+    //
+    // That pairing is real in production — page one resolves honestly, page
+    // two's connection is rebound — and it is untested. Not because it is
+    // settled: because reaching it needs one page the peer check *allows*
+    // followed by one it refuses, and every server a test can stand up is on
+    // a private address, which is the thing being refused. Serving benign
+    // content first does not help; the address is what fails, not the body. A
+    // journey mixing a `file://` fixture with an http target cannot be
+    // expressed either, since `resolveNavigationUrl` resolves every path
+    // against one base. Recorded here rather than left as a passing test that
+    // proved something else.
+    if (pages.length === 0) throw error;
+
+    // Both paths, because a run can be truncated and then die.
+    warnIfCapped();
+
+    throw new PartialJourneyError(error, { pages, truncatedPages });
   } finally {
     await browser.close();
   }

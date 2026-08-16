@@ -247,3 +247,41 @@ describe('compareToBaseline, when intent is the wrong shape', () => {
     expect(summary.resolvedFindings).toHaveLength(0);
   });
 });
+
+describe('compareToBaseline, when the baseline is a run that died partway', () => {
+  /**
+   * The invariant that protects this is real, load-bearing, and was written
+   * nowhere.
+   *
+   * `getLatestRun` does not filter on status, so a failed run is eligible as
+   * the next run's baseline — and since partial runs started keeping their
+   * pages, such a baseline carries real findings where it used to carry none.
+   * The only thing preventing a comparison is that the failure path records no
+   * `intent`. That is one line away from being "fixed" by someone reasoning
+   * that a run with pages should record what it walked.
+   *
+   * If it ever were, this is what would happen: a baseline that reached pages
+   * one and two, a current run that reached all four, and everything the
+   * baseline never got to reported as newly appeared — or, the other way
+   * round, everything the current run never reached reported as resolved.
+   */
+  it('refuses to compare against a partial run', () => {
+    const critical = {
+      code: 'missing-image-alt',
+      severity: 'critical' as const,
+      source: 'deterministic' as const,
+    };
+
+    // What `executeRun`'s catch writes: pages, findings, failed, no intent.
+    const partialBaseline = {
+      ...makeRecordWithoutIntent('baseline', [critical]),
+      status: 'failed' as const,
+      ciStatus: 'inconclusive',
+    };
+
+    const summary = compareToBaseline(makeRecord('current', []), partialBaseline);
+
+    expect(summary.status).toBe('incomparable');
+    expect(summary.resolvedFindings).toHaveLength(0);
+  });
+});
