@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Restyled login</title>
+  </head>
+  <body>
+    <h1>Restyled login</h1>
+    <!--
+      `#password` was an <input> and is now a <div>, which is what a redesign
+      does to a journey. Playwright resolves the selector, refuses to fill it,
+      and puts the value it was asked to type into the error message.
+    -->
+    <div id="password">Password</div>
+  </body>
+</html>

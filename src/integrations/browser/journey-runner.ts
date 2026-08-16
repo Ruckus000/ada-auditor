@@ -127,6 +127,17 @@ const DEFAULT_MAX_PAGES = 20;
  * runner has already navigated to and waited for `domcontentloaded` on is
  * stale, not slow. Raise it with `AUDITOR_STEP_TIMEOUT_MS` for an app that
  * genuinely takes longer to paint a control.
+ *
+ * Passed to each `fill` and `click` rather than to `context.setDefaultTimeout`,
+ * which was the first version of this and was wrong. That default is
+ * context-wide: it also caps `page.goto` — which waits for `load`, so every
+ * image, font and third-party tag on a real client page — and
+ * `page.screenshot({fullPage: true})`, measured failing at exactly the cap on a
+ * tall page. Both sit outside `attemptStep`, so both would have reported
+ * `audit_run_failed`: a knob added to make failures legible would have
+ * manufactured illegible ones, on precisely the heavy real-world pages this
+ * product exists for. The axe scan is unaffected either way — it runs through
+ * `page.evaluate`, which passes its own no-timeout.
  */
 const DEFAULT_STEP_TIMEOUT_MS = 10_000;
 
@@ -186,6 +197,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // stepId costs nothing and leaves nothing behind.
   resolveArtifactPrefix(input.artifactsDir, input.stepId);
   const maxPages = resolveMaxPages(input.maxPages);
+  const stepTimeoutMs = resolveStepTimeoutMs(input.stepTimeoutMs);
 
   // Default the allowlist to the target's own host: an audit of one site has no
   // business navigating to another.
@@ -205,7 +217,6 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // `script-src` CSP would block that injection and silently return no
   // results, so the context opts out of CSP enforcement for the audit session.
   const context = await browser.newContext({ bypassCSP: true });
-  context.setDefaultTimeout(resolveStepTimeoutMs(input.stepTimeoutMs));
   const page = await context.newPage();
 
   // Every main-frame document the browser fetched, judged as it arrives.
@@ -403,11 +414,13 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
           'credentialRef' in step
             ? resolveCredential(step.credentialRef, step.field)
             : step.value;
-        await attemptStep(index, step, () => page.fill(step.selector, value));
+        await attemptStep(index, step, () =>
+          page.fill(step.selector, value, { timeout: stepTimeoutMs }),
+        );
         continue;
       }
 
-      await attemptStep(index, step, () => page.click(step.selector));
+      await attemptStep(index, step, () => page.click(step.selector, { timeout: stepTimeoutMs }));
       await page.waitForLoadState('domcontentloaded');
       await assertNavigationsWereSafe();
       await capturePage();

@@ -2,10 +2,11 @@ import { access } from 'node:fs/promises';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { createEvidenceBundle } from '../../../src/domain/evidence';
 import {
   buildDefaultDemoJourneySteps,
+  resolveStepTimeoutMs,
   runJourney,
 } from '../../../src/integrations/browser/journey-runner';
 
@@ -275,4 +276,103 @@ describe('runJourney, when a step cannot be performed', () => {
       await rm(artifactsDir, { recursive: true, force: true });
     }
   }, 60_000);
+});
+
+describe('runJourney, when a fill lands on something it cannot fill', () => {
+  /**
+   * The value must not travel with the failure.
+   *
+   * A selector that used to match a login `<input>` and now matches a `<div>`
+   * is an ordinary stale-selector case — a redesign is enough. Playwright
+   * resolves it, refuses to fill it, and writes the value it was asked to type
+   * into `error.message`, `error.stack` and its call log. When that value is a
+   * resolved credential, anything that logs the error logs the password.
+   *
+   * `attemptStep` attaches the original as `cause` rather than interpolating
+   * it, so the message it throws is built only from the step's own metadata.
+   * Nothing enforced that but the wording of a comment, and a comment does not
+   * fail a build — which is the whole reason this test exists.
+   */
+  it('keeps the typed value out of the error it throws', async () => {
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+    const secret = 'hunter2-CORRECT-HORSE';
+
+    try {
+      const run = runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'unfillable',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        stepTimeoutMs: 1000,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'restyled-login.html' },
+          { action: 'login', type: 'fill', selector: '#password', value: secret },
+        ],
+      });
+
+      const error = await run.then(
+        () => {
+          throw new Error('expected the fill to fail');
+        },
+        (thrown: unknown) => thrown as Error,
+      );
+
+      // It still names the step, so the operator can fix it.
+      expect(error.message).toMatch(/Step 2 \("login"\) could not fill "#password"/);
+
+      // And it says nothing about what was being typed. `stack` too, because
+      // that is what an uncaught handler prints.
+      expect(error.message).not.toContain(secret);
+      expect(error.stack ?? '').not.toContain(secret);
+
+      // The original is kept for debugging and does contain the value — which
+      // is exactly why it stays off `message` and out of the log line.
+      expect(String((error.cause as Error)?.message ?? '')).toContain(secret);
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+});
+
+describe('resolveStepTimeoutMs', () => {
+  // Exported and used by `runJourney`, and previously asserted nowhere: the
+  // default, the env override and the fallbacks were all unguarded.
+  //
+  // Here rather than beside `classifyRunFailure`, where it was first written:
+  // that suite is the fast one, and importing this module into it pulls
+  // `playwright-core` along — 495ms of import for four numeric assertions.
+  // `resolveMaxPages` is tested from this suite for the same reason.
+  const original = process.env.AUDITOR_STEP_TIMEOUT_MS;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.AUDITOR_STEP_TIMEOUT_MS;
+    else process.env.AUDITOR_STEP_TIMEOUT_MS = original;
+  });
+
+  it('defaults to ten seconds, not to Playwright’s thirty', () => {
+    delete process.env.AUDITOR_STEP_TIMEOUT_MS;
+    expect(resolveStepTimeoutMs()).toBe(10_000);
+  });
+
+  it('prefers an explicit value over the environment', () => {
+    process.env.AUDITOR_STEP_TIMEOUT_MS = '5000';
+    expect(resolveStepTimeoutMs(1000)).toBe(1000);
+  });
+
+  it('reads the environment when no value is passed', () => {
+    process.env.AUDITOR_STEP_TIMEOUT_MS = '25000';
+    expect(resolveStepTimeoutMs()).toBe(25_000);
+  });
+
+  it('falls back rather than trusting a nonsense value', () => {
+    // A typo in a deploy's environment must not mean "no timeout" or a
+    // negative one, either of which hangs a run against the 300s ceiling.
+    for (const bad of ['0', '-1', 'soon', '']) {
+      process.env.AUDITOR_STEP_TIMEOUT_MS = bad;
+      expect(resolveStepTimeoutMs()).toBe(10_000);
+    }
+    delete process.env.AUDITOR_STEP_TIMEOUT_MS;
+    expect(resolveStepTimeoutMs(-5)).toBe(10_000);
+  });
 });
