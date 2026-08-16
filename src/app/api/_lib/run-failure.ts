@@ -16,7 +16,6 @@ export type RunFailureCode =
   | 'journey_not_in_scope'
   | 'action_not_allowed'
   | 'invalid_step_id'
-  | 'incomplete_evidence'
   /**
    * The same code the platform run route answers with, for the callers that
    * do not pass through it: a bearer POST to `/api/audit/run` naming a target
@@ -31,13 +30,43 @@ export type RunFailureCode =
    * crash: both arrived as `audit_run_failed`.
    */
   | 'journey_step_failed'
+  /**
+   * The run refused to navigate somewhere: off the allowlist, or to a private
+   * or reserved address. Operator-fixable when it is their own journey, and a
+   * security refusal working correctly when it is not.
+   */
+  | 'navigation_not_allowed'
   // Not produced by `classifyRunFailure`: nothing throws it, because the
   // invocation that would have caught it is gone. `reconcileRunStatus` writes
   // it onto a run left `running` past the point where it could still be alive.
   | 'run_timed_out'
   | 'audit_run_failed';
 
-export function classifyRunFailure(message: string): RunFailureCode {
+export function classifyRunFailure(message: string, errorName?: string): RunFailureCode {
+  /**
+   * Every refusal from `target-url`, matched by type rather than by prose.
+   *
+   * The first attempt at this matched a message prefix and claimed to cover
+   * "three shapes". `UnsafeTargetError` has **nine** throw sites, and the
+   * regex caught three — leaving `Target URL resolves to a private or
+   * reserved address`, thrown by both the literal-IP check and the post-DNS
+   * check, reporting "a reason it could not categorise". Those are the two
+   * most security-critical refusals the SSRF guard makes, and a typo'd
+   * hostname resolving into a private range is the likeliest way a real
+   * operator meets one.
+   *
+   * The name survives wrapping: `PartialJourneyError` and `PartialAuditError`
+   * both copy `name` from their cause, so a refusal partway through a walk
+   * still classifies here.
+   *
+   * One code for all nine. The distinction an operator acts on is that the
+   * run refused to go somewhere, and the answer is the same in every case:
+   * fix the journey, or widen its allowed hosts deliberately.
+   */
+  if (errorName === 'UnsafeTargetError') {
+    return 'navigation_not_allowed';
+  }
+
   // First, and anchored, because this is the only message here built partly
   // from operator-authored text. The branches below match with `includes`, so
   // a journey whose selector contains "incomplete evidence" would otherwise
@@ -58,9 +87,6 @@ export function classifyRunFailure(message: string): RunFailureCode {
   }
   if (message.startsWith('stepId must')) {
     return 'invalid_step_id';
-  }
-  if (message.includes('incomplete evidence')) {
-    return 'incomplete_evidence';
   }
   // Thrown by `runBrowserAudit` when a run names a target URL and no steps.
   // Anchored to the start of the whole sentence, not a substring of it: the

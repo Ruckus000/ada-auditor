@@ -167,3 +167,57 @@ describe('buildClientDetail', () => {
 function detailRun(detail: Awaited<ReturnType<typeof buildClientDetail>>) {
   return detail?.lastRun;
 }
+
+describe('buildClientDetail, for a journey whose last run failed', () => {
+  /**
+   * `failureReason` has been stored since failures were first classified and
+   * read by nothing, so every failure rendered as `? INCONCLUSIVE` with no
+   * explanation. A stale selector, a browser crash and a journey walked out of
+   * scope looked identical on the screen, and each needs a different person to
+   * do a different thing.
+   */
+  it('carries the reason through so a screen can say it', async () => {
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({
+      id: 'j1',
+      clientId: 'acme',
+      name: 'Checkout',
+      targetUrl: 'https://acme.test/',
+      steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+    });
+    await runs.saveRun(
+      run({
+        requestId: 'failed-run',
+        journeyId: 'j1',
+        status: 'failed',
+        failureReason: 'journey_step_failed',
+        ciStatus: 'inconclusive',
+      }),
+    );
+
+    const [journey] = (await buildClientDetail('acme', deps()))?.journeys ?? [];
+
+    expect(journey?.lastRun?.failureReason).toBe('journey_step_failed');
+  });
+
+  it('does not carry one on a run that finished', async () => {
+    // A reason on a completed run would be a leftover from an earlier attempt
+    // at the same request id, and the screen would report a failure that was
+    // subsequently fixed.
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({
+      id: 'j1',
+      clientId: 'acme',
+      name: 'Checkout',
+      targetUrl: 'https://acme.test/',
+      steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+    });
+    await runs.saveRun(
+      run({ requestId: 'ok-run', journeyId: 'j1', failureReason: 'journey_step_failed' }),
+    );
+
+    const [journey] = (await buildClientDetail('acme', deps()))?.journeys ?? [];
+
+    expect(journey?.lastRun?.failureReason).toBeUndefined();
+  });
+});

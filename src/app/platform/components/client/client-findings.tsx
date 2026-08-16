@@ -1,6 +1,7 @@
 import type { DisplaySeverity } from '../../../../services/presentation/severity';
 import type { FindingView, FindingsView, PageFindings } from '../../../../services/findings-view';
 import { describeCriterion } from '../../../../services/wcag-reference';
+import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
 import { Empty } from './client-overview';
 import { IssueReport } from './issue-report';
@@ -62,6 +63,9 @@ export function ClientFindings({ view }: { view: FindingsView }) {
           Evidence for this run was <strong>{view.run.evidenceStatus}</strong>. This list covers
           only what we could actually see, so it is not a clean bill of health for anything missing
           from it.
+          {/* Same reason the overview shows it: the list is short because the
+              run stopped, and that is the thing worth knowing about it. */}
+          {view.run.failureReason ? <> {describeRunFailure(view.run.failureReason)}</> : null}
         </p>
       ) : null}
 

@@ -311,7 +311,10 @@ async function executeRun(
   } catch (error) {
     const durationMs = Date.now() - startedAt;
     const failureReason = error instanceof Error ? error.message : 'audit_run_failed';
-    const code = classifyRunFailure(failureReason);
+    const code = classifyRunFailure(
+      failureReason,
+      error instanceof Error ? error.name : undefined,
+    );
 
     /**
      * What the run managed to audit before it died.

@@ -1,4 +1,5 @@
 import type { ClientDetail } from '../../../../services/client-detail';
+import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
@@ -91,7 +92,30 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                       Never run
                     </span>
                   )}
+
                 </span>
+
+                {/*
+                  A direct child of the row, not of the right-hand group.
+                  `flexBasis: 100%` inside that group did nothing useful: the
+                  group is `nowrap`, so instead of breaking to its own line the
+                  sentence became an oversized item that squeezed the verdict
+                  pill and the date beside it. The `<li>` is the element that
+                  wraps.
+                */}
+                {journey.lastRun?.failureReason ? (
+                  <span
+                    style={{
+                      flexBasis: '100%',
+                      fontFamily: FONT.sans,
+                      fontSize: 12.5,
+                      color: T.inkMuted,
+                    }}
+                  >
+                    <strong style={{ fontWeight: 650 }}>Stopped:</strong>{' '}
+                    {describeRunFailure(journey.lastRun.failureReason)}
+                  </span>
+                ) : null}
               </li>
             );
           })}
