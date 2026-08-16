@@ -68,12 +68,14 @@ export async function PATCH(
     }
 
     // `journeyRunRefusal` answers "an array with something in it", which is as
-    // much as the domain can know — the step contract lives in the run
-    // handler. Without this, steps that are the right *shape* and not valid
-    // steps (`[{banana: 1}]`, which the write schema accepts) booked a cadence
-    // the tick could never dispatch: it claims the journey, POSTs to
-    // /api/audit/run, and gets a 400 at body parse, once a window, forever.
-    // The run route already refuses that with this code.
+    // much as the domain can know. Without this, steps that are the right
+    // *shape* and not valid steps booked a cadence the tick could never
+    // dispatch: it claims the journey, POSTs to /api/audit/run, and gets a 400
+    // at body parse, once a window, forever.
+    //
+    // `[{banana: 1}]` was the example, and the write schema no longer accepts
+    // it — that hole is closed at the source. This still guards the rows
+    // written while it was open, which cannot be un-written.
     if (!z.array(journeyStepSchema).safeParse(journey.steps).success) {
       return Response.json({ error: 'invalid_journey_steps', requestId }, { status: 422 });
     }

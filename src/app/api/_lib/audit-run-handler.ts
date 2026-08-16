@@ -11,6 +11,7 @@ import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-
 import { compareToBaseline } from '../../../services/regression';
 import { toStoredRunRecord } from '../../../services/run-persistence';
 import { z } from 'zod';
+import { journeyStepSchema } from '../../../domain/journey-step';
 import {
   CHAOS_SCENARIOS,
   isChaosEnabled,
@@ -34,74 +35,18 @@ const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 const MAX_RUN_DURATION_MS = 300_000;
 
 /**
- * Every free-text field on a step, bounded.
+ * The step contract, which used to live here.
  *
- * These were `z.string().min(1)` with no ceiling, and a step's `action`,
- * `selector` and `path` are stored on the run's `intent`, echoed into failure
- * messages by `attemptStep`, and serialised on both sides of every regression
- * diff. One step carrying a multi-megabyte string reached all three, bounded
- * only by the request body limit. 512 is generous for a CSS selector or a
- * path; `deterministic-audit` caps axe's `outerHTML` at the same number.
+ * Moved to `domain/journey-step`, beside the stricter schema a *new write*
+ * must satisfy and the test proving one is a subset of the other. This handler
+ * owned it only because there was nowhere better, and the comment that used to
+ * sit here said the write route stayed loose "so the step contract has one
+ * owner" — the ownership was real, the conclusion that writing therefore could
+ * not be validated was not.
  *
- * This covers running, not writing. The journeys collection route validates
- * with its own loose `z.record(z.string(), z.unknown())` — deliberately, so
- * the step contract has one owner — so a stored journey can still hold a step
- * this would refuse. It simply cannot be run or scheduled: both routes
- * re-validate `journey.steps` against this schema first. `journeys.steps` is
- * bounded separately, by size rather than by shape, for the same reason.
+ * Re-exported because three routes import it from here.
  */
-const STEP_TEXT = z.string().min(1).max(512);
-
-/**
- * A `fill` step carries either a literal value or a credential reference.
- * Passwords must use the reference: steps travel in this request body and get
- * persisted with the journey, and would otherwise be recoverable from both.
- *
- * The literal variant is still accepted, and that is a known hole rather than
- * a decision — `containsInlineCredential` rejects a key *named* `password` and
- * does not run on this route at all. What has changed is that a literal no
- * longer reaches the run record: `redactIntent` keeps only the keys that say
- * *where* a step went, so the hole ends at the journey row it already had.
- */
-export const journeyStepSchema = z.union([
-  z.object({ action: STEP_TEXT, type: z.literal('goto'), path: STEP_TEXT }),
-  z.object({ action: STEP_TEXT, type: z.literal('click'), selector: STEP_TEXT }),
-  // Two `fill` shapes, so these are a plain union rather than a discriminated
-  // one — `type` alone does not tell them apart.
-  z.object({
-    action: STEP_TEXT,
-    type: z.literal('fill'),
-    selector: STEP_TEXT,
-    value: z.string().max(4096),
-  }),
-  z.object({
-    action: STEP_TEXT,
-    type: z.literal('fill'),
-    selector: STEP_TEXT,
-    credentialRef: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
-    field: z.enum(['user', 'pass']),
-  }),
-  /**
-   * An expectation, which is also how a journey waits.
-   *
-   * `.refine` rather than two variants, because "at least one of two optional
-   * fields" is what the rule actually is and splitting it into
-   * url-only/selector-only/both triples the shapes to keep in step. The runner
-   * refuses the empty case too — it is reachable by callers that never came
-   * through this route — but refusing it here is what stops a journey being
-   * *stored* asserting nothing while looking as though it asserts something.
-   */
-  z
-    .object({
-      action: STEP_TEXT,
-      type: z.literal('expect'),
-      urlIncludes: STEP_TEXT.optional(),
-      selector: STEP_TEXT.optional(),
-    })
-    .refine((step) => step.urlIncludes !== undefined || step.selector !== undefined, {
-      message: 'An expect step must set urlIncludes, selector, or both.',
-    }),
-]);
+export { journeyStepSchema } from '../../../domain/journey-step';
 
 /**
  * Where a run may write its evidence.

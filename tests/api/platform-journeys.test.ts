@@ -138,13 +138,51 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     const response = await POST(
       fromBrowser({
         name: 'Login',
-        steps: [{ action: 'fill', selector: '#pw', credentialRef: 'acme', field: 'pass' }],
+        steps: [
+          {
+            action: 'login',
+            // Required now, and it always should have been: the runner's
+            // schema is a union discriminated on `type`, so a typeless step
+            // could never run. This route accepted them anyway, and the
+            // journey only found out when somebody tried to schedule it.
+            type: 'fill',
+            selector: '#pw',
+            credentialRef: 'acme',
+            field: 'pass',
+          },
+        ],
       }),
       params('acme'),
     );
 
     expect(response.status).toBe(201);
     expect((await platform.listJourneys('acme'))[0].steps).toHaveLength(1);
+  });
+
+  /**
+   * The state this route used to allow, and the reason it mattered.
+   *
+   * `{banana: 1}` got a 201 and sat in the database looking like a journey.
+   * Two routes then refused to schedule or run it — both carry an
+   * `invalid_journey_steps` code written for exactly this — so an operator
+   * found out weeks later, at the wrong end.
+   */
+  it.each([
+    ['a step of the wrong shape entirely', { banana: 1 }],
+    ['a step with no type, which could never run', { action: 'login', selector: '#pw' }],
+    ['an action the policy layer cannot classify', { action: 'frobnicate', type: 'goto', path: '/x' }],
+    [
+      'a login carrying its own password',
+      { action: 'login', type: 'fill', selector: '#pw', value: 'hunter2' },
+    ],
+  ])('refuses %s', async (_label, step) => {
+    const response = await POST(
+      fromBrowser({ name: 'Login', steps: [step] }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await platform.listJourneys('acme')).toEqual([]);
   });
 
   it.each([
@@ -195,11 +233,11 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
   });
 
   it('refuses a steps payload too large to be a journey', async () => {
-    // `steps` is validated loosely here on purpose — the step contract has one
-    // owner, and it is `/api/audit/run`. But `z.unknown()` accepts a
-    // multi-megabyte string in any field, and this row is written permanently
-    // and read on every client screen. Bounded by size rather than by shape,
-    // so the two definitions still cannot disagree about what a step *is*.
+    // Size *and* shape now — the shape check arrived with
+    // `authoredStepSchema`, and this comment used to say steps were "validated
+    // loosely here on purpose". The size bound survives it as a separate
+    // question: a payload this large is not a journey whatever shape it is in,
+    // and the row is written permanently and read on every client screen.
     const response = await POST(
       fromBrowser({
         name: 'Huge',
