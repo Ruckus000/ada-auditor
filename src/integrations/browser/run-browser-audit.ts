@@ -51,11 +51,16 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     throw new Error('A run against a target URL must name its own steps.');
   }
 
+  // Resolved once and returned below, not recomputed by the caller. On the
+  // fixture path the default is substituted here, so this is the only place
+  // that knows what the run was actually asked to walk.
+  const steps = input.steps ?? buildDefaultDemoJourneySteps();
+
   const journeyStartedAt = Date.now();
   const journeyResult = await runJourney({
     ...input,
     allowedHosts,
-    steps: input.steps ?? buildDefaultDemoJourneySteps(),
+    steps,
   });
   const journeyMs = Date.now() - journeyStartedAt;
 
@@ -167,6 +172,8 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   return {
     journeyId: input.journeyId,
     environment: input.environment,
+    /** What the run was asked to walk. Recorded onto the run by the handler. */
+    steps,
     evidenceStatus,
     findings,
     platform,

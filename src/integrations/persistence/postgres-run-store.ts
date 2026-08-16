@@ -63,6 +63,7 @@ type RunRow = {
   created_at: Date | string;
   started_at: Date | string | null;
   phase_ms: Record<string, number> | null;
+  intent: { steps: unknown[] } | null;
 };
 
 type PageRow = {
@@ -180,6 +181,9 @@ function toRecord(
   if (run.failure_reason !== null) record.failureReason = run.failure_reason;
   if (run.started_at !== null) record.startedAt = toIso(run.started_at);
   if (run.phase_ms !== null) record.phaseMs = run.phase_ms;
+  // Absent stays absent. A `{steps: []}` default here would claim every old
+  // run walked nothing, and two of those would then compare as equal.
+  if (run.intent !== null) record.intent = run.intent;
 
   // Applied on the way out, so a run that died mid-flight never reads as still
   // in progress — not even in the window before the scheduled sweep rewrites
@@ -249,7 +253,8 @@ export class PostgresRunStore implements RunStore {
       insert into runs (
         request_id, journey_id, environment, platform, evidence_status,
         ci_status, status, failure_reason, duration_ms, browser_mode,
-        truncated_pages, score, score_version, created_at, started_at, phase_ms
+        truncated_pages, score, score_version, created_at, started_at, phase_ms,
+        intent
       ) values (
         ${record.requestId}, ${record.journeyId}, ${record.environment},
         ${record.platform}, ${record.evidenceStatus}, ${record.ciStatus},
@@ -258,7 +263,8 @@ export class PostgresRunStore implements RunStore {
         ${record.truncatedPages ?? 0}, ${record.score ?? null},
         ${record.scoreVersion ?? 1}, ${record.createdAt},
         ${record.startedAt ?? record.createdAt},
-        ${record.phaseMs ? JSON.stringify(record.phaseMs) : null}
+        ${record.phaseMs ? JSON.stringify(record.phaseMs) : null},
+        ${record.intent ? JSON.stringify(record.intent) : null}
       )
       on conflict (request_id) do update set
         journey_id = excluded.journey_id,
@@ -280,7 +286,8 @@ export class PostgresRunStore implements RunStore {
         -- that died, while getLatestRun ordered baselines by it.
         created_at = least(runs.created_at, excluded.created_at),
         started_at = least(coalesce(runs.started_at, excluded.started_at), excluded.started_at),
-        phase_ms = coalesce(excluded.phase_ms, runs.phase_ms)
+        phase_ms = coalesce(excluded.phase_ms, runs.phase_ms),
+        intent = coalesce(excluded.intent, runs.intent)
     `);
 
     statements.push(sql`delete from run_pages where request_id = ${record.requestId}`);

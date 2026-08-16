@@ -46,6 +46,7 @@ const FULL_RECORD = runRecord({
   durationMs: 1234,
   startedAt: '2026-01-01T00:00:00.000Z',
   phaseMs: { journey: 900, advisory: 200, upload: 100 },
+  intent: { steps: [{ action: 'navigate', type: 'goto', path: '/login' }] },
   browserMode: true,
   status: 'complete',
   truncatedPages: 2,
@@ -470,5 +471,63 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     expect((await store.getRun('contract-fresh'))?.pages?.[0]?.artifacts).toEqual({
       screenshotUrl: 'https://blob.test/fresh.png',
     });
+  });
+
+  /**
+   * Absent has to survive as absent.
+   *
+   * `compareToBaseline` reads a missing `intent` as "this run never recorded
+   * what it was asked to walk", and withholds the diff rather than guessing. A
+   * store that helpfully defaulted the column to `{steps: []}` would turn every
+   * pre-existing run into one that claims to have walked nothing — and two of
+   * those compare as equal, which is the false all-clear the column exists to
+   * prevent.
+   */
+  it('keeps a run that recorded no intent distinguishable from one that did', async () => {
+    const store = await makeStore();
+    await store.saveRun(runRecord({ requestId: 'contract-no-intent' }));
+
+    const read = await store.getRun('contract-no-intent');
+
+    expect(read).not.toBeNull();
+    expect(read).not.toHaveProperty('intent');
+  });
+
+  it('round-trips the steps a run was given, in order', async () => {
+    const store = await makeStore();
+    const steps = [
+      { action: 'navigate', type: 'goto', path: '/' },
+      { action: 'login', type: 'fill', selector: '#user', credentialRef: 'acme', field: 'user' },
+      { action: 'navigate', type: 'click', selector: '#submit' },
+    ];
+    await store.saveRun(runRecord({ requestId: 'contract-intent', intent: { steps } }));
+
+    // Order and shape both, because the comparison serialises: a store that
+    // reordered keys or entries would make two identical runs incomparable.
+    expect((await store.getRun('contract-intent'))?.intent).toEqual({ steps });
+  });
+
+  /**
+   * A re-save that carries no intent must not erase the one already recorded.
+   *
+   * The reachable second write is `executeRun`'s catch: a run that failed late
+   * records a failure with no intent, over a row that already has one. Losing
+   * it there would leave a run that cannot be compared and cannot say why —
+   * and the two stores disagreed about this, Postgres coalescing while the
+   * memory double overwrote wholesale, with nothing here to notice.
+   */
+  it('keeps a recorded intent when a later save omits it', async () => {
+    const store = await makeStore();
+    const steps = [{ action: 'navigate', type: 'goto', path: '/checkout' }];
+
+    await store.saveRun(runRecord({ requestId: 'contract-intent-resave', intent: { steps } }));
+    await store.saveRun(
+      runRecord({ requestId: 'contract-intent-resave', status: 'failed', failureReason: 'x' }),
+    );
+
+    const read = await store.getRun('contract-intent-resave');
+
+    expect(read?.status).toBe('failed');
+    expect(read?.intent).toEqual({ steps });
   });
 }

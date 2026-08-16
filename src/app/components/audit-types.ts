@@ -49,7 +49,8 @@ export interface AuditPage {
 }
 
 export interface RegressionSummary {
-  status: 'none' | 'warn' | 'fail';
+  /** Mirrors `RegressionStatus` in `services/regression`. */
+  status: 'none' | 'warn' | 'fail' | 'incomparable';
   baselineRequestId?: string;
   newFindings: Finding[];
   resolvedFindings: Finding[];
@@ -144,8 +145,16 @@ export function parseFindings(value: unknown): Finding[] {
 function parseRegression(value: unknown): RegressionSummary | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const raw = value as Record<string, unknown>;
+  // Anything unrecognised reads as `incomparable`, not as `none`. `none`
+  // renders "No change since the last run" — the most confident possible
+  // all-clear — so an unknown status defaulting to it meant a server that grew
+  // a new one would announce good news the run had not earned. `incomparable`
+  // is the fail-safe direction: it withholds the claim rather than inventing
+  // it. This is how the `incomparable` case itself would have arrived.
   const status =
-    raw.status === 'warn' || raw.status === 'fail' || raw.status === 'none' ? raw.status : 'none';
+    raw.status === 'warn' || raw.status === 'fail' || raw.status === 'none'
+      ? raw.status
+      : 'incomparable';
 
   return {
     status,

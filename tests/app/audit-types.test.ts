@@ -271,6 +271,30 @@ describe('countBySource', () => {
   });
 });
 
+describe('parseRegression', () => {
+  it('reads an unknown status as incomparable rather than as no change', () => {
+    // The default used to be `none`, which renders "No change since the last
+    // run" — the most confident all-clear the screen has. So a server that
+    // grew a status this parser did not know announced good news the run had
+    // not earned. Withholding is the only safe direction for this field.
+    const result = parseAuditResponse(
+      { regression: { status: 'something-new', baselineRequestId: 'req-1' } },
+      200,
+      true,
+      false,
+    );
+
+    expect(result.regression?.status).toBe('incomparable');
+  });
+
+  it('passes the statuses it does know through', () => {
+    for (const status of ['none', 'warn', 'fail'] as const) {
+      const result = parseAuditResponse({ regression: { status } }, 200, true, false);
+      expect(result.regression?.status).toBe(status);
+    }
+  });
+});
+
 describe('describeApiError', () => {
   it('explains a known error code and gives an actionable fix', () => {
     const copy = describeApiError('auditor_run_token_not_configured', 503);

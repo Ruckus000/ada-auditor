@@ -471,3 +471,20 @@ update journeys set schedule = 'off' where schedule is null;
 
 create index if not exists journeys_schedule_idx
   on journeys (schedule, schedule_hour) where schedule <> 'off';
+
+-- ------------------------------------------------------- run intent (2026-08) --
+
+-- What a run was asked to walk, as opposed to what it walked.
+--
+-- Every other column on `runs` is outcome. Nothing recorded the intent, so
+-- nothing could tell a run that audited five pages from one that audited five
+-- *different* pages — and `getLatestRun` picks a regression baseline on
+-- `journey_id` and `environment` alone. `/api/audit/run` accepts `journey_id`
+-- and `steps` independently, so one call naming an existing journey with a
+-- different path becomes the next run's baseline, and every finding the real
+-- journey has that the impostor did not is reported as *resolved*.
+--
+-- Nullable, and nullable means "not recorded" — never "the same path as some
+-- other run". Runs written before this column exist and must not start
+-- comparing as though they agreed.
+alter table runs add column if not exists intent jsonb;
