@@ -74,10 +74,14 @@ export async function POST(
     return Response.json({ error: refusal, requestId, journeyId }, { status: 422 });
   }
 
-  // Steps were stored unvalidated on purpose — `/api/audit/run` owns the step
-  // contract and duplicating it would create two definitions that disagree.
-  // The cost is that a malformed stored step must be caught here, as a 422
-  // naming the journey, rather than as a 500 from inside the browser.
+  // Kept, though creation now validates too.
+  //
+  // This used to say steps were "stored unvalidated on purpose". They are not,
+  // any more — the write route parses them against `authoredStepSchema`. What
+  // it protects is every row written *before* that, and those are the majority
+  // of what exists: a journey stored under the old free-for-all is still out
+  // there and must be refused here as a 422 naming the journey, rather than as
+  // a 500 from inside the browser. Rows written from now on cannot fail it.
   const validated = z.array(journeyStepSchema).safeParse(journey.steps);
   if (!validated.success) {
     return Response.json(
