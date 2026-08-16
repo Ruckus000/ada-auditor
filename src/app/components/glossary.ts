@@ -322,12 +322,6 @@ export const API_ERRORS: Record<string, ApiErrorCopy> = {
     cause: 'Step names become filenames, so they may only contain letters, numbers, hyphens and underscores.',
     fix: 'Use a plain name such as dashboard.',
   },
-  incomplete_evidence: {
-    title: 'The run stopped on incomplete evidence',
-    cause:
-      'This run contract is set to stop rather than continue when evidence cannot be fully captured.',
-    fix: 'Re-run using the demo journey, which captures all three artifacts.',
-  },
   audit_run_failed: {
     title: 'The run did not finish',
     cause: 'The auditor stopped partway through for a reason it could not categorise.',

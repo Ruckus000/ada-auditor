@@ -27,8 +27,8 @@ const COPY: Record<RunFailureCode, string> = {
   action_not_allowed:
     'A step asked for something this environment forbids. Production is read-only.',
   invalid_step_id: 'The run’s step name was not usable as an evidence filename.',
-  incomplete_evidence:
-    'A page’s evidence could not be captured in full, and this run was set to stop rather than report a partial result.',
+  navigation_not_allowed:
+    'The run refused to follow a navigation — off this journey’s allowed hosts, or to a private address. The run log names which. If the destination is legitimate, the journey’s allowed hosts need widening deliberately.',
   run_timed_out:
     'The run never reported back and was closed out. Usually the journey outlived the function’s time limit.',
   audit_run_failed: 'The run stopped for a reason it could not categorise. The run log has the detail.',
@@ -41,5 +41,12 @@ const COPY: Record<RunFailureCode, string> = {
  * Printing it is ugly and true; inventing a sentence for it would be neither.
  */
 export function describeRunFailure(code: string): string {
-  return COPY[code as RunFailureCode] ?? `The run stopped: ${code}.`;
+  // `Object.hasOwn`, not `??`. The key comes from a database column with no
+  // CHECK behind it, and a stored `__proto__` or `constructor` would resolve
+  // through the prototype chain to something truthy and not a string — which
+  // React renders by throwing, turning an unrecognised code into a 500 on the
+  // journeys screen rather than the fallback written for it.
+  return Object.hasOwn(COPY, code)
+    ? COPY[code as RunFailureCode]
+    : `The run stopped: ${code}.`;
 }

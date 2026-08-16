@@ -28,10 +28,17 @@ describe('classifyRunFailure', () => {
     );
   });
 
-  it('classifies the failureMode=stop path', () => {
-    expect(
-      classifyRunFailure('Run stopped due to incomplete evidence under failureMode=stop.'),
-    ).toBe('incomplete_evidence');
+  it('classifies every refusal from the navigation guard', () => {
+    // All three shapes `UnsafeTargetError` throws. None matched a branch, so
+    // the most deliberate failures in the system — the run refusing to go
+    // somewhere — reported "a reason it could not categorise".
+    for (const message of [
+      'Navigation to http://rebind.example/ connected to 127.0.0.1, a private or reserved address.',
+      'Host evil.example is not in the allowed domains for this run.',
+      'No allowed hosts are configured for this run.',
+    ]) {
+      expect(classifyRunFailure(message)).toBe('navigation_not_allowed');
+    }
   });
 
   it('classifies a run that named a target and no steps', () => {

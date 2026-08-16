@@ -93,19 +93,29 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                     </span>
                   )}
 
-                  {journey.lastRun?.failureReason ? (
-                    <span
-                      style={{
-                        flexBasis: '100%',
-                        fontFamily: FONT.sans,
-                        fontSize: 12.5,
-                        color: T.inkMuted,
-                      }}
-                    >
-                      {describeRunFailure(journey.lastRun.failureReason)}
-                    </span>
-                  ) : null}
                 </span>
+
+                {/*
+                  A direct child of the row, not of the right-hand group.
+                  `flexBasis: 100%` inside that group did nothing useful: the
+                  group is `nowrap`, so instead of breaking to its own line the
+                  sentence became an oversized item that squeezed the verdict
+                  pill and the date beside it. The `<li>` is the element that
+                  wraps.
+                */}
+                {journey.lastRun?.failureReason ? (
+                  <span
+                    style={{
+                      flexBasis: '100%',
+                      fontFamily: FONT.sans,
+                      fontSize: 12.5,
+                      color: T.inkMuted,
+                    }}
+                  >
+                    <strong style={{ fontWeight: 650 }}>Stopped:</strong>{' '}
+                    {describeRunFailure(journey.lastRun.failureReason)}
+                  </span>
+                ) : null}
               </li>
             );
           })}

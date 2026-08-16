@@ -66,6 +66,13 @@ export type RunSummary = {
    * stale selector looked exactly like a browser crash. It is the stable
    * code, never the raw message: `audit-run-handler` stores
    * `classifyRunFailure`'s output precisely so this can be shown.
+   *
+   * `RunSummary` is also embedded in `SharedReport`, which is what the public
+   * `/r/[token]` page renders — so this field structurally reaches an
+   * unauthenticated surface. Nothing there reads it, and the page is a Server
+   * Component so only its output crosses the wire. Noted because the type
+   * gives no signal, and this codebase has already shipped one leak that
+   * looked exactly like this.
    */
   failureReason?: string;
 };
