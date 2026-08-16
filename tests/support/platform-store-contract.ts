@@ -469,7 +469,7 @@ export function platformStoreContract(
         targetUrl: `https://${id}.test/`,
         schedule: 'daily',
         scheduleHour: thisHour,
-        steps: [],
+        steps: [{ action: 'navigate', type: 'goto', path: '/' }],
         ...overrides,
       });
     }
@@ -583,6 +583,58 @@ export function platformStoreContract(
       const claimed = await store_.claimDueJourneys(10);
 
       expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-targetless');
+    });
+
+    /**
+     * Falsy, not null.
+     *
+     * The two stores express the same rule in different languages, and this is
+     * the value where they drifted: `journeyRunRefusal` refuses any falsy
+     * `targetUrl`, while the SQL asked `target_url is not null`, which an
+     * empty string satisfies. No writer can store one — both routes take
+     * `z.url()` — so the disagreement was invisible, and stayed invisible
+     * because this contract only ever seeded `undefined`.
+     */
+    it('never claims a journey whose target URL is empty', async () => {
+      await scheduled('pc-journey-blank-target', { targetUrl: '' });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-blank-target');
+    });
+
+    /**
+     * The other half of the same rule, and the half that was missing.
+     *
+     * A journey with a target and no steps is refused by the run route, so
+     * claiming it dispatches a certain failure: one wasted run-budget slot and
+     * one "started a scheduled run" in the client's activity feed per tick,
+     * for as long as the schedule stands. The filter has to be whatever the
+     * run route refuses, not a subset of it.
+     */
+    it('never claims a journey with no steps', async () => {
+      await scheduled('pc-journey-stepless', { steps: [] });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-stepless');
+    });
+
+    /**
+     * `steps` is `jsonb`, and this column predates any write-time validation,
+     * so a row can hold something that is not an array at all. Postgres needs
+     * the `jsonb_typeof` guard for this: `jsonb_array_length` raises on a
+     * non-array, which would take down the whole tick rather than skip one
+     * journey.
+     */
+    it('never claims a journey whose steps are not an array', async () => {
+      await scheduled('pc-journey-badsteps', {
+        steps: { banana: 1 } as unknown as unknown[],
+      });
+
+      const claimed = await store_.claimDueJourneys(10);
+
+      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-badsteps');
     });
 
     it('never claims an archived journey', async () => {

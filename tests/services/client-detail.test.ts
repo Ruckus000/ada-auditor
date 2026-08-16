@@ -139,6 +139,29 @@ describe('buildClientDetail', () => {
 
     expect((await buildClientDetail('acme', deps()))?.journeys).toEqual([]);
   });
+
+  /**
+   * `steps` is jsonb that predates any validation, so a row can hold something
+   * that is not an array at all — the Postgres claim query carries a guard for
+   * exactly that value. Here it reached the screen: `.length` on an object is
+   * `undefined`, and `client-journeys.tsx` renders it straight into the words
+   * "undefined steps" beside the journey's name.
+   */
+  it('says a malformed steps column has no steps rather than putting "undefined" on screen', async () => {
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({
+      id: 'j1',
+      clientId: 'acme',
+      name: 'Malformed',
+      targetUrl: 'https://acme.test/',
+      steps: { banana: 1 } as unknown as unknown[],
+    });
+
+    const [journey] = (await buildClientDetail('acme', deps()))?.journeys ?? [];
+
+    expect(journey?.stepCount).toBe(0);
+    expect(journey?.runRefusal).toBe('journey_has_no_steps');
+  });
 });
 
 function detailRun(detail: Awaited<ReturnType<typeof buildClientDetail>>) {

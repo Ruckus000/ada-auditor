@@ -157,9 +157,13 @@ export async function GET(request: Request) {
           journeyId: journey.id,
           environment: journey.environment ?? 'production',
           targetUrl: journey.targetUrl,
-          ...(Array.isArray(journey.steps) && journey.steps.length > 0
-            ? { steps: journey.steps }
-            : {}),
+          // Sent unconditionally. This used to omit `steps` when they were
+          // empty, which is how a claimed stepless journey reached the runner
+          // with none and had our fixture login substituted against the
+          // client's origin. `claimDueJourneys` cannot hand back a journey
+          // without steps now, so the conditional guarded nothing and read as
+          // though the tick still expected one.
+          steps: journey.steps,
         }),
       });
 

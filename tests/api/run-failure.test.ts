@@ -34,6 +34,17 @@ describe('classifyRunFailure', () => {
     ).toBe('incomplete_evidence');
   });
 
+  it('classifies a run that named a target and no steps', () => {
+    // The exact sentence `runBrowserAudit` throws. Without this branch the one
+    // failure the runner categorises precisely was reported as "a reason it
+    // could not categorise" — to the bearer callers of /api/audit/run, which
+    // are the only ones that reach the runner guard without passing the
+    // platform route's 422 first.
+    expect(classifyRunFailure('A run against a target URL must name its own steps.')).toBe(
+      'journey_has_no_steps',
+    );
+  });
+
   it('collapses anything unrecognised, so new internals are opaque by default', () => {
     // The point of the default: a future error carrying a path or a stack must
     // not reach the client just because nobody remembered to map it.

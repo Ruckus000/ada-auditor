@@ -8,9 +8,16 @@ import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
 import { scoreRun } from '../../services/score';
 import { buildDefaultDemoJourneySteps, runJourney } from './journey-runner';
-import type { JourneyRunnerInput } from './types';
+import type { JourneyRunnerInput, JourneyStep } from './types';
 
-export type RunBrowserAuditInput = JourneyRunnerInput & {
+export type RunBrowserAuditInput = Omit<JourneyRunnerInput, 'steps'> & {
+  /**
+   * Optional *here* and required on `JourneyRunnerInput`, which is the whole
+   * invariant: this is the only layer allowed to be handed no steps, and the
+   * only one that decides what that means — the fixture journey when there is
+   * no target to walk, a refusal when there is.
+   */
+  steps?: JourneyStep[];
   platformHint?: string;
   allowedJourneyIds?: string[];
   /** Injected in tests so the advisory pass never reaches the network. */
@@ -33,6 +40,16 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   // audit of one site has no business navigating to another.
   const allowedHosts =
     input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
+
+  // The built-in demo is a *fixture* journey: its paths only mean something
+  // against `fixtureDir`. Substituting it for a run that names a real target
+  // resolved those paths against the client's origin instead — an audit of
+  // whatever `https://their-site/login.html` happens to return, filed under
+  // their name. A caller that names a target and no steps has not described a
+  // journey, so say so rather than inventing one.
+  if (input.targetUrl && !input.steps?.length) {
+    throw new Error('A run against a target URL must name its own steps.');
+  }
 
   const journeyStartedAt = Date.now();
   const journeyResult = await runJourney({

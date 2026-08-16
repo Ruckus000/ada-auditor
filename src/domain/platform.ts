@@ -68,6 +68,44 @@ export type StoredJourney = {
 };
 
 /**
+ * Why a journey cannot be run, or `null` when it can.
+ *
+ * One decision, because it had become four that disagreed. Each was written
+ * for the case in front of it:
+ *
+ * - the run route refused a journey with no target, and (since the
+ *   fixture-walk fix) one with no steps;
+ * - the schedule route refused only the first, so a journey that could never
+ *   run could still be booked daily, forever;
+ * - `client-detail` offered the "Run now" button on the same half-check, so
+ *   the operator learned by clicking;
+ * - the scheduler's claim query selected on `target_url is not null` alone.
+ *
+ * The disagreement is the bug. A caller asks here and renders or refuses on
+ * the answer; the code it returns is the same string the routes put on the
+ * wire, so the screen and the API cannot drift apart either.
+ *
+ * Both refusals exist for the same reason: a journey names a site and a path
+ * through it, and a run missing either one gets the gap filled in with our own
+ * fixture app — a green audit of demo pages, or of `https://their-site/
+ * login.html`, filed under a real client's name.
+ */
+export type JourneyRunRefusal = 'journey_not_runnable' | 'journey_has_no_steps';
+
+export function journeyRunRefusal(
+  journey: Pick<StoredJourney, 'targetUrl' | 'steps'>,
+): JourneyRunRefusal | null {
+  if (!journey.targetUrl) return 'journey_not_runnable';
+  // `steps` is `unknown[]` on the way out of the store and genuinely arbitrary
+  // JSON on the way in, so a row can hold something that is not an array at
+  // all. That is not a runnable journey either.
+  if (!Array.isArray(journey.steps) || journey.steps.length === 0) {
+    return 'journey_has_no_steps';
+  }
+  return null;
+}
+
+/**
  * One human decision about one defect.
  *
  * `findingKey` is `source:code:pageUrl:selector` — produced by `findingKey` in

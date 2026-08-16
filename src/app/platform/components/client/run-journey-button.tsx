@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { JourneyRunRefusal } from '../../../../domain/platform';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -22,15 +23,34 @@ const POLL_INTERVAL_MS = 3000;
 /** ~5 minutes: `maxDuration` plus slack. */
 const MAX_POLLS = 100;
 
+/**
+ * What the route can answer *after* a click.
+ *
+ * The two refusal codes belong in `REFUSAL_LABELS` below and nowhere here:
+ * this button only renders when there is no refusal, and no route changes a
+ * journey's target or steps, so it cannot be clicked into one. They were
+ * duplicated here and were dead copy — the same reason the `journey_has_no_
+ * steps` entry came out of `glossary.ts`. `invalid_journey_steps` stays,
+ * because a journey whose steps are the right shape and not valid steps
+ * passes the refusal check and fails at the route.
+ */
 const MESSAGES: Record<string, string> = {
-  // A target URL is what this route requires — steps alone would walk our own
-  // fixture app. Saying "and no steps" sent an operator to add steps that
-  // could not have helped.
-  journey_not_runnable: 'This journey has no target URL, so there is no site to walk.',
   invalid_journey_steps: 'This journey’s stored steps are not valid. Record it again.',
   journey_not_found: 'That journey is no longer on this client.',
   unauthorized: 'Your session expired. Reload and sign in again.',
   run_budget_exceeded: 'The run budget for this window is used up. Try again later.',
+};
+
+/**
+ * Said in place of the button, so it has to say the *right* one.
+ *
+ * These are the same two codes the route answers with, taken from the same
+ * `journeyRunRefusal`, so the label an operator reads before clicking and the
+ * error they would have got by clicking cannot disagree.
+ */
+const REFUSAL_LABELS: Record<JourneyRunRefusal, string> = {
+  journey_not_runnable: 'Not runnable — no target URL',
+  journey_has_no_steps: 'Not runnable — no steps recorded',
 };
 
 type Phase = 'idle' | 'starting' | 'running' | 'slow';
@@ -39,12 +59,12 @@ export function RunJourneyButton({
   clientId,
   journeyId,
   journeyName,
-  runnable,
+  runRefusal,
 }: {
   clientId: string;
   journeyId: string;
   journeyName: string;
-  runnable: boolean;
+  runRefusal: JourneyRunRefusal | null;
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('idle');
@@ -61,12 +81,13 @@ export function RunJourneyButton({
     };
   }, []);
 
-  if (!runnable) {
+  if (runRefusal) {
     // Said rather than hidden: an operator looking for the button needs to know
-    // why it is not there, and "nothing to walk" is the actionable answer.
+    // why it is not there, and which of the two things is missing is exactly
+    // what makes the answer actionable.
     return (
       <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-        Not runnable — no target URL
+        {REFUSAL_LABELS[runRefusal]}
       </span>
     );
   }

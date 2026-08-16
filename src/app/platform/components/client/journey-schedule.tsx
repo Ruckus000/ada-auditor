@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { JourneyRunRefusal } from '../../../../domain/platform';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -23,8 +24,18 @@ const OPTIONS: Array<{ value: 'off' | 'daily' | 'weekly'; label: string }> = [
   { value: 'weekly', label: 'Weekly' },
 ];
 
+/**
+ * Only what this control can actually provoke.
+ *
+ * The two refusal codes are absent on purpose: a journey that earns one has no
+ * cadence picker, only an off switch, and the route always allows `off`. What
+ * *is* reachable is a journey whose steps are the right shape and not valid
+ * steps — `journeyRunRefusal` cannot see that, so the picker is offered and
+ * the route refuses on parse.
+ */
 const MESSAGES: Record<string, string> = {
-  journey_not_runnable: 'A journey with no target URL cannot be scheduled.',
+  invalid_journey_steps:
+    'This journey’s stored steps are not valid, so a schedule could never run it. Record it again.',
   journey_not_found: 'That journey is no longer on this client.',
   unauthorized: 'Your session expired. Reload and sign in again.',
 };
@@ -34,23 +45,18 @@ export function JourneySchedule({
   journeyId,
   journeyName,
   schedule,
-  runnable,
+  runRefusal,
 }: {
   clientId: string;
   journeyId: string;
   journeyName: string;
   schedule: 'off' | 'daily' | 'weekly';
-  runnable: boolean;
+  runRefusal: JourneyRunRefusal | null;
 }) {
   const router = useRouter();
   const selectId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Scheduling something that cannot run would book a recurring failure. The
-  // route refuses it; saying so here is better than offering a control that
-  // always errors.
-  if (!runnable) return null;
 
   async function change(next: string) {
     setBusy(true);
@@ -83,6 +89,19 @@ export function JourneySchedule({
       setBusy(false);
     }
   }
+
+  /**
+   * A journey that cannot run gets no cadence picker: every option but the one
+   * it already has would be refused, and `RunJourneyButton` prints the reason
+   * on this same row rather than saying it twice.
+   *
+   * The route is more permissive than this — it always allows `off`, so a
+   * journey booked before that guard existed can still be cleared. No screen
+   * offers that, deliberately: the state needs a row that is both scheduled
+   * and unrunnable, no route can produce one now, and production holds none.
+   * A control for a row that does not exist is a control nobody can reach.
+   */
+  if (runRefusal) return null;
 
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
