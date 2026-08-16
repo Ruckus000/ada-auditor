@@ -115,6 +115,42 @@ export function routeFromPageUrl(url: string): string {
  */
 const DEFAULT_MAX_PAGES = 20;
 
+/**
+ * How long one interaction may wait for its element.
+ *
+ * Nothing set a timeout at all, so Playwright's 30s default applied. The step
+ * loop has no `catch`, so the first stale selector ends the run — one wait, not
+ * one per step — which makes this a smaller win than it looks: ten seconds
+ * instead of thirty on a journey that was going to fail anyway.
+ *
+ * Ten because a selector that has not appeared in ten seconds on a page the
+ * runner has already navigated to and waited for `domcontentloaded` on is
+ * stale, not slow. Raise it with `AUDITOR_STEP_TIMEOUT_MS` for an app that
+ * genuinely takes longer to paint a control.
+ *
+ * Passed to each `fill` and `click` rather than to `context.setDefaultTimeout`,
+ * which was the first version of this and was wrong. That default is
+ * context-wide: it also caps `page.goto` — which waits for `load`, so every
+ * image, font and third-party tag on a real client page — and
+ * `page.screenshot({fullPage: true})`, measured failing at exactly the cap on a
+ * tall page. Both sit outside `attemptStep`, so both would have reported
+ * `audit_run_failed`: a knob added to make failures legible would have
+ * manufactured illegible ones, on precisely the heavy real-world pages this
+ * product exists for. The axe scan is unaffected either way — it runs through
+ * `page.evaluate`, which passes its own no-timeout.
+ */
+const DEFAULT_STEP_TIMEOUT_MS = 10_000;
+
+export function resolveStepTimeoutMs(explicit?: number): number {
+  if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
+    return Math.floor(explicit);
+  }
+  const configured = Number(process.env.AUDITOR_STEP_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0
+    ? Math.floor(configured)
+    : DEFAULT_STEP_TIMEOUT_MS;
+}
+
 export function resolveMaxPages(explicit?: number): number {
   if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
     return Math.floor(explicit);
@@ -161,6 +197,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // stepId costs nothing and leaves nothing behind.
   resolveArtifactPrefix(input.artifactsDir, input.stepId);
   const maxPages = resolveMaxPages(input.maxPages);
+  const stepTimeoutMs = resolveStepTimeoutMs(input.stepTimeoutMs);
 
   // Default the allowlist to the target's own host: an audit of one site has no
   // business navigating to another.
@@ -356,7 +393,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       assertAllowedUrl(page.url(), allowedHosts);
     };
 
-    for (const step of steps) {
+    for (const [index, step] of steps.entries()) {
       if (!isActionAllowed(input.environment, step.action)) {
         throw new Error(`Action "${step.action}" is not allowed in ${input.environment}.`);
       }
@@ -377,12 +414,31 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
           'credentialRef' in step
             ? resolveCredential(step.credentialRef, step.field)
             : step.value;
-        await page.fill(step.selector, value);
+        await attemptStep(index, step, () =>
+          page.fill(step.selector, value, { timeout: stepTimeoutMs }),
+        );
         continue;
       }
 
-      await page.click(step.selector);
-      await page.waitForLoadState('domcontentloaded');
+      // The settle is part of the click, not a separate act. Left outside the
+      // wrapper it was the one line that undid the naming: a click that fires
+      // and then stalls on its navigation threw a bare Playwright error and
+      // reported `audit_run_failed` — for the step named one line above.
+      //
+      // No `stepTimeoutMs` on it. A step's element should already be there;
+      // a page load legitimately takes longer, and capping navigation is the
+      // mistake `DEFAULT_STEP_TIMEOUT_MS` documents not making.
+      //
+      // Untested, and worth saying so. Making this throw needs a navigation
+      // that stalls, which needs a server holding a socket open — the fixtures
+      // are `file://`, so nothing here can produce one, and the wait is
+      // deliberately uncapped so it would take Playwright's full default to
+      // fire. The wrapper it moved inside is covered; this one line's presence
+      // in it is not.
+      await attemptStep(index, step, async () => {
+        await page.click(step.selector, { timeout: stepTimeoutMs });
+        await page.waitForLoadState('domcontentloaded');
+      });
       await assertNavigationsWereSafe();
       await capturePage();
     }
@@ -417,6 +473,53 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     return { pages, truncatedPages };
   } finally {
     await browser.close();
+  }
+}
+
+/**
+ * Names the step that failed, because "it failed" is not a fix.
+ *
+ * A stale selector is the most likely way a real journey dies, and it used to
+ * arrive as a bare Playwright timeout that `classifyRunFailure` had no branch
+ * for — so the operator was told the run stopped "for a reason it could not
+ * categorise", about the one failure mode that is entirely theirs to fix. This
+ * says which step, which action, and which selector.
+ *
+ * Only the interactions are wrapped, and the reason is not that the others are
+ * better labelled — `UnsafeTargetError` from the address checks falls through
+ * `classifyRunFailure` to the same generic code this exists to avoid. It is
+ * that they are different failures. An SSRF refusal reported as "a step could
+ * not click" is a worse answer than the vague one it replaced, and it would be
+ * the wrong thing to hand an operator to go and fix.
+ *
+ * The reason is the first line of the underlying error and nothing after it.
+ * That line is Playwright's own summary — "Element is not an <input>…", or the
+ * timeout — while everything below it is the call log, and the call log is
+ * where a `fill` prints the value it was asked to type. When that value is a
+ * resolved credential, the split is the only thing between it and a log line.
+ * The whole error is kept on `cause` for a debugger; nothing logs it.
+ */
+async function attemptStep(
+  index: number,
+  step: { action: string; type: string; selector: string },
+  run: () => Promise<void>,
+): Promise<void> {
+  try {
+    await run();
+  } catch (error) {
+    // Not `error.name`. The case this was written for — a login input restyled
+    // into a div — is not a timeout at all: Playwright rejects it immediately
+    // with a plain `Error`, so naming the class said "it raised Error", which
+    // is nothing the step's own `type` had not already said.
+    const because =
+      error instanceof Error
+        ? (error.message.split('\n')[0] ?? '').trim() || `it raised ${error.name}`
+        : 'it raised an unknown error';
+
+    throw new Error(
+      `Step ${index + 1} ("${step.action}") could not ${step.type} "${step.selector}": ${because}.`,
+      { cause: error },
+    );
   }
 }
 

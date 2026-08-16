@@ -33,6 +33,12 @@ export type JourneyRunnerInput = {
    * one case it is legitimate in: a run with no target URL at all.
    */
   steps: JourneyStep[];
+  /**
+   * Per-interaction timeout. Defaults to `AUDITOR_STEP_TIMEOUT_MS`, then to
+   * ten seconds — Playwright's own default of thirty applied until nothing
+   * anywhere set one.
+   */
+  stepTimeoutMs?: number;
   omitAxTree?: boolean;
   headless?: boolean;
   /**

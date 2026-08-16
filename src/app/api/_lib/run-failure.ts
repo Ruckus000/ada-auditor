@@ -25,6 +25,12 @@ export type RunFailureCode =
    * categorised exactly.
    */
   | 'journey_has_no_steps'
+  /**
+   * A step could not be performed — almost always a selector that no longer
+   * matches. Operator-fixable, and previously indistinguishable from a browser
+   * crash: both arrived as `audit_run_failed`.
+   */
+  | 'journey_step_failed'
   // Not produced by `classifyRunFailure`: nothing throws it, because the
   // invocation that would have caught it is gone. `reconcileRunStatus` writes
   // it onto a run left `running` past the point where it could still be alive.
@@ -32,6 +38,16 @@ export type RunFailureCode =
   | 'audit_run_failed';
 
 export function classifyRunFailure(message: string): RunFailureCode {
+  // First, and anchored, because this is the only message here built partly
+  // from operator-authored text. The branches below match with `includes`, so
+  // a journey whose selector contains "incomplete evidence" would otherwise
+  // be classified as an evidence failure — an operator naming their own run's
+  // error code by accident, through what they called a CSS class. A message
+  // starting with `Step N ("` can only have come from `attemptStep`, so it is
+  // safe to decide here and stop.
+  if (/^Step \d+ \(".*"\) could not /.test(message)) {
+    return 'journey_step_failed';
+  }
   if (message.includes('not allowed by run contract scope')) {
     return 'journey_not_in_scope';
   }

@@ -45,12 +45,38 @@ describe('classifyRunFailure', () => {
     );
   });
 
+  it('classifies a step that could not be performed', () => {
+    // The shape `attemptStep` builds. A stale selector is the likeliest way a
+    // real journey dies and it is the operator's to fix, so it must not arrive
+    // as the same code as a browser crash.
+    expect(
+      classifyRunFailure(
+        'Step 3 ("sign in") could not fill "#username": the selector never matched anything on the page.',
+      ),
+    ).toBe('journey_step_failed');
+  });
+
+  it('does not let an operator\u2019s selector pick the code for them', () => {
+    // This branch is checked first, and anchored, because it is the only
+    // message built partly from text the operator wrote. The branches after it
+    // match with `includes`, so without the ordering a selector containing
+    // another branch's phrase wins — a run misfiled as an evidence failure
+    // because of what somebody called a CSS class.
+    expect(
+      classifyRunFailure(
+        'Step 1 ("login") could not click "[data-test=incomplete evidence]": the selector never matched anything on the page.',
+      ),
+    ).toBe('journey_step_failed');
+  });
+
   it('collapses anything unrecognised, so new internals are opaque by default', () => {
     // The point of the default: a future error carrying a path or a stack must
     // not reach the client just because nobody remembered to map it.
     for (const message of [
       'ENOENT: no such file or directory, open /Users/someone/secret/config.json',
       'connect ECONNREFUSED 127.0.0.1:9222',
+      // Near the new branch without matching it: no index, no quoted action.
+      'Step over the broken tile could not be avoided',
       'browserType.launch: Executable does not exist at /root/.cache/ms-playwright/chromium/headless_shell',
       '',
     ]) {
@@ -58,3 +84,4 @@ describe('classifyRunFailure', () => {
     }
   });
 });
+
