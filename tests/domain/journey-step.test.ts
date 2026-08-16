@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   authoredStepSchema,
+  authoredStepsSchema,
   journeyStepSchema,
+  MAX_STEPS_PER_JOURNEY,
   toStepViews,
 } from '../../src/domain/journey-step';
+import { auditRunBodySchema } from '../../src/app/api/_lib/audit-run-handler';
 import { AUTHORABLE_ACTIONS } from '../../src/domain/policy';
 
 /**
@@ -316,5 +319,42 @@ describe('toStepViews', () => {
     for (const notAnArray of [null, undefined, {}, 'steps', 7]) {
       expect(toStepViews(notAnArray)).toEqual([]);
     }
+  });
+});
+
+describe('MAX_STEPS_PER_JOURNEY', () => {
+  /**
+   * The list-level half of the subset proof.
+   *
+   * `authoredStepSchema ⊂ journeyStepSchema` is proven per step, and that said
+   * nothing about how many steps a list may hold. The two caps disagreed — 200
+   * for a stored journey, 50 at `/api/audit/run` — so a journey between them
+   * stored, scheduled, and then failed at body parse once a window forever.
+   */
+  it('is the ceiling the steps array actually enforces', () => {
+    const step = { action: 'navigate', type: 'goto', path: '/' };
+    const atCap = Array.from({ length: MAX_STEPS_PER_JOURNEY }, () => step);
+    const overCap = [...atCap, step];
+
+    expect(authoredStepsSchema.safeParse(atCap).success).toBe(true);
+    expect(authoredStepsSchema.safeParse(overCap).success).toBe(false);
+  });
+
+  it('is the same ceiling the run body schema uses', () => {
+    // One number in one place is the only thing that keeps these from drifting
+    // apart again — and the drift is invisible until it is a recurring
+    // production failure on a timer.
+    const step = { action: 'navigate', type: 'goto', path: '/' };
+    const overCap = Array.from({ length: MAX_STEPS_PER_JOURNEY + 1 }, () => step);
+
+    const body = { journeyId: 'j', environment: 'staging' as const };
+
+    expect(auditRunBodySchema.safeParse({ ...body, steps: overCap }).success).toBe(false);
+    expect(
+      auditRunBodySchema.safeParse({
+        ...body,
+        steps: overCap.slice(0, MAX_STEPS_PER_JOURNEY),
+      }).success,
+    ).toBe(true);
   });
 });

@@ -32,11 +32,13 @@ const { MemoryPlatformStore, setPlatformStore } = await import(
   '../../src/integrations/persistence'
 );
 
+const { MAX_STEPS_PER_JOURNEY } = await import('../../src/domain/journey-step');
+
 const RUNNABLE_STEPS = [{ action: 'navigate', type: 'goto', path: '/' }];
 
 let platform: InstanceType<typeof MemoryPlatformStore>;
 
-function patch(journeyId: string, schedule: 'off' | 'daily' | 'weekly') {
+function patchBody(journeyId: string, body: Record<string, unknown>) {
   principalFromRequest.mockResolvedValue(OPERATOR);
 
   return PATCH(
@@ -47,10 +49,14 @@ function patch(journeyId: string, schedule: 'off' | 'daily' | 'weekly') {
         origin: 'http://localhost',
         'sec-fetch-site': 'same-origin',
       },
-      body: JSON.stringify({ schedule }),
+      body: JSON.stringify(body),
     }),
     { params: Promise.resolve({ clientId: 'acme', journeyId }) },
   );
+}
+
+function patch(journeyId: string, schedule: 'off' | 'daily' | 'weekly') {
+  return patchBody(journeyId, { schedule });
 }
 
 async function seed(id: string, journey: { targetUrl?: string; steps: unknown[] }) {
@@ -144,5 +150,172 @@ describe('PATCH /api/platform/clients/[clientId]/journeys/[journeyId]', () => {
 
     expect(response.status).toBe(200);
     expect((await platform.getJourney('already-booked'))?.schedule).toBe('off');
+  });
+
+  /**
+   * Steps are editable now, against the stance this route was written with.
+   *
+   * "Recorded once and re-walked" held while a journey was inert. Selectors go
+   * stale, and an uneditable journey means a dead one plus a duplicate called
+   * `acme-login-2` — with a re-audit quietly comparing against what
+   * `getLatestRun` treats as a different journey.
+   */
+  it('rewrites the steps a journey walks', async () => {
+    await seed('editable', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    const response = await patchBody('editable', {
+      steps: [
+        { action: 'navigate', type: 'goto', path: '/login' },
+        { action: 'inspect', type: 'expect', urlIncludes: '/dashboard' },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+    expect((await platform.getJourney('editable'))?.steps).toHaveLength(2);
+  });
+
+  it('holds new steps to the same rules creation does', async () => {
+    await seed('editable', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    // The literal-password shape, refused at creation since #43. An edit route
+    // that did not refuse it would be a second way in to the same column.
+    const response = await patchBody('editable', {
+      steps: [{ action: 'login', type: 'fill', selector: '#p', value: 'hunter2' }],
+    });
+
+    expect(response.status).toBe(400);
+    expect((await platform.getJourney('editable'))?.steps).toEqual(RUNNABLE_STEPS);
+  });
+
+  it('refuses an edit that would leave a scheduled journey unrunnable', async () => {
+    // The state the patch *leaves behind*, not the one it found. Checking the
+    // stored steps would let this land on a journey that is already Daily and
+    // book a recurring failure.
+    await seed('booked', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+    expect((await patch('booked', 'daily')).status).toBe(200);
+
+    const response = await patchBody('booked', { steps: [] });
+
+    expect(response.status).toBe(422);
+    expect((await response.json()).error).toBe('journey_has_no_steps');
+    expect((await platform.getJourney('booked'))?.steps).toEqual(RUNNABLE_STEPS);
+  });
+
+  it('lets steps and cadence change in one patch', async () => {
+    await seed('both', { targetUrl: 'https://acme.test/', steps: [] });
+
+    // Unrunnable until this patch gives it steps — so the guard has to judge
+    // the result, or a legitimate fix-and-schedule is refused.
+    const response = await patchBody('both', { schedule: 'weekly', steps: RUNNABLE_STEPS });
+
+    expect(response.status).toBe(200);
+    const stored = await platform.getJourney('both');
+    expect(stored?.schedule).toBe('weekly');
+    expect(stored?.steps).toHaveLength(1);
+  });
+
+  /**
+   * A partial update must not blank what it did not mention.
+   *
+   * `upsertJourney` overwrites the whole row, and this route omitted
+   * `scheduleHour` whenever the body did — so any schedule change silently
+   * moved a custom hour back to the store's default. It was latent while
+   * cadence was the only editable field; a steps-only patch would have reset
+   * the hour of a journey it never mentioned.
+   */
+  it('keeps a custom schedule hour a patch says nothing about', async () => {
+    await seed('houred', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+    expect((await patchBody('houred', { schedule: 'daily', scheduleHour: 9 })).status).toBe(200);
+
+    await patchBody('houred', { steps: RUNNABLE_STEPS });
+
+    expect((await platform.getJourney('houred'))?.scheduleHour).toBe(9);
+  });
+
+  it('keeps midnight, which is a real hour and a falsy number', async () => {
+    // `??`, not `||`. Hour 0 is midnight UTC and perfectly valid; `||` would
+    // treat it as unset and move the run to the store's default.
+    await seed('midnight', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+    await patchBody('midnight', { schedule: 'daily', scheduleHour: 0 });
+
+    await patchBody('midnight', { steps: RUNNABLE_STEPS });
+
+    expect((await platform.getJourney('midnight'))?.scheduleHour).toBe(0);
+  });
+
+  it('keeps the schedule a steps-only patch says nothing about', async () => {
+    await seed('kept', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+    await patch('kept', 'daily');
+
+    await patchBody('kept', { steps: RUNNABLE_STEPS });
+
+    expect((await platform.getJourney('kept'))?.schedule).toBe('daily');
+  });
+
+  /**
+   * The cap the subset proof did not cover.
+   *
+   * `authoredStepSchema ⊂ journeyStepSchema` is proven per *step*. It said
+   * nothing about list length, and the two caps disagreed — 200 for a stored
+   * journey against 50 at `/api/audit/run` — so a journey of 51 valid steps
+   * was storable, schedulable, and then undispatchable: the tick claims it,
+   * POSTs, takes a 400 at body parse, and repeats every window forever. Which
+   * is the exact failure the schedule guard exists to prevent.
+   */
+  it('refuses more steps than a run could ever dispatch', async () => {
+    await seed('toolong', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    const response = await patchBody('toolong', {
+      steps: Array.from({ length: MAX_STEPS_PER_JOURNEY + 1 }, () => RUNNABLE_STEPS[0]),
+    });
+
+    expect(response.status).toBe(400);
+    expect((await platform.getJourney('toolong'))?.steps).toEqual(RUNNABLE_STEPS);
+  });
+
+  it('accepts exactly as many as a run will take', async () => {
+    await seed('atcap', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    const response = await patchBody('atcap', {
+      steps: Array.from({ length: MAX_STEPS_PER_JOURNEY }, () => RUNNABLE_STEPS[0]),
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('answers an inline credential with the sentence that fixes it', async () => {
+    // The create route already does. An edit path answering `invalid_request_body`
+    // to the identical mistake is a worse answer to the same question.
+    await seed('cred', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    const response = await patchBody('cred', {
+      steps: [{ action: 'login', type: 'fill', selector: '#p', password: 'hunter2' }],
+    });
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('inline_credential');
+  });
+
+  it('refuses a patch that changes nothing', async () => {
+    // An empty body used to be a schema error only because `schedule` was
+    // required. Now every field is optional, so "change something" has to be
+    // said outright.
+    await seed('empty', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    expect((await patchBody('empty', {})).status).toBe(400);
+  });
+
+  it('records what actually changed', async () => {
+    // A feed saying "set a schedule" for an edit that rewrote the steps is how
+    // an audit trail stops being one.
+    await seed('logged', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    await patchBody('logged', { steps: RUNNABLE_STEPS });
+
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event?.action).toBe('rewrote a journey');
+    // The count, never the steps: a step can carry a literal and this row is
+    // rendered on the client screen.
+    expect(JSON.stringify(event?.metadata)).not.toContain('goto');
   });
 });

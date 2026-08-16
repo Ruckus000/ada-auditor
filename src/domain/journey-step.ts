@@ -155,6 +155,54 @@ export const authoredStepSchema = z.union([
 ]);
 
 /**
+ * The most steps a journey may hold, and the most `/api/audit/run` will take.
+ *
+ * One number because two disagreed, and the disagreement was invisible until
+ * it was a recurring production failure. Journeys allowed 200; the run body
+ * schema allowed 50. A journey of 51 well-formed steps was therefore storable,
+ * schedulable — `journeyRunRefusal` asks only "a non-empty array", and the
+ * schedule guard's `z.array(journeyStepSchema)` has no length bound — and then
+ * undispatchable: the tick claims it, POSTs, takes a 400 at body parse,
+ * releases, and does it again next window, forever. Which is word for word the
+ * failure that guard was written to stop.
+ *
+ * The manual run route calls `startRun` directly and bypasses the body schema,
+ * so such a journey ran fine by hand and failed only on the timer.
+ *
+ * 50 rather than 200: the page cap is 20 and every step costs wall clock
+ * against a 300s function ceiling, so the smaller number is the one with a
+ * reason behind it. Raising the run endpoint to 200 would only widen what an
+ * unauthenticated body-parse has to chew through.
+ */
+export const MAX_STEPS_PER_JOURNEY = 50;
+
+/**
+ * A whole list of steps, as a route must accept it.
+ *
+ * Here rather than in each route, because there are two of them now — create
+ * and edit — and "what a journey's steps may be" is exactly the thing this
+ * module exists to stop having two answers to.
+ *
+ * **Length before shape, and the order is load-bearing.** `.max()` on an array
+ * of `authoredStepSchema` is a check that runs *after* every element has been
+ * parsed against a five-branch strict union, so a body of junk steps was fully
+ * parsed before the cap refused it: measured at 210ms against 1ms for 5,000
+ * elements, and at 100,000 the parse-first form throws `RangeError` inside
+ * zod's own error builder. Counting first costs nothing.
+ *
+ * The size bound is a separate question from the shape and survives it — a
+ * payload that large is not a journey whatever shape it is in, and this row is
+ * written permanently and read on every client screen.
+ */
+export const authoredStepsSchema = z
+  .array(z.unknown())
+  .max(MAX_STEPS_PER_JOURNEY)
+  .pipe(z.array(authoredStepSchema))
+  .refine((steps) => JSON.stringify(steps).length <= 64_000, {
+    message: 'steps payload is too large',
+  });
+
+/**
  * One step, shaped for a screen.
  *
  * A journey's steps were never shown — the UI printed a *count*, so an

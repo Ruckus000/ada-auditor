@@ -11,7 +11,7 @@ import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-
 import { compareToBaseline } from '../../../services/regression';
 import { toStoredRunRecord } from '../../../services/run-persistence';
 import { z } from 'zod';
-import { journeyStepSchema } from '../../../domain/journey-step';
+import { journeyStepSchema, MAX_STEPS_PER_JOURNEY } from '../../../domain/journey-step';
 import {
   CHAOS_SCENARIOS,
   isChaosEnabled,
@@ -80,7 +80,14 @@ export const auditRunBodySchema = z.object({
    * `integrations/browser/target-url.ts`.
    */
   targetUrl: z.url().optional(),
-  steps: z.array(journeyStepSchema).min(1).max(50).optional(),
+  /**
+   * The same cap the journeys routes write against.
+   *
+   * These were 50 here and 200 there, and a journey between the two stored
+   * fine, scheduled fine, and then failed at this very line once a window
+   * forever — the tick claims it, POSTs, takes a 400, releases, repeats.
+   */
+  steps: z.array(journeyStepSchema).min(1).max(MAX_STEPS_PER_JOURNEY).optional(),
   chaosScenario: z
     .enum([
       'browser_omit_ax_tree',

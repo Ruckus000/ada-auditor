@@ -11,6 +11,8 @@ const OPERATOR = { kind: 'operator' as const, id: 'op-1', name: 'Alex Reed', ema
 const { GET, POST } = await import(
   '../../src/app/api/platform/clients/[clientId]/journeys/route'
 );
+const { MAX_STEPS_PER_JOURNEY } = await import('../../src/domain/journey-step');
+
 const { MemoryPlatformStore, resetPlatformStore, setPlatformStore } = await import(
   '../../src/integrations/persistence'
 );
@@ -252,13 +254,29 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
 
   it('still accepts a journey with a realistic number of real steps', async () => {
     // The bound has to be a bound, not a blanket refusal.
-    const steps = Array.from({ length: 200 }, (_, i) => ({
+    //
+    // This asked for 200, which was this route's own cap and *not* the one
+    // `/api/audit/run` enforced — 50. A journey between the two stored fine,
+    // scheduled fine, and then failed at body parse once a window forever.
+    // One `MAX_STEPS_PER_JOURNEY` now, and this asks for exactly it.
+    const steps = Array.from({ length: MAX_STEPS_PER_JOURNEY }, (_, i) => ({
       action: 'navigate',
       type: 'goto',
       path: `/page-${i}`,
     }));
 
     expect((await POST(fromBrowser({ name: 'Long', steps }), params('acme'))).status).toBe(201);
+  });
+
+  it('refuses more steps than a run could ever dispatch', async () => {
+    const steps = Array.from({ length: MAX_STEPS_PER_JOURNEY + 1 }, (_, i) => ({
+      action: 'navigate',
+      type: 'goto',
+      path: `/page-${i}`,
+    }));
+
+    expect((await POST(fromBrowser({ name: 'Long', steps }), params('acme'))).status).toBe(400);
+    expect(await platform.listJourneys('acme')).toEqual([]);
   });
 
   it('still creates an unrunnable journey when no schedule is asked for', async () => {
