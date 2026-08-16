@@ -153,11 +153,12 @@ function ArtifactChecklist({
 /**
  * What to call a page.
  *
- * One function because three places name pages — the heading, the section's
- * accessible name, and the "no issues on" sentence — and each read `title`
- * raw. A page with no title rendered a bold blank, an `aria-label=""`, and the
- * sentence "No issues on ." Its route is the only honest name available, and
- * it is the one the rest of the screen uses anyway.
+ * One function because four reads named pages and each took `title` raw: the
+ * findings heading and the evidence block (both through `PageLabel`), the
+ * section's accessible name, and the "no issues on" sentence. A page with no
+ * title rendered a bold blank, an `aria-label=""`, and the sentence "No issues
+ * on ." Its route is the only honest name available, and it is the one the
+ * rest of the screen uses anyway.
  */
 function pageLabel(page: AuditPage): string {
   return page.title ?? page.route;

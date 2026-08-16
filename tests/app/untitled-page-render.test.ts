@@ -30,15 +30,7 @@ import { FindingsList } from '../../src/app/components/findings-list';
 
 const UNTITLED_URL = 'https://acme.test/dashboard';
 const TITLED_URL = 'https://acme.test/checkout';
-/**
- * Untitled *and* clean, which is a third case and not a spare.
- *
- * `CleanPages` reads titles separately from the heading, and the first version
- * of this test never put an untitled page in front of it: the only finding was
- * on the untitled page, so the clean one was `Checkout` and the sentence read
- * correctly whether or not `CleanPages` was fixed. It would not have caught
- * the "No issues on ." defect it was named after.
- */
+/** Untitled *and* clean: the only shape that reaches `CleanPages`. */
 const UNTITLED_CLEAN_URL = 'https://acme.test/help';
 
 /** The body `/api/audit/console` returns when a page has an empty title. */
@@ -102,9 +94,9 @@ describe('the findings list, for a page with no title', () => {
   it('names an untitled clean page in the "no issues" sentence', () => {
     const markup = render();
 
-    // Both clean pages, in page order, one titled and one not. Before this,
-    // the untitled one contributed nothing and the sentence read "No issues on
-    // Checkout, ." — an affirmative claim about a page it declined to name.
+    // Both clean pages, in page order, one titled and one not. Reading `title`
+    // raw here gave "No issues on Checkout, ." — an affirmative claim about a
+    // page it declined to name.
     expect(markup).toContain('No issues on Checkout, /help.');
   });
 });

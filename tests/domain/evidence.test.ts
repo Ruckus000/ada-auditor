@@ -74,16 +74,9 @@ describe('worstEvidenceStatus', () => {
 });
 
 describe('boundTitle', () => {
-  /**
-   * `document.title` comes from the audited site and has no length limit. The
-   * same string is stored per page per run, returned in the API response,
-   * interpolated into the model prompt, and rendered into a PDF.
-   *
-   * Bounded at capture rather than in the schema beside it, deliberately: this
-   * helper exists beside that schema precisely because a `.max()` inside it
-   * would throw and destroy the run, which is the bug the empty-title case
-   * already taught. Truncate the page, never kill the run.
-   */
+  // Why it exists and why it is not a `.max()` are in the source docblock.
+  // What these pin is the behaviour: pass through, cut with a marker, and do
+  // not mark a title that fits.
   it('leaves a real title alone', () => {
     expect(boundTitle('Checkout — Acme')).toBe('Checkout — Acme');
     expect(boundTitle('')).toBe('');

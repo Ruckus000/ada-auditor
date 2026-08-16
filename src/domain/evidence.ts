@@ -43,12 +43,19 @@ export type EvidenceBundle = EvidenceBundleInput & {
 };
 
 /**
+ * Generous for any real title. `deterministic-audit` caps axe's `outerHTML` at
+ * 512 for the same reason; a title is a label rather than markup.
+ */
+const MAX_TITLE_LENGTH = 300;
+
+/**
  * A page's title is whatever the audited site says it is.
  *
  * `document.title` has no length limit, and this one string is stored per page
- * per run, returned in the API response, interpolated into the model prompt in
- * `services/ai-advisory`, and rendered into a Chromium PDF. A hostile — or
- * merely broken — page returning megabytes reaches all four.
+ * per run, returned in the API response, rendered on the client screen and on
+ * the public share page outside the auth gate, interpolated into the model
+ * prompt in `services/ai-advisory`, and drawn into a Chromium PDF. A hostile —
+ * or merely broken — page returning megabytes reaches every one of them.
  *
  * A function beside the schema rather than a `.max()` inside it, and that
  * distinction is the whole lesson of the field above: `createEvidenceBundle`
@@ -61,14 +68,16 @@ export type EvidenceBundle = EvidenceBundleInput & {
  * consumer reading the unbounded string.
  *
  * The ellipsis is load-bearing: silently cutting a title presents a fragment as
- * the whole thing. 300 is generous for any real title — `deterministic-audit`
- * caps axe's `outerHTML` at 512 for the same reason, and a title is a label
- * rather than markup.
+ * the whole thing.
+ *
+ * Cutting by code unit can land inside a surrogate pair, and half a pair is not
+ * valid UTF-8: it survives `JSON.stringify` as a lone `\uD83D` escape, which a
+ * strict parser can reject, and it renders as `�` in a client's report. So the
+ * cut drops a trailing high surrogate rather than keeping half a character.
  */
-const MAX_TITLE_LENGTH = 300;
-
 export function boundTitle(title: string): string {
-  return title.length <= MAX_TITLE_LENGTH ? title : `${title.slice(0, MAX_TITLE_LENGTH)}…`;
+  if (title.length <= MAX_TITLE_LENGTH) return title;
+  return `${title.slice(0, MAX_TITLE_LENGTH).replace(/[\uD800-\uDBFF]$/, '')}…`;
 }
 
 export function createEvidenceBundle(input: EvidenceBundleInput): EvidenceBundle {
