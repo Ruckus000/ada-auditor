@@ -142,9 +142,16 @@ carrier-grade NAT, IPv6 unique- and link-local, every IPv6 range that embeds an
 IPv4 address (IPv4-mapped, IPv4-compatible, NAT64, 6to4), and
 `169.254.169.254` — the cloud metadata endpoint.
 
-A run's allowed hosts default to the target's own host, and that is currently
-the only value they take — nothing accepts them over HTTP. Two rules govern
-where a run may go, and they answer different questions:
+A run's allowed hosts are the target's own host plus anything the journey names
+in `allowed_hosts` — a union, so listing a provider cannot lock a run out of
+the site it is auditing. Set it with `allowedHosts` on
+`POST`/`PATCH /api/platform/clients/<id>/journeys[/<journeyId>]`, or per run on
+`POST /api/audit/run`; all three validate against the same schema. Entries are
+hostnames only — no scheme, port, path, wildcard, IP literal or bare public
+suffix — and are matched host-or-subdomain, so one entry covers a provider's
+tenants. It exists for third-party sign-in and nothing else.
+
+Two rules govern where a run may go, and they answer different questions:
 
 - **Passing through another host is permitted** on the way, provided every hop
   reaches a public address. An apex-to-www hop, a consent wall and an SSO
@@ -156,7 +163,7 @@ where a run may go, and they answer different questions:
   defects are not the client's to fix. Ending on one aborts the run.
 
 Both hold whatever the allowed-host list contains, which is what makes it safe
-to widen later for a third-party identity provider.
+to name a third-party identity provider in it.
 
 **CI/executive read:** `GET /api/audit/runs/latest?journeyId=&environment=` with
 the run token returns the latest stored run plus optional regression against the

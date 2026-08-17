@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { actorFields } from '../../../../../../../domain/operator';
 import { journeyRunRefusal } from '../../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../../integrations/persistence';
+import { allowedHostsSchema } from '../../../../../../../domain/allowed-hosts';
 import { authoredStepsSchema, journeyStepSchema } from '../../../../../../../domain/journey-step';
 import { containsInlineCredential } from '../../../../../_lib/inline-credential';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
@@ -44,10 +45,19 @@ const patchSchema = z
     /** UTC. Unset now means *unchanged*, not "back to the store's default". */
     scheduleHour: z.number().int().min(0).max(23).optional(),
     steps: authoredStepsSchema.optional(),
+    /**
+     * Unset means unchanged, as everywhere else here. An empty array is how a
+     * list is cleared — the two have to be different, or a patch that only
+     * renames a cadence would silently drop the provider a journey needs.
+     */
+    allowedHosts: allowedHostsSchema.optional(),
   })
   .refine(
     (body) =>
-      body.schedule !== undefined || body.scheduleHour !== undefined || body.steps !== undefined,
+      body.schedule !== undefined ||
+      body.scheduleHour !== undefined ||
+      body.steps !== undefined ||
+      body.allowedHosts !== undefined,
     { message: 'A patch must change something.' },
   );
 
@@ -143,6 +153,7 @@ export async function PATCH(
   // hour silently moved the run. `??` against the stored value is what makes
   // "unset" mean unchanged.
   const scheduleHour = parsed.scheduleHour ?? journey.scheduleHour;
+  const allowedHosts = parsed.allowedHosts ?? journey.allowedHosts;
 
   await platform.upsertJourney({
     id: journey.id,
@@ -152,26 +163,37 @@ export async function PATCH(
     ...(journey.environment ? { environment: journey.environment } : {}),
     schedule,
     ...(scheduleHour === undefined ? {} : { scheduleHour }),
+    ...(allowedHosts === undefined ? {} : { allowedHosts }),
     steps,
   });
 
   // Named by what actually changed. A feed saying "set a schedule" for an edit
-  // that only rewrote the steps is how an audit trail stops being one — and
-  // rewriting what a journey walks is the more consequential of the two.
+  // that only rewrote the steps is how an audit trail stops being one.
+  //
+  // Ordered by consequence, and the allowed hosts come first for a reason
+  // beyond novelty: it is the only field here that changes *where a browser
+  // may be sent*. An entry added to that list and recorded in the feed as "set
+  // a schedule" is the one change an audit trail exists to make findable.
   await platform.recordEvent({
     clientId,
     ...actorFields(principal),
-    action: parsed.steps
-      ? 'rewrote a journey'
-      : schedule === 'off'
-        ? 'turned off a schedule'
-        : 'set a schedule',
+    action: parsed.allowedHosts
+      ? 'changed where a journey may go'
+      : parsed.steps
+        ? 'rewrote a journey'
+        : schedule === 'off'
+          ? 'turned off a schedule'
+          : 'set a schedule',
     subject: journey.name,
     metadata: {
       schedule,
       // The count, never the steps: a step can carry a literal, and an
       // activity row is rendered on the client screen.
       ...(parsed.steps ? { stepCount: parsed.steps.length } : {}),
+      // The hosts themselves, unlike the steps. A hostname an operator chose
+      // is not a secret, and "which hosts" is the entire question somebody
+      // reads this row to answer.
+      ...(parsed.allowedHosts ? { allowedHosts: parsed.allowedHosts } : {}),
     },
   });
 

@@ -63,6 +63,7 @@ type JourneyRow = {
   environment: string | null;
   schedule: string | null;
   schedule_hour: number | null;
+  allowed_hosts: string[] | null;
   last_scheduled_at: Date | string | null;
   steps: unknown[];
   archived_at: Date | string | null;
@@ -280,6 +281,11 @@ export class PostgresPlatformStore implements PlatformStore {
       ...optional('environment', row.environment),
       ...optional('schedule', row.schedule),
       ...optional('scheduleHour', row.schedule_hour),
+      // Absent rather than `[]` when the column is null, matching every other
+      // nullable field here: "not recorded" and "recorded as nothing" are the
+      // same for this list, and inventing an empty array would make a row
+      // written before the column look like one an operator cleared.
+      ...optional('allowedHosts', row.allowed_hosts),
       ...optional('lastScheduledAt', row.last_scheduled_at ? toIso(row.last_scheduled_at) : null),
       steps: row.steps ?? [],
       ...optional('archivedAt', row.archived_at ? toIso(row.archived_at) : null),
@@ -322,12 +328,13 @@ export class PostgresPlatformStore implements PlatformStore {
     await this.sql`
       insert into journeys (
         id, client_id, name, target_url, environment, schedule, schedule_hour,
-        steps, updated_at
+        allowed_hosts, steps, updated_at
       )
       values (
         ${journey.id}, ${journey.clientId}, ${journey.name},
         ${journey.targetUrl ?? null}, ${journey.environment ?? 'production'},
         ${journey.schedule ?? 'off'}, ${journey.scheduleHour ?? null},
+        ${journey.allowedHosts ?? null},
         ${JSON.stringify(journey.steps ?? [])}::jsonb, now()
       )
       on conflict (id) do update set
@@ -337,6 +344,7 @@ export class PostgresPlatformStore implements PlatformStore {
         environment = excluded.environment,
         schedule = excluded.schedule,
         schedule_hour = excluded.schedule_hour,
+        allowed_hosts = excluded.allowed_hosts,
         steps = excluded.steps,
         updated_at = now()
     `;

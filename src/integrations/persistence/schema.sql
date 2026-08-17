@@ -510,3 +510,16 @@ alter table runs add column if not exists intent jsonb;
 -- has no HTTP status at all, and every page recorded before this column has
 -- none either.
 alter table run_pages add column if not exists status_code integer;
+
+-- Extra hosts one journey may pass through, beyond the target's own.
+--
+-- For third-party sign-in: an app that hands off to Okta or Entra is refused
+-- on its first step without this, because the allowlist is otherwise the
+-- target's host alone. Null and empty read the same — the target's own host is
+-- added by the runner and is never stored here.
+--
+-- Matched host-or-subdomain, which is why `allowedHostsSchema` refuses a bare
+-- public suffix at write time. What contains a wrong entry is not this column:
+-- a pass-through host is never audited, every hop's peer address is
+-- range-checked, and the run must still come to rest on the target.
+alter table journeys add column if not exists allowed_hosts text[];

@@ -205,6 +205,30 @@ describe('a journey whose app hands off to an identity provider', () => {
   }, 60_000);
 
   /**
+   * The list adds to the target's host; it does not replace it.
+   *
+   * An operator writing this box is naming the provider — the site they are
+   * auditing is already named by `targetUrl`, and having to repeat it is the
+   * kind of requirement nobody reads twice. Left as a replacement, listing
+   * only the provider would lock the run out of the client's own site: the
+   * first step lands on the IdP, the journey comes back to the app, and the
+   * app is now off-allowlist.
+   */
+  it('adds to the target host rather than replacing it', async () => {
+    const result = await ssoJourney({
+      allowedHosts: [IDP],
+      steps: [
+        { action: 'navigate', type: 'goto', path: '/' },
+        { action: 'navigate', type: 'click', selector: '#continue' },
+      ],
+    });
+
+    expect(result.pages.map((captured) => captured.page.url)).toEqual([
+      `http://${APP}/dashboard`,
+    ]);
+  }, 60_000);
+
+  /**
    * The rule that stops a widened allowlist becoming this plan's own headline
    * failure: a run that never got in, audited a login page, and reported it as
    * a clean pass because login pages are small and tidy.

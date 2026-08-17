@@ -100,6 +100,35 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     });
   });
 
+  it('records the hosts a journey may pass through, normalised', async () => {
+    const response = await POST(
+      fromBrowser({
+        name: 'SSO',
+        targetUrl: 'https://acme.test/',
+        allowedHosts: ['ACME.Okta.com.'],
+      }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(201);
+    // What is stored is what the matcher compares. A row that matches only
+    // because the comparison lowercases both sides is a coincidence.
+    const [stored] = await platform.listJourneys('acme');
+    expect(stored.allowedHosts).toEqual(['acme.okta.com']);
+  });
+
+  it('refuses a public suffix, so one entry cannot allow the internet', async () => {
+    // The list is matched host-or-subdomain, so `co.uk` is every British
+    // company. The operator meant `acme.co.uk`.
+    const response = await POST(
+      fromBrowser({ name: 'SSO', targetUrl: 'https://acme.test/', allowedHosts: ['co.uk'] }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await platform.listJourneys('acme')).toHaveLength(0);
+  });
+
   it('scopes the id to the client', async () => {
     // Two clients may both have a journey called Checkout, and they are not
     // the same journey. The id is global — runs reference it — so an unscoped

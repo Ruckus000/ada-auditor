@@ -104,6 +104,41 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/runs', () =
     expect(input.journeyId).toBe('checkout');
   });
 
+  /**
+   * The whole chain, at the only point that proves it is joined up.
+   *
+   * A stored list that never reaches `runBrowserAudit` is a column an operator
+   * fills in and a journey that still fails on its first redirect — and every
+   * unit test of the schema, the store and the runner would stay green through
+   * it. Three separate guards in this repo have shipped fully tested and
+   * entirely unwired; this is the assertion that would have caught them.
+   */
+  it('hands the journey’s own allowed hosts to the run', async () => {
+    await platform.upsertJourney({
+      id: 'checkout',
+      clientId: 'acme',
+      name: 'Checkout',
+      targetUrl: 'https://acme.test/',
+      allowedHosts: ['acme.okta.com'],
+      steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+    });
+
+    await POST(request(), params('acme', 'checkout'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(runBrowserAudit.mock.calls[0][0].allowedHosts).toEqual(['acme.okta.com']);
+  });
+
+  it('sends no allowed hosts for a journey that names none', async () => {
+    // Absent, not `[]`. The runner unions the target's own host in either way,
+    // so this is about not inventing a value — but a route that always sent
+    // something would make the two cases indistinguishable downstream.
+    await POST(request(), params('acme', 'checkout'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(runBrowserAudit.mock.calls[0][0].allowedHosts).toBeUndefined();
+  });
+
   it('refuses an unauthenticated caller', async () => {
     const call = request();
     principalFromRequest.mockResolvedValue(null);

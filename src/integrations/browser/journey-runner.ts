@@ -246,8 +246,12 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
 
   // Default the allowlist to the target's own host: an audit of one site has no
   // business navigating to another.
-  const allowedHosts =
-    input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
+  // A union, matching `runBrowserAudit`: the target's own host is always
+  // allowed, and `allowedHosts` adds to it rather than replacing it.
+  const allowedHosts = [
+    ...(input.targetUrl ? [new URL(input.targetUrl).hostname] : []),
+    ...(input.allowedHosts ?? []),
+  ];
 
   /**
    * The site this run is actually about, which stopped being the same question

@@ -164,6 +164,11 @@ export async function GET(request: Request) {
           // without steps now, so the conditional guarded nothing and read as
           // though the tick still expected one.
           steps: journey.steps,
+          // Without this a journey that signs in through a provider runs by
+          // hand and fails on the timer, which is the shape of bug the shared
+          // step cap was created to stop: a difference between two doors into
+          // the same run that only shows up once a window.
+          ...(journey.allowedHosts ? { allowedHosts: journey.allowedHosts } : {}),
         }),
       });
 

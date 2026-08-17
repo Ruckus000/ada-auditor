@@ -1,6 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { waitUntil } from '@vercel/functions';
+import { allowedHostsSchema } from '../../../domain/allowed-hosts';
 import { environmentSchema } from '../../../domain/contracts';
 import { getArtifactStore } from '../../../integrations/artifacts/blob-store';
 import { worstEvidenceStatus } from '../../../domain/evidence';
@@ -80,6 +81,21 @@ export const auditRunBodySchema = z.object({
    * `integrations/browser/target-url.ts`.
    */
   targetUrl: z.url().optional(),
+  /**
+   * Extra hosts the run may pass through, on top of the target's own.
+   *
+   * Accepted over HTTP because the scheduler dispatches through this endpoint:
+   * the tick reads a journey's stored list and posts it here, so withholding
+   * it would mean an SSO journey that runs by hand and fails on a timer —
+   * exactly the split `MAX_STEPS_PER_JOURNEY` was created to close.
+   *
+   * The same schema the journeys routes write against, deliberately. A caller
+   * holding the run token could otherwise post `["co.uk"]` here and bypass
+   * every rule enforced at the other end. That caller can already choose
+   * `targetUrl`, so this is not the boundary that keeps them honest — but a
+   * validation that two doors disagree about is not a validation.
+   */
+  allowedHosts: allowedHostsSchema.optional(),
   /**
    * The same cap the journeys routes write against.
    *
@@ -186,6 +202,7 @@ async function executeRun(
       omitAxTree: chaosParams?.omitAxTree ?? parsedBody.omitAxTree,
       steps: chaosParams?.steps ?? parsedBody.steps,
       targetUrl: chaosParams ? undefined : parsedBody.targetUrl,
+      ...(parsedBody.allowedHosts ? { allowedHosts: parsedBody.allowedHosts } : {}),
       platformHint: parsedBody.platformHint,
     });
 

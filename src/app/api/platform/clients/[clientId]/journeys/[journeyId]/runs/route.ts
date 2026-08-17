@@ -101,6 +101,10 @@ export async function POST(
       journeyId: journey.id,
       environment,
       targetUrl: journey.targetUrl,
+      // The journey's own list, not the caller's: this route names a stored
+      // journey, so where it may go is a property of that journey and not
+      // something a request body gets to add to.
+      ...(journey.allowedHosts ? { allowedHosts: journey.allowedHosts } : {}),
       steps,
     },
     requestId,
