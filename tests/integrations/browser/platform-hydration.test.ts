@@ -653,9 +653,19 @@ describe('platform hydration', () => {
           },
           { timeout: 30_000, intervals: [1000] },
         )
+        // The API's own projection, not the stored row: this route answers
+        // with `toStepViews` so a literal value a legacy step is carrying
+        // cannot be read back out of it. Still server truth — the shape and
+        // order are the edit that was saved.
         .toEqual([
-          { action: 'navigate', type: 'goto', path: '/' },
-          { action: 'navigate', type: 'expect', urlIncludes: '/dashboard' },
+          { position: 1, action: 'navigate', type: 'goto', path: '/', recognised: true },
+          {
+            position: 2,
+            action: 'navigate',
+            type: 'expect',
+            urlIncludes: '/dashboard',
+            recognised: true,
+          },
         ]);
     } finally {
       await page.close();
