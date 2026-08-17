@@ -224,8 +224,19 @@ export function describeDraftProblem(draft: StepDraft): string | null {
  */
 export function toAuthoredSteps(
   drafts: readonly StepDraft[],
+  environment: Environment,
 ): { ok: true; steps: unknown[] } | { ok: false } {
   if (drafts.length === 0) return { ok: false };
+
+  // An action this environment forbids, which the schema cannot see: it knows
+  // what a step *is*, not where it will run. The write routes refuse the same
+  // pair, and they have to agree — an editor that lets a save through for the
+  // route to reject is two doors disagreeing about one rule, which is the
+  // failure the shared step cap and the shared credential check were both
+  // written to end.
+  if (drafts.some((draft) => draft.action !== '' && !isActionAllowed(environment, draft.action))) {
+    return { ok: false };
+  }
 
   const parsed = authoredStepsSchema.safeParse(drafts.map(draftToStep));
   return parsed.success ? { ok: true, steps: parsed.data } : { ok: false };

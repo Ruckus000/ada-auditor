@@ -59,12 +59,16 @@ function patch(journeyId: string, schedule: 'off' | 'daily' | 'weekly') {
   return patchBody(journeyId, { schedule });
 }
 
-async function seed(id: string, journey: { targetUrl?: string; steps: unknown[] }) {
+async function seed(
+  id: string,
+  journey: { targetUrl?: string; environment?: string; steps: unknown[] },
+) {
   await platform.upsertJourney({
     id,
     clientId: 'acme',
     name: id,
     ...(journey.targetUrl ? { targetUrl: journey.targetUrl } : {}),
+    ...(journey.environment ? { environment: journey.environment } : {}),
     steps: journey.steps,
   });
 }
@@ -268,6 +272,68 @@ describe('PATCH /api/platform/clients/[clientId]/journeys/[journeyId]', () => {
 
     expect(response.status).toBe(400);
     expect((await platform.getJourney('sso-bad'))?.allowedHosts).toBeUndefined();
+  });
+
+  /**
+   * Promoting a journey can break the steps it already has.
+   *
+   * Production forbids `submit-safe`, so moving a working staging journey
+   * there turns its first submission into a mid-walk abort — against a
+   * client's live site, at step N, with steps 1..N-1 already performed. The
+   * pair is judged before it is stored.
+   */
+  it('refuses an environment change its existing steps could not survive', async () => {
+    await seed('promote', {
+      targetUrl: 'https://acme.test/',
+      environment: 'staging',
+      steps: [{ action: 'submit-safe', type: 'click', selector: '#pay' }],
+    });
+
+    const response = await patchBody('promote', { environment: 'production' });
+
+    expect(response.status).toBe(422);
+    expect((await response.json()).error).toBe('action_not_allowed_here');
+    expect((await platform.getJourney('promote'))?.environment).toBe('staging');
+  });
+
+  it('refuses steps the stored environment could not survive', async () => {
+    // The other half of the same pair. Checking new steps against nothing, or
+    // a new environment against nothing, each misses a patch that changes only
+    // the other one.
+    await seed('prod', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    const response = await patchBody('prod', {
+      steps: [{ action: 'submit-safe', type: 'click', selector: '#pay' }],
+    });
+
+    expect(response.status).toBe(422);
+  });
+
+  it('accepts the same steps once the journey is moved somewhere that allows them', async () => {
+    await seed('move', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    const response = await patchBody('move', {
+      environment: 'staging',
+      steps: [{ action: 'submit-safe', type: 'click', selector: '#pay' }],
+    });
+
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect((await platform.getJourney('move'))?.environment).toBe('staging');
+  });
+
+  it('keeps the environment a patch says nothing about', async () => {
+    // `upsertJourney` overwrites the whole row, and this field decides what a
+    // step is allowed to do — dropping it silently promotes a staging journey
+    // to production, where its own steps are then refused.
+    await seed('keep-env', {
+      targetUrl: 'https://acme.test/',
+      environment: 'staging',
+      steps: RUNNABLE_STEPS,
+    });
+
+    await patchBody('keep-env', { steps: RUNNABLE_STEPS });
+
+    expect((await platform.getJourney('keep-env'))?.environment).toBe('staging');
   });
 
   it('keeps midnight, which is a real hour and a falsy number', async () => {

@@ -151,6 +151,12 @@ hostnames only — no scheme, port, path, wildcard, IP literal or bare public
 suffix — and are matched host-or-subdomain, so one entry covers a provider's
 tenants. It exists for third-party sign-in and nothing else.
 
+A journey also carries an `environment` — `production` unless it says otherwise
+— which decides what its steps may do: `submit-safe` and `mutate-test-data` are
+refused in production, and both write routes refuse a journey whose steps and
+environment disagree rather than letting the runner abort part-way through one.
+Set it alongside `steps` on the same two routes.
+
 Two rules govern where a run may go, and they answer different questions:
 
 - **Passing through another host is permitted** on the way, provided every hop

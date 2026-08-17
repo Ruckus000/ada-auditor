@@ -290,6 +290,43 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     expect(journey).not.toHaveProperty('lastScheduledAt');
   });
 
+  it('records the environment a journey runs in', async () => {
+    // `production` when unsaid, and that default is why this had to become
+    // settable: while every journey was production, `submit-safe` was an
+    // action an operator could write and no run could ever walk.
+    const response = await POST(
+      fromBrowser({
+        name: 'Staging Checkout',
+        targetUrl: 'https://acme.test/',
+        environment: 'staging',
+        steps: [{ action: 'submit-safe', type: 'click', selector: '#pay' }],
+      }),
+      params('acme'),
+    );
+
+    expect(response.status, await response.clone().text()).toBe(201);
+    const [stored] = await platform.listJourneys('acme');
+    expect(stored.environment).toBe('staging');
+  });
+
+  it('refuses a step the chosen environment would abort on', async () => {
+    // The runner checks each action as it reaches it, so the alternative to
+    // refusing here is a journey that clicks its way through a client's live
+    // site and *then* stops. Production forbids `submit-safe`.
+    const response = await POST(
+      fromBrowser({
+        name: 'Prod Checkout',
+        targetUrl: 'https://acme.test/',
+        steps: [{ action: 'submit-safe', type: 'click', selector: '#pay' }],
+      }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(422);
+    expect((await response.json()).error).toBe('action_not_allowed_here');
+    expect(await platform.listJourneys('acme')).toHaveLength(0);
+  });
+
   it('records who recorded it', async () => {
     await POST(fromBrowser({ name: 'Checkout' }), params('acme'));
 

@@ -50,6 +50,8 @@ const MESSAGES: Record<string, string> = {
     'A step carried a credential of its own. Use a stored credential by name instead.',
   invalid_request_body: 'Those steps were refused. Check every row and try again.',
   invalid_journey_steps: 'Those steps are not ones a run could walk.',
+  action_not_allowed_here:
+    'One of these steps does something this journey’s environment does not allow.',
   journey_has_no_steps: 'A journey needs at least one step.',
   journey_not_runnable: 'This journey has no target URL, so nothing can run it.',
   journey_not_found: 'That journey is no longer on this client.',
@@ -137,7 +139,7 @@ export function JourneyStepsEditor({
     });
   }
 
-  const writable = toAuthoredSteps(drafts);
+  const writable = toAuthoredSteps(drafts, environment);
   // A journey that never says it arrived is the failure this whole plan is
   // named for: a login that silently fails is audited as though it succeeded,
   // and the run reports a clean pass over the login page. Said here, where the
@@ -421,11 +423,17 @@ export function JourneyStepsEditor({
                     }}
                   >
                     {/*
-                      A warning, not a refusal. The action is already stored;
-                      blocking the save would make the journey uneditable by
-                      the very operator who came here to fix it.
+                      This blocks the save, and the route refuses the same
+                      pair. An earlier version warned and let it through on the
+                      reasoning that the action was already stored and blocking
+                      would trap the operator — but it does not: the dropdown
+                      beside this offers every action that *is* allowed, and
+                      the row can be removed. What the softer version actually
+                      produced was a save the route then rejected, which is two
+                      doors disagreeing about one rule.
                     */}
-                    “{draft.action}” is not allowed in {environment}, so a run stops at this step.
+                    “{draft.action}” is not allowed in {environment}. Choose another action or
+                    remove this step.
                   </p>
                 ) : null}
               </fieldset>
