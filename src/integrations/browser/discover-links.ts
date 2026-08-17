@@ -170,6 +170,18 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         break;
       }
 
+      // Kept as a guard, and unreachable while the frontier ceiling below
+      // exists. The ceiling admits a link only when
+      // `frontier.length < MAX_DISCOVERY_URLS - pages.length`, and a page is
+      // pushed before that iteration's links are read — so after every
+      // iteration `frontier.length <= MAX_DISCOVERY_URLS - pages.length`, and
+      // `pages.length >= MAX_DISCOVERY_URLS` therefore implies an empty
+      // frontier, which the `while` condition has already caught. Deleting this
+      // leaves the browser suite green and a sweep of 8,640 simulated site
+      // shapes never fires it once; the post-loop assignment is the only path
+      // that reports `url-cap`. It stays because the ceiling is one edit away
+      // from changing and a cap with no top-of-loop check is a cap that can be
+      // overrun. The budget branch above is live and is *not* in this position.
       if (pages.length >= MAX_DISCOVERY_URLS) {
         truncated = { reason: 'url-cap', seen: seen.size };
         break;
@@ -177,6 +189,11 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
       const next = frontier.shift();
       if (next === undefined) break;
+
+      // Set only where the *entry* page comes to rest outside the allowlist,
+      // which is the one failure the per-page handler must not swallow. See
+      // the throw site below.
+      let entrySettledOffAllowlist = false;
 
       try {
         await page.goto(next.url, { waitUntil: 'domcontentloaded' });
@@ -202,7 +219,47 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // governs where a walk comes to rest, and a redirect is how a request
         // for one host produces a page from another.
         const settled = page.url();
-        assertAllowedUrl(settled, allowedHosts);
+
+        try {
+          assertAllowedUrl(settled, allowedHosts);
+        } catch (error) {
+          // Depth 0 is the entry point, and an entry point that settles off its
+          // own allowlist is not one bad page among many — it is the whole
+          // crawl aimed somewhere else. `hostAllowed` matches an entry or any
+          // subdomain of it, so apex→www passes (`www.acme.com` ends with
+          // `.acme.com`) and **www→apex does not**, which is the redirect a
+          // large share of real sites perform. Caught by the per-page handler
+          // below, `http://www.acme.com/` returns zero pages, one error and no
+          // truncation: an empty result claiming to be the whole site, which is
+          // the one thing `DiscoveryTruncation` exists to prevent. Rethrown,
+          // the caller can answer 4xx naming the host the target redirected to
+          // and tell the operator to discover *that* instead.
+          entrySettledOffAllowlist = next.depth === 0;
+          throw error;
+        }
+
+        // Dedupe on where it came to rest, not only on where it was asked for.
+        //
+        // `/old-pricing` 301ing to `/pricing` is ordinary — trailing slashes and
+        // apex-to-www make it so — and without this the crawl reports both and
+        // navigates twice. Note what this is *not*: termination never depended
+        // on it. `seen` still holds the requested key, so `/a`→`/b` where `/b`
+        // links back to `/a` short-circuits regardless, and the
+        // `routeFromPageUrl` scar is not the risk here. What it prevents is two
+        // rows carrying a byte-identical `url` — recording the settled URL is
+        // what made that newly possible — which a UI keyed on that string would
+        // collide on.
+        //
+        // `continue` rather than skipping the push alone: the settled page's
+        // links were harvested when the canonical entry was visited, so
+        // re-extracting them is pure waste. Skipping only the push would also be
+        // correct, just slower, and the fast one is chosen deliberately. The
+        // politeness delay still gets paid — it lives in this block's `finally`
+        // precisely so a request that was made is a request that is paid for.
+        const settledKey = discoveryKey(settled);
+        const alreadyRecorded = settledKey !== discoveryKey(next.url) && seen.has(settledKey);
+        seen.add(settledKey);
+        if (alreadyRecorded) continue;
 
         pages.push({
           // The settled URL, so a `goto` step authored from this points at
@@ -273,7 +330,34 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
           }
         }
       } catch (error) {
+        // An empty crawl is not a crawl. Everything else here is one page's
+        // failure and the walk goes on; this one is the walk itself.
+        if (entrySettledOffAllowlist) throw error;
+
+        // Bounded, because nothing else bounds it. `MAX_DISCOVERY_URLS` counts
+        // pages, and an errored navigation adds none — so a site of dead links
+        // never trips the URL cap while accumulating a full entry per failure.
+        // The budget holds it to roughly 240 navigations in practice, so this
+        // is a precision fix rather than a memory one, but the whole array is
+        // serialised into a response body and served to a browser.
+        if (errors.length >= MAX_DISCOVERY_URLS) continue;
+
         errors.push({
+          // The *requested* URL, where `pages[].url` is the settled one, and
+          // the asymmetry is deliberate rather than an oversight.
+          //
+          // A page's URL becomes a `goto` step, and a step pointing at a
+          // redirector re-pays the hop on every run forever — so a page is
+          // recorded where it lives. An error is a diagnosis, and a diagnosis
+          // has to name something the operator can find: telling them
+          // `elsewhere.test/landed` failed is useless when nothing in their
+          // markup says that and `Ctrl-F` finds nothing.
+          //
+          // The row only reads correctly because both halves are present:
+          // `/offsite-redirect.html` plus `Host elsewhere.test is not in the
+          // allowed domains` is legible, where `/offsite-redirect.html` alone
+          // would read as "your own page is not in your allowed domains",
+          // which is nonsense. Do not "fix" this to the settled URL.
           url: next.url,
           // First line only, matching `attemptStep` in `journey-runner.ts`.
           //
@@ -285,22 +369,30 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
           // inside a value under the key `message` would travel unredacted.
           message: firstLine(error),
         });
+      } finally {
+        // Politeness is owed to the next request, so there is no one to be
+        // polite to when there is no next request. Unconditional, this charged
+        // every crawl 250ms of dead time after its last page and took it from
+        // the budget.
+        //
+        // In `finally` rather than after the block so that every path that made
+        // a request pays for it — including the redirect-dedupe `continue`
+        // above, which skips the rest of the iteration but not the navigation.
+        if (frontier.length > 0) await delay(DISCOVERY_DELAY_MS);
       }
-
-      // Politeness is owed to the next request, so there is no one to be
-      // polite to when there is no next request. Unconditional, this charged
-      // every crawl 250ms of dead time after its last page and took it from
-      // the budget.
-      if (frontier.length > 0) await delay(DISCOVERY_DELAY_MS);
     }
   } finally {
     await browser.close();
   }
 
   // A link the ceiling refused is itself proof the crawl was cut short, and it
-  // is the only proof left once the frontier has been drained to empty. The
-  // top-of-loop reason wins where both apply: reaching the cap while pages
-  // remained queued is the same truncation, already recorded.
+  // is the only proof left once the frontier has been drained to empty.
+  //
+  // For `url-cap` this is not one of two paths, it is the only one: the
+  // top-of-loop `url-cap` branch cannot fire while the ceiling exists, for the
+  // reason set out beside it. The `!truncated` guard is about `budget`, which
+  // is live and does win here — a crawl that ran out of clock having also
+  // dropped links should report the clock, because that is what stopped it.
   if (!truncated && droppedByCeiling > 0) {
     truncated = { reason: 'url-cap', seen: seen.size };
   }

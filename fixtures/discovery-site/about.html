@@ -4,9 +4,26 @@
   <body>
     <main>
       <h1>About</h1>
+      <!--
+        Three of the links below name paths that exist in no file in this
+        directory, and that is deliberate rather than rot. `/offsite-redirect.html`
+        and `/old-pricing.html` are redirects, and `/broken.html` is a connection
+        the server drops mid-request. A redirect and a dropped socket are server
+        behaviours, not documents, so there is nothing a file here could hold —
+        they are answered inside the `createServer` callback of
+        `tests/integrations/browser/discover-links.test.ts`. Any other server over
+        this directory answers them 404, which is a page rather than an error, so
+        a test relying on the behaviour must be in that file.
+
+        `hostile.html` is the counter-example done right: it is a real file
+        because it really is a document. Read this directory as the site's
+        documents, not as the whole of what a crawl of it meets.
+      -->
       <a href="/">Home</a>
       <a href="/deep.html">Deep</a>
       <a href="/offsite-redirect.html">Offsite redirect</a>
+      <a href="/broken.html">Broken</a>
+      <a href="/old-pricing.html">Old pricing</a>
     </main>
   </body>
 </html>

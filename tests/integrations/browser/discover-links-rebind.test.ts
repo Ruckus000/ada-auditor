@@ -26,7 +26,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
  * makes the file able to stub nothing, and also what makes it blind to whether
  * the crawl *recovers* after a refusal — sticky and cleared `peerViolation`
  * look identical when there is no clean page to tell them apart.
- * `discover-links-peer-clearing.test.ts` covers that, and pays for a clean
+ * `discover-links-violation-clearing.test.ts` covers that, and pays for a clean
  * page with a substitution this file must never adopt.
  */
 

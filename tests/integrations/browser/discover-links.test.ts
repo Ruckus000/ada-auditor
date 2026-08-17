@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { MAX_HREF_LENGTH, MAX_LINKS_PER_PAGE } from '../../../src/domain/discovery';
+import { discoveryKey, MAX_HREF_LENGTH, MAX_LINKS_PER_PAGE } from '../../../src/domain/discovery';
 
 /**
  * A crawl with no network.
@@ -13,14 +13,40 @@ import { MAX_HREF_LENGTH, MAX_LINKS_PER_PAGE } from '../../../src/domain/discove
  * would only prove the guard works. Instead: a hostname that never resolves for
  * real, told to Node's resolver as public — the answer a pre-navigation check
  * would get — and mapped in Chromium to the loopback server.
+ *
+ * **Discovery's other three test files, and why none of them belong here.**
+ * Each exists because its mock graph cannot coexist with this one's, so merging
+ * any of them would cost the coverage it was written for:
+ *
+ *   - `discover-links-rebind.test.ts` — stubs *nothing*, so the peer check runs
+ *     for real end to end. This file stubs `assertPeerAddressAllowed` (see
+ *     below) and must never become the reason that one weakens.
+ *   - `discover-links-violation-clearing.test.ts` — needs clean pages *after* a
+ *     refused one, which no locally-served page can be, so it varies the peer
+ *     check's input per path rather than replacing it.
+ *   - `discover-links-truncation.test.ts` — mocks `MAX_DISCOVERY_URLS` down to
+ *     2 for the whole module, which would break every assertion here about
+ *     finding the whole site.
  */
 
 const HOST = 'discovery.example';
+
+/**
+ * The same site under its `www` name, which 302s to the apex — see the entry
+ * point test at the bottom. A second *mapped* host is the only way to reach
+ * that case: every other host in this suite resolves to the host it was asked
+ * for, by construction, so no fixture can produce a settled entry point on a
+ * host the allowlist refuses.
+ */
+const WWW_HOST = `www.${HOST}`;
+
 const shared = vi.hoisted(() => ({ port: 0 }));
 
 vi.mock('node:dns/promises', () => ({
   lookup: async (hostname: string) => {
-    if (hostname === HOST) return [{ address: '93.184.216.34', family: 4 }];
+    if (hostname === HOST || hostname === `www.${HOST}`) {
+      return [{ address: '93.184.216.34', family: 4 }];
+    }
     throw new Error(`unexpected lookup: ${hostname}`);
   },
 }));
@@ -36,7 +62,7 @@ vi.mock('../../../src/integrations/browser/launch', () => ({
       // and the test asserting the redirect was refused passes with the check
       // it exists to drive entirely absent.
       args: [
-        `--host-resolver-rules=MAP ${HOST} 127.0.0.1:${shared.port},MAP elsewhere.test 127.0.0.1:${shared.port}`,
+        `--host-resolver-rules=MAP ${HOST} 127.0.0.1:${shared.port},MAP elsewhere.test 127.0.0.1:${shared.port},MAP www.${HOST} 127.0.0.1:${shared.port}`,
       ],
     }),
 }));
@@ -71,9 +97,62 @@ const { discoverLinks } = await import('../../../src/integrations/browser/discov
 const FIXTURES = join(process.cwd(), 'fixtures/discovery-site');
 let server: Server;
 
+/** Path and query, which together are what this crawl calls one page. */
+function locationOf(rawUrl: string): string {
+  const url = new URL(rawUrl);
+  return `${url.pathname}${url.search}`;
+}
+
 beforeAll(async () => {
   server = createServer(async (request, response) => {
+    // A connection that dies mid-request, which is what `page.goto` actually
+    // throws on. Serving a 404 here would prove nothing: Playwright resolves
+    // for any status, so a missing page is a page, not an error.
+    //
+    // `/dropped-*.html` are the same thing in bulk, for the errors-cap case.
+    if (request.url === '/broken.html' || request.url?.startsWith('/dropped-')) {
+      request.socket.destroy();
+      return;
+    }
+
+    // The whole site under `www`, canonicalising to the apex. Discriminated on
+    // the `Host` header rather than the path because the *host* is the point:
+    // both names serve the same paths, and only the name the browser asked for
+    // distinguishes them.
+    if ((request.headers.host ?? '').split(':')[0] === WWW_HOST) {
+      response.writeHead(302, { location: `http://${HOST}/` });
+      response.end();
+      return;
+    }
+
     const path = new URL(request.url ?? '/', `http://${HOST}`).pathname;
+
+    // The everyday same-host redirect: a renamed page kept alive by a 301.
+    // Trailing slashes and apex-to-www make this shape ordinary, and it is the
+    // one that costs real budget, because without deduping on where a page
+    // settles the crawl reports it twice and navigates to it twice.
+    if (path === '/old-pricing.html') {
+      response.writeHead(301, { location: '/pricing.html' });
+      response.end();
+      return;
+    }
+
+    // Two pages of dead links, shaped so that the errors outnumber a lowered
+    // `MAX_DISCOVERY_URLS` — see the errors-cap test for the arithmetic. Not a
+    // fixture file, because the shape is the claim and a file would say none of
+    // it: three dead links *then* the next hub, so the frontier drains to empty
+    // before the second hub is visited and the ceiling lets it refill.
+    if (path === '/dead-hub.html' || path === '/dead-hub-2.html') {
+      const first = path === '/dead-hub.html';
+      const dead = (first ? [1, 2, 3] : [4, 5, 6])
+        .map((n) => `<a href="/dropped-${n}.html">Dead ${n}</a>`)
+        .join('');
+      const nextHub = first ? '<a href="/dead-hub-2.html">Next hub</a>' : '';
+
+      response.writeHead(200, { 'content-type': 'text/html' });
+      response.end(`<!doctype html><title>Dead hub</title><main>${dead}${nextHub}</main>`);
+      return;
+    }
 
     // An in-scope URL that lands somewhere else entirely. Ordinary on real
     // sites — SSO, a marketing shortlink — and the reason the settled URL is
@@ -146,14 +225,24 @@ afterAll(async () => {
 describe('discoverLinks', () => {
   it('finds every in-scope page reachable from the entry point', async () => {
     const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
-    const paths = result.pages.map((page) => new URL(page.url).pathname).sort();
+    const paths = result.pages.map((page) => locationOf(page.url)).sort();
 
-    expect(paths).toEqual(['/', '/about.html', '/deep.html', '/hostile.html', '/pricing.html']);
+    // Path *and* query, because `?tab=annual` is a page here and a bare
+    // pathname would silently collapse it onto `/pricing.html`.
+    expect(paths).toEqual([
+      '/',
+      '/about.html',
+      '/deep.html',
+      '/hostile.html',
+      '/pricing.html',
+      '/pricing.html?tab=annual',
+    ]);
 
-    // The one failure is `/offsite-redirect.html`, which is in scope when it is
-    // asked for and out of scope by the time it answers. It has its own test
-    // below; here it is named so that any *other* error still fails this one.
-    expect(result.errors.map((error) => new URL(error.url).pathname)).toEqual([
+    // Two failures, both of which have their own tests below: a page that is in
+    // scope when it is asked for and out of scope by the time it answers, and a
+    // connection that dies. Named here so that any *other* error fails this one.
+    expect(result.errors.map((error) => new URL(error.url).pathname).sort()).toEqual([
+      '/broken.html',
       '/offsite-redirect.html',
     ]);
     expect(result.truncated).toBeUndefined();
@@ -161,9 +250,17 @@ describe('discoverLinks', () => {
 
   it('reports each page once, whatever spelling the links used', async () => {
     const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
-    const keys = result.pages.map((page) => page.url);
 
-    expect(new Set(keys).size).toBe(keys.length);
+    // An exact count, not `new Set(urls).size === urls.length`.
+    //
+    // That set assertion was true by construction when it was written and is
+    // not any more: `seen` keys on the URL a page was *requested* under while
+    // `pages` records the one it *settled* on, so `/old-pricing.html` and
+    // `/pricing.html` would produce two rows carrying byte-identical `url`
+    // strings — which is precisely the defect the redirect dedupe fixes, and
+    // precisely what a set of URLs cannot see. Page uniqueness is a property
+    // the crawler maintains, not one the shape of the data guarantees.
+    expect(result.pages).toHaveLength(6);
   }, 60_000);
 
   it('records the page title and its distance from the entry point', async () => {
@@ -203,6 +300,44 @@ describe('discoverLinks', () => {
     const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
 
     expect(result.pages.every((page) => page.url.startsWith(`http://${HOST}/`))).toBe(true);
+
+    // The fragment half of this test's name, which the line above cannot make.
+    // A followed `#main` produces `http://HOST/#main`, and that starts with the
+    // host prefix like everything else — so without this the crawl could be
+    // walking every fragment on the site and the assertion would still pass.
+    expect(result.pages.every((page) => !page.url.includes('#'))).toBe(true);
+  }, 60_000);
+
+  it('follows a relative href without re-implementing URL resolution', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const paths = result.pages.map((page) => locationOf(page.url));
+
+    // Every other link in this fixture site is root-absolute, so `extractLinks`'s
+    // central claim — that the browser resolves relative, root-relative and
+    // absolute hrefs into one form — had nothing exercising the first of the
+    // three, on a form real brochure sites emit constantly. `deep.html` is
+    // reachable root-absolutely from /about.html and relatively from
+    // /pricing.html; either route finding it proves the href was resolved, and
+    // exactly one row proves both routes agreed on what it resolved to.
+    expect(paths.filter((path) => path === '/deep.html')).toHaveLength(1);
+  }, 60_000);
+
+  it('treats a query string as a different page, matching discoveryKey', () => {
+    // Deliberately not a crawl: this pins the domain rule the crawl relies on,
+    // and the crawl asserting it too would only prove the same function twice.
+    expect(discoveryKey('http://x.test/a?tab=annual')).not.toBe(discoveryKey('http://x.test/a'));
+  });
+
+  it('reports a redirected page once, under the URL it settled on', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const paths = result.pages.map((page) => locationOf(page.url));
+
+    // On path *and* query rather than pathname alone: `/pricing.html?tab=annual`
+    // is a second legitimate page sharing the pathname, so counting pathnames
+    // would count it as the duplicate this test is looking for and pass with the
+    // dedupe removed.
+    expect(paths.filter((path) => path === '/pricing.html')).toHaveLength(1);
+    expect(paths).not.toContain('/old-pricing.html');
   }, 60_000);
 });
 
@@ -260,5 +395,151 @@ describe('discoverLinks guards', () => {
     // On the message, not merely the presence of an error: a DNS failure would
     // also produce an error here, and that is the vacuous version of this test.
     expect(offsite?.message).toMatch(/not in the allowed domains/i);
+  }, 60_000);
+
+  /**
+   * The entry point is the one page whose redirect cannot be filed as an error
+   * and walked past. `hostAllowed` matches an allowlist entry or any subdomain
+   * of it, so apex→www is fine and www→apex is not — and www→apex is what a
+   * large share of real sites do. Handled as an ordinary page failure it
+   * returns zero pages, one error and no truncation: an empty result claiming
+   * to be the whole site.
+   *
+   * This needs a second *mapped* host and cannot be reached any other way:
+   * every other host in this suite resolves to the host it was asked for.
+   */
+  it('refuses an entry point that redirects off its own allowlist', async () => {
+    // On the settled host by name. A DNS failure or a dead connection would
+    // also reject here, and either is the vacuous version of this test — only
+    // this message proves the redirect was followed and then refused.
+    await expect(discoverLinks({ targetUrl: `http://${WWW_HOST}/` })).rejects.toThrow(
+      new RegExp(`Host ${HOST} is not in the allowed domains`, 'i'),
+    );
+  }, 60_000);
+});
+
+/**
+ * The bounds, driven by mocking the exported constants rather than by building
+ * a site large enough or slow enough to reach them for real — so none of this
+ * needs a 100-page fixture or a 60-second wait.
+ *
+ * The URL cap is deliberately absent: `discover-links-truncation.test.ts`
+ * already mocks `MAX_DISCOVERY_URLS` to 2 and asserts the `url-cap` reason and
+ * a `seen` count above the page count. Repeating it here would prove the same
+ * thing twice. What that file cannot say is what the *budget* does, which is
+ * the reason a real crawl will almost always report.
+ */
+describe('discoverLinks bounds', () => {
+  it('records a page it could not read and finishes the crawl', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const broken = result.errors.find((error) => error.url.includes('/broken.html'));
+
+    expect(broken).toBeDefined();
+
+    // The point of the assertion: one dead link must not end the walk.
+    // `/deep.html` is queued from the same page as `/broken.html`.
+    const paths = result.pages.map((page) => locationOf(page.url));
+    expect(paths).toContain('/deep.html');
+    expect(paths).not.toContain('/broken.html');
+  }, 60_000);
+
+  it('reports a crawl cut short by the clock rather than implying it saw the whole site', async () => {
+    vi.resetModules();
+    vi.doMock('../../../src/domain/discovery', async () => {
+      const actual = await vi.importActual<typeof import('../../../src/domain/discovery')>(
+        '../../../src/domain/discovery',
+      );
+      return { ...actual, DISCOVERY_BUDGET_MS: 1 };
+    });
+
+    const { discoverLinks: rushed } = await import(
+      '../../../src/integrations/browser/discover-links'
+    );
+    const result = await rushed({ targetUrl: `http://${HOST}/` });
+
+    // Zero pages, and deterministically so: the budget is checked at the top of
+    // the loop, and launching a browser costs far more than a millisecond. A
+    // budget large enough to admit some pages and not others would be a race
+    // against the machine the suite runs on.
+    //
+    // Which makes this the honest counterpart to the entry-redirect case above:
+    // an empty result is fine as long as it does not claim to be the whole site.
+    expect(result.pages).toEqual([]);
+    expect(result.truncated?.reason).toBe('budget');
+    expect(result.truncated?.seen).toBeGreaterThan(0);
+
+    vi.doUnmock('../../../src/domain/discovery');
+    vi.resetModules();
+  }, 60_000);
+
+  it('does not walk past the depth limit', async () => {
+    vi.resetModules();
+    vi.doMock('../../../src/domain/discovery', async () => {
+      const actual = await vi.importActual<typeof import('../../../src/domain/discovery')>(
+        '../../../src/domain/discovery',
+      );
+      return { ...actual, MAX_DISCOVERY_DEPTH: 1 };
+    });
+
+    const { discoverLinks: shallow } = await import(
+      '../../../src/integrations/browser/discover-links'
+    );
+    const result = await shallow({ targetUrl: `http://${HOST}/` });
+    const paths = result.pages.map((page) => locationOf(page.url)).sort();
+
+    // /deep.html sits behind /about.html, so depth 1 must not reach it. The
+    // exact set says the same thing from the other side: the depth-1 pages are
+    // all still visited, so this is a boundary and not a stalled crawl.
+    expect(paths).toEqual(['/', '/about.html', '/hostile.html', '/pricing.html']);
+    expect(paths).not.toContain('/deep.html');
+    // Depth is the crawl's shape, not a shortfall: it is never a truncation.
+    expect(result.truncated).toBeUndefined();
+
+    vi.doUnmock('../../../src/domain/discovery');
+    vi.resetModules();
+  }, 60_000);
+
+  /**
+   * Errors need a ceiling of their own because `MAX_DISCOVERY_URLS` counts
+   * pages and a failed navigation adds none — so a site of dead links never
+   * trips it while filing a full entry per failure into a response body.
+   *
+   * Boundary-precise rather than a volume test, for the reason `/many.html`
+   * next door is: with the cap lowered to 5, this shape produces exactly 6
+   * errors, so the cap is the *only* thing that can make the answer 5. The
+   * arithmetic, which the fixture's ordering exists to arrange:
+   *
+   *   - `/dead-hub.html` is the entry (1 page). The frontier ceiling admits
+   *     links while `frontier.length < 5 - 1`, so all four of its links queue.
+   *   - Its three dead links error and drain the frontier to just the hub link.
+   *   - `/dead-hub-2.html` loads (2 pages), and with the frontier empty the
+   *     ceiling — now `< 5 - 2` — admits its three dead links.
+   *   - Those error too: six failures against a cap of five.
+   */
+  it('stops accumulating errors at the cap, on a site that is all dead links', async () => {
+    vi.resetModules();
+    vi.doMock('../../../src/domain/discovery', async () => {
+      const actual = await vi.importActual<typeof import('../../../src/domain/discovery')>(
+        '../../../src/domain/discovery',
+      );
+      return { ...actual, MAX_DISCOVERY_URLS: 5 };
+    });
+
+    const { discoverLinks: capped } = await import(
+      '../../../src/integrations/browser/discover-links'
+    );
+    const result = await capped({ targetUrl: `http://${HOST}/dead-hub.html` });
+
+    expect(result.errors).toHaveLength(5);
+
+    // Both hubs were reached, so the six failures really did happen and the
+    // fifth is a cap rather than the crawl having stopped early.
+    expect(result.pages.map((page) => locationOf(page.url)).sort()).toEqual([
+      '/dead-hub-2.html',
+      '/dead-hub.html',
+    ]);
+
+    vi.doUnmock('../../../src/domain/discovery');
+    vi.resetModules();
   }, 60_000);
 });

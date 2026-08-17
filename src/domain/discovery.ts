@@ -64,6 +64,16 @@ export function discoveryKey(rawUrl: string): string {
  *
  * This bounds pages *visited*. It says nothing about how many links a crawl
  * reads, which is a different and larger number — see `MAX_LINKS_PER_PAGE`.
+ *
+ * More precisely it counts *successes*, and two kinds of navigation increment
+ * nothing, so a crawl performs more of them than this number implies:
+ *
+ *   - A page that could not be read adds a `DiscoveryError`, not a page. A site
+ *     of dead links would therefore never trip this cap at all, so `errors`
+ *     carries its own ceiling — the same number, applied separately in the
+ *     crawler.
+ *   - A page deduped onto the URL it redirected to adds neither. A
+ *     redirect-heavy site spends real navigations on hops that leave no row.
  */
 export const MAX_DISCOVERY_URLS = 100;
 
@@ -185,6 +195,17 @@ export type DiscoveryTruncation = {
  * passes through untouched — and this string is destined for an operator's
  * screen. The full call log is deliberately excluded here; Task 3's crawler
  * performs the split before constructing this type.
+ *
+ * None of which contradicts the `url` field below carrying a whole URL. One
+ * controlled copy, in a field every consumer knows is a URL and can truncate,
+ * link or redact as a URL, is exactly what the message-splitting buys: a second
+ * uncontrolled copy buried in prose is the thing being refused, not URLs.
+ *
+ * That `url` is the URL the crawl *requested*, where `DiscoveredPage.url` is
+ * the one it settled on. Deliberate: a page becomes a `goto` step and must name
+ * where it lives, while an error is a diagnosis and must name something the
+ * operator can find in their own markup. The crawler's catch site argues it at
+ * length.
  */
 export type DiscoveryError = {
   url: string;

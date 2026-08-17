@@ -43,6 +43,18 @@ const REBIND_HOST = 'discovery-clearing.example';
 /** The path Chromium is allowed to reach over loopback, and the only one. */
 const REBOUND_PATH = '/rebound';
 
+/**
+ * Every other path this fixture serves, named rather than implied.
+ *
+ * The classification below has to be *total*. Discriminating on
+ * `pathname === REBOUND_PATH` alone degrades loudly if that path stops matching
+ * — nothing violates, the assertions below fail — but silently if a page is
+ * added to `PAGES`: the new page falls into the clean branch, is handed a
+ * public address, and quietly stops being judged on the address it truly
+ * reached. A page that is not judged is a page this file thinks it covered.
+ */
+const CLEAN_PATHS = new Set(['/', '/clean-a', '/clean-b']);
+
 /** What `REBIND_HOST` resolves to for the pre-navigation check. */
 const PUBLIC_ADDRESS = '93.184.216.34';
 
@@ -74,7 +86,16 @@ vi.mock('../../../src/integrations/browser/target-url', async (importOriginal) =
     // the browser truly reached, every other page on the one its host resolves
     // to. See the header for why the second half cannot be arranged for real.
     assertPeerAddressAllowed: (pageUrl: string, ipAddress?: string): void => {
-      const isSubject = new URL(pageUrl).pathname === REBOUND_PATH;
+      const { pathname } = new URL(pageUrl);
+      const isSubject = pathname === REBOUND_PATH;
+
+      // Total rather than binary: a page added to `PAGES` must be classified
+      // deliberately. Falling into the clean branch by default is how a page
+      // silently stops being judged on the address it truly reached.
+      if (!isSubject && !CLEAN_PATHS.has(pathname)) {
+        throw new Error(`unclassified page ${pathname}`);
+      }
+
       actual.assertPeerAddressAllowed(pageUrl, isSubject ? ipAddress : PUBLIC_ADDRESS);
     },
   };
@@ -131,7 +152,13 @@ describe('discoverLinks, when one page of a site resolves to a private address',
     // And the clean pages either side of it are still reported. A sticky
     // violation would have failed every page after the first, all carrying
     // the first page's message and its URL.
-    expect(result.pages.length).toBeGreaterThanOrEqual(2);
+    //
+    // Exactly these three, not "at least two": the fixture's page set is known,
+    // and the loose form cannot notice the crawl failing to reach one of them —
+    // which is the same silent half-coverage the total classification above
+    // exists to prevent.
+    const paths = result.pages.map((page) => new URL(page.url).pathname).sort();
+    expect(paths).toEqual([...CLEAN_PATHS].sort());
     expect(result.pages.every((page) => !page.url.includes(REBOUND_PATH))).toBe(true);
   }, 60_000);
 });
