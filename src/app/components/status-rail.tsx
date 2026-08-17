@@ -28,17 +28,34 @@ const COPY: Record<ReadyState, { headline: string; tone: string }> = {
   unreachable: { headline: 'Cannot reach the auditor service.', tone: 'bad' },
 };
 
+/**
+ * How long ago `timestamp` was, refreshed on a timer.
+ *
+ * The clock is read in the interval callback and kept in state rather than read
+ * during render: `Date.now()` in a render body is impure, and it would also
+ * make this component's output depend on which machine rendered it. The reading
+ * is stamped with the timestamp it was taken for, so a fresh check reads as
+ * "just now" immediately instead of briefly showing the age of the previous
+ * one — no state reset, which an effect body is not allowed to do.
+ */
 function useRelativeTime(timestamp: number | null): string {
-  const [, force] = useState(0);
+  const [reading, setReading] = useState<{ of: number | null; elapsedMs: number }>({
+    of: timestamp,
+    elapsedMs: 0,
+  });
 
   useEffect(() => {
     if (timestamp == null) return;
-    const id = setInterval(() => force((n) => n + 1), 5_000);
+    const id = setInterval(
+      () => setReading({ of: timestamp, elapsedMs: Date.now() - timestamp }),
+      5_000,
+    );
     return () => clearInterval(id);
   }, [timestamp]);
 
   if (timestamp == null) return '';
-  const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+  const elapsedMs = reading.of === timestamp ? reading.elapsedMs : 0;
+  const seconds = Math.max(0, Math.round(elapsedMs / 1000));
   if (seconds < 5) return 'just now';
   if (seconds < 60) return `${seconds}s ago`;
   return `${Math.round(seconds / 60)}m ago`;

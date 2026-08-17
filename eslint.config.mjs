@@ -21,18 +21,27 @@ const eslintConfig = [
   ...nextTypescript,
   {
     // `eslint .` walks the whole tree, so everything .gitignore keeps out of
-    // the repo has to be listed here too. Without `dist/**` a plain
-    // `npm run build:kernel` followed by `npm run lint` reports the same
-    // warnings twice — once for the source and once for its own emitted
-    // JavaScript — and the second copy is unfixable.
+    // the repo has to be listed here too, and the build-output patterns have to
+    // match at any depth rather than only at the root. Two ways this bites:
+    //
+    //   - Without `**/dist/**`, a `npm run build:kernel` followed by
+    //     `npm run lint` reports every warning twice — once for the source and
+    //     once for its own emitted JavaScript, where it is unfixable.
+    //   - Without `.claude/**`, lint descends into the agent worktrees kept
+    //     there. Each one is a full checkout of this repo WITH its own `.next`,
+    //     so a single stale worktree turned 22 real problems into 38,846 and
+    //     buried the ones in src/. Flat config does not skip dot-directories on
+    //     its own the way .eslintrc did.
     ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
-      "dist/**",
-      "coverage/**",
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/out/**",
+      "**/build/**",
+      "**/coverage/**",
+      ".claude/**",
       ".vercel/**",
+      ".serena/**",
       "artifacts/**",
       "data/runs/**",
       "next-env.d.ts",
