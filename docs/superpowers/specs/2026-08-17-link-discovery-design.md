@@ -71,6 +71,32 @@ bound to the browser context. A plain-`fetch` crawler would need a second SSRF
 implementation for the fetch path, and a security rule with two implementations
 is the worst thing to duplicate. Rendering is slower and correct.
 
+### Where a page settled, not where it was asked for
+
+`page.goto` follows redirects, so the URL the crawl requested and the page it got
+are not always the same. Both halves of that matter, and the second is the one
+that bites on ordinary sites.
+
+**Off-host.** `acme.com/login` 302s to an identity provider. Nothing off-scope
+enters the frontier — harvested links are refused individually — and the peer
+check still fires on the final response, so this is not a security hole. But the
+page would be *reported* as `acme.com/login` carrying the IdP's title, the
+operator would select it, and the runner's `assertSettledOnTarget` would fail the
+run days later. A mistake made at the door should be caught at the door.
+
+**Same-host, and this is the common case.** `/old-pricing` 301s to `/pricing`.
+The crawl records `/old-pricing`, harvests `/pricing`'s links, and then navigates
+`/pricing` again as its own frontier entry — two rows for one page, two
+navigations, twice the budget. Trailing-slash and apex-to-`www` redirects make
+this ordinary rather than exotic, and it defeats exactly what `discoveryKey` was
+built for: the domain module's own comment warns that a crawler getting page
+identity wrong "would not mislabel pages, it would fail to terminate".
+
+So the settled URL is what gets checked and what gets recorded: `assertAllowedUrl`
+runs against `page.url()` after every navigation, the settled key is what dedupes,
+and the reported `url` is where the page actually lives — which is also the URL
+the operator wants in a `goto` step.
+
 ### Politeness
 
 `robots.txt` is deliberately not consulted — see the decision log. Discovery
@@ -142,6 +168,23 @@ Both numbers stay because they stop different things: the budget stops a slow
 site, the cap stops a fast one with thousands of URLs. But a `truncated` result
 on a real site will almost always say `budget`, and nobody should read that as a
 bug. Re-derive both from a real client crawl, not from this estimate.
+
+**The crawler's largest input is one page's DOM, not the page count.** This
+section originally reasoned only about navigations, and that was a blind spot
+worth naming rather than quietly patching: `MAX_DISCOVERY_URLS` bounds *visited*
+pages, so nothing in it stops a single page from handing over a million anchors.
+Harvesting is fast, so the wall-clock budget never gets a chance to trip — one
+`$$eval` returns, memory is gone, and in a 300s function that is an OOM rather
+than a slow crawl. A faceted-search or calendar page emitting `?filter=`
+permutations reaches this without anybody being hostile.
+
+So the DOM read is bounded too, inside the page callback so the oversized data
+never crosses CDP: `MAX_LINKS_PER_PAGE` (500) and `MAX_HREF_LENGTH` (2048,
+matching the request schema's own bound on `targetUrl`). The frontier stops
+growing once it holds more than the URL cap could ever consume.
+
+The general form of the lesson: every bound here is on something the *site*
+controls, and a site controls more than how many pages it has.
 
 **Depth is not truncation.** Reaching `MAX_DISCOVERY_DEPTH` is the crawl's
 intended shape, not a shortfall, so it is not a `truncated` reason. Only the URL
