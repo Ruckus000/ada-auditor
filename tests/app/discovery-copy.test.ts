@@ -120,6 +120,18 @@ describe('describeJourneyCreationFailure', () => {
     expect(copy).not.toMatch(/address/i);
   });
 
+  it('names a length, not a remedy the panel already guarantees', () => {
+    // The sentence this replaces told operators to "give the journey a name
+    // and pick at least one page" — and the panel refuses to POST without
+    // both, so it was never right on any occasion it could appear. What
+    // actually reaches this code is a name over 120 characters or a path over
+    // `MAX_STEP_TEXT`.
+    const copy = describeJourneyCreationFailure('invalid_request_body');
+
+    expect(copy).toMatch(/too long/i);
+    expect(copy).not.toMatch(/at least one page/i);
+  });
+
   it('shares no code with the discovery map where the answers would differ', () => {
     expect(describeJourneyCreationFailure('client_not_found')).not.toBe(
       describeDiscoveryFailure('client_not_found'),
@@ -184,6 +196,15 @@ describe('describeErrorTotal', () => {
 
   it('agrees with itself about one page', () => {
     expect(describeErrorTotal(1, 0)).toContain('1 page could');
+  });
+
+  it('does not say "The first 1 are listed below"', () => {
+    // The commonest truncated shape there is: a hub of dead links fills the
+    // ceiling, and the list under this heading is one row long.
+    const copy = describeErrorTotal(1, 4);
+
+    expect(copy).toContain('The first one is listed below.');
+    expect(copy).not.toMatch(/first 1 /);
   });
 });
 

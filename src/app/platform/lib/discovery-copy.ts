@@ -95,7 +95,18 @@ export function describeJourneyCreationFailure(code: string): string {
     case 'client_not_found':
       return 'This client is no longer here. Reload the page.';
     case 'invalid_request_body':
-      return 'Those pages were refused. Give the journey a name and pick at least one page.';
+      /*
+       * Not "give it a name and pick a page", which is what this said and was
+       * wrong in every case it can fire: the panel refuses to POST without
+       * both, so both remedies are already satisfied by the time anyone reads
+       * it. What actually reaches this code is a *length*: the route caps a
+       * name at 120 characters and a step's path at `MAX_STEP_TEXT`. The panel
+       * now stops both before they are posted — a `maxLength` on the name box,
+       * a disabled row for an over-long path — so this is the sentence for a
+       * cap moving underneath a screen that has a stale copy of it, which is
+       * the only route left to it.
+       */
+      return 'The server refused those details as too long — most likely the name, or one page’s address. Shorten the name, or untick the longest page, and try again.';
     case 'unauthorized':
       return 'Your session expired. Reload and sign in again.';
     default:
@@ -138,9 +149,14 @@ export function describeErrorTotal(kept: number, omitted: number): string {
   const total = kept + omitted;
   const noun = total === 1 ? 'page' : 'pages';
 
-  return omitted === 0
-    ? `${total} ${noun} could not be read.`
-    : `${total} ${noun} could not be read. The first ${kept} are listed below.`;
+  if (omitted === 0) return `${total} ${noun} could not be read.`;
+
+  // `kept` is routinely 1 in practice — the ceiling drops everything past the
+  // first on a hub of dead links — and "The first 1 are listed below" is the
+  // sentence that shape produces if the count is interpolated blind.
+  const listed = kept === 1 ? 'The first one is listed below.' : `The first ${kept} are listed below.`;
+
+  return `${total} ${noun} could not be read. ${listed}`;
 }
 
 /**

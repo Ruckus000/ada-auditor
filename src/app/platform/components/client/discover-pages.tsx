@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DiscoveredPage, DiscoveryError, DiscoveryTruncation } from '../../../../domain/discovery';
+import { MAX_STEP_TEXT } from '../../../../domain/journey-step';
 import {
   describeDepth,
   describeDiscoveryFailure,
@@ -46,6 +47,17 @@ import { FONT, T } from '../../lib/tokens';
  */
 const SOFT_PAGE_ADVICE = 20;
 
+/**
+ * The longest name the create route will take.
+ *
+ * `createJourneySchema` caps it at 120 and answers `invalid_request_body` past
+ * that — a code that says nothing about which field was wrong. Enforced here
+ * as a `maxLength` rather than as a validation message, because a box that
+ * simply stops accepting characters is a rule the operator meets *while*
+ * typing rather than after posting.
+ */
+const MAX_JOURNEY_NAME = 120;
+
 type DiscoveryResponse = {
   pages?: DiscoveredPage[];
   errors?: DiscoveryError[];
@@ -72,11 +84,26 @@ type Found = {
   errorsOmitted: number;
 };
 
+/**
+ * One page as this panel has to think about it.
+ *
+ * `tooLong` is a property of the *step format*, not of the crawl: a discovered
+ * href may run to `MAX_HREF_LENGTH`, four times what a `goto` path may hold.
+ * Decided per row and at selection time, which is the whole improvement over
+ * finding out at save time — the operator learns which page and why while
+ * looking at it, and the route's generic `invalid_request_body` becomes
+ * unreachable from this panel.
+ */
+type Row = { page: DiscoveredPage; index: number; path: string; tooLong: boolean };
+
 /** The part of a discovered URL a `goto` step carries. */
 function pathOf(url: string, origin: string): string {
   try {
     const parsed = new URL(url);
-    return `${parsed.pathname}${parsed.search}` || '/';
+    // No `|| '/'` fallback: `pathname` is never empty for an http(s) URL, and
+    // http(s) is all `extractLinks` lets through. Defending a case that cannot
+    // occur reads as though it can.
+    return `${parsed.pathname}${parsed.search}`;
   } catch {
     // A URL this could not parse cannot have come from the crawler, which
     // built every one of them with `new URL`. Falling back to the whole string
@@ -267,14 +294,30 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
    * checkbox's `id` unique. Two pages can share a title and — across a query
    * string the crawl deliberately keys on — nearly share a path, so neither is
    * usable as an id on its own.
+   *
+   * `path` and `tooLong` are computed once here rather than at render, because
+   * three separate things need the same answer: the row, select-all, and the
+   * decision not to post the page at all.
    */
-  const groups: Array<{ depth: number; rows: Array<{ page: DiscoveredPage; index: number }> }> = [];
+  const groups: Array<{ depth: number; rows: Row[] }> = [];
   (found?.pages ?? []).forEach((page, index) => {
+    const path = pathOf(page.url, found?.origin ?? '');
+    const row: Row = { page, index, path, tooLong: path.length > MAX_STEP_TEXT };
     const group = groups.find((one) => one.depth === page.depth);
-    if (group) group.rows.push({ page, index });
-    else groups.push({ depth: page.depth, rows: [{ page, index }] });
+    if (group) group.rows.push(row);
+    else groups.push({ depth: page.depth, rows: [row] });
   });
   groups.sort((a, b) => a.depth - b.depth);
+
+  /**
+   * The pages "select every page" may actually select.
+   *
+   * A page whose path the step format cannot hold is not one of them: its
+   * checkbox is disabled, and a bulk control that ticked it anyway would put
+   * the panel in a state no click could have produced and then fail the create
+   * with a generic refusal.
+   */
+  const selectable = groups.flatMap((group) => group.rows.filter((row) => !row.tooLong));
 
   const truncation = describeTruncation(found?.truncated);
   const nothingToCreate = chosen.length === 0 || name.trim() === '';
@@ -370,9 +413,18 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
         region that only appears when there is something to say says nothing.
       */}
       <p role="status" style={statusStyle}>
+        {/*
+          Silent while a refusal is on screen, and that is the load-bearing
+          clause. A failed second crawl deliberately leaves the first crawl's
+          list where it is — blanking somebody's work over a typo'd address is
+          the worse mistake — but the count then describes a site the operator
+          has stopped looking at, and "Found 12 pages" re-announced beside a
+          `role="alert"` saying the crawl failed is two regions contradicting
+          each other. The list stays; the claim about it does not.
+        */}
         {crawling
           ? 'Looking for pages…'
-          : found
+          : found && !crawlError
             ? `Found ${found.pages.length === 1 ? '1 page' : `${found.pages.length} pages`}.`
             : ''}
       </p>
@@ -384,7 +436,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
           <span style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
-              onClick={() => setSelected(new Set(found.pages.map((page) => page.url)))}
+              onClick={() => setSelected(new Set(selectable.map((row) => row.page.url)))}
               style={buttonStyle}
             >
               Select every page
@@ -433,9 +485,16 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
                   gap: 4,
                 }}
               >
-                {group.rows.map(({ page, index }) => {
+                {group.rows.map(({ page, index, path, tooLong }) => {
                   const boxId = `${fieldPrefix}-page-${index}`;
-                  const path = pathOf(page.url, found.origin);
+                  // Branched on, not `page.title || path`. Playwright's
+                  // `page.title()` returns `''` for a document with no
+                  // `<title>`, which is ordinary on real sites — and `||`
+                  // there makes the accessible name "/pricing/teams
+                  // /pricing/teams", said twice to a screen reader and printed
+                  // twice on screen. Trimmed, because a title of spaces is the
+                  // same absence.
+                  const title = page.title.trim();
 
                   return (
                     <li key={page.url} style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -444,15 +503,40 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
                         type="checkbox"
                         checked={selected.has(page.url)}
                         onChange={() => toggle(page.url)}
+                        disabled={tooLong}
                       />
                       <label
                         htmlFor={boxId}
-                        style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.ink }}
+                        style={{
+                          fontFamily: FONT.sans,
+                          fontSize: 12.5,
+                          color: tooLong ? T.inkMuted : T.ink,
+                        }}
                       >
-                        {page.title || path}{' '}
+                        {title === '' ? null : <>{title} </>}
                         <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
                           {path}
                         </span>
+                        {tooLong ? (
+                          /*
+                            The rule, beside the row it applies to, rather than
+                            as a refusal after the journey is posted. The page
+                            stays visible — it is a real page of the site and
+                            hiding it would leave the operator wondering what
+                            the crawl missed — but it cannot become a step,
+                            because `authoredStepSchema` caps a path at
+                            `MAX_STEP_TEXT` and would answer
+                            `invalid_request_body` naming neither the page nor
+                            the reason. Same convention as the two disabled
+                            buttons in this panel: never a dead control without
+                            visible prose saying why.
+                          */
+                          <span style={{ color: T.caution }}>
+                            {' '}
+                            — too long to record as a step ({path.length} characters, limit{' '}
+                            {MAX_STEP_TEXT}).
+                          </span>
+                        ) : null}
                       </label>
                     </li>
                   );
@@ -511,6 +595,15 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
                 id={nameId}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
+                // The route's own cap, met while typing. Past it the create
+                // answers `invalid_request_body`, which names no field.
+                maxLength={MAX_JOURNEY_NAME}
+                // The address box takes Enter and this one sat immediately
+                // above a Create button and did not, which is asymmetry an
+                // operator has to learn rather than guess.
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !creating && !nothingToCreate) void create();
+                }}
                 aria-invalid={createError ? true : undefined}
                 aria-describedby={[nameNoteId, createError ? nameErrorId : null]
                   .filter(Boolean)
@@ -529,7 +622,17 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
             </button>
           </span>
 
-          <p id={nameNoteId} style={noteStyle}>
+          {/*
+            A live region as well as an `aria-describedby` target, because the
+            count changes without focus moving. "Select every page" and "Clear
+            the selection" are the two controls that alter it most, and both
+            leave focus on themselves — so as a describedby target alone this
+            sentence is read on *focus* and never on *change*, and a blind
+            operator presses the bulk control and hears nothing at all. The
+            double read is not a real collision: focus lands here by tabbing to
+            the name field, which is not the moment the count changes.
+          */}
+          <p id={nameNoteId} aria-live="polite" style={noteStyle}>
             {chosen.length === 0
               ? `Nothing picked yet. The journey will visit ${found.origin} and go to each page you tick, in the order they were found.`
               : `${chosen.length === 1 ? '1 page' : `${chosen.length} pages`} picked. The journey will visit ${found.origin} and go to each, in the order they were found.`}

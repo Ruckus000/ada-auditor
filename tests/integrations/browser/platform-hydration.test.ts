@@ -773,7 +773,21 @@ describe('platform hydration', () => {
             pages: [
               { url: 'https://discovered.invalid/', title: 'Front door', depth: 0 },
               { url: 'https://discovered.invalid/pricing', title: 'Pricing', depth: 1 },
+              // No `<title>` on the document. Playwright's `page.title()`
+              // returns `''` for one, which is ordinary on real sites, and
+              // every other stub here has a title — so this is the row that
+              // catches a label built with `title || path` printing the path
+              // twice.
+              { url: 'https://discovered.invalid/untitled', title: '', depth: 1 },
               { url: 'https://discovered.invalid/pricing/teams', title: 'Teams', depth: 2 },
+              // Longer than a `goto` step's path may be. A discovered href may
+              // run to `MAX_HREF_LENGTH`, four times `MAX_STEP_TEXT`, so this
+              // is a real shape and not a contrivance.
+              {
+                url: `https://discovered.invalid/long/${'a'.repeat(600)}`,
+                title: 'Very long address',
+                depth: 2,
+              },
             ],
             // The URL *and* the message, which is the pair the crawler's own
             // comment argues for: either alone is unreadable.
@@ -806,7 +820,10 @@ describe('platform hydration', () => {
       expect(text).toContain('One click from there');
       expect(text).toContain('At least 137');
       // `kept + omitted`, not `errors.length`: one error listed, five counted.
-      expect(text).toContain('5 pages could not be read');
+      // One listed, five counted — and the grammar of the shape that produces
+      // it, which is the commonest one: a hub of dead links fills the ceiling
+      // and leaves a one-row list under the heading.
+      expect(text).toContain('5 pages could not be read. The first one is listed below.');
       // Both halves of an error row, which is the crawler's own worked
       // example: the path alone reads as "your own page is not in your allowed
       // domains", which is nonsense, and the message alone names nothing the
@@ -814,10 +831,35 @@ describe('platform hydration', () => {
       expect(text).toContain('/offsite-redirect.html');
       expect(text).toContain('Host elsewhere.test is not in the allowed domains');
 
-      // And with a page ticked, so the journey-name field and the sentence
-      // explaining the disabled Create button are rendered too.
-      await page.getByRole('checkbox', { name: 'Teams /pricing/teams' }).check();
+      // An untitled page announces its path once, not twice. `exact` is the
+      // whole assertion: `title || path` produces "/untitled /untitled", which
+      // a substring match would happily find.
+      await expect
+        .poll(() => page.getByRole('checkbox', { name: '/untitled', exact: true }).count())
+        .toBe(1);
+
+      // A page the step format cannot hold: refused at selection time, beside
+      // the row, rather than as a nameless `invalid_request_body` after the
+      // journey is posted.
+      const longBox = page.getByRole('checkbox', { name: /Very long address/ });
+      expect(await longBox.isDisabled()).toBe(true);
+      expect(text).toContain('too long to record as a step');
+
+      // The bulk control takes the four it may and leaves the fifth, which is
+      // the state no click could otherwise produce.
+      await page.getByRole('button', { name: 'Select every page' }).click();
+      await expect.poll(() => panel.innerText()).toContain('4 pages picked');
+      expect(await longBox.isChecked()).toBe(false);
+
+      // With the name still empty, so the sentence explaining the disabled
+      // Create button is on the page when axe looks.
       await expect.poll(() => panel.innerText()).toContain('Give the journey a name');
+
+      // The selection count is a live region as well as a describedby target.
+      // Both bulk controls leave focus on themselves, so as a describedby
+      // target alone this sentence is read on focus and never on change — and
+      // axe cannot see the difference, which is why it is asserted here.
+      expect(await panel.locator('p[aria-live="polite"]', { hasText: 'picked.' }).count()).toBe(1);
 
       const results = await new AxeBuilder({ page }).analyze();
       expect(
@@ -825,6 +867,30 @@ describe('platform hydration', () => {
           .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
           .join('\n'),
       ).toBe('');
+
+      // A failed *second* crawl. The list from the first deliberately stays —
+      // blanking somebody's work over a typo'd address is the worse mistake —
+      // but the status region must stop claiming a count for a site the
+      // operator has moved off, or it contradicts the alert beside it.
+      await page.unroute('**/api/platform/discover');
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'entry_point_redirected', host: 'www.elsewhere.test' }),
+        }),
+      );
+      await page.getByLabel('Site address').fill('https://moved.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      // The refusal names the host the route shipped as structured data.
+      await expect
+        .poll(() => panel.innerText(), { timeout: 15_000 })
+        .toContain('www.elsewhere.test');
+      // The list survived…
+      expect(await panel.innerText()).toContain('Front door');
+      // …and the status region is silent rather than re-announcing the count.
+      expect(await panel.locator('p[role="status"]').first().innerText()).toBe('');
     } finally {
       await page.close();
     }
@@ -884,6 +950,10 @@ describe('platform hydration', () => {
       // read the origin off this box at save time would store
       // `https://somewhere-else.invalid` and pass every other assertion here.
       await page.getByLabel('Site address').fill('https://somewhere-else.invalid/');
+
+      // The route's own cap, met while typing rather than as a nameless
+      // `invalid_request_body` after the journey is posted.
+      expect(await page.getByLabel('Journey name').getAttribute('maxlength')).toBe('120');
 
       // Neither substring of the two journey names the tests above locate by.
       await page.getByLabel('Journey name').fill('Picked Pages');
