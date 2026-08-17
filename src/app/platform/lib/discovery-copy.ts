@@ -97,16 +97,25 @@ export function describeJourneyCreationFailure(code: string): string {
     case 'invalid_request_body':
       /*
        * Not "give it a name and pick a page", which is what this said and was
-       * wrong in every case it can fire: the panel refuses to POST without
-       * both, so both remedies are already satisfied by the time anyone reads
-       * it. What actually reaches this code is a *length*: the route caps a
-       * name at 120 characters and a step's path at `MAX_STEP_TEXT`. The panel
-       * now stops both before they are posted — a `maxLength` on the name box,
-       * a disabled row for an over-long path — so this is the sentence for a
-       * cap moving underneath a screen that has a stale copy of it, which is
-       * the only route left to it.
+       * wrong in every case it could fire: the panel refuses to POST without
+       * both, so both remedies were already satisfied by the time anyone read
+       * it.
+       *
+       * What actually reaches this code is a bound being exceeded, and there
+       * are three — one of them a *count*, which an earlier version of this
+       * sentence missed. `authoredStepsSchema` caps the array at
+       * `MAX_STEPS_PER_JOURNEY` (50) before it parses an element, and a crawl
+       * stopped by the URL cap returns 100 pages: "shorten the name or untick
+       * the longest page" is advice nobody in that state can follow, because
+       * the fix is to untick fifty. The other two are lengths — a name over
+       * 120 and a path over `MAX_STEP_TEXT`.
+       *
+       * The panel now stops all three before they are posted, so this is the
+       * sentence for a bound moving underneath a screen holding a stale copy
+       * of it. It names all three anyway: a code with only one true remedy
+       * listed is how this went wrong twice.
        */
-      return 'The server refused those details as too long — most likely the name, or one page’s address. Shorten the name, or untick the longest page, and try again.';
+      return 'The server refused those details. Either too many pages for one journey, or a name or page address that is too long. Pick fewer pages, or shorten the name, and try again.';
     case 'unauthorized':
       return 'Your session expired. Reload and sign in again.';
     default:

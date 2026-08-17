@@ -997,6 +997,85 @@ describe('platform hydration', () => {
     }
   }, 120_000);
 
+  /**
+   * The bulk control at the boundary a crawl actually reaches.
+   *
+   * `authoredStepsSchema` caps a journey at `MAX_STEPS_PER_JOURNEY` (50)
+   * *before* it parses an element, and a crawl stopped by `MAX_DISCOVERY_URLS`
+   * returns exactly 100 pages. So one click of "Select every page" on a large
+   * site used to build a body the route refuses with `invalid_request_body` —
+   * a code naming neither the field nor the number, whose copy then told the
+   * operator to shorten the name and untick the longest page. Neither is the
+   * fix; the fix is to untick fifty.
+   *
+   * 60 pages rather than 100: past the cap by enough that the prefix and the
+   * remainder are both unambiguous, and small enough that the stub stays
+   * readable. No axe run here — the maximal-state test above covers the
+   * markup, and this one is about a number.
+   */
+  it('will not build a journey longer than the route will store', async () => {
+    const page = await openAuthenticatedPage();
+    try {
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            // Zero-padded, so no page's accessible name is a substring of
+            // another's — `Page 5 /p5` inside `Page 50 /p50` would make the
+            // 51st tick below select the wrong row.
+            pages: Array.from({ length: 60 }, (_, index) => ({
+              url: `https://sixty.invalid/p${String(index).padStart(2, '0')}`,
+              title: `Page ${String(index).padStart(2, '0')}`,
+              depth: index === 0 ? 0 : 1,
+            })),
+            errors: [],
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site address').fill('https://sixty.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Page 00');
+
+      // Said before the click, so an operator is not left thinking the bulk
+      // control half-worked.
+      expect(await panel.innerText()).toContain('takes the first 50');
+
+      // A name first, so the block asserted below is attributable to the
+      // count and not to an empty name field.
+      await page.getByLabel('Journey name').fill('Boundary Check');
+
+      const create = page.getByRole('button', { name: 'Create journey' });
+
+      // Select-all takes a storeable prefix rather than all 60 — the same move
+      // as skipping a `tooLong` row: a state the operator could have reached
+      // by clicking, with prose saying what was left out.
+      await page.getByRole('button', { name: 'Select every page' }).click();
+      await expect.poll(() => panel.innerText()).toContain('50 pages picked');
+      expect(await create.isDisabled()).toBe(false);
+
+      // And the cap is not merely a property of that button: ticking one more
+      // by hand blocks the create, and the prose says how many to remove
+      // rather than sending the operator to shorten a name that is fine.
+      await page.getByRole('checkbox', { name: 'Page 55 /p55' }).check();
+      await expect.poll(() => panel.innerText()).toContain('51 pages picked');
+      expect(await create.isDisabled()).toBe(true);
+
+      const text = await panel.innerText();
+      expect(text).toContain('A journey holds at most 50 steps, and 51 pages are picked.');
+      expect(text).toContain('Untick 1');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
   it('refuses a client that does not exist rather than showing another one', async () => {
     // The fixture lookup this replaces fell back to the first client, so any
     // unknown slug rendered one client's findings under another client's

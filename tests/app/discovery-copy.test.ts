@@ -120,15 +120,20 @@ describe('describeJourneyCreationFailure', () => {
     expect(copy).not.toMatch(/address/i);
   });
 
-  it('names a length, not a remedy the panel already guarantees', () => {
-    // The sentence this replaces told operators to "give the journey a name
-    // and pick at least one page" — and the panel refuses to POST without
-    // both, so it was never right on any occasion it could appear. What
-    // actually reaches this code is a name over 120 characters or a path over
-    // `MAX_STEP_TEXT`.
+  it('names every bound that can produce it, count as well as length', () => {
+    // Two sentences have already been wrong here, both by listing a remedy
+    // that could not apply. The first told operators to "give the journey a
+    // name and pick at least one page", which the panel guarantees before it
+    // will POST. The second named only *lengths* — and the bound most likely
+    // to fire is a *count*: `authoredStepsSchema` caps the array at
+    // `MAX_STEPS_PER_JOURNEY` (50), while a url-capped crawl returns 100
+    // pages, so "shorten the name or untick the longest page" is advice
+    // nobody in that state can act on.
     const copy = describeJourneyCreationFailure('invalid_request_body');
 
+    expect(copy).toMatch(/too many pages/i);
     expect(copy).toMatch(/too long/i);
+    expect(copy).toMatch(/fewer pages/i);
     expect(copy).not.toMatch(/at least one page/i);
   });
 

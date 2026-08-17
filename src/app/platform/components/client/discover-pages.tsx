@@ -3,7 +3,7 @@
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DiscoveredPage, DiscoveryError, DiscoveryTruncation } from '../../../../domain/discovery';
-import { MAX_STEP_TEXT } from '../../../../domain/journey-step';
+import { MAX_STEP_TEXT, MAX_STEPS_PER_JOURNEY } from '../../../../domain/journey-step';
 import {
   describeDepth,
   describeDiscoveryFailure,
@@ -28,12 +28,23 @@ import { FONT, T } from '../../lib/tokens';
  * way a journey gets made. Being visible also earns the panel's idle state axe
  * coverage from the existing route sweep, with no test to register.
  *
- * **What it does not do.** `AUTHORABLE_ACTIONS`, the page cap a run enforces,
- * and what a step may do in which environment all stay where they are. The
- * selection warning below is advice, not a limit: `AUDITOR_MAX_PAGES_PER_RUN`
- * is enforced in the runner, which truncates loudly and logs it. Re-enforcing
- * it here would put one rule in two places and invalidate stored journeys the
- * day somebody lowered it.
+ * **Which caps this panel restates, and which it does not.** The line is not
+ * "never repeat a rule" — it is *where the rule is decided*.
+ *
+ * Restated here, because they are write-time bounds on the very route this
+ * panel posts to, and a screen that can only discover them by posting and
+ * reading back `invalid_request_body` reports them as a mystery:
+ * `MAX_JOURNEY_NAME` (120), `MAX_STEP_TEXT` (512 per path) and
+ * `MAX_STEPS_PER_JOURNEY` (50 steps). All three are schema constants imported
+ * from the module that owns them, never numbers typed twice.
+ *
+ * Left advisory, because it is a *runtime* cap this code cannot read and that
+ * may move under journeys already stored: `AUDITOR_MAX_PAGES_PER_RUN`. See
+ * `SOFT_PAGE_ADVICE`. Enforcing that one here would put one rule in two places
+ * and invalidate stored journeys the day somebody lowered it.
+ *
+ * `AUTHORABLE_ACTIONS` and what a step may do in which environment stay where
+ * they are — this panel writes `navigate`/`goto` and nothing else.
  */
 
 /**
@@ -44,6 +55,11 @@ import { FONT, T } from '../../lib/tokens';
  * exactly why this is worded as roughly-how-many rather than as a rule. If it
  * were a rule, a panel holding a stale copy of the number would refuse
  * selections a run would happily have walked.
+ *
+ * Deliberately *not* the same kind of thing as `MAX_STEPS_PER_JOURNEY`, which
+ * is enforced hard a few lines below. That one is a schema bound on the route
+ * this panel posts to, known at build time and identical everywhere; this one
+ * is a deployment's setting for a different route entirely.
  */
 const SOFT_PAGE_ADVICE = 20;
 
@@ -235,8 +251,32 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
    */
   const chosen = found ? found.pages.filter((page) => selected.has(page.url)) : [];
 
+  /**
+   * Why the Create button is dead, or `null` when it is not.
+   *
+   * The step count is checked before the count of characters in a name,
+   * because an operator who fixes the name first is still blocked and has
+   * learned nothing. Zero pages comes first because it is the state the panel
+   * opens in.
+   */
+  const createBlockedBy =
+    chosen.length === 0
+      ? 'Tick at least one page before creating a journey.'
+      : chosen.length > MAX_STEPS_PER_JOURNEY
+        ? // Hard, not advisory, and the distinction is where the rule is
+          // decided: `authoredStepsSchema` caps the array at
+          // `MAX_STEPS_PER_JOURNEY` *before* parsing an element, so a 51-step
+          // body comes back as `invalid_request_body` — a code that names
+          // neither the field nor the number. A url-capped crawl returns
+          // exactly 100 pages, so this was one click of "Select every page"
+          // away on any large site.
+          `A journey holds at most ${MAX_STEPS_PER_JOURNEY} steps, and ${chosen.length} pages are picked. Untick ${chosen.length - MAX_STEPS_PER_JOURNEY}, or split this crawl across more than one journey.`
+        : name.trim() === ''
+          ? 'Give the journey a name before creating it.'
+          : null;
+
   async function create() {
-    if (!found || chosen.length === 0 || name.trim() === '') return;
+    if (!found || createBlockedBy) return;
 
     setCreating(true);
     setCreateError(null);
@@ -319,8 +359,23 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
    */
   const selectable = groups.flatMap((group) => group.rows.filter((row) => !row.tooLong));
 
+  /**
+   * What the bulk control actually takes.
+   *
+   * Capped, rather than left to select 100 and hand the operator a blocked
+   * Create button and "untick 50" — which is a recoverable state and a
+   * miserable one. Taking a storeable prefix is the same move as skipping a
+   * `tooLong` row: leave the panel in a state the operator could have reached
+   * by clicking, and say in prose what was left out. The sentence beside the
+   * buttons is the half that keeps this from being a silent drop.
+   *
+   * Not a substitute for `createBlockedBy`, which still refuses 51 pages
+   * ticked by hand. This makes the common path work; that makes every path
+   * honest.
+   */
+  const takeable = selectable.slice(0, MAX_STEPS_PER_JOURNEY);
+
   const truncation = describeTruncation(found?.truncated);
-  const nothingToCreate = chosen.length === 0 || name.trim() === '';
   const canCrawl = targetUrl.trim() !== '' && !crawling;
 
   return (
@@ -436,7 +491,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
           <span style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
-              onClick={() => setSelected(new Set(selectable.map((row) => row.page.url)))}
+              onClick={() => setSelected(new Set(takeable.map((row) => row.page.url)))}
               style={buttonStyle}
             >
               Select every page
@@ -445,6 +500,21 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
               Clear the selection
             </button>
           </span>
+
+          {selectable.length > MAX_STEPS_PER_JOURNEY ? (
+            /*
+              Said before the click, not after it. A crawl stopped by the URL
+              cap returns exactly `MAX_DISCOVERY_URLS` pages — twice what a
+              journey can hold — so on any large site this is the first thing
+              the bulk control does, and an operator who is not told is one who
+              thinks the button half-worked.
+            */
+            <p style={noteStyle}>
+              This crawl found {selectable.length} pages and a journey holds at most{' '}
+              {MAX_STEPS_PER_JOURNEY} steps, so “Select every page” takes the first{' '}
+              {MAX_STEPS_PER_JOURNEY}. The rest need a journey of their own.
+            </p>
+          ) : null}
 
           {/*
             No scroll container, deliberately. A pane that scrolls its own
@@ -602,7 +672,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
                 // above a Create button and did not, which is asymmetry an
                 // operator has to learn rather than guess.
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter' && !creating && !nothingToCreate) void create();
+                  if (event.key === 'Enter' && !creating && !createBlockedBy) void create();
                 }}
                 aria-invalid={createError ? true : undefined}
                 aria-describedby={[nameNoteId, createError ? nameErrorId : null]
@@ -615,8 +685,8 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
             <button
               type="button"
               onClick={create}
-              disabled={creating || nothingToCreate}
-              style={{ ...buttonStyle, ...disabledStyle(creating || nothingToCreate) }}
+              disabled={creating || createBlockedBy !== null}
+              style={{ ...buttonStyle, ...disabledStyle(creating || createBlockedBy !== null) }}
             >
               {creating ? 'Creating…' : 'Create journey'}
             </button>
@@ -638,13 +708,14 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
               : `${chosen.length === 1 ? '1 page' : `${chosen.length} pages`} picked. The journey will visit ${found.origin} and go to each, in the order they were found.`}
           </p>
 
-          {nothingToCreate ? (
-            <p style={noteStyle}>
-              {chosen.length === 0
-                ? 'Tick at least one page before creating a journey.'
-                : 'Give the journey a name before creating it.'}
-            </p>
-          ) : null}
+          {/*
+            Never a dead control without visible prose saying why — the same
+            convention the two buttons above and the `tooLong` rows keep. One
+            sentence, decided in one place, so the button and the explanation
+            cannot come to different conclusions about whether a create is
+            possible.
+          */}
+          {createBlockedBy ? <p style={noteStyle}>{createBlockedBy}</p> : null}
 
           {chosen.length > SOFT_PAGE_ADVICE ? (
             /*
