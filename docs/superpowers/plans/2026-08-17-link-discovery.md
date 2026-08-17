@@ -1055,6 +1055,7 @@ describe('discoverLinks bounds', () => {
     expect(paths).toContain('/deep.html');
     expect(paths).not.toContain('/broken.html');
   }, 60_000);
+```
 
 **The url-cap reason already has coverage.** Task 3 added `tests/integrations/browser/discover-links-truncation.test.ts` when it fixed the frontier ceiling's suppression of truncation, mocking `MAX_DISCOVERY_URLS` down to 2. Do not write a second url-cap test here — read that file first, and if it already asserts what you were about to assert, say so and move on. What is *not* covered is the budget reason, which is the one a real site will almost always report. Retarget this case at `DISCOVERY_BUDGET_MS` instead, mocking it low the same way.
 
@@ -1175,7 +1176,15 @@ Link it from `fixtures/discovery-site/about.html`, and assert:
 
 Make it pass by keying the `seen` set on the settled URL as well as the requested one: after `assertAllowedUrl(settled, allowedHosts)`, compute `discoveryKey(settled)` and, if it differs from the requested key and is already in `seen`, skip the page rather than recording it. Add the settled key to `seen` either way.
 
-- [ ] **Step 5: Bound the error list**
+- [ ] **Step 5: Correct a comment that describes an unreachable state**
+
+Task 3's frontier ceiling made the top-of-loop `url-cap` branch dead code. Proof: the ceiling caps the frontier at `MAX_DISCOVERY_URLS - pages.length`, so `frontier.length - (MAX - pages.length) <= 0` always holds, while the branch needs it `>= 1`. Deleting the branch leaves the whole browser suite green, and a sweep over 576 simulated site shapes never fired it once.
+
+Behaviourally harmless — the post-loop path produces the same result. But the comment beside the post-loop assignment says *"the top-of-loop reason wins where both apply"*, describing a precedence that cannot occur: for `url-cap` the post-loop path is the only path. The top-of-loop **budget** branch is live and correct; only the `url-cap` half is dead.
+
+Either keep the branch as a defensive guard and correct the comment to say its `url-cap` half is unreachable while the ceiling exists, or drop that case and leave `budget`. The false comment is the part that matters — in a codebase at this comment bar, a reader trusts it.
+
+- [ ] **Step 6: Bound the error list**
 
 **Before writing any cap test, read this.** `MAX_LINKS_PER_PAGE` is invisible to a naive test, because both `MAX_DISCOVERY_URLS` and the frontier ceiling sit *below* it: serving 600 links and asserting fewer pages come back passes with the link cap deleted, since the other two bounds do the work. Task 3 already added a boundary-precise test (`/many.html`) that puts the interesting links exactly at the cap edge and 404s them deliberately, so that a *missing page* proves a *dropped link*. Extend that pattern rather than writing a fresh volume test, and prove any new cap test non-vacuous by deleting the cap it targets — one at a time, not all together — and watching it fail.
 
@@ -1184,7 +1193,7 @@ Make it pass by keying the `seen` set on the settled URL as well as the requeste
 
 Cap `errors` at `MAX_DISCOVERY_URLS` in the crawler, and note in `src/domain/discovery.ts` beside `MAX_DISCOVERY_URLS` that it counts successes and that `errors` carries its own ceiling.
 
-- [ ] **Step 6: Run it**
+- [ ] **Step 7: Run it**
 
 ```bash
 npx vitest run --config vitest.browser.config.ts tests/integrations/browser/discover-links.test.ts
@@ -1192,7 +1201,7 @@ npx vitest run --config vitest.browser.config.ts tests/integrations/browser/disc
 
 Expected: PASS. The truncation and depth cases should already pass against the Task 3 implementation — Task 3 restored url-cap truncation after its frontier ceiling suppressed it, so if `truncated` comes back `undefined` here, that regression has returned rather than the `seen` set being wrong. If `truncated.seen` is not greater than the page count, the seen set is being populated in the wrong place — it must record a URL when it is queued, not when it is visited, or a truncated crawl cannot say how much it had found.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add fixtures/discovery-site src/domain/discovery.ts src/integrations/browser/discover-links.ts tests/integrations/browser/discover-links.test.ts
