@@ -2,6 +2,20 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AxeBuilder } from '@axe-core/playwright';
+import { ENABLED_BY_US } from '../../../src/integrations/browser/axe-scan';
+
+/**
+ * The same rule set the product applies to a client's site.
+ *
+ * `AxeBuilder` defaults are not what a real scan uses: `scanPageWithAxe`
+ * switches on the rules axe ships disabled, `target-size` among them. Sweeping
+ * our own screens with the defaults meant holding clients to a standard this
+ * product does not meet itself — and "who audits the auditor" is the entire
+ * reason this block exists.
+ */
+const OUR_RULES = {
+  rules: Object.fromEntries(ENABLED_BY_US.map((rule) => [rule, { enabled: true }])),
+};
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Browser, Page } from 'playwright-core';
 import { launchChromium } from '../../../src/integrations/browser/launch';
@@ -620,7 +634,7 @@ describe('platform hydration', () => {
       // without this the largest form in the product is the one screen the
       // auditor never audits.
       await expect.poll(() => row.innerText()).toContain('needs a path');
-      const results = await new AxeBuilder({ page }).analyze();
+      const results = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
       expect(
         results.violations
           .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
@@ -1134,7 +1148,7 @@ describe('platform accessibility', () => {
       await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      const results = await new AxeBuilder({ page }).analyze();
+      const results = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
 
       // Name the rule and the element on failure: "expected 0, got 2" would
       // send the next reader back to a browser to find out what broke. The

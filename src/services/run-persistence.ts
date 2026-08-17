@@ -125,6 +125,25 @@ const STEP_KEYS_THAT_SAY_WHERE = [
 
 export function redactIntent(intent: RunIntent): RunIntent {
   return {
+    /**
+     * Carried through, and it was not.
+     *
+     * This function rebuilt the top-level object with `steps` alone, so
+     * `ruleset` — added so a change to the engine's rule set makes two runs
+     * `incomparable` — was stripped on the way to the database. Every write
+     * passes through here, so no run ever stored one, `walkedTheSamePath`
+     * compared `undefined === undefined` and answered *true*, and the guard
+     * did nothing at all while two long comments asserted that it did.
+     *
+     * The allowlist below is deliberate and stays: it governs the keys of a
+     * *step*, where failing closed is right because a step can carry a
+     * credential. That reasoning never applied to the intent's own fields, and
+     * applying it by accident is what broke this.
+     *
+     * `ruleset` is `axe-core@<version>+<rules>` — a fact about our scanner,
+     * with nothing of the client's in it.
+     */
+    ...(intent.ruleset === undefined ? {} : { ruleset: intent.ruleset }),
     steps: intent.steps.map((step) => {
       // Not an object: `steps` is `unknown[]` off a jsonb column, so nothing
       // guarantees one. Passed through — there is no key to keep or drop.

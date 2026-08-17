@@ -285,3 +285,78 @@ describe('compareToBaseline, when the baseline is a run that died partway', () =
     expect(summary.resolvedFindings).toHaveLength(0);
   });
 });
+
+/**
+ * The same path scanned by a different engine is not the same measurement.
+ *
+ * `target-size` shipped `enabled: false` in axe-core, so WCAG 2.5.8 was mapped
+ * by `conformanceLevelFromTags`, listed as AA in `wcag-reference`, and never
+ * evaluated. Switching it on makes the next run surface findings that are new
+ * to *us* rather than new to the client's site — and presented as a diff they
+ * read as a regression on a site nobody touched. The mirror image of the false
+ * all-clear this guard was written to refuse, and the reason an axe-core
+ * upgrade has always been able to produce one unnoticed.
+ */
+describe('compareToBaseline, when the two runs used different rule sets', () => {
+  const critical = {
+    code: 'target-size',
+    severity: 'serious' as const,
+    source: 'deterministic' as const,
+  };
+
+  function withRuleset(record: StoredRunRecord, ruleset?: string): StoredRunRecord {
+    return { ...record, intent: { steps: record.intent!.steps, ...(ruleset ? { ruleset } : {}) } };
+  }
+
+  it('withholds the diff when the rule set changed under it', () => {
+    const summary = compareToBaseline(
+      withRuleset(makeRecord('current', [critical]), 'axe-core@4.12.1+target-size'),
+      withRuleset(makeRecord('baseline', []), 'axe-core@4.12.1+'),
+    );
+
+    expect(summary.status).toBe('incomparable');
+    // The finding is not new to the site; it is new to the scanner. Reporting
+    // it as a regression would send a client looking for a change they did
+    // not make.
+    expect(summary.newFindings).toHaveLength(0);
+  });
+
+  it('still compares two runs scanned by the same rule set', () => {
+    // The guard has to be a guard, not a blanket refusal.
+    const summary = compareToBaseline(
+      withRuleset(makeRecord('current', [critical]), 'axe-core@4.12.1+target-size'),
+      withRuleset(makeRecord('baseline', []), 'axe-core@4.12.1+target-size'),
+    );
+
+    // Not `incomparable`, which is the whole point; `warn` rather than `fail`
+    // because the finding is `serious` and only `critical` fails a run.
+    expect(summary.status).toBe('warn');
+    expect(summary.newFindings).toHaveLength(1);
+  });
+
+  it('compares two runs from before the rule set was recorded', () => {
+    // Deliberately unlike `steps`, where two absents must never read as
+    // agreement. Runs predating this field really were scanned by the same
+    // rule set, because there was only one — so refusing them would withhold
+    // every diff in the existing history for no reason.
+    const summary = compareToBaseline(
+      withRuleset(makeRecord('current', [])),
+      withRuleset(makeRecord('baseline', [critical])),
+    );
+
+    expect(summary.status).toBe('none');
+    expect(summary.resolvedFindings).toHaveLength(1);
+  });
+
+  it('refuses a run that recorded a rule set against one that did not', () => {
+    // One side knows what scanned it and the other does not, so nothing can be
+    // concluded about whether they agree.
+    const summary = compareToBaseline(
+      withRuleset(makeRecord('current', []), 'axe-core@4.12.1+target-size'),
+      withRuleset(makeRecord('baseline', [critical])),
+    );
+
+    expect(summary.status).toBe('incomparable');
+    expect(summary.resolvedFindings).toHaveLength(0);
+  });
+});

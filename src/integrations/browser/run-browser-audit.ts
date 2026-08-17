@@ -8,6 +8,7 @@ import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
 import { scoreRun } from '../../services/score';
 import { buildDefaultDemoJourneySteps, runJourney } from './journey-runner';
+import { RUN_RULESET } from './axe-scan';
 import { PartialAuditError, PartialJourneyError, type AuditedPage } from './partial-run';
 import type { JourneyRunnerInput, JourneyStep, PageAudit } from './types';
 
@@ -213,6 +214,13 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
     environment: input.environment,
     /** What the run was asked to walk. Recorded onto the run by the handler. */
     steps,
+    /**
+     * Which engine and rule set produced the findings, for the same reason
+     * `steps` is here: the handler records it onto the run and must not
+     * recompute it. Reaching for it directly would drag `@axe-core/playwright`
+     * into the request layer, which is the boundary this file exists to hold.
+     */
+    ruleset: RUN_RULESET,
     evidenceStatus,
     findings,
     platform,

@@ -539,11 +539,20 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
       { action: 'login', type: 'fill', selector: '#user', credentialRef: 'acme', field: 'user' },
       { action: 'navigate', type: 'click', selector: '#submit' },
     ];
-    await store.saveRun(runRecord({ requestId: 'contract-intent', intent: { steps } }));
+    // With the rule set, because that is the half that was silently dropped.
+    // `redactIntent` rebuilt the intent as `{steps}` alone, so no run ever
+    // stored a `ruleset` and `walkedTheSamePath` compared two undefineds and
+    // answered "same rules" every time. This assertion previously asserted
+    // exactly the broken shape — `toEqual({ steps })` — and so agreed with the
+    // bug rather than catching it.
+    const ruleset = 'axe-core@4.12.1+target-size';
+    await store.saveRun(
+      runRecord({ requestId: 'contract-intent', intent: { steps, ruleset } }),
+    );
 
     // Order and shape both, because the comparison serialises: a store that
     // reordered keys or entries would make two identical runs incomparable.
-    expect((await store.getRun('contract-intent'))?.intent).toEqual({ steps });
+    expect((await store.getRun('contract-intent'))?.intent).toEqual({ steps, ruleset });
   });
 
   /**

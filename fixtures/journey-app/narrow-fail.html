@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Narrow failure fixture</title>
+    <!--
+      A page that is clean at 1280px and broken at 320px.
+
+      It exists to answer the question Phase 7 rests on: does scanning at a
+      narrow viewport find anything a wide scan does not? Every failure below
+      is behind a media query, so the wide scan must report zero violations and
+      the narrow scan must report several. If a page built specifically to fail
+      narrow does not fail narrow, the phase yields nothing and stops.
+
+      Three deliberate failures, each a different kind:
+
+      1. `.note` drops to a contrast ratio of about 1.9:1 on white. A rule that
+         passes wide and fails narrow, which is the whole premise.
+      2. `.cta` buttons shrink below the 24x24 minimum and sit close enough
+         together that the spacing exception cannot save them.
+      3. `.overflow` is wider than the viewport, so the document scrolls in two
+         dimensions. This is the one axe has no rule for and the one closest to
+         WCAG 1.4.10 — it is here to be measured by a probe, not by axe.
+
+      WHAT IT MEASURED, 2026-08-17. Recorded here because a fixture that poses
+      a go/no-go question and does not write down the answer is worth less than
+      no fixture at all:
+
+        wide   : 0 violations, scan 327ms, overflows=false
+        narrow : 1 violation,  scan 223ms, overflows=true
+        narrow-only: color-contrast @ .note
+        ten narrow scans: 1 distinct result
+
+      Both go/no-go criteria passed, and the overflow probe discriminated
+      cleanly. The axe yield was *one rule*, not two: `target-size` should have
+      fired on the buttons below — measured at 44x18 against a 24x24 minimum —
+      and did not, because axe ships that rule `enabled: false`. Chasing that
+      is what found a WCAG 2.5.8 criterion this product mapped, listed as AA
+      and never once evaluated. See `ENABLED_BY_US` in `axe-scan.ts`.
+
+      So the fixture's most valuable result was not the one it was built to
+      produce.
+    -->
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #ffffff;
+        color: #1a1a1a;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      /* 14.2:1 on white. Comfortably passing. */
+      .note {
+        color: #2b2b2b;
+      }
+
+      .cta {
+        min-width: 48px;
+        min-height: 48px;
+        margin-right: 16px;
+        padding: 12px 16px;
+        border: 0;
+        background: #0b5cab;
+        color: #ffffff;
+        font-size: 16px;
+      }
+
+      @media (max-width: 400px) {
+        /* About 1.9:1 on white, against a 4.5:1 requirement. */
+        .note {
+          color: #b9b9b9;
+        }
+
+        /* Under the 24x24 minimum, and too close together to be spared by the
+           spacing exception. */
+        .cta {
+          min-width: 18px;
+          min-height: 18px;
+          margin-right: 1px;
+          padding: 1px 2px;
+          font-size: 10px;
+        }
+
+        /* Wider than a 320px viewport, so the page scrolls sideways. */
+        .overflow {
+          width: 520px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Narrow failure fixture</h1>
+
+      <p class="note">
+        This paragraph has sufficient contrast at 1280px and fails it at 320px.
+      </p>
+
+      <p>
+        <button type="button" class="cta">Continue</button>
+        <button type="button" class="cta">Cancel</button>
+      </p>
+
+      <div class="overflow">
+        <p>A fixed-width block that overflows a 320px viewport.</p>
+      </div>
+    </main>
+  </body>
+</html>

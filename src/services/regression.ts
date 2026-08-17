@@ -60,7 +60,24 @@ function walkedTheSamePath(a: StoredRunRecord, b: StoredRunRecord): boolean {
   // off a jsonb column with no validation between here and the database, so
   // its shape is checked rather than assumed.
   if (!Array.isArray(a.intent?.steps) || !Array.isArray(b.intent?.steps)) return false;
-  return JSON.stringify(a.intent.steps) === JSON.stringify(b.intent.steps);
+  if (JSON.stringify(a.intent.steps) !== JSON.stringify(b.intent.steps)) return false;
+
+  // And the same rule set, because the same path scanned by a different engine
+  // is not the same measurement. Enabling a rule axe ships switched off — as
+  // `target-size` was, leaving WCAG 2.5.8 mapped, listed as AA and never
+  // evaluated — makes the next run surface findings that are new to *us*
+  // rather than new to the client's site. Presented as a diff they read as a
+  // regression on a site nobody touched: the mirror image of the false
+  // all-clear this function was written to refuse, and the reason an axe-core
+  // upgrade has always been able to produce one unnoticed.
+  //
+  // `undefined === undefined` is deliberately allowed here and would be a bug
+  // three lines above. For `steps`, absent means *not recorded*, so two
+  // absents must never read as agreement. For `ruleset`, two absents are two
+  // runs from before this was recorded — which really were scanned by the same
+  // rule set, because there was only one. What must not compare equal is a run
+  // that recorded one against a run that did not.
+  return a.intent.ruleset === b.intent.ruleset;
 }
 
 export function compareToBaseline(

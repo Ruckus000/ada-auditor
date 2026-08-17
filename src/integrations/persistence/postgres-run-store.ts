@@ -2,6 +2,7 @@ import type { Environment } from '../../domain/contracts';
 import { reconcileRunStatus } from '../../domain/run-staleness';
 import {
   clampRunListLimit,
+  type RunIntent,
   type RunStore,
   type StoredFinding,
   type StoredRunPage,
@@ -64,7 +65,10 @@ type RunRow = {
   created_at: Date | string;
   started_at: Date | string | null;
   phase_ms: Record<string, number> | null;
-  intent: { steps: unknown[] } | null;
+  // `RunIntent`, not a narrower literal. Typed as `{steps}` alone it agreed
+  // with the bug in `redactIntent` rather than catching it: `ruleset` was
+  // stripped before it ever got here, and this type said that was the shape.
+  intent: RunIntent | null;
 };
 
 type PageRow = {
