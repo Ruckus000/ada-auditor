@@ -1,10 +1,11 @@
 import type { Environment } from '../../domain/contracts';
 import { reconcileRunStatus } from '../../domain/run-staleness';
-import type {
-  RunStore,
-  StoredFinding,
-  StoredRunPage,
-  StoredRunRecord,
+import {
+  clampRunListLimit,
+  type RunStore,
+  type StoredFinding,
+  type StoredRunPage,
+  type StoredRunRecord,
 } from '../../domain/persistence';
 
 /**
@@ -395,7 +396,7 @@ export class PostgresRunStore implements RunStore {
   } = {}): Promise<StoredRunRecord[]> {
     // A caller that forgets to page must not be able to pull the whole table
     // into one function invocation.
-    const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+    const limit = clampRunListLimit(options.limit);
     const journeyId = options.journeyId ?? null;
     const environment = options.environment ?? null;
 

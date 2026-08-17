@@ -333,17 +333,38 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     expect(runs.map((run) => run.requestId)).toEqual(['contract-a']);
   });
 
-  it('caps a listing so one call cannot pull the whole table', async () => {
+  /**
+   * That a store honours a limit at all. The *clamp* is tested elsewhere, and
+   * moving it there is what makes this test both meaningful and quick.
+   *
+   * It used to end with `store.list({ limit: 100_000 })` and assert the result
+   * was at most 100. Two things were wrong with that. It is vacuous on a clean
+   * database — three rows satisfy "at most 100" — so it proved the clamp only
+   * when the shared dev database happened to be full. And when the database
+   * *was* full it hydrated a hundred runs with all their pages and findings
+   * over the network, which is why this one test timed out at five seconds
+   * locally and passed in twenty in CI. A suite that cries wolf stops being
+   * run, which is the same reasoning that put the db suite in its own config.
+   *
+   * `clampRunListLimit` is now one function in `domain/persistence`, shared by
+   * both stores and tested against its boundaries in the fast suite.
+   */
+  it('honours a listing limit', async () => {
     const store = await makeStore();
-    for (const [i, id] of ['contract-1', 'contract-2', 'contract-3'].entries()) {
+    // Two, not three. Each `saveRun` writes a run, its pages and its findings,
+    // and against a hosted Postgres that is a second of pure latency for a row
+    // this test does not need — the pair below proves the limit truncates just
+    // as well as a trio would.
+    for (const [i, id] of ['contract-1', 'contract-2'].entries()) {
       await store.saveRun(
         runRecord({ requestId: id, createdAt: `2026-08-08T1${i}:00:00.000Z` }),
       );
     }
 
-    expect(await store.list({ journeyId: CONTRACT_JOURNEY, limit: 2 })).toHaveLength(2);
-    // An absurd limit is clamped, not honoured.
-    expect((await store.list({ limit: 100_000 })).length).toBeLessThanOrEqual(100);
+    // Scoped to this contract's own journey, so the assertion cannot be
+    // changed by whatever else is in the database.
+    expect(await store.list({ journeyId: CONTRACT_JOURNEY, limit: 1 })).toHaveLength(1);
+    expect(await store.list({ journeyId: CONTRACT_JOURNEY })).toHaveLength(2);
   });
 
   it('lists a run with its pages and findings, not a bare header', async () => {

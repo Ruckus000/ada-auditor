@@ -1,6 +1,11 @@
 import type { Environment } from '../../domain/contracts';
 import { isAbandoned, reconcileRunStatus } from '../../domain/run-staleness';
-import type { ListRunsOptions, RunStore, StoredRunRecord } from '../../domain/persistence';
+import {
+  clampRunListLimit,
+  type ListRunsOptions,
+  type RunStore,
+  type StoredRunRecord,
+} from '../../domain/persistence';
 
 /**
  * An in-process run store, for tests and nothing else.
@@ -60,7 +65,7 @@ export class MemoryRunStore implements RunStore {
   }
 
   async list(options: ListRunsOptions = {}): Promise<StoredRunRecord[]> {
-    const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+    const limit = clampRunListLimit(options.limit);
 
     return this.ordered()
       .filter(
