@@ -14,7 +14,9 @@
 
 ## Read this before Task 1
 
-**Do not add a `services/` module.** The spec cut the clustering unit that would have lived there. There is no orchestration in this feature — a crawl is one integration call over pure domain rules — and an empty service to match the shape of other features is a layer with no job.
+**Do not add a `services/` module for the crawl.** The spec cut the clustering unit that would have lived there. There is no orchestration in this feature — a crawl is one integration call over pure domain rules — and an empty service to match the shape of other features is a layer with no job.
+
+The one exception is `services/presentation/discovery-message.ts` in Task 8, and it is not an exception to the reasoning. AGENTS.md places vocabulary mapping in `services/presentation/` because deciding what the product *says* is a business rule; that is a different job from orchestration, and it is why `verdict.ts`, `severity.ts` and `page-evidence.ts` already live there. It also has to be pure to be testable, since the component around it is not reachable from the fast suite.
 
 **Do not add a page-count cap to the journeys route.** The spec explains at length why the run's page cap stays in the runner. If you find yourself editing `src/app/api/platform/clients/[clientId]/journeys/route.ts` to refuse a long step list, stop and re-read the "Selection, and one rule in one place" section.
 
@@ -30,12 +32,14 @@
 | `src/integrations/browser/journey-runner.ts` | Modify | `routeFromPageUrl` delegates to `normalizePathname` |
 | `src/integrations/browser/discover-links.ts` | Create | BFS crawl, guard enforcement, anchor extraction |
 | `src/app/api/platform/discover/route.ts` | Create | Auth, validate, call, respond |
+| `src/services/presentation/discovery-message.ts` | Create | Turns the API's error codes into sentences an operator can act on |
 | `src/app/platform/components/client/discover-pages.tsx` | Create | Discovery panel: run discovery, tick pages, create journey |
 | `src/app/platform/components/client/client-journeys.tsx` | Modify | Mount the panel |
 | `fixtures/discovery-site/*.html` | Create | Multi-page static fixture for the crawl tests |
 | `tests/domain/discovery.test.ts` | Create | Normalisation and dedupe table |
 | `tests/integrations/browser/discover-links.test.ts` | Create | Crawl, guards, bounds, errors |
 | `tests/api/discover-route.test.ts` | Create | Auth, schema, budget isolation |
+| `tests/services/discovery-message.test.ts` | Create | Every code maps to an actionable sentence |
 | `scripts/chaos.ts` | Modify | Blocked-address steady-state assertion |
 
 ---
@@ -1137,7 +1141,18 @@ describe('POST /api/platform/discover', () => {
     const response = await POST(post({ targetUrl: 'file:///etc/passwd' }));
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({ error: 'invalid_request' });
+    await expect(response.json()).resolves.toMatchObject({ error: 'invalid_request_body' });
+  });
+
+  it('answers with a code and never the failure text', async () => {
+    const response = await POST(post({ targetUrl: 'https://acme.test', extra: 1 }));
+    const body = await response.json();
+
+    // No route in this API returns a `detail`. A message on the wire leaks
+    // internals and makes the format an accident of whoever last edited a
+    // string — `run-failure.ts` exists to stop exactly that.
+    expect(body).not.toHaveProperty('detail');
+    expect(Object.keys(body).sort()).toEqual(['error', 'requestId']);
   });
 
   it('returns the pages a crawl found', async () => {
@@ -1157,9 +1172,13 @@ describe('POST /api/platform/discover', () => {
     );
 
     const response = await POST(post({ targetUrl: 'https://acme.test' }));
+    const body = await response.json();
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({ error: 'unsafe_target' });
+    // The code the rest of the product already uses for this refusal, not one
+    // minted for this route. The address itself must not appear.
+    expect(body.error).toBe('navigation_not_allowed');
+    expect(JSON.stringify(body)).not.toContain('private or reserved');
   });
 });
 ```
@@ -1182,6 +1201,7 @@ import { discoverLinks } from '../../../../integrations/browser/discover-links';
 import { UnsafeTargetError } from '../../../../integrations/browser/target-url';
 import { authorizePrincipal } from '../../_lib/authorize';
 import { createRequestId } from '../../_lib/request-id';
+import { classifyRunFailure } from '../../_lib/run-failure';
 
 /**
  * Discovery renders every page it finds, so it needs the same headroom a run
@@ -1210,29 +1230,38 @@ export async function POST(request: Request): Promise<Response> {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'invalid_request', requestId }, { status: 400 });
+    return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
 
+  // The same code the journeys route answers with, and no `detail` field.
+  //
+  // No route in this API returns one. `run-failure.ts` says why: a message
+  // returned verbatim leaks internals and "makes the wire format an accident
+  // of whatever string someone last edited". Callers get a code to branch on;
+  // the message goes to the structured log, which is where it is useful.
   const parsed = discoveryRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json(
-      { error: 'invalid_request', detail: parsed.error.issues[0]?.message, requestId },
-      { status: 400 },
-    );
+    return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
 
   try {
+    // `parsed.data`, never the raw body: zod trims before validating, so this
+    // is the only value guaranteed to reach the crawler without padding.
     const result = await discoverLinks({ targetUrl: parsed.data.targetUrl });
     return Response.json({ requestId, ...result }, { status: 200 });
   } catch (error) {
     // A refused target is the caller naming somewhere we will not go — their
     // problem to fix, not ours to have failed at. 500 here would put an
     // operator's typo in the error budget.
+    //
+    // `classifyRunFailure` rather than a code minted here. It already maps
+    // every `UnsafeTargetError` throw site to `navigation_not_allowed`, and it
+    // matches on the error *name* rather than the prose — a lesson that file
+    // records paying for, when a message-prefix regex caught three of nine
+    // throw sites and missed both private-address refusals.
     if (error instanceof UnsafeTargetError || (error as Error)?.name === 'UnsafeTargetError') {
-      return Response.json(
-        { error: 'unsafe_target', detail: (error as Error).message, requestId },
-        { status: 400 },
-      );
+      const code = classifyRunFailure((error as Error).message, (error as Error).name);
+      return Response.json({ error: code, requestId }, { status: 400 });
     }
     throw error;
   }
@@ -1261,10 +1290,81 @@ git commit -m "Serve a proposed page list to an authenticated operator"
 A panel on the client journeys screen: enter a URL, see what was found, tick pages, create a journey.
 
 **Files:**
+- Create: `src/services/presentation/discovery-message.ts`
+- Create: `tests/services/discovery-message.test.ts`
 - Create: `src/app/platform/components/client/discover-pages.tsx`
 - Modify: `src/app/platform/components/client/client-journeys.tsx`
 
-- [ ] **Step 1: Build the panel**
+- [ ] **Step 1: Turn the API's codes into sentences**
+
+The route answers with a stable code and no message, matching every other route in this API. Something has to decide what an operator reads, and AGENTS.md puts that decision in `services/presentation/` — it is a business rule, not a component detail, and putting it there is also the only way it reaches the fast suite, since the component does not.
+
+Create `src/services/presentation/discovery-message.ts`:
+
+```ts
+/**
+ * What an operator reads when discovery refuses.
+ *
+ * The API answers with a code and never a message — `run-failure.ts` explains
+ * why at length: a message on the wire leaks internals and makes the format an
+ * accident of whoever last edited a string. So the sentence is composed here,
+ * where it can be tested and where changing the product's words does not mean
+ * editing a route.
+ *
+ * Each phrase names something the operator can *do*. "Invalid request" tells
+ * somebody nothing; "that is not a valid http or https address" tells them to
+ * look at what they typed. The default is deliberately not "unknown error" —
+ * an unrecognised code still means discovery did not run, and saying so beats
+ * naming our own bookkeeping.
+ */
+export function describeDiscoveryFailure(code: string | undefined): string {
+  switch (code) {
+    case 'unauthorized':
+      return 'Your session has expired. Sign in again and retry.';
+    case 'invalid_request_body':
+      return 'That is not a valid http or https web address.';
+    case 'navigation_not_allowed':
+      return 'That address cannot be crawled: it is not a public web address.';
+    default:
+      return 'Discovery could not finish. Check the address and try again.';
+  }
+}
+```
+
+Create `tests/services/discovery-message.test.ts`:
+
+```ts
+import { describe, expect, it } from 'vitest';
+import { describeDiscoveryFailure } from '../../src/services/presentation/discovery-message';
+
+describe('describeDiscoveryFailure', () => {
+  it('names something the operator can act on for each known code', () => {
+    expect(describeDiscoveryFailure('unauthorized')).toMatch(/sign in/i);
+    expect(describeDiscoveryFailure('invalid_request_body')).toMatch(/address/i);
+    expect(describeDiscoveryFailure('navigation_not_allowed')).toMatch(/public/i);
+  });
+
+  it('still says discovery did not run when the code is unrecognised', () => {
+    // An unknown code is our bookkeeping, not the operator's problem. The
+    // sentence has to stay useful without naming it.
+    for (const code of [undefined, '', 'some_code_added_later']) {
+      const message = describeDiscoveryFailure(code);
+      expect(message).toMatch(/could not finish/i);
+      expect(message).not.toContain(String(code));
+    }
+  });
+});
+```
+
+Run it:
+
+```bash
+npx vitest run tests/services/discovery-message.test.ts
+```
+
+Expected: PASS, 2 tests.
+
+- [ ] **Step 2: Build the panel**
 
 Create `src/app/platform/components/client/discover-pages.tsx`:
 
@@ -1274,6 +1374,7 @@ Create `src/app/platform/components/client/discover-pages.tsx`:
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DiscoveredPage, DiscoveryTruncation } from '../../../../domain/discovery';
+import { describeDiscoveryFailure } from '../../../../services/presentation/discovery-message';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -1299,8 +1400,8 @@ type DiscoveryResponse = {
   pages?: DiscoveredPage[];
   truncated?: DiscoveryTruncation;
   errors?: Array<{ url: string; message: string }>;
+  /** A stable code. The API returns no message — see `describeDiscoveryFailure`. */
   error?: string;
-  detail?: string;
 };
 
 export function DiscoverPages({ clientId }: { clientId: string }) {
@@ -1330,7 +1431,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
       const body = (await response.json()) as DiscoveryResponse;
 
       if (!response.ok) {
-        setProblem(body.detail ?? body.error ?? 'Discovery failed.');
+        setProblem(describeDiscoveryFailure(body.error));
         return;
       }
 
@@ -1371,7 +1472,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
 
       if (!response.ok) {
         const body = (await response.json()) as DiscoveryResponse;
-        setProblem(body.detail ?? body.error ?? 'The journey could not be created.');
+        setProblem(describeDiscoveryFailure(body.error));
         return;
       }
 
@@ -1473,7 +1574,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
 }
 ```
 
-- [ ] **Step 2: Mount it**
+- [ ] **Step 3: Mount it**
 
 In `src/app/platform/components/client/client-journeys.tsx`, add to the imports:
 
@@ -1483,7 +1584,7 @@ import { DiscoverPages } from './discover-pages';
 
 Then render `<DiscoverPages clientId={detail.client.id} />` inside the `ClientJourneys` return, above the existing journey list. Read the surrounding JSX first and match its wrapper elements and token usage — do not paste it in bare if every sibling sits inside a card element.
 
-- [ ] **Step 3: Build and check hydration**
+- [ ] **Step 4: Build and check hydration**
 
 ```bash
 npm run build && npm run test:hydration
@@ -1491,10 +1592,10 @@ npm run build && npm run test:hydration
 
 Expected: PASS. The hydration suite runs the product's own axe engine over its own screens at **zero** violations, so a missing label or an unlabelled control fails here. If it does, fix the markup — the threshold is not negotiable.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add src/app/platform/components/client/discover-pages.tsx src/app/platform/components/client/client-journeys.tsx
+git add src/services/presentation/discovery-message.ts tests/services/discovery-message.test.ts src/app/platform/components/client/discover-pages.tsx src/app/platform/components/client/client-journeys.tsx
 git commit -m "Pick pages from a list instead of typing a step for each"
 ```
 
