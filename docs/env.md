@@ -142,8 +142,21 @@ carrier-grade NAT, IPv6 unique- and link-local, every IPv6 range that embeds an
 IPv4 address (IPv4-mapped, IPv4-compatible, NAT64, 6to4), and
 `169.254.169.254` — the cloud metadata endpoint.
 
-A run may only navigate to the target's own host. Off-origin navigation aborts
-the run rather than following it.
+A run's allowed hosts default to the target's own host, and that is currently
+the only value they take — nothing accepts them over HTTP. Two rules govern
+where a run may go, and they answer different questions:
+
+- **Passing through another host is permitted** on the way, provided every hop
+  reaches a public address. An apex-to-www hop, a consent wall and an SSO
+  redirect are all ordinary, and refusing them would break the normal case to
+  stop an abnormal one.
+- **The journey must come to rest on the site it is auditing**, and only pages
+  on that site are captured. A host the journey merely passes through is walked
+  and not audited: its pages are not the client's, and its accessibility
+  defects are not the client's to fix. Ending on one aborts the run.
+
+Both hold whatever the allowed-host list contains, which is what makes it safe
+to widen later for a third-party identity provider.
 
 **CI/executive read:** `GET /api/audit/runs/latest?journeyId=&environment=` with
 the run token returns the latest stored run plus optional regression against the

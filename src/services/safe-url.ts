@@ -28,3 +28,20 @@ export function settledLocation(rawUrl: string): string {
     return '(unparseable URL)';
   }
 }
+
+/**
+ * Just the host, for the times when even the path is more than is wanted.
+ *
+ * The runner logs a line each time a journey passes through a host it is not
+ * auditing, and the pass-through host in an SSO flow is the one whose URLs
+ * carry the authorization code — in the query on the way out and, for some
+ * providers, in the path on the way back. The only thing that line is for is
+ * naming *which* host, so nothing else needs to be in it.
+ */
+export function hostnameOf(rawUrl: string): string {
+  try {
+    return new URL(rawUrl).hostname;
+  } catch {
+    return '(unparseable URL)';
+  }
+}

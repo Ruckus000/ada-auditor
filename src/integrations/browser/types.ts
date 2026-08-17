@@ -152,6 +152,11 @@ export type JourneyRunnerResult = {
    * Every page audited, in visit order. This used to be a single page's worth
    * of results — the journey's last — so every page walked through was
    * discarded and a journey stepping past real violations reported a clean pass.
+   *
+   * Every page *of the target site*. A journey may pass through another host —
+   * an identity provider — and those pages are deliberately not captured: they
+   * are not the client's site and their defects are not the client's to fix.
+   * See the pass-through skip in `capturePage`.
    */
   pages: PageAudit[];
   /**

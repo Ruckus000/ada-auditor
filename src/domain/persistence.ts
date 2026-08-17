@@ -151,8 +151,11 @@ export type StoredRunRecord = {
   phaseMs?: Record<string, number>;
   browserMode?: boolean;
   /**
-   * Every page the journey walked through, in visit order, each with its own
-   * uploaded evidence. This replaced a single run-level `artifacts` field,
+   * Every page of the audited site the journey walked through, in visit order,
+   * each with its own
+   * uploaded evidence. A host the journey only passed through — an identity
+   * provider — is walked and not captured, so it has no row here. This
+   * replaced a single run-level `artifacts` field,
    * which could only ever describe one page and so described the last one — the
    * same single-page assumption that made a run miss the violations it walked
    * past.

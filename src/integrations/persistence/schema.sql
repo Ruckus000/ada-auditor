@@ -83,7 +83,9 @@ create index if not exists runs_created_idx on runs (created_at desc);
 
 -- -------------------------------------------------------------- run_pages --
 
--- One row per page the journey walked through. `position` preserves visit
+-- One row per page of the audited site the journey walked through; a host it
+-- only passed through, such as an identity provider, is not captured and has no
+-- row. `position` preserves visit
 -- order, which the report and the console both render by; sorting by URL or
 -- insertion id would scramble a journey into alphabetical order.
 create table if not exists run_pages (

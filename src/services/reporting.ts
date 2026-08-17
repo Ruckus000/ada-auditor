@@ -11,8 +11,8 @@ export type CiStatus = 'pass' | 'fail' | 'inconclusive';
 /**
  * Rolls a whole run up into one verdict.
  *
- * The findings handed in are the run's aggregate — every page the journey
- * walked through, concatenated. `evidenceStatus` is the worst of the pages'
+ * The findings handed in are the run's aggregate — every page of the audited
+ * site the journey walked through, concatenated. `evidenceStatus` is the worst of the pages'
  * (see `worstEvidenceStatus` in `domain/evidence.ts`), so one page missing an
  * artifact makes the whole run inconclusive.
  *

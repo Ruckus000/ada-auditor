@@ -421,8 +421,8 @@ export function FindingsList({ result }: { result: AuditResult }) {
 
         {pagesAudited > 0 && (
           <p className="findings-scope">
-            {pagesAudited} {pagesAudited === 1 ? 'page' : 'pages'} audited — every page the journey
-            walked through, not just the last one.
+            {pagesAudited} {pagesAudited === 1 ? 'page' : 'pages'} audited — every page of this site
+            the journey walked through, not just the last one.
           </p>
         )}
 
