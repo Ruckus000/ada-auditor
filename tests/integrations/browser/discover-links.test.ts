@@ -92,7 +92,9 @@ vi.mock('../../../src/integrations/browser/target-url', async (importOriginal) =
   assertPeerAddressAllowed: () => {},
 }));
 
-const { discoverLinks } = await import('../../../src/integrations/browser/discover-links');
+const { discoverLinks, EntryPointRedirectedError } = await import(
+  '../../../src/integrations/browser/discover-links'
+);
 
 const FIXTURES = join(process.cwd(), 'fixtures/discovery-site');
 let server: Server;
@@ -233,6 +235,8 @@ describe('discoverLinks', () => {
       '/',
       '/about.html',
       '/deep.html',
+      '/docs/guide.html',
+      '/docs/handbook.html',
       '/hostile.html',
       '/pricing.html',
       '/pricing.html?tab=annual',
@@ -260,7 +264,7 @@ describe('discoverLinks', () => {
     // strings — which is precisely the defect the redirect dedupe fixes, and
     // precisely what a set of URLs cannot see. Page uniqueness is a property
     // the crawler maintains, not one the shape of the data guarantees.
-    expect(result.pages).toHaveLength(6);
+    expect(result.pages).toHaveLength(8);
   }, 60_000);
 
   it('records the page title and its distance from the entry point', async () => {
@@ -308,18 +312,35 @@ describe('discoverLinks', () => {
     expect(result.pages.every((page) => !page.url.includes('#'))).toBe(true);
   }, 60_000);
 
-  it('follows a relative href without re-implementing URL resolution', async () => {
+  it('agrees on one page when two pages spell its link differently', async () => {
     const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
     const paths = result.pages.map((page) => locationOf(page.url));
 
-    // Every other link in this fixture site is root-absolute, so `extractLinks`'s
-    // central claim — that the browser resolves relative, root-relative and
-    // absolute hrefs into one form — had nothing exercising the first of the
-    // three, on a form real brochure sites emit constantly. `deep.html` is
-    // reachable root-absolutely from /about.html and relatively from
-    // /pricing.html; either route finding it proves the href was resolved, and
-    // exactly one row proves both routes agreed on what it resolved to.
+    // `/deep.html` is linked root-absolutely from /about.html and relatively
+    // from /pricing.html, and comes back once — the two spellings agree.
+    //
+    // Named for what it is. It was called a test of relative-href *resolution*,
+    // which it is not: deleting the relative link leaves it green, because the
+    // root-absolute route finds the page anyway. Resolution has its own test
+    // below, on the only link here whose two possible answers differ.
     expect(paths.filter((path) => path === '/deep.html')).toHaveLength(1);
+  }, 60_000);
+
+  it('resolves a relative href against the document, not the origin', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const paths = result.pages.map((page) => locationOf(page.url));
+
+    // `/docs/guide.html` links `handbook.html`, whose two candidate resolutions
+    // differ: `/docs/handbook.html` against the document, `/handbook.html`
+    // against the origin. That is what `extractLinks` claims the browser does
+    // for it, and until this fixture nothing in the suite could tell.
+    expect(paths).toContain('/docs/handbook.html');
+
+    // Load-bearing, and the half a "did we find it" assertion would miss.
+    // Playwright resolves for any status, so a mis-resolution does not make a
+    // page vanish — `/handbook.html` would 404 and arrive as an *extra* page
+    // sitting beside the right one, leaving the line above true.
+    expect(paths).not.toContain('/handbook.html');
   }, 60_000);
 
   it('treats a query string as a different page, matching discoveryKey', () => {
@@ -409,11 +430,31 @@ describe('discoverLinks guards', () => {
    * every other host in this suite resolves to the host it was asked for.
    */
   it('refuses an entry point that redirects off its own allowlist', async () => {
-    // On the settled host by name. A DNS failure or a dead connection would
-    // also reject here, and either is the vacuous version of this test — only
-    // this message proves the redirect was followed and then refused.
-    await expect(discoverLinks({ targetUrl: `http://${WWW_HOST}/` })).rejects.toThrow(
-      new RegExp(`Host ${HOST} is not in the allowed domains`, 'i'),
+    const failure = await discoverLinks({ targetUrl: `http://${WWW_HOST}/` }).catch(
+      (error: unknown) => error,
+    );
+
+    // The type, and the host as a *field*. A DNS failure or a dead connection
+    // would also reject here — that is the vacuous version of this test — and
+    // only the settled host proves the redirect was followed and then refused.
+    // Task 7 answers from this field rather than by matching prose, which is
+    // what `run-failure.ts` records the cost of getting wrong.
+    expect(failure).toBeInstanceOf(EntryPointRedirectedError);
+    expect((failure as InstanceType<typeof EntryPointRedirectedError>).settledHost).toBe(HOST);
+
+    // `name` stays the parent's, because `classifyRunFailure` keys on it and
+    // maps that one string to `navigation_not_allowed` — the right answer here
+    // too. Overriding it would silently drop this into the uncategorised bucket.
+    expect((failure as Error).name).toBe('UnsafeTargetError');
+  }, 60_000);
+
+  it('refuses an entry point that never answered, rather than returning an empty crawl', async () => {
+    // The most common entry failure of the three — a dead server, a timeout, a
+    // typo'd host — and the one that used to come back as `{ pages: [] }` with
+    // no truncation, which a route would answer 200. One contract: a crawl or a
+    // throw.
+    await expect(discoverLinks({ targetUrl: `http://${HOST}/broken.html` })).rejects.toThrow(
+      /net::ERR_/,
     );
   }, 60_000);
 });
@@ -490,7 +531,13 @@ describe('discoverLinks bounds', () => {
     // /deep.html sits behind /about.html, so depth 1 must not reach it. The
     // exact set says the same thing from the other side: the depth-1 pages are
     // all still visited, so this is a boundary and not a stalled crawl.
-    expect(paths).toEqual(['/', '/about.html', '/hostile.html', '/pricing.html']);
+    expect(paths).toEqual([
+      '/',
+      '/about.html',
+      '/docs/guide.html',
+      '/hostile.html',
+      '/pricing.html',
+    ]);
     expect(paths).not.toContain('/deep.html');
     // Depth is the crawl's shape, not a shortfall: it is never a truncation.
     expect(result.truncated).toBeUndefined();
@@ -522,7 +569,14 @@ describe('discoverLinks bounds', () => {
       const actual = await vi.importActual<typeof import('../../../src/domain/discovery')>(
         '../../../src/domain/discovery',
       );
-      return { ...actual, MAX_DISCOVERY_URLS: 5 };
+      // Both, and they are not the same knob — which this test proves by
+      // needing both set. `MAX_DISCOVERY_URLS` shapes the frontier, and the
+      // arithmetic above depends on it; `MAX_DISCOVERY_ERRORS` is the ceiling
+      // under test. Lowering only the first leaves six errors, because the
+      // error ceiling is still 100. That is the separation being bought:
+      // anyone tuning how many pages a crawl visits does not silently retune
+      // how many failures it reports.
+      return { ...actual, MAX_DISCOVERY_URLS: 5, MAX_DISCOVERY_ERRORS: 5 };
     });
 
     const { discoverLinks: capped } = await import(
@@ -531,6 +585,11 @@ describe('discoverLinks bounds', () => {
     const result = await capped({ targetUrl: `http://${HOST}/dead-hub.html` });
 
     expect(result.errors).toHaveLength(5);
+
+    // What the cap dropped, said out loud. A bounded list reporting nothing
+    // about its bound is the same defect as a truncated crawl claiming to be
+    // whole — this shape produces six failures, so exactly one was refused.
+    expect(result.errorsOmitted).toBe(1);
 
     // Both hubs were reached, so the six failures really did happen and the
     // fifth is a cap rather than the crawl having stopped early.

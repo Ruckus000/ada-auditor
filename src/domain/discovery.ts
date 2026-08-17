@@ -70,12 +70,26 @@ export function discoveryKey(rawUrl: string): string {
  *
  *   - A page that could not be read adds a `DiscoveryError`, not a page. A site
  *     of dead links would therefore never trip this cap at all, so `errors`
- *     carries its own ceiling — the same number, applied separately in the
- *     crawler.
+ *     carries its own ceiling — `MAX_DISCOVERY_ERRORS` below.
  *   - A page deduped onto the URL it redirected to adds neither. A
  *     redirect-heavy site spends real navigations on hops that leave no row.
  */
 export const MAX_DISCOVERY_URLS = 100;
+
+/**
+ * How many failures the response will carry.
+ *
+ * The same number as `MAX_DISCOVERY_URLS` because there is no reason for a
+ * different one, and a separate constant because there is no reason the two
+ * should move together: they bound different things, and anyone tuning how many
+ * pages a crawl visits should not silently retune how many failures it reports.
+ *
+ * It needs a ceiling of its own precisely because the page cap cannot serve as
+ * one — a failed navigation increments no page count, so a site of dead links
+ * files an entry per failure with nothing to stop it. What it drops it counts:
+ * see `DiscoveryResult.errorsOmitted`.
+ */
+export const MAX_DISCOVERY_ERRORS = MAX_DISCOVERY_URLS;
 
 /**
  * How many anchors are read from any one page.
@@ -178,6 +192,16 @@ export type DiscoveredPage = {
  */
 export type DiscoveryTruncation = {
   reason: 'url-cap' | 'budget';
+  /**
+   * How many distinct URLs the crawl had identified when it stopped — a floor
+   * on how much more is out there, not an exact count of the site.
+   *
+   * It also counts the URL a redirect settled on, which the crawl records so it
+   * can dedupe against it, so a redirect-heavy site reports a slightly larger
+   * number than it found distinct *links*. That errs upward, which is the safe
+   * direction for a floor, but it is the reason this is documented as "at
+   * least this much" rather than as a total.
+   */
   seen: number;
 };
 
@@ -216,6 +240,24 @@ export type DiscoveryResult = {
   pages: DiscoveredPage[];
   truncated?: DiscoveryTruncation;
   errors: DiscoveryError[];
+  /**
+   * How many failures `MAX_DISCOVERY_ERRORS` refused to carry. Absent when it
+   * refused none.
+   *
+   * A bound that drops work must say it dropped work — the same rule
+   * `DiscoveryTruncation` exists for, one level down. Without this a crawl of a
+   * hub with 200 dead links returns 100 of them and reads as a site with
+   * exactly 100 problems.
+   *
+   * Deliberately **not** a `DiscoveryTruncation.reason`. Those reasons mean
+   * "this is not the whole site", and a crawl that filled its error list may
+   * have seen every page there is: saying `truncated` here would claim the
+   * pages are incomplete when they are complete, which is a lie in the opposite
+   * direction and would put a "we may have missed pages" banner on a crawl that
+   * missed none. Incomplete *diagnostics* and an incomplete *site* are two
+   * facts and get two fields.
+   */
+  errorsOmitted?: number;
 };
 
 /**

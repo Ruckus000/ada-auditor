@@ -5,6 +5,7 @@ import {
   DISCOVERY_DELAY_MS,
   DISCOVERY_USER_AGENT_PRODUCT,
   MAX_DISCOVERY_DEPTH,
+  MAX_DISCOVERY_ERRORS,
   MAX_DISCOVERY_URLS,
   MAX_HREF_LENGTH,
   MAX_LINKS_PER_PAGE,
@@ -21,6 +22,32 @@ import {
   assertSafeTargetUrl,
   UnsafeTargetError,
 } from './target-url';
+
+/**
+ * The entry point came to rest on a host the allowlist refuses.
+ *
+ * Carries `settledHost` as a *field* rather than only inside its message, so a
+ * caller can name the host in a structured answer — "discover
+ * `example.com` instead" — without parsing prose. `run-failure.ts` records
+ * what the alternative costs: a message-prefix regex there claimed to cover
+ * `UnsafeTargetError` and caught three of its nine throw sites, silently
+ * miscategorising the two most security-critical refusals the guard makes.
+ *
+ * Extends `UnsafeTargetError` and deliberately does **not** override `name`.
+ * `classifyRunFailure` keys on `name` and maps that one string to
+ * `navigation_not_allowed`, which is the right answer for this too; callers
+ * that want the detail branch on the *type*. A tenth throw site for a class
+ * that already has nine is cheaper than a code every screen would have to
+ * learn — the same trade `assertSettledOnTarget` documents.
+ */
+export class EntryPointRedirectedError extends UnsafeTargetError {
+  readonly settledHost: string;
+
+  constructor(settledHost: string, message: string) {
+    super(message);
+    this.settledHost = settledHost;
+  }
+}
 
 export type DiscoverLinksInput = {
   targetUrl: string;
@@ -68,6 +95,31 @@ async function extractLinks(page: Page): Promise<string[]> {
         ),
     { maxLinks: MAX_LINKS_PER_PAGE, maxHref: MAX_HREF_LENGTH },
   );
+}
+
+/**
+ * Where a navigation came to rest has to be somewhere the crawl may go.
+ *
+ * `isEntry` changes only the *type* of the refusal, never the decision. At
+ * depth 0 the settled URL is the whole crawl's address rather than one page's:
+ * `hostAllowed` matches an allowlist entry or any subdomain of it, so apex→www
+ * passes (`www.acme.com` ends with `.acme.com`) while **www→apex does not** —
+ * and www→apex is the canonicalisation a large share of real sites perform. The
+ * refusal is correct; what the caller needs is the host to point at instead.
+ */
+function assertSettledInScope(settled: string, allowedHosts: string[], isEntry: boolean): void {
+  try {
+    assertAllowedUrl(settled, allowedHosts);
+  } catch (error) {
+    if (isEntry && error instanceof UnsafeTargetError) {
+      const host = new URL(settled).hostname;
+      throw new EntryPointRedirectedError(
+        host,
+        `The target redirected to ${host}, which is not the host it was asked for. Discover ${host} instead.`,
+      );
+    }
+    throw error;
+  }
 }
 
 function delay(ms: number): Promise<void> {
@@ -132,6 +184,9 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
   /** Links the frontier ceiling refused. See the ceiling for why this is kept. */
   let droppedByCeiling = 0;
 
+  /** Failures past `MAX_DISCOVERY_ERRORS`. Reported, for the reason given there. */
+  let errorsOmitted = 0;
+
   const browser: Browser = await launchChromium({ headless: input.headless });
 
   try {
@@ -177,9 +232,8 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
       // iteration `frontier.length <= MAX_DISCOVERY_URLS - pages.length`, and
       // `pages.length >= MAX_DISCOVERY_URLS` therefore implies an empty
       // frontier, which the `while` condition has already caught. Deleting this
-      // leaves the browser suite green and a sweep of 8,640 simulated site
-      // shapes never fires it once; the post-loop assignment is the only path
-      // that reports `url-cap`. It stays because the ceiling is one edit away
+      // leaves the whole browser suite green; the post-loop assignment is the
+      // only path that reports `url-cap`. It stays because the ceiling is one edit away
       // from changing and a cap with no top-of-loop check is a cap that can be
       // overrun. The budget branch above is live and is *not* in this position.
       if (pages.length >= MAX_DISCOVERY_URLS) {
@@ -189,11 +243,6 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
       const next = frontier.shift();
       if (next === undefined) break;
-
-      // Set only where the *entry* page comes to rest outside the allowlist,
-      // which is the one failure the per-page handler must not swallow. See
-      // the throw site below.
-      let entrySettledOffAllowlist = false;
 
       try {
         await page.goto(next.url, { waitUntil: 'domcontentloaded' });
@@ -219,24 +268,7 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // governs where a walk comes to rest, and a redirect is how a request
         // for one host produces a page from another.
         const settled = page.url();
-
-        try {
-          assertAllowedUrl(settled, allowedHosts);
-        } catch (error) {
-          // Depth 0 is the entry point, and an entry point that settles off its
-          // own allowlist is not one bad page among many — it is the whole
-          // crawl aimed somewhere else. `hostAllowed` matches an entry or any
-          // subdomain of it, so apex→www passes (`www.acme.com` ends with
-          // `.acme.com`) and **www→apex does not**, which is the redirect a
-          // large share of real sites perform. Caught by the per-page handler
-          // below, `http://www.acme.com/` returns zero pages, one error and no
-          // truncation: an empty result claiming to be the whole site, which is
-          // the one thing `DiscoveryTruncation` exists to prevent. Rethrown,
-          // the caller can answer 4xx naming the host the target redirected to
-          // and tell the operator to discover *that* instead.
-          entrySettledOffAllowlist = next.depth === 0;
-          throw error;
-        }
+        assertSettledInScope(settled, allowedHosts, next.depth === 0);
 
         // Dedupe on where it came to rest, not only on where it was asked for.
         //
@@ -256,6 +288,13 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // correct, just slower, and the fast one is chosen deliberately. The
         // politeness delay still gets paid — it lives in this block's `finally`
         // precisely so a request that was made is a request that is paid for.
+        //
+        // One consequence worth naming, because `truncated.seen` is `seen.size`
+        // and Task 8 renders it: a settled URL nobody linked to is still an
+        // entry here, so on a redirect-heavy site `seen` runs slightly ahead of
+        // the number of distinct *links* found. `seen` is documented as a floor
+        // on how much is out there, and this errs upward, which is the safe
+        // direction for a floor.
         const settledKey = discoveryKey(settled);
         const alreadyRecorded = settledKey !== discoveryKey(next.url) && seen.has(settledKey);
         seen.add(settledKey);
@@ -330,9 +369,32 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
           }
         }
       } catch (error) {
-        // An empty crawl is not a crawl. Everything else here is one page's
-        // failure and the walk goes on; this one is the walk itself.
-        if (entrySettledOffAllowlist) throw error;
+        // **One contract: this either returns a crawl or it throws.**
+        //
+        // Every other failure here is one page's and the walk goes on. A
+        // failure of the entry point is the walk itself, and it does not matter
+        // which of the three ways it failed — settled off the allowlist,
+        // rebound to a private address, or simply never answered, which is the
+        // most common of the three and the one an operator meets after a typo.
+        // Returning `{ pages: [], errors: [1] }` for any of them hands a route
+        // something it will answer 200 with an empty page list: an empty result
+        // claiming to be the whole site, which is exactly what the settled-URL
+        // comment above condemns. Discriminating between them here would give
+        // one function two contracts for one event.
+        //
+        // `pages.length === 0` rather than depth alone, so this says what it
+        // means — there is nothing to return — rather than relying on the entry
+        // being visited first.
+        //
+        // **This error is rethrown whole, so it still carries Playwright's call
+        // log.** Everything filed into `errors` below goes through `firstLine`
+        // first, for the reason `DiscoveryError` gives at length; nothing can
+        // split this one without destroying the type a caller branches on. The
+        // entry URL is the operator's own and not harvested from markup, so the
+        // leak is narrower than the one `firstLine` exists for — but a caller
+        // putting `error.message` into a response body must take its first line
+        // itself.
+        if (next.depth === 0 && pages.length === 0) throw error;
 
         // Bounded, because nothing else bounds it. `MAX_DISCOVERY_URLS` counts
         // pages, and an errored navigation adds none — so a site of dead links
@@ -340,7 +402,17 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // The budget holds it to roughly 240 navigations in practice, so this
         // is a precision fix rather than a memory one, but the whole array is
         // serialised into a response body and served to a browser.
-        if (errors.length >= MAX_DISCOVERY_URLS) continue;
+        //
+        // Counted, not merely dropped. A bound that discards work and reports
+        // nothing is the defect one level up in this same function; `errors`
+        // silently stopping at 100 would read as a site with exactly 100
+        // problems. It is not a `truncated` reason, though — see
+        // `DiscoveryResult.errorsOmitted` for why an incomplete error list says
+        // nothing about whether the page list is complete.
+        if (errors.length >= MAX_DISCOVERY_ERRORS) {
+          errorsOmitted += 1;
+          continue;
+        }
 
         errors.push({
           // The *requested* URL, where `pages[].url` is the settled one, and
@@ -402,8 +474,14 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
     pages: pages.length,
     errors: errors.length,
     durationMs: Date.now() - startedAt,
+    ...(errorsOmitted > 0 ? { errorsOmitted } : {}),
     ...(truncated ? { truncatedReason: truncated.reason, seen: truncated.seen } : {}),
   });
 
-  return { pages, errors, ...(truncated ? { truncated } : {}) };
+  return {
+    pages,
+    errors,
+    ...(truncated ? { truncated } : {}),
+    ...(errorsOmitted > 0 ? { errorsOmitted } : {}),
+  };
 }

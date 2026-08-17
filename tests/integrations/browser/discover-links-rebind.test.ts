@@ -72,17 +72,26 @@ afterAll(async () => {
 });
 
 describe('discoverLinks, against a host that rebinds to loopback', () => {
-  it('reports the page as an error rather than as something it found', async () => {
-    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
-
-    // A crawl is not a run: one refused page is an error entry, not the end of
-    // the walk. What must not happen is the page arriving in `pages`.
-    expect(result.pages).toEqual([]);
-    expect(result.errors).toHaveLength(1);
+  it('refuses the page rather than reporting it as something it found', async () => {
+    // Every page of this host rebinds, so the *entry* page is the refused one —
+    // and `discoverLinks` has one contract: it returns a crawl or it throws.
+    // This used to assert `{ pages: [], errors: [1] }`, which was the same
+    // shape a dead entry point produced, and that shape is one a route answers
+    // 200 with an empty page list. Rejecting is the correction, not a
+    // regression: the claim being made here is unchanged — the internal page
+    // must not arrive as a result — and it is now made in the stronger form.
+    //
+    // The refusal of a page *mid-crawl* is still an error entry and still
+    // covered, by `discover-links-violation-clearing.test.ts`, whose entry page
+    // is clean.
+    const failure = await discoverLinks({ targetUrl: `http://${HOST}/` }).catch(
+      (error: unknown) => error,
+    );
 
     // The address, not just the hostname. A rebind's URL is unremarkable, so
     // an error naming only the URL would send the next reader to the wrong
     // place entirely.
-    expect(result.errors[0].message).toMatch(/127\.0\.0\.1/);
+    expect((failure as Error).message).toMatch(/127\.0\.0\.1/);
+    expect((failure as Error).name).toBe('UnsafeTargetError');
   }, 60_000);
 });
