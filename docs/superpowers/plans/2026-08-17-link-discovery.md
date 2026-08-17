@@ -16,7 +16,7 @@
 
 **Do not add a `services/` module for the crawl.** The spec cut the clustering unit that would have lived there. There is no orchestration in this feature — a crawl is one integration call over pure domain rules — and an empty service to match the shape of other features is a layer with no job.
 
-The one exception is `services/presentation/discovery-message.ts` in Task 8, and it is not an exception to the reasoning. AGENTS.md places vocabulary mapping in `services/presentation/` because deciding what the product *says* is a business rule; that is a different job from orchestration, and it is why `verdict.ts`, `severity.ts` and `page-evidence.ts` already live there. It also has to be pure to be testable, since the component around it is not reachable from the fast suite.
+Operator-facing copy is not an exception to that — it goes in `src/app/platform/lib/discovery-copy.ts`, beside `run-failure-copy.ts`, which is the same job for the same screen and is already reached by the fast suite through `tests/app/`. `services/presentation/` is for product *semantics* with steady-state contracts behind them (whether we may say "pass"); refusal wording is not that.
 
 **Do not add a page-count cap to the journeys route.** The spec explains at length why the run's page cap stays in the runner. If you find yourself editing `src/app/api/platform/clients/[clientId]/journeys/route.ts` to refuse a long step list, stop and re-read the "Selection, and one rule in one place" section.
 
@@ -32,14 +32,16 @@ The one exception is `services/presentation/discovery-message.ts` in Task 8, and
 | `src/integrations/browser/journey-runner.ts` | Modify | `routeFromPageUrl` delegates to `normalizePathname` |
 | `src/integrations/browser/discover-links.ts` | Create | BFS crawl, guard enforcement, anchor extraction |
 | `src/app/api/platform/discover/route.ts` | Create | Auth, validate, call, respond |
-| `src/services/presentation/discovery-message.ts` | Create | Turns the API's error codes into sentences an operator can act on |
+| `src/app/platform/lib/discovery-copy.ts` | Create | Turns the API's error codes into sentences an operator can act on |
 | `src/app/platform/components/client/discover-pages.tsx` | Create | Discovery panel: run discovery, tick pages, create journey |
 | `src/app/platform/components/client/client-journeys.tsx` | Modify | Mount the panel |
 | `fixtures/discovery-site/*.html` | Create | Multi-page static fixture for the crawl tests |
 | `tests/domain/discovery.test.ts` | Create | Normalisation and dedupe table |
 | `tests/integrations/browser/discover-links.test.ts` | Create | Crawl, guards, bounds, errors |
-| `tests/api/discover-route.test.ts` | Create | Auth, schema, budget isolation |
-| `tests/services/discovery-message.test.ts` | Create | Every code maps to an actionable sentence |
+| `tests/api/discover-route.test.ts` | Create | Auth, schema, branch order, redaction |
+| `tests/deploy/browser-routes-are-packaged.test.ts` | Create | A browser route must be traced and memoried |
+| `next.config.mjs` / `vercel.json` / `docs/env.md` | Modify | Package the route for Chromium |
+| `tests/app/discovery-copy.test.ts` | Create | Every code maps to an actionable sentence |
 | `scripts/chaos.ts` | Modify | Blocked-address steady-state assertion |
 
 ---
@@ -1320,565 +1322,305 @@ git commit -m "Make the crawler's refusal a steady-state claim"
 
 ### Task 7: The route
 
+Three parts, and the first is the one no test can catch after the fact.
+
 **Files:**
+- Modify: `next.config.mjs`, `vercel.json`, `docs/env.md`
+- Create: `tests/deploy/browser-routes-are-packaged.test.ts`
+- Modify: `src/integrations/browser/discover-links.ts` (error types)
 - Create: `src/app/api/platform/discover/route.ts`
 - Create: `tests/api/discover-route.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+#### Why the path stays `/api/platform/discover`
 
-Create `tests/api/discover-route.test.ts`:
+Moving it under `clients/` would be covered by the existing tracing glob, and it would also introduce a routing bug. `src/app/api/platform/clients/[clientId]/` is a sibling dynamic segment, and Next resolves a static segment ahead of a dynamic one — so a static `discover/` would permanently shadow the client whose id is `discover`. That id is producible: `clientIdFromName` slugs an operator-typed name, so a client called "Discover" loses its journeys, triage and reports URLs. Silently: no build error, no 404, just the discovery route answering. It would also only half-fix the packaging, because `vercel.json`'s key is `.../clients/**/runs/route.ts`, which a `clients/discover/route.ts` does not match either.
 
-```ts
-import { describe, expect, it, vi } from 'vitest';
+- [ ] **Step 1: Package the route for Chromium**
 
-/**
- * The handler with the crawl removed. What is under test is authorisation and
- * validation — a route test that launches Chromium would belong in the browser
- * suite and would be run far less often than it needs to be.
- */
-vi.mock('../../src/integrations/browser/discover-links', () => ({
-  discoverLinks: vi.fn(async () => ({
-    pages: [{ url: 'https://acme.test/', title: 'Home', depth: 0 }],
-    errors: [],
-  })),
-}));
+`next.config.mjs` copies `playwright-core` and `@sparticuz/chromium` beside only two path globs, and `vercel.json` grants `memory: 3009` to three literal paths. This route launches a browser from a path covered by neither, so it would deploy with no browser binaries and default memory — a production-only failure invisible to every suite, which is exactly what the comment already in `next.config.mjs` records paying for twice.
 
-vi.mock('../../src/app/api/_lib/authorize', () => ({
-  authorizePrincipal: vi.fn(async (request: Request) =>
-    request.headers.get('authorization') === 'Bearer good' ? { kind: 'machine' } : null,
-  ),
-}));
+In `next.config.mjs`, inside `outputFileTracingIncludes`, after the `/api/platform/clients/**` entry:
 
-const { POST } = await import('../../src/app/api/platform/discover/route');
-const { discoverLinks } = await import('../../src/integrations/browser/discover-links');
+```js
+    // The first browser route outside the two subtrees above. Nothing in the
+    // route file says "I need the tracer's help" — that knowledge lives only
+    // here — which is why `tests/deploy/browser-routes-are-packaged.test.ts`
+    // exists rather than a comment asking people to remember.
+    '/api/platform/discover/**': [
+      './node_modules/playwright-core/**',
+      './node_modules/@sparticuz/chromium/**',
+    ],
+```
 
-function post(body: unknown, authorized = true): Request {
-  return new Request('https://auditor.test/api/platform/discover', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      ...(authorized ? { authorization: 'Bearer good' } : {}),
+In `vercel.json`, inside `functions`:
+
+```json
+    "src/app/api/platform/discover/route.ts": {
+      "memory": 3009
     },
-    body: JSON.stringify(body),
-  });
-}
-
-describe('POST /api/platform/discover', () => {
-  it('refuses an unauthenticated caller', async () => {
-    const response = await POST(post({ targetUrl: 'https://acme.test' }, false));
-
-    expect(response.status).toBe(401);
-    expect(discoverLinks).not.toHaveBeenCalled();
-  });
-
-  it('refuses a body the schema does not accept', async () => {
-    const response = await POST(post({ targetUrl: 'file:///etc/passwd' }));
-
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({ error: 'invalid_request_body' });
-  });
-
-  it('answers with a code and never the failure text', async () => {
-    const response = await POST(post({ targetUrl: 'https://acme.test', extra: 1 }));
-    const body = await response.json();
-
-    // No route in this API returns a `detail`. A message on the wire leaks
-    // internals and makes the format an accident of whoever last edited a
-    // string — `run-failure.ts` exists to stop exactly that.
-    expect(body).not.toHaveProperty('detail');
-    expect(Object.keys(body).sort()).toEqual(['error', 'requestId']);
-  });
-
-  it('returns the pages a crawl found', async () => {
-    const response = await POST(post({ targetUrl: 'https://acme.test' }));
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
-      pages: [{ url: 'https://acme.test/', title: 'Home', depth: 0 }],
-    });
-  });
-
-  it('tells the operator where a redirecting target actually went', async () => {
-    const { EntryPointRedirectedError } = await import(
-      '../../src/integrations/browser/discover-links'
-    );
-    vi.mocked(discoverLinks).mockRejectedValueOnce(
-      new EntryPointRedirectedError('probe.example'),
-    );
-
-    const response = await POST(post({ targetUrl: 'https://www.probe.example' }));
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(body).toMatchObject({ error: 'entry_point_redirected', host: 'probe.example' });
-    // The host is structured data, not prose. No message crosses the wire.
-    expect(body).not.toHaveProperty('detail');
-  });
-
-  it('answers 400 rather than 500 when the target is refused by a guard', async () => {
-    vi.mocked(discoverLinks).mockRejectedValueOnce(
-      Object.assign(new Error('Target URL resolves to a private or reserved address.'), {
-        name: 'UnsafeTargetError',
-      }),
-    );
-
-    const response = await POST(post({ targetUrl: 'https://acme.test' }));
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    // The code the rest of the product already uses for this refusal, not one
-    // minted for this route. The address itself must not appear.
-    expect(body.error).toBe('navigation_not_allowed');
-    expect(JSON.stringify(body)).not.toContain('private or reserved');
-  });
-});
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+A literal path, not a glob: the wildcard on the `clients` key exists only because `[clientId]` would be read as a character class.
 
-```bash
-npx vitest run tests/api/discover-route.test.ts
-```
+Then update the "Function memory" section of `docs/env.md`, which enumerates the routes that launch Chromium. Left alone it becomes wrong the moment this merges.
 
-Expected: FAIL — cannot resolve the route module.
+- [ ] **Step 2: Stop the next person repeating it**
 
-**Decide one thing while you are here.** `discoverLinks` logs `discovery_completed` only on the success path — it sits after the `try/finally`, so a target refused by `assertSafeTargetUrl` before the browser launches produces no log line at all. Discovery is operator-triggered and its refusals are exactly what an operator would want in a log. Either log the refusal at this layer (where the principal and requestId are already in hand, which argues for here) or add a `discovery_refused` line in the crawler — but not both, and say in a comment which layer owns it.
+Create `tests/deploy/browser-routes-are-packaged.test.ts`. Keep it small — its one job is *walk imports, assert coverage*. Do not build a glob engine: `next.config.mjs` is ESM with a default export, so import it and compare keys directly. A hand-rolled matcher would be a third implementation of globbing sitting beside picomatch and Vercel's own.
 
-- [ ] **Step 3: Implement the route**
-
-Create `src/app/api/platform/discover/route.ts`:
+The shape:
 
 ```ts
-import { discoveryRequestSchema } from '../../../../domain/discovery';
-import { discoverLinks } from '../../../../integrations/browser/discover-links';
-import { UnsafeTargetError } from '../../../../integrations/browser/target-url';
-import { authorizePrincipal } from '../../_lib/authorize';
-import { createRequestId } from '../../_lib/request-id';
-import { classifyRunFailure } from '../../_lib/run-failure';
-import { EntryPointRedirectedError } from '../../../../integrations/browser/discover-links';
-
 /**
- * Discovery renders every page it finds, so it needs the same headroom a run
- * does. `DISCOVERY_BUDGET_MS` stops it well inside this.
- */
-export const maxDuration = 300;
-
-/**
- * Propose the pages of a site, for an operator to turn into a journey.
+ * The deployment config knows something the code does not, and nothing checks it.
  *
- * **This does not consume the run budget.** `AUDITOR_MAX_RUNS_PER_HOUR` exists
- * because audit runs cost money and the bill is shared; discovery is not a run,
- * and a shared counter would let an afternoon of picking pages exhaust a
- * client's audits. What bounds this is the 60s crawl budget and the operator
- * gate in front of it.
+ * `next.config.mjs` names which routes get the browser packaged beside them;
+ * `vercel.json` names which get enough memory to launch it. Both are keyed by
+ * path. A route that launches Chromium from a path neither covers builds
+ * clean, deploys clean, passes every suite, and dies on its first production
+ * request. `next.config.mjs`'s own comment records paying for that twice.
+ *
+ * Static rather than dynamic on purpose: importing the routes would drag
+ * Playwright into the fast suite, which `vitest.config.ts` exists to prevent.
+ * `tests/services/log-shape.test.ts` is the precedent for a test that reads
+ * the tree rather than running it.
  */
-export async function POST(request: Request): Promise<Response> {
-  const requestId = createRequestId();
+```
 
-  const principal = await authorizePrincipal(request);
-  if (!principal) {
-    return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
-  }
+- Walk relative, non-`type` imports from each `src/app/api/**/route.ts`, depth-first with a `seen` set (cycles are ordinary here), and collect the routes that reach `src/integrations/browser/launch.ts`.
+- Assert each such route has a `next.config.mjs` key whose value mentions both `playwright-core` and `@sparticuz/chromium`, and a `vercel.json` `functions` entry with `memory >= 2048`. Do not hardcode 3009 — `report.pdf` legitimately runs at 2048, and a floor keeps the config as the source of truth rather than duplicating it here.
+- Add one non-vacuity assertion: the walk must find `/api/audit/run`. Without it, a resolver that silently stopped resolving would make every other case pass.
 
-  let body: unknown;
+**Prove it.** Delete each config key you added in Step 1, one at a time, and confirm the discovery case fails. Restore, re-run.
+
+- [ ] **Step 3: Two error types**
+
+In `src/integrations/browser/discover-links.ts`.
+
+First, give `EntryPointRedirectedError` a **one-argument** constructor that derives its message from `settledHost`. Today the message is built at the only throw site out of the same value the field carries, which permits the two to disagree — silently, since the message never crosses the wire. The message string stays byte-identical.
+
+```ts
+  /**
+   * One argument, because the message is a function of the host.
+   *
+   * The sentence lives here rather than at the throw site so the field and the
+   * prose cannot drift apart. What the message is *for* is a log line and a
+   * stack trace; the route answers with `settledHost` as structured data, and
+   * `run-failure.ts` explains why no message crosses the wire.
+   */
+  constructor(settledHost: string) {
+```
+
+Second, add `EntryPointUnreachableError`, thrown at the existing depth-0 site when the failure is **not** an `UnsafeTargetError`:
+
+```ts
+/**
+ * The entry point could not be read at all — a dead host, a typo'd domain, a
+ * timeout.
+ *
+ * A type rather than an inference, and the difference matters. Since Task 5,
+ * `discoverLinks` throws *only* on entry failure, so the route could deduce
+ * this from "not an `UnsafeTargetError`" and skip the class. But a `TypeError`
+ * in our own crawler takes that same path, and inferring would tell the
+ * operator their site is unreachable when the bug is ours. The type is what
+ * keeps us from blaming a client's site for our own defect.
+ *
+ * The message is split here rather than at the catch because this is where the
+ * call log is — the same reason `DiscoveryError.message` gives.
+ */
+```
+
+Also export the private `firstLine` as `firstErrorLine`, so the route splits a message with the same function the crawler does rather than a third copy. Same move Task 1 made for `normalizePathname`.
+
+- [ ] **Step 4: Write the route test first**
+
+Create `tests/api/discover-route.test.ts`, following `tests/api/platform-clients.test.ts` and `platform-triage.test.ts` exactly.
+
+**Two things the earlier draft of this plan got wrong, both of which would have failed:**
+
+1. **Mock `principalFromRequest`, not `authorizePrincipal`.** Every suite in `tests/api/` mocks one level deeper so the same-origin/CSRF check and the bearer comparison stay under test. Those are the two things a browser-launching endpoint most needs held.
+
+```ts
+const { principalFromRequest } = vi.hoisted(() => ({ principalFromRequest: vi.fn() }));
+vi.mock('../../src/app/api/_lib/principal', () => ({ principalFromRequest }));
+```
+
+2. **The crawler mock must spread `importOriginal`.** The route does `error instanceof EntryPointRedirectedError`; replacing the module wholesale makes that identifier `undefined` at runtime, and `x instanceof undefined` throws `TypeError` — failing *every* test that reaches the catch block, including ones about private addresses that have nothing to do with redirects.
+
+```ts
+const { discoverLinks } = vi.hoisted(() => ({ discoverLinks: vi.fn() }));
+
+vi.mock('../../src/integrations/browser/discover-links', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/integrations/browser/discover-links')>()),
+  discoverLinks,
+}));
+
+// `importOriginal` loads the real module, which statically imports
+// `playwright-core` through `./launch`. Nothing launches a browser, but the
+// fast suite's boundary erodes one heavy import at a time.
+vi.mock('../../src/integrations/browser/launch', () => ({ launchChromium: vi.fn() }));
+```
+
+Local `request(body, headers)`, `fromBrowser(body)` and `fromScript(body)` helpers as the neighbouring files define them. Open with the repo's two standard cases — `refuses an unauthenticated request` and `refuses a cookie carried cross-origin` — each also asserting `discoverLinks` was never called.
+
+Then cover:
+
+- the four `invalid_request_body` shapes (non-URL, non-http scheme, no target, a smuggled `maxUrls`), each asserting nothing was launched
+- that `discoverLinks` receives `parsed.targetUrl` — post `'  https://acme.test/  '` and assert the call argument is trimmed, since reading the raw body would buy nothing from the schema
+- a successful crawl, with `Object.keys(body)[0] === 'requestId'`
+- `truncated` and `errorsOmitted` passed through — a route that dropped them would undo at the last hop the one thing `DiscoveryTruncation` exists to prevent
+- `entry_point_redirected` returning `{ error, requestId, host }` and **no** other keys
+- **that the redirect case does not fall through to `navigation_not_allowed`** — this is the only thing standing between a future branch-tidying pass and an operator being told a valid address is not allowed
+- `entry_point_unreachable` answering **502**
+- `navigation_not_allowed` answering 400 with the address absent from the body
+- that a Playwright call log carrying a query-string secret reaches neither the response nor the log line
+
+- [ ] **Step 5: Implement the route**
+
+Create `src/app/api/platform/discover/route.ts`. Conventions verified against `platform/clients/[clientId]/triage/route.ts`:
+
+- `const requestId = createRequestId();` as the first line, then `authorizePrincipal`, then the body
+- the repo's single-`try` parse idiom, **not** `safeParse`:
+
+```ts
+  let parsed: z.infer<typeof discoveryRequestSchema>;
   try {
-    body = await request.json();
+    parsed = discoveryRequestSchema.parse(await request.json());
   } catch {
     return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
+```
 
-  // The same code the journeys route answers with, and no `detail` field.
-  //
-  // No route in this API returns one. `run-failure.ts` says why: a message
-  // returned verbatim leaks internals and "makes the wire format an accident
-  // of whatever string someone last edited". Callers get a code to branch on;
-  // the message goes to the structured log, which is where it is useful.
-  const parsed = discoveryRequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
-  }
+- extra response fields go **after** `requestId`, matching `action_not_allowed_here` and `run_budget_exceeded`
+- `export const runtime = 'nodejs'` (Chromium cannot run on edge)
+- `export const maxDuration = 300`, with the reasoning written down: the crawl's own 60s budget is checked at the top of each iteration, an in-flight navigation can add Playwright's default 30s, and a cold start unpacks Chromium before any of it. **The inner bound must be the one that fires** — a crawl stopped by its budget returns the pages it found with `truncated`; a crawl stopped by the platform returns a 504 and nothing.
+- a comment stating that `consumeRunBudget` is deliberately absent: it lives inside `startRun` and is scoped to audit runs, and sharing the counter would let an afternoon of picking pages exhaust a client's actual audits
 
-  try {
-    // `parsed.data`, never the raw body: zod trims before validating, so this
-    // is the only value guaranteed to reach the crawler without padding.
-    const result = await discoverLinks({ targetUrl: parsed.data.targetUrl });
-    return Response.json({ requestId, ...result }, { status: 200 });
-  } catch (error) {
-    // A refused target is the caller naming somewhere we will not go — their
-    // problem to fix, not ours to have failed at. 500 here would put an
-    // operator's typo in the error budget.
+The catch block, with the ordering comment as written:
+
+```ts
+    // ORDER IS LOAD-BEARING — do not sort these branches, do not merge them.
     //
-    // `classifyRunFailure` rather than a code minted here. It already maps
-    // every `UnsafeTargetError` throw site to `navigation_not_allowed`, and it
-    // matches on the error *name* rather than the prose — a lesson that file
-    // records paying for, when a message-prefix regex caught three of nine
-    // throw sites and missed both private-address refusals.
-    // The entry point redirected off its own allowlist — the www-to-apex case.
-    // Branch on the *type*, never on the prose: `run-failure.ts` records what
-    // matching a message prefix cost, where a regex caught three of nine throw
-    // sites and missed both private-address refusals. `settledHost` is carried
-    // on the error so the operator can be told where to look instead, without
-    // a message crossing the wire.
-    if (error instanceof EntryPointRedirectedError) {
-      return Response.json(
-        { error: 'entry_point_redirected', host: error.settledHost, requestId },
-        { status: 400 },
-      );
-    }
-
-    if (error instanceof UnsafeTargetError || (error as Error)?.name === 'UnsafeTargetError') {
-      const code = classifyRunFailure((error as Error).message, (error as Error).name);
-      return Response.json({ error: code, requestId }, { status: 400 });
-    }
-
-    // Task 5 gave `discoverLinks` one contract: it returns a crawl or it
-    // throws. So a dead host, a timeout or a typo'd target arrives here rather
-    // than as a 200 with an empty page list — which is the shape that would
-    // have rendered as "0 pages found" and read as success.
-    throw error;
-  }
-}
+    // `EntryPointRedirectedError extends UnsafeTargetError`, so the generic
+    // check matches it too. Put the generic one first and this branch becomes
+    // unreachable: the operator is told `navigation_not_allowed` about an
+    // address that is perfectly allowed and merely redirects. A tidying pass
+    // that reorders these regresses a user-visible answer while every type
+    // check still passes.
+    //
+    // All three branch on the *type*, never the prose. `run-failure.ts`
+    // records what the alternative cost: a message-prefix regex claimed to
+    // cover `UnsafeTargetError`, caught three of its nine throw sites, and
+    // missed both private-address refusals.
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+| Caught | Answer |
+|---|---|
+| `EntryPointRedirectedError` | 400 `{ error: 'entry_point_redirected', requestId, host }` |
+| `EntryPointUnreachableError` | 502 `{ error: 'entry_point_unreachable', requestId }` |
+| `UnsafeTargetError` | 400, code from `classifyRunFailure(error.message, error.name)` |
+| anything else | 500 `{ error: 'discovery_failed', requestId }` |
+
+**The last one terminates here and does not rethrow.** No route in `src/app/api/` rethrows, and this one has a specific reason not to start: the errors arriving here are Playwright's, and a navigation failure carries its whole call log including the URL it was dialling. Handing that to whatever catches an uncaught route error hands it to something that applies no redaction. Log `firstErrorLine(error)` and answer a code.
+
+Log the refusals — `logWarn('discovery_refused', { requestId, code, target, settledHost? })` and `logWarn('discovery_failed', { requestId, target, errorName, reason })`. `unauthorized` and `invalid_request_body` stay silent, matching every other route: a caller's typo says nothing about deployment health. `target` is `new URL(parsed.targetUrl).origin` and never the whole URL — `logger.ts` redacts by field *name*, so a token in a query string would travel whole, and the crawler's own `discovery_completed` logs the origin for the same reason. This layer owns the line, not the crawler: `requestId` and the principal are only in hand here, and one owner beats two.
+
+- [ ] **Step 6: Run**
 
 ```bash
-npx vitest run tests/api/discover-route.test.ts
+npx vitest run tests/api/discover-route.test.ts tests/deploy/browser-routes-are-packaged.test.ts
 ```
 
-Expected: PASS, 4 tests.
+Then `npm test` and `npx tsc --noEmit`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/app/api/platform/discover tests/api/discover-route.test.ts
-git commit -m "Serve a proposed page list to an authenticated operator"
+git add next.config.mjs vercel.json docs/env.md tests/deploy src/integrations/browser/discover-links.ts src/app/api/platform/discover tests/api/discover-route.test.ts
+git commit -m "Serve a proposed page list, packaged so it can actually run"
 ```
 
 ---
 
 ### Task 8: The screen
 
-A panel on the client journeys screen: enter a URL, see what was found, tick pages, create a journey.
-
 **Files:**
-- Create: `src/services/presentation/discovery-message.ts`
-- Create: `tests/services/discovery-message.test.ts`
+- Create: `src/app/platform/lib/discovery-copy.ts`
+- Create: `tests/app/discovery-copy.test.ts`
 - Create: `src/app/platform/components/client/discover-pages.tsx`
 - Modify: `src/app/platform/components/client/client-journeys.tsx`
+- Modify: `tests/integrations/browser/platform-hydration.test.ts`
 
-- [ ] **Step 1: Turn the API's codes into sentences**
+- [ ] **Step 1: The words**
 
-The route answers with a stable code and no message, matching every other route in this API. Something has to decide what an operator reads, and AGENTS.md puts that decision in `services/presentation/` — it is a business rule, not a component detail, and putting it there is also the only way it reaches the fast suite, since the component does not.
+Create `src/app/platform/lib/discovery-copy.ts` — **not** `services/presentation/`. The precedent is `src/app/platform/lib/run-failure-copy.ts`: operator-facing sentences for one screen's failure codes, already reached by the fast suite through `tests/app/`. `services/presentation/` holds product *semantics* with steady-state contracts behind them — whether the product may say "pass" — and refusal copy is not that.
 
-Create `src/services/presentation/discovery-message.ts`:
+Use a `switch`, not a `Record` lookup, and say why: `describeRunFailure` had to be repaired after `__proto__` resolved through the prototype chain to a non-string that React renders by throwing, and this code arrives off a parsed JSON body, which is exactly as untrusted.
 
-```ts
-/**
- * What an operator reads when discovery refuses.
- *
- * The API answers with a code and never a message — `run-failure.ts` explains
- * why at length: a message on the wire leaks internals and makes the format an
- * accident of whoever last edited a string. So the sentence is composed here,
- * where it can be tested and where changing the product's words does not mean
- * editing a route.
- *
- * Each phrase names something the operator can *do*. "Invalid request" tells
- * somebody nothing; "that is not a valid http or https address" tells them to
- * look at what they typed. The default is deliberately not "unknown error" —
- * an unrecognised code still means discovery did not run, and saying so beats
- * naming our own bookkeeping.
- */
-export function describeDiscoveryFailure(code: string | undefined): string {
-  switch (code) {
-    case 'unauthorized':
-      return 'Your session has expired. Sign in again and retry.';
-    case 'invalid_request_body':
-      return 'That is not a valid http or https web address.';
-    case 'navigation_not_allowed':
-      return 'That address cannot be crawled: it is not a public web address.';
-    case 'entry_point_redirected':
-      // The host is returned as structured data, so the caller composes the
-      // sentence. See the route: no message crosses the wire.
-      return 'That address redirects somewhere else. Try the address it redirects to.';
-    default:
-      return 'Discovery could not finish. Check the address and try again.';
-  }
-}
-```
+**Two maps, not one.** `describeDiscoveryFailure(code, details?)` and `describeJourneyCreationFailure(code)` share no codes, and the failures are different events. Answering the create route's `client_not_found` with "check the address and try again" sends an operator back to a URL that already worked — the crawl had succeeded by then.
 
-Create `tests/services/discovery-message.test.ts`:
+`describeDiscoveryFailure` must **consume `details.host`** for `entry_point_redirected`. The route ships the host as structured data precisely so this sentence can name it; a version that ignores it leaves the operator to find the destination themselves, which is the work discovery exists to save. Render it as text, never a link, and clip it — the value came from somebody else's redirect.
 
-```ts
-import { describe, expect, it } from 'vitest';
-import { describeDiscoveryFailure } from '../../src/services/presentation/discovery-message';
+Also `describeTruncation(truncated)`, `describeErrorTotal(kept, omitted)` and `describeDepth(depth)`.
 
-describe('describeDiscoveryFailure', () => {
-  it('names something the operator can act on for each known code', () => {
-    expect(describeDiscoveryFailure('unauthorized')).toMatch(/sign in/i);
-    expect(describeDiscoveryFailure('invalid_request_body')).toMatch(/address/i);
-    expect(describeDiscoveryFailure('navigation_not_allowed')).toMatch(/public/i);
-    expect(describeDiscoveryFailure('entry_point_redirected')).toMatch(/redirects/i);
-  });
+`describeErrorTotal` must report `kept + omitted` and say when the list is shorter than the count. `errorsOmitted` counts failures the ceiling *discarded*, so a heading built from `errors.length` alone would read as "100 problems" on a site with 300.
 
-  it('still says discovery did not run when the code is unrecognised', () => {
-    // An unknown code is our bookkeeping, not the operator's problem. The
-    // sentence has to stay useful without naming it.
-    for (const code of [undefined, '', 'some_code_added_later']) {
-      const message = describeDiscoveryFailure(code);
-      expect(message).toMatch(/could not finish/i);
-      expect(message).not.toContain(String(code));
-    }
-  });
-});
-```
+`describeTruncation` should say "at least", not a total: `DiscoveryTruncation.seen` documents itself as a floor that errs upward on a redirect-heavy site, so printing it as a count the list below contradicts would be wrong.
 
-Run it:
+Then `tests/app/discovery-copy.test.ts`: every code the route can emit maps to a sentence naming something the operator can act on; an unrecognised code still says discovery did not finish without naming our own bookkeeping; `entry_point_redirected` includes the host when given one and stays sensible without.
 
-```bash
-npx vitest run tests/services/discovery-message.test.ts
-```
+- [ ] **Step 2: The panel**
 
-Expected: PASS, 2 tests.
+Create `src/app/platform/components/client/discover-pages.tsx`, a `'use client'` component.
 
-- [ ] **Step 2: Build the panel**
+**Four corrections to the earlier draft of this plan, each of which would have failed:**
 
-Create `src/app/platform/components/client/discover-pages.tsx`:
+- `detail.id`, **not** `detail.client.id`. `ClientDetail` has `id` at the top level, and `client-journeys.tsx` already passes `clientId={detail.id}` to three children. The draft would not compile.
+- `T.ink` / `T.inkMuted`, **not** `T.text`. There is no `T.text`; `T` is `as const`, so it is a type error.
+- Derive steps by **filtering `pages` in crawl order**, not by spreading the selection `Set`. `[...selected]` is tick order, so a journey's first step could be a leaf page.
+- Capture the origin **when the result lands**, not when the journey is saved. The operator may have edited the address box in between.
 
-```tsx
-'use client';
+Placement: always visible, directly under the `<h2>Journeys</h2>` and above the list — not behind a disclosure. The step editor hides because there is one per row and twenty open forms is chaos; there is exactly one discovery panel and it is now the primary way a journey gets created. Visibility also earns idle-state axe coverage from the existing route sweep with no test registration. Heading `<h3>`, so `heading-order` stays clean.
 
-import { useId, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import type { DiscoveredPage, DiscoveryTruncation } from '../../../../domain/discovery';
-import { describeDiscoveryFailure } from '../../../../services/presentation/discovery-message';
-import { FONT, T } from '../../lib/tokens';
+Markup: one `<fieldset>` with a `<legend>` per depth group, a `<ul>` with `listStyle: 'none'` inside, and an explicit `id`/`htmlFor` pair per checkbox. Depth is said **once per group as prose**, never as a number repeated into forty accessible names. **No scroll container** — that is a scroll trap, and axe's `scrollable-region-focusable` would either fail it or force an extra tab stop ahead of every checkbox; select-all and clear at the top are what make a long list cheap.
 
-/**
- * Turn one URL into a journey, without typing a step per page.
- *
- * The list is a *proposal*. Nothing here audits anything and nothing is saved
- * until the operator picks pages and creates the journey — which is what keeps
- * every run a fixed list of steps a person approved, and keeps regression
- * comparison honest across nights.
- */
+Follow the accessibility conventions the neighbouring components already keep at zero violations: `useId()` for every field, a visible `<label htmlFor>` rather than a placeholder or an `aria-label`, `aria-invalid` with `aria-describedby` joining note and error ids, errors as `<p role="alert">`, and a disabled control always accompanied by visible prose saying why.
 
-/**
- * The run's page cap, mirrored for a warning only.
- *
- * Deliberately advisory. The cap belongs to the runner, which truncates loudly
- * and logs `audit_page_cap_reached`; enforcing it here as well would put one
- * rule in two places, and a journey stored today would become invalid the day
- * somebody lowered `AUDITOR_MAX_PAGES_PER_RUN`.
- */
-const RUN_PAGE_CAP = 20;
+`role="status"` regions must be **rendered always**, holding an empty string when idle. `run-journey-button.tsx` documents the reason: a live region mounted in the same tick as its text is frequently not announced.
 
-type DiscoveryResponse = {
-  pages?: DiscoveredPage[];
-  truncated?: DiscoveryTruncation;
-  errors?: Array<{ url: string; message: string }>;
-  /** How many failures the crawler's ceiling discarded. Absent means none. */
-  errorsOmitted?: number;
-  /** A stable code. The API returns no message — see `describeDiscoveryFailure`. */
-  error?: string;
-};
+Error rows render `url` **and** `message`. The crawler's own comment explains that either alone is unreadable — the URL alone reads as "your own page is not in your allowed domains", which is nonsense.
 
-export function DiscoverPages({ clientId }: { clientId: string }) {
-  const router = useRouter();
-  const urlFieldId = useId();
-  const nameFieldId = useId();
+The selection cap warning is advisory. `AUDITOR_MAX_PAGES_PER_RUN` stays enforced in the runner, which truncates loudly and logs; re-enforcing it here would put one rule in two places and invalidate stored journeys the day somebody lowered it.
 
-  const [targetUrl, setTargetUrl] = useState('');
-  const [journeyName, setJourneyName] = useState('');
-  const [pages, setPages] = useState<DiscoveredPage[] | null>(null);
-  const [truncated, setTruncated] = useState<DiscoveryTruncation | undefined>();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+- [ ] **Step 3: Mount it, and fix what it makes untrue**
 
-  async function discover() {
-    setBusy(true);
-    setProblem(null);
-    setPages(null);
+In `client-journeys.tsx`, render `<DiscoverPages clientId={detail.id} />` above the list. Read the surrounding JSX first and match its wrappers.
 
-    try {
-      const response = await fetch('/api/platform/discover', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ targetUrl }),
-      });
-      const body = (await response.json()) as DiscoveryResponse;
+Two pieces of prose in that file become false the moment this ships and must be rewritten: the `<Empty>` body, which says "There is no way to record one from these screens yet", and the closing paragraph of the file's header comment, which says creating a journey is still API work. A stale sentence on a screen teaches operators to distrust the screen.
 
-      if (!response.ok) {
-        setProblem(describeDiscoveryFailure(body.error));
-        return;
-      }
+- [ ] **Step 4: Two hydration tests**
 
-      setPages(body.pages ?? []);
-      setTruncated(body.truncated);
-      setSelected(new Set((body.pages ?? []).slice(0, RUN_PAGE_CAP).map((page) => page.url)));
-    } catch {
-      setProblem('Discovery could not be reached.');
-    } finally {
-      setBusy(false);
-    }
-  }
+Nothing in CI can be crawled: `target-url.ts` blocks loopback and RFC1918 and re-checks every resolved address, so the suite's own `localhost:3417` is refused by design. Stub the crawl with `page.route`; never stub the POST.
 
-  async function createJourney() {
-    if (selected.size === 0) return;
-    setBusy(true);
-    setProblem(null);
+The existing route sweep already covers the panel's idle state for free. Add two tests inside the hydration describe:
 
-    const origin = new URL(targetUrl).origin;
-    const steps = [...selected].map((url) => {
-      const parsed = new URL(url);
-      return {
-        action: 'navigate',
-        type: 'goto',
-        // Origin-absolute. `resolveNavigationUrl` resolves a step's path
-        // against the journey's target as a base, so the target must be the
-        // bare origin — a target carrying a path silently discards the step's.
-        path: `${parsed.pathname}${parsed.search}`,
-      };
-    });
+1. **The maximal state.** One stub carrying pages, errors *and* truncation, then click through to render it and run `AxeBuilder` against it. The precedent is the step editor's inline axe run, added because "the largest form in the product is the one screen the auditor never audits". One stub covers all three markup shapes; a separate refusal test would cost another 120-second browser run to prove wording that `tests/app/discovery-copy.test.ts` already pins.
+2. **The write.** Tick pages, name the journey, create it, then assert by reading `GET /journeys` back — not off the screen. The panel clears its own selection on a 201, so a screen assertion would pass against a component that never spoke to the route. Tick deepest-first so the assertion proves steps come back in **crawl** order rather than tick order.
 
-    try {
-      const response = await fetch(`/api/platform/clients/${clientId}/journeys`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: journeyName, targetUrl: origin, steps }),
-      });
+Locator collisions were checked against every existing assertion in that file. Safe, with two constraints: no new journey name may contain `Editable Journey` or `Run Now Journey` as a substring, and no stubbed page *title* may contain a journey name.
 
-      if (!response.ok) {
-        const body = (await response.json()) as DiscoveryResponse;
-        setProblem(describeDiscoveryFailure(body.error));
-        return;
-      }
-
-      setPages(null);
-      setSelected(new Set());
-      setJourneyName('');
-      router.refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function toggle(url: string) {
-    setSelected((current) => {
-      const next = new Set(current);
-      if (next.has(url)) next.delete(url);
-      else next.add(url);
-      return next;
-    });
-  }
-
-  const overCap = selected.size > RUN_PAGE_CAP;
-
-  return (
-    <section style={{ fontFamily: FONT.sans, color: T.text }}>
-      <h3>Find pages</h3>
-
-      <label htmlFor={urlFieldId}>Site URL</label>
-      <input
-        id={urlFieldId}
-        type="url"
-        value={targetUrl}
-        onChange={(event) => setTargetUrl(event.target.value)}
-        placeholder="https://example.com"
-      />
-      <button type="button" onClick={discover} disabled={busy || targetUrl.trim() === ''}>
-        {busy ? 'Looking…' : 'Find pages'}
-      </button>
-
-      {problem === null ? null : <p role="alert">{problem}</p>}
-
-      {pages === null ? null : (
-        <>
-          {truncated === undefined ? null : (
-            <p role="status">
-              Stopped after {truncated.seen} pages ({truncated.reason === 'budget'
-                ? 'time limit'
-                : 'page limit'}). This is not the whole site.
-            </p>
-          )}
-
-          {pages.length === 0 ? (
-            <p>No pages were found.</p>
-          ) : (
-            <>
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {pages.map((page) => (
-                  <li key={page.url}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(page.url)}
-                        onChange={() => toggle(page.url)}
-                      />
-                      <span>{new URL(page.url).pathname}</span>
-                      <span> — {page.title}</span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-
-              {/* An error row must show `url` and `message` together. The URL
-                  is the link the operator would have clicked; the message says
-                  what refused it. Either alone is unreadable — see the comment
-                  at the crawler's catch site. */}
-              {overCap ? (
-                <p role="status">
-                  {selected.size} pages selected. A run audits the first {RUN_PAGE_CAP} and
-                  reports the rest as truncated.
-                </p>
-              ) : null}
-
-              <label htmlFor={nameFieldId}>Journey name</label>
-              <input
-                id={nameFieldId}
-                type="text"
-                value={journeyName}
-                onChange={(event) => setJourneyName(event.target.value)}
-              />
-              <button
-                type="button"
-                onClick={createJourney}
-                disabled={busy || selected.size === 0 || journeyName.trim() === ''}
-              >
-                Create journey from {selected.size} pages
-              </button>
-            </>
-          )}
-        </>
-      )}
-    </section>
-  );
-}
-```
-
-- [ ] **Step 3: Mount it**
-
-In `src/app/platform/components/client/client-journeys.tsx`, add to the imports:
-
-```tsx
-import { DiscoverPages } from './discover-pages';
-```
-
-Then render `<DiscoverPages clientId={detail.client.id} />` inside the `ClientJourneys` return, above the existing journey list. Read the surrounding JSX first and match its wrapper elements and token usage — do not paste it in bare if every sibling sits inside a card element.
-
-- [ ] **Step 4: Build and check hydration**
+- [ ] **Step 5: Build and verify**
 
 ```bash
 npm run build && npm run test:hydration
 ```
 
-Expected: PASS. The hydration suite runs the product's own axe engine over its own screens at **zero** violations, so a missing label or an unlabelled control fails here. If it does, fix the markup — the threshold is not negotiable.
+The suite runs the product's own axe engine over its own screens at **zero** violations. A threshold would be a budget for shipping barriers, which is not a position this product can hold.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/services/presentation/discovery-message.ts tests/services/discovery-message.test.ts src/app/platform/components/client/discover-pages.tsx src/app/platform/components/client/client-journeys.tsx
+git add src/app/platform/lib/discovery-copy.ts tests/app/discovery-copy.test.ts src/app/platform/components/client/discover-pages.tsx src/app/platform/components/client/client-journeys.tsx tests/integrations/browser/platform-hydration.test.ts
 git commit -m "Pick pages from a list instead of typing a step for each"
 ```
 
