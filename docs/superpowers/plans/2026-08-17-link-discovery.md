@@ -1666,9 +1666,29 @@ curl -s -X POST http://localhost:3000/api/platform/discover -H "authorization: B
 
 Also point it at a site that canonicalises **www→apex** — `https://www.iana.org/` or similar. Every fixture in the browser suite resolves to the host it was asked for, so the entry-redirect hole from Task 5 Step 5 is invisible to the whole suite by construction, and this is the only place it can be caught.
 
+**Three things Task 7's review says will surprise this run:**
+
+- **A 502 may be our bug, not their site.** A crawler defect raised inside the per-URL try at depth 0 presents as `entry_point_unreachable`. Read the log line's `errorName` before spending the debugging time on DNS.
+- **`truncated: { reason: 'budget' }` on a real site is the design working**, not a failure. The domain module predicts 40–45 pages in 60s, not 100. A ~20-page static site should come back untruncated; anything larger will truncate.
+- **A local run proves nothing about packaging.** `npm start` passes with no tracing config at all, because the tracer only runs for a real build output. See Step 5.
+
+- [ ] **Step 5: Prove it on a deployed preview**
+
+This is the only step that can verify Task 7 Step 1, and it cannot be skipped in favour of the local run above. `outputFileTracingIncludes` decides which files are copied *beside a deployed function*; nothing local exercises that path, so a local pass is compatible with a completely unpackaged route.
+
+Deploy a Vercel preview, then run the same two discoveries against it — the multi-page static site and the www→apex site. What is being proven:
+
+1. Chromium launches at all on a Vercel function. That has never been observed for this route, and AGENTS.md lists it as an open question for the product generally.
+2. 3009 MB is enough for a real crawl's accumulated context, as opposed to a four-page fixture.
+3. The `www→apex` entry redirect answers `entry_point_redirected` with the right host, rather than an empty result.
+
+**Ask before deploying.** A deploy is outward-facing and needs the operator's credentials; do not run it unprompted.
+
+- [ ] **Step 6: Record what the run actually measured**
+
 Expected: a 200 with several pages, each carrying a title and depth. Record the page count, the duration and whether `truncated` came back — the spec's estimate of 40–45 pages in 60s is arithmetic, not a measurement, and this is the first real number. If `truncated.reason` is `budget` on a site this small, re-derive the bounds before shipping.
 
-- [ ] **Step 5: Commit any fixes, then report**
+- [ ] **Step 7: Commit any fixes, then report**
 
 Report the actual output of each command. If a suite was skipped, say which and why.
 
