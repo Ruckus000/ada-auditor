@@ -231,7 +231,14 @@ async function executeRun(
       // from the request: on the fixture path the request names no steps and
       // the runner substitutes the demo journey, so the request is not a
       // record of what happened.
-      intent: { steps: report.steps },
+      // The rule set alongside the steps, because it decides what a run was
+      // *able* to find. Enabling a rule the engine ships switched off — as
+      // `target-size` was — means the next run reports findings that are new
+      // to us rather than new to the client's site, and diffed against the
+      // previous baseline they read as a regression on a site nobody touched.
+      // `walkedTheSamePath` compares this, so such a pair is `incomparable`
+      // and the diff is withheld rather than presented as bad news.
+      intent: { steps: report.steps, ruleset: report.ruleset },
       platform: report.platform.id,
       evidenceStatus: report.evidenceStatus,
       ciStatus: report.ciStatus,

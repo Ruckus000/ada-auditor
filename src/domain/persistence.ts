@@ -124,6 +124,23 @@ export type StoredRunPage = {
  */
 export type RunIntent = {
   steps: unknown[];
+  /**
+   * Which engine and rule set produced this run's findings, as
+   * `axe-core@<version>+<rules we enable>`.
+   *
+   * Recorded because it decides what a run was *able* to find, which is as
+   * much a part of intent as the path walked. `target-size` shipped
+   * `enabled: false` in axe-core, so WCAG 2.5.8 was mapped, listed as AA, and
+   * never evaluated; switching it on means the next run surfaces findings that
+   * are new to *us* rather than new to the client's site. Diffed against the
+   * previous baseline without this, they read as a regression on a site nobody
+   * touched — the mirror image of the false all-clear `walkedTheSamePath` was
+   * written to refuse.
+   *
+   * Absent on runs recorded before this existed. Absent means *not recorded*,
+   * never "the same rules as some other run".
+   */
+  ruleset?: string;
 };
 
 export type StoredRunRecord = {

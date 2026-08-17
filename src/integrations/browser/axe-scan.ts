@@ -1,4 +1,5 @@
 import { AxeBuilder } from '@axe-core/playwright';
+import axe from 'axe-core';
 import type { Page } from 'playwright-core';
 import type {
   AxeCheckResult,
@@ -80,8 +81,50 @@ function normalizeRule(value: unknown): AxeRuleResult {
   };
 }
 
+/**
+ * Rules axe ships switched off that this product needs switched on.
+ *
+ * Nine of axe's 105 rules carry `enabled: false`. Eight are deprecated,
+ * obsolete or AAA and are rightly off. One is neither.
+ *
+ * **`target-size` is WCAG 2.2 AA — success criterion 2.5.8, Target Size
+ * (Minimum) — and it was never running.** Not failing: absent. A scan reported
+ * it in none of the four buckets, because a disabled rule is not evaluated at
+ * all. Meanwhile `conformanceLevelFromTags` maps `wcag22aa`, `wcag-reference`
+ * lists 2.5.8 as AA, and a client's report could therefore never contain a
+ * 2.5.8 finding while saying nothing about not having looked.
+ *
+ * That is this product's signature failure living inside the scanner: a clean
+ * result that means "we did not check", presented as "we checked and it is
+ * fine". Found by measuring a fixture whose buttons are 44×18 — comfortably
+ * under the 24×24 minimum — and getting back zero violations.
+ *
+ * Exported so `RUN_RULESET` can name it and the regression guard can tell runs
+ * apart across a change to this list.
+ */
+export const ENABLED_BY_US = ['target-size'] as const;
+
+/**
+ * What the engine was, for a run that wants to say so.
+ *
+ * Changing the rule set changes what a run can find, which means the next run
+ * after a change reports findings that are new to *us* rather than new to the
+ * client's site. Diffed against the previous baseline they read as a
+ * regression on a site nobody touched.
+ *
+ * Derived rather than hand-maintained. A constant somebody has to remember to
+ * bump is a constant somebody forgets, and the two things that actually decide
+ * the rule set — the engine's version and the rules we override — are both
+ * facts available here.
+ */
+export const RUN_RULESET = `axe-core@${axe.version}+${[...ENABLED_BY_US].sort().join(',')}`;
+
 export async function scanPageWithAxe(page: Page): Promise<AxeScanResult> {
-  const results = await new AxeBuilder({ page }).analyze();
+  const results = await new AxeBuilder({ page })
+    .options({
+      rules: Object.fromEntries(ENABLED_BY_US.map((rule) => [rule, { enabled: true }])),
+    })
+    .analyze();
 
   return {
     violations: results.violations.map(normalizeRule),
