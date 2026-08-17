@@ -902,10 +902,93 @@ npx vitest run --config vitest.browser.config.ts tests/integrations/browser/disc
 
 Expected: PASS, 9 tests. The Task 3 implementation already calls `assertAllowedUrl` on every link, so these should pass without new code — that is the point of writing them, and if any fails the guard has a hole to close before moving on.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: Check where the page settled, not where it was asked for**
+
+`page.goto` follows redirects. An in-scope URL that 302s off-host is currently reported as an in-scope page carrying the other host's title — the operator selects it, and the runner's `assertSettledOnTarget` fails the run days later. `journey-runner.ts` has that check; discovery needs its analogue.
+
+Add a redirecting path to the test server. Inside the `createServer` callback in `tests/integrations/browser/discover-links.test.ts`, before the existing file-serving logic:
+
+```ts
+    // An in-scope URL that lands somewhere else entirely. Ordinary on real
+    // sites — SSO, a marketing shortlink — and the reason the settled URL is
+    // the one that gets checked.
+    if (request.url === '/offsite-redirect.html') {
+      response.writeHead(302, { location: 'https://elsewhere.test/landed' });
+      response.end();
+      return;
+    }
+```
+
+Add the link to `fixtures/discovery-site/about.html`, inside `<main>`:
+
+```html
+      <a href="/offsite-redirect.html">Offsite redirect</a>
+```
+
+Add the test:
+
+```ts
+  it('refuses a page that redirected off the target host', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+
+    // Reported as a failure, not as a page. Recording it as in-scope would put
+    // a foreign page into a journey under the client's own URL.
+    expect(result.pages.some((page) => page.url.includes('offsite-redirect'))).toBe(false);
+    expect(result.errors.some((error) => error.url.includes('offsite-redirect'))).toBe(true);
+    expect(result.pages.every((page) => new URL(page.url).hostname === HOST)).toBe(true);
+  }, 60_000);
+```
+
+Then make it pass in `src/integrations/browser/discover-links.ts`. After the `page.goto` and the awaited peer checks, before pushing the page:
+
+```ts
+        // Where it settled, not where it was asked for. `assertSettledOnTarget`
+        // in `journey-runner.ts` exists for the same reason: the allowlist
+        // governs where a walk comes to rest, and a redirect is how a request
+        // for one host produces a page from another.
+        const settled = page.url();
+        assertAllowedUrl(settled, allowedHosts);
+```
+
+Record `settled` as the page's `url` rather than `next.url` — a `goto` step should point at where the page lives, not at a URL that redirects to it. The `UnsafeTargetError` this throws is caught by the existing per-page handler, which is what puts it in `errors`.
+
+- [ ] **Step 5: Test the take-and-clear behaviour that has no coverage**
+
+Task 3 changed `peerViolation` from sticky to take-and-clear, because a crawl continues where a run stops — a sticky field would report the first bad page's message on every page after it, naming an unrelated URL. That change is currently untested: revert it to sticky and every test in the repo still passes.
+
+In `tests/integrations/browser/discover-links-rebind.test.ts`, add a second case. The server must rebind for **one path only** and serve clean HTML elsewhere, with the entry page linking onward:
+
+```ts
+  it('keeps crawling cleanly after one page resolves to a private address', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${REBIND_HOST}/` });
+
+    // The violation is recorded once, against the page that caused it.
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]?.url).toContain('/rebound');
+    expect(result.errors[0]?.message).toMatch(/127\.0\.0\.1/);
+
+    // And the clean pages either side of it are still reported. A sticky
+    // violation would have failed every page after the first, all carrying
+    // the first page's message and its URL.
+    expect(result.pages.length).toBeGreaterThanOrEqual(2);
+    expect(result.pages.every((page) => !page.url.includes('/rebound'))).toBe(true);
+  }, 60_000);
+```
+
+Structure the fixture so at least two clean pages are visited *after* the rebinding one, or the assertion cannot distinguish sticky from cleared.
+
+- [ ] **Step 6: Run the guard suite**
 
 ```bash
-git add fixtures/discovery-site tests/integrations/browser/discover-links.test.ts
+npx vitest run --config vitest.browser.config.ts tests/integrations/browser/discover-links.test.ts tests/integrations/browser/discover-links-rebind.test.ts
+```
+
+Expected: PASS. Steps 1-3 should pass with no new code — the Task 3 implementation already guards every link, and if any of those fail the guard has a hole to close before moving on. Steps 4 and 5 do require the change above.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add fixtures/discovery-site src/integrations/browser/discover-links.ts tests/integrations/browser/discover-links.test.ts tests/integrations/browser/discover-links-rebind.test.ts
 git commit -m "Prove the crawler refuses the links a hostile page offers it"
 ```
 
@@ -1007,18 +1090,85 @@ describe('discoverLinks bounds', () => {
 });
 ```
 
-- [ ] **Step 3: Run it**
+- [ ] **Step 3: Cover what a real static site emits and the fixtures do not**
+
+Every link in `fixtures/discovery-site/` is root-absolute. That means `extractLinks`'s central documented claim — that the browser resolves relative, root-relative and absolute hrefs into one form, so nothing re-implements URL resolution — is asserted in a comment and tested by nothing. Real brochure sites emit relative hrefs constantly.
+
+Add to `fixtures/discovery-site/pricing.html`, inside `<main>`:
+
+```html
+      <a href="deep.html">Relative, no leading slash</a>
+      <a href="/pricing.html?tab=annual">Same page, different query</a>
+```
+
+Then assert both behaviours:
+
+```ts
+  it('follows a relative href without re-implementing URL resolution', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const paths = result.pages.map((page) => new URL(page.url).pathname);
+
+    // `deep.html` is reachable root-absolutely from /about.html and relatively
+    // from /pricing.html. Either route finding it proves the browser resolved
+    // the href; the dedupe assertion below proves both routes agree.
+    expect(paths.filter((path) => path === '/deep.html')).toHaveLength(1);
+  }, 60_000);
+
+  it('treats a query string as a different page, matching discoveryKey', () => {
+    // Deliberately not a crawl: this pins the domain rule the crawl relies on,
+    // and the crawl asserting it too would only prove the same function twice.
+    expect(discoveryKey('http://x.test/a?tab=annual')).not.toBe(discoveryKey('http://x.test/a'));
+  });
+```
+
+Import `discoveryKey` from `../../../src/domain/discovery` at the top of the file.
+
+- [ ] **Step 4: Dedupe a same-host redirect**
+
+The common case, and the one that costs real budget: `/old-pricing` 301s to `/pricing`, so the crawl reports both and navigates twice. Trailing-slash and apex-to-`www` redirects make this ordinary. Task 4 made the crawl *record* the settled URL; this makes it *dedupe* on it.
+
+Add to the test server, beside the off-host redirect from Task 4:
+
+```ts
+    if (request.url === '/old-pricing.html') {
+      response.writeHead(301, { location: '/pricing.html' });
+      response.end();
+      return;
+    }
+```
+
+Link it from `fixtures/discovery-site/about.html`, and assert:
+
+```ts
+  it('reports a redirected page once, under the URL it settled on', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const paths = result.pages.map((page) => new URL(page.url).pathname);
+
+    expect(paths.filter((path) => path === '/pricing.html')).toHaveLength(1);
+    expect(paths).not.toContain('/old-pricing.html');
+  }, 60_000);
+```
+
+Make it pass by keying the `seen` set on the settled URL as well as the requested one: after `assertAllowedUrl(settled, allowedHosts)`, compute `discoveryKey(settled)` and, if it differs from the requested key and is already in `seen`, skip the page rather than recording it. Add the settled key to `seen` either way.
+
+- [ ] **Step 5: Bound the error list**
+
+`MAX_DISCOVERY_URLS` counts pages, and an errored page increments nothing — so a site of dead links never trips the URL cap, and every failure accumulates a full entry in the response body. Bounded in practice by the budget at roughly 240 navigations, so this is a precision fix rather than a memory one, but the response is served to a browser.
+
+Cap `errors` at `MAX_DISCOVERY_URLS` in the crawler, and note in `src/domain/discovery.ts` beside `MAX_DISCOVERY_URLS` that it counts successes and that `errors` carries its own ceiling.
+
+- [ ] **Step 6: Run it**
 
 ```bash
 npx vitest run --config vitest.browser.config.ts tests/integrations/browser/discover-links.test.ts
 ```
 
-Expected: PASS, 12 tests. As in Task 4, the Task 3 implementation should already satisfy these. If `truncated.seen` is not greater than the page count, the seen set is being populated in the wrong place — it must record a URL when it is queued, not when it is visited, or a truncated crawl cannot say how much it had found.
+Expected: PASS. The truncation and depth cases should already pass against the Task 3 implementation. If `truncated.seen` is not greater than the page count, the seen set is being populated in the wrong place — it must record a URL when it is queued, not when it is visited, or a truncated crawl cannot say how much it had found.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add fixtures/discovery-site tests/integrations/browser/discover-links.test.ts
+git add fixtures/discovery-site src/domain/discovery.ts src/integrations/browser/discover-links.ts tests/integrations/browser/discover-links.test.ts
 git commit -m "A short crawl says it was short, and how much it had seen"
 ```
 
