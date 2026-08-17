@@ -1,6 +1,10 @@
-import { z } from 'zod';
-
 /**
+ * What discovery is: the pure contracts and rules for proposing a site's pages
+ * to an operator, as data. Discovery is an authoring aid — it audits nothing,
+ * stores nothing and scores nothing — so this module holds only the types,
+ * caps and request schema a crawler and route are built against, not the
+ * crawl itself.
+ *
  * What one page is, for the purpose of not visiting it twice.
  *
  * `/a`, `/a/`, `/a/index.html` and `/a#top` are one page. `routeFromPageUrl`
@@ -15,6 +19,8 @@ import { z } from 'zod';
  * keeps `file:` handling. Sharing past the overlap would fold two rules into
  * one and break display the next time dedupe learns something about queries.
  */
+
+import { z } from 'zod';
 
 /** Collapses a pathname's directory, `index.html` and bare forms to one canonical path. */
 export function normalizePathname(pathname: string): string {
@@ -58,7 +64,12 @@ export function discoveryKey(rawUrl: string): string {
  */
 export const MAX_DISCOVERY_URLS = 100;
 
-/** How far from the entry page the crawl will walk. */
+/**
+ * How far from the entry page the crawl will walk, inclusive: pages at this
+ * depth are still visited, so a value of 3 spans four levels in all — the
+ * entry page plus three hops beyond it. `DiscoveredPage.depth` uses the same
+ * 0-based count.
+ */
 export const MAX_DISCOVERY_DEPTH = 3;
 
 /**
@@ -85,8 +96,15 @@ export const DISCOVERY_BUDGET_MS = 60_000;
  */
 export const DISCOVERY_DELAY_MS = 250;
 
-/** Says who we are, so a site operator reading logs can tell. */
-export const DISCOVERY_USER_AGENT_SUFFIX = 'ADA-Auditor-Discovery/1.0';
+/**
+ * Says who we are, so a site operator reading logs can tell.
+ *
+ * A product token for the comment field of a User-Agent header
+ * (`Mozilla/5.0 (compatible; ${DISCOVERY_USER_AGENT_PRODUCT})`), not a suffix
+ * appended to one — naming it a suffix invited `${baseUa} ${...}`, which is
+ * not a well-formed header.
+ */
+export const DISCOVERY_USER_AGENT_PRODUCT = 'ADA-Auditor-Discovery/1.0';
 
 export type DiscoveredPage = {
   url: string;
@@ -108,7 +126,21 @@ export type DiscoveryTruncation = {
   seen: number;
 };
 
-/** A page that could not be read. One dead link must not end a crawl. */
+/**
+ * A page that could not be read. One dead link must not end a crawl.
+ *
+ * `message` is the navigation error's first line only — the same split
+ * `attemptStep` in `src/integrations/browser/journey-runner.ts` makes, and for
+ * the same reason. Everything after the first line is Playwright's call log,
+ * and a `page.goto` call log includes the URL it was navigating to. Discovery
+ * follows links harvested from arbitrary markup on someone else's site, and a
+ * query string there routinely carries a reset token, session id or signed
+ * param; the call log would print it. `services/logger.ts` redacts by key
+ * name, so a secret sitting inside the *value* of a field named `message`
+ * passes through untouched — and this string is destined for an operator's
+ * screen. The full call log is deliberately excluded here; Task 3's crawler
+ * performs the split before constructing this type.
+ */
 export type DiscoveryError = {
   url: string;
   message: string;
@@ -124,9 +156,20 @@ export type DiscoveryResult = {
  * `.strict()` for the same reason `authoredStepSchema` is: the keys nobody
  * thought to name are the ones worth refusing. The caps are not caller-supplied
  * in v1 and a body that tries to supply them is a body to reject, not ignore.
+ *
+ * `targetUrl` is capped at 2048 characters, matching the same field on the
+ * journeys route (`src/app/api/platform/clients/[clientId]/journeys/route.ts`)
+ * for the same reason `src/domain/journey-step.ts` gives for its own length
+ * bound: size is a separate question from shape, and a value this large is
+ * not a URL worth parsing whatever shape it is in.
+ *
+ * zod trims a string before running format checks, so a `targetUrl` with
+ * leading or trailing whitespace both parses successfully and comes back
+ * trimmed on `.data`. Callers must use the parsed value, never the raw
+ * request body, or that trimming buys nothing.
  */
 export const discoveryRequestSchema = z
   .object({
-    targetUrl: z.url({ protocol: /^https?$/ }),
+    targetUrl: z.url({ protocol: /^https?$/ }).max(2048),
   })
   .strict();

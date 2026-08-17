@@ -78,9 +78,14 @@ describe('discoveryRequestSchema', () => {
 
   it('refuses a non-URL and a non-http scheme', () => {
     expect(discoveryRequestSchema.safeParse({ targetUrl: 'not-a-url' }).success).toBe(false);
-    expect(
-      discoveryRequestSchema.safeParse({ targetUrl: 'file:///etc/passwd' }).success,
-    ).toBe(false);
+    for (const targetUrl of [
+      'file:///etc/passwd',
+      'javascript:alert(1)',
+      'data:text/html,x',
+      'ftp://acme.test',
+    ]) {
+      expect(discoveryRequestSchema.safeParse({ targetUrl }).success).toBe(false);
+    }
   });
 
   it('refuses unknown keys, so a caller cannot smuggle a cap past the schema', () => {
@@ -89,7 +94,24 @@ describe('discoveryRequestSchema', () => {
     ).toBe(false);
   });
 
-  it('caps discovery well above the run page cap of 20', () => {
+  it('refuses a target URL past the 2048-character bound the journeys route also enforces', () => {
+    const targetUrl = `https://acme.test/${'a'.repeat(5000)}`;
+    expect(discoveryRequestSchema.safeParse({ targetUrl }).success).toBe(false);
+  });
+
+  it('parses to the trimmed value, so callers must use the parsed result, not the raw body', () => {
+    expect(discoveryRequestSchema.parse({ targetUrl: '  https://acme.test  ' }).targetUrl).toBe(
+      'https://acme.test',
+    );
+  });
+
+  // MAX_DISCOVERY_URLS is intentionally set well above the run's page cap
+  // (20 by default, `AUDITOR_MAX_PAGES_PER_RUN` in
+  // `src/services/deployment-config.ts`) so an operator can select any
+  // in-cap subset from what discovery proposes. Nothing enforces that
+  // relationship at runtime, and no shared named constant exists to import
+  // here, so this only pins discovery's own cap, not the pair.
+  it('caps discovery well above the default run page cap', () => {
     expect(MAX_DISCOVERY_URLS).toBeGreaterThan(20);
   });
 });
