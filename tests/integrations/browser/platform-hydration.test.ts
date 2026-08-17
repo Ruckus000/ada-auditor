@@ -1,5 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
+import { createConnection } from 'node:net';
 import { join } from 'node:path';
 import { AxeBuilder } from '@axe-core/playwright';
 import { ENABLED_BY_US } from '../../../src/integrations/browser/axe-scan';
@@ -55,20 +57,63 @@ const PORT = 3417;
 const BASE = `http://localhost:${PORT}`;
 const TOKEN = 'platform-hydration-test-token';
 
+/**
+ * Identifies the server *this* run started.
+ *
+ * The port is fixed, so a second concurrent run's `next start` fails to bind
+ * while `/api/health` keeps answering — from the first run's server. The suite
+ * then drove a process it did not own, both runs seeded journeys into the same
+ * in-memory store, and the duplicates surfaced as ordinary-looking assertion
+ * failures ("expected 2 to be 1") that named the screen under test and never
+ * the real cause. The server echoes this value back, so answering is not
+ * enough: the answer has to come from our own process.
+ */
+const INSTANCE = randomUUID();
+
 let server: ChildProcess;
 let browser: Browser;
 /** Kept so a startup failure reports what the server said, not just a timeout. */
 let serverOutput = '';
 
+/** Is something already listening on the port we are about to take? */
+function portIsInUse(port: number, timeoutMs = 2_000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = createConnection({ port, host: '127.0.0.1' });
+    const settle = (inUse: boolean) => {
+      socket.destroy();
+      resolve(inUse);
+    };
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => settle(true));
+    socket.once('timeout', () => settle(false));
+    socket.once('error', () => settle(false));
+  });
+}
+
 async function waitForServer(timeoutMs = 60_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    let health: { instance?: string | null } | null = null;
     try {
       const response = await fetch(`${BASE}/api/health`);
-      if (response.ok) return;
+      if (response.ok) health = (await response.json()) as { instance?: string | null };
     } catch {
       // Not listening yet.
     }
+
+    if (health) {
+      if (health.instance === INSTANCE) return;
+      throw new Error(
+        `${BASE}/api/health is answering, but from a server this run did not start ` +
+          `(instance ${health.instance ?? 'unset'}, expected ${INSTANCE}).\n` +
+          `Port ${PORT} belongs to another process — most likely a concurrent ` +
+          `\`npm run test:hydration\`. This suite is not safe to run twice at once: ` +
+          `both runs share one in-memory store, and the duplicate data fails the ` +
+          `assertions below in ways that look like product bugs. Wait for the other ` +
+          `run to finish, or kill it.`,
+      );
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw new Error(
@@ -114,11 +159,26 @@ beforeAll(async () => {
     throw new Error('No build found. Run `npm run build` before `npm run test:hydration`.');
   }
 
+  // Fail here, loudly, rather than 30 assertions later against someone else's
+  // server. `next start` cannot bind a taken port, but the suite would never
+  // notice: `/api/health` answers, from whatever is already there.
+  if (await portIsInUse(PORT)) {
+    throw new Error(
+      `Port ${PORT} is already in use, so this run cannot start its own server.\n` +
+        `Most likely another \`npm run test:hydration\` owns it — this suite is not ` +
+        `safe to run concurrently, because both runs would share one in-memory store.\n` +
+        `Stop the other run (or whatever holds ${PORT}) and try again.`,
+    );
+  }
+
   server = spawn('npx', ['next', 'start', '-p', String(PORT)], {
     cwd: process.cwd(),
     env: {
       ...process.env,
       AUDITOR_RUN_TOKEN: TOKEN,
+      // Echoed by `/api/health`, so `waitForServer` can tell our server from a
+      // foreign one holding the port.
+      AUDITOR_INSTANCE_ID: INSTANCE,
       // The portfolio reads the catalog, so the server needs *a* store. CI has
       // no database, and pointing at one that is not there renders the error
       // page and fails every assertion below for the wrong reason. This asks
