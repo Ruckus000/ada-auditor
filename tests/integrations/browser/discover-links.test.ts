@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { MAX_HREF_LENGTH, MAX_LINKS_PER_PAGE } from '../../../src/domain/discovery';
 
 /**
  * A crawl with no network.
@@ -65,6 +66,27 @@ let server: Server;
 beforeAll(async () => {
   server = createServer(async (request, response) => {
     const path = new URL(request.url ?? '/', `http://${HOST}`).pathname;
+
+    // Generated rather than a fixture file, because the shape is the point and
+    // the shape is arithmetic: exactly `MAX_LINKS_PER_PAGE` anchors before the
+    // two that must not be read. A 500-line HTML file in `fixtures/` would say
+    // none of that to whoever opened it next.
+    if (path === '/many.html') {
+      const anchors = [
+        // Anchors 1..499. All one URL, so they cost the crawl a single visit
+        // and leave the interesting ones exactly at the boundary.
+        ...Array.from({ length: MAX_LINKS_PER_PAGE - 1 }, () => '<a href="/dup.html">Dup</a>'),
+        // Anchor 500: inside the count cap, over the length cap.
+        `<a href="/long.html?x=${'a'.repeat(MAX_HREF_LENGTH)}">Long</a>`,
+        // Anchor 501: the first one past the count cap.
+        '<a href="/late.html">Late</a>',
+      ].join('');
+
+      response.writeHead(200, { 'content-type': 'text/html' });
+      response.end(`<!doctype html><title>Many</title><main>${anchors}</main>`);
+      return;
+    }
+
     const file = path === '/' ? 'index.html' : path.replace(/^\//, '');
 
     try {
@@ -115,6 +137,28 @@ describe('discoverLinks', () => {
     expect(byPath.get('/about.html')?.depth).toBe(1);
     // Reachable only via /about.html, so it is one hop further out.
     expect(byPath.get('/deep.html')?.depth).toBe(2);
+  }, 60_000);
+
+  /**
+   * The crawler's largest single input is one page's DOM, not its page count,
+   * and both caps on it are applied in the page callback where nothing can
+   * observe them directly. So they are observed by consequence: a link past
+   * either cap is never harvested, so the page it names is never visited.
+   *
+   * `/dup.html`, `/long.html` and `/late.html` are all 404s, and that is
+   * deliberate — a 404 still navigates and still lands in `pages`, so a page
+   * missing from the result means the *link* was dropped, which is the claim.
+   */
+  it('stops reading links at the per-page cap, and drops oversized hrefs', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/many.html` });
+    const paths = result.pages.map((page) => new URL(page.url).pathname).sort();
+
+    // Anchor 501 was never read, so nothing knows `/late.html` exists.
+    expect(paths).not.toContain('/late.html');
+    // Anchor 500 was read and refused on length.
+    expect(paths).not.toContain('/long.html');
+    // And the 499 that were within both caps still did their job.
+    expect(paths).toEqual(['/dup.html', '/many.html']);
   }, 60_000);
 
   it('does not follow mailto or fragment-only links', async () => {

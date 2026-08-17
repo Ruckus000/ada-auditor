@@ -61,8 +61,44 @@ export function discoveryKey(rawUrl: string): string {
 /**
  * A ceiling that stops a pathological site, not a target the crawl expects to
  * reach. The wall-clock budget binds first on anything real — see below.
+ *
+ * This bounds pages *visited*. It says nothing about how many links a crawl
+ * reads, which is a different and larger number — see `MAX_LINKS_PER_PAGE`.
  */
 export const MAX_DISCOVERY_URLS = 100;
+
+/**
+ * How many anchors are read from any one page.
+ *
+ * The crawler's largest single input is one page's DOM, not its page count.
+ * Everything else here bounds navigations, and navigations are slow enough
+ * that the wall clock contains them; harvesting is not. A single faceted-search
+ * page emitting `?filter=` permutations, or one page carrying a million
+ * anchors, is read in one navigation — so the budget never gets a chance to
+ * trip, and what would have been a slow crawl is an out-of-memory instead.
+ *
+ * The cap has to be applied *inside* the page callback, before the hrefs are
+ * serialised back across CDP. Slicing the array `$$eval` returns would mean the
+ * oversized data had already crossed, which is the cost this exists to avoid.
+ *
+ * 500 is far above any real page's navigation and far below the size at which
+ * a page becomes a weapon. A crawl that hits it has found a page whose links
+ * are generated, and the first 500 of those are as good a sample as any.
+ */
+export const MAX_LINKS_PER_PAGE = 500;
+
+/**
+ * The longest href the crawl will carry, matching the `targetUrl` bound in
+ * `discoveryRequestSchema` below.
+ *
+ * The same number for the same reason, and deliberately not a second opinion
+ * about how long a URL may be: an operator may not hand us a URL longer than
+ * this, so a page has no business making us hold one either. Applied in the
+ * same page-side filter as `MAX_LINKS_PER_PAGE` — a thousand 100KB hrefs are
+ * as effective an attack as a million short ones, and counting alone would
+ * miss it.
+ */
+export const MAX_HREF_LENGTH = 2048;
 
 /**
  * How far from the entry page the crawl will walk, inclusive: pages at this

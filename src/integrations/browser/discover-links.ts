@@ -6,6 +6,8 @@ import {
   DISCOVERY_USER_AGENT_PRODUCT,
   MAX_DISCOVERY_DEPTH,
   MAX_DISCOVERY_URLS,
+  MAX_HREF_LENGTH,
+  MAX_LINKS_PER_PAGE,
   type DiscoveredPage,
   type DiscoveryError,
   type DiscoveryResult,
@@ -13,12 +15,7 @@ import {
 } from '../../domain/discovery';
 import { logInfo } from '../../services/logger';
 import { launchChromium } from './launch';
-import {
-  assertAllowedUrl,
-  assertPeerAddressAllowed,
-  assertSafeTargetUrl,
-  UnsafeTargetError,
-} from './target-url';
+import { assertAllowedUrl, assertPeerAddressAllowed, assertSafeTargetUrl } from './target-url';
 
 export type DiscoverLinksInput = {
   targetUrl: string;
@@ -27,10 +24,10 @@ export type DiscoverLinksInput = {
   headless?: boolean;
 };
 
-type Frontier = { url: string; depth: number };
+type FrontierEntry = { url: string; depth: number };
 
 /**
- * Every same-host link on the page, as absolute URLs.
+ * Every http or https link on the page, as absolute URLs.
  *
  * Read from the rendered DOM via `href`, which the browser has already
  * resolved against the document — so a relative `about.html`, a root-relative
@@ -40,12 +37,31 @@ type Frontier = { url: string; depth: number };
  * `mailto:`, `tel:` and friends are dropped by the scheme test rather than by
  * name: an allowlist of two schemes is a rule, a denylist of the ones anybody
  * remembered is a list that grows by incident.
+ *
+ * Scope is *not* decided here. Everything on the page comes back and the
+ * caller puts each href through the allowlist, so this returns off-host links
+ * too.
+ *
+ * Both caps are applied inside the page callback, which is the whole point of
+ * them: this is the crawler's largest single input, and it is written by the
+ * page. Slicing what `$$eval` returned would mean a million hrefs had already
+ * been serialised across CDP into this process, which is the cost being
+ * avoided. The slice runs before the map so nothing beyond the cap is even
+ * read off the DOM.
  */
 async function extractLinks(page: Page): Promise<string[]> {
-  return page.$$eval('a[href]', (anchors) =>
-    anchors
-      .map((anchor) => (anchor as HTMLAnchorElement).href)
-      .filter((href) => href.startsWith('http://') || href.startsWith('https://')),
+  return page.$$eval(
+    'a[href]',
+    (anchors, limits) =>
+      anchors
+        .slice(0, limits.maxLinks)
+        .map((anchor) => (anchor as HTMLAnchorElement).href)
+        .filter(
+          (href) =>
+            href.length <= limits.maxHref &&
+            (href.startsWith('http://') || href.startsWith('https://')),
+        ),
+    { maxLinks: MAX_LINKS_PER_PAGE, maxHref: MAX_HREF_LENGTH },
   );
 }
 
@@ -64,8 +80,15 @@ function delay(ms: number): Promise<void> {
  * keys on field names rather than values.
  */
 function firstLine(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  return (message.split('\n')[0] ?? '').trim();
+  const isError = error instanceof Error;
+  const first = ((isError ? error.message : String(error)).split('\n')[0] ?? '').trim();
+
+  // The fallback is half of the parity, and `attemptStep`'s two fallbacks are
+  // reproduced rather than collapsed into one. An `Error` with an empty
+  // message is rare and not impossible, and without this the operator gets a
+  // blank row where the reason should be — the class name is little, but it is
+  // not nothing.
+  return first || (isError ? `it raised ${error.name}` : 'it raised an unknown error');
 }
 
 /**
@@ -98,7 +121,7 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
   const pages: DiscoveredPage[] = [];
   const errors: DiscoveryError[] = [];
   const seen = new Set<string>([discoveryKey(input.targetUrl)]);
-  const frontier: Frontier[] = [{ url: input.targetUrl, depth: 0 }];
+  const frontier: FrontierEntry[] = [{ url: input.targetUrl, depth: 0 }];
   let truncated: DiscoveryTruncation | undefined;
 
   const browser: Browser = await launchChromium({ headless: input.headless });
@@ -174,20 +197,39 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
         if (next.depth < MAX_DISCOVERY_DEPTH) {
           for (const href of await extractLinks(page)) {
-            const key = discoveryKey(href);
-            if (seen.has(key)) continue;
-
+            // One link's failure is one link's failure.
+            //
+            // `discoveryKey` throws `TypeError` on anything `new URL` cannot
+            // read, and `src/domain/discovery.ts` states outright that this
+            // caller must catch per-URL rather than let one href abort the
+            // frontier. Both calls sit inside this `try` for that reason: from
+            // the page-level `catch` a malformed href would discard every
+            // remaining anchor on the page *and* file a `TypeError` against
+            // the page's own URL, which reads as "this page failed to load"
+            // about a page that loaded perfectly.
+            let key: string;
             try {
+              key = discoveryKey(href);
+              if (seen.has(key)) continue;
+
+              // Off-scope or a blocked literal address throws here. Not an
+              // error worth reporting — a site linking off itself is the
+              // normal case — just somewhere this crawl does not go.
               assertAllowedUrl(href, allowedHosts);
-            } catch (error) {
-              // Off-scope or a blocked literal address. Not an error worth
-              // reporting — a site linking off itself is the normal case —
-              // just somewhere this crawl does not go.
-              if (error instanceof UnsafeTargetError) continue;
-              throw error;
+            } catch {
+              continue;
             }
 
             seen.add(key);
+
+            // The frontier never needs to hold more than the crawl can still
+            // visit: `MAX_DISCOVERY_URLS` is the ceiling on `pages`, so once
+            // the queue holds that many beyond what has been visited, every
+            // further entry is one the loop will never reach. Without this the
+            // queue keeps growing from pages the crawl is still reading long
+            // after the visit budget is spoken for.
+            if (frontier.length >= MAX_DISCOVERY_URLS - pages.length) continue;
+
             frontier.push({ url: href, depth: next.depth + 1 });
           }
         }
@@ -206,7 +248,11 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         });
       }
 
-      await delay(DISCOVERY_DELAY_MS);
+      // Politeness is owed to the next request, so there is no one to be
+      // polite to when there is no next request. Unconditional, this charged
+      // every crawl 250ms of dead time after its last page and took it from
+      // the budget.
+      if (frontier.length > 0) await delay(DISCOVERY_DELAY_MS);
     }
   } finally {
     await browser.close();
