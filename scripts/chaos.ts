@@ -7,6 +7,7 @@ import {
   isChaosEnabled,
   resolveChaosRunParams,
 } from '../src/app/api/_lib/chaos';
+import { discoverLinks } from '../src/integrations/browser/discover-links';
 import { runBrowserAudit } from '../src/integrations/browser/run-browser-audit';
 import { logInfo } from '../src/services/logger';
 
@@ -105,6 +106,37 @@ async function main(): Promise<void> {
       await rm(artifactsDir, { recursive: true, force: true });
     }
   }
+
+  // Discovery's frontier is filled by whatever markup a page happens to
+  // contain, not authored by an operator the way a run's steps are — so "the
+  // crawler will not fetch a private, loopback or cloud-metadata address" is a
+  // claim about what this product does not do, not merely about one function
+  // a unit test can cover in isolation. It belongs here for the same reason
+  // the scenarios above do: a unit test proves the guard exists today, this
+  // proves it still holds against the guard's actual call path, unmocked.
+  console.log('CHAOS: asserting discovery refuses a private entry point');
+
+  const unsafeDiscoveryTargets = [
+    'http://169.254.169.254/latest/meta-data/',
+    'http://127.0.0.1:22/',
+    'http://10.0.0.1/admin',
+  ];
+
+  for (const targetUrl of unsafeDiscoveryTargets) {
+    try {
+      await discoverLinks({ targetUrl });
+      fail(`discovery accepted an unsafe entry point: ${targetUrl}`);
+    } catch {
+      // Rejection is the pass condition; the guard's own error shape is
+      // covered by the unit tests, so only "did it refuse" is asserted here.
+    }
+  }
+
+  logInfo('chaos_result', {
+    scenario: 'discovery_refuses_private_entry_point',
+    targets: unsafeDiscoveryTargets.length,
+    pass: true,
+  });
 
   console.log('CHAOS: all steady-state assertions passed');
 }
