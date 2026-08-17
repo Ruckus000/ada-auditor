@@ -1,3 +1,4 @@
+import { environmentSchema, type Environment } from '../domain/contracts';
 import { toStepViews, type JourneyStepView } from '../domain/journey-step';
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
 import {
@@ -55,6 +56,20 @@ export type JourneySummary = {
   runRefusal: JourneyRunRefusal | null;
   /** How often this journey re-runs. `off` unless somebody chose otherwise. */
   schedule: 'off' | 'daily' | 'weekly';
+  /**
+   * Where this journey runs, which decides what a step is allowed to do.
+   *
+   * On the screen because the step editor needs it. `submit-safe` and
+   * `mutate-test-data` are authorable — some environment permits them — and
+   * production permits neither, so offering them on a production journey
+   * stores steps that walk 1..N-1 against a live site and then abort. The
+   * editor can only avoid that if it knows which environment it is editing.
+   *
+   * `production` when the row does not say, matching the run route: a journey
+   * with no stored environment is run as production, so the editor must
+   * constrain it as production too or the two disagree about the same journey.
+   */
+  environment: Environment;
   lastRun: RunSummary | null;
 };
 
@@ -175,6 +190,12 @@ export async function buildClientDetail(
         steps: toStepViews(journey.steps),
         runRefusal: journeyRunRefusal(journey),
         schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
+        // Parsed rather than cast: `environment` is a free `string?` on the
+        // stored row, so a value written before the schema existed — or by
+        // hand — must not reach the editor as an `Environment` it is not.
+        // Anything unrecognised falls to `production`, the same default the
+        // run route applies, because the safe answer is the strict one.
+        environment: environmentSchema.safeParse(journey.environment).data ?? 'production',
         lastRun: run ? summariseRun(run) : null,
       };
     }),

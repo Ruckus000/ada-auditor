@@ -6,6 +6,7 @@ import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
 import { Empty } from './client-overview';
 import { JourneySchedule } from './journey-schedule';
+import { JourneyStepsEditor } from './journey-steps-editor';
 import { RunJourneyButton } from './run-journey-button';
 
 /**
@@ -18,8 +19,11 @@ import { RunJourneyButton } from './run-journey-button';
  * This page used to say, in this comment, that it "reports, it does not yet
  * author" — because a stored journey was inert, and nothing anywhere read its
  * steps to build a run. That is no longer true: `POST /api/platform/clients/
- * <id>/journeys/<id>/runs` walks the stored journey, so the button is offered
- * rather than withheld. *Recording* a journey is still console and API work.
+ * <id>/journeys/<id>/runs` walks the stored journey, and `JourneyStepsEditor`
+ * rewrites what it walks.
+ *
+ * *Creating* a journey is still API work — a new one needs a name and a target
+ * URL, which PATCH does not accept — so the empty state below stays honest.
  */
 export function ClientJourneys({ detail }: { detail: ClientDetail }) {
   return (
@@ -111,7 +115,21 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                   line below is: the right-hand group is `nowrap`, so anything
                   placed inside it squeezes the controls instead of wrapping.
                 */}
-                <StepList steps={journey.steps} />
+                <JourneyStepsEditor
+                  clientId={detail.id}
+                  journeyId={journey.id}
+                  journeyName={journey.name}
+                  environment={journey.environment}
+                  steps={journey.steps}
+                >
+                  {/*
+                    Passed as children rather than rebuilt inside the editor:
+                    the list stays a Server Component, so the redaction that
+                    keeps a stored literal off this screen keeps its own tests
+                    and does not become something a client component decides.
+                  */}
+                  <StepList steps={journey.steps} />
+                </JourneyStepsEditor>
 
                 {journey.lastRun?.failureReason ? (
                   <span
@@ -148,6 +166,28 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
  * An unrecognised step is called one rather than dressed up, because it cannot
  * run and the operator needs to know that before a schedule fires.
  */
+/**
+ * Where the step acts, in one phrase.
+ *
+ * Composed here rather than carried on the view. An `expect` declares up to
+ * two things, and joining them into "url contains /x and #y visible" is a
+ * sentence for reading — the editor next door needs the two values in their
+ * own boxes, and un-writing that sentence to recover them is a parse that
+ * breaks on the first path containing the word "and".
+ */
+function describeTarget(step: JourneyStepView): string {
+  if (step.type === 'expect') {
+    return [
+      step.urlIncludes ? `url contains ${step.urlIncludes}` : undefined,
+      step.selector ? `${step.selector} visible` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' and ');
+  }
+
+  return step.path ?? step.selector ?? '';
+}
+
 function StepList({ steps }: { steps: JourneyStepView[] }) {
   if (steps.length === 0) return null;
 
@@ -178,7 +218,7 @@ function StepList({ steps }: { steps: JourneyStepView[] }) {
           <span style={{ minWidth: 16, textAlign: 'right' }}>{step.position}.</span>
           <span style={{ fontWeight: 650 }}>{step.type}</span>
           <span>{step.action}</span>
-          {step.target ? <span>{step.target}</span> : null}
+          {describeTarget(step) ? <span>{describeTarget(step)}</span> : null}
           {step.credentialRef ? (
             <span>
               credential {step.credentialRef} ({step.field})

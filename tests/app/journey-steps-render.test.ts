@@ -15,6 +15,16 @@ vi.mock('../../src/app/platform/components/client/run-journey-button', () => ({
   RunJourneyButton: () => null,
 }));
 
+/**
+ * `JourneyStepsEditor` is *not* stubbed, and that is the point.
+ *
+ * It wraps the step list — closed, it renders its children — so stubbing it
+ * out would make every assertion below pass against a screen that shows
+ * nothing. Only `useRouter` is replaced, because the server renderer has no
+ * app router mounted; the component's own markup is the real one.
+ */
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {} }) }));
+
 const { ClientJourneys } = await import(
   '../../src/app/platform/components/client/client-journeys'
 );
@@ -45,6 +55,7 @@ function detailWith(steps: unknown[]): ClientDetail {
         steps: toStepViews(steps),
         runRefusal: null,
         schedule: 'off',
+        environment: 'production',
         lastRun: null,
       },
     ],
@@ -99,6 +110,20 @@ describe('the journeys screen', () => {
     const html = render([{ banana: 1 }]);
 
     expect(html).toContain('not a runnable step');
+  });
+
+  /**
+   * The way in has to be on the screen.
+   *
+   * Three separate guards in this repo have shipped fully tested and entirely
+   * unwired — a rule with no caller is green forever. The editor is a client
+   * component whose behaviour lives in the hydration suite; this is the cheap
+   * half, that the button exists at all and names its journey.
+   */
+  it('offers a way to correct the steps, naming the journey', () => {
+    const html = render([{ action: 'navigate', type: 'goto', path: 'login.html' }]);
+
+    expect(html).toContain('Edit steps for Login');
   });
 
   it('renders a journey with no steps without inventing a list', () => {

@@ -570,6 +570,99 @@ describe('platform hydration', () => {
   }, 120_000);
 
   /**
+   * The step editor, which is the first screen that writes a journey.
+   *
+   * Everything the form decides is unit-tested as pure functions; none of that
+   * proves a control on the page is connected to any of it. This is the half
+   * only a real browser can answer: open the editor, add the step the journey
+   * is missing, save, and check the *database* changed — not the optimistic
+   * label the button prints.
+   *
+   * The seeded journey is deliberately the failing shape this whole plan is
+   * named for: it navigates and never says it arrived, so the editor's nudge
+   * has something true to say and the edit that clears it is the edit worth
+   * testing.
+   */
+  it('rewrites a journey’s steps from the journeys screen', async () => {
+    const created = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        name: 'Editable Journey',
+        targetUrl: 'https://editable.invalid/',
+        steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+      }),
+    });
+    expect(created.status, await created.clone().text()).toBe(201);
+    const { journey } = (await created.json()) as { journey: { id: string } };
+
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      const open = page.getByRole('button', { name: 'Edit steps for Editable Journey' });
+      await expect.poll(() => open.count(), { timeout: 15_000 }).toBe(1);
+      await open.click();
+
+      // The Phase 4 nudge, on the screen where steps are written rather than
+      // on a run result — a warning attached to an audit fires on healthy runs
+      // and teaches an operator to dismiss the one that matters.
+      const row = page.locator('li', { hasText: 'Editable Journey' }).first();
+      await expect.poll(() => row.innerText()).toContain('never says it arrived');
+
+      await row.getByRole('button', { name: 'Add a step' }).click();
+
+      // Zero violations with the form open, and open in its *worst* state: a
+      // half-finished row, so the red "needs a path" sentence and the reason
+      // the disabled save button gives are both on the page when axe looks.
+      // The route-level sweep below only ever sees the editor closed, so
+      // without this the largest form in the product is the one screen the
+      // auditor never audits.
+      await expect.poll(() => row.innerText()).toContain('needs a path');
+      const results = await new AxeBuilder({ page }).analyze();
+      expect(
+        results.violations
+          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
+          .join('\n'),
+      ).toBe('');
+
+      const added = row.locator('fieldset').nth(1);
+      await added.getByLabel('Does').selectOption('expect');
+      await added.getByLabel('URL contains (optional)').fill('/dashboard');
+
+      // Cleared by the edit, so the nudge is a live reading of the form and
+      // not a sentence printed once when it opened.
+      await expect.poll(() => row.innerText()).not.toContain('never says it arrived');
+
+      await row.getByRole('button', { name: 'Save steps' }).click();
+
+      // Server truth. The button clears itself on a 200, so asserting on the
+      // screen would pass against a component that never spoke to the route.
+      await expect
+        .poll(
+          async () => {
+            const stored = await fetch(
+              `${BASE}/api/platform/clients/${CLIENT}/journeys`,
+              { headers: { authorization: `Bearer ${TOKEN}` } },
+            );
+            const { journeys } = (await stored.json()) as {
+              journeys: Array<{ id: string; steps?: unknown[] }>;
+            };
+            return journeys.find((one) => one.id === journey.id)?.steps;
+          },
+          { timeout: 30_000, intervals: [1000] },
+        )
+        .toEqual([
+          { action: 'navigate', type: 'goto', path: '/' },
+          { action: 'navigate', type: 'expect', urlIncludes: '/dashboard' },
+        ]);
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
    * Evidence links must never appear on the public report.
    *
    * `/r/<token>` is deliberately outside the auth gate — the token is the whole

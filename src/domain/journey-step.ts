@@ -126,7 +126,22 @@ export const authoredStepSchema = z.union([
       action: authoredAction,
       type: z.literal('fill'),
       selector: STEP_TEXT,
-      value: z.string().max(4096),
+      /**
+       * `min(1)`, unlike the runner's, and the bound is doing real work.
+       *
+       * An empty string parses as a value, so a `fill` that types nothing was
+       * writable — and the step editor is where that stops being theoretical.
+       * A row whose stored literal is deliberately withheld from the screen
+       * comes back with the box empty, so a save that accepted `''` would
+       * silently blank what was stored: an operator opens the editor to fix
+       * step 5 and wipes step 2's search term by not touching it.
+       *
+       * Only the *authoring* side. A stored row holding `''` keeps running,
+       * because a client's scheduled audit must not break on a deploy that
+       * changed no behaviour. Clearing a field by filling it with nothing is a
+       * thing a browser can do and nothing has asked for.
+       */
+      value: z.string().min(1).max(4096),
     })
     .strict()
     .refine((step) => step.action !== 'login', {
@@ -216,8 +231,23 @@ export type JourneyStepView = {
   position: number;
   action: string;
   type: string;
-  /** The path, selector, or expectation — whatever says *where* this step acts. */
-  target?: string;
+  /**
+   * Where the step acts, in the step's own fields rather than in a sentence.
+   *
+   * This carried a single `target: string` holding whatever the step pointed
+   * at — and, for an `expect`, the rendered phrase "url contains /x and #y
+   * visible". That was enough while the only reader was a list to look at. It
+   * is not enough for the editor, which has to put each field back in the box
+   * it came from, and un-writing that sentence to recover two values is the
+   * kind of parse that is wrong the first time somebody's path contains the
+   * word "and".
+   *
+   * So the phrase is composed where it is displayed, and what travels is the
+   * step. One projection of a stored step, not one per reader.
+   */
+  path?: string;
+  selector?: string;
+  urlIncludes?: string;
   /** The credential's *name*. Never its value; the value is not here to leak. */
   credentialRef?: string;
   /** `user` or `pass`, so a transposed login is visible on the screen. */
@@ -298,10 +328,10 @@ export function toStepViews(steps: unknown): JourneyStepView[] {
       recognised: true,
     };
 
-    if (step.type === 'goto') view.target = step.path;
-    if (step.type === 'click') view.target = step.selector;
+    if (step.type === 'goto') view.path = step.path;
+    if (step.type === 'click') view.selector = step.selector;
     if (step.type === 'fill') {
-      view.target = step.selector;
+      view.selector = step.selector;
       if ('credentialRef' in step) {
         view.credentialRef = step.credentialRef;
         view.field = step.field;
@@ -310,14 +340,12 @@ export function toStepViews(steps: unknown): JourneyStepView[] {
       }
     }
     if (step.type === 'expect') {
-      // Both halves, joined, because an expectation that checks the URL *and*
-      // a selector is stronger than either and the screen should show which.
-      view.target = [
-        step.urlIncludes ? `url contains ${step.urlIncludes}` : undefined,
-        step.selector ? `${step.selector} visible` : undefined,
-      ]
-        .filter(Boolean)
-        .join(' and ');
+      // Both halves separately, because an expectation that checks the URL
+      // *and* a selector is stronger than either and both readers need to tell
+      // them apart — the list to say which were declared, the editor to put
+      // each back in its own field.
+      if (step.urlIncludes !== undefined) view.urlIncludes = step.urlIncludes;
+      if (step.selector !== undefined) view.selector = step.selector;
     }
 
     return view;
