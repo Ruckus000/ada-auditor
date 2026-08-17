@@ -10,7 +10,9 @@ import nextConfig from '../../next.config.mjs';
  * The deployment config knows something the code does not, and nothing checks it.
  *
  * `next.config.mjs` names which routes get the browser packaged beside them;
- * `vercel.json` names which get enough memory to launch it. Both are keyed by
+ * `vercel.json` names which get enough memory to launch it — though see the
+ * memory assertion below, because on this project that half is currently
+ * declarative only. Both are keyed by
  * path. A route that launches Chromium from a path neither covers builds
  * clean, deploys clean, passes every suite, and dies on its first production
  * request. `next.config.mjs`'s own comment records paying for that twice.
@@ -383,7 +385,28 @@ describe('routes that launch Chromium', () => {
     expect(included).toContain('@sparticuz/chromium');
   });
 
-  it.each(browserRoutes)('%s has enough memory to launch it', (file) => {
+  /**
+   * Asserts what the config *says*, which on this project is not what runs.
+   *
+   * A preview deploy on 2026-08-17 answered:
+   *
+   *   Provided `memory` setting in `vercel.json` is ignored on Active CPU
+   *   billing.
+   *
+   * So every number below is currently declarative. Under Fluid Compute memory
+   * comes from the plan, and whether a browser route has enough of it is an
+   * empirical question — the first real crawl either launches Chromium or does
+   * not. `docs/env.md` carries the full note and the reason the setting is kept
+   * rather than deleted.
+   *
+   * This assertion stays for the same reason the setting does: it is correct
+   * for any deployment not on Active CPU billing, and it keeps a *new* browser
+   * route from being added with no memory declaration at all — which would be a
+   * real gap the day billing changes. What it must not be read as is proof that
+   * the function can launch a browser. Only the tracing assertion above proves
+   * something the platform currently honours.
+   */
+  it.each(browserRoutes)('%s declares the memory it would need to launch one', (file) => {
     const path = file.replaceAll('\\', '/');
     const key = Object.keys(vercelConfig.functions).find((pattern) => vercelCovers(pattern, path));
 

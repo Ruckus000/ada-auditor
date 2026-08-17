@@ -200,6 +200,31 @@ nothing, which Vercel reports as a build error. `/api/platform/discover` has no
 dynamic segment, so its key is literal — a wildcard there would buy nothing and
 widen what it matches.
 
+### These numbers are currently ignored, and the setting stays anyway
+
+On **Active CPU billing** — which this project is on — Vercel discards the
+`memory` values above. The deploy says so out loud:
+
+> Provided `memory` setting in `vercel.json` is ignored on Active CPU billing.
+
+Observed on a preview deploy on 2026-08-17. It applies to all five routes,
+including the three that had carried the setting for weeks before anyone read
+the warning. Under Fluid Compute, memory comes from the plan rather than from
+this file, and what a Fluid instance actually gets is not stated anywhere in the
+documentation we could find — so the paragraphs above describe an intent, not a
+guarantee that is being enforced today.
+
+The setting is kept rather than deleted, for two reasons. It is still correct
+for any deployment not on Active CPU billing, and deleting it would silently
+remove the record of *why* 3009 was chosen — which is the part worth keeping,
+since the reasoning outlives the billing mode.
+
+What this means in practice: **whether a browser route has enough memory is an
+empirical question here, not a configured one.** If Chromium starts failing at
+launch on a deployed function, this file is not where the fix lives.
+`tests/deploy/browser-routes-are-packaged.test.ts` still asserts these keys — it
+is checking that the config says what we mean, not that the platform obeys it.
+
 Memory is only half of what a browser route needs; `next.config.mjs` has to
 name the same route under `outputFileTracingIncludes` or the function deploys
 with no browser binaries at all. Neither file can see the other, and neither
