@@ -1056,6 +1056,11 @@ describe('discoverLinks bounds', () => {
     expect(paths).not.toContain('/broken.html');
   }, 60_000);
 
+**The url-cap reason already has coverage.** Task 3 added `tests/integrations/browser/discover-links-truncation.test.ts` when it fixed the frontier ceiling's suppression of truncation, mocking `MAX_DISCOVERY_URLS` down to 2. Do not write a second url-cap test here — read that file first, and if it already asserts what you were about to assert, say so and move on. What is *not* covered is the budget reason, which is the one a real site will almost always report. Retarget this case at `DISCOVERY_BUDGET_MS` instead, mocking it low the same way.
+
+Keep the original url-cap case below only if reading Task 3's file shows a genuine gap; otherwise delete it from this step.
+
+```ts
   it('reports a truncated crawl rather than implying it saw the whole site', async () => {
     vi.resetModules();
     vi.doMock('../../../src/domain/discovery', async () => {
