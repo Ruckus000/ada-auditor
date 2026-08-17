@@ -769,8 +769,43 @@ describe('platform hydration', () => {
       await save.focus();
       await page.keyboard.press('Enter');
       expect(await focused()).toBe('Save steps');
-      // Still open, still refusing: the guard held, so nothing was sent.
+      // Still open, still refusing. `save()` guards `!writable.ok` itself, so
+      // this alone would pass with the guard in `inertWhen` deleted — the
+      // request it uniquely stops is a *second* PATCH while one is in flight,
+      // which `disabled` used to stop at the DOM level. Asserted below.
       await expect.poll(() => row.innerText()).toContain('needs a path');
+
+      // 2b. Reordering, where the place can be lost a second way that
+      // `aria-disabled` does not touch: React moves the keyed <li>, and a DOM
+      // move that is remove-then-insert blurs the focused element inside it.
+      //
+      // Read this before trusting it: React 19.2 moves with
+      // `Element.moveBefore` where it exists, which preserves focus, and this
+      // browser has it — so these three assertions pass with the component's
+      // refocus effect deleted. They pin the *outcome*, not that mechanism.
+      // What they would catch is the fallback path arriving here: an older
+      // Chromium, or React reverting to `insertBefore`. The engines where that
+      // fallback is live today — Firefox and Safari — this suite never runs.
+      const later = row.getByRole('button', { name: 'Move step 1 later' });
+      await later.focus();
+      await page.keyboard.press('Enter');
+      // The same step's button, one row down — so pressing again keeps moving
+      // the same step, rather than whatever swapped into the old position.
+      await expect.poll(focused).toBe('Move step 2 later');
+      await page.keyboard.press('Enter');
+      // Now at the end, and inert rather than gone: still focused, still the
+      // last step.
+      expect(await focused()).toBe('Move step 2 later');
+      expect(
+        await page.evaluate(() => document.activeElement?.getAttribute('aria-disabled')),
+      ).toBe('true');
+
+      // Put it back, so the assertions below are about the step that was
+      // half-finished rather than about the order.
+      const earlier = row.getByRole('button', { name: 'Move step 2 earlier' });
+      await earlier.focus();
+      await page.keyboard.press('Enter');
+      await expect.poll(focused).toBe('Move step 1 earlier');
 
       // 3. And the other half of the same problem — a save that succeeds
       // unmounts the form, so the focused button disappears with it. Closing

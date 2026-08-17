@@ -146,6 +146,35 @@ export function JourneyStepsEditor({
     openButton.current?.focus();
   }, [open]);
 
+  // The other way a reorder loses the operator's place, and the one
+  // `aria-disabled` does not touch — on the engines where it happens.
+  //
+  // Reordering the drafts makes React move the keyed `<li>`, and a DOM move
+  // has historically been remove-then-insert: moving a node blurs the focused
+  // element inside it, so focus lands on `<body>` after *every* successful
+  // move, not only the one that reaches an end. Measured, not assumed —
+  // `insertBefore` on a list item containing the focused button leaves
+  // `document.activeElement` as `<body>`.
+  //
+  // React 19.2 uses `Element.moveBefore` where the browser has it, which is
+  // atomic and preserves focus, so in Chromium this effect is a no-op that
+  // re-focuses the button already focused. `moveBefore` is Chromium-only
+  // today: on Firefox and Safari React falls back to `insertBefore` and the
+  // defect is real. Our hydration suite is Chromium, so the suite is not what
+  // justifies this — the operator on another browser is.
+  //
+  // Focusing the button that was pressed is also where the operator wants it:
+  // pressing ↓ twice moves the same step down twice.
+  const list = useRef<HTMLOListElement>(null);
+  const refocus = useRef<string | null>(null);
+
+  useEffect(() => {
+    const handle = refocus.current;
+    if (!handle) return;
+    refocus.current = null;
+    list.current?.querySelector<HTMLButtonElement>(`[data-move="${handle}"]`)?.focus();
+  }, [drafts]);
+
   function start() {
     // Seeded on open rather than held from the first render, so an edit that
     // lands from another tab — or this one's own `router.refresh()` — is what
@@ -231,6 +260,7 @@ export function JourneyStepsEditor({
   return (
     <div style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
       <ol
+        ref={list}
         style={{
           margin: '4px 0 0',
           padding: 0,
@@ -416,7 +446,13 @@ export function JourneyStepsEditor({
                   */}
                   <button
                     type="button"
-                    {...inertWhen(index === 0, () => move(index, -1))}
+                    // Keyed on the draft, not the position: after the move it
+                    // is the same step's button, one row further up.
+                    data-move={`${draft.key}-earlier`}
+                    {...inertWhen(index === 0, () => {
+                      refocus.current = `${draft.key}-earlier`;
+                      move(index, -1);
+                    })}
                     // Re-read after a move, so the focused button says where
                     // the step ended up.
                     aria-label={`Move step ${index + 1} earlier`}
@@ -426,7 +462,11 @@ export function JourneyStepsEditor({
                   </button>
                   <button
                     type="button"
-                    {...inertWhen(index === drafts.length - 1, () => move(index, 1))}
+                    data-move={`${draft.key}-later`}
+                    {...inertWhen(index === drafts.length - 1, () => {
+                      refocus.current = `${draft.key}-later`;
+                      move(index, 1);
+                    })}
                     aria-label={`Move step ${index + 1} later`}
                     style={index === drafts.length - 1 ? inertSmallButtonStyle : smallButtonStyle}
                   >
