@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { discoveryKey, normalizePathname } from '../../src/domain/discovery';
+import {
+  discoveryKey,
+  discoveryRequestSchema,
+  MAX_DISCOVERY_URLS,
+  normalizePathname,
+} from '../../src/domain/discovery';
 
 describe('normalizePathname', () => {
   it('collapses directory, index.html and bare forms to one path', () => {
@@ -63,5 +68,28 @@ describe('discoveryKey', () => {
 
   it('collides opaque-origin schemes, because callers must filter to http/https first', () => {
     expect(discoveryKey('mailto:x')).toBe(discoveryKey('data:x'));
+  });
+});
+
+describe('discoveryRequestSchema', () => {
+  it('accepts an http(s) target', () => {
+    expect(discoveryRequestSchema.safeParse({ targetUrl: 'https://acme.test' }).success).toBe(true);
+  });
+
+  it('refuses a non-URL and a non-http scheme', () => {
+    expect(discoveryRequestSchema.safeParse({ targetUrl: 'not-a-url' }).success).toBe(false);
+    expect(
+      discoveryRequestSchema.safeParse({ targetUrl: 'file:///etc/passwd' }).success,
+    ).toBe(false);
+  });
+
+  it('refuses unknown keys, so a caller cannot smuggle a cap past the schema', () => {
+    expect(
+      discoveryRequestSchema.safeParse({ targetUrl: 'https://acme.test', maxUrls: 100_000 }).success,
+    ).toBe(false);
+  });
+
+  it('caps discovery well above the run page cap of 20', () => {
+    expect(MAX_DISCOVERY_URLS).toBeGreaterThan(20);
   });
 });
