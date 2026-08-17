@@ -197,8 +197,17 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
           throw violation;
         }
 
+        // Where it settled, not where it was asked for. `assertSettledOnTarget`
+        // in `journey-runner.ts` exists for the same reason: the allowlist
+        // governs where a walk comes to rest, and a redirect is how a request
+        // for one host produces a page from another.
+        const settled = page.url();
+        assertAllowedUrl(settled, allowedHosts);
+
         pages.push({
-          url: next.url,
+          // The settled URL, so a `goto` step authored from this points at
+          // where the page lives rather than at a URL that redirects to it.
+          url: settled,
           title: (await page.title()).slice(0, 200),
           depth: next.depth,
         });

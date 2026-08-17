@@ -21,6 +21,13 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
  * `journey-rebind.test.ts`: Node's resolver is told the host is public, which
  * is what a hostile 0-TTL answer gives the pre-navigation check, and Chromium
  * is told to send the connection to a local server instead.
+ *
+ * Every page of this host rebinds, so every page here is refused. That is what
+ * makes the file able to stub nothing, and also what makes it blind to whether
+ * the crawl *recovers* after a refusal — sticky and cleared `peerViolation`
+ * look identical when there is no clean page to tell them apart.
+ * `discover-links-peer-clearing.test.ts` covers that, and pays for a clean
+ * page with a substitution this file must never adopt.
  */
 
 const HOST = 'discovery-rebind.example';

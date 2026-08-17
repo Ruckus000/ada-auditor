@@ -29,7 +29,15 @@ vi.mock('../../../src/integrations/browser/launch', () => ({
   launchChromium: async ({ headless = true }: { headless?: boolean } = {}) =>
     chromium.launch({
       headless,
-      args: [`--host-resolver-rules=MAP ${HOST} 127.0.0.1:${shared.port}`],
+      // `elsewhere.test` is mapped as well as `discovery.example`, and the
+      // mapping is load-bearing rather than tidy. The off-host redirect below
+      // must genuinely resolve, connect and serve, or Chromium fails it with
+      // `ERR_NAME_NOT_RESOLVED`, the per-page handler files that as the error,
+      // and the test asserting the redirect was refused passes with the check
+      // it exists to drive entirely absent.
+      args: [
+        `--host-resolver-rules=MAP ${HOST} 127.0.0.1:${shared.port},MAP elsewhere.test 127.0.0.1:${shared.port}`,
+      ],
     }),
 }));
 
@@ -66,6 +74,30 @@ let server: Server;
 beforeAll(async () => {
   server = createServer(async (request, response) => {
     const path = new URL(request.url ?? '/', `http://${HOST}`).pathname;
+
+    // An in-scope URL that lands somewhere else entirely. Ordinary on real
+    // sites — SSO, a marketing shortlink — and the reason the settled URL is
+    // the one that gets checked.
+    //
+    // `http:` rather than the `https:` an SSO hop would really use: this
+    // server speaks plaintext, and an https redirect target would die in the
+    // TLS handshake — which is the same vacuous outcome as a failed DNS
+    // lookup. The scheme is not what the assertion is about; the host is.
+    if (path === '/offsite-redirect.html') {
+      response.writeHead(302, { location: 'http://elsewhere.test/landed' });
+      response.end();
+      return;
+    }
+
+    // Served, and served deliberately: the redirect has to come to rest on a
+    // real document, so that the only thing left that can refuse it is the
+    // settled-URL check. This branch answers whichever `Host` asked for it,
+    // which for `/landed` is only ever `elsewhere.test`.
+    if (path === '/landed') {
+      response.writeHead(200, { 'content-type': 'text/html' });
+      response.end('<!doctype html><title>Elsewhere</title><main><h1>Elsewhere</h1></main>');
+      return;
+    }
 
     // Generated rather than a fixture file, because the shape is the point and
     // the shape is arithmetic: exactly `MAX_LINKS_PER_PAGE` anchors before the
@@ -116,8 +148,14 @@ describe('discoverLinks', () => {
     const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
     const paths = result.pages.map((page) => new URL(page.url).pathname).sort();
 
-    expect(paths).toEqual(['/', '/about.html', '/deep.html', '/pricing.html']);
-    expect(result.errors).toEqual([]);
+    expect(paths).toEqual(['/', '/about.html', '/deep.html', '/hostile.html', '/pricing.html']);
+
+    // The one failure is `/offsite-redirect.html`, which is in scope when it is
+    // asked for and out of scope by the time it answers. It has its own test
+    // below; here it is named so that any *other* error still fails this one.
+    expect(result.errors.map((error) => new URL(error.url).pathname)).toEqual([
+      '/offsite-redirect.html',
+    ]);
     expect(result.truncated).toBeUndefined();
   }, 60_000);
 
@@ -165,5 +203,62 @@ describe('discoverLinks', () => {
     const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
 
     expect(result.pages.every((page) => page.url.startsWith(`http://${HOST}/`))).toBe(true);
+  }, 60_000);
+});
+
+describe('discoverLinks guards', () => {
+  /**
+   * The frontier is filled by markup, not by an operator. This is the whole
+   * reason discovery re-runs a run's guards on every URL instead of trusting
+   * that a link found on the target must belong to the target.
+   */
+  it('never queues a link to a private, loopback or metadata address', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const visited = result.pages.map((page) => page.url).join(' ');
+
+    for (const forbidden of ['169.254.169.254', '127.0.0.1:22', '10.0.0.1', '[::1]']) {
+      expect(visited).not.toContain(forbidden);
+    }
+  }, 60_000);
+
+  it('reaches the hostile page itself, so the test proves refusal and not absence', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const paths = result.pages.map((page) => new URL(page.url).pathname);
+
+    // If this fails the crawl never got there and the assertion above proved
+    // nothing at all.
+    expect(paths).toContain('/hostile.html');
+  }, 60_000);
+
+  it('stays on the target host', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+
+    expect(result.pages.every((page) => new URL(page.url).hostname === HOST)).toBe(true);
+  }, 60_000);
+
+  it('refuses an entry point that is off-scheme before launching a browser', async () => {
+    await expect(discoverLinks({ targetUrl: 'file:///etc/passwd' })).rejects.toThrow(
+      /http or https/i,
+    );
+  });
+
+  it('refuses an entry point resolving to a private address', async () => {
+    await expect(discoverLinks({ targetUrl: 'http://10.0.0.1/' })).rejects.toThrow(
+      /private or reserved/i,
+    );
+  });
+
+  it('refuses a page that redirected off the target host', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const offsite = result.errors.find((error) => error.url.includes('offsite-redirect'));
+
+    // Reported as a failure, not as a page. Recording it as in-scope would put
+    // a foreign page into a journey under the client's own URL.
+    expect(result.pages.some((page) => page.url.includes('offsite-redirect'))).toBe(false);
+    expect(result.pages.every((page) => new URL(page.url).hostname === HOST)).toBe(true);
+
+    // On the message, not merely the presence of an error: a DNS failure would
+    // also produce an error here, and that is the vacuous version of this test.
+    expect(offsite?.message).toMatch(/not in the allowed domains/i);
   }, 60_000);
 });
