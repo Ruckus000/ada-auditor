@@ -1153,6 +1153,9 @@ Make it pass by keying the `seen` set on the settled URL as well as the requeste
 
 - [ ] **Step 5: Bound the error list**
 
+**Before writing any cap test, read this.** `MAX_LINKS_PER_PAGE` is invisible to a naive test, because both `MAX_DISCOVERY_URLS` and the frontier ceiling sit *below* it: serving 600 links and asserting fewer pages come back passes with the link cap deleted, since the other two bounds do the work. Task 3 already added a boundary-precise test (`/many.html`) that puts the interesting links exactly at the cap edge and 404s them deliberately, so that a *missing page* proves a *dropped link*. Extend that pattern rather than writing a fresh volume test, and prove any new cap test non-vacuous by deleting the cap it targets — one at a time, not all together — and watching it fail.
+
+
 `MAX_DISCOVERY_URLS` counts pages, and an errored page increments nothing — so a site of dead links never trips the URL cap, and every failure accumulates a full entry in the response body. Bounded in practice by the budget at roughly 240 navigations, so this is a precision fix rather than a memory one, but the response is served to a browser.
 
 Cap `errors` at `MAX_DISCOVERY_URLS` in the crawler, and note in `src/domain/discovery.ts` beside `MAX_DISCOVERY_URLS` that it counts successes and that `errors` carries its own ceiling.
