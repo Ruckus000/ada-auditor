@@ -1145,7 +1145,7 @@ Import `discoveryKey` from `../../../src/domain/discovery` at the top of the fil
 
 **Also tighten two Task 3 assertions that cannot fail.** Shipping tests that cannot fail sets the local standard, and these are tests:
 
-- *"reports each page once"* asserts `new Set(urls).size === urls.length`, which the `seen` set makes true by construction. Replace with an exact `expect(result.pages).toHaveLength(n)` against the fixture's real page count.
+- *"reports each page once"* asserts `new Set(urls).size === urls.length`. **Read this before deleting it.** That assertion was true by construction when it was written, and Task 4 made it false: `seen` keys on the *requested* URL while `pages` now records the *settled* one, so `/old-pricing` and `/pricing` produce two rows carrying byte-identical `url` strings. It can now fail — on precisely the defect Step 4 below exists to fix. Replace it with an exact `expect(result.pages).toHaveLength(n)`, which is stronger, but do **not** carry away the belief that page uniqueness is guaranteed by construction. It is not, until Step 4 lands.
 - *"does not follow mailto or fragment-only links"* asserts every URL starts with the host prefix — but a followed fragment link produces `http://HOST/#main`, which **passes**. The fragment half of its own name is untestable as written. Add `expect(result.pages.every((page) => !page.url.includes('#'))).toBe(true)`.
 
 - [ ] **Step 4: Dedupe a same-host redirect**
@@ -1176,7 +1176,55 @@ Link it from `fixtures/discovery-site/about.html`, and assert:
 
 Make it pass by keying the `seen` set on the settled URL as well as the requested one: after `assertAllowedUrl(settled, allowedHosts)`, compute `discoveryKey(settled)` and, if it differs from the requested key and is already in `seen`, skip the page rather than recording it. Add the settled key to `seen` either way.
 
-- [ ] **Step 5: Correct a comment that describes an unreachable state**
+**`continue`, not merely skipping the push.** The settled page's links were already harvested when the canonical entry was visited, so re-extracting them is pure waste. Skipping only the push is also *correct*, just slower — pick the fast one deliberately rather than by accident.
+
+**And note what termination does and does not depend on.** The design doc invokes the `routeFromPageUrl` scar, where wrong page identity means a crawl that never ends. That is not the risk here and the distinction is worth keeping straight: `seen` is still keyed on the requested URL, so `/a`→`/b` where `/b` links back to `/a` still short-circuits. What Task 4 created is duplicate *rows*, which is milder — but it is a genuinely new failure mode, and two rows now carry the same URL string where before they carried two different ones. That is what will collide as a React key in Task 8.
+
+- [ ] **Step 5: An entry point that redirects off its own allowlist**
+
+Probed, not theorised. Target `http://www.probe.example/` 302ing to `http://probe.example/` returns `pages: []`, one error, and `truncated: undefined` — a result claiming to be the whole site while holding nothing. `hostAllowed` matches an entry *or any subdomain of it*, so apex→www is fine (`www.acme.com` ends with `.acme.com`) but **www→apex is not**, and www→apex is what a large share of real sites do.
+
+No fixture in this suite can surface this: every fixture host resolves to the host it was asked for, by construction.
+
+Special-case depth 0. If the *entry* page settles outside the allowlist, let the `UnsafeTargetError` propagate out of `discoverLinks` rather than be caught by the per-page handler — an empty crawl is not a crawl, and the caller can say something useful. Task 7 owns the response: it should answer 4xx naming the host the target redirected to, so the operator is told to discover *that* instead. Add a test using a second mapped host.
+
+- [ ] **Step 6: Comment the asymmetry between `pages[].url` and `errors[].url`**
+
+The one load-bearing decision in Task 4 that carries no comment. `pages[].url` is the settled URL because it becomes a `goto` step, and a step pointing at a redirector re-pays the hop on every run forever. `errors[].url` is the *requested* URL because it is a diagnosis — telling an operator that `elsewhere.test/landed` failed is useless when nothing in their markup names it, and `Ctrl-F` finds nothing.
+
+The row only reads correctly because both halves are present: `/offsite-redirect.html` plus `Host elsewhere.test is not in the allowed domains` is legible; `/offsite-redirect.html` alone reads as "your own page is not in your allowed domains", which is nonsense. Comment it at the catch site, or the next person tidying that block will "fix" it to use the settled URL and break diagnosis.
+
+While there, add a clause to `DiscoveryError`'s doc comment: it currently argues at length that `message` must not carry a URL, directly above a `url` field carrying one whole. Both are right — one controlled copy in a field the UI knows is a URL beats a second uncontrolled one buried in prose — but unresolved it reads as though the message-splitting were theatre.
+
+- [ ] **Step 7: Harden the peer-clearing test and index the suite**
+
+Small, and they ride here rather than reopening Task 4.
+
+`discover-links-peer-clearing.test.ts` discriminates on `pathname === REBOUND_PATH`. It degrades loudly if that path stops matching (no violation recorded, the length assertion fails) but **silently** if someone adds a new path to `PAGES` — it falls into the else branch and quietly opts out of the real check. Make the classification total so an unclassified page throws:
+
+```ts
+const CLEAN_PATHS = new Set(['/', '/clean-a', '/clean-b']);
+// Total rather than binary: a page added to `PAGES` must be classified
+// deliberately. Falling into the clean branch by default is how a page
+// silently stops being judged on the address it truly reached.
+if (pathname !== REBOUND_PATH && !CLEAN_PATHS.has(pathname)) {
+  throw new Error(`unclassified page ${pathname}`);
+}
+```
+
+Also tighten `expect(result.pages.length).toBeGreaterThanOrEqual(2)` to an exact `expect(paths.sort()).toEqual([...])` — the fixture produces a known set, and the loose form cannot notice the crawl failing to reach one of them.
+
+Then add a four-line index to `discover-links.test.ts`'s header. Discovery now has four test files, each existing because its mock graph cannot coexist with the others' — that structure is correct and none should be merged, but `discover-links.test.ts` is the file a newcomer opens first and it points at none of its siblings. Name them and say why they are separate.
+
+Rename `discover-links-peer-clearing.test.ts` to `discover-links-violation-clearing.test.ts` — "peer-clearing" reads as clearing the peer; the subject is clearing `peerViolation` after a refusal.
+
+- [ ] **Step 8: Say which paths the fixture directory does not contain**
+
+`fixtures/discovery-site/` is now served by two servers with different behaviour, and `about.html` links `/offsite-redirect.html`, which exists on disk in neither — a 302 in one test, a plain 404 in another. After this task it will also link `/broken.html` and `/old-pricing.html`. Three of four links pointing at paths that live only inside a server callback is the point where the directory stops defining the site.
+
+Add one HTML comment in `about.html` naming the server-served paths and why they cannot be files: a redirect and a dropped socket are server behaviours, not documents. `hostile.html` is the counter-example done right — it is a real file because it *is* a document.
+
+- [ ] **Step 9: Correct a comment that describes an unreachable state**
 
 Task 3's frontier ceiling made the top-of-loop `url-cap` branch dead code. Proof: the ceiling caps the frontier at `MAX_DISCOVERY_URLS - pages.length`, so `frontier.length - (MAX - pages.length) <= 0` always holds, while the branch needs it `>= 1`. Deleting the branch leaves the whole browser suite green, and a sweep over 576 simulated site shapes never fired it once.
 
@@ -1184,16 +1232,16 @@ Behaviourally harmless — the post-loop path produces the same result. But the 
 
 Either keep the branch as a defensive guard and correct the comment to say its `url-cap` half is unreachable while the ceiling exists, or drop that case and leave `budget`. The false comment is the part that matters — in a codebase at this comment bar, a reader trusts it.
 
-- [ ] **Step 6: Bound the error list**
+- [ ] **Step 10: Bound the error list**
 
 **Before writing any cap test, read this.** `MAX_LINKS_PER_PAGE` is invisible to a naive test, because both `MAX_DISCOVERY_URLS` and the frontier ceiling sit *below* it: serving 600 links and asserting fewer pages come back passes with the link cap deleted, since the other two bounds do the work. Task 3 already added a boundary-precise test (`/many.html`) that puts the interesting links exactly at the cap edge and 404s them deliberately, so that a *missing page* proves a *dropped link*. Extend that pattern rather than writing a fresh volume test, and prove any new cap test non-vacuous by deleting the cap it targets — one at a time, not all together — and watching it fail.
 
 
 `MAX_DISCOVERY_URLS` counts pages, and an errored page increments nothing — so a site of dead links never trips the URL cap, and every failure accumulates a full entry in the response body. Bounded in practice by the budget at roughly 240 navigations, so this is a precision fix rather than a memory one, but the response is served to a browser.
 
-Cap `errors` at `MAX_DISCOVERY_URLS` in the crawler, and note in `src/domain/discovery.ts` beside `MAX_DISCOVERY_URLS` that it counts successes and that `errors` carries its own ceiling.
+Cap `errors` at `MAX_DISCOVERY_URLS` in the crawler, and note in `src/domain/discovery.ts` beside `MAX_DISCOVERY_URLS` that it counts successes and that `errors` carries its own ceiling. Say the same about **deduped** pages while you are there: a page skipped by Step 4 increments nothing either, so a redirect-heavy site performs more navigations than the cap implies.
 
-- [ ] **Step 7: Run it**
+- [ ] **Step 11: Run it**
 
 ```bash
 npx vitest run --config vitest.browser.config.ts tests/integrations/browser/discover-links.test.ts
@@ -1201,10 +1249,10 @@ npx vitest run --config vitest.browser.config.ts tests/integrations/browser/disc
 
 Expected: PASS. The truncation and depth cases should already pass against the Task 3 implementation — Task 3 restored url-cap truncation after its frontier ceiling suppressed it, so if `truncated` comes back `undefined` here, that regression has returned rather than the `seen` set being wrong. If `truncated.seen` is not greater than the page count, the seen set is being populated in the wrong place — it must record a URL when it is queued, not when it is visited, or a truncated crawl cannot say how much it had found.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 12: Commit**
 
 ```bash
-git add fixtures/discovery-site src/domain/discovery.ts src/integrations/browser/discover-links.ts tests/integrations/browser/discover-links.test.ts
+git add fixtures/discovery-site src/domain/discovery.ts src/integrations/browser/discover-links.ts tests/integrations/browser/discover-links*.test.ts
 git commit -m "A short crawl says it was short, and how much it had seen"
 ```
 
@@ -1732,6 +1780,10 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
                 ))}
               </ul>
 
+              {/* An error row must show `url` and `message` together. The URL
+                  is the link the operator would have clicked; the message says
+                  what refused it. Either alone is unreadable — see the comment
+                  at the crawler's catch site. */}
               {overCap ? (
                 <p role="status">
                   {selected.size} pages selected. A run audits the first {RUN_PAGE_CAP} and
@@ -1826,6 +1878,8 @@ Then, in another shell:
 ```bash
 curl -s -X POST http://localhost:3000/api/platform/discover -H "authorization: Bearer $AUDITOR_RUN_TOKEN" -H 'content-type: application/json' -d '{"targetUrl":"https://www.w3.org/WAI/demos/bad/"}' | head -60
 ```
+
+Also point it at a site that canonicalises **www→apex** — `https://www.iana.org/` or similar. Every fixture in the browser suite resolves to the host it was asked for, so the entry-redirect hole from Task 5 Step 5 is invisible to the whole suite by construction, and this is the only place it can be caught.
 
 Expected: a 200 with several pages, each carrying a title and depth. Record the page count, the duration and whether `truncated` came back — the spec's estimate of 40–45 pages in 60s is arithmetic, not a measurement, and this is the first real number. If `truncated.reason` is `budget` on a site this small, re-derive the bounds before shipping.
 
