@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Environment } from '../../../../domain/contracts';
 import type { JourneyStepView } from '../../../../domain/journey-step';
@@ -14,6 +14,7 @@ import {
   type StepDraft,
 } from '../../../../domain/journey-step-draft';
 import { isActionAllowed } from '../../../../domain/policy';
+import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -88,6 +89,21 @@ const smallButtonStyle = {
   cursor: 'pointer',
 } as const;
 
+/**
+ * The same button, unavailable.
+ *
+ * These controls keep their place in the tab order rather than taking
+ * `disabled` (see `lib/inert-button`), so the browser no longer greys them out
+ * on our behalf and something has to. A control that is inert and still looks
+ * live is the defect this trades for otherwise.
+ */
+const inertSmallButtonStyle = {
+  ...smallButtonStyle,
+  background: T.surfaceSunk,
+  color: T.inkMuted,
+  cursor: 'default',
+} as const;
+
 export function JourneyStepsEditor({
   clientId,
   journeyId,
@@ -113,6 +129,22 @@ export function JourneyStepsEditor({
   // or with each other. A counter, not `Math.random`, so two renders of the
   // same edit produce the same markup.
   const added = useRef(0);
+  // Keeping the save button focusable is only half the answer here: a
+  // successful save — and Cancel — unmount the whole form, so the focused
+  // control disappears and focus lands on `<body>` anyway. Closing the editor
+  // therefore hands focus back to the button that opened it, the way a closed
+  // dialog returns focus to its opener.
+  const openButton = useRef<HTMLButtonElement>(null);
+  // Only after *this* component closed the editor. Without the flag the effect
+  // fires on first mount and steals focus from wherever the operator was on a
+  // page that has one of these per journey.
+  const returnFocus = useRef(false);
+
+  useEffect(() => {
+    if (open || !returnFocus.current) return;
+    returnFocus.current = false;
+    openButton.current?.focus();
+  }, [open]);
 
   function start() {
     // Seeded on open rather than held from the first render, so an edit that
@@ -169,6 +201,7 @@ export function JourneyStepsEditor({
         return;
       }
 
+      returnFocus.current = true;
       setOpen(false);
       router.refresh();
     } catch {
@@ -182,7 +215,12 @@ export function JourneyStepsEditor({
     return (
       <div style={{ flexBasis: '100%' }}>
         {children}
-        <button type="button" onClick={start} style={{ ...smallButtonStyle, marginTop: 6 }}>
+        <button
+          type="button"
+          ref={openButton}
+          onClick={start}
+          style={{ ...smallButtonStyle, marginTop: 6 }}
+        >
           {/* Named, because every row carries one of these. */}
           Edit steps for {journeyName}
         </button>
@@ -368,21 +406,29 @@ export function JourneyStepsEditor({
                 ) : null}
 
                 <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                  {/*
+                    These are the sharpest case for `aria-disabled` in the
+                    product: the click is what makes the control unavailable.
+                    Moving a step to the top disables ↑ *on the button being
+                    pressed*, and with `disabled` that dropped focus to
+                    `<body>` in the middle of reordering a list — with the
+                    keyboard the only way to reorder one.
+                  */}
                   <button
                     type="button"
-                    onClick={() => move(index, -1)}
-                    disabled={index === 0}
+                    {...inertWhen(index === 0, () => move(index, -1))}
+                    // Re-read after a move, so the focused button says where
+                    // the step ended up.
                     aria-label={`Move step ${index + 1} earlier`}
-                    style={smallButtonStyle}
+                    style={index === 0 ? inertSmallButtonStyle : smallButtonStyle}
                   >
                     ↑
                   </button>
                   <button
                     type="button"
-                    onClick={() => move(index, 1)}
-                    disabled={index === drafts.length - 1}
+                    {...inertWhen(index === drafts.length - 1, () => move(index, 1))}
                     aria-label={`Move step ${index + 1} later`}
-                    style={smallButtonStyle}
+                    style={index === drafts.length - 1 ? inertSmallButtonStyle : smallButtonStyle}
                   >
                     ↓
                   </button>
@@ -465,30 +511,39 @@ export function JourneyStepsEditor({
         </button>
         <button
           type="button"
-          onClick={save}
-          disabled={busy || !writable.ok}
-          style={{
-            ...smallButtonStyle,
-            background: busy || !writable.ok ? T.surfaceSunk : T.surface,
-            color: busy || !writable.ok ? T.inkMuted : T.ink,
-            cursor: busy || !writable.ok ? 'default' : 'pointer',
-          }}
+          {...inertWhen(busy || !writable.ok, save)}
+          // Only while the sentence below is on the page: a description
+          // pointing at an id that is not there is itself a violation.
+          aria-describedby={writable.ok ? undefined : `${fieldPrefix}-save-refused`}
+          style={busy || !writable.ok ? inertSmallButtonStyle : smallButtonStyle}
         >
           {busy ? 'Saving…' : 'Save steps'}
         </button>
-        <button type="button" onClick={() => setOpen(false)} style={smallButtonStyle}>
+        <button
+          type="button"
+          onClick={() => {
+            returnFocus.current = true;
+            setOpen(false);
+          }}
+          style={smallButtonStyle}
+        >
           Cancel
         </button>
         {/*
-          Why the button is dead, said out loud.
+          Why the button is refusing, said out loud.
 
-          A disabled control with no explanation is a dead end — it cannot take
-          focus, so a screen reader user reaches the end of the form and finds
-          nothing that says what is wrong. The per-row sentences are the detail;
-          this is the one that is always there when the save is refused.
+          An unavailable control with no explanation is a dead end: the operator
+          reaches the end of the form and finds nothing that says what is wrong.
+          The per-row sentences are the detail; this is the one that is always
+          there when the save is refused. Now that the button keeps its place in
+          the tab order it can also *describe* itself with this — a `disabled`
+          button could not be reached to hear it.
         */}
         {!writable.ok ? (
-          <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
+          <span
+            id={`${fieldPrefix}-save-refused`}
+            style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}
+          >
             {drafts.length === 0
               ? 'A journey needs at least one step.'
               : 'Finish the steps marked below before saving.'}
