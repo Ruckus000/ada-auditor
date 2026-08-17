@@ -1,6 +1,7 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import nextConfig from '../../next.config.mjs';
 
 /**
@@ -18,8 +19,9 @@ import nextConfig from '../../next.config.mjs';
  * the tree rather than running it.
  */
 
-const API_DIR = join('src', 'app', 'api');
-const LAUNCH = join('src', 'integrations', 'browser', 'launch.ts');
+const SRC_ROOT = 'src';
+const API_DIR = join(SRC_ROOT, 'app', 'api');
+const LAUNCH = join(SRC_ROOT, 'integrations', 'browser', 'launch.ts');
 
 function routeFiles(dir: string): string[] {
   const out: string[] = [];
@@ -39,41 +41,76 @@ function routeFiles(dir: string): string[] {
  * packaged beside it. Counting it would demand 3009 MB for a route that
  * returns JSON.
  *
+ * Three patterns run independently rather than as one alternation, and that is
+ * a fix rather than a style: as a single alternation the `from` branch is tried
+ * first at every position, and its lazy middle would run *across* a preceding
+ * side-effect import to reach the next `from`. `import './launch';` on line 1
+ * followed by any `from`-import was consumed as one match and the side effect
+ * was lost — a route importing the browser purely for its side effect was
+ * invisible to this whole file. Separate passes cannot swallow each other, and
+ * the middle below additionally refuses quotes and semicolons so it cannot
+ * leave the statement it started in.
+ *
  * Dynamic `import()` counts, because it is still a call that ends in a running
  * module — `launch.ts` reaches `@sparticuz/chromium` that way itself.
  */
-const SPECIFIER =
-  /(?:^|[^.\w])(?:import|export)\s+(?!type\b)[\s\S]*?from\s*['"]([^'"]+)['"]|(?:^|[^.\w])import\s*\(\s*['"]([^'"]+)['"]\s*\)|(?:^|[^.\w])import\s*['"]([^'"]+)['"]/g;
+const SPECIFIER_PATTERNS = [
+  // `import x from '…'` / `export { x } from '…'`, and never `import type`.
+  /(?:^|[^.\w])(?:import|export)\s+(?!type\b)[^;'"]*?from\s*['"]([^'"]+)['"]/g,
+  /(?:^|[^.\w])import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+  // `import '…'` for its side effects alone.
+  /(?:^|[^.\w])import\s*['"]([^'"]+)['"]/g,
+];
 
 function specifiers(source: string): string[] {
-  const out: string[] = [];
-  for (const match of source.matchAll(SPECIFIER)) {
-    const spec = match[1] ?? match[2] ?? match[3];
-    if (spec) out.push(spec);
+  const out = new Set<string>();
+  for (const pattern of SPECIFIER_PATTERNS) {
+    for (const match of source.matchAll(pattern)) {
+      if (match[1]) out.add(match[1]);
+    }
   }
-  return out;
+  return [...out];
 }
 
 /**
- * Only relative specifiers are followed. A bare one is a package, and no
- * package in `node_modules` imports this repo's `launch.ts`.
+ * Where a specifier points, or `null` for a package.
  *
- * An unresolvable relative specifier is a hard failure rather than a skip: a
- * resolver that quietly stopped resolving would report every route as
- * browser-free and this whole file would pass by finding nothing. The
- * `/api/audit/run` assertion at the bottom is the other half of that guard.
+ * Two forms are followed, because the repo offers two. Relative is what every
+ * `src` file happens to use today; `@/…` is the `tsconfig.json` path alias, and
+ * `src/integrations/browser/README.md` teaches new call sites in exactly that
+ * form — so the one thing a person is most likely to copy was the one form this
+ * walk could not see. A route importing `@/integrations/browser/launch` from an
+ * unpackaged path passed the guard silently.
+ *
+ * A bare specifier is a package and stops the walk: nothing in `node_modules`
+ * imports this repo's `launch.ts`.
+ *
+ * An unresolvable specifier is a hard failure rather than a skip: a resolver
+ * that quietly stopped resolving would report every route as browser-free and
+ * this whole file would pass by finding nothing.
  */
-function resolveRelative(from: string, spec: string): string {
-  const base = resolve(dirname(from), spec);
+function resolveSpecifier(from: string, spec: string, srcRoot: string): string | null {
+  let base: string;
+  if (spec.startsWith('.')) base = resolve(dirname(from), spec);
+  else if (spec.startsWith('@/')) base = resolve(srcRoot, spec.slice('@/'.length));
+  else return null;
+
   for (const candidate of [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx')]) {
     if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
   }
   throw new Error(`${from} imports '${spec}', which does not resolve to a file`);
 }
 
-/** Depth-first with a `seen` set — import cycles are ordinary in this tree. */
-function launchesBrowser(entry: string): boolean {
-  const target = resolve(LAUNCH);
+/**
+ * Depth-first with a `seen` set — import cycles are ordinary in this tree.
+ *
+ * Fully parameterised, with no defaults, so the fixture tree below can be
+ * walked by the same code the repo is. Defaults were tried and removed: the
+ * repo call site is a `.filter()`, which passes an array index as the second
+ * argument.
+ */
+function reachesFrom(entry: string, launch: string, srcRoot: string): boolean {
+  const target = resolve(launch);
   const seen = new Set<string>();
   const stack = [resolve(entry)];
 
@@ -84,7 +121,8 @@ function launchesBrowser(entry: string): boolean {
     if (file === target) return true;
 
     for (const spec of specifiers(readFileSync(file, 'utf8'))) {
-      if (spec.startsWith('.')) stack.push(resolveRelative(file, spec));
+      const resolved = resolveSpecifier(file, spec, srcRoot);
+      if (resolved !== null) stack.push(resolved);
     }
   }
 
@@ -98,9 +136,15 @@ function launchesBrowser(entry: string): boolean {
  * picomatch already implements one for Next and Vercel implements another for
  * `functions`; a third here would be a third set of edge cases to disagree
  * about. So this understands exactly the two key shapes both files actually
- * use — a literal path, and one containing a single `**` — and *throws* on
- * anything else rather than guessing. A key this cannot read is a key nobody
- * should assume is being checked.
+ * use: a literal path, and one containing a single `**`.
+ *
+ * Two keys behave differently and neither can produce a false pass. More than
+ * one `**` **throws**, because two wildcards are where a hand-rolled match and
+ * a real one start disagreeing about which is greedy. A single `*` is not
+ * special-cased at all — it falls through to literal comparison and simply
+ * does not match, so a key using one is reported as covering nothing and the
+ * route it was meant to cover fails loudly. Under-matching is the safe
+ * direction; the unsafe one is claiming coverage that is not there.
  *
  * `X/**` also covers `X` itself, which is what picomatch does and is the case
  * the discovery route depends on: its page path is `/api/platform/discover`
@@ -133,7 +177,80 @@ const vercelConfig = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
 
 const tracingIncludes = (nextConfig.outputFileTracingIncludes ?? {}) as Record<string, string[]>;
 
-const browserRoutes = routeFiles(API_DIR).filter(launchesBrowser);
+const browserRoutes = routeFiles(API_DIR).filter((file) => reachesFrom(file, LAUNCH, SRC_ROOT));
+
+/**
+ * The walk itself, against a tree written for the purpose.
+ *
+ * Everything below this block asserts about the walk's *output on today's
+ * tree*, and that is exactly how two silent holes survived review: no `src`
+ * file uses the `@/` alias and none imports the browser purely for its side
+ * effect, so a walk blind to both forms still produced the right answer today
+ * and would have missed the first route that used either. The point of this
+ * guard is the next person, and the next person following
+ * `src/integrations/browser/README.md` writes `@/integrations/browser/…`.
+ *
+ * A temp directory rather than real routes: proving the walk sees a form
+ * requires a file written in that form, and adding one to `src/app/api` would
+ * mean shipping a route to satisfy a test.
+ */
+describe('the import walk', () => {
+  let root: string;
+
+  beforeAll(() => {
+    root = mkdtempSync(join(tmpdir(), 'browser-routes-'));
+    const src = join(root, 'src');
+    const write = (path: string, body: string) => {
+      mkdirSync(dirname(join(src, path)), { recursive: true });
+      writeFileSync(join(src, path), body);
+    };
+
+    write('integrations/browser/launch.ts', 'export function launchChromium() {}\n');
+    write('app/api/alias/route.ts', "import { launchChromium } from '@/integrations/browser/launch';\nexport const GET = () => launchChromium();\n");
+    // The side effect first and a `from`-import after it: the order that used
+    // to be swallowed. Reversed, it was always found.
+    write('app/api/side-effect/route.ts', "import '../../../integrations/browser/launch';\nimport { helper } from './helper';\nexport const GET = () => helper();\n");
+    write('app/api/side-effect/helper.ts', 'export function helper() {}\n');
+    write('app/api/plain/route.ts', "import { helper } from '../side-effect/helper';\nexport const GET = () => helper();\n");
+    // A side effect followed by a *type-only* import of the browser. The only
+    // shape that tells the two halves of the fix apart: separate passes alone
+    // still let the first pattern start on line 1 and run to line 2's `from`,
+    // reading a type-only import as a real one.
+    write('app/api/type-only/route.ts', "import './helper';\nimport type { Browser } from '@/integrations/browser/launch';\nexport const GET = (): Browser | null => null;\n");
+    write('app/api/type-only/helper.ts', 'export function helper() {}\n');
+  });
+
+  afterAll(() => rmSync(root, { recursive: true, force: true }));
+
+  const reaches = (route: string) =>
+    reachesFrom(
+      join(root, 'src', 'app', 'api', route, 'route.ts'),
+      join(root, 'src', 'integrations', 'browser', 'launch.ts'),
+      join(root, 'src'),
+    );
+
+  it('follows the `@/` alias the README tells people to use', () => {
+    expect(reaches('alias')).toBe(true);
+  });
+
+  it('follows a side-effect import that comes before a named one', () => {
+    expect(reaches('side-effect')).toBe(true);
+  });
+
+  // The other half: a walk that answered `true` for everything would pass both
+  // cases above while asserting nothing at all.
+  it('does not claim a route reaches the browser when it does not', () => {
+    expect(reaches('plain')).toBe(false);
+  });
+
+  it('does not count a type-only import that follows a side-effect one', () => {
+    // A `type` import is erased before anything runs. Counting this one would
+    // demand 3009 MB and a packaged Chromium for a route that returns JSON —
+    // and it is the case that proves the statement bound in the first pattern
+    // is doing work, not just the separation into three passes.
+    expect(reaches('type-only')).toBe(false);
+  });
+});
 
 describe('routes that launch Chromium', () => {
   // Non-vacuity. Everything below is an assertion about a list, and a list
