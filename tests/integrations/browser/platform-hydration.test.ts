@@ -1022,9 +1022,13 @@ describe('platform hydration', () => {
           contentType: 'application/json',
           body: JSON.stringify({
             requestId: 'stubbed',
-            // Zero-padded, so no page's accessible name is a substring of
-            // another's — `Page 5 /p5` inside `Page 50 /p50` would make the
-            // 51st tick below select the wrong row.
+            // Zero-padded defensively, not because anything here needs it:
+            // the accessible name is `Page 5 /p5`, and the space before the
+            // path already stops it being a substring of `Page 50 /p50`. An
+            // earlier version of this comment claimed the padding was
+            // load-bearing; it is not, and the collision it described exists
+            // only when matching on the title alone, which this test does not
+            // do.
             pages: Array.from({ length: 60 }, (_, index) => ({
               url: `https://sixty.invalid/p${String(index).padStart(2, '0')}`,
               title: `Page ${String(index).padStart(2, '0')}`,
@@ -1071,6 +1075,21 @@ describe('platform hydration', () => {
       const text = await panel.innerText();
       expect(text).toContain('A journey holds at most 50 steps, and 51 pages are picked.');
       expect(text).toContain('Untick 1');
+
+      // And inside the announced region, not merely on the page. The count
+      // change is what a screen reader hears; without the remedy in the same
+      // paragraph it hears "51 pages picked" and nothing about the Create
+      // button having just died.
+      expect(await panel.locator('p[aria-live="polite"]', { hasText: 'Untick 1' }).count()).toBe(1);
+
+      // The count is reported *before* the missing name, and until now that
+      // ordering was argued in a comment and exercised by nothing — this test
+      // filled the name first precisely so the block would be attributable.
+      // An operator who is told to name the journey, does so, and is still
+      // blocked has learned nothing, so the more structural problem wins.
+      await page.getByLabel('Journey name').fill('');
+      await expect.poll(() => panel.innerText()).toContain('Untick 1');
+      expect(await panel.innerText()).not.toContain('Give the journey a name');
     } finally {
       await page.close();
     }

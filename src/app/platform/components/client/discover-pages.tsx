@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DiscoveredPage, DiscoveryError, DiscoveryTruncation } from '../../../../domain/discovery';
 import { MAX_STEP_TEXT, MAX_STEPS_PER_JOURNEY } from '../../../../domain/journey-step';
+import { MAX_JOURNEY_NAME } from '../../../../domain/platform';
 import {
   describeDepth,
   describeDiscoveryFailure,
@@ -35,8 +36,11 @@ import { FONT, T } from '../../lib/tokens';
  * panel posts to, and a screen that can only discover them by posting and
  * reading back `invalid_request_body` reports them as a mystery:
  * `MAX_JOURNEY_NAME` (120), `MAX_STEP_TEXT` (512 per path) and
- * `MAX_STEPS_PER_JOURNEY` (50 steps). All three are schema constants imported
- * from the module that owns them, never numbers typed twice.
+ * `MAX_STEPS_PER_JOURNEY` (50 steps). Each is imported from the module that
+ * declares it — `domain/platform` for the first, `domain/journey-step` for the
+ * other two — so the panel and the schema read one number. This sentence used
+ * to claim that and was wrong: `MAX_JOURNEY_NAME` was a local literal here
+ * duplicating one in the route, which is exactly the drift the claim denied.
  *
  * Left advisory, because it is a *runtime* cap this code cannot read and that
  * may move under journeys already stored: `AUDITOR_MAX_PAGES_PER_RUN`. See
@@ -62,17 +66,6 @@ import { FONT, T } from '../../lib/tokens';
  * is a deployment's setting for a different route entirely.
  */
 const SOFT_PAGE_ADVICE = 20;
-
-/**
- * The longest name the create route will take.
- *
- * `createJourneySchema` caps it at 120 and answers `invalid_request_body` past
- * that — a code that says nothing about which field was wrong. Enforced here
- * as a `maxLength` rather than as a validation message, because a box that
- * simply stops accepting characters is a rule the operator meets *while*
- * typing rather than after posting.
- */
-const MAX_JOURNEY_NAME = 120;
 
 type DiscoveryResponse = {
   pages?: DiscoveredPage[];
@@ -106,9 +99,13 @@ type Found = {
  * `tooLong` is a property of the *step format*, not of the crawl: a discovered
  * href may run to `MAX_HREF_LENGTH`, four times what a `goto` path may hold.
  * Decided per row and at selection time, which is the whole improvement over
- * finding out at save time — the operator learns which page and why while
- * looking at it, and the route's generic `invalid_request_body` becomes
- * unreachable from this panel.
+ * finding out at save time: the operator learns which page and why while
+ * looking at it, rather than reading a refusal that names neither.
+ *
+ * It closes one of the three ways this panel could provoke
+ * `invalid_request_body` — not all of them, and the earlier draft of this
+ * comment said otherwise. The step *count* was still one click of
+ * "Select every page" away when it claimed that.
  */
 type Row = { page: DiscoveredPage; index: number; path: string; tooLong: boolean };
 
@@ -510,7 +507,14 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
               thinks the button half-worked.
             */
             <p style={noteStyle}>
-              This crawl found {selectable.length} pages and a journey holds at most{' '}
+              {/*
+                `selectable`, said as "can use" rather than as what the crawl
+                found. The two differ whenever a row is `tooLong`, and the
+                status region directly above already states the crawl's total —
+                two numbers for the same noun, a paragraph apart, is a screen
+                arguing with itself.
+              */}
+              {selectable.length} of these pages can go in a journey, and a journey holds at most{' '}
               {MAX_STEPS_PER_JOURNEY} steps, so “Select every page” takes the first{' '}
               {MAX_STEPS_PER_JOURNEY}. The rest need a journey of their own.
             </p>
@@ -702,20 +706,26 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
             double read is not a real collision: focus lands here by tabbing to
             the name field, which is not the moment the count changes.
           */}
+          {/*
+            The blocked reason lives *inside* the announced paragraph, not
+            beside it. Ticking a 51st page announced "51 pages picked" and
+            nothing about the Create button having just died — the count is the
+            symptom and `createBlockedBy` is the remedy, and announcing the
+            first without the second is the same silence the bulk controls had
+            before this region existed.
+
+            It is also still the visible prose the disabled button owes the
+            screen — the convention the two buttons above and the `tooLong`
+            rows keep — and it is decided in one place, so the button and the
+            explanation cannot reach different conclusions about whether a
+            create is possible.
+          */}
           <p id={nameNoteId} aria-live="polite" style={noteStyle}>
             {chosen.length === 0
               ? `Nothing picked yet. The journey will visit ${found.origin} and go to each page you tick, in the order they were found.`
               : `${chosen.length === 1 ? '1 page' : `${chosen.length} pages`} picked. The journey will visit ${found.origin} and go to each, in the order they were found.`}
+            {createBlockedBy ? ` ${createBlockedBy}` : ''}
           </p>
-
-          {/*
-            Never a dead control without visible prose saying why — the same
-            convention the two buttons above and the `tooLong` rows keep. One
-            sentence, decided in one place, so the button and the explanation
-            cannot come to different conclusions about whether a create is
-            possible.
-          */}
-          {createBlockedBy ? <p style={noteStyle}>{createBlockedBy}</p> : null}
 
           {chosen.length > SOFT_PAGE_ADVICE ? (
             /*
@@ -725,9 +735,20 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
               invalidate every stored journey the day somebody lowered it.
             */
             <p style={{ ...noteStyle, color: T.caution }}>
+              {/*
+                The advisory stays even while `createBlockedBy` is up, because
+                it carries the fact the blocker does not: a journey of 50 steps
+                is legal and still mostly unaudited, since a run stops at about
+                `AUDITOR_MAX_PAGES_PER_RUN` pages. An operator will not guess
+                that, and it is the more consequential of the two.
+
+                Only the closing remedy goes, because the blocker one paragraph
+                up ends on the same words — the same advice twice running reads
+                as a screen with nothing else to say.
+              */}
               That is {chosen.length} pages. A run audits about {SOFT_PAGE_ADVICE} by default and
-              stops there, so the rest would not be looked at — this is worth splitting into more
-              than one journey.
+              stops there, so the rest would not be looked at
+              {createBlockedBy ? '.' : ' — this is worth splitting into more than one journey.'}
             </p>
           ) : null}
 
