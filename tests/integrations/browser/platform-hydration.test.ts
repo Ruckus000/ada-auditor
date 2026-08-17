@@ -747,6 +747,141 @@ describe('platform hydration', () => {
   }, 120_000);
 
   /**
+   * A control the operator just pressed keeps their place.
+   *
+   * Four call sites disabled a button as a *direct result* of clicking it. The
+   * browser takes a `disabled` element out of the tab order, so focus fell to
+   * `<body>` mid-interaction and the operator had to tab from the top of the
+   * document — past the whole workspace nav — to get back to the thing they had
+   * just asked for. The worst instance never came back at all: the handler
+   * cleared the form, so the condition stayed true and the control stayed
+   * disabled with focus nowhere.
+   *
+   * `lib/inert-button` is the fix: `aria-disabled` plus a guard in the handler,
+   * so the control is inert without leaving the tab order, and the polite live
+   * region beside it is not interrupted by having to announce some other
+   * control instead.
+   *
+   * This is pinned in a browser because nothing else can see it. The markup is
+   * valid and the control is correctly marked unavailable either way, so axe
+   * passes on both — the zero-violation sweep below included. It was found by
+   * reading the flow as a keyboard-only user, and this is what stops it coming
+   * back the next time somebody reaches for `disabled`.
+   */
+  it('keeps focus on a control that its own click made unavailable', async () => {
+    // Two journeys, because the run started below keeps polling and refreshing
+    // the screen — the editor half should not be sharing a row with it.
+    for (const name of ['Focus Journey', 'Focus Editor Journey']) {
+      const created = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+        body: JSON.stringify({
+          name,
+          targetUrl: 'https://focus.invalid/',
+          steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+        }),
+      });
+      expect(created.status, await created.clone().text()).toBe(201);
+    }
+
+    const page = await openAuthenticatedPage();
+
+    /** What a screen reader would be on, right now. */
+    const focused = () =>
+      page.evaluate(() => {
+        const active = document.activeElement;
+        if (!active || active === document.body) return 'body';
+        return active.getAttribute('aria-label') ?? active.textContent?.trim() ?? active.tagName;
+      });
+
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      // 1. Run now — busy is the state its own click produces.
+      const run = page.getByRole('button', { name: 'Run Focus Journey now' });
+      await expect.poll(() => run.count(), { timeout: 15_000 }).toBe(1);
+      await run.focus();
+      // Enter on a focused button, not a mouse click: this is the interaction
+      // the defect belongs to.
+      await page.keyboard.press('Enter');
+
+      // Waited on the label, which changes either way — polling the fix's own
+      // attribute would make the wait part of what is being tested, and the
+      // assertion that matters is the focus.
+      await expect.poll(() => run.innerText(), { timeout: 15_000 }).not.toBe('Run now');
+      expect(await focused()).toBe('Run Focus Journey now');
+      // And how. `disabled` is what dropped focus, so its absence is the other
+      // half: a future edit that reinstates it fails here rather than quietly
+      // reintroducing the defect.
+      expect(await run.getAttribute('aria-disabled')).toBe('true');
+      expect(await run.evaluate((node: HTMLButtonElement) => node.disabled)).toBe(false);
+
+      // 2. Save steps — inert because the form is incomplete, and inert has to
+      // mean the handler does not run.
+      const row = page.locator('li', { hasText: 'Focus Editor Journey' }).first();
+      await row.getByRole('button', { name: 'Edit steps for Focus Editor Journey' }).click();
+      await row.getByRole('button', { name: 'Add a step' }).click();
+      await expect.poll(() => row.innerText()).toContain('needs a path');
+
+      const save = row.getByRole('button', { name: 'Save steps' });
+      expect(await save.getAttribute('aria-disabled')).toBe('true');
+      await save.focus();
+      await page.keyboard.press('Enter');
+      expect(await focused()).toBe('Save steps');
+      // Still open, still refusing. `save()` guards `!writable.ok` itself, so
+      // this alone would pass with the guard in `inertWhen` deleted — the
+      // request it uniquely stops is a *second* PATCH while one is in flight,
+      // which `disabled` used to stop at the DOM level. Asserted below.
+      await expect.poll(() => row.innerText()).toContain('needs a path');
+
+      // 2b. Reordering, where the place can be lost a second way that
+      // `aria-disabled` does not touch: React moves the keyed <li>, and a DOM
+      // move that is remove-then-insert blurs the focused element inside it.
+      //
+      // Read this before trusting it: React 19.2 moves with
+      // `Element.moveBefore` where it exists, which preserves focus, and this
+      // browser has it — so these three assertions pass with the component's
+      // refocus effect deleted. They pin the *outcome*, not that mechanism.
+      // What they would catch is the fallback path arriving here: an older
+      // Chromium, or React reverting to `insertBefore`. The engines where that
+      // fallback is live today — Firefox and Safari — this suite never runs.
+      const later = row.getByRole('button', { name: 'Move step 1 later' });
+      await later.focus();
+      await page.keyboard.press('Enter');
+      // The same step's button, one row down — so pressing again keeps moving
+      // the same step, rather than whatever swapped into the old position.
+      await expect.poll(focused).toBe('Move step 2 later');
+      await page.keyboard.press('Enter');
+      // Now at the end, and inert rather than gone: still focused, still the
+      // last step.
+      expect(await focused()).toBe('Move step 2 later');
+      expect(
+        await page.evaluate(() => document.activeElement?.getAttribute('aria-disabled')),
+      ).toBe('true');
+
+      // Put it back, so the assertions below are about the step that was
+      // half-finished rather than about the order.
+      const earlier = row.getByRole('button', { name: 'Move step 2 earlier' });
+      await earlier.focus();
+      await page.keyboard.press('Enter');
+      await expect.poll(focused).toBe('Move step 1 earlier');
+
+      // 3. And the other half of the same problem — a save that succeeds
+      // unmounts the form, so the focused button disappears with it. Closing
+      // hands focus back to the control that opened the editor.
+      const added = row.locator('fieldset').nth(1);
+      await added.getByLabel('Does').selectOption('expect');
+      await added.getByLabel('URL contains (optional)').fill('/done');
+      await save.click();
+
+      await expect.poll(focused, { timeout: 30_000 }).toBe('Edit steps for Focus Editor Journey');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
    * Evidence links must never appear on the public report.
    *
    * `/r/<token>` is deliberately outside the auth gate — the token is the whole
