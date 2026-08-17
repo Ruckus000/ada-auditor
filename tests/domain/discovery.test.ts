@@ -83,6 +83,11 @@ describe('discoveryRequestSchema', () => {
       'javascript:alert(1)',
       'data:text/html,x',
       'ftp://acme.test',
+      // Not a scheme-list case: pins the `^...$` anchoring itself. None of
+      // the schemes above contain "http", so a regex relaxed to /https?/
+      // would leave them refused and this suite green while accepting
+      // `xhttps://` and `httpsx://` targets.
+      'xhttps://acme.test',
     ]) {
       expect(discoveryRequestSchema.safeParse({ targetUrl }).success).toBe(false);
     }

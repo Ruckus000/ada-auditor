@@ -159,17 +159,24 @@ export type DiscoveryResult = {
  *
  * `targetUrl` is capped at 2048 characters, matching the same field on the
  * journeys route (`src/app/api/platform/clients/[clientId]/journeys/route.ts`)
- * for the same reason `src/domain/journey-step.ts` gives for its own length
- * bound: size is a separate question from shape, and a value this large is
- * not a URL worth parsing whatever shape it is in.
+ * and built the same way `authoredStepsSchema` bounds its array, for the
+ * reason `src/domain/journey-step.ts` gives: length before shape, and the
+ * order is load-bearing. `.max(2048)` runs on the plain string before
+ * `.pipe()` ever hands it to the URL format check, so an oversized value is
+ * refused without being parsed as a URL at all — chaining `.max()` onto
+ * `z.url()` instead would run the format check first.
  *
  * zod trims a string before running format checks, so a `targetUrl` with
  * leading or trailing whitespace both parses successfully and comes back
- * trimmed on `.data`. Callers must use the parsed value, never the raw
+ * trimmed on `.data`. That trimming happens inside the piped `z.url()` step
+ * and survives the pipe. Callers must use the parsed value, never the raw
  * request body, or that trimming buys nothing.
  */
 export const discoveryRequestSchema = z
   .object({
-    targetUrl: z.url({ protocol: /^https?$/ }).max(2048),
+    targetUrl: z
+      .string()
+      .max(2048)
+      .pipe(z.url({ protocol: /^https?$/ })),
   })
   .strict();
