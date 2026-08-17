@@ -106,6 +106,24 @@ describe('authoredStepSchema, stricter than the runner on purpose', () => {
     ).toBe(true);
   });
 
+  /**
+   * A fill that types nothing is not a step, and the step editor is why it
+   * matters now.
+   *
+   * A row whose stored literal is deliberately withheld from the screen comes
+   * back with the box empty. Accepting `''` here means an operator who opens
+   * the editor to correct step 5 blanks step 2's search term by not touching
+   * it — a silent rewrite of a journey nobody asked to change.
+   */
+  it('refuses a fill that types nothing, while the runner still walks one', () => {
+    const empty = { action: 'search', type: 'fill', selector: '#q', value: '' };
+
+    expect(authoredStepSchema.safeParse(empty).success).toBe(false);
+    // Rows already holding one keep running: a client's scheduled audit must
+    // not break on a deploy that changed no behaviour.
+    expect(journeyStepSchema.safeParse(empty).success).toBe(true);
+  });
+
   it('keeps a literal value for every other kind of fill', () => {
     // Typing a search term is ordinary. Banning literals outright to catch
     // passwords would break the common case to stop the rare one.
@@ -200,10 +218,13 @@ describe('toStepViews', () => {
     ]);
 
     expect(views.map((v) => v.position)).toEqual([1, 2, 3]);
-    expect(views[0].target).toBe('login.html');
-    expect(views[1].target).toBe('#submit');
-    // Both halves, so the screen shows which checks were declared.
-    expect(views[2].target).toBe('url contains /dashboard and #menu visible');
+    expect(views[0].path).toBe('login.html');
+    expect(views[1].selector).toBe('#submit');
+    // Both halves, kept apart. The list joins them into a sentence where it
+    // renders one; the editor needs each in its own box, and a view carrying
+    // only the joined phrase forced one of the two to parse it back out.
+    expect(views[2].urlIncludes).toBe('/dashboard');
+    expect(views[2].selector).toBe('#menu');
   });
 
   it('names a credential and shows which field it fills', () => {
