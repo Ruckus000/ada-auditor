@@ -23,7 +23,25 @@ export function normalizePathname(pathname: string): string {
  *
  * The fragment is dropped because it names a position within a page, not a
  * page — `/a#intro` and `/a#detail` are one document and one audit. The query
- * is kept because it routinely selects a different one.
+ * is kept because it routinely selects a different one, and it is kept
+ * exactly as written: `?a=1&b=2` and `?b=2&a=1` key as two different pages.
+ * That is a decision, not an oversight — the crawl is capped, so the worst
+ * case is a few wasted revisits, and sorting params would break the rare
+ * server that treats param order as meaningful.
+ *
+ * Requires an absolute URL (`new URL` throws `TypeError` otherwise, e.g. on
+ * `/relative`, `''`, `'not a url'` or a bare `'#frag'`). That throw is the
+ * contract, not a gap: minting a key for a value with no origin would either
+ * fabricate one or silently merge it with whatever else lacks one, and a
+ * crawler has no business treating an unparseable href as a page. Task 3's
+ * caller must catch per-URL and route the failure into `DiscoveryError[]`,
+ * not let it abort the frontier.
+ *
+ * Callers must also filter to http/https before calling this: origin is the
+ * literal string `"null"` for opaque-origin schemes like `mailto:` or
+ * `data:`, so `mailto:x` and `data:x` collide on the same key. Scheme
+ * filtering is Task 3's job, not this function's — it is out of contract
+ * here.
  */
 export function discoveryKey(rawUrl: string): string {
   const url = new URL(rawUrl);

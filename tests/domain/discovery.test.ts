@@ -17,6 +17,10 @@ describe('normalizePathname', () => {
   it('keeps nested paths intact', () => {
     expect(normalizePathname('/a/b/c/')).toBe('/a/b/c');
   });
+
+  it('collapses index.html regardless of case', () => {
+    expect(normalizePathname('/help/INDEX.HTML')).toBe('/help');
+  });
 });
 
 describe('discoveryKey', () => {
@@ -42,5 +46,22 @@ describe('discoveryKey', () => {
   it('separates hosts and schemes', () => {
     expect(discoveryKey('https://acme.test/a')).not.toBe(discoveryKey('https://other.test/a'));
     expect(discoveryKey('https://acme.test/a')).not.toBe(discoveryKey('http://acme.test/a'));
+  });
+
+  it('composes the directory and query-string rules together', () => {
+    expect(discoveryKey('https://acme.test/help/?q=1')).toBe(
+      discoveryKey('https://acme.test/help?q=1'),
+    );
+  });
+
+  it('throws on a URL with no origin, rather than minting a garbage key', () => {
+    expect(() => discoveryKey('/relative')).toThrow(TypeError);
+    expect(() => discoveryKey('')).toThrow(TypeError);
+    expect(() => discoveryKey('not a url')).toThrow(TypeError);
+    expect(() => discoveryKey('#frag')).toThrow(TypeError);
+  });
+
+  it('collides opaque-origin schemes, because callers must filter to http/https first', () => {
+    expect(discoveryKey('mailto:x')).toBe(discoveryKey('data:x'));
   });
 });
