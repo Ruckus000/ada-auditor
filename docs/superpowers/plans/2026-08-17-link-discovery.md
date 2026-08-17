@@ -297,7 +297,7 @@ export const DISCOVERY_BUDGET_MS = 60_000;
 export const DISCOVERY_DELAY_MS = 250;
 
 /** Says who we are, so a site operator reading logs can tell. */
-export const DISCOVERY_USER_AGENT_SUFFIX = 'ADA-Auditor-Discovery/1.0';
+export const DISCOVERY_USER_AGENT_PRODUCT = 'ADA-Auditor-Discovery/1.0';
 
 export type DiscoveredPage = {
   url: string;
@@ -319,7 +319,17 @@ export type DiscoveryTruncation = {
   seen: number;
 };
 
-/** A page that could not be read. One dead link must not end a crawl. */
+/**
+ * A page that could not be read. One dead link must not end a crawl.
+ *
+ * `message` is the navigation failure's **first line only**. Playwright
+ * appends a call log naming the URL it was dialling, and discovery's URLs come
+ * from a client's own markup, where a query string routinely carries a reset
+ * token or a session id. This text is shown to an operator, and
+ * `services/logger.ts` redacts by field *name*, so a secret inside a value
+ * under the key `message` would travel unredacted. `attemptStep` in
+ * `journey-runner.ts` splits for the same reason, at more length.
+ */
 export type DiscoveryError = {
   url: string;
   message: string;
@@ -335,10 +345,19 @@ export type DiscoveryResult = {
  * `.strict()` for the same reason `authoredStepSchema` is: the keys nobody
  * thought to name are the ones worth refusing. The caps are not caller-supplied
  * in v1 and a body that tries to supply them is a body to reject, not ignore.
+ *
+ * `.max(2048)` matches the bound the journeys route already puts on the same
+ * field. `journey-step.ts` explains why a size check is a separate question
+ * from a shape check and belongs first — parsing junk before refusing it was
+ * measured at 210ms against 1ms.
+ *
+ * Callers must use the **parsed** value, never the raw body: zod trims before
+ * validating, so a padded target arrives here clean and arrives at the crawler
+ * clean only if the parse output is what gets passed on.
  */
 export const discoveryRequestSchema = z
   .object({
-    targetUrl: z.url({ protocol: /^https?$/ }),
+    targetUrl: z.url({ protocol: /^https?$/ }).max(2048),
   })
   .strict();
 ```
@@ -555,7 +574,7 @@ import {
   discoveryKey,
   DISCOVERY_BUDGET_MS,
   DISCOVERY_DELAY_MS,
-  DISCOVERY_USER_AGENT_SUFFIX,
+  DISCOVERY_USER_AGENT_PRODUCT,
   MAX_DISCOVERY_DEPTH,
   MAX_DISCOVERY_URLS,
   type DiscoveredPage,
@@ -606,6 +625,21 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
+ * The first line of a failure, and nothing after it.
+ *
+ * `attemptStep` in `journey-runner.ts` does the same thing for the same
+ * reason, stated there at length: Playwright appends a call log, and a call
+ * log names the URL it was dialling. Discovery's URLs come from a client's own
+ * markup, where a query string routinely carries a reset token or a session
+ * id — and this text is shown to an operator, having passed a redactor that
+ * keys on field names rather than values.
+ */
+function firstLine(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return (message.split('\n')[0] ?? '').trim();
+}
+
+/**
  * Walks a site from one URL and reports the pages it found.
  *
  * Discovery is an authoring aid: it scans nothing, scores nothing and stores
@@ -642,7 +676,7 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
   try {
     const context = await browser.newContext({
-      userAgent: `Mozilla/5.0 (compatible; ${DISCOVERY_USER_AGENT_SUFFIX})`,
+      userAgent: `Mozilla/5.0 (compatible; ${DISCOVERY_USER_AGENT_PRODUCT})`,
     });
 
     // The peer check, registered on the context before any page exists, so no
@@ -717,7 +751,15 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
       } catch (error) {
         errors.push({
           url: next.url,
-          message: error instanceof Error ? error.message : String(error),
+          // First line only, matching `attemptStep` in `journey-runner.ts`.
+          //
+          // A Playwright navigation failure carries its whole call log, which
+          // includes the URL it was dialling — and a URL harvested from a
+          // client's markup routinely has a reset token or a session id in the
+          // query. This string is destined for an operator's screen, and
+          // `services/logger.ts` redacts by field *name*, so a secret sitting
+          // inside a value under the key `message` would travel unredacted.
+          message: firstLine(error),
         });
       }
 
