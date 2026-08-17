@@ -233,6 +233,63 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     expect(body.journeys[0]).toMatchObject({ id: 'acme-checkout', clientId: 'acme' });
   });
 
+  /**
+   * The one surface where a stored secret was actually retrievable.
+   *
+   * The screens say "types a literal value" and never what it is, because a
+   * `fill` written before `authoredStepSchema` can hold a real password and a
+   * screen is a worse place for one than a database column. This route sat
+   * beside them handing the row over whole.
+   *
+   * Seeded through the store rather than the create route, because the create
+   * route refuses this shape now — and refusing new ones does nothing about
+   * the rows that already exist, which is the entire point.
+   */
+  it('never hands back a literal value a step is carrying', async () => {
+    await platform.upsertJourney({
+      id: 'legacy',
+      clientId: 'acme',
+      name: 'Legacy',
+      steps: [{ action: 'login', type: 'fill', selector: '#p', value: 'hunter2' }],
+    });
+
+    const response = await GET(fromBrowser(), params('acme'));
+    const text = await response.text();
+
+    // The whole body, not one field of it: a leak that moved to a different
+    // key would pass an assertion aimed at `steps`.
+    expect(text).not.toContain('hunter2');
+    expect(JSON.parse(text).journeys[0].steps[0]).toMatchObject({ hasLiteralValue: true });
+  });
+
+  it('publishes only the fields it names', async () => {
+    // A response built by spreading the row publishes every column somebody
+    // adds later, which is how the literal above got out. `lastScheduledAt` is
+    // the scheduler's bookkeeping and stands in here for "not chosen".
+    //
+    // Runnable and due, both of which are load-bearing: `claimDueJourneys`
+    // refuses a journey with no steps or no target, so a convenient stub here
+    // would never be claimed, `lastScheduledAt` would never be set, and the
+    // assertion below would hold against a route that publishes everything.
+    // It did, on the first attempt.
+    await platform.upsertJourney({
+      id: 'claimed',
+      clientId: 'acme',
+      name: 'Claimed',
+      targetUrl: 'https://acme.test/',
+      schedule: 'daily',
+      steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+    });
+    const claimed = await platform.claimDueJourneys(5, new Date(Date.UTC(2026, 0, 1, 3)));
+    expect(claimed.map((one) => one.id)).toContain('claimed');
+
+    const body = await (await GET(fromBrowser(), params('acme'))).json();
+    const journey = body.journeys.find((one: { id: string }) => one.id === 'claimed');
+
+    expect(journey).toBeDefined();
+    expect(journey).not.toHaveProperty('lastScheduledAt');
+  });
+
   it('records who recorded it', async () => {
     await POST(fromBrowser({ name: 'Checkout' }), params('acme'));
 
