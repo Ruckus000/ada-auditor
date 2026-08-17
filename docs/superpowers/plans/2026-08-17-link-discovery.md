@@ -1398,6 +1398,23 @@ describe('POST /api/platform/discover', () => {
     });
   });
 
+  it('tells the operator where a redirecting target actually went', async () => {
+    const { EntryPointRedirectedError } = await import(
+      '../../src/integrations/browser/discover-links'
+    );
+    vi.mocked(discoverLinks).mockRejectedValueOnce(
+      new EntryPointRedirectedError('probe.example'),
+    );
+
+    const response = await POST(post({ targetUrl: 'https://www.probe.example' }));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({ error: 'entry_point_redirected', host: 'probe.example' });
+    // The host is structured data, not prose. No message crosses the wire.
+    expect(body).not.toHaveProperty('detail');
+  });
+
   it('answers 400 rather than 500 when the target is refused by a guard', async () => {
     vi.mocked(discoverLinks).mockRejectedValueOnce(
       Object.assign(new Error('Target URL resolves to a private or reserved address.'), {
@@ -1438,6 +1455,7 @@ import { UnsafeTargetError } from '../../../../integrations/browser/target-url';
 import { authorizePrincipal } from '../../_lib/authorize';
 import { createRequestId } from '../../_lib/request-id';
 import { classifyRunFailure } from '../../_lib/run-failure';
+import { EntryPointRedirectedError } from '../../../../integrations/browser/discover-links';
 
 /**
  * Discovery renders every page it finds, so it needs the same headroom a run
@@ -1495,10 +1513,28 @@ export async function POST(request: Request): Promise<Response> {
     // matches on the error *name* rather than the prose — a lesson that file
     // records paying for, when a message-prefix regex caught three of nine
     // throw sites and missed both private-address refusals.
+    // The entry point redirected off its own allowlist — the www-to-apex case.
+    // Branch on the *type*, never on the prose: `run-failure.ts` records what
+    // matching a message prefix cost, where a regex caught three of nine throw
+    // sites and missed both private-address refusals. `settledHost` is carried
+    // on the error so the operator can be told where to look instead, without
+    // a message crossing the wire.
+    if (error instanceof EntryPointRedirectedError) {
+      return Response.json(
+        { error: 'entry_point_redirected', host: error.settledHost, requestId },
+        { status: 400 },
+      );
+    }
+
     if (error instanceof UnsafeTargetError || (error as Error)?.name === 'UnsafeTargetError') {
       const code = classifyRunFailure((error as Error).message, (error as Error).name);
       return Response.json({ error: code, requestId }, { status: 400 });
     }
+
+    // Task 5 gave `discoverLinks` one contract: it returns a crawl or it
+    // throws. So a dead host, a timeout or a typo'd target arrives here rather
+    // than as a 200 with an empty page list — which is the shape that would
+    // have rendered as "0 pages found" and read as success.
     throw error;
   }
 }
@@ -1561,6 +1597,10 @@ export function describeDiscoveryFailure(code: string | undefined): string {
       return 'That is not a valid http or https web address.';
     case 'navigation_not_allowed':
       return 'That address cannot be crawled: it is not a public web address.';
+    case 'entry_point_redirected':
+      // The host is returned as structured data, so the caller composes the
+      // sentence. See the route: no message crosses the wire.
+      return 'That address redirects somewhere else. Try the address it redirects to.';
     default:
       return 'Discovery could not finish. Check the address and try again.';
   }
@@ -1578,6 +1618,7 @@ describe('describeDiscoveryFailure', () => {
     expect(describeDiscoveryFailure('unauthorized')).toMatch(/sign in/i);
     expect(describeDiscoveryFailure('invalid_request_body')).toMatch(/address/i);
     expect(describeDiscoveryFailure('navigation_not_allowed')).toMatch(/public/i);
+    expect(describeDiscoveryFailure('entry_point_redirected')).toMatch(/redirects/i);
   });
 
   it('still says discovery did not run when the code is unrecognised', () => {
@@ -1636,6 +1677,8 @@ type DiscoveryResponse = {
   pages?: DiscoveredPage[];
   truncated?: DiscoveryTruncation;
   errors?: Array<{ url: string; message: string }>;
+  /** How many failures the crawler's ceiling discarded. Absent means none. */
+  errorsOmitted?: number;
   /** A stable code. The API returns no message — see `describeDiscoveryFailure`. */
   error?: string;
 };
