@@ -1,5 +1,6 @@
 import type { ClientDetail } from '../../../../services/client-detail';
 import type { JourneyStepView } from '../../../../domain/journey-step';
+import type { CredentialPresence } from '../../../../services/credential-presence';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
@@ -131,6 +132,8 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                   <StepList steps={journey.steps} />
                 </JourneyStepsEditor>
 
+                <CredentialList credentials={journey.credentials} />
+
                 {journey.lastRun?.failureReason ? (
                   <span
                     style={{
@@ -154,18 +157,59 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
 }
 
 /**
- * The steps, in order, in words.
+ * Which credentials this journey needs, and whether they are there.
  *
- * The screen showed a *count*. An operator could not tell whether a journey
- * logged in and reached a dashboard or fetched one page five times, which is
- * also why no static rule can be trusted to police what a step does:
- * `{action:'activate', type:'click', selector:'#delete-account'}` passes every
- * check in `authoredStepSchema`, and a person reading the list is the defence.
+ * Presence, never a value. There is no input here and nothing to reveal — a
+ * credential is set in the deployment's environment by whoever administers it,
+ * and this screen's only job is to say whether the name a step uses resolves.
  *
- * A literal value is reported as present and never shown — see `toStepViews`.
- * An unrecognised step is called one rather than dressed up, because it cannot
- * run and the operator needs to know that before a schedule fires.
+ * Worth having because the step editor lets an operator type a `credentialRef`
+ * and gave them no way to check it. The alternative was starting a run and
+ * waiting for it to fail at the login, after a browser had launched and walked
+ * that far into a client's site.
+ *
+ * A missing half is called out on its own: a login needs both, and the likely
+ * failure is somebody setting the pair and mistyping one variable name.
  */
+function CredentialList({ credentials }: { credentials: CredentialPresence[] }) {
+  if (credentials.length === 0) return null;
+
+  return (
+    <ul
+      style={{
+        flexBasis: '100%',
+        margin: '2px 0 0',
+        padding: 0,
+        listStyle: 'none',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 10,
+      }}
+    >
+      {credentials.map((credential) => {
+        const missing = [
+          credential.user ? undefined : 'username',
+          credential.pass ? undefined : 'password',
+        ].filter(Boolean);
+
+        return (
+          <li
+            key={credential.ref}
+            style={{
+              fontFamily: FONT.mono,
+              fontSize: 11.5,
+              color: missing.length > 0 ? '#96231c' : T.inkMuted,
+            }}
+          >
+            credential {credential.ref} —{' '}
+            {missing.length === 0 ? 'configured' : `no ${missing.join(' and no ')} configured`}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /**
  * Where the step acts, in one phrase.
  *
@@ -188,6 +232,19 @@ function describeTarget(step: JourneyStepView): string {
   return step.path ?? step.selector ?? '';
 }
 
+/**
+ * The steps, in order, in words.
+ *
+ * The screen showed a *count*. An operator could not tell whether a journey
+ * logged in and reached a dashboard or fetched one page five times, which is
+ * also why no static rule can be trusted to police what a step does:
+ * `{action:'activate', type:'click', selector:'#delete-account'}` passes every
+ * check in `authoredStepSchema`, and a person reading the list is the defence.
+ *
+ * A literal value is reported as present and never shown — see `toStepViews`.
+ * An unrecognised step is called one rather than dressed up, because it cannot
+ * run and the operator needs to know that before a schedule fires.
+ */
 function StepList({ steps }: { steps: JourneyStepView[] }) {
   if (steps.length === 0) return null;
 

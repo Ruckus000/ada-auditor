@@ -226,3 +226,53 @@ describe('buildClientDetail, for a journey whose last run failed', () => {
     expect(journey?.lastRun?.failureReason).toBeUndefined();
   });
 });
+
+/**
+ * The credentials a journey names, carried through to the screen.
+ *
+ * `credentialsForSteps` has its own tests; this is the other half, and the
+ * half three separate guards in this repo have shipped without. A rule with no
+ * caller is green forever.
+ */
+describe('buildClientDetail, on credentials', () => {
+  it('reports which of a journey’s credentials are configured', async () => {
+    const previous = process.env.AUDIT_CREDENTIAL_ACME_USER;
+    process.env.AUDIT_CREDENTIAL_ACME_USER = 'auditor@acme.test';
+
+    try {
+      await platform.upsertClient({ id: 'acme', name: 'Acme' });
+      await platform.upsertJourney({
+        id: 'j1',
+        clientId: 'acme',
+        name: 'Login',
+        targetUrl: 'https://acme.test/',
+        steps: [
+          { action: 'login', type: 'fill', selector: '#u', credentialRef: 'acme', field: 'user' },
+        ],
+      });
+
+      const detail = await buildClientDetail('acme', deps());
+
+      // The username is set in the environment above; the password is not, and
+      // half-configured is the state an operator most needs told.
+      expect(detail?.journeys[0].credentials).toEqual([
+        { ref: 'acme', user: true, pass: false },
+      ]);
+    } finally {
+      if (previous === undefined) delete process.env.AUDIT_CREDENTIAL_ACME_USER;
+      else process.env.AUDIT_CREDENTIAL_ACME_USER = previous;
+    }
+  });
+
+  it('says nothing for a journey that names none', async () => {
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({
+      id: 'j1',
+      clientId: 'acme',
+      name: 'Plain',
+      steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+    });
+
+    expect((await buildClientDetail('acme', deps()))?.journeys[0].credentials).toEqual([]);
+  });
+});

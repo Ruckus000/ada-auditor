@@ -7,6 +7,7 @@ import {
   type JourneyRunRefusal,
   type JourneyStore,
 } from '../domain/platform';
+import { credentialsForSteps, type CredentialPresence } from './credential-presence';
 import { displaySeverity } from './presentation/severity';
 import { runVerdict, type VerdictKind } from './presentation/verdict';
 
@@ -70,6 +71,15 @@ export type JourneySummary = {
    * constrain it as production too or the two disagree about the same journey.
    */
   environment: Environment;
+  /**
+   * The credentials this journey names, and whether each is configured.
+   *
+   * Presence only — never a value, never an input. The step editor lets an
+   * operator type a `credentialRef`, and until this the only way to find out
+   * whether it resolved was to start a run and watch it fail at the login,
+   * after a browser had launched and walked that far.
+   */
+  credentials: CredentialPresence[];
   lastRun: RunSummary | null;
 };
 
@@ -196,6 +206,7 @@ export async function buildClientDetail(
         // Anything unrecognised falls to `production`, the same default the
         // run route applies, because the safe answer is the strict one.
         environment: environmentSchema.safeParse(journey.environment).data ?? 'production',
+        credentials: credentialsForSteps(journey.steps),
         lastRun: run ? summariseRun(run) : null,
       };
     }),
