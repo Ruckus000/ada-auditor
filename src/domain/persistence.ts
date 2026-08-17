@@ -243,3 +243,25 @@ export interface RunStore {
    */
   list(options?: ListRunsOptions): Promise<StoredRunRecord[]>;
 }
+
+/**
+ * How many runs one `list` call may return.
+ *
+ * The rule lived twice, spelled `Math.min(Math.max(options.limit ?? 20, 1),
+ * 100)` in both the Postgres store and the memory double — two copies of one
+ * policy, in the two places whose whole purpose is to behave identically. The
+ * shared contract could never have caught a drift between them, because the
+ * assertion it made (`length <= 100`) is satisfied by any smaller number.
+ *
+ * `Number.isFinite` because the bare `Math.min(Math.max(...))` answers `NaN`
+ * for a `NaN` input, which reaches Postgres as `limit NaN`. No route can send
+ * one — they parse integers — but a store is called by scripts and tests too,
+ * and a clamp that answers "not a number" is not a clamp.
+ */
+export const RUN_LIST_DEFAULT = 20;
+export const RUN_LIST_MAX = 100;
+
+export function clampRunListLimit(limit?: number): number {
+  if (limit === undefined || !Number.isFinite(limit)) return RUN_LIST_DEFAULT;
+  return Math.min(Math.max(Math.floor(limit), 1), RUN_LIST_MAX);
+}
