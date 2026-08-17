@@ -22,6 +22,25 @@
       3. `.overflow` is wider than the viewport, so the document scrolls in two
          dimensions. This is the one axe has no rule for and the one closest to
          WCAG 1.4.10 — it is here to be measured by a probe, not by axe.
+
+      WHAT IT MEASURED, 2026-08-17. Recorded here because a fixture that poses
+      a go/no-go question and does not write down the answer is worth less than
+      no fixture at all:
+
+        wide   : 0 violations, scan 327ms, overflows=false
+        narrow : 1 violation,  scan 223ms, overflows=true
+        narrow-only: color-contrast @ .note
+        ten narrow scans: 1 distinct result
+
+      Both go/no-go criteria passed, and the overflow probe discriminated
+      cleanly. The axe yield was *one rule*, not two: `target-size` should have
+      fired on the buttons below — measured at 44x18 against a 24x24 minimum —
+      and did not, because axe ships that rule `enabled: false`. Chasing that
+      is what found a WCAG 2.5.8 criterion this product mapped, listed as AA
+      and never once evaluated. See `ENABLED_BY_US` in `axe-scan.ts`.
+
+      So the fixture's most valuable result was not the one it was built to
+      produce.
     -->
     <style>
       body {

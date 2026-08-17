@@ -50,6 +50,34 @@ describe('toStoredRunRecord, for a run whose steps carry a typed value', () => {
     ]);
   });
 
+  /**
+   * The rule set has to survive the boundary, and it did not.
+   *
+   * `redactIntent` rebuilt the intent as `{steps}` alone, so `ruleset` was
+   * dropped on every write. `walkedTheSamePath` therefore compared
+   * `undefined === undefined`, answered "same rules", and the guard that makes
+   * a rule-set change `incomparable` did nothing — while two long comments,
+   * one of them in `regression.ts`, asserted that it did.
+   *
+   * Nothing caught it. `regression.test.ts` builds intent objects by hand, so
+   * it proved the comparison and never the plumbing; the store contract
+   * asserted `toEqual({ steps })`, which is the broken shape written down as
+   * the expected one. This file's own header is about that exact failure —
+   * "the wiring, not the function" — and the fourth instance of it on this
+   * work went in anyway, one commit after the header was cited approvingly.
+   */
+  it('carries the rule set through to the stored record', () => {
+    const record = toStoredRunRecord({
+      ...BASE,
+      intent: {
+        steps: [{ action: 'navigate', type: 'goto', path: '/login' }],
+        ruleset: 'axe-core@4.12.1+target-size',
+      },
+    });
+
+    expect(record.intent?.ruleset).toBe('axe-core@4.12.1+target-size');
+  });
+
   it('keeps a run that recorded no intent absent, rather than empty', () => {
     // `compareToBaseline` reads absent as "not recorded" and withholds the
     // diff. An `{steps: []}` here would claim the run walked nothing, and two
