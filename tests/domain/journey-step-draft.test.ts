@@ -37,7 +37,7 @@ describe('loading a journey into the editor and saving it back', () => {
    * step 5 silently rewrites step 2.
    */
   it('returns exactly the steps it was given', () => {
-    const saved = toAuthoredSteps(load(STORED));
+    const saved = toAuthoredSteps(load(STORED), 'production');
 
     expect(saved.ok).toBe(true);
     expect(saved.ok && saved.steps).toEqual(STORED);
@@ -47,7 +47,10 @@ describe('loading a journey into the editor and saving it back', () => {
     // `STEP_TEXT` is `min(1)`, so sending `selector: ''` for the box nobody
     // filled in refuses the whole array — over a field the operator never
     // touched and cannot see is wrong.
-    const saved = toAuthoredSteps(load([{ action: 'inspect', type: 'expect', urlIncludes: '/x' }]));
+    const saved = toAuthoredSteps(
+      load([{ action: 'inspect', type: 'expect', urlIncludes: '/x' }]),
+      'production',
+    );
 
     expect(saved.ok && saved.steps).toEqual([
       { action: 'inspect', type: 'expect', urlIncludes: '/x' },
@@ -60,7 +63,7 @@ describe('loading a journey into the editor and saving it back', () => {
     // it. `authoredStepSchema` is `.strict()`, so sending it would refuse the
     // save over a leftover nothing on screen explains.
     const [click] = load([{ action: 'login', type: 'click', selector: '#submit' }]);
-    const saved = toAuthoredSteps([{ ...click, type: 'goto', action: 'navigate', path: '/home' }]);
+    const saved = toAuthoredSteps([{ ...click, type: 'goto', action: 'navigate', path: '/home' }], 'production');
 
     expect(saved.ok && saved.steps).toEqual([{ action: 'navigate', type: 'goto', path: '/home' }]);
   });
@@ -70,7 +73,7 @@ describe('loading a journey into the editor and saving it back', () => {
     // it leaves behind is a journey `journeyRunRefusal` answers
     // `journey_has_no_steps` to: a save that succeeds and makes the journey
     // unrunnable is this plan's whole subject.
-    expect(toAuthoredSteps([]).ok).toBe(false);
+    expect(toAuthoredSteps([], 'production').ok).toBe(false);
   });
 });
 
@@ -91,10 +94,10 @@ describe('a stored literal value', () => {
 
     expect(draft.value).toBe('');
     expect(draft.literalWithheld).toBe(true);
-    expect(toAuthoredSteps([draft]).ok).toBe(false);
+    expect(toAuthoredSteps([draft], 'production').ok).toBe(false);
     expect(describeDraftProblem(draft)).toMatch(/not shown/);
 
-    const retyped = toAuthoredSteps([{ ...draft, value: 'shoes' }]);
+    const retyped = toAuthoredSteps([{ ...draft, value: 'shoes' }], 'production');
     expect(retyped.ok && retyped.steps).toEqual(STORED_LITERAL);
   });
 
@@ -115,7 +118,7 @@ describe('a step the runner does not recognise', () => {
 
     expect(draft.type).toBe('');
     expect(draft.unrecognised).toBe(true);
-    expect(toAuthoredSteps([draft]).ok).toBe(false);
+    expect(toAuthoredSteps([draft], 'production').ok).toBe(false);
     expect(describeDraftProblem(draft)).toMatch(/Choose what this step does/);
   });
 
@@ -172,11 +175,41 @@ describe('what the form says is wrong', () => {
       value: 'hunter2',
     };
 
-    expect(toAuthoredSteps([draft]).ok).toBe(false);
+    expect(toAuthoredSteps([draft], 'production').ok).toBe(false);
     expect(describeDraftProblem(draft)).toMatch(/must use a credential/);
   });
 
   it('says nothing about a row that is fine', () => {
     expect(describeDraftProblem({ ...emptyDraft('k'), path: '/home' })).toBeNull();
+  });
+});
+
+describe('an action the journey’s environment forbids', () => {
+  const submit = {
+    ...emptyDraft('k'),
+    type: 'click' as const,
+    action: 'submit-safe',
+    selector: '#pay',
+  };
+
+  /**
+   * The editor and the write routes have to answer the same way.
+   *
+   * This warned and let the save through once, on the reasoning that the
+   * action was already stored and blocking would trap the operator. It does
+   * not trap them — the dropdown offers every allowed action and the row can
+   * be removed — and what the softer version produced was a save the route
+   * then rejected with a 422. Two doors disagreeing about one rule is the
+   * failure the shared step cap and the shared credential check both exist to
+   * end.
+   */
+  it('is refused where the environment forbids it', () => {
+    expect(toAuthoredSteps([submit], 'production').ok).toBe(false);
+  });
+
+  it('is accepted where the environment permits it', () => {
+    // The same step, the same list, a different journey. Nothing about the
+    // shape of a step decides this.
+    expect(toAuthoredSteps([submit], 'staging').ok).toBe(true);
   });
 });

@@ -3,6 +3,8 @@ import { actorFields } from '../../../../../../../domain/operator';
 import { journeyRunRefusal } from '../../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../../integrations/persistence';
 import { allowedHostsSchema } from '../../../../../../../domain/allowed-hosts';
+import { environmentSchema } from '../../../../../../../domain/contracts';
+import { firstForbiddenAction } from '../../../../../../../domain/policy';
 import { authoredStepsSchema, journeyStepSchema } from '../../../../../../../domain/journey-step';
 import { containsInlineCredential } from '../../../../../_lib/inline-credential';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
@@ -51,13 +53,23 @@ const patchSchema = z
      * renames a cadence would silently drop the provider a journey needs.
      */
     allowedHosts: allowedHostsSchema.optional(),
+    /**
+     * Where the journey runs. Unset means unchanged, as everywhere here.
+     *
+     * A change either way can break the steps already stored: production
+     * forbids `submit-safe`, so promoting a working staging journey turns its
+     * first submission into a mid-walk abort. The check below judges the pair
+     * this patch leaves behind rather than either half of it.
+     */
+    environment: environmentSchema.optional(),
   })
   .refine(
     (body) =>
       body.schedule !== undefined ||
       body.scheduleHour !== undefined ||
       body.steps !== undefined ||
-      body.allowedHosts !== undefined,
+      body.allowedHosts !== undefined ||
+      body.environment !== undefined,
     { message: 'A patch must change something.' },
   );
 
@@ -109,6 +121,10 @@ export async function PATCH(
   // a journey that was scheduled last week.
   const schedule = parsed.schedule ?? journey.schedule ?? 'off';
   const steps = parsed.steps ?? journey.steps;
+  // Both halves resolved before either is judged. Checking new steps against
+  // the stored environment would miss a patch that moves the journey, and
+  // checking a new environment against nothing would miss one that does both.
+  const environment = parsed.environment ?? environmentSchema.safeParse(journey.environment).data ?? 'production';
 
   // A journey that cannot be run cannot be scheduled either: booking one is
   // booking a recurring failure, one wasted run-budget slot and one "started a
@@ -147,6 +163,17 @@ export async function PATCH(
     }
   }
 
+  // Refused before it is stored, not at step N of the next walk. The runner
+  // checks each action as it reaches it, so the alternative is a journey that
+  // clicks its way through a client's live site and then aborts.
+  const forbidden = firstForbiddenAction(steps, environment);
+  if (forbidden) {
+    return Response.json(
+      { error: 'action_not_allowed_here', requestId, action: forbidden },
+      { status: 422 },
+    );
+  }
+
   // Every field carried across explicitly, because `upsertJourney` overwrites
   // the whole row. Omitting `scheduleHour` used to reset a custom hour to the
   // store's default on any schedule change — a patch that never mentioned the
@@ -160,7 +187,7 @@ export async function PATCH(
     clientId: journey.clientId,
     name: journey.name,
     ...(journey.targetUrl ? { targetUrl: journey.targetUrl } : {}),
-    ...(journey.environment ? { environment: journey.environment } : {}),
+    environment,
     schedule,
     ...(scheduleHour === undefined ? {} : { scheduleHour }),
     ...(allowedHosts === undefined ? {} : { allowedHosts }),

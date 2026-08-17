@@ -3,6 +3,8 @@ import { allowedHostsSchema } from '../../../../../../domain/allowed-hosts';
 import { authoredStepsSchema, toStepViews } from '../../../../../../domain/journey-step';
 import { containsInlineCredential } from '../../../../_lib/inline-credential';
 import { actorFields } from '../../../../../../domain/operator';
+import { environmentSchema } from '../../../../../../domain/contracts';
+import { firstForbiddenAction } from '../../../../../../domain/policy';
 import { journeyRunRefusal, type StoredJourney } from '../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { clientIdFromName } from '../../../../../../services/portfolio';
@@ -109,6 +111,17 @@ const createJourneySchema = z.object({
    * provider and forgetting it.
    */
   allowedHosts: allowedHostsSchema.optional(),
+  /**
+   * Where this journey runs, which decides what a step may do.
+   *
+   * `production` when unsaid, and that default is why this had to become
+   * settable. Production forbids `submit-safe` and `mutate-test-data`, so
+   * while every journey was production those two were authorable and runnable
+   * nowhere — a step an operator could write and no run could ever walk, which
+   * is precisely the state `delete` was removed from `AUTHORABLE_ACTIONS` to
+   * avoid.
+   */
+  environment: environmentSchema.optional(),
 });
 
 
@@ -165,6 +178,18 @@ export async function POST(
     return Response.json({ error: refusal, requestId }, { status: 422 });
   }
 
+  // Refused here rather than at step N of the walk. The runner checks each
+  // action as it reaches it, so a journey production forbids is one that
+  // clicks its way through a client's live site and then stops — the damage
+  // is already done by the time the refusal is read.
+  const forbidden = firstForbiddenAction(parsed.steps ?? [], parsed.environment ?? 'production');
+  if (forbidden) {
+    return Response.json(
+      { error: 'action_not_allowed_here', requestId, action: forbidden },
+      { status: 422 },
+    );
+  }
+
   // Scoped to the client, because the id is global: two clients may both have
   // a journey called "Checkout" and they are not the same journey.
   const taken = (await platform.listJourneys()).map((journey) => journey.id);
@@ -178,6 +203,7 @@ export async function POST(
     ...(parsed.schedule ? { schedule: parsed.schedule } : {}),
     ...(parsed.scheduleHour === undefined ? {} : { scheduleHour: parsed.scheduleHour }),
     ...(parsed.allowedHosts ? { allowedHosts: parsed.allowedHosts } : {}),
+    ...(parsed.environment ? { environment: parsed.environment } : {}),
     steps: parsed.steps ?? [],
   });
 

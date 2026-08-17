@@ -141,3 +141,34 @@ export function isActionAllowed(environment: Environment, action: string): boole
   const actionClass = classifyAction(action);
   return actionClass !== 'forbidden' && allowedByEnvironment[environment].has(actionClass);
 }
+
+/**
+ * The first step this environment would refuse, or undefined when none would.
+ *
+ * The runner checks each step's action as it reaches it, which means a journey
+ * carrying one forbidden step walks 1..N-1 against a live site and *then*
+ * aborts. That is the "found out at the wrong end" failure `AUTHORABLE_ACTIONS`
+ * was created for, and it reopens the moment a journey's environment can
+ * change: `submit-safe` is fine in staging and forbidden in production, so
+ * moving a working journey to production turns its first submission into a
+ * mid-walk abort.
+ *
+ * Takes `unknown[]` because it is asked about stored rows as well as parsed
+ * ones — `steps` is jsonb written before any validation existed. A step whose
+ * action is not a string is not this function's problem: `journeyStepSchema`
+ * refuses it separately, and answering "forbidden" here would report the wrong
+ * reason for it.
+ */
+export function firstForbiddenAction(
+  steps: readonly unknown[],
+  environment: Environment,
+): string | undefined {
+  for (const step of steps) {
+    if (!step || typeof step !== 'object') continue;
+    const action = (step as { action?: unknown }).action;
+    if (typeof action !== 'string') continue;
+    if (!isActionAllowed(environment, action)) return action;
+  }
+
+  return undefined;
+}
