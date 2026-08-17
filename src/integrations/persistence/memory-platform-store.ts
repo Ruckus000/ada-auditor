@@ -174,6 +174,11 @@ export class MemoryPlatformStore implements PlatformStore {
       environment: journey.environment ?? 'production',
       schedule: journey.schedule ?? 'off',
       ...(journey.scheduleHour === undefined ? {} : { scheduleHour: journey.scheduleHour }),
+      // Absent rather than `[]` when unset, matching the Postgres column,
+      // which is nullable for the same reason: a row written before the column
+      // existed and one an operator deliberately cleared read the same, and
+      // neither is worth telling apart.
+      ...(journey.allowedHosts === undefined ? {} : { allowedHosts: journey.allowedHosts }),
       ...(existing?.lastScheduledAt ? { lastScheduledAt: existing.lastScheduledAt } : {}),
       steps: journey.steps ?? [],
       ...(existing?.archivedAt === undefined ? {} : { archivedAt: existing.archivedAt }),

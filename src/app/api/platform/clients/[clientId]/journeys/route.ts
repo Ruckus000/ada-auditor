@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { allowedHostsSchema } from '../../../../../../domain/allowed-hosts';
 import { authoredStepsSchema } from '../../../../../../domain/journey-step';
 import { containsInlineCredential } from '../../../../_lib/inline-credential';
 import { actorFields } from '../../../../../../domain/operator';
@@ -57,6 +58,14 @@ const createJourneySchema = z.object({
    * a 201, and found out weeks later when a scheduled audit refused itself.
    */
   steps: authoredStepsSchema.optional(),
+  /**
+   * Extra hosts this journey may pass through, for third-party sign-in.
+   *
+   * The target's own host is not written here — the runner adds it, so an
+   * operator cannot lock themselves out of their own site by listing a
+   * provider and forgetting it.
+   */
+  allowedHosts: allowedHostsSchema.optional(),
 });
 
 
@@ -125,6 +134,7 @@ export async function POST(
     ...(parsed.targetUrl ? { targetUrl: parsed.targetUrl } : {}),
     ...(parsed.schedule ? { schedule: parsed.schedule } : {}),
     ...(parsed.scheduleHour === undefined ? {} : { scheduleHour: parsed.scheduleHour }),
+    ...(parsed.allowedHosts ? { allowedHosts: parsed.allowedHosts } : {}),
     steps: parsed.steps ?? [],
   });
 

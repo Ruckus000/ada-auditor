@@ -52,6 +52,21 @@ export type StoredJourney = {
    */
   steps: unknown[];
   /**
+   * Extra hosts a run of this journey may pass through, beyond the target's
+   * own.
+   *
+   * For third-party sign-in and nothing else: an app that hands off to Okta,
+   * Entra or Auth0 fails on its first step without one, because the allowlist
+   * is otherwise the target's host alone. Absent on every row written before
+   * the column, which reads the same as empty.
+   *
+   * Matched as host-or-subdomain, so one entry covers a provider's tenants.
+   * `allowedHostsSchema` in `domain/allowed-hosts.ts` is what may be written
+   * here; the target's own host is added by the runner and is never in this
+   * list.
+   */
+  allowedHosts?: string[];
+  /**
    * How often this journey re-runs. `off` unless somebody chose otherwise —
    * a tool that walks other people's sites does not start doing so on a timer
    * because a row defaulted.

@@ -180,6 +180,37 @@ export function platformStoreContract(
       expect(journey?.steps).toEqual([{ action: 'navigate', type: 'goto', path: '/' }]);
     });
 
+    it('round-trips the hosts a journey may pass through, and leaves them absent when unset', async () => {
+      // The list decides where a browser is allowed to go, so a store that
+      // dropped it would not fail loudly — it would quietly narrow the
+      // allowlist back to the target and break every SSO journey with a
+      // refusal naming a host the operator did write down.
+      const store = await seeded();
+      await store.upsertJourney({
+        id: 'pc-journey-sso',
+        clientId: CONTRACT_CLIENT,
+        name: 'SSO',
+        targetUrl: 'https://a.example',
+        allowedHosts: ['acme.okta.com', 'login.okta.com'],
+        steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+      });
+      await store.upsertJourney({
+        id: 'pc-journey-plain',
+        clientId: CONTRACT_CLIENT,
+        name: 'Plain',
+        steps: [],
+      });
+
+      expect((await store.getJourney('pc-journey-sso'))?.allowedHosts).toEqual([
+        'acme.okta.com',
+        'login.okta.com',
+      ]);
+      // Absent, not `[]`. Every other nullable column here reads "not
+      // recorded" that way, and an empty array would make a row written before
+      // the column look like one an operator deliberately cleared.
+      expect((await store.getJourney('pc-journey-plain'))?.allowedHosts).toBeUndefined();
+    });
+
     it('archives rather than deletes', async () => {
       // `runs` cascades from `journeys`, so a delete would destroy audit
       // history. Archiving hides the journey from the catalog and keeps it.

@@ -232,6 +232,44 @@ describe('PATCH /api/platform/clients/[clientId]/journeys/[journeyId]', () => {
     expect((await platform.getJourney('houred'))?.scheduleHour).toBe(9);
   });
 
+  /**
+   * Same defect class as the hour above, and a worse consequence.
+   *
+   * `upsertJourney` overwrites the whole row, so anything a patch does not
+   * carry across is erased. Drop the allowed hosts and the journey keeps
+   * running — right up until its next redirect to the identity provider, at
+   * which point it fails naming a host the operator can see in their own list.
+   */
+  it('keeps the allowed hosts a patch says nothing about', async () => {
+    await seed('sso', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+    expect((await patchBody('sso', { allowedHosts: ['acme.okta.com'] })).status).toBe(200);
+
+    await patchBody('sso', { steps: RUNNABLE_STEPS });
+
+    expect((await platform.getJourney('sso'))?.allowedHosts).toEqual(['acme.okta.com']);
+  });
+
+  it('lets the allowed hosts be cleared, which unset cannot express', async () => {
+    // An empty array is the only way back. Unset means unchanged everywhere on
+    // this route, so without this the list would be one-way — the gap left
+    // open for `scheduleHour` and worth not repeating.
+    await seed('sso-clear', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+    await patchBody('sso-clear', { allowedHosts: ['acme.okta.com'] });
+
+    await patchBody('sso-clear', { allowedHosts: [] });
+
+    expect((await platform.getJourney('sso-clear'))?.allowedHosts).toEqual([]);
+  });
+
+  it('holds an allowed host to the same rules creation does', async () => {
+    await seed('sso-bad', { targetUrl: 'https://acme.test/', steps: RUNNABLE_STEPS });
+
+    const response = await patchBody('sso-bad', { allowedHosts: ['*.okta.com'] });
+
+    expect(response.status).toBe(400);
+    expect((await platform.getJourney('sso-bad'))?.allowedHosts).toBeUndefined();
+  });
+
   it('keeps midnight, which is a real hour and a falsy number', async () => {
     // `??`, not `||`. Hour 0 is midnight UTC and perfectly valid; `||` would
     // treat it as unset and move the run to the store's default.

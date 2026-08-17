@@ -141,6 +141,36 @@ describe('GET /api/cron/tick', () => {
     });
   });
 
+  /**
+   * The dispatch has to carry everything the run needs, and this field is the
+   * newest way to get that wrong.
+   *
+   * A journey that signs in through a provider would otherwise run correctly
+   * by hand — the platform route reads the stored list directly — and fail on
+   * the timer, once a window, forever. That is word for word the failure the
+   * shared step cap was created to close, and it took a production schedule to
+   * find last time.
+   */
+  it('carries a journey’s allowed hosts into the dispatch', async () => {
+    await platform.upsertJourney({
+      id: 'sso',
+      clientId: 'acme',
+      name: 'SSO',
+      targetUrl: 'https://sso.test/',
+      allowedHosts: ['acme.okta.com'],
+      schedule: 'daily',
+      scheduleHour: new Date().getUTCHours(),
+      steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+    });
+
+    await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+    const [, init] = fetchMock.mock.calls[0]!;
+    expect(JSON.parse((init as RequestInit).body as string).allowedHosts).toEqual([
+      'acme.okta.com',
+    ]);
+  });
+
   // Claim-and-stamp in one operation, so a second tick in the same window
   // finds nothing left to do.
   it('is idempotent within a window', async () => {

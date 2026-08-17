@@ -81,10 +81,14 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
       };
     });
 
-  // The allowlist is the target's own host unless a run says otherwise: an
-  // audit of one site has no business navigating to another.
-  const allowedHosts =
-    input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
+  // The target's own host, plus anything the journey named. A union rather
+  // than a replacement: `allowedHosts` means "and also these", so an operator
+  // who lists their identity provider cannot lock the run out of the site it
+  // is auditing by forgetting to list that too.
+  const allowedHosts = [
+    ...(input.targetUrl ? [new URL(input.targetUrl).hostname] : []),
+    ...(input.allowedHosts ?? []),
+  ];
 
   // The built-in demo is a *fixture* journey: its paths only mean something
   // against `fixtureDir`. Substituting it for a run that names a real target
