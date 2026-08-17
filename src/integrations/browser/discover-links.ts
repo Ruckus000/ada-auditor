@@ -43,9 +43,45 @@ import {
 export class EntryPointRedirectedError extends UnsafeTargetError {
   readonly settledHost: string;
 
-  constructor(settledHost: string, message: string) {
-    super(message);
+  /**
+   * One argument, because the message is a function of the host.
+   *
+   * The sentence lives here rather than at the throw site so the field and the
+   * prose cannot drift apart. What the message is *for* is a log line and a
+   * stack trace; the route answers with `settledHost` as structured data, and
+   * `run-failure.ts` explains why no message crosses the wire.
+   */
+  constructor(settledHost: string) {
+    super(
+      `The target redirected to ${settledHost}, which is not the host it was asked for. Discover ${settledHost} instead.`,
+    );
     this.settledHost = settledHost;
+  }
+}
+
+/**
+ * The entry point could not be read at all — a dead host, a typo'd domain, a
+ * timeout.
+ *
+ * A type rather than an inference, and the difference matters. Since Task 5,
+ * `discoverLinks` throws *only* on entry failure, so the route could deduce
+ * this from "not an `UnsafeTargetError`" and skip the class. But a `TypeError`
+ * in our own crawler takes that same path, and inferring would tell the
+ * operator their site is unreachable when the bug is ours. The type is what
+ * keeps us from blaming a client's site for our own defect.
+ *
+ * The message is split here rather than at the catch because this is where the
+ * call log is — the same reason `DiscoveryError.message` gives.
+ */
+export class EntryPointUnreachableError extends Error {
+  constructor(cause: unknown) {
+    super(firstErrorLine(cause));
+    this.name = 'EntryPointUnreachableError';
+    // The original is kept as `cause` and not as prose. A stack trace in the
+    // platform's own logs is how our `TypeError` gets diagnosed; `message` is
+    // the only part anything is allowed to hand an operator, and it is already
+    // split. Nothing may serialise this field.
+    this.cause = cause;
   }
 }
 
@@ -112,11 +148,7 @@ function assertSettledInScope(settled: string, allowedHosts: string[], isEntry: 
     assertAllowedUrl(settled, allowedHosts);
   } catch (error) {
     if (isEntry && error instanceof UnsafeTargetError) {
-      const host = new URL(settled).hostname;
-      throw new EntryPointRedirectedError(
-        host,
-        `The target redirected to ${host}, which is not the host it was asked for. Discover ${host} instead.`,
-      );
+      throw new EntryPointRedirectedError(new URL(settled).hostname);
     }
     throw error;
   }
@@ -135,8 +167,12 @@ function delay(ms: number): Promise<void> {
  * markup, where a query string routinely carries a reset token or a session
  * id — and this text is shown to an operator, having passed a redactor that
  * keys on field names rather than values.
+ *
+ * Exported because the route needs the same split for the errors that reach it
+ * whole, and a second copy of a redaction rule is the thing this file argues
+ * against everywhere else. Same move Task 1 made for `normalizePathname`.
  */
-function firstLine(error: unknown): string {
+export function firstErrorLine(error: unknown): string {
   const isError = error instanceof Error;
   const first = ((isError ? error.message : String(error)).split('\n')[0] ?? '').trim();
 
@@ -386,15 +422,19 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // means — there is nothing to return — rather than relying on the entry
         // being visited first.
         //
-        // **This error is rethrown whole, so it still carries Playwright's call
-        // log.** Everything filed into `errors` below goes through `firstLine`
-        // first, for the reason `DiscoveryError` gives at length; nothing can
-        // split this one without destroying the type a caller branches on. The
-        // entry URL is the operator's own and not harvested from markup, so the
-        // leak is narrower than the one `firstLine` exists for — but a caller
-        // putting `error.message` into a response body must take its first line
-        // itself.
-        if (next.depth === 0 && pages.length === 0) throw error;
+        // **What is thrown is always one of two types, never a raw Playwright
+        // error.** An `UnsafeTargetError` — which includes
+        // `EntryPointRedirectedError` — goes up untouched, because the type is
+        // the whole answer and its message is ours rather than Playwright's.
+        // Anything else is wrapped, which is where the call log gets split
+        // off: a raw `page.goto` failure carries the URL it was dialling, and
+        // the caller nearest that string is the one that should not have to
+        // remember to split it. The type is also what stops a `TypeError` of
+        // ours being reported to an operator as their site being down — see
+        // `EntryPointUnreachableError`.
+        if (next.depth === 0 && pages.length === 0) {
+          throw error instanceof UnsafeTargetError ? error : new EntryPointUnreachableError(error);
+        }
 
         // Bounded, because nothing else bounds it. `MAX_DISCOVERY_URLS` counts
         // pages, and an errored navigation adds none — so a site of dead links
@@ -439,7 +479,7 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
           // query. This string is destined for an operator's screen, and
           // `services/logger.ts` redacts by field *name*, so a secret sitting
           // inside a value under the key `message` would travel unredacted.
-          message: firstLine(error),
+          message: firstErrorLine(error),
         });
       } finally {
         // Politeness is owed to the next request, so there is no one to be

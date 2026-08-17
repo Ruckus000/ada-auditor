@@ -46,6 +46,14 @@ const nextConfig = {
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
     ],
+    // The first browser route outside the two subtrees above. Nothing in the
+    // route file says "I need the tracer's help" — that knowledge lives only
+    // here — which is why `tests/deploy/browser-routes-are-packaged.test.ts`
+    // exists rather than a comment asking people to remember.
+    '/api/platform/discover/**': [
+      './node_modules/playwright-core/**',
+      './node_modules/@sparticuz/chromium/**',
+    ],
   },
   experimental: {
     useTypeScriptCli: true,

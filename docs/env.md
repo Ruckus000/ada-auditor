@@ -189,9 +189,22 @@ smaller, and a Chromium that cannot allocate fails at launch rather than
 degrading — so a too-small setting looks like "audits do not work" rather than
 "audits are slow".
 
-The two wildcard patterns are wildcards on purpose: `functions` keys are globs,
-and `[clientId]` in a literal path would be read as a character class and match
-nothing, which Vercel reports as a build error.
+Four routes get 3009 and each is named: `/api/audit/run`, `/api/audit/console`,
+the platform run route under `clients/**/runs`, and `/api/platform/discover`,
+which crawls a site to propose its pages. The PDF route drives a browser too,
+but only to print one already-stored report, so 2048 covers it.
+
+The wildcard patterns are wildcards on purpose: `functions` keys are globs, and
+`[clientId]` in a literal path would be read as a character class and match
+nothing, which Vercel reports as a build error. `/api/platform/discover` has no
+dynamic segment, so its key is literal — a wildcard there would buy nothing and
+widen what it matches.
+
+Memory is only half of what a browser route needs; `next.config.mjs` has to
+name the same route under `outputFileTracingIncludes` or the function deploys
+with no browser binaries at all. Neither file can see the other, and neither
+can see the code, so `tests/deploy/browser-routes-are-packaged.test.ts` holds
+the three together.
 
 ## Scheduling
 
