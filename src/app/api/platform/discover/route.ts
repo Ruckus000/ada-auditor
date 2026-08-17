@@ -134,6 +134,14 @@ export async function POST(request: Request) {
         // the field a log query groups on and would be indexed broadly. The
         // alternative is a regex that strips URLs out of Playwright's prose,
         // which is the exact move `run-failure.ts` records getting wrong.
+        //
+        // "The operator's own input" is a claim about a condition next door,
+        // not about this branch: `discover-links.ts` wraps a failure as
+        // `EntryPointUnreachableError` only under
+        // `next.depth === 0 && pages.length === 0`, which is what guarantees
+        // the URL inside this message is the entry point and not a link
+        // harvested from a third party's markup. Loosen that condition and
+        // this field starts carrying somebody else's query string.
         reason: error.message,
       });
       return Response.json({ error: 'entry_point_unreachable', requestId }, { status: 502 });

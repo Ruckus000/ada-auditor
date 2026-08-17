@@ -173,16 +173,36 @@ function nextCovers(key: string, route: string): boolean {
  *
  * `functions` keys are globs and Vercel resolves them server-side, so nothing
  * importable here is authoritative. picomatch without `contains` is the closest
- * available model, and the direction of any disagreement is what makes it
- * acceptable: this file only ever asks "is this route covered?", so a model
- * that matches *less* than Vercel reports a missing entry that is in fact
- * present — loud and wrong-but-safe — while the failure being guarded against
- * is a route covered by nothing at all.
+ * available model, and it is acceptable only for the shapes actually in use:
+ * literal paths, `*`, and `**`. On those, picomatch is at worst *stricter* than
+ * a matcher that let a wildcard cross `/` — and stricter is the safe direction
+ * here, because this file only ever asks "is this route covered?", so a model
+ * that matches less reports a missing entry that is in fact present: loud and
+ * wrong-but-safe, against a failure mode of a route covered by nothing at all.
  *
- * The discovery key is a literal path, so for the route this task adds the
+ * That argument does **not** extend to brace expansion or extglobs, which
+ * picomatch enables by default and Vercel may not support at all. There the
+ * disagreement runs the other way — picomatch would match *more* — so those
+ * keys are refused below rather than modelled. None are in use; the throw is
+ * what keeps that true.
+ *
+ * The discovery key is a literal path, so for the route Task 7 adds the
  * question does not arise.
  */
 function vercelCovers(key: string, filePath: string): boolean {
+  // Refused, not approximated. The hand-rolled matcher that stood here threw
+  // on shapes outside its competence, and swapping in picomatch quietly
+  // dropped that guard: picomatch applies its own semantics to anything it is
+  // handed, so the safety property above became an argument rather than a
+  // structural fact. This restores it.
+  const unmodelled = [...'{(!+'].find((character) => key.includes(character));
+  if (unmodelled !== undefined) {
+    throw new Error(
+      `vercel.json functions key '${key}' uses '${unmodelled}', a brace or extglob shape this ` +
+        `test does not model. picomatch would match more than Vercel might, which is the unsafe ` +
+        `direction — establish what Vercel does with it before relying on this test.`,
+    );
+  }
   return picomatch(key, { dot: true })(filePath);
 }
 
@@ -318,6 +338,18 @@ describe('the path Next matches keys against', () => {
     expect(vercelCovers('src/app/api/**runs/route.ts', 'src/app/api/platform/x/runs/route.ts')).toBe(false);
     expect(nextCovers('src/app/api/**runs/route.ts', 'src/app/api/platform/x/runs/route.ts')).toBe(false);
     expect(vercelCovers('/api/audit**', '/api/audity/z/route')).toBe(false);
+  });
+
+  it('refuses a `vercel.json` key shape it does not model', () => {
+    const key = 'src/app/api/{audit,platform}/**';
+
+    // The reason the guard is worth having: picomatch expands the brace
+    // happily, so without the throw this file would silently report the route
+    // as covered on the strength of picomatch's semantics rather than
+    // Vercel's — and unlike `*` and `**`, that disagreement runs in the unsafe
+    // direction.
+    expect(picomatch(key, { dot: true })('src/app/api/audit/run/route.ts')).toBe(true);
+    expect(() => vercelCovers(key, 'src/app/api/audit/run/route.ts')).toThrow(/does not model/);
   });
 
   it('matches a key against the `/app`-prefixed path, which needs `contains`', () => {
