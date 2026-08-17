@@ -32,6 +32,21 @@
         <tr><td>1</td><td>2</td></tr>
       </table>
 
+      <!--
+        2.5.8 Target Size (Minimum) — 16x16, well under the 24x24 floor.
+
+        Two of them, side by side with no gap, because the rule spares an
+        undersized target that has enough clear space around it. One tiny
+        button alone in the flow can pass on spacing; two touching cannot.
+
+        This element is why the rule is here at all: `target-size` ships
+        `enabled: false` in axe-core, so 2.5.8 was mapped by
+        `conformanceLevelFromTags`, listed in `wcag-reference`, and never once
+        evaluated.
+      -->
+      <button id="tiny-target-a" type="button" style="width: 16px; height: 16px; padding: 0; font-size: 8px">A</button
+      ><button id="tiny-target-b" type="button" style="width: 16px; height: 16px; padding: 0; font-size: 8px">B</button>
+
       <!-- 1.4.3 Contrast (grey on white) -->
       <p id="low-contrast" style="color: #bbbbbb; background-color: #ffffff">
         Hard to read text.

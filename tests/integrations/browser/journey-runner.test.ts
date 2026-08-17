@@ -106,6 +106,51 @@ describe('runJourney', () => {
     }
   }, 60_000);
 
+  /**
+   * A rule the engine ships switched off is a criterion nobody checks.
+   *
+   * Nine of axe's 105 rules carry `enabled: false`. Eight are deprecated,
+   * obsolete or AAA. The ninth is `target-size` — **WCAG 2.5.8, level AA** —
+   * and it was never evaluated: absent from violations, passes, incomplete and
+   * inapplicable alike, because a disabled rule does not run at all.
+   *
+   * Meanwhile `conformanceLevelFromTags` maps `wcag22aa` and `wcag-reference`
+   * lists 2.5.8 as AA, so a client's report could never contain a 2.5.8
+   * finding and never said it had not looked. This product's signature failure
+   * living inside the scanner.
+   *
+   * Driven through `runJourney` rather than asserted against `scanPageWithAxe`
+   * directly, because "the option was set" and "the rule ran on a real page"
+   * are different claims and only the second one matters.
+   */
+  it('evaluates target-size, which axe ships switched off', async () => {
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'target-size',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        steps: [{ action: 'navigate', type: 'goto', path: 'violations.html' }],
+      });
+
+      const page = result.pages.find((one) => one.page.route === '/violations.html');
+      const rule = page!.axe.violations.find((one) => one.id === 'target-size');
+
+      // The 16x16 buttons in the fixture, under the 24x24 minimum and touching
+      // so the spacing exception cannot spare them.
+      expect(rule, 'target-size did not run').toBeDefined();
+      expect(rule!.nodes.length).toBeGreaterThan(0);
+      // The tag is what carries the criterion through to the report; without
+      // it the finding lands with no conformance level at all.
+      expect(rule!.tags).toContain('wcag22aa');
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('stops at the page cap and says how much it skipped', async () => {
     // A silent cap reads as "we audited everything" when we did not.
     const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
