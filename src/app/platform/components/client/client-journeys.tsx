@@ -6,6 +6,7 @@ import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
 import { Empty } from './client-overview';
+import { DiscoverPages } from './discover-pages';
 import { JourneySchedule } from './journey-schedule';
 import { JourneyStepsEditor } from './journey-steps-editor';
 import { RunJourneyButton } from './run-journey-button';
@@ -23,8 +24,12 @@ import { RunJourneyButton } from './run-journey-button';
  * <id>/journeys/<id>/runs` walks the stored journey, and `JourneyStepsEditor`
  * rewrites what it walks.
  *
- * *Creating* a journey is still API work — a new one needs a name and a target
- * URL, which PATCH does not accept — so the empty state below stays honest.
+ * Nor is *creating* one API work any more. `DiscoverPages` crawls a site
+ * address, and the pages an operator ticks become a journey of `goto` steps —
+ * so the sentence that used to stand here, saying a new journey needs a bearer
+ * POST, has gone with the empty state that repeated it. A screen that tells an
+ * operator to go and use curl for something it can now do teaches them to stop
+ * reading it.
  */
 export function ClientJourneys({ detail }: { detail: ClientDetail }) {
   return (
@@ -33,10 +38,17 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
         Journeys
       </h2>
 
+      {/*
+        Above the list and always visible: this is now the way a journey gets
+        made, and the empty state below no longer explains how because this
+        panel *is* the explanation.
+      */}
+      <DiscoverPages clientId={detail.id} />
+
       {detail.journeys.length === 0 ? (
         <Empty
           title="No journeys yet"
-          body="A journey is the path we re-walk on every run. POST one — its target URL and its steps, both — to /api/platform/clients/<id>/journeys with a bearer token and it appears here with a button to run it. There is no way to record one from these screens yet."
+          body="A journey is the path we re-walk on every run. Give the panel above a site address, tick the pages that matter, and the journey appears here with a button to run it. A bearer POST to /api/platform/clients/<id>/journeys still does the same thing for anyone scripting it."
           action={null}
         />
       ) : (

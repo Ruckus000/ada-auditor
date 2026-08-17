@@ -733,6 +733,200 @@ describe('platform hydration', () => {
     }
   }, 60_000);
 
+  /**
+   * The discovery panel, in the only state that has all of its markup on
+   * screen at once.
+   *
+   * **Nothing in CI can be crawled.** `target-url.ts` blocks loopback and
+   * RFC1918 and re-checks every address a hostname resolves to, so this
+   * suite's own `localhost:3417` is refused by design — there is no site here
+   * to point discovery at. The crawl is therefore stubbed at the route with
+   * `page.route`. The *write* below is not, and that asymmetry is the point:
+   * a stubbed crawl still exercises every line of the panel that turns a
+   * response into markup, while a stubbed write would prove nothing about
+   * whether the panel can create a journey.
+   *
+   * One stub carrying pages, errors and truncation, because all three are
+   * different markup — grouped fieldsets, a labelled error list, an advisory
+   * paragraph — and a browser run costs two minutes. The refusal wording is
+   * pinned by `tests/app/discovery-copy.test.ts`, which needs no browser at
+   * all, so there is no second stub here for it.
+   *
+   * The inline axe run has the same justification as the step editor's: the
+   * route-level sweep below only ever sees this panel idle and empty, so
+   * without this the list an operator actually works in is the one screen the
+   * auditor never audits.
+   */
+  it('renders discovered pages, errors and truncation with no axe violations', async () => {
+    const page = await openAuthenticatedPage();
+    try {
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            // Three depths, so more than one `<fieldset>`/`<legend>` group is
+            // on screen. No title here may contain a journey name — the list
+            // below this panel is matched with `hasText`, and a page titled
+            // "Editable Journey" would be found by the step editor's test.
+            pages: [
+              { url: 'https://discovered.invalid/', title: 'Front door', depth: 0 },
+              { url: 'https://discovered.invalid/pricing', title: 'Pricing', depth: 1 },
+              { url: 'https://discovered.invalid/pricing/teams', title: 'Teams', depth: 2 },
+            ],
+            // The URL *and* the message, which is the pair the crawler's own
+            // comment argues for: either alone is unreadable.
+            errors: [
+              {
+                url: 'https://discovered.invalid/offsite-redirect.html',
+                message: 'Host elsewhere.test is not in the allowed domains',
+              },
+            ],
+            errorsOmitted: 4,
+            truncated: { reason: 'budget', seen: 137 },
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site address').fill('https://discovered.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      // The panel is a client component talking to a route, so wait for the
+      // markup rather than assuming the fetch resolved within a tick.
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
+
+      // All three shapes really are on screen. Without this the axe run below
+      // would pass against a panel that rendered none of them.
+      const text = await panel.innerText();
+      expect(text).toContain('One click from there');
+      expect(text).toContain('At least 137');
+      // `kept + omitted`, not `errors.length`: one error listed, five counted.
+      expect(text).toContain('5 pages could not be read');
+      // Both halves of an error row, which is the crawler's own worked
+      // example: the path alone reads as "your own page is not in your allowed
+      // domains", which is nonsense, and the message alone names nothing the
+      // operator can search their markup for.
+      expect(text).toContain('/offsite-redirect.html');
+      expect(text).toContain('Host elsewhere.test is not in the allowed domains');
+
+      // And with a page ticked, so the journey-name field and the sentence
+      // explaining the disabled Create button are rendered too.
+      await page.getByRole('checkbox', { name: 'Teams /pricing/teams' }).check();
+      await expect.poll(() => panel.innerText()).toContain('Give the journey a name');
+
+      const results = await new AxeBuilder({ page }).analyze();
+      expect(
+        results.violations
+          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
+          .join('\n'),
+      ).toBe('');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
+   * The write: ticked pages become a stored journey of `goto` steps.
+   *
+   * Asserted by reading `GET /journeys` back rather than off the screen. The
+   * panel clears its own selection on a 201, so the screen looks exactly the
+   * same whether the route was called or not — a screen assertion here would
+   * pass against a component that never spoke to the server, which is the
+   * failure mode this whole suite exists for.
+   *
+   * The pages are ticked **deepest first**, which is what makes the order in
+   * the assertion mean something: a `Set` iterates in insertion order, so a
+   * panel that built its steps by spreading the selection would store the leaf
+   * page as step 1 and this would fail. Ticking in crawl order would not tell
+   * the two implementations apart.
+   */
+  it('creates a journey from the pages an operator ticks', async () => {
+    const page = await openAuthenticatedPage();
+    try {
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            pages: [
+              { url: 'https://picked.invalid/', title: 'Front door', depth: 0 },
+              { url: 'https://picked.invalid/pricing', title: 'Pricing', depth: 1 },
+              { url: 'https://picked.invalid/pricing/teams', title: 'Teams', depth: 2 },
+            ],
+            errors: [],
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site address').fill('https://picked.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
+
+      await page.getByRole('checkbox', { name: 'Teams /pricing/teams' }).check();
+      await page.getByRole('checkbox', { name: 'Pricing /pricing' }).check();
+      await page.getByRole('checkbox', { name: 'Front door /' }).check();
+
+      // The address box is edited *after* the result landed and before the
+      // journey is saved, which is the ordinary thing an operator does when
+      // they line up the next site while reading this list. It is also the
+      // only way the `targetUrl` assertion below means anything: a panel that
+      // read the origin off this box at save time would store
+      // `https://somewhere-else.invalid` and pass every other assertion here.
+      await page.getByLabel('Site address').fill('https://somewhere-else.invalid/');
+
+      // Neither substring of the two journey names the tests above locate by.
+      await page.getByLabel('Journey name').fill('Picked Pages');
+      await page.getByRole('button', { name: 'Create journey' }).click();
+
+      // Server truth.
+      await expect
+        .poll(
+          async () => {
+            const stored = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+              headers: { authorization: `Bearer ${TOKEN}` },
+            });
+            const { journeys } = (await stored.json()) as {
+              journeys: Array<{ name: string; targetUrl?: string; steps?: unknown[] }>;
+            };
+            const match = journeys.find((one) => one.name === 'Picked Pages');
+            return match ? { targetUrl: match.targetUrl, steps: match.steps } : null;
+          },
+          { timeout: 30_000, intervals: [1000] },
+        )
+        .toEqual({
+          // The origin captured when the result landed, not re-read off the
+          // address box at save time — the operator may have typed the next
+          // site into it while reading the list.
+          targetUrl: 'https://picked.invalid',
+          // Crawl order, from a deepest-first set of ticks.
+          steps: [
+            { position: 1, action: 'navigate', type: 'goto', path: '/', recognised: true },
+            { position: 2, action: 'navigate', type: 'goto', path: '/pricing', recognised: true },
+            {
+              position: 3,
+              action: 'navigate',
+              type: 'goto',
+              path: '/pricing/teams',
+              recognised: true,
+            },
+          ],
+        });
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
   it('refuses a client that does not exist rather than showing another one', async () => {
     // The fixture lookup this replaces fell back to the first client, so any
     // unknown slug rendered one client's findings under another client's
