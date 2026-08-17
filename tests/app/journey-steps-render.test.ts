@@ -56,6 +56,7 @@ function detailWith(steps: unknown[]): ClientDetail {
         runRefusal: null,
         schedule: 'off',
         environment: 'production',
+        credentials: [],
         lastRun: null,
       },
     ],
@@ -131,5 +132,43 @@ describe('the journeys screen', () => {
 
     expect(html).not.toContain('not a runnable step');
     expect(html).toContain('Login');
+  });
+});
+
+/**
+ * Whether the credentials a journey names are actually configured.
+ *
+ * The step editor lets an operator type a `credentialRef` and, until this,
+ * gave them no way to find out whether it resolved — the only feedback was
+ * starting a run and watching it fail at the login, after a browser had
+ * launched and walked that far into a client's site.
+ */
+describe('credentials on the journeys screen', () => {
+  function renderWith(credentials: unknown[]): string {
+    const detail = detailWith([]) as unknown as { journeys: Array<Record<string, unknown>> };
+    detail.journeys[0].credentials = credentials;
+    return renderToStaticMarkup(
+      createElement(ClientJourneys, { detail: detail as unknown as ClientDetail }),
+    );
+  }
+
+  it('names the credential and says it is configured', () => {
+    // The *name* is not a secret — naming it is the whole point of
+    // `credentialRef`.
+    const html = renderWith([{ ref: 'acme', user: true, pass: true }]);
+
+    expect(html).toContain('credential acme');
+    expect(html).toContain('configured');
+  });
+
+  it('says which half is missing', () => {
+    const html = renderWith([{ ref: 'acme', user: true, pass: false }]);
+
+    expect(html).toContain('no password configured');
+    expect(html).not.toContain('no username');
+  });
+
+  it('says nothing at all for a journey that names none', () => {
+    expect(renderWith([])).not.toContain('credential ');
   });
 });

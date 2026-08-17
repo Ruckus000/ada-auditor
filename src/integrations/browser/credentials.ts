@@ -12,7 +12,7 @@
  * to every journey that uses a credential.
  */
 
-const REF_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+import { credentialEnvKey, CREDENTIAL_REF_PATTERN } from '../../domain/credential-ref';
 
 export class CredentialError extends Error {
   constructor(message: string) {
@@ -21,18 +21,14 @@ export class CredentialError extends Error {
   }
 }
 
-function envKey(ref: string, field: 'user' | 'pass'): string {
-  return `AUDIT_CREDENTIAL_${ref.toUpperCase().replace(/-/g, '_')}_${field.toUpperCase()}`;
-}
-
 export function resolveCredential(ref: string, field: 'user' | 'pass'): string {
-  if (!REF_PATTERN.test(ref)) {
+  if (!CREDENTIAL_REF_PATTERN.test(ref)) {
     // The ref becomes part of an environment variable name, so anything other
     // than a plain identifier is refused rather than normalised.
     throw new CredentialError('Credential reference must be alphanumeric.');
   }
 
-  const value = process.env[envKey(ref, field)];
+  const value = process.env[credentialEnvKey(ref, field)];
   if (!value) {
     // Names the reference and field, never a value.
     throw new CredentialError(`Credential "${ref}" has no ${field} configured.`);
