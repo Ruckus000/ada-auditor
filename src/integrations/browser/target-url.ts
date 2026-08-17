@@ -1,5 +1,6 @@
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
+import { settledLocation } from '../../services/safe-url';
 
 /**
  * Guards the one genuinely dangerous thing this service does: fetch a URL the
@@ -188,6 +189,65 @@ function hostAllowed(hostname: string, allowedHosts: string[]): boolean {
     const allowed = entry.toLowerCase().replace(/^\*\./, '').replace(/\.$/, '');
     return host === allowed || host.endsWith(`.${allowed}`);
   });
+}
+
+/**
+ * Is this URL on the site we were asked to audit — as opposed to somewhere the
+ * journey is merely allowed to pass through?
+ *
+ * Two different questions, and until an allowlist could name a second host
+ * they had the same answer, so one check served both. `hostAllowed` asks "may
+ * the browser go here"; this asks "is what is here the client's". An identity
+ * provider is a yes to the first and a no to the second: Okta's login page is
+ * not Acme's site, its accessibility defects are not Acme's to fix, and a
+ * screenshot of it is not evidence about Acme.
+ *
+ * Subdomains count, because the target's allowlist entry has always meant
+ * "this host or below" — an audit of `acme.com` that follows a link to
+ * `www.acme.com` is auditing the same site, and requiring an exact match here
+ * would refuse the apex-to-www hop every second site performs.
+ *
+ * Unparseable is not the target. Anything that cannot be read as a URL cannot
+ * be shown to be the client's site, and the caller decides what that means.
+ */
+export function isOnTargetHost(rawUrl: string, targetHostname: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+
+  return hostAllowed(url.hostname, [targetHostname]);
+}
+
+/**
+ * Where a journey came to rest has to be the client's own site.
+ *
+ * Passing through an identity provider is normal; ending on one is not. A run
+ * that finishes on the IdP audited a login page belonging to somebody else and
+ * would report it under the client's name with a good score, because login
+ * pages are small and tidy — which is the failure this entire plan is named
+ * for, arriving through the door that widening the allowlist opens.
+ *
+ * `UnsafeTargetError` rather than a new type: `classifyRunFailure` maps it to
+ * `navigation_not_allowed`, whose operator-facing answer is "fix the journey
+ * or widen its allowed hosts deliberately". That is the right answer here, and
+ * a tenth throw site for a class that already has nine is cheaper than a code
+ * every screen would have to learn.
+ *
+ * The URL is trimmed before it reaches the message, and this is the site where
+ * that matters most. The place a journey most often ends up stuck is an SSO
+ * callback, whose query string carries the `?code=` — a magic link, a reset
+ * token and a session handle all live in the same discarded part. The message
+ * becomes `failureReason`, which is stored and logged.
+ */
+export function assertSettledOnTarget(rawUrl: string, targetHostname: string): void {
+  if (!isOnTargetHost(rawUrl, targetHostname)) {
+    throw new UnsafeTargetError(
+      `The journey ended at ${settledLocation(rawUrl)}, which is not on ${targetHostname}. A run may pass through another host but must finish on the site it is auditing.`,
+    );
+  }
 }
 
 export function parseTargetUrl(rawUrl: string): URL {

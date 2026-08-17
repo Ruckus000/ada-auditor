@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { settledLocation } from '../../src/services/safe-url';
+import { hostnameOf, settledLocation } from '../../src/services/safe-url';
 
 describe('settledLocation', () => {
   /**
@@ -42,5 +42,19 @@ describe('settledLocation', () => {
     // Never the raw input: an unparseable URL is the case where guessing which
     // part is safe to print is least defensible.
     expect(settledLocation('not a url at all ?code=SECRET')).toBe('(unparseable URL)');
+  });
+});
+
+describe('hostnameOf', () => {
+  it('gives the host and nothing else', () => {
+    // The runner logs a line each time a journey passes through a host it is
+    // not auditing, and in an SSO flow that host's URLs are the ones carrying
+    // the authorization code — in the query going out and, for some
+    // providers, in the path coming back. The line exists to name the host.
+    expect(hostnameOf('https://acme.okta.com/callback?code=SECRET-CODE')).toBe('acme.okta.com');
+  });
+
+  it('refuses to echo something it could not parse', () => {
+    expect(hostnameOf('not a url ?code=SECRET')).toBe('(unparseable URL)');
   });
 });

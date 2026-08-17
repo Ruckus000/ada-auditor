@@ -77,7 +77,7 @@ const FINDINGS_TOOL: Anthropic.Tool = {
 
 const SYSTEM_PROMPT = `You review web accessibility evidence and report only issues that need human judgement.
 
-The evidence covers every page a user journey walked through, in order. Judge each page, and also judge them together.
+The evidence covers every page of the audited site a user journey walked through, in order. Judge each page, and also judge them together.
 
 Report things a rule engine cannot decide:
 - Alt text, labels, and link text that exist but do not describe their target ("image1", "click here", "submit").

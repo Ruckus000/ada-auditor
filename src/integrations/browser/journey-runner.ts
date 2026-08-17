@@ -5,8 +5,8 @@ import type { Environment } from '../../domain/contracts';
 import { boundTitle } from '../../domain/evidence';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/ax-tree';
-import { logWarn } from '../../services/logger';
-import { settledLocation } from '../../services/safe-url';
+import { logInfo, logWarn } from '../../services/logger';
+import { hostnameOf, settledLocation } from '../../services/safe-url';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
@@ -15,6 +15,8 @@ import {
   assertAllowedUrl,
   assertPeerAddressAllowed,
   assertSafeTargetUrl,
+  assertSettledOnTarget,
+  isOnTargetHost,
 } from './target-url';
 import {
   buildDefaultDemoJourneySteps,
@@ -247,6 +249,18 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   const allowedHosts =
     input.allowedHosts ?? (input.targetUrl ? [new URL(input.targetUrl).hostname] : []);
 
+  /**
+   * The site this run is actually about, which stopped being the same question
+   * as the allowlist the moment the allowlist could name a second host.
+   *
+   * While `allowedHosts` defaulted to this one value the two were
+   * interchangeable and one check answered both. They are not the same: an
+   * identity provider is somewhere the journey may *go*, and never somewhere
+   * whose pages are the client's. Undefined for a fixture run, where every
+   * step resolves to `file://` and there is no host to be off.
+   */
+  const targetHost = input.targetUrl ? new URL(input.targetUrl).hostname : undefined;
+
   // Resolve and range-check the entry point before spending a browser launch
   // on it.
   if (input.targetUrl) {
@@ -431,6 +445,37 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     const capturePage = async (): Promise<void> => {
       const url = page.url();
 
+      /**
+       * A host the journey is only passing through is not audited.
+       *
+       * The first step of an SSO journey lands on the identity provider, and
+       * once the allowlist can name one, that page would otherwise be scanned,
+       * screenshotted and scored — Okta's login-page violations filed as
+       * Acme's defects, on a report Acme's counsel may read, about a site Acme
+       * cannot change. The IdP is walked through, not judged.
+       *
+       * Skipped rather than refused, unlike the check after the capture below,
+       * and the asymmetry is the point: arriving here is the normal shape of
+       * an SSO hop, whereas *leaving* mid-capture means the artifacts already
+       * written are of a page nothing agreed to audit.
+       *
+       * Logged, because a page walked and not audited is exactly the kind of
+       * silence this product exists to remove. It is not counted into
+       * `truncatedPages`: that number means "the cap cut the walk short", and
+       * a client reading "1 page not audited" about their identity provider
+       * would be told something true in a way that means something false.
+       */
+      if (targetHost && !isOnTargetHost(url, targetHost)) {
+        logInfo('audit_passed_through_host', {
+          journeyId: input.journeyId,
+          stepId: input.stepId,
+          // The host, not the URL: an SSO callback carries the authorization
+          // code in the query, and this line goes to a log.
+          host: hostnameOf(url),
+        });
+        return;
+      }
+
       // A click that did not move the page is not a second page. Scanning it
       // again would double its findings and pay twice for the same evidence.
       if (pages.length > 0 && pages[pages.length - 1].page.url === url) {
@@ -480,6 +525,41 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       // runs on our schedule cannot contain a page that moves on its own, so
       // the capture is only accepted if the run is still safe afterwards.
       await assertNavigationsWereSafe();
+
+      /**
+       * And still on the client's own site, which the line above stopped
+       * guaranteeing the moment the allowlist could hold a second host.
+       *
+       * `assertNavigationsWereSafe` re-checks `page.url()` against
+       * `allowedHosts`, and while that list held only the target this covered
+       * both questions. Widen it for an IdP and it no longer does: a page that
+       * redirects to the allowlisted host mid-screenshot leaves the artifacts
+       * on disk showing the IdP while the row records the target's URL — the
+       * client's evidence, of somebody else's page, with nothing in the run
+       * saying so.
+       *
+       * A throw rather than a discard, which is what this call site did before
+       * widening was possible. The alternative — drop the page and carry on —
+       * turns a hostile or broken redirect into a quietly shorter audit, and a
+       * page silently missing from a walk is what `truncatedPages` exists to
+       * stop happening unannounced.
+       *
+       * Cross-origin `pushState` is not a way around this: browsers refuse it,
+       * so a page cannot claim the target's URL without actually being served
+       * from a host at or below it.
+       *
+       * **Not covered by a test, and worth saying so rather than implying it
+       * is.** Reaching this line needs a navigation that lands after the axe
+       * scan and before this check. `journey-offsite.test.ts` drives the
+       * mid-capture case and finds the redirect usually lands *inside* the
+       * scan, where `page.evaluate` fails first with "Execution context was
+       * destroyed" — so the run dies either way, and which guard speaks is a
+       * race with the scan. That test pins the property that survives the
+       * race; this line closes the half of it where the scan finished in time.
+       */
+      if (targetHost) {
+        assertSettledOnTarget(page.url(), targetHost);
+      }
 
       pages.push({
         page: { url, route, title, statusCode: mainFrameStatus.get(page) },
@@ -715,6 +795,25 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     // step's popup was recorded into `navigationViolation` and then never
     // read, because nothing looked again. A check nobody reads is not a check.
     await assertNavigationsWereSafe();
+
+    /**
+     * And it has to have come to rest on the site it was auditing.
+     *
+     * Passing through an identity provider is normal; ending on one is not. A
+     * journey that finishes on the IdP either never got in or got bounced back
+     * out, and what it walked was somebody else's login page — which scores
+     * *well*, because a login page is small and tidy. That is this plan's
+     * headline failure arriving through the door the allowlist opens, so the
+     * door comes with this.
+     *
+     * Nothing changes for a run that did not widen its allowlist: the default
+     * is the target's own host, so every settle that passed
+     * `assertNavigationsWereSafe` already satisfies this. It is the guard that
+     * makes widening safe, shipped before anything can widen.
+     */
+    if (targetHost) {
+      assertSettledOnTarget(page.url(), targetHost);
+    }
 
     warnIfCapped();
 

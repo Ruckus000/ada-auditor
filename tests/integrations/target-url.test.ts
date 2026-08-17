@@ -3,7 +3,9 @@ import {
   assertAllowedUrl,
   assertPeerAddressAllowed,
   assertSafeTargetUrl,
+  assertSettledOnTarget,
   isBlockedAddress,
+  isOnTargetHost,
   parseTargetUrl,
   UnsafeTargetError,
 } from '../../src/integrations/browser/target-url';
@@ -264,5 +266,81 @@ describe('assertPeerAddressAllowed', () => {
     expect(() => assertPeerAddressAllowed('https://audit-me.example/', '169.254.169.254')).toThrow(
       /169\.254\.169\.254/,
     );
+  });
+});
+
+/**
+ * "May the browser go here" and "is what is here the client's site" are two
+ * questions that had one answer for as long as the allowlist held one host.
+ *
+ * They come apart the moment a journey may pass through an identity provider:
+ * Okta is a yes to the first and must always be a no to the second. Everything
+ * that keeps a third party's login page out of a client's report — and keeps a
+ * run that never got in from being scored as a clean audit — rests on this
+ * telling them apart correctly.
+ */
+describe('isOnTargetHost', () => {
+  it('accepts the host itself and anything below it', () => {
+    // Subdomains count: the apex-to-www hop is what half the web does on the
+    // first request, and an exact match would refuse it.
+    expect(isOnTargetHost('https://acme.com/dashboard', 'acme.com')).toBe(true);
+    expect(isOnTargetHost('https://www.acme.com/', 'acme.com')).toBe(true);
+    expect(isOnTargetHost('https://app.eu.acme.com/', 'acme.com')).toBe(true);
+  });
+
+  it('is not fooled by a name that merely ends the same way', () => {
+    // The dot is load-bearing. Without it `notacme.com` and `evil-acme.com`
+    // both end with `acme.com`, and either is a domain anyone can register.
+    expect(isOnTargetHost('https://notacme.com/', 'acme.com')).toBe(false);
+    expect(isOnTargetHost('https://evil-acme.com/', 'acme.com')).toBe(false);
+  });
+
+  it('is not fooled by the target appearing as a prefix', () => {
+    // The other direction, and the one an attacker controls entirely: any
+    // subdomain of a domain they own can be spelled to read like the target.
+    expect(isOnTargetHost('https://acme.com.evil.test/', 'acme.com')).toBe(false);
+  });
+
+  it('ignores case and a trailing root dot, which are the same host', () => {
+    expect(isOnTargetHost('https://WWW.ACME.COM/', 'acme.com')).toBe(true);
+    expect(isOnTargetHost('https://acme.com./', 'acme.com')).toBe(true);
+  });
+
+  it('treats what it cannot parse as not the target', () => {
+    // Refusing to judge is not the same as approving. Anything unreadable
+    // cannot be shown to be the client's site, so it is not.
+    expect(isOnTargetHost('not a url', 'acme.com')).toBe(false);
+  });
+});
+
+describe('assertSettledOnTarget', () => {
+  it('allows a journey that came back to the site it was auditing', () => {
+    expect(() =>
+      assertSettledOnTarget('https://app.acme.com/dashboard', 'acme.com'),
+    ).not.toThrow();
+  });
+
+  it('refuses one that came to rest on the provider', () => {
+    // Passing through an IdP is normal; ending on one means the journey never
+    // got in, and what it walked was somebody else's login page — which scores
+    // well, because a login page is small and tidy.
+    expect(() => assertSettledOnTarget('https://acme.okta.com/login', 'acme.com')).toThrow(
+      UnsafeTargetError,
+    );
+  });
+
+  it('names where it ended without carrying the authorization code', () => {
+    // The single most likely place for a journey to get stuck is an SSO
+    // callback, and its query string is the credential. This message becomes
+    // `failureReason`, which is stored and logged verbatim.
+    let message = '';
+    try {
+      assertSettledOnTarget('https://acme.okta.com/callback?code=SECRET-CODE', 'acme.com');
+    } catch (error) {
+      message = (error as Error).message;
+    }
+
+    expect(message).toContain('/callback');
+    expect(message).not.toContain('SECRET-CODE');
   });
 });
