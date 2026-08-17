@@ -925,19 +925,33 @@ Add the link to `fixtures/discovery-site/about.html`, inside `<main>`:
       <a href="/offsite-redirect.html">Offsite redirect</a>
 ```
 
+**The redirect target must actually resolve, or this test is vacuous.** `elsewhere.test` is a reserved TLD with no resolution, so without the mapping below Chromium fails with `ERR_NAME_NOT_RESOLVED`, `page.goto` rejects, and the existing per-page handler files an error — meaning both assertions pass *with the settled-URL check entirely absent*. Extend the launcher mock's resolver rules so the redirect genuinely lands and serves, leaving `assertAllowedUrl` as the only thing that can refuse it:
+
+```ts
+      args: [
+        `--host-resolver-rules=MAP ${HOST} 127.0.0.1:${shared.port},MAP elsewhere.test 127.0.0.1:${shared.port}`,
+      ],
+```
+
 Add the test:
 
 ```ts
   it('refuses a page that redirected off the target host', async () => {
     const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+    const offsite = result.errors.find((error) => error.url.includes('offsite-redirect'));
 
     // Reported as a failure, not as a page. Recording it as in-scope would put
     // a foreign page into a journey under the client's own URL.
     expect(result.pages.some((page) => page.url.includes('offsite-redirect'))).toBe(false);
-    expect(result.errors.some((error) => error.url.includes('offsite-redirect'))).toBe(true);
     expect(result.pages.every((page) => new URL(page.url).hostname === HOST)).toBe(true);
+
+    // On the message, not merely the presence of an error: a DNS failure would
+    // also produce an error here, and that is the vacuous version of this test.
+    expect(offsite?.message).toMatch(/not in the allowed domains/i);
   }, 60_000);
 ```
+
+**Prove it non-vacuous before moving on.** Comment out the `assertAllowedUrl(settled, ...)` line you add below and confirm this test fails on the message assertion. If it still passes, the redirect is not resolving and the mapping above did not take effect.
 
 Then make it pass in `src/integrations/browser/discover-links.ts`. After the `page.goto` and the awaited peer checks, before pushing the page:
 
@@ -1123,6 +1137,11 @@ Then assert both behaviours:
 
 Import `discoveryKey` from `../../../src/domain/discovery` at the top of the file.
 
+**Also tighten two Task 3 assertions that cannot fail.** Shipping tests that cannot fail sets the local standard, and these are tests:
+
+- *"reports each page once"* asserts `new Set(urls).size === urls.length`, which the `seen` set makes true by construction. Replace with an exact `expect(result.pages).toHaveLength(n)` against the fixture's real page count.
+- *"does not follow mailto or fragment-only links"* asserts every URL starts with the host prefix — but a followed fragment link produces `http://HOST/#main`, which **passes**. The fragment half of its own name is untestable as written. Add `expect(result.pages.every((page) => !page.url.includes('#'))).toBe(true)`.
+
 - [ ] **Step 4: Dedupe a same-host redirect**
 
 The common case, and the one that costs real budget: `/old-pricing` 301s to `/pricing`, so the crawl reports both and navigates twice. Trailing-slash and apex-to-`www` redirects make this ordinary. Task 4 made the crawl *record* the settled URL; this makes it *dedupe* on it.
@@ -1166,7 +1185,7 @@ Cap `errors` at `MAX_DISCOVERY_URLS` in the crawler, and note in `src/domain/dis
 npx vitest run --config vitest.browser.config.ts tests/integrations/browser/discover-links.test.ts
 ```
 
-Expected: PASS. The truncation and depth cases should already pass against the Task 3 implementation. If `truncated.seen` is not greater than the page count, the seen set is being populated in the wrong place — it must record a URL when it is queued, not when it is visited, or a truncated crawl cannot say how much it had found.
+Expected: PASS. The truncation and depth cases should already pass against the Task 3 implementation — Task 3 restored url-cap truncation after its frontier ceiling suppressed it, so if `truncated` comes back `undefined` here, that regression has returned rather than the `seen` set being wrong. If `truncated.seen` is not greater than the page count, the seen set is being populated in the wrong place — it must record a URL when it is queued, not when it is visited, or a truncated crawl cannot say how much it had found.
 
 - [ ] **Step 7: Commit**
 
@@ -1343,6 +1362,8 @@ npx vitest run tests/api/discover-route.test.ts
 ```
 
 Expected: FAIL — cannot resolve the route module.
+
+**Decide one thing while you are here.** `discoverLinks` logs `discovery_completed` only on the success path — it sits after the `try/finally`, so a target refused by `assertSafeTargetUrl` before the browser launches produces no log line at all. Discovery is operator-triggered and its refusals are exactly what an operator would want in a log. Either log the refusal at this layer (where the principal and requestId are already in hand, which argues for here) or add a `discovery_refused` line in the crawler — but not both, and say in a comment which layer owns it.
 
 - [ ] **Step 3: Implement the route**
 

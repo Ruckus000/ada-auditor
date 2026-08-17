@@ -186,6 +186,19 @@ growing once it holds more than the URL cap could ever consume.
 The general form of the lesson: every bound here is on something the *site*
 controls, and a site controls more than how many pages it has.
 
+**And a bound that drops work must record that work was dropped.** The frontier
+ceiling taught this the expensive way: by refusing entries it drained the
+frontier to empty exactly when the cap bound, so the loop exited by its own
+`while` condition, the truncation check at the top was never reached, and a
+crawl that had been cut short reported a complete result. Worse, whether it
+reported correctly depended on how many entries the frontier happened to hold
+when the ceiling first engaged — a wide site was fine, a narrow one was not, and
+data-dependent truncation reporting is worse than none.
+
+Every bound in this crawl therefore has to answer both questions: what did it
+stop, and did it say so. A dropped link is itself evidence the crawl was
+incomplete.
+
 **Depth is not truncation.** Reaching `MAX_DISCOVERY_DEPTH` is the crawl's
 intended shape, not a shortfall, so it is not a `truncated` reason. Only the URL
 cap and the time budget cut a result short, and both are reported loudly with
