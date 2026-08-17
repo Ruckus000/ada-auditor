@@ -211,7 +211,8 @@ position `PartialJourneyError` already takes on the run side.
 
 | Suite | Covers |
 |---|---|
-| `tests/domain/discovery.test.ts` | normalisation and dedupe as a table; `routeFromPageUrl` unchanged after the extraction |
+| `tests/domain/discovery.test.ts` | normalisation and dedupe as a table |
+| `tests/integrations/browser/artifact-path.test.ts` | `routeFromPageUrl` unchanged after the extraction — it lives in the browser suite because `journey-runner.ts` imports Playwright, so this assertion cannot run in the fast suite |
 | `tests/integrations/browser/discover-links.test.ts` | a new multi-page static fixture: depth limit, dedupe, off-host rejection, error recording |
 | `npm run chaos` | a fixture page linking to `http://127.0.0.1:22/` is never navigated to |
 | route test | auth, schema refusal, budget isolation |
