@@ -63,12 +63,27 @@ export class EntryPointRedirectedError extends UnsafeTargetError {
  * The entry point could not be read at all — a dead host, a typo'd domain, a
  * timeout.
  *
- * A type rather than an inference, and the difference matters. Since Task 5,
- * `discoverLinks` throws *only* on entry failure, so the route could deduce
- * this from "not an `UnsafeTargetError`" and skip the class. But a `TypeError`
- * in our own crawler takes that same path, and inferring would tell the
- * operator their site is unreachable when the bug is ours. The type is what
- * keeps us from blaming a client's site for our own defect.
+ * A type rather than an inference, and here is precisely what it buys. Since
+ * Task 5 `discoverLinks` throws only on entry failure, so the route could try
+ * to deduce this from "not an `UnsafeTargetError`" — but that test cannot see
+ * the distinction that matters, because **not every failure of this function
+ * goes through the wrapping site.** `launchChromium` and the context and page
+ * creation all sit *outside* the per-URL `try`, so a browser that will not
+ * launch — the missing-binary, wrong-memory failure this whole route was
+ * packaged to avoid — propagates raw and correctly reaches the operator as a
+ * 500 about us. Only a navigation that actually happened is wrapped. That
+ * distinction is invisible from the route, which sees a throw either way, and
+ * it is the one worth having on a route whose premise is a packaging failure.
+ *
+ * **The residual, stated rather than papered over:** the per-URL `try` spans
+ * the whole page body — `page.title()`, `extractLinks`, `discoveryKey`, the
+ * frontier bookkeeping — so a `TypeError` of ours raised in any of those, at
+ * depth 0 with no pages yet, is wrapped too and reaches the operator as "your
+ * site could not be read". That is a misattribution and it is not fixed here.
+ * What keeps it diagnosable is `cause`: the route logs the *cause's* name, so
+ * one of our own defects shows up in our logs as a `TypeError` even while the
+ * operator sees a clean 502. Narrowing the `try` is the real fix and is not
+ * this task's.
  *
  * The message is split here rather than at the catch because this is where the
  * call log is — the same reason `DiscoveryError.message` gives.
@@ -90,6 +105,13 @@ export type DiscoverLinksInput = {
   /** Extra hosts, unioned with the target's own. Same shape as a run's. */
   allowedHosts?: string[];
   headless?: boolean;
+  /**
+   * Threaded in so `discovery_completed` can be tied to the request that
+   * caused it. Only the route holds one, and without it a slow crawl is a log
+   * line with a duration and no way back to the response an operator is
+   * holding. Optional because a script calling this directly has no request.
+   */
+  requestId?: string;
 };
 
 type FrontierEntry = { url: string; depth: number };
@@ -510,6 +532,7 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
   }
 
   logInfo('discovery_completed', {
+    ...(input.requestId ? { requestId: input.requestId } : {}),
     target: target.origin,
     pages: pages.length,
     errors: errors.length,

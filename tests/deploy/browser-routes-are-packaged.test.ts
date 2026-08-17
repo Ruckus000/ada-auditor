@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { normalizeAppPath } from 'next/dist/shared/lib/router/utils/app-paths';
+import picomatch from 'picomatch';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import nextConfig from '../../next.config.mjs';
 
@@ -52,7 +54,11 @@ function routeFiles(dir: string): string[] {
  * leave the statement it started in.
  *
  * Dynamic `import()` counts, because it is still a call that ends in a running
- * module — `launch.ts` reaches `@sparticuz/chromium` that way itself.
+ * module — `launch.ts` reaches `@sparticuz/chromium` that way itself. Only with
+ * a *literal* specifier, though: `import(someVariable)` is a known residual
+ * hole rather than an oversight, and not one any static reader can close. A
+ * route that reaches the browser through a computed specifier is invisible to
+ * this file.
  */
 const SPECIFIER_PATTERNS = [
   // `import x from '…'` / `export { x } from '…'`, and never `import type`.
@@ -95,7 +101,13 @@ function resolveSpecifier(from: string, spec: string, srcRoot: string): string |
   else if (spec.startsWith('@/')) base = resolve(srcRoot, spec.slice('@/'.length));
   else return null;
 
-  for (const candidate of [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx')]) {
+  // A NodeNext-style specifier names the *emitted* file, so `./foo.js` has to
+  // be tried as `./foo.ts` as well. No `src` file writes one today; without
+  // this the first that did would fail a deploy test with a resolution error,
+  // which is a confusing tripwire for something that is not the bug this file
+  // hunts. `base` itself covers a literal hit such as a `.json` import.
+  const stem = base.replace(/\.(js|jsx|mjs|cjs)$/, '');
+  for (const candidate of [base, `${stem}.ts`, `${stem}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx')]) {
     if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
   }
   throw new Error(`${from} imports '${spec}', which does not resolve to a file`);
@@ -130,45 +142,65 @@ function reachesFrom(entry: string, launch: string, srcRoot: string): boolean {
 }
 
 /**
- * The narrowest matcher that reads these two files, and deliberately not a
- * glob engine.
+ * How Next decides, using Next's own decider.
  *
- * picomatch already implements one for Next and Vercel implements another for
- * `functions`; a third here would be a third set of edge cases to disagree
- * about. So this understands exactly the two key shapes both files actually
- * use: a literal path, and one containing a single `**`.
+ * `collect-build-traces.js` computes `picomatch(key, { dot: true, contains: true })`
+ * and tests it against `normalizeAppPath(entryName)`. Both halves are imported
+ * here rather than modelled, and that is the whole point: a hand-rolled matcher
+ * stood here first and over-matched two shapes, because picomatch treats `**`
+ * as a globstar only when a `/` or a string boundary delimits it. The strongest
+ * evidence that this corner is not worth re-deriving is that Node's own
+ * `path.matchesGlob` disagrees with picomatch on the very key this repo
+ * ships — picomatch matches `/api/platform/discover` against
+ * `/api/platform/discover/**`, and `path.matchesGlob` does not. Only the
+ * production matcher is authoritative.
  *
- * Two keys behave differently and neither can produce a false pass. More than
- * one `**` **throws**, because two wildcards are where a hand-rolled match and
- * a real one start disagreeing about which is greedy. A single `*` is not
- * special-cased at all — it falls through to literal comparison and simply
- * does not match, so a key using one is reported as covering nothing and the
- * route it was meant to cover fails loudly. Under-matching is the safe
- * direction; the unsafe one is claiming coverage that is not there.
+ * `contains: true` is load-bearing and easy to miss: the subject is
+ * `/app/api/…`, not `/api/…`, so `/api/audit/**` matches by being *contained*
+ * in it. A test that compared against `/api/…` would be modelling a string Next
+ * never builds.
  *
- * `X/**` also covers `X` itself, which is what picomatch does and is the case
- * the discovery route depends on: its page path is `/api/platform/discover`
- * exactly, with nothing beneath it.
+ * The deep import into `next/dist` is the accepted cost. It is typed, and if a
+ * Next upgrade moves it this file fails to compile — loudly, which is the only
+ * failure mode acceptable for the thing that decides whether Chromium ships.
  */
-function covers(pattern: string, path: string): boolean {
-  const parts = pattern.split('**');
-  if (parts.length === 1) return pattern === path;
-  if (parts.length > 2 || parts.some((part) => part.includes('*'))) {
-    throw new Error(`this test cannot judge the config key '${pattern}'`);
-  }
-
-  const [prefix, suffix] = parts as [string, string];
-  if (suffix === '' && prefix.endsWith('/') && path === prefix.slice(0, -1)) return true;
-  return (
-    path.length >= prefix.length + suffix.length &&
-    path.startsWith(prefix) &&
-    path.endsWith(suffix)
-  );
+function nextCovers(key: string, route: string): boolean {
+  return picomatch(key, { dot: true, contains: true })(route);
 }
 
-/** `src/app/api/platform/discover/route.ts` → `/api/platform/discover`. */
-function pagePath(file: string): string {
-  return file.replaceAll('\\', '/').replace(/^src\/app/, '').replace(/\/route\.ts$/, '');
+/**
+ * How Vercel decides — modelled, because its matcher is not picomatch.
+ *
+ * `functions` keys are globs and Vercel resolves them server-side, so nothing
+ * importable here is authoritative. picomatch without `contains` is the closest
+ * available model, and the direction of any disagreement is what makes it
+ * acceptable: this file only ever asks "is this route covered?", so a model
+ * that matches *less* than Vercel reports a missing entry that is in fact
+ * present — loud and wrong-but-safe — while the failure being guarded against
+ * is a route covered by nothing at all.
+ *
+ * The discovery key is a literal path, so for the route this task adds the
+ * question does not arise.
+ */
+function vercelCovers(key: string, filePath: string): boolean {
+  return picomatch(key, { dot: true })(filePath);
+}
+
+/**
+ * `src/app/api/platform/discover/route.ts` → `/app/api/platform/discover`.
+ *
+ * `normalizeAppPath` is Next's, imported rather than approximated, because the
+ * transformations it performs are not guessable from the file path: it drops
+ * `(group)` and `@slot` segments as well as the trailing `route`. This repo
+ * already uses route groups (`src/app/(platform)/`), and approximating this was
+ * worse than a false negative — a route at `api/(browser)/heavy/route.ts` would
+ * have been reported as `/api/(browser)/heavy`, and the obvious fix is a
+ * `next.config.mjs` key spelled the same way. That key would satisfy this test
+ * and match nothing at build time, because Next asks about `/app/api/heavy`.
+ * The guard would have handed someone a fix that deploys without Chromium.
+ */
+function routePath(file: string): string {
+  return normalizeAppPath(file.replaceAll('\\', '/').replace(/^src\//, '').replace(/\.ts$/, ''));
 }
 
 const vercelConfig = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
@@ -218,6 +250,10 @@ describe('the import walk', () => {
     // reading a type-only import as a real one.
     write('app/api/type-only/route.ts', "import './helper';\nimport type { Browser } from '@/integrations/browser/launch';\nexport const GET = (): Browser | null => null;\n");
     write('app/api/type-only/helper.ts', 'export function helper() {}\n');
+    // A NodeNext-style specifier: it names the emitted `.js`, and only the
+    // `.ts` exists on disk.
+    write('app/api/emitted-extension/route.ts', "import { launchChromium } from './launcher.js';\nexport const GET = () => launchChromium();\n");
+    write('app/api/emitted-extension/launcher.ts', "export { launchChromium } from '../../../integrations/browser/launch';\n");
   });
 
   afterAll(() => rmSync(root, { recursive: true, force: true }));
@@ -243,6 +279,14 @@ describe('the import walk', () => {
     expect(reaches('plain')).toBe(false);
   });
 
+  it('follows a specifier that names the emitted `.js`', () => {
+    // NodeNext style. Nothing in `src` writes one today; without the fallback
+    // the first that did would fail this deploy test with a module-resolution
+    // error, which is a confusing tripwire for something that is not the bug
+    // this file hunts.
+    expect(reaches('emitted-extension')).toBe(true);
+  });
+
   it('does not count a type-only import that follows a side-effect one', () => {
     // A `type` import is erased before anything runs. Counting this one would
     // demand 3009 MB and a packaged Chromium for a route that returns JSON —
@@ -252,18 +296,51 @@ describe('the import walk', () => {
   });
 });
 
+describe('the path Next matches keys against', () => {
+  it('drops a route group, as `normalizeAppPath` does', () => {
+    // This repo already uses route groups, and a route path carrying one would
+    // invite a `next.config.mjs` key spelled the same way: green here, matching
+    // nothing at build time, deployed without Chromium.
+    expect(routePath(join('src', 'app', 'api', '(browser)', 'heavy', 'route.ts'))).toBe('/app/api/heavy');
+  });
+
+  it('keeps the dynamic segments, which are part of the path Next asks about', () => {
+    expect(routePath(join('src', 'app', 'api', 'audit', 'runs', '[requestId]', 'report.pdf', 'route.ts'))).toBe(
+      '/app/api/audit/runs/[requestId]/report.pdf',
+    );
+  });
+
+  it('does not treat an undelimited `**` as a globstar', () => {
+    // The two shapes the hand-rolled matcher that stood here got wrong: it
+    // split on `**` and let the wildcard cross `/` unconditionally. picomatch
+    // makes `**` a globstar only when a `/` or a string boundary delimits it,
+    // so `**runs` degrades to `*runs` and stays inside one segment.
+    expect(vercelCovers('src/app/api/**runs/route.ts', 'src/app/api/platform/x/runs/route.ts')).toBe(false);
+    expect(nextCovers('src/app/api/**runs/route.ts', 'src/app/api/platform/x/runs/route.ts')).toBe(false);
+    expect(vercelCovers('/api/audit**', '/api/audity/z/route')).toBe(false);
+  });
+
+  it('matches a key against the `/app`-prefixed path, which needs `contains`', () => {
+    // The subject is `/app/api/…`; without `contains: true` no key in
+    // `next.config.mjs` would match anything, and this file would fail closed
+    // for the wrong reason.
+    expect(nextCovers('/api/audit/**', '/app/api/audit/run')).toBe(true);
+    expect(picomatch('/api/audit/**', { dot: true })('/app/api/audit/run')).toBe(false);
+  });
+});
+
 describe('routes that launch Chromium', () => {
   // Non-vacuity. Everything below is an assertion about a list, and a list
   // built by a resolver that silently stopped resolving would be empty — so
   // every case would pass by covering nothing. `/api/audit/run` is the oldest
   // browser route in the repo and the last one that would ever stop being one.
   it('are actually found by the import walk', () => {
-    expect(browserRoutes.map(pagePath)).toContain('/api/audit/run');
+    expect(browserRoutes.map(routePath)).toContain('/app/api/audit/run');
   });
 
   it.each(browserRoutes)('%s has the browser packaged beside it', (file) => {
-    const page = pagePath(file);
-    const key = Object.keys(tracingIncludes).find((pattern) => covers(pattern, page));
+    const page = routePath(file);
+    const key = Object.keys(tracingIncludes).find((pattern) => nextCovers(pattern, page));
 
     expect(key, `no next.config.mjs outputFileTracingIncludes key covers ${page}`).toBeDefined();
     // Both, because they are two separate production failures a week apart:
@@ -276,7 +353,7 @@ describe('routes that launch Chromium', () => {
 
   it.each(browserRoutes)('%s has enough memory to launch it', (file) => {
     const path = file.replaceAll('\\', '/');
-    const key = Object.keys(vercelConfig.functions).find((pattern) => covers(pattern, path));
+    const key = Object.keys(vercelConfig.functions).find((pattern) => vercelCovers(pattern, path));
 
     expect(key, `no vercel.json functions key covers ${path}`).toBeDefined();
     // A floor rather than 3009, so `vercel.json` stays the source of truth for

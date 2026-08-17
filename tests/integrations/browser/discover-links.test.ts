@@ -448,6 +448,30 @@ describe('discoverLinks guards', () => {
     expect((failure as Error).name).toBe('UnsafeTargetError');
   }, 60_000);
 
+  it('names the request its completion log belongs to', async () => {
+    // `discovery_completed` carries the duration and the page count, and this
+    // is the only place that knows either — but the request id lives only in
+    // the route. Without it threaded through, a slow crawl is a log line with
+    // no way back to the response an operator is holding, which is exactly the
+    // question a real-site run asks first.
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    let lines: string[];
+    try {
+      await discoverLinks({ targetUrl: `http://${HOST}/about.html`, requestId: 'req-42' });
+    } finally {
+      // Read before restoring: `mockRestore` clears `mock.calls` as well as
+      // putting the original back.
+      lines = log.mock.calls.flat().map(String);
+      log.mockRestore();
+    }
+
+    const completed = lines
+      .map((line) => JSON.parse(line) as Record<string, unknown>)
+      .find((entry) => entry.type === 'discovery_completed');
+
+    expect(completed).toMatchObject({ requestId: 'req-42', target: `http://${HOST}` });
+  }, 60_000);
+
   it('refuses an entry point that never answered, rather than returning an empty crawl', async () => {
     // The most common entry failure of the three — a dead server, a timeout, a
     // typo'd host — and the one that used to come back as `{ pages: [] }` with

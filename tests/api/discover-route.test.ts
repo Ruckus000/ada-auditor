@@ -211,14 +211,19 @@ describe('/api/platform/discover', () => {
     expect(JSON.stringify(body)).not.toContain('10.0.0.1');
   });
 
-  it('keeps a call-log secret out of both the response and the log line', async () => {
-    // Playwright appends its call log to a navigation failure, and a call log
-    // names the URL it was dialling — which on a crawl is a URL harvested from
-    // someone else's markup, query string and all.
+  it('keeps the call log out of the response and the log line', async () => {
+    // The real shape of a Playwright navigation failure: the URL it was
+    // dialling is on line ONE, after the error code, and the call log follows.
+    // An earlier fixture put the secret on line two, where `firstErrorLine`
+    // caught it — which made this test claim more than the code does. What is
+    // actually guaranteed is that the *call log* never travels: it is the part
+    // that names every URL tried rather than just this one, and it is
+    // unbounded. Line one may still carry the entry URL, which is the
+    // operator's own input; `journey-runner.ts` makes the identical split.
     const error = new Error(
-      'page.goto: net::ERR_ABORTED\n' +
+      'page.goto: net::ERR_ABORTED at https://acme.test/?token=hunter2seekrit\n' +
         'Call log:\n' +
-        '  - navigating to "https://acme.test/reset?token=hunter2seekrit"',
+        '  - navigating to "https://acme.test/harvested?secret=leakedcalllog"',
     );
     discoverLinks.mockRejectedValue(error);
 
@@ -226,14 +231,52 @@ describe('/api/platform/discover', () => {
     const response = await POST(fromBrowser({ targetUrl: 'https://acme.test/?token=hunter2seekrit' }));
     const text = await response.text();
 
+    // The body carries a code and nothing else — no part of the error, line
+    // one included.
     expect(response.status).toBe(500);
-    expect(JSON.parse(text)).toMatchObject({ error: 'discovery_failed' });
+    expect(JSON.parse(text)).toEqual({ error: 'discovery_failed', requestId: expect.any(String) });
+    expect(text).not.toContain('leakedcalllog');
     expect(text).not.toContain('hunter2seekrit');
 
     // The log line is not exempt: `services/logger.ts` redacts by field *name*,
     // so a secret inside a value under `reason` or `target` travels whole.
-    // `target` is the origin for exactly this reason.
+    // `target` is the origin for exactly this reason, and the call log is
+    // dropped by `firstErrorLine`.
     expect(warn).toHaveBeenCalled();
-    expect(warn.mock.calls.flat().join('\n')).not.toContain('hunter2seekrit');
+    const logged = warn.mock.calls.flat().join('\n');
+    expect(logged).not.toContain('leakedcalllog');
+    // The origin, never the operator's whole URL, in the `target` field.
+    expect(JSON.parse(logged).target).toBe('https://acme.test');
+  });
+
+  it('threads the request id into the crawl, so its log line can be traced back', async () => {
+    // `discovery_completed` is emitted inside the crawler, which is the only
+    // place that knows the duration and the only place that does not know the
+    // request. Without this a slow crawl is a log line with no way back to the
+    // response an operator is holding.
+    const response = await POST(fromBrowser({ targetUrl: 'https://acme.test/' }));
+    const { requestId } = await response.json();
+
+    expect(discoverLinks).toHaveBeenCalledWith(expect.objectContaining({ requestId }));
+  });
+
+  it('logs our own defect under its real name, even while answering 502', async () => {
+    // The wrap in `discoverLinks` spans more than the navigation, so a
+    // `TypeError` of ours at depth 0 is reported to the operator as an
+    // unreachable site. That misattribution is documented and not fixed here —
+    // what stops it being invisible is that the *cause's* name is logged.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    discoverLinks.mockRejectedValue(
+      new EntryPointUnreachableError(new TypeError('urls is not iterable')),
+    );
+
+    const response = await POST(fromBrowser({ targetUrl: 'https://acme.test/' }));
+
+    expect(response.status).toBe(502);
+    expect(JSON.parse(warn.mock.calls.flat().join('\n'))).toMatchObject({
+      type: 'discovery_refused',
+      code: 'entry_point_unreachable',
+      errorName: 'TypeError',
+    });
   });
 });

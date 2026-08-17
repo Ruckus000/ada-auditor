@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   const target = new URL(parsed.targetUrl).origin;
 
   try {
-    const result = await discoverLinks({ targetUrl: parsed.targetUrl });
+    const result = await discoverLinks({ targetUrl: parsed.targetUrl, requestId });
 
     return Response.json(
       {
@@ -116,6 +116,24 @@ export async function POST(request: Request) {
         requestId,
         code: 'entry_point_unreachable',
         target,
+        // The *cause's* name, not this error's, which is always
+        // `EntryPointUnreachableError` and says nothing. The wrapping site
+        // spans more than the navigation, so a `TypeError` of ours at depth 0
+        // is reported to the operator as an unreachable site — see the class.
+        // This field is what makes that visible to us anyway: a log line
+        // reading `TypeError` under `entry_point_unreachable` is our bug, not
+        // their server.
+        errorName: error.cause instanceof Error ? error.cause.name : 'unknown',
+        // Playwright puts the URL it was dialling on the *first* line, so this
+        // can repeat the entry URL in full, query string and all — where
+        // `target` beside it was deliberately reduced to an origin. Accepted,
+        // and the difference is where the URL came from: this one is the
+        // operator's own input for this request, not a URL harvested from a
+        // third party's markup, which is the case `firstErrorLine` and
+        // `DiscoveryError` exist for. `target` is origin-only because it is
+        // the field a log query groups on and would be indexed broadly. The
+        // alternative is a regex that strips URLs out of Playwright's prose,
+        // which is the exact move `run-failure.ts` records getting wrong.
         reason: error.message,
       });
       return Response.json({ error: 'entry_point_unreachable', requestId }, { status: 502 });
@@ -130,10 +148,17 @@ export async function POST(request: Request) {
     // **This terminates here and does not rethrow.** No route in
     // `src/app/api/` rethrows, and this one has a specific reason not to
     // start: the errors arriving here are Playwright's, and a navigation
-    // failure carries its whole call log including the URL it was dialling.
-    // Handing that to whatever catches an uncaught route error hands it to
-    // something that applies no redaction. `firstErrorLine` is the same split
-    // the crawler makes, for the reason `DiscoveryError` gives at length.
+    // failure carries its whole call log — every URL it tried, every selector
+    // it waited on. Handing that to whatever catches an uncaught route error
+    // hands it to something that applies no redaction.
+    //
+    // `firstErrorLine` keeps the *call log* out, which is what it claims and
+    // all it claims. It is not a URL filter: Playwright puts the URL it was
+    // dialling on line one, after the error code, so a first line can still
+    // carry one whole. `journey-runner.ts` makes the identical split and this
+    // is the repo's settled position, not a gap peculiar to this route — the
+    // response body carries a code and nothing else, which is the part that
+    // actually has to hold.
     logWarn('discovery_failed', {
       requestId,
       target,
