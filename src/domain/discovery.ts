@@ -84,6 +84,15 @@ export const MAX_DISCOVERY_URLS = 100;
  * 500 is far above any real page's navigation and far below the size at which
  * a page becomes a weapon. A crawl that hits it has found a page whose links
  * are generated, and the first 500 of those are as good a sample as any.
+ *
+ * Together with the two caps around it this bounds the crawl's largest
+ * structure, which is the set of keys it has already seen — not its list of
+ * pages. That set takes an entry per distinct link harvested, so its ceiling is
+ * `MAX_DISCOVERY_URLS × MAX_LINKS_PER_PAGE` plus the entry point: 50,001 keys
+ * of at most `MAX_HREF_LENGTH` each, roughly 100MB of key text and about twice
+ * that held as UTF-16. Survivable in a 300s function, and the wall-clock budget
+ * cuts a real crawl to 40-45 pages long before any of it is reached — but it is
+ * the number to re-derive first if these caps are ever raised.
  */
 export const MAX_LINKS_PER_PAGE = 500;
 

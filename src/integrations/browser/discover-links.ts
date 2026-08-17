@@ -15,7 +15,12 @@ import {
 } from '../../domain/discovery';
 import { logInfo } from '../../services/logger';
 import { launchChromium } from './launch';
-import { assertAllowedUrl, assertPeerAddressAllowed, assertSafeTargetUrl } from './target-url';
+import {
+  assertAllowedUrl,
+  assertPeerAddressAllowed,
+  assertSafeTargetUrl,
+  UnsafeTargetError,
+} from './target-url';
 
 export type DiscoverLinksInput = {
   targetUrl: string;
@@ -124,6 +129,9 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
   const frontier: FrontierEntry[] = [{ url: input.targetUrl, depth: 0 }];
   let truncated: DiscoveryTruncation | undefined;
 
+  /** Links the frontier ceiling refused. See the ceiling for why this is kept. */
+  let droppedByCeiling = 0;
+
   const browser: Browser = await launchChromium({ headless: input.headless });
 
   try {
@@ -210,14 +218,23 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
             let key: string;
             try {
               key = discoveryKey(href);
-              if (seen.has(key)) continue;
-
-              // Off-scope or a blocked literal address throws here. Not an
-              // error worth reporting — a site linking off itself is the
-              // normal case — just somewhere this crawl does not go.
-              assertAllowedUrl(href, allowedHosts);
             } catch {
               continue;
+            }
+
+            if (seen.has(key)) continue;
+
+            try {
+              assertAllowedUrl(href, allowedHosts);
+            } catch (error) {
+              // Off-scope or a blocked literal address. Not an error worth
+              // reporting — a site linking off itself is the normal case —
+              // just somewhere this crawl does not go. Anything else from
+              // inside the allowlist is a surprise and is not swallowed as
+              // one: a catch-all here would file an unknown failure class
+              // under "this link was off-scope" and nobody would ever see it.
+              if (error instanceof UnsafeTargetError) continue;
+              throw error;
             }
 
             seen.add(key);
@@ -228,7 +245,20 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
             // further entry is one the loop will never reach. Without this the
             // queue keeps growing from pages the crawl is still reading long
             // after the visit budget is spoken for.
-            if (frontier.length >= MAX_DISCOVERY_URLS - pages.length) continue;
+            //
+            // The count is the other half, and it is not bookkeeping: **a
+            // bound that drops work must also record that work was dropped, or
+            // truncation reports a complete crawl.** Without it this ceiling
+            // silently disabled url-cap truncation — draining the frontier to
+            // empty is exactly what it does when the cap binds, so the loop
+            // exits by its own `while` condition and the check at the top that
+            // sets `truncated` is never reached again. The result then claims
+            // to be the whole site, which is the one thing
+            // `DiscoveryTruncation` exists to prevent.
+            if (frontier.length >= MAX_DISCOVERY_URLS - pages.length) {
+              droppedByCeiling += 1;
+              continue;
+            }
 
             frontier.push({ url: href, depth: next.depth + 1 });
           }
@@ -256,6 +286,14 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
     }
   } finally {
     await browser.close();
+  }
+
+  // A link the ceiling refused is itself proof the crawl was cut short, and it
+  // is the only proof left once the frontier has been drained to empty. The
+  // top-of-loop reason wins where both apply: reaching the cap while pages
+  // remained queued is the same truncation, already recorded.
+  if (!truncated && droppedByCeiling > 0) {
+    truncated = { reason: 'url-cap', seen: seen.size };
   }
 
   logInfo('discovery_completed', {
