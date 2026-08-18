@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { JourneyRunRefusal } from '../../../../domain/platform';
+import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -167,9 +168,14 @@ export function RunJourneyButton({
       )}
 
       {/*
-        A live region rather than only a disabled button: a run takes tens of
-        seconds, and a screen reader user needs to be told it started and told
-        again when it finished.
+        A live region rather than only an unavailable button: a run takes tens
+        of seconds, and a screen reader user needs to be told it started and
+        told again when it finished.
+
+        This is also why the button below is `aria-disabled` and not
+        `disabled` — see `lib/inert-button`. Focus stays on the button the
+        operator just pressed, so nothing else has to be focused and announced
+        to hold their place, and this region is left to speak.
       */}
       <span role="status" style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
         {phase === 'running' ? 'Running…' : phase === 'slow' ? 'Still running — reload later' : ''}
@@ -177,10 +183,11 @@ export function RunJourneyButton({
 
       <button
         type="button"
-        onClick={start}
-        disabled={busy}
+        {...inertWhen(busy, start)}
         // Every row is otherwise another identically-named control in a screen
-        // reader's list.
+        // reader's list. It also holds the name *still* while the run goes:
+        // the visible label changes underneath it, and renaming the focused
+        // control is the other way to talk over the live region.
         aria-label={`Run ${journeyName} now`}
         style={{
           fontFamily: FONT.sans,
