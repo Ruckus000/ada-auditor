@@ -208,7 +208,14 @@ export function Modal({
 }) {
   const card = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
-  closeRef.current = onClose;
+  // The keydown listener below is installed once, so it has to reach the
+  // current `onClose` rather than the one from the render that installed it.
+  // Refreshed after each commit instead of during render: writing to a ref
+  // while rendering is not safe, and nothing reads this one until the user
+  // presses a key, which is always after a commit.
+  useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
 
   // `aria-modal` is a promise to the user that the rest of the page is out of
   // reach. Without these three behaviours it is a lie: focus starts outside the

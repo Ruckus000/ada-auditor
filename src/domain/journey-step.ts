@@ -22,7 +22,20 @@ import { AUTHORABLE_ACTIONS } from './policy';
  * creation and cannot run. An operator found out at the wrong end.
  */
 
-const STEP_TEXT = z.string().min(1).max(512);
+/**
+ * The longest a step's path, selector or URL fragment may be.
+ *
+ * Exported because a screen that *builds* steps has to know it. `DiscoverPages`
+ * turns discovered URLs into `goto` paths, and a URL may be up to
+ * `MAX_HREF_LENGTH` (2048) — four times this — so without the number the panel
+ * could only find out by posting the journey and reading back
+ * `invalid_request_body`, which names neither the page nor the reason. A
+ * screen that cannot state a rule before the operator breaks it is a screen
+ * that reports the rule as a mystery.
+ */
+export const MAX_STEP_TEXT = 512;
+
+const STEP_TEXT = z.string().min(1).max(MAX_STEP_TEXT);
 
 /**
  * What the *runner* accepts. Lenient on purpose.

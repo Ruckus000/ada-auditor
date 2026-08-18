@@ -183,6 +183,10 @@ export function RunJourneyButton({
 
       <button
         type="button"
+        // `start` writes `cancelled.current`, and passing it to a call made
+        // during render is enough for the rule — see `lib/inert-button`, which
+        // records why this is the argument position and not the ref.
+        // eslint-disable-next-line react-hooks/refs
         {...inertWhen(busy, start)}
         // Every row is otherwise another identically-named control in a screen
         // reader's list. It also holds the name *still* while the run goes:

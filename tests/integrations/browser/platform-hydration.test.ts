@@ -942,6 +942,518 @@ describe('platform hydration', () => {
     }
   }, 60_000);
 
+  /**
+   * The discovery panel, in the only state that has all of its markup on
+   * screen at once.
+   *
+   * **Nothing in CI can be crawled.** `target-url.ts` blocks loopback and
+   * RFC1918 and re-checks every address a hostname resolves to, so this
+   * suite's own `localhost:3417` is refused by design — there is no site here
+   * to point discovery at. The crawl is therefore stubbed at the route with
+   * `page.route`. The *write* below is not, and that asymmetry is the point:
+   * a stubbed crawl still exercises every line of the panel that turns a
+   * response into markup, while a stubbed write would prove nothing about
+   * whether the panel can create a journey.
+   *
+   * One stub carrying pages, errors and truncation, because all three are
+   * different markup — grouped fieldsets, a labelled error list, an advisory
+   * paragraph — and a browser run costs two minutes. The refusal wording is
+   * pinned by `tests/app/discovery-copy.test.ts`, which needs no browser at
+   * all, so there is no second stub here for it.
+   *
+   * The inline axe run has the same justification as the step editor's: the
+   * route-level sweep below only ever sees this panel idle and empty, so
+   * without this the list an operator actually works in is the one screen the
+   * auditor never audits.
+   */
+  it('renders discovered pages, errors and truncation with no axe violations', async () => {
+    const page = await openAuthenticatedPage();
+    try {
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            // Three depths, so more than one `<fieldset>`/`<legend>` group is
+            // on screen. No title here may contain a journey name — the list
+            // below this panel is matched with `hasText`, and a page titled
+            // "Editable Journey" would be found by the step editor's test.
+            pages: [
+              { url: 'https://discovered.invalid/', title: 'Front door', depth: 0 },
+              { url: 'https://discovered.invalid/pricing', title: 'Pricing', depth: 1 },
+              // No `<title>` on the document. Playwright's `page.title()`
+              // returns `''` for one, which is ordinary on real sites, and
+              // every other stub here has a title — so this is the row that
+              // catches a label built with `title || path` printing the path
+              // twice.
+              { url: 'https://discovered.invalid/untitled', title: '', depth: 1 },
+              { url: 'https://discovered.invalid/pricing/teams', title: 'Teams', depth: 2 },
+              // Longer than a `goto` step's path may be. A discovered href may
+              // run to `MAX_HREF_LENGTH`, four times `MAX_STEP_TEXT`, so this
+              // is a real shape and not a contrivance.
+              {
+                url: `https://discovered.invalid/long/${'a'.repeat(600)}`,
+                title: 'Very long address',
+                depth: 2,
+              },
+              // A subdomain of the target, which a crawl returns because it
+              // must: `hostAllowed` matches subdomains, and without that the
+              // apex-to-www redirect ends every crawl at depth 0. A journey
+              // holds one `targetUrl` and a list of paths and cannot say this.
+              { url: 'https://docs.discovered.invalid/guide', title: 'Guide', depth: 1 },
+            ],
+            // The URL *and* the message, which is the pair the crawler's own
+            // comment argues for: either alone is unreadable.
+            errors: [
+              {
+                url: 'https://discovered.invalid/offsite-redirect.html',
+                message: 'Host elsewhere.test is not in the allowed domains',
+              },
+            ],
+            errorsOmitted: 4,
+            truncated: { reason: 'budget', seen: 137 },
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site address').fill('https://discovered.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      // The panel is a client component talking to a route, so wait for the
+      // markup rather than assuming the fetch resolved within a tick.
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
+
+      // All three shapes really are on screen. Without this the axe run below
+      // would pass against a panel that rendered none of them.
+      const text = await panel.innerText();
+      expect(text).toContain('One click from there');
+      expect(text).toContain('At least 137');
+      // `kept + omitted`, not `errors.length`: one error listed, five counted.
+      // One listed, five counted — and the grammar of the shape that produces
+      // it, which is the commonest one: a hub of dead links fills the ceiling
+      // and leaves a one-row list under the heading.
+      expect(text).toContain('5 pages could not be read. The first one is listed below.');
+      // Both halves of an error row, which is the crawler's own worked
+      // example: the path alone reads as "your own page is not in your allowed
+      // domains", which is nonsense, and the message alone names nothing the
+      // operator can search their markup for.
+      expect(text).toContain('/offsite-redirect.html');
+      expect(text).toContain('Host elsewhere.test is not in the allowed domains');
+
+      // An untitled page announces its path once, not twice. `exact` is the
+      // whole assertion: `title || path` produces "/untitled /untitled", which
+      // a substring match would happily find.
+      await expect
+        .poll(() => page.getByRole('checkbox', { name: '/untitled', exact: true }).count())
+        .toBe(1);
+
+      // A page the step format cannot hold: refused at selection time, beside
+      // the row, rather than as a nameless `invalid_request_body` after the
+      // journey is posted.
+      const longBox = page.getByRole('checkbox', { name: /Very long address/ });
+      expect(await longBox.isDisabled()).toBe(true);
+      expect(text).toContain('too long to record as a step');
+
+      // A page on another host, refused for a different and worse reason. The
+      // route would have answered **201** to a step built from its path — the
+      // body is perfectly valid — and the run would then have audited
+      // `discovered.invalid/guide`, a page nobody picked, and reported it
+      // clean. Nothing downstream could have caught it: the host is discarded
+      // before the step is written.
+      const offHostBox = page.getByRole('checkbox', { name: /Guide/ });
+      expect(await offHostBox.isDisabled()).toBe(true);
+      // The whole URL, not the path: the host is the thing that makes this row
+      // different, and two pages sharing a path across two hosts would
+      // otherwise render as the same row twice.
+      expect(text).toContain('https://docs.discovered.invalid/guide');
+      expect(text).toContain('on docs.discovered.invalid, not discovered.invalid');
+      // And what to do about it, which is the half that makes this a rule
+      // rather than a dead end.
+      expect(text).toContain('crawl docs.discovered.invalid on its own');
+
+      // The bulk control takes the four it may and leaves both it may not,
+      // which is the state no click could otherwise produce.
+      await page.getByRole('button', { name: 'Select every page' }).click();
+      await expect.poll(() => panel.innerText()).toContain('4 pages picked');
+      expect(await longBox.isChecked()).toBe(false);
+      expect(await offHostBox.isChecked()).toBe(false);
+
+      // With the name still empty, so the sentence explaining the disabled
+      // Create button is on the page when axe looks.
+      await expect.poll(() => panel.innerText()).toContain('Give the journey a name');
+
+      // The selection count is a live region as well as a describedby target.
+      // Both bulk controls leave focus on themselves, so as a describedby
+      // target alone this sentence is read on focus and never on change — and
+      // axe cannot see the difference, which is why it is asserted here.
+      expect(await panel.locator('p[aria-live="polite"]', { hasText: 'picked.' }).count()).toBe(1);
+
+      const results = await new AxeBuilder({ page }).analyze();
+      expect(
+        results.violations
+          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
+          .join('\n'),
+      ).toBe('');
+
+      // A failed *second* crawl. The list from the first deliberately stays —
+      // blanking somebody's work over a typo'd address is the worse mistake —
+      // but the status region must stop claiming a count for a site the
+      // operator has moved off, or it contradicts the alert beside it.
+      await page.unroute('**/api/platform/discover');
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'entry_point_redirected', host: 'www.elsewhere.test' }),
+        }),
+      );
+      await page.getByLabel('Site address').fill('https://moved.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      // The refusal names the host the route shipped as structured data.
+      await expect
+        .poll(() => panel.innerText(), { timeout: 15_000 })
+        .toContain('www.elsewhere.test');
+      // The list survived…
+      expect(await panel.innerText()).toContain('Front door');
+      // …and the status region is silent rather than re-announcing the count.
+      expect(await panel.locator('p[role="status"]').first().innerText()).toBe('');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
+   * The write: ticked pages become a stored journey of `goto` steps.
+   *
+   * Asserted by reading `GET /journeys` back rather than off the screen. The
+   * panel clears its own selection on a 201, so the screen looks exactly the
+   * same whether the route was called or not — a screen assertion here would
+   * pass against a component that never spoke to the server, which is the
+   * failure mode this whole suite exists for.
+   *
+   * The pages are ticked **deepest first**, which is what makes the order in
+   * the assertion mean something: a `Set` iterates in insertion order, so a
+   * panel that built its steps by spreading the selection would store the leaf
+   * page as step 1 and this would fail. Ticking in crawl order would not tell
+   * the two implementations apart.
+   */
+  it('creates a journey from the pages an operator ticks', async () => {
+    const page = await openAuthenticatedPage();
+    try {
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            pages: [
+              { url: 'https://picked.invalid/', title: 'Front door', depth: 0 },
+              { url: 'https://picked.invalid/pricing', title: 'Pricing', depth: 1 },
+              { url: 'https://picked.invalid/pricing/teams', title: 'Teams', depth: 2 },
+            ],
+            errors: [],
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site address').fill('https://picked.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
+
+      await page.getByRole('checkbox', { name: 'Teams /pricing/teams' }).check();
+      await page.getByRole('checkbox', { name: 'Pricing /pricing' }).check();
+      await page.getByRole('checkbox', { name: 'Front door /' }).check();
+
+      // The address box is edited *after* the result landed and before the
+      // journey is saved, which is the ordinary thing an operator does when
+      // they line up the next site while reading this list. It is also the
+      // only way the `targetUrl` assertion below means anything: a panel that
+      // read the origin off this box at save time would store
+      // `https://somewhere-else.invalid` and pass every other assertion here.
+      await page.getByLabel('Site address').fill('https://somewhere-else.invalid/');
+
+      // The route's own cap, met while typing rather than as a nameless
+      // `invalid_request_body` after the journey is posted.
+      expect(await page.getByLabel('Journey name').getAttribute('maxlength')).toBe('120');
+
+      // Neither substring of the two journey names the tests above locate by.
+      await page.getByLabel('Journey name').fill('Picked Pages');
+      await page.getByRole('button', { name: 'Create journey' }).click();
+
+      // Server truth.
+      await expect
+        .poll(
+          async () => {
+            const stored = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+              headers: { authorization: `Bearer ${TOKEN}` },
+            });
+            const { journeys } = (await stored.json()) as {
+              journeys: Array<{ name: string; targetUrl?: string; steps?: unknown[] }>;
+            };
+            const match = journeys.find((one) => one.name === 'Picked Pages');
+            return match ? { targetUrl: match.targetUrl, steps: match.steps } : null;
+          },
+          { timeout: 30_000, intervals: [1000] },
+        )
+        .toEqual({
+          // The origin captured when the result landed, not re-read off the
+          // address box at save time — the operator may have typed the next
+          // site into it while reading the list.
+          targetUrl: 'https://picked.invalid',
+          // Crawl order, from a deepest-first set of ticks.
+          steps: [
+            { position: 1, action: 'navigate', type: 'goto', path: '/', recognised: true },
+            { position: 2, action: 'navigate', type: 'goto', path: '/pricing', recognised: true },
+            {
+              position: 3,
+              action: 'navigate',
+              type: 'goto',
+              path: '/pricing/teams',
+              recognised: true,
+            },
+          ],
+        });
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
+   * The bulk control at the boundary a crawl actually reaches.
+   *
+   * `authoredStepsSchema` caps a journey at `MAX_STEPS_PER_JOURNEY` (50)
+   * *before* it parses an element, and a crawl stopped by `MAX_DISCOVERY_URLS`
+   * returns exactly 100 pages. So one click of "Select every page" on a large
+   * site used to build a body the route refuses with `invalid_request_body` —
+   * a code naming neither the field nor the number, whose copy then told the
+   * operator to shorten the name and untick the longest page. Neither is the
+   * fix; the fix is to untick fifty.
+   *
+   * 60 pages rather than 100: past the cap by enough that the prefix and the
+   * remainder are both unambiguous, and small enough that the stub stays
+   * readable. No axe run here — the maximal-state test above covers the
+   * markup, and this one is about a number.
+   */
+  it('will not build a journey longer than the route will store', async () => {
+    const page = await openAuthenticatedPage();
+    try {
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            // Zero-padded defensively, not because anything here needs it:
+            // the accessible name is `Page 5 /p5`, and the space before the
+            // path already stops it being a substring of `Page 50 /p50`. An
+            // earlier version of this comment claimed the padding was
+            // load-bearing; it is not, and the collision it described exists
+            // only when matching on the title alone, which this test does not
+            // do.
+            pages: Array.from({ length: 60 }, (_, index) => ({
+              url: `https://sixty.invalid/p${String(index).padStart(2, '0')}`,
+              title: `Page ${String(index).padStart(2, '0')}`,
+              depth: index === 0 ? 0 : 1,
+            })),
+            errors: [],
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site address').fill('https://sixty.invalid/');
+      await page.getByRole('button', { name: 'Find pages' }).click();
+
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Page 00');
+
+      // Said before the click, so an operator is not left thinking the bulk
+      // control half-worked.
+      expect(await panel.innerText()).toContain('takes the first 50');
+
+      // A name first, so the block asserted below is attributable to the
+      // count and not to an empty name field.
+      await page.getByLabel('Journey name').fill('Boundary Check');
+
+      const create = page.getByRole('button', { name: 'Create journey' });
+
+      // Select-all takes a storeable prefix rather than all 60 — the same move
+      // as skipping a `tooLong` row: a state the operator could have reached
+      // by clicking, with prose saying what was left out.
+      await page.getByRole('button', { name: 'Select every page' }).click();
+      await expect.poll(() => panel.innerText()).toContain('50 pages picked');
+      expect(await create.isDisabled()).toBe(false);
+
+      // And the cap is not merely a property of that button: ticking one more
+      // by hand blocks the create, and the prose says how many to remove
+      // rather than sending the operator to shorten a name that is fine.
+      await page.getByRole('checkbox', { name: 'Page 55 /p55' }).check();
+      await expect.poll(() => panel.innerText()).toContain('51 pages picked');
+      expect(await create.isDisabled()).toBe(true);
+
+      const text = await panel.innerText();
+      expect(text).toContain('A journey holds at most 50 steps, and 51 pages are picked.');
+      expect(text).toContain('Untick 1');
+
+      // And inside the announced region, not merely on the page. The count
+      // change is what a screen reader hears; without the remedy in the same
+      // paragraph it hears "51 pages picked" and nothing about the Create
+      // button having just died.
+      expect(await panel.locator('p[aria-live="polite"]', { hasText: 'Untick 1' }).count()).toBe(1);
+
+      // The count is reported *before* the missing name, and until now that
+      // ordering was argued in a comment and exercised by nothing — this test
+      // filled the name first precisely so the block would be attributable.
+      // An operator who is told to name the journey, does so, and is still
+      // blocked has learned nothing, so the more structural problem wins.
+      await page.getByLabel('Journey name').fill('');
+      await expect.poll(() => panel.innerText()).toContain('Untick 1');
+      expect(await panel.innerText()).not.toContain('Give the journey a name');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
+   * The discovery panel's two buttons, held to what #57 settled everywhere
+   * else in the workspace.
+   *
+   * `lib/inert-button` landed on master while this panel was on a branch, and
+   * its commit said so: "`discover-pages.tsx` is not on this branch; its three
+   * sites are on claude/auditor-static-websites-4eae70". Git merged the two
+   * without a word, which is the whole danger — a clean merge would have
+   * shipped the exact keyboard defect that commit removed, into the panel that
+   * is now the main way a journey gets made, in a product that audits other
+   * people's sites for this.
+   *
+   * Two of the three sites convert. The third, the `tooLong` checkbox, is
+   * unavailable on arrival rather than by the operator's own click, and the
+   * component says why beside it.
+   *
+   * Nothing but a browser can see any of this: both spellings are valid markup
+   * and correctly marked unavailable, so the zero-violation sweep at the foot
+   * of this file passes either way.
+   */
+  it('keeps focus on the discovery buttons their own click makes unavailable', async () => {
+    const page = await openAuthenticatedPage();
+
+    /** What a screen reader would be on, right now. */
+    const focused = () =>
+      page.evaluate(() => {
+        const active = document.activeElement;
+        if (!active || active === document.body) return 'body';
+        return active.getAttribute('aria-label') ?? active.textContent?.trim() ?? active.tagName;
+      });
+
+    try {
+      // Held open until this test releases it, so "crawling" is a state the
+      // assertions can stand in rather than a frame between two renders. A
+      // stub that answers at once would make this a race with React.
+      let release = () => {};
+      const crawled = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+
+      let crawlRequests = 0;
+
+      await page.route('**/api/platform/discover', async (route) => {
+        crawlRequests += 1;
+        await crawled;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            pages: [{ url: 'https://inert.invalid/', title: 'Front door', depth: 0 }],
+            errors: [],
+          }),
+        });
+      });
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await page.getByLabel('Site address').fill('https://inert.invalid/');
+
+      // 1. Find pages, mid-crawl. The panel's own copy says a crawl "takes
+      // about a minute", so this is a minute of the operator having lost their
+      // place — the longest window of the four controls #57 fixed.
+      const find = page.getByRole('button', { name: 'Find pages' });
+      await find.focus();
+      // Enter on a focused button, not a mouse click: the defect is about the
+      // keyboard and a mouse user never had a place to lose.
+      await page.keyboard.press('Enter');
+
+      // Waited on the visible label, which changes either way. Polling
+      // `aria-disabled` would make the fix's own attribute the thing that
+      // decides when to look, and the assertion that matters is the focus.
+      await expect.poll(() => find.innerText(), { timeout: 15_000 }).toBe('Looking…');
+      expect(await focused()).toBe('Find pages');
+      // And how, so an edit that reinstates `disabled` fails here rather than
+      // quietly reintroducing the defect.
+      expect(await find.getAttribute('aria-disabled')).toBe('true');
+      expect(await find.evaluate((node: HTMLButtonElement) => node.disabled)).toBe(false);
+      // The accessible name did not move with the visible one. Under
+      // `disabled` that rename was free, because focus had already gone to
+      // `<body>`; with focus staying it is announced, over the polite region
+      // below that is the thing actually saying the crawl started.
+      expect(await focused()).not.toBe('Looking…');
+
+      // 1b. And the half `aria-disabled` gives away, which has to be bought
+      // back by the guard inside `inertWhen`.
+      //
+      // `discover()` has no `crawling` check of its own — under `disabled` the
+      // DOM was what stopped a second Enter, and `aria-disabled` stops nothing.
+      // So this is the one assertion here that the guard uniquely holds up:
+      // delete the early return in `inertWhen` and a second Enter starts a
+      // second crawl of the same site while the first is in flight.
+      await page.keyboard.press('Enter');
+
+      release();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
+
+      // Counted after the results are on screen rather than straight after the
+      // key: the request would be made by Chromium's network stack, not
+      // synchronously by the handler, so an assertion taken immediately would
+      // pass whether or not a second crawl had been started.
+      expect(crawlRequests).toBe(1);
+
+      // 2. Create journey, inert because nothing is ticked — the state the
+      // panel spends most of its life in, and the one an operator meets first.
+      const create = page.getByRole('button', { name: 'Create journey' });
+      expect(await create.getAttribute('aria-disabled')).toBe('true');
+      await create.focus();
+      await page.keyboard.press('Enter');
+      expect(await focused()).toBe('Create journey');
+      // Still refusing, and still saying why in the live region beside it —
+      // which a `disabled` button could never be reached to be told about.
+      //
+      // Read this for what it is: `create()` opens with its own
+      // `if (!found || createBlockedBy) return;`, so this line survives
+      // deleting the guard inside `inertWhen`. It pins the outcome, not that
+      // mechanism. What the guard uniquely stops is a *second* Enter while a
+      // create is in flight, which `disabled` used to stop at the DOM level.
+      await expect.poll(() => panel.innerText()).toContain('Tick at least one page');
+      expect(await panel.innerText()).not.toContain('It is in the list below');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
   it('refuses a client that does not exist rather than showing another one', async () => {
     // The fixture lookup this replaces fell back to the first client, so any
     // unknown slug rendered one client's findings under another client's
