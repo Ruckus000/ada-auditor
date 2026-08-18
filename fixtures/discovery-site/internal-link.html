@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Internal link</title></head>
+  <body>
+    <main>
+      <h1>Internal link</h1>
+      <!--
+        The case `hostile.html` cannot make: a link whose host is a *name*
+        rather than a literal address, inside the target's own domain, that
+        resolves into private space.
+
+        Every link in `hostile.html` is a literal — 169.254.169.254, 127.0.0.1,
+        10.0.0.1, [::1] — and `assertAllowedUrl` refuses all of them
+        synchronously, both because they fail the host allowlist and because it
+        range-checks a literal host. That is why a crawl of that page proved
+        nothing about the guard this fixture exists for.
+
+        `internal.discovery.example` is a subdomain of the crawl's target, so it
+        satisfies the allowlist, and it is not a literal, so nothing
+        range-checks it without first resolving it.
+      -->
+      <a href="http://internal.discovery.example/secret">Internal</a>
+      <!-- Twice, and the same URL: a nav bar repeating one link across a
+           site is the everyday shape of this. One refusal is one row. -->
+      <a href="http://internal.discovery.example/secret">Internal again</a>
+      <a href="/">Home</a>
+    </main>
+  </body>
+</html>

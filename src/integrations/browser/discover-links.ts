@@ -233,6 +233,35 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
   // Resolve and range-check the entry point before spending a browser launch.
   await assertSafeTargetUrl(input.targetUrl, allowedHosts);
 
+  /**
+   * Hosts whose addresses have already been resolved and range-checked.
+   *
+   * The DNS half of the guard is per *host*; the checks in `assertAllowedUrl`
+   * are per URL. A crawl is confined to one apex and its subdomains, so this
+   * holds a handful of entries and turns what would be one `lookup()` per
+   * harvested link — up to `MAX_LINKS_PER_PAGE * MAX_DISCOVERY_URLS` of them —
+   * into one per distinct name.
+   *
+   * The promise is cached rather than the verdict, so a host that resolved
+   * into blocked space is refused again from memory instead of being re-asked
+   * once per link pointing at it.
+   *
+   * Seeded with the entry point, which the line above just checked.
+   */
+  const resolvedHosts = new Map<string, Promise<void>>([
+    [target.hostname, Promise.resolve()],
+  ]);
+
+  const assertHostResolves = (href: string): Promise<void> => {
+    const hostname = new URL(href).hostname;
+    let check = resolvedHosts.get(hostname);
+    if (check === undefined) {
+      check = assertSafeTargetUrl(href, allowedHosts).then(() => undefined);
+      resolvedHosts.set(hostname, check);
+    }
+    return check;
+  };
+
   const pages: DiscoveredPage[] = [];
   const errors: DiscoveryError[] = [];
   const seen = new Set<string>([discoveryKey(input.targetUrl)]);
@@ -244,6 +273,31 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
   /** Failures past `MAX_DISCOVERY_ERRORS`. Reported, for the reason given there. */
   let errorsOmitted = 0;
+
+  /**
+   * File one failure, or count it as omitted once the list is full.
+   *
+   * One function because there are two callers now — a navigation that failed
+   * and a link refused before it was dialled — and the cap is one rule. Two
+   * copies of "stop at the ceiling and increment the counter" is how one of
+   * them ends up incrementing nothing, which is the exact defect
+   * `errorsOmitted` exists to prevent, one level down.
+   *
+   * `message` is the first line only, matching `attemptStep` in
+   * `journey-runner.ts`. A Playwright navigation failure carries its whole call
+   * log, which includes the URL it was dialling — and a URL harvested from a
+   * client's markup routinely has a reset token or a session id in the query.
+   * This string is destined for an operator's screen, and `services/logger.ts`
+   * redacts by field *name*, so a secret sitting inside a value under the key
+   * `message` would travel unredacted.
+   */
+  const recordError = (url: string, error: unknown): void => {
+    if (errors.length >= MAX_DISCOVERY_ERRORS) {
+      errorsOmitted += 1;
+      return;
+    }
+    errors.push({ url, message: firstErrorLine(error) });
+  };
 
   const browser: Browser = await launchChromium({ headless: input.headless });
 
@@ -400,7 +454,52 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
               throw error;
             }
 
+            // Before the resolution check below, deliberately. A link refused
+            // there still gets one error row and no more: a nav bar carrying
+            // the same internal link on forty pages would otherwise file forty
+            // identical rows, spend the error budget that real diagnoses need,
+            // and render forty identical lines on an operator's screen.
             seen.add(key);
+
+            /**
+             * And resolve it, which is the guard this loop was missing.
+             *
+             * `assertAllowedUrl` is synchronous and reads only the URL: scheme,
+             * credentials, the host allowlist, and a range check when the host
+             * is already a literal address. It never resolves a name. So a
+             * link to `internal.acme.com` — a subdomain of the target, and so
+             * inside the allowlist — passed every check here and was dialled,
+             * whatever it resolved to.
+             *
+             * That inverted the guarantee the module claims. `journey-runner`
+             * puts every operator-authored `goto` through `assertSafeTargetUrl`,
+             * and the entry point above gets the same treatment; only these
+             * URLs, the ones written by the audited page rather than by a
+             * person, were held to the weaker check. The peer-address check
+             * still fired, but only after Chromium had completed the connection
+             * and sent the request — it recorded the visit rather than
+             * preventing it, which for an internal endpoint that acts on a GET
+             * is a distinction without a difference.
+             *
+             * Recorded rather than skipped, unlike the off-scope case above.
+             * Both failures this can raise are worth an operator's attention:
+             * a link into private space is a fact about their markup, and a
+             * host that does not resolve is a dead link. Both already produced
+             * an error row before this check existed — the first from the peer
+             * check, the second from the failed navigation — so staying silent
+             * here would trade a request we should not make for a diagnosis we
+             * used to give.
+             */
+            try {
+              await assertHostResolves(href);
+            } catch (error) {
+              if (error instanceof UnsafeTargetError) {
+                recordError(href, error);
+                continue;
+              }
+              throw error;
+            }
+
 
             // The frontier never needs to hold more than the crawl can still
             // visit: `MAX_DISCOVERY_URLS` is the ceiling on `pages`, so once
@@ -471,38 +570,27 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // problems. It is not a `truncated` reason, though — see
         // `DiscoveryResult.errorsOmitted` for why an incomplete error list says
         // nothing about whether the page list is complete.
-        if (errors.length >= MAX_DISCOVERY_ERRORS) {
-          errorsOmitted += 1;
-          continue;
-        }
-
-        errors.push({
-          // The *requested* URL, where `pages[].url` is the settled one, and
-          // the asymmetry is deliberate rather than an oversight.
-          //
-          // A page's URL becomes a `goto` step, and a step pointing at a
-          // redirector re-pays the hop on every run forever — so a page is
-          // recorded where it lives. An error is a diagnosis, and a diagnosis
-          // has to name something the operator can find: telling them
-          // `elsewhere.test/landed` failed is useless when nothing in their
-          // markup says that and `Ctrl-F` finds nothing.
-          //
-          // The row only reads correctly because both halves are present:
-          // `/offsite-redirect.html` plus `Host elsewhere.test is not in the
-          // allowed domains` is legible, where `/offsite-redirect.html` alone
-          // would read as "your own page is not in your allowed domains",
-          // which is nonsense. Do not "fix" this to the settled URL.
-          url: next.url,
-          // First line only, matching `attemptStep` in `journey-runner.ts`.
-          //
-          // A Playwright navigation failure carries its whole call log, which
-          // includes the URL it was dialling — and a URL harvested from a
-          // client's markup routinely has a reset token or a session id in the
-          // query. This string is destined for an operator's screen, and
-          // `services/logger.ts` redacts by field *name*, so a secret sitting
-          // inside a value under the key `message` would travel unredacted.
-          message: firstErrorLine(error),
-        });
+        // Bounded and counted by `recordError`, for the reasons given there:
+        // `MAX_DISCOVERY_URLS` counts pages and an errored navigation adds
+        // none, so a site of dead links would otherwise file an entry per
+        // failure with nothing to stop it.
+        //
+        // The *requested* URL, where `pages[].url` is the settled one, and the
+        // asymmetry is deliberate rather than an oversight.
+        //
+        // A page's URL becomes a `goto` step, and a step pointing at a
+        // redirector re-pays the hop on every run forever — so a page is
+        // recorded where it lives. An error is a diagnosis, and a diagnosis has
+        // to name something the operator can find: telling them
+        // `elsewhere.test/landed` failed is useless when nothing in their
+        // markup says that and `Ctrl-F` finds nothing.
+        //
+        // The row only reads correctly because both halves are present:
+        // `/offsite-redirect.html` plus `Host elsewhere.test is not in the
+        // allowed domains` is legible, where `/offsite-redirect.html` alone
+        // would read as "your own page is not in your allowed domains", which
+        // is nonsense. Do not "fix" this to the settled URL.
+        recordError(next.url, error);
       } finally {
         // Politeness is owed to the next request, so there is no one to be
         // polite to when there is no next request. Unconditional, this charged

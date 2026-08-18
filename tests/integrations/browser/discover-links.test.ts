@@ -40,12 +40,28 @@ const HOST = 'discovery.example';
  */
 const WWW_HOST = `www.${HOST}`;
 
+/**
+ * A name inside the target's domain that resolves into private space.
+ *
+ * Mapped in Chromium's resolver to the same loopback server as every other
+ * host here, so that a crawler which fails to refuse it *succeeds* in reaching
+ * it — the server records the `Host` it was asked for, and the test asserts
+ * that name never arrives. A hostname that simply failed to resolve would make
+ * the test pass with the guard deleted.
+ */
+const INTERNAL_HOST = `internal.${HOST}`;
+
 const shared = vi.hoisted(() => ({ port: 0 }));
 
 vi.mock('node:dns/promises', () => ({
   lookup: async (hostname: string) => {
     if (hostname === HOST || hostname === `www.${HOST}`) {
       return [{ address: '93.184.216.34', family: 4 }];
+    }
+    // The whole point of `INTERNAL_HOST`: a public-looking name in the
+    // target's own domain, answering with an address inside RFC1918.
+    if (hostname === INTERNAL_HOST) {
+      return [{ address: '10.0.0.5', family: 4 }];
     }
     throw new Error(`unexpected lookup: ${hostname}`);
   },
@@ -62,7 +78,7 @@ vi.mock('../../../src/integrations/browser/launch', () => ({
       // and the test asserting the redirect was refused passes with the check
       // it exists to drive entirely absent.
       args: [
-        `--host-resolver-rules=MAP ${HOST} 127.0.0.1:${shared.port},MAP elsewhere.test 127.0.0.1:${shared.port},MAP www.${HOST} 127.0.0.1:${shared.port}`,
+        `--host-resolver-rules=MAP ${HOST} 127.0.0.1:${shared.port},MAP elsewhere.test 127.0.0.1:${shared.port},MAP www.${HOST} 127.0.0.1:${shared.port},MAP ${INTERNAL_HOST} 127.0.0.1:${shared.port}`,
       ],
     }),
 }));
@@ -98,6 +114,7 @@ const { discoverLinks, EntryPointRedirectedError } = await import(
 
 const FIXTURES = join(process.cwd(), 'fixtures/discovery-site');
 let server: Server;
+const requestedHosts: string[] = [];
 
 /** Path and query, which together are what this crawl calls one page. */
 function locationOf(rawUrl: string): string {
@@ -116,6 +133,11 @@ beforeAll(async () => {
       request.socket.destroy();
       return;
     }
+
+    // Every host the server is actually asked for. The guard under test is
+    // supposed to stop a request being made at all, and the only witness to
+    // that is the server it would have reached.
+    requestedHosts.push((request.headers.host ?? '').split(':')[0]);
 
     // The whole site under `www`, canonicalising to the apex. Discriminated on
     // the `Host` header rather than the path because the *host* is the point:
@@ -375,6 +397,63 @@ describe('discoverLinks guards', () => {
     for (const forbidden of ['169.254.169.254', '127.0.0.1:22', '10.0.0.1', '[::1]']) {
       expect(visited).not.toContain(forbidden);
     }
+  }, 60_000);
+
+  /**
+   * The guard the hostile fixture could not test.
+   *
+   * Every link in `hostile.html` is a literal address, and `assertAllowedUrl`
+   * refuses those synchronously — twice over, since a literal also fails the
+   * host allowlist. So the crawl's guards looked complete while the check that
+   * matters for a *named* host was missing entirely.
+   *
+   * `assertAllowedUrl` resolves nothing. A link to a subdomain of the target
+   * satisfies the allowlist and is not a literal, so before this the crawler
+   * put it straight on the frontier and dialled it, whatever it resolved to.
+   * `journey-runner` has never done that: every operator-authored `goto` goes
+   * through `assertSafeTargetUrl`. The weaker check was reserved for the URLs
+   * an audited page wrote, which is the wrong way round.
+   *
+   * The peer check is not what saves this, and is stubbed out in this file
+   * anyway. It inspects `response.serverAddr()` *after* Chromium has connected
+   * and sent the request — it can record an internal visit, not prevent one,
+   * and for an endpoint that acts on a GET that distinction is the whole
+   * vulnerability.
+   *
+   * The assertion is on the server, not on the result: `INTERNAL_HOST` is
+   * mapped to this very server, so a crawler that fails to refuse it reaches
+   * it and the `Host` header arrives. Asserting only that no page came back
+   * would pass with the guard deleted, because the response is discarded
+   * either way.
+   */
+  it('never dials a named host inside the target that resolves into private space', async () => {
+    requestedHosts.length = 0;
+
+    const result = await discoverLinks({
+      targetUrl: `http://${HOST}/internal-link.html`,
+    });
+
+    // The request was never made.
+    expect(requestedHosts).not.toContain(INTERNAL_HOST);
+    // And the server was genuinely reachable under that name, so the assertion
+    // above is about the guard rather than about a dead mapping.
+    expect(requestedHosts).toContain(HOST);
+
+    // Refused, not silently skipped. An in-scope link into private space is a
+    // fact about the operator's own markup, and it produced an error row
+    // before this guard existed — from the peer check, after the visit. Losing
+    // the diagnosis to gain the refusal would trade one defect for another.
+    //
+    // Exactly one row, and the fixture links to it twice on purpose. Recording
+    // before marking the URL seen files a row per occurrence, so a nav bar
+    // carrying one internal link across forty pages would file forty identical
+    // rows and spend the error budget real diagnoses need.
+    const refused = result.errors.filter((error) => error.url.includes(INTERNAL_HOST));
+    expect(refused, 'the refused link should be reported').toHaveLength(1);
+    expect(refused[0].message).toMatch(/private or reserved address/);
+
+    // And it is not among the pages an operator could pick.
+    expect(result.pages.some((page) => page.url.includes(INTERNAL_HOST))).toBe(false);
   }, 60_000);
 
   it('reaches the hostile page itself, so the test proves refusal and not absence', async () => {
