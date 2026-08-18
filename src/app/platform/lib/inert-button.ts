@@ -35,6 +35,25 @@ import type { MouseEvent } from 'react';
  * What this does not do is style the control. An inert button that still looks
  * live is its own defect, so every call site pairs this with the muted
  * treatment it already used for `disabled`.
+ *
+ * **`react-hooks/refs` reports a call site whose handler touches a ref, and
+ * the report is wrong here.** The rule refuses ref access during render, and
+ * it treats a function passed *as an argument to a call made during render* as
+ * one that call might invoke. This function never invokes the handler: it
+ * closes over it and returns a wrapper the browser calls on click. Nothing
+ * above ever runs during a render.
+ *
+ * That is the analysis; here is the evidence, so nobody has to re-derive it.
+ * Replace `{...inertWhen(busy, start)}` with a plain `onClick={start}` and the
+ * report disappears while `start` still touches exactly the same ref — so what
+ * the rule objects to is the argument position, not the ref. The three sites
+ * that trip it suppress it on that line and point here. Sites whose handler
+ * touches no ref — the two in `discover-pages.tsx` — do not trip it at all,
+ * which is the other half of the same demonstration.
+ *
+ * Suppressed rather than designed around, because every way around it splits
+ * the attribute from the guard, and keeping those two together is the entire
+ * reason this function exists.
  */
 export function inertWhen(
   isInert: boolean,

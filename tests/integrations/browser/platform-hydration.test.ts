@@ -997,6 +997,11 @@ describe('platform hydration', () => {
                 title: 'Very long address',
                 depth: 2,
               },
+              // A subdomain of the target, which a crawl returns because it
+              // must: `hostAllowed` matches subdomains, and without that the
+              // apex-to-www redirect ends every crawl at depth 0. A journey
+              // holds one `targetUrl` and a list of paths and cannot say this.
+              { url: 'https://docs.discovered.invalid/guide', title: 'Guide', depth: 1 },
             ],
             // The URL *and* the message, which is the pair the crawler's own
             // comment argues for: either alone is unreadable.
@@ -1054,11 +1059,29 @@ describe('platform hydration', () => {
       expect(await longBox.isDisabled()).toBe(true);
       expect(text).toContain('too long to record as a step');
 
-      // The bulk control takes the four it may and leaves the fifth, which is
-      // the state no click could otherwise produce.
+      // A page on another host, refused for a different and worse reason. The
+      // route would have answered **201** to a step built from its path — the
+      // body is perfectly valid — and the run would then have audited
+      // `discovered.invalid/guide`, a page nobody picked, and reported it
+      // clean. Nothing downstream could have caught it: the host is discarded
+      // before the step is written.
+      const offHostBox = page.getByRole('checkbox', { name: /Guide/ });
+      expect(await offHostBox.isDisabled()).toBe(true);
+      // The whole URL, not the path: the host is the thing that makes this row
+      // different, and two pages sharing a path across two hosts would
+      // otherwise render as the same row twice.
+      expect(text).toContain('https://docs.discovered.invalid/guide');
+      expect(text).toContain('on docs.discovered.invalid, not discovered.invalid');
+      // And what to do about it, which is the half that makes this a rule
+      // rather than a dead end.
+      expect(text).toContain('crawl docs.discovered.invalid on its own');
+
+      // The bulk control takes the four it may and leaves both it may not,
+      // which is the state no click could otherwise produce.
       await page.getByRole('button', { name: 'Select every page' }).click();
       await expect.poll(() => panel.innerText()).toContain('4 pages picked');
       expect(await longBox.isChecked()).toBe(false);
+      expect(await offHostBox.isChecked()).toBe(false);
 
       // With the name still empty, so the sentence explaining the disabled
       // Create button is on the page when axe looks.
@@ -1299,6 +1322,133 @@ describe('platform hydration', () => {
       await page.getByLabel('Journey name').fill('');
       await expect.poll(() => panel.innerText()).toContain('Untick 1');
       expect(await panel.innerText()).not.toContain('Give the journey a name');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
+   * The discovery panel's two buttons, held to what #57 settled everywhere
+   * else in the workspace.
+   *
+   * `lib/inert-button` landed on master while this panel was on a branch, and
+   * its commit said so: "`discover-pages.tsx` is not on this branch; its three
+   * sites are on claude/auditor-static-websites-4eae70". Git merged the two
+   * without a word, which is the whole danger — a clean merge would have
+   * shipped the exact keyboard defect that commit removed, into the panel that
+   * is now the main way a journey gets made, in a product that audits other
+   * people's sites for this.
+   *
+   * Two of the three sites convert. The third, the `tooLong` checkbox, is
+   * unavailable on arrival rather than by the operator's own click, and the
+   * component says why beside it.
+   *
+   * Nothing but a browser can see any of this: both spellings are valid markup
+   * and correctly marked unavailable, so the zero-violation sweep at the foot
+   * of this file passes either way.
+   */
+  it('keeps focus on the discovery buttons their own click makes unavailable', async () => {
+    const page = await openAuthenticatedPage();
+
+    /** What a screen reader would be on, right now. */
+    const focused = () =>
+      page.evaluate(() => {
+        const active = document.activeElement;
+        if (!active || active === document.body) return 'body';
+        return active.getAttribute('aria-label') ?? active.textContent?.trim() ?? active.tagName;
+      });
+
+    try {
+      // Held open until this test releases it, so "crawling" is a state the
+      // assertions can stand in rather than a frame between two renders. A
+      // stub that answers at once would make this a race with React.
+      let release = () => {};
+      const crawled = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+
+      let crawlRequests = 0;
+
+      await page.route('**/api/platform/discover', async (route) => {
+        crawlRequests += 1;
+        await crawled;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            pages: [{ url: 'https://inert.invalid/', title: 'Front door', depth: 0 }],
+            errors: [],
+          }),
+        });
+      });
+
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      await page.getByLabel('Site address').fill('https://inert.invalid/');
+
+      // 1. Find pages, mid-crawl. The panel's own copy says a crawl "takes
+      // about a minute", so this is a minute of the operator having lost their
+      // place — the longest window of the four controls #57 fixed.
+      const find = page.getByRole('button', { name: 'Find pages' });
+      await find.focus();
+      // Enter on a focused button, not a mouse click: the defect is about the
+      // keyboard and a mouse user never had a place to lose.
+      await page.keyboard.press('Enter');
+
+      // Waited on the visible label, which changes either way. Polling
+      // `aria-disabled` would make the fix's own attribute the thing that
+      // decides when to look, and the assertion that matters is the focus.
+      await expect.poll(() => find.innerText(), { timeout: 15_000 }).toBe('Looking…');
+      expect(await focused()).toBe('Find pages');
+      // And how, so an edit that reinstates `disabled` fails here rather than
+      // quietly reintroducing the defect.
+      expect(await find.getAttribute('aria-disabled')).toBe('true');
+      expect(await find.evaluate((node: HTMLButtonElement) => node.disabled)).toBe(false);
+      // The accessible name did not move with the visible one. Under
+      // `disabled` that rename was free, because focus had already gone to
+      // `<body>`; with focus staying it is announced, over the polite region
+      // below that is the thing actually saying the crawl started.
+      expect(await focused()).not.toBe('Looking…');
+
+      // 1b. And the half `aria-disabled` gives away, which has to be bought
+      // back by the guard inside `inertWhen`.
+      //
+      // `discover()` has no `crawling` check of its own — under `disabled` the
+      // DOM was what stopped a second Enter, and `aria-disabled` stops nothing.
+      // So this is the one assertion here that the guard uniquely holds up:
+      // delete the early return in `inertWhen` and a second Enter starts a
+      // second crawl of the same site while the first is in flight.
+      await page.keyboard.press('Enter');
+
+      release();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
+
+      // Counted after the results are on screen rather than straight after the
+      // key: the request would be made by Chromium's network stack, not
+      // synchronously by the handler, so an assertion taken immediately would
+      // pass whether or not a second crawl had been started.
+      expect(crawlRequests).toBe(1);
+
+      // 2. Create journey, inert because nothing is ticked — the state the
+      // panel spends most of its life in, and the one an operator meets first.
+      const create = page.getByRole('button', { name: 'Create journey' });
+      expect(await create.getAttribute('aria-disabled')).toBe('true');
+      await create.focus();
+      await page.keyboard.press('Enter');
+      expect(await focused()).toBe('Create journey');
+      // Still refusing, and still saying why in the live region beside it —
+      // which a `disabled` button could never be reached to be told about.
+      //
+      // Read this for what it is: `create()` opens with its own
+      // `if (!found || createBlockedBy) return;`, so this line survives
+      // deleting the guard inside `inertWhen`. It pins the outcome, not that
+      // mechanism. What the guard uniquely stops is a *second* Enter while a
+      // create is in flight, which `disabled` used to stop at the DOM level.
+      await expect.poll(() => panel.innerText()).toContain('Tick at least one page');
+      expect(await panel.innerText()).not.toContain('It is in the list below');
     } finally {
       await page.close();
     }

@@ -4,6 +4,7 @@ import {
   discoveryRequestSchema,
   MAX_DISCOVERY_URLS,
   normalizePathname,
+  stepPathFor,
 } from '../../src/domain/discovery';
 
 describe('normalizePathname', () => {
@@ -118,5 +119,59 @@ describe('discoveryRequestSchema', () => {
   // here, so this only pins discovery's own cap, not the pair.
   it('caps discovery well above the default run page cap', () => {
     expect(MAX_DISCOVERY_URLS).toBeGreaterThan(20);
+  });
+});
+
+/**
+ * The rule that stops a crawl's wider reach becoming a journey's wrong URL.
+ *
+ * A crawl of `acme.com` legitimately returns pages on `docs.acme.com`:
+ * `hostAllowed` matches subdomains, and it must, or the apex-to-www redirect
+ * ends every crawl at depth 0. A journey cannot express that — one
+ * `targetUrl`, a list of paths — so a step built from the path alone audits a
+ * different page and the route answers 201, because nothing about the body is
+ * wrong. The host was discarded before it was written.
+ */
+describe('stepPathFor', () => {
+  it('takes the path and query of a page on the target host', () => {
+    expect(stepPathFor('https://acme.com/pricing?plan=team', 'https://acme.com')).toBe(
+      '/pricing?plan=team',
+    );
+  });
+
+  it('refuses a page on a subdomain of the target', () => {
+    // The whole point. `docs.acme.com/guide` and `acme.com/guide` are
+    // different pages, and taking `/guide` here is what makes the second one
+    // silently stand in for the first.
+    expect(stepPathFor('https://docs.acme.com/guide', 'https://acme.com')).toBeNull();
+  });
+
+  it('refuses a page on the parent of the target', () => {
+    // The other direction, which the subdomain rule does not cover on its own:
+    // crawl `www.acme.com`, follow a link to `acme.com`, and the entry point
+    // check never sees it because it is not the entry point.
+    expect(stepPathFor('https://acme.com/pricing', 'https://www.acme.com')).toBeNull();
+  });
+
+  it('keeps a page whose scheme differs from the target', () => {
+    // An operator who types `http://` gets `https://` pages back from a site
+    // that redirects, which is most of them. The step still resolves against
+    // the `http://` target and the site performs the same redirect at run
+    // time, so this is the case where comparing origins would refuse
+    // essentially every real crawl.
+    expect(stepPathFor('https://acme.com/pricing', 'http://acme.com')).toBe('/pricing');
+  });
+
+  it('ignores case in the hostname', () => {
+    // `URL.hostname` lowercases what it parses, so this passes with the
+    // `toLowerCase` calls deleted. It is here for the target, which is built
+    // from an operator's typed string and travels through this function
+    // unparsed by anything else.
+    expect(stepPathFor('https://ACME.com/pricing', 'https://acme.COM')).toBe('/pricing');
+  });
+
+  it('answers null rather than throwing for an address it cannot read', () => {
+    expect(stepPathFor('not a url', 'https://acme.com')).toBeNull();
+    expect(stepPathFor('https://acme.com/', 'not a url')).toBeNull();
   });
 });

@@ -2,16 +2,23 @@
 
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { DiscoveredPage, DiscoveryError, DiscoveryTruncation } from '../../../../domain/discovery';
+import {
+  type DiscoveredPage,
+  type DiscoveryError,
+  type DiscoveryTruncation,
+  stepPathFor,
+} from '../../../../domain/discovery';
 import { MAX_STEP_TEXT, MAX_STEPS_PER_JOURNEY } from '../../../../domain/journey-step';
 import { MAX_JOURNEY_NAME } from '../../../../domain/platform';
 import {
+  clipHost,
   describeDepth,
   describeDiscoveryFailure,
   describeErrorTotal,
   describeJourneyCreationFailure,
   describeTruncation,
 } from '../../lib/discovery-copy';
+import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -49,6 +56,15 @@ import { FONT, T } from '../../lib/tokens';
  *
  * `AUTHORABLE_ACTIONS` and what a step may do in which environment stay where
  * they are — this panel writes `navigate`/`goto` and nothing else.
+ *
+ * **One rule is neither restated nor advisory: it is enforced here and nowhere
+ * else.** A crawl may return pages on subdomains of the target — it has to,
+ * or the apex-to-www redirect ends every crawl at depth 0 — and a journey
+ * cannot express them: it holds one `targetUrl` and a list of paths. Taking
+ * the path of a page on `docs.acme.com` would post a step that audits
+ * `acme.com` and get a **201** for it. No route can catch that, because there
+ * is nothing wrong with the body; the host was thrown away before it was
+ * written. `rowFor` refuses the row instead. See `stepPathFor`.
  */
 
 /**
@@ -96,33 +112,84 @@ type Found = {
 /**
  * One page as this panel has to think about it.
  *
- * `tooLong` is a property of the *step format*, not of the crawl: a discovered
- * href may run to `MAX_HREF_LENGTH`, four times what a `goto` path may hold.
- * Decided per row and at selection time, which is the whole improvement over
- * finding out at save time: the operator learns which page and why while
- * looking at it, rather than reading a refusal that names neither.
+ * Both `stepPath` and `blockedBy` are decided per row and at *selection* time,
+ * which is the whole improvement over finding out at save time: the operator
+ * learns which page and why while looking at it, rather than reading a refusal
+ * that names neither.
  *
- * It closes one of the three ways this panel could provoke
- * `invalid_request_body` — not all of them, and the earlier draft of this
- * comment said otherwise. The step *count* was still one click of
- * "Select every page" away when it claimed that.
+ * `blockedBy` closes two of the three ways this panel could provoke a wrong
+ * result. The third — the step *count* — is one click of "Select every page"
+ * away and is handled by `takeable` and `createBlockedBy` instead, because it
+ * is a fact about the selection rather than about any one row.
  */
-type Row = { page: DiscoveredPage; index: number; path: string; tooLong: boolean };
+type Row = {
+  page: DiscoveredPage;
+  index: number;
+  /** What to show: the step path, or the whole URL when there is no step. */
+  path: string;
+  /** `null` when this page cannot be a step of this journey — see `blockedBy`. */
+  stepPath: string | null;
+  /** Why it cannot be ticked, in the words the row prints. `null` when it can. */
+  blockedBy: string | null;
+};
 
-/** The part of a discovered URL a `goto` step carries. */
-function pathOf(url: string, origin: string): string {
+/**
+ * The host of a discovered URL, clipped, or `null` if it cannot be read as one.
+ *
+ * Clipped because the value came out of a client's own markup and a hostname
+ * may run to 253 characters — `describeDiscoveryFailure` bounds the host it
+ * prints for the same reason and this reuses that bound rather than keeping a
+ * second one.
+ */
+function hostOf(url: string): string | null {
   try {
-    const parsed = new URL(url);
-    // No `|| '/'` fallback: `pathname` is never empty for an http(s) URL, and
-    // http(s) is all `extractLinks` lets through. Defending a case that cannot
-    // occur reads as though it can.
-    return `${parsed.pathname}${parsed.search}`;
+    return clipHost(new URL(url).hostname);
   } catch {
-    // A URL this could not parse cannot have come from the crawler, which
-    // built every one of them with `new URL`. Falling back to the whole string
-    // keeps the row readable rather than blanking a checkbox's label.
-    return url.startsWith(origin) ? url.slice(origin.length) || '/' : url;
+    return null;
   }
+}
+
+/**
+ * Turn one discovered page into a row, deciding whether it can be a step.
+ *
+ * The two refusals are different in kind and only one of them is about this
+ * panel. A path the step format cannot hold is a bound on the route below;
+ * a page on another host is a page **this journey cannot express at all**, and
+ * taking its path anyway would store a step that audits a different URL under
+ * the operator's nose. `stepPathFor` states the rule and why it is the
+ * hostname it compares.
+ */
+function rowFor(page: DiscoveredPage, index: number, origin: string): Row {
+  const stepPath = stepPathFor(page.url, origin);
+
+  if (stepPath === null) {
+    const host = hostOf(page.url);
+    const target = hostOf(origin);
+    return {
+      page,
+      index,
+      // The whole URL, because the host is the thing that makes this row
+      // different and a path alone would hide it — two pages on two hosts
+      // sharing a path would otherwise render as the same row twice.
+      path: page.url,
+      stepPath,
+      blockedBy:
+        host === null
+          ? 'this address could not be read'
+          : `on ${host}, not ${target ?? 'this site'} — a journey visits one host, so crawl ${host} on its own to audit these`,
+    };
+  }
+
+  return {
+    page,
+    index,
+    path: stepPath,
+    stepPath,
+    blockedBy:
+      stepPath.length > MAX_STEP_TEXT
+        ? `too long to record as a step (${stepPath.length} characters, limit ${MAX_STEP_TEXT})`
+        : null,
+  };
 }
 
 const inputStyle = {
@@ -239,14 +306,26 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
   }
 
   /**
+   * Every discovered page, in crawl order, already judged.
+   *
+   * Built once. Three separate things need the same answer — the row on
+   * screen, what "select every page" may take, and what the create actually
+   * posts — and deciding it three times is three chances to disagree about
+   * which pages are usable.
+   */
+  const rows: Row[] = (found?.pages ?? []).map((page, index) =>
+    rowFor(page, index, found?.origin ?? ''),
+  );
+
+  /**
    * The steps, in the order the crawl found the pages.
    *
-   * Filtered out of `pages`, never spread out of `selected`. A `Set` iterates
+   * Filtered out of `rows`, never spread out of `selected`. A `Set` iterates
    * in insertion order, which here is *tick* order — so a journey built from
    * it could open on a leaf page the operator happened to click first, and
    * every later step would be a navigation from somewhere unexpected.
    */
-  const chosen = found ? found.pages.filter((page) => selected.has(page.url)) : [];
+  const chosen = rows.filter((row) => selected.has(row.page.url));
 
   /**
    * Why the Create button is dead, or `null` when it is not.
@@ -286,11 +365,17 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
         body: JSON.stringify({
           name: name.trim(),
           targetUrl: found.origin,
-          steps: chosen.map((page) => ({
-            action: 'navigate',
-            type: 'goto',
-            path: pathOf(page.url, found.origin),
-          })),
+          // `stepPath`, decided in `rowFor` — never recomputed here, and
+          // never substituted. A row without one cannot be ticked, so the
+          // empty branch is unreachable; it is written as a `flatMap` rather
+          // than a `??` fallback because every value a fallback could supply
+          // is a URL, and posting a URL where a path belongs would resolve
+          // off-origin instead of failing. Nothing here may invent a step.
+          steps: chosen.flatMap((row) =>
+            row.stepPath === null
+              ? []
+              : [{ action: 'navigate', type: 'goto', path: row.stepPath }],
+          ),
         }),
       });
 
@@ -332,29 +417,30 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
    * string the crawl deliberately keys on — nearly share a path, so neither is
    * usable as an id on its own.
    *
-   * `path` and `tooLong` are computed once here rather than at render, because
-   * three separate things need the same answer: the row, select-all, and the
-   * decision not to post the page at all.
+   * Grouping only — every row was already decided by `rowFor` above, in crawl
+   * order, so this rearranges for display and settles nothing.
    */
   const groups: Array<{ depth: number; rows: Row[] }> = [];
-  (found?.pages ?? []).forEach((page, index) => {
-    const path = pathOf(page.url, found?.origin ?? '');
-    const row: Row = { page, index, path, tooLong: path.length > MAX_STEP_TEXT };
-    const group = groups.find((one) => one.depth === page.depth);
+  rows.forEach((row) => {
+    const group = groups.find((one) => one.depth === row.page.depth);
     if (group) group.rows.push(row);
-    else groups.push({ depth: page.depth, rows: [row] });
+    else groups.push({ depth: row.page.depth, rows: [row] });
   });
   groups.sort((a, b) => a.depth - b.depth);
 
   /**
    * The pages "select every page" may actually select.
    *
-   * A page whose path the step format cannot hold is not one of them: its
-   * checkbox is disabled, and a bulk control that ticked it anyway would put
-   * the panel in a state no click could have produced and then fail the create
-   * with a generic refusal.
+   * A page `rowFor` refused is not one of them — a path the step format cannot
+   * hold, or a page on another host. Its checkbox is unavailable, and a bulk
+   * control that ticked it anyway would put the panel in a state no click
+   * could have produced and then post a journey that walks the wrong URL.
+   *
+   * Read off `groups`, so `takeable` below takes a prefix of the *displayed*
+   * order — shallowest first. Step order is not decided here: `chosen` filters
+   * `rows`, which is the crawl's own order.
    */
-  const selectable = groups.flatMap((group) => group.rows.filter((row) => !row.tooLong));
+  const selectable = groups.flatMap((group) => group.rows.filter((row) => row.blockedBy === null));
 
   /**
    * What the bulk control actually takes.
@@ -362,7 +448,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
    * Capped, rather than left to select 100 and hand the operator a blocked
    * Create button and "untick 50" — which is a recoverable state and a
    * miserable one. Taking a storeable prefix is the same move as skipping a
-   * `tooLong` row: leave the panel in a state the operator could have reached
+   * row `rowFor` refused: leave the panel in a state the operator could have reached
    * by clicking, and say in prose what was left out. The sentence beside the
    * buttons is the half that keeps this from being a silent drop.
    *
@@ -428,8 +514,23 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
 
         <button
           type="button"
-          onClick={discover}
-          disabled={!canCrawl}
+          {...inertWhen(!canCrawl, discover)}
+          // Holds the name still while the visible label changes underneath
+          // it. `aria-disabled` is what makes this necessary: focus now stays
+          // on the button, so renaming the focused control to "Looking…" is
+          // announced — over the polite `role="status"` region below, which is
+          // the thing actually saying the crawl started. Under `disabled` the
+          // rename was free because focus had already gone to `<body>`.
+          //
+          // The cost, named rather than left for a reviewer to find: while the
+          // crawl runs, the visible label is not contained in the accessible
+          // name, which is what 1.4.10's neighbour 2.5.3 Label in Name asks
+          // for. It is not a failure anyone can act on — 2.5.3 exists so a
+          // speech-input user can say what they see, and in the only state
+          // where saying it does anything the two are identical. `axe` sees
+          // the idle state in the sweep and agrees; this note is here because
+          // the busy state is the one it never looks at.
+          aria-label="Find pages"
           style={{ ...buttonStyle, ...disabledStyle(!canCrawl) }}
         >
           {crawling ? 'Looking…' : 'Find pages'}
@@ -442,9 +543,17 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
       </p>
 
       {/*
-        Why the button is dead, said out loud. A disabled control cannot take
-        focus, so without this a screen reader user reaches the end of the row
-        and finds nothing that explains it.
+        Why the button is dead, said out loud.
+
+        The reason this line was written is no longer the reason it stays. It
+        was here because a `disabled` control cannot take focus, so a screen
+        reader user reached the end of the row and found nothing explaining
+        it. The button is `aria-disabled` now and *is* reachable — but reaching
+        it hears only its name, and "Find pages" does not say why pressing it
+        does nothing. Describing the button with this sentence would be the
+        tighter binding and is not free: it is a `<p>` that comes and goes with
+        the field being empty, and an `aria-describedby` pointing at an absent
+        id is silently nothing.
       */}
       {targetUrl.trim() === '' ? <p style={noteStyle}>Type a site address to search it.</p> : null}
 
@@ -509,7 +618,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
             <p style={noteStyle}>
               {/*
                 `selectable`, said as "can use" rather than as what the crawl
-                found. The two differ whenever a row is `tooLong`, and the
+                found. The two differ whenever `rowFor` refused a row, and the
                 status region directly above already states the crawl's total —
                 two numbers for the same noun, a paragraph apart, is a screen
                 arguing with itself.
@@ -559,7 +668,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
                   gap: 4,
                 }}
               >
-                {group.rows.map(({ page, index, path, tooLong }) => {
+                {group.rows.map(({ page, index, path, blockedBy }) => {
                   const boxId = `${fieldPrefix}-page-${index}`;
                   // Branched on, not `page.title || path`. Playwright's
                   // `page.title()` returns `''` for a document with no
@@ -572,45 +681,63 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
 
                   return (
                     <li key={page.url} style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                      {/*
+                        Really `disabled`, and deliberately not `inertWhen`.
+                        That helper is for a control the operator's own click
+                        makes unavailable, where the browser takes focus off
+                        the thing they just pressed — see `lib/inert-button`.
+                        This box is unavailable on arrival, from a fact about
+                        the page's address — its length, or its host: no click
+                        of theirs took it away and there was never focus here
+                        to lose. The reason is in the
+                        `<label>` beside it, which is part of this control's
+                        accessible name and is read whether it can be ticked or
+                        not, so the explanation a dead control owes the screen
+                        is already paid. (`inertWhen` is also typed for a
+                        button's `onClick` and does not fit an `onChange`.)
+                      */}
                       <input
                         id={boxId}
                         type="checkbox"
                         checked={selected.has(page.url)}
                         onChange={() => toggle(page.url)}
-                        disabled={tooLong}
+                        disabled={blockedBy !== null}
                       />
                       <label
                         htmlFor={boxId}
                         style={{
                           fontFamily: FONT.sans,
                           fontSize: 12.5,
-                          color: tooLong ? T.inkMuted : T.ink,
+                          color: blockedBy === null ? T.ink : T.inkMuted,
                         }}
                       >
                         {title === '' ? null : <>{title} </>}
                         <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
                           {path}
                         </span>
-                        {tooLong ? (
+                        {blockedBy === null ? null : (
                           /*
                             The rule, beside the row it applies to, rather than
-                            as a refusal after the journey is posted. The page
-                            stays visible — it is a real page of the site and
-                            hiding it would leave the operator wondering what
-                            the crawl missed — but it cannot become a step,
-                            because `authoredStepSchema` caps a path at
-                            `MAX_STEP_TEXT` and would answer
-                            `invalid_request_body` naming neither the page nor
-                            the reason. Same convention as the two disabled
-                            buttons in this panel: never a dead control without
-                            visible prose saying why.
+                            as a refusal after the journey is posted — or, for
+                            the host case, rather than not at all. The page
+                            stays visible either way: it is a real page the
+                            crawl really found, and hiding it would leave the
+                            operator wondering what was missed.
+
+                            Two reasons reach here. A path longer than
+                            `MAX_STEP_TEXT` would come back from the route as
+                            `invalid_request_body`, naming neither the page nor
+                            the rule. A page on another host would come back
+                            **201** — and then audit a URL nobody picked, which
+                            is the worse of the two by a wide margin and the
+                            one nothing would have reported.
+
+                            Same convention as the two inert buttons in this
+                            panel: never a dead control without visible prose
+                            saying why.
                           */
-                          <span style={{ color: T.caution }}>
-                            {' '}
-                            — too long to record as a step ({path.length} characters, limit{' '}
-                            {MAX_STEP_TEXT}).
-                          </span>
-                        ) : null}
+                          <span style={{ color: T.caution }}> — {blockedBy}.</span>
+                        )}
                       </label>
                     </li>
                   );
@@ -688,8 +815,13 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
 
             <button
               type="button"
-              onClick={create}
-              disabled={creating || createBlockedBy !== null}
+              {...inertWhen(creating || createBlockedBy !== null, create)}
+              // Stable for the same reason as "Find pages" above, including
+              // the 2.5.3 note, and with a second reason here: this button
+              // spends most of its life inert because `createBlockedBy` is
+              // set, and the sentence explaining why is the live region
+              // immediately below it.
+              aria-label="Create journey"
               style={{ ...buttonStyle, ...disabledStyle(creating || createBlockedBy !== null) }}
             >
               {creating ? 'Creating…' : 'Create journey'}
@@ -714,8 +846,8 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
             first without the second is the same silence the bulk controls had
             before this region existed.
 
-            It is also still the visible prose the disabled button owes the
-            screen — the convention the two buttons above and the `tooLong`
+            It is also still the visible prose the inert button owes the
+            screen — the convention the two buttons above and the refused
             rows keep — and it is decided in one place, so the button and the
             explanation cannot reach different conclusions about whether a
             create is possible.

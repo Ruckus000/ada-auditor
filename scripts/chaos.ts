@@ -8,6 +8,7 @@ import {
   resolveChaosRunParams,
 } from '../src/app/api/_lib/chaos';
 import { discoverLinks } from '../src/integrations/browser/discover-links';
+import { UnsafeTargetError } from '../src/integrations/browser/target-url';
 import { runBrowserAudit } from '../src/integrations/browser/run-browser-audit';
 import { logInfo } from '../src/services/logger';
 
@@ -123,12 +124,30 @@ async function main(): Promise<void> {
   ];
 
   for (const targetUrl of unsafeDiscoveryTargets) {
+    let refusal: unknown;
     try {
       await discoverLinks({ targetUrl });
       fail(`discovery accepted an unsafe entry point: ${targetUrl}`);
-    } catch {
-      // Rejection is the pass condition; the guard's own error shape is
-      // covered by the unit tests, so only "did it refuse" is asserted here.
+    } catch (error) {
+      refusal = error;
+    }
+
+    // The *type*, not merely that something was thrown — and this is the whole
+    // assertion. Delete the guard and these three addresses still reject on any
+    // machine this ever runs on: link-local and RFC1918 do not answer, and
+    // loopback:22 refuses the connection. All three arrive as
+    // `EntryPointUnreachableError`, so a bare `catch {}` passes with the SSRF
+    // check gone — against a crawler that has by then really dialled the cloud
+    // metadata endpoint. `discover-links.test.ts` states the same rule for the
+    // same reason: an error that a dead host would also produce proves nothing.
+    //
+    // `UnsafeTargetError` is also what proves the refusal happened *before* the
+    // browser launched — `discoverLinks` resolves and range-checks the entry
+    // point first, so a run that reaches Playwright cannot answer with this
+    // type.
+    if (!(refusal instanceof UnsafeTargetError)) {
+      const name = refusal instanceof Error ? refusal.name : typeof refusal;
+      fail(`discovery refused ${targetUrl} as ${name}, not as an unsafe target`);
     }
   }
 

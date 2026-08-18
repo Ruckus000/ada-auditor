@@ -256,6 +256,23 @@ as a base, so an origin with a path in it discards the step's path — the bug t
 made `--url https://www.w3.org/WAI/` audit `https://www.w3.org/` while reporting
 six healthy pages.
 
+**Corrected after the fact: not every discovered page can become one of these
+steps, and this section assumed they all could.** A crawl walks more hosts than
+a journey can name — `hostAllowed` matches an allowlist entry *or any subdomain
+of it*, deliberately, because the apex-to-www redirect would otherwise end every
+crawl at depth 0. So a crawl of `acme.com` legitimately returns pages on
+`docs.acme.com`, and taking `pathname + search` from one of those builds a step
+that audits `acme.com/guide`: a different page, under a **201**, reported clean.
+No route can refuse it — the body is valid; the host was discarded before the
+step was written.
+
+`stepPathFor` in `src/domain/discovery.ts` is that rule, and `rowFor` in the
+panel refuses the row rather than silently substituting a URL. It compares
+hostnames and not origins on purpose: an operator who types `http://` gets
+`https://` pages back from any site that redirects, and the step resolves
+against their `http://` target and meets the same redirect again at run time.
+A host mismatch has no such second chance.
+
 ## Errors
 
 A page that fails to load is recorded in `errors` and the crawl continues. One

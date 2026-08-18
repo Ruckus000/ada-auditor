@@ -59,6 +59,60 @@ export function discoveryKey(rawUrl: string): string {
 }
 
 /**
+ * The path a `goto` step would carry for a discovered page — or `null` when
+ * this page cannot be a step of a journey aimed at `targetUrl` at all.
+ *
+ * **A crawl deliberately walks more hosts than a journey can express.**
+ * `hostAllowed` matches an allowlist entry *or any subdomain of it*, which is
+ * not an accident: an entry point that canonicalises `acme.com` to
+ * `www.acme.com` has to be followed, or the commonest redirect on the web ends
+ * every crawl. The consequence is that a crawl of `acme.com` legitimately
+ * returns pages on `docs.acme.com`.
+ *
+ * A journey cannot say that. It holds one `targetUrl` and a list of paths, and
+ * the runner resolves each with `new URL(path, targetUrl)` — so a step built
+ * from `https://docs.acme.com/guide` by taking its path alone audits
+ * `https://acme.com/guide`, a different page, or nothing at all. Silently: the
+ * run reports a clean audit of whatever answered. That is this project's
+ * signature failure, arriving through a door the crawler had to leave open.
+ *
+ * So the comparison is the **hostname**, and the caller refuses the page.
+ *
+ * Hostname and not `origin`, which would be the tighter-looking check and the
+ * wrong one. A site that redirects `http://acme.com` to `https://acme.com`
+ * differs in origin and is the same host; the step still resolves against the
+ * operator's `http://` target and the site performs the same redirect again at
+ * run time, so nothing is lost. A *host* mismatch has no such second chance.
+ *
+ * Nor is a port ignored: it is part of `hostname`'s sibling `host`, and
+ * `URL.hostname` excludes it — but a journey's steps resolve against the whole
+ * `targetUrl` including its port, so a page on another port of the same host
+ * resolves back to the target's port. Deliberate: `hostAllowed` does not look
+ * at ports either, and disagreeing with it here would refuse pages the crawl
+ * was right to walk.
+ */
+export function stepPathFor(pageUrl: string, targetUrl: string): string | null {
+  let page: URL;
+  let target: URL;
+  try {
+    page = new URL(pageUrl);
+    target = new URL(targetUrl);
+  } catch {
+    // Not reachable from a crawl's own output — every page URL was built with
+    // `new URL` — but this function is the one place the decision is made, and
+    // a decision that throws on bad input is one its callers have to guard.
+    // Unusable is the honest answer for a URL nobody can read.
+    return null;
+  }
+
+  if (page.hostname.toLowerCase() !== target.hostname.toLowerCase()) return null;
+
+  // No `|| '/'` fallback: `pathname` is never empty for an http(s) URL, and
+  // http(s) is all `extractLinks` lets through.
+  return `${page.pathname}${page.search}`;
+}
+
+/**
  * A ceiling that stops a pathological site, not a target the crawl expects to
  * reach. The wall-clock budget binds first on anything real — see below.
  *

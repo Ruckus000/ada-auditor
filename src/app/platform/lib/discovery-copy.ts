@@ -29,14 +29,20 @@ import type { DiscoveryTruncation } from '../../../domain/discovery';
 /**
  * The longest host this will print.
  *
- * The value came from somebody else's redirect, so it is neither trusted nor
- * bounded: a 2000-character host would push the rest of the panel off the
- * screen. Rendered as text and never as a link, for the same reason — naming
- * where a redirect went is help, offering a click through to it is not.
+ * The value came from somebody else's redirect — or, for the second caller
+ * below, from somebody else's markup — so it is neither trusted nor bounded: a
+ * 2000-character host would push the rest of the panel off the screen.
+ * Rendered as text and never as a link, for the same reason — naming where a
+ * redirect went is help, offering a click through to it is not.
  */
 const MAX_HOST_CHARS = 80;
 
-function clipHost(host: string): string {
+/**
+ * Exported for `discover-pages.tsx`, which names the host of a page it is
+ * refusing. Same rule, same untrusted source, and a second copy of a bound is
+ * a second bound to forget to move.
+ */
+export function clipHost(host: string): string {
   return host.length > MAX_HOST_CHARS ? `${host.slice(0, MAX_HOST_CHARS)}…` : host;
 }
 
