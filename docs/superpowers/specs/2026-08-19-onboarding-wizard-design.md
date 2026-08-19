@@ -185,8 +185,9 @@ existing inert-button pattern applies to busy controls.
 - **Hydration suite:** empty portfolio → wizard → homepage fast path → first run →
   findings render, against the built app and the real store (replaces the modal test,
   which keeps its job: the front door must reach the store and come back). Axe at zero
-  on `/clients/new` and every `/setup` stage. Focus lands on the stage heading after
-  each advance.
+  on `/clients/new`, `/setup`'s terminal state, and the failed stage in-walk (see the
+  Accessibility section for the exact coverage). Focus lands on the stage heading after
+  each component-swapping advance.
 - **API tests (preview):** authz + cross-origin cookie refusal; ownership check;
   policy/SSRF refusals; budget accounting; and the load-bearing pair — **no run row
   written, no artifact stored**.
