@@ -249,7 +249,9 @@ const ROUTES = [
   '/activity',
   '/settings',
   '/reports',
+  '/clients/new',
   `/clients/${CLIENT}`,
+  `/clients/${CLIENT}/setup`,
   `/clients/${CLIENT}/findings`,
   `/clients/${CLIENT}/journeys`,
 ];
@@ -270,48 +272,189 @@ describe('platform hydration', () => {
     }
   }, 60_000);
 
-  it('starts with an empty portfolio and adds a client through the modal', async () => {
+  it('starts with an empty portfolio and onboards a client through the wizard', async () => {
     // The one path that decides whether this product has a front door: the
-    // portfolio is empty until an operator adds someone, and adding someone
-    // has to actually reach the store and come back. Every unit test around
-    // this passed while the modal was still scenery that jumped to a fixture.
+    // portfolio is empty until an operator adds someone, and onboarding them
+    // has to actually reach the store and come back at every stage.
     //
-    // It runs first on purpose, and the client it adds is the one every client
-    // route below visits. Seeding in `beforeAll` instead would have made
+    // It runs first on purpose, and the client it onboards is the one every
+    // client route below visits. Seeding in `beforeAll` instead would have made
     // "starts empty" untestable — and a seeded fixture is exactly what this
     // phase removed.
+    //
+    // The predecessor of this test clicked through a modal, and its central
+    // assertion was that "No clients yet" disappeared — which it took as proof
+    // that a write had reached the store and come back. Under the wizard that
+    // proof evaporated without failing: the button now *navigates* to
+    // `/clients/new`, a page that never contained that string, so the check
+    // went green before any client existed. Hence every stage below ends by
+    // reading state back from a fresh render of a screen that can only know it
+    // from the database — the portfolio row, or the record over the API.
     const page = await openAuthenticatedPage();
+
+    // Every poll the first-audit stage makes, timestamped. `FirstRunControl`
+    // has two ways in — the click handler and the `pollUrl` effect that fires
+    // when the refresh flips the stage to `running` — and since the dispatcher
+    // renders both stages through one slot, the same mounted instance takes
+    // both. A `watching` ref is the only thing making them mutually exclusive,
+    // and nothing else in the suite would notice if it were refactored away:
+    // the button still behaves and results still appear at twice the request
+    // rate. Asserted below on the shape a doubled loop has, not on a count
+    // alone, because run duration here is not ours to fix.
+    const polls: number[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/api/audit/runs/')) polls.push(Date.now());
+    });
+
     try {
       await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
       expect(await page.innerText('body')).toContain('No clients yet');
 
+      // ---- Stage 1: the client. A route now, not a modal. ----
       await page.getByRole('button', { name: 'Add the first client', exact: true }).click();
+      await expect.poll(() => page.url(), { timeout: 15_000 }).toContain('/clients/new');
       await page.getByLabel('Client name').fill('Harness Client');
       await page.getByLabel('Owner').fill('Alex Reed');
       await page.getByRole('button', { name: 'Add client', exact: true }).click();
 
-      // The row, not the toast: the toast says the same words and would appear
-      // even if the write were discarded. Only the row can come from a re-read
-      // of the store, so the empty state disappearing is the real assertion.
+      // The write is what earns the next stage: the URL is the client's own
+      // setup route, so the slug came back from the store.
+      await expect
+        .poll(() => page.url(), { timeout: 15_000 })
+        .toContain(`/clients/${CLIENT}/setup`);
       await expect
         .poll(() => page.innerText('body'), { timeout: 15_000 })
-        .not.toContain('No clients yet');
+        .toContain('Where do we audit?');
 
-      const body = await page.innerText('body');
-      expect(body).toContain('Harness Client');
-      expect(body).toContain('Never audited');
+      // A stage change that swaps the component moves focus to its heading, so
+      // a screen-reader user hears where the flow went. Only these
+      // transitions: `first-run` → `running` is served by one component and is
+      // announced by its live region instead, so focus deliberately stays put
+      // there and is not asserted.
+      expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('H2');
+
+      // ---- The portfolio knows: a client with no completed run. ----
+      // "Never audited" and the setup hint answer different questions, and
+      // this is the only point in the walk where both are true at once.
+      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+      const seeded = await page.innerText('body');
+      expect(seeded).not.toContain('No clients yet');
+      expect(seeded).toContain('Harness Client');
+      expect(seeded).toContain('Never audited');
+      expect(seeded).toContain('Setup incomplete');
       // The operator comes from the environment, not from a person we
       // invented — the header said "Jules Reyes" on every screen until it did.
       // Asserted on the accessible name, because the avatar renders initials
       // and the name is what a screen reader announces.
       expect(await page.getByLabel('Signed in as Harness Operator').innerText()).toBe('HO');
-      expect(body).not.toContain('Jules Reyes');
+      expect(seeded).not.toContain('Jules Reyes');
+
+      // ---- Stage 2: where. Deep-linked, because the wizard holds no state:
+      // coming back to the route lands on whatever stage the record earned. ----
+      await page.goto(`${BASE}/clients/${CLIENT}/setup`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+      expect(await page.innerText('body')).toContain('Where do we audit?');
+
+      // `.invalid` is reserved and cannot resolve, which is what makes the
+      // failure stage below reachable on purpose rather than by luck.
+      await page.getByLabel('Their website').fill('https://wizard-target.invalid/shop');
+      await page.getByRole('button', { name: 'Continue', exact: true }).click();
+
+      // A runnable journey with no run yet: the first-audit stage.
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 15_000 })
+        .toContain('Run the first audit');
+
+      // The homepage fast path wrote the journey and its one step itself, and
+      // kept the pasted path rather than flattening it to "/" — asserted on
+      // the record, which is the only place that can prove it.
+      const listed = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+        headers: { authorization: `Bearer ${TOKEN}` },
+      });
+      const { journeys } = (await listed.json()) as {
+        journeys: Array<{ id: string; name: string; steps?: Array<{ path?: string }> }>;
+      };
+      const wizardJourney = journeys.find((journey) => journey.name === 'Homepage');
+      expect(wizardJourney, `journeys: ${JSON.stringify(journeys)}`).toBeTruthy();
+      expect(wizardJourney!.steps?.[0]?.path).toBe('/shop');
+
+      // ---- The failure stage: an operator's first audit not finishing is a
+      // state the product has to explain, not a dead end. ----
+      const startedAt = Date.now();
+      await page.getByRole('button', { name: /Run the first audit/ }).click();
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 120_000, intervals: [1000] })
+        .toContain('The first audit stopped');
+
+      const failed = await page.innerText('body');
+      expect(failed).toContain('Stopped:'); // the classified reason
+      expect(failed).toContain('Verify so far'); // the editor's way back
+      expect(failed).toContain('start over'); // the URL's way back
+
+      // One watcher, not two. A doubled loop shows up as near-simultaneous
+      // pairs — both loops sleep the same 3s, so they stay in lockstep a few
+      // hundred ms apart — and as a total that outruns the elapsed time. One
+      // loop cannot fire twice inside its own interval, so any gap this short
+      // is a second watcher.
+      const elapsed = Date.now() - startedAt;
+      expect(polls.length, 'the running stage never polled at all').toBeGreaterThan(0);
+      const gaps = polls.slice(1).map((at, index) => at - polls[index]!);
+      expect(gaps.filter((gap) => gap < 500), `poll gaps (ms): ${gaps.join(', ')}`).toEqual([]);
+      // The bound has no slack on purpose. A watcher sleeps *before* its first
+      // fetch and before every retry, so one loop cannot have polled more times
+      // than whole intervals have elapsed — and `elapsed` is measured from
+      // before the click, so it is generously larger than the last poll's own
+      // timestamp. Slack of `+1` here would have made this assertion useless
+      // against the defect it exists for: this journey's target cannot resolve,
+      // so the run dies on its first poll, and a second watcher shows up as
+      // exactly 2 polls where 1 was possible.
+      expect(polls.length, `polls in ${elapsed}ms: ${polls.length}`).toBeLessThanOrEqual(
+        Math.floor(elapsed / 3000),
+      );
+
+      // ---- Still unfinished, and now with a run to its name. This is the
+      // case `lastRun` cannot express: the row carries a verdict, so the
+      // never-audited copy is gone, and setup is still not done. ----
+      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+      const afterFailure = await page.innerText('body');
+      expect(afterFailure).not.toContain('Never audited');
+      expect(afterFailure).toContain('Setup incomplete');
+
+      // ---- The terminal stage. The chaos scenario is how this suite gets a
+      // run that completes against a real browser; `?wait=1` holds the
+      // connection so there is nothing to poll for here. ----
+      const completed = await fetch(`${BASE}/api/audit/run?wait=1`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+        body: JSON.stringify({
+          journeyId: wizardJourney!.id,
+          environment: 'staging',
+          chaosScenario: 'browser_passthrough_violations',
+        }),
+      });
+      expect([200, 202], await completed.clone().text()).toContain(completed.status);
+
+      // Rendered, not redirected: revisiting /setup on a finished client is a
+      // page, so the route stays idempotent.
+      await page.goto(`${BASE}/clients/${CLIENT}/setup`, { waitUntil: 'domcontentloaded' });
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 30_000 })
+        .toContain('First audit complete');
+      expect(await page.innerText('body')).toContain('Go to the findings');
+
+      // And the hint retires itself — derived, never stored, so nothing had to
+      // remember to clear it.
+      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+      expect(await page.innerText('body')).not.toContain('Setup incomplete');
     } finally {
       await page.close();
     }
-  }, 60_000);
+  }, 240_000);
 
 
   it('shows the findings a real run produced', async () => {
