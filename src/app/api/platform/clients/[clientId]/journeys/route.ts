@@ -99,8 +99,10 @@ const createJourneySchema = z.object({
    * `user:` — was stored as a journey every future run refuses: a permanently
    * unrunnable row. Length before shape and the trimming caveat both per
    * `discoveryRequestSchema` (`src/domain/discovery.ts`), which bounds the
-   * same field the same way. The userinfo check is not covered by
-   * `containsInlineCredential`, which reads step keys and never sees a URL.
+   * same field the same way. The refinement is the backstop behind the
+   * pre-schema userinfo check in POST below: that check answers first, with
+   * the specific `inline_credential` code, but it lives in one handler and a
+   * route that forgot it would otherwise store the row.
    */
   targetUrl: z
     .string()
