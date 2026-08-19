@@ -407,6 +407,20 @@ describe('platform hydration', () => {
       expect(failed).toContain('Verify so far'); // the editor's way back
       expect(failed).toContain('start over'); // the URL's way back
 
+      // The failed stage is the richest composite state the wizard renders —
+      // banner, editor, credentials, verify, run, archive all at once — and
+      // the route sweep at the bottom of this file only ever sees terminal
+      // states (it walks each route once, cold). After Fixes 1-2 this state
+      // includes the editor and the credentials panel, which is the point:
+      // nothing here has been swept by axe until this assertion exists.
+      const failedAxe = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
+      expect(
+        failedAxe.violations
+          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
+          .join('\n'),
+        'the failed stage, with the editor and credentials panel restored',
+      ).toBe('');
+
       // One watcher, not two. A doubled loop shows up as near-simultaneous
       // pairs — both loops sleep the same 3s, so they stay in lockstep a few
       // hundred ms apart — and as a total that outruns the elapsed time. One

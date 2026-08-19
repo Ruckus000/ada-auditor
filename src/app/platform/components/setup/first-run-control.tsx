@@ -131,10 +131,13 @@ export function FirstRunControl({
         | null;
 
       if (!response.ok) {
+        // The MESSAGES lookup first; an unmapped code never reaches the
+        // screen raw — `payload.error` is a machine code (house rule: error
+        // codes in state, human messages derived), not a sentence an
+        // operator should read.
         setError(
           (payload?.error && MESSAGES[payload.error]) ??
-            payload?.error ??
-            `That did not start (${response.status}).`,
+            `That did not start (${response.status}). Try again.`,
         );
         setPhase('idle');
         return;

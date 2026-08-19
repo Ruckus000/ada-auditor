@@ -1,7 +1,7 @@
 import type { ClientDetail, JourneySummary } from '../../../../services/client-detail';
 import { FONT, T } from '../../lib/tokens';
 import { JourneyStepsEditor } from '../client/journey-steps-editor';
-import { StepList } from '../client/client-journeys';
+import { CredentialList, StepList } from '../client/client-journeys';
 import { StageHeading } from './stage-heading';
 import { VerifyButton } from './verify-button';
 
@@ -29,6 +29,8 @@ export function StepsStage({ detail, journey }: { detail: ClientDetail; journey:
       >
         <StepList steps={journey.steps} />
       </JourneyStepsEditor>
+
+      <CredentialList credentials={journey.credentials} />
 
       <VerifyButton clientId={detail.id} journeyId={journey.id} journeyName={journey.name} />
     </div>

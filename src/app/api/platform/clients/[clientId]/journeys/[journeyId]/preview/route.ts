@@ -194,6 +194,7 @@ export async function POST(
     logInfo('journey_preview', {
       requestId,
       journeyId,
+      steps: validated.data.length,
       pages: result.pages.length,
       durationMs: Date.now() - startedAt,
     });

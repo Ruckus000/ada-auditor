@@ -2,7 +2,7 @@ import type { ClientDetail, JourneySummary } from '../../../../services/client-d
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
 import { JourneyStepsEditor } from '../client/journey-steps-editor';
-import { StepList } from '../client/client-journeys';
+import { CredentialList, StepList } from '../client/client-journeys';
 import { FirstRunControl } from './first-run-control';
 import { StageHeading } from './stage-heading';
 import { StartOverButton } from './start-over-button';
@@ -58,6 +58,8 @@ export function FailedStage({
       >
         <StepList steps={journey.steps} />
       </JourneyStepsEditor>
+
+      <CredentialList credentials={journey.credentials} />
 
       <VerifyButton clientId={detail.id} journeyId={journey.id} journeyName={journey.name} />
 

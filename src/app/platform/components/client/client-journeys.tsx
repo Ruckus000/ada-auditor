@@ -172,7 +172,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
  * A missing half is called out on its own: a login needs both, and the likely
  * failure is somebody setting the pair and mistyping one variable name.
  */
-function CredentialList({ credentials }: { credentials: CredentialPresence[] }) {
+export function CredentialList({ credentials }: { credentials: CredentialPresence[] }) {
   if (credentials.length === 0) return null;
 
   return (
