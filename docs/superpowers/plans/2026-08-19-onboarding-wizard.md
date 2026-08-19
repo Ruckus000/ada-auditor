@@ -703,20 +703,35 @@ import { classifyRunFailure } from '../../../../../../_lib/run-failure';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-/** The last screenshot the walk wrote, inlined; null when nothing captured. */
+/** Inline bytes cap: base64 adds a third, and the platform rejects function
+ *  responses past ~4.5 MB — a successful preview must not die at that layer. */
+const MAX_INLINE_SCREENSHOT_BYTES = 3_000_000;
+
+/** The last screenshot the walk wrote, inlined; null when nothing captured;
+ *  'omitted' when it exists but would blow the response ceiling. */
 async function lastScreenshot(
   pages: PageAudit[],
-): Promise<{ mimeType: string; base64: string } | null> {
+): Promise<{ mimeType: string; base64: string } | 'omitted' | null> {
   const path = [...pages].reverse().find((p) => p.artifacts.screenshotPath)?.artifacts
     .screenshotPath;
   if (!path) return null;
   try {
-    return { mimeType: 'image/png', base64: (await readFile(path)).toString('base64') };
+    const bytes = await readFile(path);
+    if (bytes.byteLength > MAX_INLINE_SCREENSHOT_BYTES) return 'omitted';
+    return { mimeType: 'image/png', base64: bytes.toString('base64') };
   } catch {
     // A missing file degrades the preview, it does not fail it.
     return null;
   }
 }
+```
+
+(The route spreads `screenshot` when inlined and `screenshotOmitted: true` when
+capped, on both paths. `new URL(targetUrl)` is guarded — a malformed legacy
+target answers 422 `journey_not_runnable`, never a 500 — and the 429 path logs
+`run_budget_exceeded` like `startRun` does.)
+
+```ts
 
 /** What a screen needs to say "the walk reached these pages" — nothing else. */
 function pageMeta(pages: PageAudit[]) {
@@ -840,12 +855,15 @@ export async function POST(
         requestId,
         ok: false,
         error: code,
-        // Only the step sentence `attemptStep` composes — its first line is
-        // value-free by construction. Any other error stays a bare code, the
-        // same rule the run handler applies.
-        ...(error instanceof PartialJourneyError
+        // Only the step sentence `attemptStep` composes — the classifier's
+        // `journey_step_failed` anchor only matches those runner-authored,
+        // value-free lines. Any other error (SSRF refusals carry full URLs,
+        // fs errors carry paths) stays a bare code, the same rule the run
+        // handler applies.
+        ...(code === 'journey_step_failed' && error instanceof PartialJourneyError
           ? { detail: (message.split('\n')[0] ?? '').trim() }
           : {}),
+        ...(partial.length ? { truncatedPages: (error as PartialJourneyError).captured.truncatedPages } : {}),
         pages: pageMeta(partial),
         ...(screenshot ? { screenshot } : {}),
       },
