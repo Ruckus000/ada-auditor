@@ -1146,6 +1146,43 @@ const errorStyle = {
   - `header.tsx`: add `import { useRouter } from 'next/navigation';`, `const router = useRouter();`, and change the button's `onClick` to `() => router.push('/clients/new')`.
   - `portfolio.tsx`: the empty state's button `onClick` becomes `() => router.push('/clients/new')` (a `router` is already in scope).
 
+- [ ] **Step 3b: Reserve the slug `new` in `clientIdFromName`.** This task creates the static route that shadows any client whose id is `new`, so the minter must never produce it. In `src/services/portfolio.ts`, `clientIdFromName`:
+
+```ts
+/** Ids that are routes, not clients: a client minted onto one would be shadowed. */
+const RESERVED_CLIENT_IDS = ['new'];
+
+export function clientIdFromName(name: string, taken: readonly string[] = []): string {
+  const base =
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'client';
+
+  if (!taken.includes(base) && !RESERVED_CLIENT_IDS.includes(base)) {
+    return base;
+  }
+
+  for (let suffix = 2; ; suffix += 1) {
+    const candidate = `${base}-${suffix}`;
+    if (!taken.includes(candidate) && !RESERVED_CLIENT_IDS.includes(candidate)) {
+      return candidate;
+    }
+  }
+}
+```
+
+Failing test first, in `tests/services/portfolio.test.ts`'s `clientIdFromName` describe:
+
+```ts
+it('never mints a reserved route as an id', () => {
+  expect(clientIdFromName('New')).toBe('new-2');
+});
+```
+
+Also fix the mechanism claim in the `/clients/new` comment in `src/app/platform/lib/params.ts` (landed in Task 4 with wording that attributes the header behavior to `clientSlug`): reword to "Not a client: `scope: 'client'` keeps the header from highlighting a workspace tab, and `clientSlug` stays null because there is no record to name yet."
+
 - [ ] **Step 4: Fix compile fallout and run the fast suite.**
 
 Run: `npx tsc --noEmit` then `npm test` — expected: everything green except any test that referenced the modal (`grep -rn "addClient\|AddClientModal" tests/ src/` must come back empty outside the hydration suite, which Task 12 rewrites).
