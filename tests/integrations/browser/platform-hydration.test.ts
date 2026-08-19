@@ -451,6 +451,22 @@ describe('platform hydration', () => {
       expect(afterFailure).not.toContain('Never audited');
       expect(afterFailure).toContain('Setup incomplete');
 
+      // ...and the state it names is reachable from where the row lands. This
+      // is the assertion the hint's own correctness depends on: the overview
+      // renders `lastRun ? summary : empty`, and only the empty state used to
+      // carry the Finish-setup link — so a *failed* first audit set `lastRun`,
+      // skipped the empty state, and left the one client who most needed the
+      // wizard with no way back into it. The route sweep at the bottom of this
+      // file cannot catch that: it reaches this page only after the walk has
+      // completed a run, when `hasCompletedRun` is true and the link is
+      // correctly absent. The client name comes first because a bare check for
+      // the link would pass just as happily on a locked shell.
+      await page.goto(`${BASE}/clients/${CLIENT}`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+      const overview = await page.innerText('body');
+      expect(overview).toContain('Harness Client');
+      expect(overview).toContain('Finish setup');
+
       // ---- The terminal stage. The chaos scenario is how this suite gets a
       // run that completes against a real browser; `?wait=1` holds the
       // connection so there is nothing to poll for here. ----
