@@ -953,7 +953,21 @@ export function StageIndicator({ current }: { current: 0 | 1 | 2 }) {
 }
 ```
 
-- [ ] **Step 2: The screen** (`new-client-screen.tsx`). Complete file:
+- [ ] **Step 2: The screen** (`new-client-screen.tsx`). Complete file — **with these
+  post-review corrections applied over the snippet below** (the snippet predates the
+  a11y review; the corrections are the authority where they disagree):
+  - Title via `ScreenHeading` (h1), never a bare h2 — `page-has-heading-one` gates.
+  - The duplicate hint's `role="status"` span is ALWAYS mounted with its text toggled,
+    and its id always sits in the name input's `aria-describedby` (toast.tsx's rule).
+  - Submit uses `inertWhen(...)` (lib/inert-button), not `disabled`, with the
+    empty-name guard moved into the submit handler.
+  - `autoFocus` on the name input (the modal's behavior, restored).
+  - State holds the error CODE; `aria-invalid`/`-error` describedby apply only for
+    `invalid_request_body` — page-level failures don't describe the name field.
+  - StageIndicator: `role="list"` on the ol, ✓ aria-hidden with a visually-hidden
+    "(complete)".
+
+  Snippet:
 
 ```tsx
 'use client';
