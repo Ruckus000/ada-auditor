@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 import { StageHeading } from './stage-heading';
@@ -23,27 +23,68 @@ const MESSAGES: Record<string, string> = {
 const NETWORK_ERROR_CODE = 'network';
 /** `normalizeUrl` rejected the input before any request went out — a code this form invents itself. */
 const LOCAL_INVALID_URL = 'local_invalid_url';
+/** `normalizeUrl` found a `user:pass@host` before any request went out — its own local code too. */
+const LOCAL_URL_CREDENTIALS = 'local_url_credentials';
 
 type Mode = 'homepage' | 'journey';
 type Environment = 'production' | 'preview' | 'staging';
 
-/** `rosewooddental.com` is what people paste; a scheme is what `new URL` needs. */
-function normalizeUrl(raw: string): URL | null {
-  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw.trim())
-    ? raw.trim()
-    : `https://${raw.trim()}`;
+/**
+ * `rosewooddental.com` is what people paste; a scheme is what `new URL` needs.
+ *
+ * Returns `'credentials'` rather than `null` for `https://user:pass@host` (and
+ * schemeless `user:pass@host`) so the caller can tell "not a URL" from "a URL
+ * with a password riding in it" — the second is a specific, fixable mistake,
+ * and `parseTargetUrl` on the runner's side refuses userinfo at launch, so a
+ * journey stored with one could never run anyway.
+ */
+export function normalizeUrl(raw: string): URL | 'credentials' | null {
+  const trimmed = raw.trim();
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  let url: URL;
   try {
-    const url = new URL(withScheme);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url : null;
+    url = new URL(withScheme);
   } catch {
     return null;
   }
+
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  if (url.username || url.password) return 'credentials';
+
+  // A trailing #section is the page's own scroll target, not part of the
+  // address a run navigates to. Stripped here, once, so what is stored and
+  // later echoed back is always the canonical form of what was pasted.
+  url.hash = '';
+  return url;
+}
+
+/**
+ * The POST body for either fast path, pulled out to a pure function so a test
+ * can pin the wizard's own marquee flow — a pasted homepage becoming a
+ * runnable journey — without going through the DOM.
+ *
+ * The homepage path writes the one step it needs itself: the target URL's own
+ * path, not "/", so a pasted /shop stays audited as /shop. There is no empty
+ * case to fall back from — an http(s) URL's `pathname` is never empty,
+ * `new URL` always yields at least "/".
+ */
+export function journeyDraft(mode: Mode, url: URL, environment: Environment) {
+  return mode === 'homepage'
+    ? {
+        name: 'Homepage',
+        targetUrl: url.toString(),
+        environment,
+        steps: [{ action: 'navigate', type: 'goto', path: `${url.pathname}${url.search}` }],
+      }
+    : { name: 'First journey', targetUrl: url.toString(), environment };
 }
 
 export function WhereScreen({ clientId }: { clientId: string }) {
   const router = useRouter();
   const urlId = useId();
   const environmentId = useId();
+  const urlInputRef = useRef<HTMLInputElement>(null);
 
   const [raw, setRaw] = useState('');
   const [mode, setMode] = useState<Mode>('homepage');
@@ -56,7 +97,10 @@ export function WhereScreen({ clientId }: { clientId: string }) {
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
-  const urlErrorActive = errorCode === LOCAL_INVALID_URL || errorCode === 'invalid_request_body';
+  const urlErrorActive =
+    errorCode === LOCAL_INVALID_URL ||
+    errorCode === LOCAL_URL_CREDENTIALS ||
+    errorCode === 'invalid_request_body';
 
   const errorMessage =
     errorCode === null
@@ -64,8 +108,13 @@ export function WhereScreen({ clientId }: { clientId: string }) {
       : errorCode === NETWORK_ERROR_CODE
         ? 'Could not reach the server. Check your connection and try again.'
         : errorCode === LOCAL_INVALID_URL
-          ? 'That does not look like a URL we can audit. Check it and try again.'
-          : (MESSAGES[errorCode] ?? `Could not save that (${errorStatus}). Try again.`);
+          // Aliased rather than a second sentence of its own — the same
+          // mistake ("that is not a URL we can audit") should not be able to
+          // drift into two different descriptions of itself.
+          ? MESSAGES.invalid_request_body
+          : errorCode === LOCAL_URL_CREDENTIALS
+            ? 'Remove the username and password from the URL — credentials never belong in an address.'
+            : (MESSAGES[errorCode] ?? `Could not save that (${errorStatus}). Try again.`);
 
   const blocked = saving || raw.trim() === '';
 
@@ -78,29 +127,23 @@ export function WhereScreen({ clientId }: { clientId: string }) {
     // provide.
     if (raw.trim() === '') return;
 
-    const url = normalizeUrl(raw);
-    if (!url) {
-      setErrorCode(LOCAL_INVALID_URL);
+    const normalized = normalizeUrl(raw);
+    if (normalized === null || normalized === 'credentials') {
+      setErrorCode(normalized === null ? LOCAL_INVALID_URL : LOCAL_URL_CREDENTIALS);
+      // The state update above may be identical to the one already on
+      // screen — a repeated submit of the same bad input — which announces
+      // nothing on its own. Moving focus back to the field re-anchors the
+      // operator regardless of whether the message text actually changed.
+      urlInputRef.current?.focus();
       return;
     }
+    const url = normalized;
 
     setSaving(true);
     setErrorCode(null);
     setErrorStatus(null);
 
-    // The fast path writes the one step it needs itself — the target URL's
-    // own path, not "/", so a pasted /shop stays audited as /shop.
-    const body =
-      mode === 'homepage'
-        ? {
-            name: 'Homepage',
-            targetUrl: url.toString(),
-            environment,
-            steps: [
-              { action: 'navigate', type: 'goto', path: `${url.pathname}${url.search}` || '/' },
-            ],
-          }
-        : { name: 'First journey', targetUrl: url.toString(), environment };
+    const body = journeyDraft(mode, url, environment);
 
     try {
       const response = await fetch(`/api/platform/clients/${clientId}/journeys`, {
@@ -157,9 +200,12 @@ export function WhereScreen({ clientId }: { clientId: string }) {
           </label>
           <input
             id={urlId}
+            ref={urlInputRef}
             value={raw}
             placeholder="rosewooddental.com"
             inputMode="url"
+            autoCapitalize="none"
+            spellCheck={false}
             required
             onChange={(event) => setRaw(event.target.value)}
             aria-invalid={urlErrorActive ? true : undefined}
@@ -208,7 +254,10 @@ export function WhereScreen({ clientId }: { clientId: string }) {
 
         <details>
           <summary style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted, cursor: 'pointer' }}>
+            {/* A collapsed disclosure must not hide a live non-default choice
+                — the summary itself has to say when this is not production. */}
             Advanced: where this journey runs
+            {environment === 'production' ? '' : ` — ${environment}`}
           </summary>
           <span style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
             <label htmlFor={environmentId} style={labelStyle}>
@@ -220,7 +269,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
               onChange={(event) => setEnvironment(event.target.value as Environment)}
               style={inputStyle}
             >
-              <option value="production">Production (read-only, the default)</option>
+              <option value="production">Production (no destructive actions, the default)</option>
               <option value="preview">Preview</option>
               <option value="staging">Staging</option>
             </select>

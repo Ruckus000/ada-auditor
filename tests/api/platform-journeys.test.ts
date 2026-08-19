@@ -11,7 +11,10 @@ const OPERATOR = { kind: 'operator' as const, id: 'op-1', name: 'Alex Reed', ema
 const { GET, POST } = await import(
   '../../src/app/api/platform/clients/[clientId]/journeys/route'
 );
-const { MAX_STEPS_PER_JOURNEY } = await import('../../src/domain/journey-step');
+const { MAX_STEPS_PER_JOURNEY, authoredStepsSchema } = await import('../../src/domain/journey-step');
+const { journeyDraft } = await import(
+  '../../src/app/platform/components/setup/where-screen'
+);
 
 const { MemoryPlatformStore, resetPlatformStore, setPlatformStore } = await import(
   '../../src/integrations/persistence'
@@ -98,6 +101,30 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
       name: 'Checkout',
       targetUrl: 'https://acme.test/cart',
     });
+  });
+
+  /**
+   * Pins the wizard's own marquee flow — a pasted homepage becoming a
+   * runnable journey — against this route's actual schema, rather than
+   * against a hand-written body that could quietly drift from what
+   * `WhereScreen` really sends. `journeyDraft` is the same function the
+   * screen's submit handler calls.
+   */
+  it("accepts the wizard's homepage fast-path body, unchanged", async () => {
+    const draft = journeyDraft('homepage', new URL('https://acme.example/shop?x=1'), 'production');
+
+    const response = await POST(fromBrowser(draft), params('acme'));
+    expect(response.status, await response.clone().text()).toBe(201);
+
+    const [stored] = await platform.listJourneys('acme');
+    // Parses under the schema the runner itself is bound by, not just under
+    // whatever shape happened to be written — the whole point of routing
+    // this through `journeyDraft` rather than a literal body.
+    expect(() => authoredStepsSchema.parse(stored.steps)).not.toThrow();
+
+    const listed = await (await GET(fromBrowser(), params('acme'))).json();
+    const journey = listed.journeys.find((one: { id: string }) => one.id === stored.id);
+    expect(journey.steps[0]).toMatchObject({ action: 'navigate', type: 'goto', path: '/shop?x=1' });
   });
 
   it('records the hosts a journey may pass through, normalised', async () => {
@@ -191,6 +218,24 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
 
     expect(response.status).toBe(400);
     expect((await response.json()).error).toBe('inline_credential');
+    expect(await platform.listJourneys('acme')).toEqual([]);
+  });
+
+  it('refuses a target URL that embeds a credential', async () => {
+    // The runner's SSRF layer (`parseTargetUrl`) refuses userinfo the moment
+    // a run launches, so a journey stored with one could never run — the same
+    // credential-wearing-an-address problem `inline_credential` already
+    // names for steps. Whole-body assertion, not just the error field: a leak
+    // that moved to a different key would pass an assertion aimed at `error`.
+    const response = await POST(
+      fromBrowser({ name: 'Login', targetUrl: 'https://user:hunter2@client.example/' }),
+      params('acme'),
+    );
+    const text = await response.text();
+
+    expect(response.status).toBe(400);
+    expect(JSON.parse(text).error).toBe('inline_credential');
+    expect(text).not.toContain('hunter2');
     expect(await platform.listJourneys('acme')).toEqual([]);
   });
 
