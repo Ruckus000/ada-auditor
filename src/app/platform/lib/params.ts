@@ -61,6 +61,13 @@ export function parseRoute(pathname: string): PlatformRoute {
     return base;
   }
 
+  if (segments[0] === 'clients' && segments[1] === 'new') {
+    // The add-client screen. Not a client — `clientSlug: null` keeps the
+    // header from highlighting a workspace tab and from naming a client bar
+    // for a record that does not exist yet.
+    return { ...base, scope: 'client' };
+  }
+
   if (segments[0] === 'clients' && segments[1]) {
     const clientSlug = segments[1];
     const tab = segments[2] ? CLIENT_TABS[segments[2]] : 'overview';
