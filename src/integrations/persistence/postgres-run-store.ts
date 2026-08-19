@@ -2,6 +2,7 @@ import type { Environment } from '../../domain/contracts';
 import { reconcileRunStatus } from '../../domain/run-staleness';
 import {
   clampRunListLimit,
+  type ListRunsOptions,
   type RunIntent,
   type RunStore,
   type StoredFinding,
@@ -393,21 +394,19 @@ export class PostgresRunStore implements RunStore {
    * history at all. It lands with the store that can actually answer it from
    * an index instead of by reading every record.
    */
-  async list(options: {
-    journeyId?: string;
-    environment?: Environment;
-    limit?: number;
-  } = {}): Promise<StoredRunRecord[]> {
+  async list(options: ListRunsOptions = {}): Promise<StoredRunRecord[]> {
     // A caller that forgets to page must not be able to pull the whole table
     // into one function invocation.
     const limit = clampRunListLimit(options.limit);
     const journeyId = options.journeyId ?? null;
     const environment = options.environment ?? null;
+    const status = options.status ?? null;
 
     const runs = await this.sql<RunRow>`
       select * from runs
       where (${journeyId}::text is null or journey_id = ${journeyId})
         and (${environment}::text is null or environment = ${environment})
+        and (${status}::text is null or status = ${status})
       order by created_at desc, request_id desc
       limit ${limit}
     `;

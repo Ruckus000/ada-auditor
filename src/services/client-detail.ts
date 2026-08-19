@@ -127,6 +127,13 @@ export type ClientDetail = {
   journeys: JourneySummary[];
   /** The newest run across every journey, or null before the first one. */
   lastRun: RunSummary | null;
+  /**
+   * Whether any journey has ever finished a run. Derived, never stored — this
+   * is what "onboarded" means, and what the setup screens key their terminal
+   * stage on. Newest-run checks cannot answer it: a failed retry would hide an
+   * old success and un-onboard a client.
+   */
+  hasCompletedRun: boolean;
 };
 
 /** The slowest page's wall clock, or null when no page carries a measurement. */
@@ -217,6 +224,17 @@ export async function buildClientDetail(
     .filter((run): run is RunSummary => run !== null)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
 
+  const completedFlags = await Promise.all(
+    journeys.map(async (journey) => {
+      const [completed] = await deps.runs.list({
+        journeyId: journey.id,
+        status: 'complete',
+        limit: 1,
+      });
+      return completed !== undefined;
+    }),
+  );
+
   return {
     id: client.id,
     name: client.name,
@@ -224,5 +242,6 @@ export async function buildClientDetail(
     createdAt: client.createdAt,
     journeys: summaries,
     lastRun: lastRun ?? null,
+    hasCompletedRun: completedFlags.some(Boolean),
   };
 }

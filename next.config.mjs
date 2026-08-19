@@ -2,6 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: import.meta.dirname,
+  // Pinned for the same reason as `outputFileTracingRoot` below it: inference
+  // walks up looking for lockfiles, and in a git worktree it can land outside
+  // the checkout entirely — the build then refuses with "couldn't find the
+  // Next.js package from the project directory". This app is the repo; its
+  // own directory is always the root.
+  turbopack: { root: import.meta.dirname },
   // Chromium and its driver must stay real files on disk — bundling them
   // breaks the executable lookup and the /tmp unpack that @sparticuz/chromium
   // performs on a serverless cold start.

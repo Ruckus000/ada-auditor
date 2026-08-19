@@ -47,6 +47,18 @@ describe('parseRoute', () => {
     });
   });
 
+  it('reads /clients/new as the add-client screen, not a client called "new"', () => {
+    expect(parseRoute('/clients/new')).toEqual({
+      scope: 'client', screen: 'portfolio', clientTab: 'overview', clientSlug: null,
+    });
+  });
+
+  it('reads /clients/acme/setup as that client, overview-highlighted', () => {
+    expect(parseRoute('/clients/acme/setup')).toEqual({
+      scope: 'client', screen: 'portfolio', clientTab: 'overview', clientSlug: 'acme',
+    });
+  });
+
   it.each([
     ['/clients/../secrets', 'clients'],
     ['/clients/%2e%2e%2fetc', 'clients'],

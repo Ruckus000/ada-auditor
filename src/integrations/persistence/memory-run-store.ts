@@ -71,7 +71,8 @@ export class MemoryRunStore implements RunStore {
       .filter(
         (run) =>
           (options.journeyId === undefined || run.journeyId === options.journeyId) &&
-          (options.environment === undefined || run.environment === options.environment),
+          (options.environment === undefined || run.environment === options.environment) &&
+          (options.status === undefined || run.status === options.status),
       )
       .slice(0, limit)
       .map((run) => reconcileRunStatus(structuredClone(run)));

@@ -186,6 +186,27 @@ export async function POST(
     return Response.json({ error: 'inline_credential', requestId }, { status: 400 });
   }
 
+  // A `targetUrl` carrying `user:pass@host` is a credential wearing an
+  // address's clothes — the same problem the check above exists for, through
+  // a different door. `parseTargetUrl` refuses userinfo the moment a run
+  // launches, so storing one here would mint a journey that can never run;
+  // this refuses it before it is ever written, with the same code, rather
+  // than as a generic `invalid_request_body` a run failure would only explain
+  // much later. Read loosely, ahead of the schema, for the same reason
+  // `containsInlineCredential` is: a targetUrl that is not even a string is
+  // the schema's problem to name, not this one's.
+  const rawTargetUrl = (body as { targetUrl?: unknown } | null)?.targetUrl;
+  if (typeof rawTargetUrl === 'string') {
+    try {
+      const targetUrl = new URL(rawTargetUrl);
+      if (targetUrl.username || targetUrl.password) {
+        return Response.json({ error: 'inline_credential', requestId }, { status: 400 });
+      }
+    } catch {
+      // Not a valid URL at all — `createJourneySchema` reports that below.
+    }
+  }
+
   let parsed: z.infer<typeof createJourneySchema>;
   try {
     parsed = createJourneySchema.parse(body);
@@ -220,7 +241,16 @@ export async function POST(
 
   // Scoped to the client, because the id is global: two clients may both have
   // a journey called "Checkout" and they are not the same journey.
-  const taken = (await platform.listJourneys()).map((journey) => journey.id);
+  //
+  // `includeArchived: true` because an archived journey's id is retired, not
+  // vacant. `upsertJourney`'s on-conflict update preserves `archived_at`, so
+  // minting a fresh journey against a list that omits archived ids would let
+  // it collide with one — and resurrect the old row as a journey that is born
+  // archived: invisible in the catalog and unrunnable from the moment it is
+  // "created".
+  const taken = (await platform.listJourneys(undefined, { includeArchived: true })).map(
+    (journey) => journey.id,
+  );
   const id = clientIdFromName(`${clientId} ${parsed.name}`, taken);
 
   await platform.upsertJourney({

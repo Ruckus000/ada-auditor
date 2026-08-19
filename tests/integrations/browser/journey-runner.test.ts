@@ -211,6 +211,50 @@ describe('runJourney', () => {
     }
   }, 60_000);
 
+  it('skipScan walks the journey without invoking axe', async () => {
+    // The preview endpoint's whole point: an authoring check should cost
+    // navigation, not an audit. `violations.html` carries real, known
+    // violations (see the passthrough test above), so an empty result here is
+    // a real discrimination against skipScan working, not a vacuous pass.
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'skip-scan',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        skipScan: true,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'violations.html' },
+        ],
+      });
+
+      // The exact two-page walk, not merely "some pages" — a truncated or
+      // over-eager walk should fail this test, not slide past it.
+      expect(result.pages.map((p) => p.page.route)).toEqual(['/login.html', '/violations.html']);
+      for (const page of result.pages) {
+        expect(page.axe.violations).toEqual([]);
+        expect(page.axe.incomplete).toEqual([]);
+        expect(page.axe.passCount).toBeUndefined();
+        // Absent, not zero: skipScan means "not measured", not "measured and
+        // found instant".
+        expect(page.timing.scanMs).toBeUndefined();
+
+        // The scan was skipped, but the walk and capture were not — every
+        // page still got a real screenshot and DOM snapshot on disk.
+        expect(page.artifacts.screenshotPath).toBeTruthy();
+        expect(page.artifacts.domSnapshotPath).toBeTruthy();
+        await expect(fileExists(page.artifacts.screenshotPath!)).resolves.toBe(true);
+        await expect(fileExists(page.artifacts.domSnapshotPath!)).resolves.toBe(true);
+      }
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('never executes denied production actions', async () => {
     const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
 

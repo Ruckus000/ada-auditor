@@ -50,7 +50,13 @@ describe('buildClientDetail', () => {
 
     const detail = await buildClientDetail('acme', deps());
 
-    expect(detail).toMatchObject({ id: 'acme', name: 'Acme', owner: 'Alex Reed', lastRun: null });
+    expect(detail).toMatchObject({
+      id: 'acme',
+      name: 'Acme',
+      owner: 'Alex Reed',
+      lastRun: null,
+      hasCompletedRun: false,
+    });
     expect(detail?.journeys).toEqual([]);
   });
 
@@ -274,5 +280,61 @@ describe('buildClientDetail, on credentials', () => {
     });
 
     expect((await buildClientDetail('acme', deps()))?.journeys[0].credentials).toEqual([]);
+  });
+});
+
+/**
+ * Whether this client has ever finished a run — what the setup screens key
+ * their terminal stage on. A per-journey newest-run check cannot answer this:
+ * a failed retry sits on top of an old success and must not un-onboard a
+ * client who already cleared setup once.
+ */
+describe('buildClientDetail, on hasCompletedRun', () => {
+  it('reports whether any journey ever completed a run', async () => {
+    await platform.upsertClient({ id: 'cd-hcr-client', name: 'Has Completed Run' });
+    await platform.upsertJourney({
+      id: 'cd-hcr-j',
+      clientId: 'cd-hcr-client',
+      name: 'Checkout',
+      steps: [],
+    });
+
+    // One journey whose newest run failed but an older one completed.
+    await runs.saveRun(
+      run({
+        requestId: 'cd-hcr-old',
+        journeyId: 'cd-hcr-j',
+        status: 'complete',
+        createdAt: '2026-08-01T00:00:00.000Z',
+      }),
+    );
+    await runs.saveRun(
+      run({
+        requestId: 'cd-hcr-new',
+        journeyId: 'cd-hcr-j',
+        status: 'failed',
+        createdAt: '2026-08-02T00:00:00.000Z',
+      }),
+    );
+
+    const detail = await buildClientDetail('cd-hcr-client', deps());
+
+    expect(detail?.hasCompletedRun).toBe(true);
+  });
+
+  it('a failed-only history is not a completed run', async () => {
+    await platform.upsertClient({ id: 'cd-hcr2-client', name: 'No Completed Run' });
+    await platform.upsertJourney({
+      id: 'cd-hcr2-j',
+      clientId: 'cd-hcr2-client',
+      name: 'Checkout',
+      steps: [],
+    });
+
+    await runs.saveRun(run({ requestId: 'cd-hcr-f', journeyId: 'cd-hcr2-j', status: 'failed' }));
+
+    const detail = await buildClientDetail('cd-hcr2-client', deps());
+
+    expect(detail?.hasCompletedRun).toBe(false);
   });
 });

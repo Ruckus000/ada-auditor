@@ -504,8 +504,10 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       await mkdir(dirname(artifactPrefix), { recursive: true });
 
       const scanStartedAt = Date.now();
-      const axe = await scanPageWithAxe(page);
-      const scanMs = Date.now() - scanStartedAt;
+      const axe = input.skipScan
+        ? { violations: [], incomplete: [] }
+        : await scanPageWithAxe(page);
+      const scanMs = input.skipScan ? undefined : Date.now() - scanStartedAt;
 
       const html = await page.content();
       const title = boundTitle(await page.title());
@@ -578,7 +580,14 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         // Measured across navigate-settle to artifacts-written, because that
         // is the unit the page cap is denominated in: the question this
         // answers is how many of these fit inside one function invocation.
-        timing: { totalMs: Date.now() - startedAt, scanMs },
+        //
+        // `scanMs` is omitted, not written as `undefined`, when `skipScan`
+        // skipped the measurement — "not measured" stays a genuinely absent
+        // key, the same convention `AxeScanResult.passCount` follows.
+        timing: {
+          totalMs: Date.now() - startedAt,
+          ...(input.skipScan ? {} : { scanMs }),
+        },
       });
     };
 

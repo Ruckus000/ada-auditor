@@ -24,12 +24,18 @@ import { RunJourneyButton } from './run-journey-button';
  * <id>/journeys/<id>/runs` walks the stored journey, and `JourneyStepsEditor`
  * rewrites what it walks.
  *
- * Nor is *creating* one API work any more. `DiscoverPages` crawls a site
- * address, and the pages an operator ticks become a journey of `goto` steps —
- * so the sentence that used to stand here, saying a new journey needs a bearer
- * POST, has gone with the empty state that repeated it. A screen that tells an
- * operator to go and use curl for something it can now do teaches them to stop
- * reading it.
+ * Nor is *creating* one API work any more, and after the merge of the setup
+ * wizard there are two honest answers rather than one. `DiscoverPages`, above,
+ * crawls a site address and turns the pages an operator ticks into a journey of
+ * `goto` steps — the fastest path, and the one already on this screen. The setup
+ * wizard (`/clients/<id>/setup`) is the guided path, and the empty state's
+ * action still points there, because a client with no journeys usually has
+ * unfinished setup rather than a missing crawl.
+ *
+ * What has gone from both is the instruction to go and use curl. The API path
+ * survives for CI and scripts and is documented in `docs/journeys-api.md`; a
+ * screen that tells an operator to use a bearer token for something it can now
+ * do itself teaches them to stop reading it.
  */
 export function ClientJourneys({ detail }: { detail: ClientDetail }) {
   return (
@@ -48,8 +54,8 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
       {detail.journeys.length === 0 ? (
         <Empty
           title="No journeys yet"
-          body="A journey is the path we re-walk on every run. Give the panel above a site address, tick the pages that matter, and the journey appears here with a button to run it. A bearer POST to /api/platform/clients/<id>/journeys still does the same thing for anyone scripting it."
-          action={null}
+          body="A journey is the path we re-walk on every run — a checkout, a booking, a sign-in. Give the panel above a site address and tick the pages that matter, or finish this client's setup to record the first one and run it."
+          action={{ href: `/clients/${detail.id}/setup`, label: 'Finish setup' }}
         />
       ) : (
         <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: 0, padding: 0 }}>
@@ -183,7 +189,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
  * A missing half is called out on its own: a login needs both, and the likely
  * failure is somebody setting the pair and mistyping one variable name.
  */
-function CredentialList({ credentials }: { credentials: CredentialPresence[] }) {
+export function CredentialList({ credentials }: { credentials: CredentialPresence[] }) {
   if (credentials.length === 0) return null;
 
   return (
@@ -257,7 +263,7 @@ function describeTarget(step: JourneyStepView): string {
  * An unrecognised step is called one rather than dressed up, because it cannot
  * run and the operator needs to know that before a schedule fires.
  */
-function StepList({ steps }: { steps: JourneyStepView[] }) {
+export function StepList({ steps }: { steps: JourneyStepView[] }) {
   if (steps.length === 0) return null;
 
   return (

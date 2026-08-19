@@ -20,8 +20,8 @@ import { parseRoute, workspaceHref } from '../lib/params';
  * six filter menus whose chosen value was read only by their own label.
  *
  * What is left after the fixtures went is small enough to see at a glance: the
- * screen comes from the pathname, and a modal and a toast live here because
- * neither belongs in a URL.
+ * screen comes from the pathname, and a toast lives here because it does not
+ * belong in a URL.
  */
 export function PlatformProvider({
   operator,
@@ -62,7 +62,6 @@ export function PlatformProvider({
       patch: (next) => setEphemeral((prev) => ({ ...prev, ...next })),
       flash,
       goWorkspace: (screen: WorkspaceScreen) => {
-        setEphemeral((prev) => ({ ...prev, modal: null }));
         router.push(workspaceHref(screen));
       },
     }),

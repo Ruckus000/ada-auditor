@@ -69,7 +69,14 @@ describe('buildPortfolio', () => {
     await seedClient('acme', 'Acme Outfitters', 'Alex Reed');
 
     expect(await buildPortfolio(deps())).toEqual([
-      { id: 'acme', name: 'Acme Outfitters', owner: 'Alex Reed', journeyCount: 0, lastRun: null },
+      {
+        id: 'acme',
+        name: 'Acme Outfitters',
+        owner: 'Alex Reed',
+        journeyCount: 0,
+        lastRun: null,
+        setupIncomplete: true,
+      },
     ]);
   });
 
@@ -205,6 +212,63 @@ describe('buildPortfolio', () => {
   });
 });
 
+/**
+ * True until the first completed run — what the portfolio's "Finish setup"
+ * hint reads. A journey that has only ever failed has not finished setup
+ * either; the flag has to look past the newest attempt.
+ */
+describe('buildPortfolio, on setupIncomplete', () => {
+  it('marks a client with no completed run as setup incomplete', async () => {
+    await seedClient('pf-fresh-client', 'Fresh Client');
+    await platform.upsertJourney({
+      id: 'pf-fresh-j',
+      clientId: 'pf-fresh-client',
+      name: 'Checkout',
+      steps: [],
+    });
+    await runs.saveRun(run({ requestId: 'pf-fresh-r', journeyId: 'pf-fresh-j', status: 'failed' }));
+
+    const rows = await buildPortfolio(deps());
+    const fresh = rows.find((row) => row.id === 'pf-fresh-client');
+
+    expect(fresh?.setupIncomplete).toBe(true);
+  });
+
+  it('marks a client with a completed run as setup complete', async () => {
+    await seedClient('pf-done-client', 'Done Client');
+    await platform.upsertJourney({
+      id: 'pf-done-j',
+      clientId: 'pf-done-client',
+      name: 'Checkout',
+      steps: [],
+    });
+    await runs.saveRun(
+      run({
+        requestId: 'pf-done-r',
+        journeyId: 'pf-done-j',
+        status: 'complete',
+        createdAt: '2026-08-01T00:00:00.000Z',
+      }),
+    );
+    // A newer failed retry on the same journey. If setupIncomplete were read
+    // off the newest run's status rather than the separate completed-exists
+    // probe, this would flip the flag back to true.
+    await runs.saveRun(
+      run({
+        requestId: 'pf-done-r2',
+        journeyId: 'pf-done-j',
+        status: 'failed',
+        createdAt: '2026-08-02T00:00:00.000Z',
+      }),
+    );
+
+    const rows = await buildPortfolio(deps());
+    const done = rows.find((row) => row.id === 'pf-done-client');
+
+    expect(done?.setupIncomplete).toBe(false);
+  });
+});
+
 describe('clientIdFromName', () => {
   it.each([
     ['Acme Outfitters', 'acme-outfitters'],
@@ -224,5 +288,9 @@ describe('clientIdFromName', () => {
   it('falls back rather than producing an empty id', () => {
     expect(clientIdFromName('***')).toBe('client');
     expect(clientIdFromName('***', ['client'])).toBe('client-2');
+  });
+
+  it('never mints a reserved route as an id', () => {
+    expect(clientIdFromName('New')).toBe('new-2');
   });
 });

@@ -72,6 +72,20 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
             </p>
           ) : null}
 
+          {!detail.hasCompletedRun ? (
+            // The state the portfolio's "Setup incomplete" hint names, made
+            // actionable where the row lands. Without this, a client whose
+            // first audit *failed* had `lastRun` set — so the empty state
+            // below never rendered — and the one case that most needs a way
+            // back into the wizard was the one case with no link to it.
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.inkSoft }}>
+              Setup is not finished — no audit has completed yet.{' '}
+              <Link href={`/clients/${detail.id}/setup`} style={{ color: T.accentInk, fontWeight: 650 }}>
+                Finish setup
+              </Link>
+            </p>
+          ) : null}
+
           <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
             Last run {new Date(lastRun.createdAt).toISOString().slice(0, 10)} ·{' '}
             <span style={{ fontFamily: FONT.mono }}>{lastRun.requestId}</span>
@@ -97,12 +111,12 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
           title={detail.journeys.length === 0 ? 'No journeys yet' : 'No runs yet'}
           body={
             detail.journeys.length === 0
-              ? 'A journey is the path through their site we re-walk on every run — a checkout, a booking, a sign-in. Record one and this page fills in.'
+              ? 'A journey is the path through their site we re-walk on every run — a checkout, a booking, a sign-in. Finish setup to say where we audit and run the first audit.'
               : 'The journeys are recorded. Nothing has been audited against them yet.'
           }
           action={
             detail.journeys.length === 0
-              ? null
+              ? { href: `/clients/${detail.id}/setup`, label: 'Finish setup' }
               : { href: `/clients/${detail.id}/journeys`, label: 'See the journeys' }
           }
         />
@@ -111,7 +125,7 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
   );
 }
 
-function Stat({ label, value, tone = false }: { label: string; value: string; tone?: boolean }) {
+export function Stat({ label, value, tone = false }: { label: string; value: string; tone?: boolean }) {
   return (
     <div
       style={{
