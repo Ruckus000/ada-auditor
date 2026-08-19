@@ -232,12 +232,23 @@ describe('runJourney', () => {
         ],
       });
 
-      expect(result.pages.length).toBeGreaterThan(0);
+      // The exact two-page walk, not merely "some pages" — a truncated or
+      // over-eager walk should fail this test, not slide past it.
+      expect(result.pages.map((p) => p.page.route)).toEqual(['/login.html', '/violations.html']);
       for (const page of result.pages) {
         expect(page.axe.violations).toEqual([]);
         expect(page.axe.incomplete).toEqual([]);
         expect(page.axe.passCount).toBeUndefined();
-        expect(page.timing.scanMs).toBe(0);
+        // Absent, not zero: skipScan means "not measured", not "measured and
+        // found instant".
+        expect(page.timing.scanMs).toBeUndefined();
+
+        // The scan was skipped, but the walk and capture were not — every
+        // page still got a real screenshot and DOM snapshot on disk.
+        expect(page.artifacts.screenshotPath).toBeTruthy();
+        expect(page.artifacts.domSnapshotPath).toBeTruthy();
+        await expect(fileExists(page.artifacts.screenshotPath!)).resolves.toBe(true);
+        await expect(fileExists(page.artifacts.domSnapshotPath!)).resolves.toBe(true);
       }
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });

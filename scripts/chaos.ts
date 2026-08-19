@@ -78,8 +78,18 @@ async function main(): Promise<void> {
         fail(`scenario ${scenario}: ${untimed.length} page(s) carry no duration`);
       }
 
+      // `scanMs` is only absent when a run asked to skip its scan, and chaos
+      // never does — `runBrowserAudit` doesn't even accept that flag. A
+      // missing value here is a real regression, caught the same way an
+      // untimed page is above, so the cast below is asserting a fact this
+      // check just proved rather than papering over the optional type.
+      const unscanned = report.pages.filter((page) => page.timing.scanMs === undefined);
+      if (unscanned.length > 0) {
+        fail(`scenario ${scenario}: ${unscanned.length} page(s) carry no scan duration`);
+      }
+
       const slowerThanScan = report.pages.filter(
-        (page) => page.timing.scanMs > page.timing.totalMs,
+        (page) => (page.timing.scanMs as number) > page.timing.totalMs,
       );
       if (slowerThanScan.length > 0) {
         fail(`scenario ${scenario}: a page's axe scan is timed longer than the page itself`);
