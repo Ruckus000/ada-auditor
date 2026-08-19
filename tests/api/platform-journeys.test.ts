@@ -299,6 +299,31 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     expect(await platform.listJourneys('acme')).toEqual([]);
   });
 
+  /**
+   * Valid URLs the runner refuses to launch.
+   *
+   * `parseTargetUrl` allows http and https and nothing else, so
+   * `z.string().url()` here — any parseable scheme — let a raw API caller
+   * (the wizard normalises client-side) store a `mailto:` journey that every
+   * future run refuses: a permanently unrunnable row. The schemeless
+   * credential is the sneaky one: `user:pass@host` parses as scheme `user:`
+   * with an *empty* username, so the route's pre-schema userinfo check
+   * cannot see it and only the scheme check refuses it. The credentialed
+   * http(s) form is not in this table — that one is caught pre-schema and
+   * answered `inline_credential`, tested above.
+   */
+  it.each([
+    ['a mailto: target', 'mailto:x@y.com'],
+    ['an ftp: target', 'ftp://acme.test/'],
+    ['a schemeless credential parsing as scheme `user:`', 'user:pass@host'],
+  ])('refuses %s, which no run could ever launch', async (_label, targetUrl) => {
+    const response = await POST(fromBrowser({ name: 'Checkout', targetUrl }), params('acme'));
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('invalid_request_body');
+    expect(await platform.listJourneys('acme')).toEqual([]);
+  });
+
   it('lists the journeys it recorded', async () => {
     await POST(fromBrowser({ name: 'Checkout' }), params('acme'));
 
