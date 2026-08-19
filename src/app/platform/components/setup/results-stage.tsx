@@ -12,6 +12,9 @@ import { StageHeading } from './stage-heading';
  */
 export function ResultsStage({ detail }: { detail: ClientDetail }) {
   const run = detail.lastRun;
+  // The same selection `setupStage` makes (services/setup-state.ts) — the
+  // schedule control below must land on the journey the wizard walked, not
+  // drift onto a different one.
   const journey = detail.journeys.find((j) => j.runRefusal === null) ?? detail.journeys[0];
 
   return (

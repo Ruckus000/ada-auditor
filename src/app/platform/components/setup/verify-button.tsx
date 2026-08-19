@@ -27,12 +27,15 @@ const MESSAGES: Record<string, string> = {
   invalid_journey_steps: 'These stored steps are not ones a walk could follow.',
   run_budget_exceeded: 'The run budget for this window is used up. Try again later.',
   unauthorized: 'Your session expired. Reload and sign in again.',
+  journey_not_found: 'That journey is no longer on this client.',
+  action_not_allowed_here: 'One of these steps does something this journey’s environment does not allow.',
 };
 
 /** A network failure never reached the server, so it never got a server error code. */
 const NETWORK_ERROR_CODE = 'network';
 
-type PreviewPage = { url: string; title: string; statusCode: number };
+/** `statusCode` is absent when nothing measured it — never assumed 200. */
+type PreviewPage = { url: string; title: string; statusCode?: number };
 
 type PreviewScreenshot = { mimeType: string; base64: string };
 
@@ -133,7 +136,7 @@ export function VerifyButton({
   const lastPage = outcome && outcome.pages.length > 0 ? outcome.pages[outcome.pages.length - 1] : undefined;
   const successSentence =
     outcome?.kind === 'ok'
-      ? `The path works — walked ${outcome.pages.length} page(s), ended on “${lastPage?.title || 'an untitled page'}”.`
+      ? `The path works — walked ${outcome.pages.length} ${outcome.pages.length === 1 ? 'page' : 'pages'}, ended on “${lastPage?.title || 'an untitled page'}”.`
       : '';
 
   return (
@@ -219,7 +222,10 @@ export function VerifyButton({
 
           {outcome.truncatedPages > 0 ? (
             <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, color: T.inkMuted }}>
-              The walk was cut short: {outcome.truncatedPages} more navigation(s) were not followed.
+              The walk was cut short:{' '}
+              {outcome.truncatedPages === 1
+                ? '1 more navigation was not followed.'
+                : `${outcome.truncatedPages} more navigations were not followed.`}
             </p>
           ) : null}
 

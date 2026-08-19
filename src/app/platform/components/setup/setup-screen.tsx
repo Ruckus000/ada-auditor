@@ -36,23 +36,25 @@ export function SetupScreen({ detail, stage }: { detail: ClientDetail; stage: Se
 
       {stage.stage === 'site' ? <WhereScreen clientId={detail.id} /> : null}
       {stage.stage === 'steps' ? <StepsStage detail={detail} journey={stage.journey} /> : null}
-      {/* Two separate conditional slots, not one ternary picking a prop —
-          load-bearing. `first-run` → `running` is a stage change, and JSX
-          identity (same slot, same component, same key-less position) is
-          what tells React whether to remount. Splitting the slot changes
-          the position `FirstRunStage` renders at between these two stages,
-          so React tears down and remounts it — which remounts
-          `StageHeading` too, re-running its focus-on-mount effect so the
-          transition is actually focused and announced. Collapsing this back
-          into `{(stage.stage === 'first-run' || stage.stage === 'running')
-          ? <FirstRunStage runningRequestId={...} /> : null}` would keep
-          `FirstRunStage` at one stable position across both stages, so React
-          would reuse the same instance instead of remounting it — the
-          heading would silently keep its old focus/announcement state
-          through the transition. */}
-      {stage.stage === 'first-run' ? <FirstRunStage detail={detail} journey={stage.journey} /> : null}
-      {stage.stage === 'running' ? (
-        <FirstRunStage detail={detail} journey={stage.journey} runningRequestId={stage.requestId} />
+      {/* ONE slot for `first-run` and `running`, deliberately — the opposite
+          of every other transition here. JSX position decides remounting, and
+          this transition is the one an operator's own click causes: the run
+          button they just pressed must survive it (see `inert-button.ts` and
+          the commit "Do not take a control away from the operator who just
+          pressed it"). One stable position keeps the same `FirstRunStage`
+          instance, so focus stays on the pressed button and
+          `FirstRunControl`'s live region announces the change; two slots
+          would remount, destroy the pressed button, and dump focus. It also
+          means `StageHeading` changes text here without refocusing — the
+          documented exception in stage-heading.tsx — and that `FirstRunControl`
+          receives `pollUrl` on its mounted instance, which is why its
+          `watching` guard exists. */}
+      {stage.stage === 'first-run' || stage.stage === 'running' ? (
+        <FirstRunStage
+          detail={detail}
+          journey={stage.journey}
+          {...(stage.stage === 'running' ? { runningRequestId: stage.requestId } : {})}
+        />
       ) : null}
       {stage.stage === 'failed' ? (
         <FailedStage detail={detail} journey={stage.journey} failureReason={stage.failureReason} />
