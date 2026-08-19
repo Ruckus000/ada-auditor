@@ -536,12 +536,16 @@ git commit -m "Journeys can be archived over HTTP"
 ```ts
 it('skipScan walks the journey without invoking axe', async () => {
   const result = await runJourney({ ...fixtureInput(), skipScan: true });
-  expect(result.pages.length).toBeGreaterThan(0);
+  expect(result.pages.length).toBe(2); // pin the walk, like the sibling tests
   for (const page of result.pages) {
     expect(page.axe.violations).toEqual([]);
     expect(page.axe.incomplete).toEqual([]);
     expect(page.axe.passCount).toBeUndefined();
-    expect(page.timing.scanMs).toBe(0);
+    // Omitted, never 0: "no scan happened" is not "an instant scan".
+    expect(page.timing.scanMs).toBeUndefined();
+    // The capture half of "walk and capture" still happens.
+    expect(page.artifacts.screenshotPath).toBeTruthy();
+    expect(page.artifacts.domSnapshotPath).toBeTruthy();
   }
 });
 ```
@@ -566,10 +570,18 @@ In `journey-runner.ts`, at the scan call site (line ~504):
       const axe = input.skipScan
         ? { violations: [], incomplete: [] }
         : await scanPageWithAxe(page);
-      const scanMs = input.skipScan ? 0 : Date.now() - scanStartedAt;
+      const scanMs = input.skipScan ? undefined : Date.now() - scanStartedAt;
 ```
 
-(Keep the surrounding code untouched; the empty object satisfies `AxeScanResult` because `passCount` is optional.)
+with `PageAudit.timing.scanMs` made optional in `types.ts` and the page record
+omitting it under skipScan — absent means "not measured", never 0, matching the
+repo's timing doctrine. (The empty object satisfies `AxeScanResult` because
+`passCount` is optional.)
+
+**Seal the audit path in the same task:** `RunBrowserAuditInput` must become
+`Omit<JourneyRunnerInput, 'steps' | 'skipScan'>` and `runBrowserAudit`'s spread
+into `runJourney` must force `skipScan: undefined` — an audit never skips its
+scan; the preview endpoint calls `runJourney` directly.
 
 - [ ] **Step 4: Run to verify** — `npm run test:browser -- journey-runner` — PASS.
 
