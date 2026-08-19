@@ -3,7 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { usePlatform } from '../../lib/state';
+import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
+import { ScreenHeading } from '../ui';
 import { StageIndicator } from './stage-indicator';
 
 /**
@@ -16,6 +18,9 @@ const MESSAGES: Record<string, string> = {
   unauthorized: 'Your session expired. Reload and sign in again.',
 };
 
+/** A network failure never reached the server, so it never got a server error code. */
+const NETWORK_ERROR_CODE = 'network';
+
 export function NewClientScreen({ existingNames }: { existingNames: string[] }) {
   const { actions } = usePlatform();
   const router = useRouter();
@@ -25,18 +30,38 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
   const [name, setName] = useState('');
   const [owner, setOwner] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // The code, not the sentence: the sentence is derived at render, and only
+  // `invalid_request_body` gets to describe the name field (see below) — a
+  // decision that is only possible to make from the code, not from prose that
+  // has already forgotten which field it was about.
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
   const duplicate = existingNames.some(
     (existing) => existing.trim().toLowerCase() === name.trim().toLowerCase(),
   );
 
+  const errorMessage =
+    errorCode === null
+      ? null
+      : errorCode === NETWORK_ERROR_CODE
+        ? 'Could not reach the server. Check your connection and try again.'
+        : (MESSAGES[errorCode] ?? `Could not add the client (${errorStatus}). Try again.`);
+
+  const blocked = saving || name.trim() === '';
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (saving) return;
+    // `inertWhen` keeps the button in the tab order rather than truly
+    // `disabled`, so Enter typed into the name field can still reach the
+    // form's submit event directly. This is the guard `disabled` used to
+    // provide.
+    if (name.trim() === '') return;
 
     setSaving(true);
-    setError(null);
+    setErrorCode(null);
+    setErrorStatus(null);
 
     try {
       const response = await fetch('/api/platform/clients', {
@@ -50,10 +75,8 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
         | null;
 
       if (!response.ok || !body?.client) {
-        setError(
-          (body?.error && MESSAGES[body.error]) ??
-            `Could not add the client (${response.status}). Try again.`,
-        );
+        setErrorCode(body?.error ?? 'unknown');
+        setErrorStatus(response.status);
         setSaving(false);
         return;
       }
@@ -63,7 +86,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
       // the portfolio, not on an empty create form that reads as "edit".
       router.replace(`/clients/${body.client.id}/setup`);
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
+      setErrorCode(NETWORK_ERROR_CODE);
       setSaving(false);
     }
   }
@@ -73,12 +96,12 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
       <div style={{ marginBottom: 14 }}>
         <StageIndicator current={0} />
       </div>
-      <h2 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em' }}>
-        Add a client
-      </h2>
-      <p style={{ margin: '0 0 18px', fontFamily: FONT.sans, fontSize: 13.5, color: T.inkSoft }}>
-        Then say where we audit, and run their first audit — about two minutes end to end.
-      </p>
+      <div style={{ marginBottom: 18 }}>
+        <ScreenHeading
+          title="Add a client"
+          lede="Then say where we audit, and run their first audit — about two minutes end to end."
+        />
+      </div>
 
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -92,19 +115,37 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
             required
             placeholder="Rosewood Dental"
             onChange={(event) => setName(event.target.value)}
-            aria-invalid={error !== null && MESSAGES.invalid_request_body === error ? true : undefined}
-            aria-describedby={`${nameId}-note${error ? ` ${nameId}-error` : ''}`}
+            // No `eslint-disable` needed — `jsx-a11y/no-autofocus` is not
+            // wired into this repo's config, the same reason the deleted
+            // modal's own disable comment was already dead code. The
+            // justification still holds regardless: landing on this route
+            // *is* the operator choosing to add a client, and the name field
+            // is the only thing to do here, so autofocus is not stealing
+            // attention from anything else on the page.
+            autoFocus
+            aria-invalid={errorCode === 'invalid_request_body' ? true : undefined}
+            aria-describedby={[
+              `${nameId}-note`,
+              `${nameId}-dup`,
+              errorCode === 'invalid_request_body' ? `${nameId}-error` : null,
+            ]
+              .filter(Boolean)
+              .join(' ')}
             style={inputStyle}
           />
           <span id={`${nameId}-note`} style={noteStyle}>
             Used for their address, e.g. /clients/rosewood-dental.
           </span>
-          {duplicate ? (
-            <span role="status" style={{ ...noteStyle, color: T.inkSoft }}>
-              You already have a client named {name.trim()} — adding this one creates a second
-              client, not an update.
-            </span>
-          ) : null}
+          {/* Always mounted, text toggled — not mounted only when duplicate.
+              Mounting the region and the text together is the classic way to
+              ship a confirmation nobody hears, the same defect `toast.tsx`
+              documents; a live region has to already be on the page for
+              assistive technology to be watching it when the text arrives. */}
+          <span role="status" id={`${nameId}-dup`} style={{ ...noteStyle, color: T.inkSoft }}>
+            {duplicate
+              ? `You already have a client named ${name.trim()} — adding this one creates a second client, not an update.`
+              : ''}
+          </span>
         </span>
 
         <span style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -125,16 +166,16 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
           </span>
         </span>
 
-        {error ? (
+        {errorMessage ? (
           <p id={`${nameId}-error`} role="alert" style={errorStyle}>
-            {error}
+            {errorMessage}
           </p>
         ) : null}
 
         <span style={{ display: 'flex', gap: 10 }}>
           <button
             type="submit"
-            disabled={saving || name.trim() === ''}
+            {...inertWhen(blocked, () => {})}
             className="ph-primary"
             style={{
               padding: '9px 18px',
@@ -145,8 +186,8 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
               fontFamily: FONT.sans,
               fontSize: 12.5,
               fontWeight: 650,
-              opacity: saving || name.trim() === '' ? 0.55 : 1,
-              cursor: saving || name.trim() === '' ? 'not-allowed' : 'pointer',
+              opacity: blocked ? 0.55 : 1,
+              cursor: blocked ? 'not-allowed' : 'pointer',
             }}
           >
             {saving ? 'Adding…' : 'Add client'}

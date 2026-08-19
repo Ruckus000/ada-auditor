@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FONT, SHADOW, T } from '../lib/tokens';
+import { FONT, T } from '../lib/tokens';
 import { usePlatform, type WorkspaceScreen } from '../lib/state';
 
 
