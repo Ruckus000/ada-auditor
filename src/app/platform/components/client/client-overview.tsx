@@ -72,6 +72,20 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
             </p>
           ) : null}
 
+          {!detail.hasCompletedRun ? (
+            // The state the portfolio's "Setup incomplete" hint names, made
+            // actionable where the row lands. Without this, a client whose
+            // first audit *failed* had `lastRun` set — so the empty state
+            // below never rendered — and the one case that most needs a way
+            // back into the wizard was the one case with no link to it.
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.inkSoft }}>
+              Setup is not finished — no audit has completed yet.{' '}
+              <Link href={`/clients/${detail.id}/setup`} style={{ color: T.accentInk, fontWeight: 650 }}>
+                Finish setup
+              </Link>
+            </p>
+          ) : null}
+
           <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
             Last run {new Date(lastRun.createdAt).toISOString().slice(0, 10)} ·{' '}
             <span style={{ fontFamily: FONT.mono }}>{lastRun.requestId}</span>
