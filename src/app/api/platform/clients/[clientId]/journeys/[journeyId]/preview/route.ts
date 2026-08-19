@@ -39,19 +39,49 @@ import { classifyRunFailure } from '../../../../../../_lib/run-failure';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-/** The last screenshot the walk wrote, inlined; null when nothing captured. */
+/**
+ * The function response has to fit inside the platform's ~4.5MB body limit,
+ * shared with the rest of the JSON this route returns. A full-page screenshot
+ * of a tall client page can reach that on its own before base64 inflates it
+ * by another third — turning a preview that walked successfully into an
+ * opaque platform error instead of an answer. Comfortably under the ceiling,
+ * not at it: the pages array and everything else in the body share the same
+ * budget.
+ */
+const MAX_INLINE_SCREENSHOT_BYTES = 3_000_000;
+
+/**
+ * The last screenshot the walk wrote, inlined — `'omitted'` when it exists
+ * but is too large to inline, null when nothing was captured at all. Three
+ * states, not two: a preview with no evidence and a preview whose evidence
+ * did not fit are different facts, and the caller needs to tell them apart to
+ * answer `screenshotOmitted` correctly.
+ */
 async function lastScreenshot(
   pages: PageAudit[],
-): Promise<{ mimeType: string; base64: string } | null> {
+): Promise<{ mimeType: string; base64: string } | 'omitted' | null> {
   const path = [...pages].reverse().find((p) => p.artifacts.screenshotPath)?.artifacts
     .screenshotPath;
   if (!path) return null;
   try {
-    return { mimeType: 'image/png', base64: (await readFile(path)).toString('base64') };
+    const bytes = await readFile(path);
+    if (bytes.byteLength > MAX_INLINE_SCREENSHOT_BYTES) {
+      return 'omitted';
+    }
+    return { mimeType: 'image/png', base64: bytes.toString('base64') };
   } catch {
     // A missing file degrades the preview, it does not fail it.
     return null;
   }
+}
+
+/** Spreads a `lastScreenshot` result into a response body's fields. */
+function screenshotFields(
+  screenshot: Awaited<ReturnType<typeof lastScreenshot>>,
+): { screenshot: { mimeType: string; base64: string } } | { screenshotOmitted: true } | Record<string, never> {
+  if (screenshot === 'omitted') return { screenshotOmitted: true };
+  if (screenshot) return { screenshot };
+  return {};
 }
 
 /** What a screen needs to say "the walk reached these pages" — nothing else. */
@@ -105,8 +135,33 @@ export async function POST(
     );
   }
 
+  // The target's own host plus anything the journey named — the same union
+  // `runBrowserAudit` builds, for the same reason.
+  const targetUrl = journey.targetUrl as string; // journeyRunRefusal guarantees it
+  let targetHostname: string;
+  try {
+    targetHostname = new URL(targetUrl).hostname;
+  } catch {
+    // `journeyRunRefusal` only checks that a target string is present, not
+    // that it parses — a row written before `targetUrl` was validated at the
+    // write end can hold something that is not a URL at all. That is not a
+    // runnable journey either, and answering 422 here is the difference
+    // between that and a 500 on `new URL()`.
+    return Response.json(
+      { error: 'journey_not_runnable', requestId, journeyId },
+      { status: 422 },
+    );
+  }
+  const allowedHosts = [targetHostname, ...(journey.allowedHosts ?? [])];
+
   const budget = await consumeRunBudget(getRunCounter());
   if (!budget.allowed) {
+    logWarn('run_budget_exceeded', {
+      requestId,
+      journeyId,
+      window: budget.window,
+      resetsInSeconds: budget.resetsInSeconds,
+    });
     return Response.json(
       {
         error: 'run_budget_exceeded',
@@ -117,11 +172,6 @@ export async function POST(
       { status: 429 },
     );
   }
-
-  // The target's own host plus anything the journey named — the same union
-  // `runBrowserAudit` builds, for the same reason.
-  const targetUrl = journey.targetUrl as string; // journeyRunRefusal guarantees it
-  const allowedHosts = [new URL(targetUrl).hostname, ...(journey.allowedHosts ?? [])];
 
   // Always under tmpdir, never the repo's artifacts/: these files exist only
   // long enough to be read back into the response.
@@ -155,10 +205,12 @@ export async function POST(
       ok: true,
       pages: pageMeta(result.pages),
       truncatedPages: result.truncatedPages,
-      ...(screenshot ? { screenshot } : {}),
+      ...screenshotFields(screenshot),
     });
   } catch (error) {
     const partial = error instanceof PartialJourneyError ? error.captured.pages : [];
+    const truncatedPages =
+      error instanceof PartialJourneyError ? error.captured.truncatedPages : undefined;
     const message = error instanceof Error ? error.message : 'preview_failed';
     const code = classifyRunFailure(message, error instanceof Error ? error.name : undefined);
     const screenshot = await lastScreenshot(partial);
@@ -176,14 +228,25 @@ export async function POST(
         requestId,
         ok: false,
         error: code,
-        // Only the step sentence `attemptStep` composes — its first line is
-        // value-free by construction. Any other error stays a bare code, the
-        // same rule the run handler applies.
-        ...(error instanceof PartialJourneyError
+        // A journey can be truncated and then die; truncation must never go
+        // quiet just because the run also failed. Present whenever the error
+        // carries captured evidence to read it from, regardless of value.
+        ...(truncatedPages !== undefined ? { truncatedPages } : {}),
+        // Gated on the code, not only on the error type. `PartialJourneyError`
+        // wraps whatever killed the walk, and most of what reaches here is not
+        // safe to echo: `UnsafeTargetError` embeds the full page URL —
+        // including the query string, where an SSO `?code=` or a reset token
+        // lives — and a filesystem error would leak a tmpdir path. Only
+        // `journey_step_failed` is built exclusively from the runner's own
+        // `Step N ("action") could not …` sentence, which `classifyRunFailure`
+        // recognises by anchoring on that exact prefix — so a message reaching
+        // this branch is, by construction, one the runner composed and never
+        // one that echoes operator- or site-controlled text.
+        ...(code === 'journey_step_failed' && error instanceof PartialJourneyError
           ? { detail: (message.split('\n')[0] ?? '').trim() }
           : {}),
         pages: pageMeta(partial),
-        ...(screenshot ? { screenshot } : {}),
+        ...screenshotFields(screenshot),
       },
       { status: 422 },
     );

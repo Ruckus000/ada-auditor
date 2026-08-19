@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -33,6 +34,7 @@ const {
 } = await import('../../src/integrations/persistence');
 const { resetRunCounter } = await import('../../src/app/api/_lib/run-counter');
 const { PartialJourneyError } = await import('../../src/integrations/browser/partial-run');
+const { UnsafeTargetError } = await import('../../src/integrations/browser/target-url');
 
 const OPERATOR = {
   kind: 'operator' as const,
@@ -221,6 +223,11 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     expect(call.skipScan).toBe(true);
     expect(call.omitAxTree).toBe(true);
     expect(call.allowedHosts).toContain('acme.test');
+
+    // The route's own scratch directory for this request must not survive
+    // the response — these files exist only long enough to be read back.
+    const artifactsDir = join(tmpdir(), 'preview-artifacts', body.requestId);
+    expect(existsSync(artifactsDir)).toBe(false);
   });
 
   it('a failed walk answers the classified code and the step sentence', async () => {
@@ -234,6 +241,61 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     expect(body.ok).toBe(false);
     expect(typeof body.error).toBe('string');
     expect(body.detail).toBe('Step 2 ("login") could not click "#go": locator timed out.');
+  });
+
+  /**
+   * The important regression: `PartialJourneyError` wraps whatever killed the
+   * walk, and most causes are not safe to echo verbatim. `UnsafeTargetError`
+   * from `assertPeerAddressAllowed` embeds the full page URL — query string
+   * included, which is exactly where an SSO authorization code or a
+   * password-reset token lives. `detail` must stay gated on the classified
+   * code, not merely on the error being a `PartialJourneyError`.
+   */
+  it('does not leak a navigation refusal message that carries a live URL', async () => {
+    const cause = new UnsafeTargetError(
+      'Navigation to https://acme.test/cb?code=SECRET connected to 10.0.0.1, a private or reserved address.',
+    );
+    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0 }));
+
+    const response = await POST(request(), params('acme', 'onboarding'));
+    const raw = await response.text();
+    const body = JSON.parse(raw);
+
+    expect(response.status).toBe(422);
+    expect(body.error).toBe('navigation_not_allowed');
+    expect(body.detail).toBeUndefined();
+    expect(raw).not.toContain('SECRET');
+  });
+
+  it('omits a screenshot that would blow the response past the platform ceiling', async () => {
+    const bigScreenshotPath = join(tmpdir(), 'journey-preview-test-oversized.png');
+    await writeFile(bigScreenshotPath, Buffer.alloc(3_500_000, 1));
+
+    try {
+      runJourney.mockResolvedValue({
+        pages: [
+          {
+            page: { url: 'https://acme.test/', route: '/', title: 'Acme' },
+            html: '',
+            axe: { violations: [], incomplete: [] },
+            axTree: [],
+            artifacts: { screenshotPath: bigScreenshotPath },
+            pageKey: 'p001-root',
+            timing: { totalMs: 900 },
+          },
+        ],
+        truncatedPages: 0,
+      });
+
+      const response = await POST(request(), params('acme', 'onboarding'));
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.screenshot).toBeUndefined();
+      expect(body.screenshotOmitted).toBe(true);
+    } finally {
+      await rm(bigScreenshotPath, { force: true });
+    }
   });
 
   it('writes no run row', async () => {
