@@ -23,8 +23,9 @@ import { RunJourneyButton } from './run-journey-button';
  * <id>/journeys/<id>/runs` walks the stored journey, and `JourneyStepsEditor`
  * rewrites what it walks.
  *
- * *Creating* a journey is still API work — a new one needs a name and a target
- * URL, which PATCH does not accept — so the empty state below stays honest.
+ * *Creating* a journey now lives in the setup wizard (`/clients/<id>/setup`),
+ * which is where the empty state below points. The API path survives for CI
+ * and scripts, documented in `docs/journeys-api.md` rather than on a screen.
  */
 export function ClientJourneys({ detail }: { detail: ClientDetail }) {
   return (

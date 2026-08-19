@@ -352,6 +352,19 @@ describe('platform hydration', () => {
       expect(await page.getByLabel('Signed in as Harness Operator').innerText()).toBe('HO');
       expect(seeded).not.toContain('Jules Reyes');
 
+      // Axe here, not only in the route loop at the bottom of this file. That
+      // loop walks each route once, in whatever state the suite has left it —
+      // and by then this client is fully onboarded, so the incomplete-setup
+      // hint has retired and no axe pass has ever rendered it. State-dependent
+      // UI only gets covered from inside the walk that produces the state.
+      const seededAxe = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
+      expect(
+        seededAxe.violations
+          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
+          .join('\n'),
+        'portfolio with the setup-incomplete hint',
+      ).toBe('');
+
       // ---- Stage 2: where. Deep-linked, because the wizard holds no state:
       // coming back to the route lands on whatever stage the record earned. ----
       await page.goto(`${BASE}/clients/${CLIENT}/setup`, { waitUntil: 'domcontentloaded' });
@@ -447,10 +460,13 @@ describe('platform hydration', () => {
       expect(await page.innerText('body')).toContain('Go to the findings');
 
       // And the hint retires itself — derived, never stored, so nothing had to
-      // remember to clear it.
+      // remember to clear it. The row is asserted positively first: a negative
+      // alone would pass on a locked shell or an error page.
       await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
-      expect(await page.innerText('body')).not.toContain('Setup incomplete');
+      const finalPortfolio = await page.innerText('body');
+      expect(finalPortfolio).toContain('Harness Client');
+      expect(finalPortfolio).not.toContain('Setup incomplete');
     } finally {
       await page.close();
     }
