@@ -9,16 +9,12 @@ import type { Scope, WorkspaceScreen } from './params';
  * This started as thirty fields in one `useState` — the prototype's entire
  * application state, including which screen you were on. Route state moved to
  * the URL in slice 1 and the fixture state went with the fixtures, leaving
- * exactly what has no business in an address bar: an open modal and a toast.
+ * exactly what has no business in an address bar: a toast.
  *
- * The rule that decided each one is lifetime, not convenience. Where you are
- * is worth sending to a colleague; a dialog you have open is not, and putting
- * it in the URL would make the back button close a dialog instead of
- * navigating.
+ * The rule that decided it is lifetime, not convenience. Where you are is
+ * worth sending to a colleague; a message that fades in four seconds is not.
  */
 export type { Scope, WorkspaceScreen } from './params';
-
-export type ModalName = 'addClient' | null;
 
 export interface PlatformState {
   /**
@@ -41,7 +37,6 @@ export interface PlatformState {
    * phase whose whole point was removing those.
    */
   operator: { name: string; initials: string };
-  modal: ModalName;
   toast: { id: number; message: string } | null;
 }
 
@@ -49,7 +44,6 @@ export const INITIAL_STATE: PlatformState = {
   scope: 'ws',
   screen: 'portfolio',
   operator: { name: 'Operator', initials: 'O' },
-  modal: null,
   toast: null,
 };
 

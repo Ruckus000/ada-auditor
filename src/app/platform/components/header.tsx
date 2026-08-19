@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { FONT, SHADOW, T } from '../lib/tokens';
 import { usePlatform, type WorkspaceScreen } from '../lib/state';
 
@@ -21,6 +22,7 @@ function tabStyle(on: boolean) {
 
 export function PlatformHeader() {
   const { state, actions } = usePlatform();
+  const router = useRouter();
   return (
     <header
       style={{
@@ -133,7 +135,7 @@ export function PlatformHeader() {
 
         <button
           type="button"
-          onClick={() => actions.patch({ modal: 'addClient' })}
+          onClick={() => router.push('/clients/new')}
           className="ph-primary"
           style={{
             padding: '8px clamp(11px,1.1vw,16px)',
@@ -152,9 +154,10 @@ export function PlatformHeader() {
           Add a client
         </button>
 
-        {/* The configured operator, not a person we made up. There is no
-            per-user identity in this product — one shared token, one trusted
-            group — so this is a name from the environment, and it renders
+        {/* The signed-in operator, not a person we made up. The name is
+            resolved by the platform layout, on the server, from the current
+            principal — with `AUDITOR_OPERATOR_NAME` as the configured
+            fallback for machine principals, which is why it can still render
             "Operator" when nobody set one.
 
             The initials had a `title` attribute, which most assistive

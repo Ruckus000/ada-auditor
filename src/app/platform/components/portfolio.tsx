@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import type { PortfolioRow } from '../../../services/portfolio';
 import { VERDICT_CHIP, verdictWords } from '../lib/verdict-chip';
-import { usePlatform } from '../lib/state';
 import { T } from '../lib/tokens';
 import { FONT } from '../lib/tokens';
 import { Avatar, ChevronRight, Pill, ScreenHeading, TableHead, TableShell } from './ui';
@@ -26,7 +25,6 @@ function runDate(iso: string): string {
 }
 
 export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
-  const { actions } = usePlatform();
   const router = useRouter();
   const hasClients = clients.length > 0;
 
@@ -185,7 +183,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
           </span>
           <button
             type="button"
-            onClick={() => actions.patch({ modal: 'addClient' })}
+            onClick={() => router.push('/clients/new')}
             className="ph-primary"
             style={{
               marginTop: 4,

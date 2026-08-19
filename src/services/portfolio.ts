@@ -118,12 +118,17 @@ export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[
   );
 }
 
+/** Ids that are routes, not clients: a client minted onto one would be shadowed. */
+const RESERVED_CLIENT_IDS = ['new'];
+
 /**
  * A URL-safe id derived from the client's name.
  *
  * The id *is* the slug, so `/clients/acme-outfitters` needs no lookup table
  * and stays readable. Collisions get a numeric suffix rather than silently
- * merging two clients into one row.
+ * merging two clients into one row. `RESERVED_CLIENT_IDS` gets the same
+ * treatment as a collision — a client named "New" is common enough that it
+ * cannot simply fail, and `/clients/new` is a static route, not a record.
  */
 export function clientIdFromName(name: string, taken: readonly string[] = []): string {
   const base =
@@ -133,13 +138,13 @@ export function clientIdFromName(name: string, taken: readonly string[] = []): s
       .replace(/^-+|-+$/g, '')
       .slice(0, 48) || 'client';
 
-  if (!taken.includes(base)) {
+  if (!taken.includes(base) && !RESERVED_CLIENT_IDS.includes(base)) {
     return base;
   }
 
   for (let suffix = 2; ; suffix += 1) {
     const candidate = `${base}-${suffix}`;
-    if (!taken.includes(candidate)) {
+    if (!taken.includes(candidate) && !RESERVED_CLIENT_IDS.includes(candidate)) {
       return candidate;
     }
   }

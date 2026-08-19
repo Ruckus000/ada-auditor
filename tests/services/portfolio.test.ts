@@ -289,4 +289,8 @@ describe('clientIdFromName', () => {
     expect(clientIdFromName('***')).toBe('client');
     expect(clientIdFromName('***', ['client'])).toBe('client-2');
   });
+
+  it('never mints a reserved route as an id', () => {
+    expect(clientIdFromName('New')).toBe('new-2');
+  });
 });
