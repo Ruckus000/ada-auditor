@@ -111,7 +111,7 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
   );
 }
 
-function Stat({ label, value, tone = false }: { label: string; value: string; tone?: boolean }) {
+export function Stat({ label, value, tone = false }: { label: string; value: string; tone?: boolean }) {
   return (
     <div
       style={{

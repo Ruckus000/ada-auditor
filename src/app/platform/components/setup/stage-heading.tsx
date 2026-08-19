@@ -4,7 +4,11 @@ import { useEffect, useRef } from 'react';
 
 /**
  * The stage's h2, focused on mount. Stage changes re-render the server page,
- * so "on mount" is exactly "on stage change" — no state to coordinate.
+ * so "on mount" is "on stage change" for every change that swaps the
+ * component — which is all of them except one: `first-run` → `running` is
+ * served by a single component, so this heading changes text without
+ * refocusing there, deliberately. `FirstRunControl`'s own live region
+ * announces that transition, and stealing focus mid-run would talk over it.
  */
 export function StageHeading({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLHeadingElement>(null);

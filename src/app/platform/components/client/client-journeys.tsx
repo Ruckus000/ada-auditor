@@ -245,7 +245,7 @@ function describeTarget(step: JourneyStepView): string {
  * An unrecognised step is called one rather than dressed up, because it cannot
  * run and the operator needs to know that before a schedule fires.
  */
-function StepList({ steps }: { steps: JourneyStepView[] }) {
+export function StepList({ steps }: { steps: JourneyStepView[] }) {
   if (steps.length === 0) return null;
 
   return (
