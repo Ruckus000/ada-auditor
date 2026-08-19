@@ -97,12 +97,12 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
           title={detail.journeys.length === 0 ? 'No journeys yet' : 'No runs yet'}
           body={
             detail.journeys.length === 0
-              ? 'A journey is the path through their site we re-walk on every run — a checkout, a booking, a sign-in. Record one and this page fills in.'
+              ? 'A journey is the path through their site we re-walk on every run — a checkout, a booking, a sign-in. Finish setup to say where we audit and run the first audit.'
               : 'The journeys are recorded. Nothing has been audited against them yet.'
           }
           action={
             detail.journeys.length === 0
-              ? null
+              ? { href: `/clients/${detail.id}/setup`, label: 'Finish setup' }
               : { href: `/clients/${detail.id}/journeys`, label: 'See the journeys' }
           }
         />

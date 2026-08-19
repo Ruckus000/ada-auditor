@@ -36,8 +36,8 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
       {detail.journeys.length === 0 ? (
         <Empty
           title="No journeys yet"
-          body="A journey is the path we re-walk on every run. POST one — its target URL and its steps, both — to /api/platform/clients/<id>/journeys with a bearer token and it appears here with a button to run it. There is no way to record one from these screens yet."
-          action={null}
+          body="A journey is the path we re-walk on every run — a checkout, a booking, a sign-in. Finish this client's setup to record the first one and run it."
+          action={{ href: `/clients/${detail.id}/setup`, label: 'Finish setup' }}
         />
       ) : (
         <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: 0, padding: 0 }}>

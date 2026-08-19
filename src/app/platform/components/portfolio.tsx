@@ -73,7 +73,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                   // button's name would be every cell run together.
                   aria-label={`${client.name} — ${
                     client.lastRun ? verdictWords(client.lastRun.verdict) : 'never audited'
-                  }, ${mustFix} must fix`}
+                  }, ${mustFix} must fix${client.setupIncomplete ? ', setup incomplete' : ''}`}
                   className="ph-row"
                   style={{
                     display: 'grid',
@@ -96,6 +96,15 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                     <span style={{ fontFamily: FONT.mono, fontSize: 11, color: T.inkMuted }}>
                       {client.journeyCount === 1 ? '1 journey' : `${client.journeyCount} journeys`}
                     </span>
+                    {client.setupIncomplete ? (
+                      /* Text, not a link — the row is already a <button>, and a
+                         nested interactive control is an axe violation. The row
+                         lands on the overview, which carries the Finish-setup
+                         link. */
+                      <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.accent, fontWeight: 650 }}>
+                        Setup incomplete
+                      </span>
+                    ) : null}
                   </span>
 
                   <span>
