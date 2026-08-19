@@ -501,8 +501,10 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       await mkdir(dirname(artifactPrefix), { recursive: true });
 
       const scanStartedAt = Date.now();
-      const axe = await scanPageWithAxe(page);
-      const scanMs = Date.now() - scanStartedAt;
+      const axe = input.skipScan
+        ? { violations: [], incomplete: [] }
+        : await scanPageWithAxe(page);
+      const scanMs = input.skipScan ? 0 : Date.now() - scanStartedAt;
 
       const html = await page.content();
       const title = boundTitle(await page.title());

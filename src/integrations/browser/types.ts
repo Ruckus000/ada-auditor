@@ -96,6 +96,12 @@ export type JourneyRunnerInput = {
    * audit as a complete one.
    */
   maxPages?: number;
+  /**
+   * Walk and capture without evaluating rules. The preview endpoint's whole
+   * point: an authoring check should cost navigation, not an audit. `passCount`
+   * stays absent — "not measured" and "zero passes" are different facts.
+   */
+  skipScan?: boolean;
 };
 
 export type JourneyPageMeta = {

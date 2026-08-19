@@ -211,6 +211,39 @@ describe('runJourney', () => {
     }
   }, 60_000);
 
+  it('skipScan walks the journey without invoking axe', async () => {
+    // The preview endpoint's whole point: an authoring check should cost
+    // navigation, not an audit. `violations.html` carries real, known
+    // violations (see the passthrough test above), so an empty result here is
+    // a real discrimination against skipScan working, not a vacuous pass.
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'skip-scan',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        skipScan: true,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'violations.html' },
+        ],
+      });
+
+      expect(result.pages.length).toBeGreaterThan(0);
+      for (const page of result.pages) {
+        expect(page.axe.violations).toEqual([]);
+        expect(page.axe.incomplete).toEqual([]);
+        expect(page.axe.passCount).toBeUndefined();
+        expect(page.timing.scanMs).toBe(0);
+      }
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('never executes denied production actions', async () => {
     const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
 
