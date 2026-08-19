@@ -41,14 +41,12 @@ export const maxDuration = 300;
 
 /**
  * The function response has to fit inside the platform's ~4.5MB body limit,
- * shared with the rest of the JSON this route returns. A full-page screenshot
- * of a tall client page can reach that on its own before base64 inflates it
- * by another third — turning a preview that walked successfully into an
- * opaque platform error instead of an answer. Comfortably under the ceiling,
- * not at it: the pages array and everything else in the body share the same
- * budget.
+ * shared with the rest of the JSON this route returns. Base64 inflates raw
+ * bytes by a third (~3.4MB encoded at this cap), leaving ~1MB of headroom for
+ * the pages array, the detail fields and the rest of the envelope under that
+ * ~4.5MB ceiling — comfortably under it, not at it.
  */
-const MAX_INLINE_SCREENSHOT_BYTES = 3_000_000;
+const MAX_INLINE_SCREENSHOT_BYTES = 2_500_000;
 
 /**
  * The last screenshot the walk wrote, inlined — `'omitted'` when it exists

@@ -140,7 +140,14 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
               Mounting the region and the text together is the classic way to
               ship a confirmation nobody hears, the same defect `toast.tsx`
               documents; a live region has to already be on the page for
-              assistive technology to be watching it when the text arrives. */}
+              assistive technology to be watching it when the text arrives.
+              That same always-mounted node is also listed in the name
+              field's `aria-describedby` above, so it does double duty on
+              purpose: it announces the hint as a live region when the text
+              changes, and it is read as part of the field's description on
+              focus even while empty. Deliberate — don't split it into a
+              separate description-only node under the mistaken impression
+              the live region is accidentally leaking into the description. */}
           <span role="status" id={`${nameId}-dup`} style={{ ...noteStyle, color: T.inkSoft }}>
             {duplicate
               ? `You already have a client named ${name.trim()} — adding this one creates a second client, not an update.`

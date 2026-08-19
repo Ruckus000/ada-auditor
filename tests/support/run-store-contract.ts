@@ -358,6 +358,33 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
   });
 
   /**
+   * A run that died mid-flight: stored `running`, stale past the threshold.
+   * The filter matches the STORED status; the record handed back reads as
+   * every other read path reports it — reconciled to failed.
+   */
+  it('filters on the stored status, then reconciles what it returns', async () => {
+    const store = await makeStore();
+    const longAgo = new Date(Date.now() - 3 * RUN_STALE_AFTER_MS).toISOString();
+
+    await store.saveRun(
+      runRecord({
+        requestId: 'contract-stale-filter-1',
+        journeyId: 'contract-stale-filter-j',
+        status: 'running',
+        createdAt: longAgo,
+        startedAt: longAgo,
+      }),
+    );
+
+    const runs = await store.list({ journeyId: 'contract-stale-filter-j', status: 'running' });
+    expect(runs.map((run) => run.requestId)).toContain('contract-stale-filter-1');
+    expect(runs.find((run) => run.requestId === 'contract-stale-filter-1')?.status).toBe('failed');
+    expect(runs.find((run) => run.requestId === 'contract-stale-filter-1')?.failureReason).toBe(
+      'run_timed_out',
+    );
+  });
+
+  /**
    * That a store honours a limit at all. The *clamp* is tested elsewhere, and
    * moving it there is what makes this test both meaningful and quick.
    *
