@@ -34,6 +34,8 @@ export type PortfolioRow = {
     shouldFix: number;
     pagesAudited: number;
   } | null;
+  /** True until the first completed run — the portfolio's "Finish setup" hint reads this. */
+  setupIncomplete: boolean;
 };
 
 function summarise(run: StoredRunRecord): NonNullable<PortfolioRow['lastRun']> {
@@ -90,12 +92,24 @@ export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[
         .filter((run): run is StoredRunRecord => run !== null)
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
 
+      const completedFlags = await Promise.all(
+        journeys.map(async (journey) => {
+          const [completed] = await deps.runs.list({
+            journeyId: journey.id,
+            status: 'complete',
+            limit: 1,
+          });
+          return completed !== undefined;
+        }),
+      );
+
       return {
         id: client.id,
         name: client.name,
         ...(client.owner === undefined ? {} : { owner: client.owner }),
         journeyCount: journeys.length,
         lastRun: latest ? summarise(latest) : null,
+        setupIncomplete: !completedFlags.some(Boolean),
       } as PortfolioRow;
     }),
   );
