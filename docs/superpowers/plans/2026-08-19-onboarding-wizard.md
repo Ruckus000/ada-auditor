@@ -1995,6 +1995,31 @@ git commit -m "Copy sweep: setup links everywhere, machine token out of the UI"
 
 ### Task 13: Hydration suite — the wizard is the front door now
 
+> **Amendments from execution-time review (authoritative over the steps below):**
+> - The suite is KNOWINGLY red from Task 8 until this task closes it (the old
+>   modal test's central `.not.toContain('No clients yet')` assertion went
+>   vacuous the moment the button navigated to `/clients/new`). The rewrite
+>   must buy back the property the old test bought: **a write reached the
+>   store and came back** — so the walk ends by returning to `/` and
+>   asserting the portfolio ROW (name + hint), never only wizard screens.
+> - The `'Never audited'` / setup-hint assertions go MID-WALK, not in a
+>   follow-on (the walk ends with a completed run, which falsifies both):
+>   after stage 1, assert row + "Never audited" + the Finish-setup hint;
+>   after the failed run, assert fail-verdict + hint TOGETHER (the case
+>   `lastRun` alone cannot express); after the completed run, assert the
+>   hint is gone. The avatar assertion is stage-independent — follow-on is fine.
+> - No standalone axe test: add BOTH `/clients/new` and
+>   `/clients/harness-client/setup` to `ROUTES` — the accessibility describe
+>   runs after the walk creates the client, same as the existing
+>   `/clients/harness-client` entries. The `document.activeElement` focus
+>   check stays in-walk, and must only be asserted on transitions that SWAP
+>   components — first-run → running deliberately keeps the instance (one
+>   dispatcher slot since 9a4ded3) and does not refocus.
+> - Add the single-watcher regression assertion: while the run is in flight,
+>   count requests to `/api/audit/runs/` (Playwright request listener or
+>   `page.route`) and assert one request per POLL_INTERVAL_MS, not two — the
+>   `watching` ref's only observable layer is this suite.
+
 **Files:**
 - Modify: `tests/integrations/browser/platform-hydration.test.ts`
 
