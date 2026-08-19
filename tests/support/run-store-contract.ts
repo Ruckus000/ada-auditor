@@ -333,6 +333,22 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     expect(runs.map((run) => run.requestId)).toEqual(['contract-a']);
   });
 
+  it('filters by status, so "a completed run exists" is one query', async () => {
+    const store = await makeStore();
+    await store.saveRun(
+      runRecord({ requestId: 'rsc-complete-1', journeyId: 'rsc-journey', status: 'complete' }),
+    );
+    await store.saveRun(
+      runRecord({ requestId: 'rsc-failed-1', journeyId: 'rsc-journey', status: 'failed' }),
+    );
+
+    const completed = await store.list({ journeyId: 'rsc-journey', status: 'complete' });
+
+    expect(completed.map((run) => run.requestId)).toContain('rsc-complete-1');
+    expect(completed.map((run) => run.requestId)).not.toContain('rsc-failed-1');
+    expect(completed.every((run) => run.status === 'complete')).toBe(true);
+  });
+
   /**
    * That a store honours a limit at all. The *clamp* is tested elsewhere, and
    * moving it there is what makes this test both meaningful and quick.

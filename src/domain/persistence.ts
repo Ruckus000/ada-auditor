@@ -219,6 +219,8 @@ export type StoredRunRecord = {
 export type ListRunsOptions = {
   journeyId?: string;
   environment?: Environment;
+  /** Only runs in this state. `complete` is what "onboarded" is derived from. */
+  status?: RunStatus;
   /** Clamped by the store. A caller cannot ask for the whole table. */
   limit?: number;
 };
