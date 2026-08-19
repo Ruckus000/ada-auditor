@@ -219,7 +219,13 @@ export type StoredRunRecord = {
 export type ListRunsOptions = {
   journeyId?: string;
   environment?: Environment;
-  /** Only runs in this state. `complete` is what "onboarded" is derived from. */
+  /**
+   * Only runs in this state. `complete` is what "onboarded" is derived from.
+   *
+   * Matches the stored status, before stale-`running` reconciliation — exact
+   * for `complete`; `running`/`failed` filters can disagree with the
+   * reconciled status callers see.
+   */
   status?: RunStatus;
   /** Clamped by the store. A caller cannot ask for the whole table. */
   limit?: number;

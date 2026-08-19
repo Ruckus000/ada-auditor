@@ -336,16 +336,24 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
   it('filters by status, so "a completed run exists" is one query', async () => {
     const store = await makeStore();
     await store.saveRun(
-      runRecord({ requestId: 'rsc-complete-1', journeyId: 'rsc-journey', status: 'complete' }),
+      runRecord({
+        requestId: 'contract-rsc-complete-1',
+        journeyId: 'contract-rsc-journey',
+        status: 'complete',
+      }),
     );
     await store.saveRun(
-      runRecord({ requestId: 'rsc-failed-1', journeyId: 'rsc-journey', status: 'failed' }),
+      runRecord({
+        requestId: 'contract-rsc-failed-1',
+        journeyId: 'contract-rsc-journey',
+        status: 'failed',
+      }),
     );
 
-    const completed = await store.list({ journeyId: 'rsc-journey', status: 'complete' });
+    const completed = await store.list({ journeyId: 'contract-rsc-journey', status: 'complete' });
 
-    expect(completed.map((run) => run.requestId)).toContain('rsc-complete-1');
-    expect(completed.map((run) => run.requestId)).not.toContain('rsc-failed-1');
+    expect(completed.map((run) => run.requestId)).toContain('contract-rsc-complete-1');
+    expect(completed.map((run) => run.requestId)).not.toContain('contract-rsc-failed-1');
     expect(completed.every((run) => run.status === 'complete')).toBe(true);
   });
 
