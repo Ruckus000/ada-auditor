@@ -80,7 +80,12 @@ far"** (see Preview endpoint). Copy distinguishes the two actions explicitly: *v
 saved, scored, on the record." Credentials are `credentialRef` only, exactly as the
 editor already enforces; no secret is ever typed into the wizard.
 
-**Stage 4 — First audit.** "Run the first audit" reuses the run-start + poll pattern
+**Stage 4 — First audit.** The path stays editable until it is on the record: the
+first-run stage renders the step editor, the credential-presence panel, and
+"Verify so far" below the run control (amended 2026-08-19 — the stage machine
+flips `steps → first-run` the moment valid steps save, so without this the
+"save, then verify" flow was unreachable and multi-page authoring got exactly
+one save inside the wizard). "Run the first audit" reuses the run-start + poll pattern
 from `RunJourneyButton` (202, poll URL, ceiling, `role="status"` live region, elapsed
 time with "usually under a minute" expectation-setting). A run in flight renders here
 on reload. A **failed** first run renders the classified reason through
@@ -146,8 +151,9 @@ states honestly ("Never audited", refusal reasons). No new columns, matching how
 - **Correct stale comments in passing** where the wizard touches them: the header's
   "no per-user identity" comment; the modal's "server's message" claim dies with the
   modal.
-- "Journey" is taught once, at first mention, via the existing `InfoTip`/glossary
-  mechanism — one sentence, not a paragraph.
+- "Journey" is taught once, at first mention, in one sentence of inline prose
+  (amended 2026-08-19: the `InfoTip`/glossary mechanism this originally named
+  did not survive into the platform screens; the sentence did).
 
 ## Error handling standard
 
@@ -165,8 +171,12 @@ transport or session failures.
 ## Accessibility requirements
 
 This wizard ships inside an accessibility auditor; it goes through the same axe-zero
-hydration gate as every screen, in **every stage state** (including in-flight and
-failed-run). Stage indicator is a `nav` with `aria-current`; focus moves to the stage
+hydration gate as every screen. Coverage (amended 2026-08-19 to match what the
+suite actually asserts): the route sweep axes `/clients/new` and `/setup` in their
+terminal states, the walk axes the portfolio while the "Setup incomplete" hint
+renders, and the walk axes the **failed** stage in place — the richest composite
+the wizard produces (banner, editor, credentials, verify, run, archive). Transient
+states not listed are exercised functionally by the walk but not axe-swept. Stage indicator is a `nav` with `aria-current`; focus moves to the stage
 heading on advance; verify/run progress uses `role="status"` live regions; the
 existing inert-button pattern applies to busy controls.
 
