@@ -88,20 +88,20 @@ In `tests/support/run-store-contract.ts`, inside the existing `describe` over `l
 
 ```ts
 it('filters by status, so "a completed run exists" is one query', async () => {
-  await store.saveRun(record({ requestId: 'rsc-complete-1', journeyId: 'rsc-journey', status: 'complete' }));
-  await store.saveRun(record({ requestId: 'rsc-failed-1', journeyId: 'rsc-journey', status: 'failed' }));
+  await store.saveRun(record({ requestId: 'contract-rsc-complete-1', journeyId: 'contract-rsc-journey', status: 'complete' }));
+  await store.saveRun(record({ requestId: 'contract-rsc-failed-1', journeyId: 'contract-rsc-journey', status: 'failed' }));
 
-  const completed = await store.list({ journeyId: 'rsc-journey', status: 'complete' });
+  const completed = await store.list({ journeyId: 'contract-rsc-journey', status: 'complete' });
 
-  expect(completed.map((run) => run.requestId)).toContain('rsc-complete-1');
-  expect(completed.map((run) => run.requestId)).not.toContain('rsc-failed-1');
+  expect(completed.map((run) => run.requestId)).toContain('contract-rsc-complete-1');
+  expect(completed.map((run) => run.requestId)).not.toContain('contract-rsc-failed-1');
   expect(completed.every((run) => run.status === 'complete')).toBe(true);
 });
 ```
 
 - [ ] **Step 2: Run to verify it fails**
 
-Run: `npm test -- run-store` — expected: FAIL (the filter is ignored, `rsc-failed-1` present).
+Run: `npm test -- run-store` — expected: FAIL (the filter is ignored, `contract-rsc-failed-1` present).
 Also run: `npm run test:db -- run-store` if a local `DATABASE_URL` is configured; otherwise note that CI covers the Postgres side.
 
 - [ ] **Step 3: Implement**
