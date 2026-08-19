@@ -242,7 +242,25 @@ describe('buildPortfolio, on setupIncomplete', () => {
       name: 'Checkout',
       steps: [],
     });
-    await runs.saveRun(run({ requestId: 'pf-done-r', journeyId: 'pf-done-j', status: 'complete' }));
+    await runs.saveRun(
+      run({
+        requestId: 'pf-done-r',
+        journeyId: 'pf-done-j',
+        status: 'complete',
+        createdAt: '2026-08-01T00:00:00.000Z',
+      }),
+    );
+    // A newer failed retry on the same journey. If setupIncomplete were read
+    // off the newest run's status rather than the separate completed-exists
+    // probe, this would flip the flag back to true.
+    await runs.saveRun(
+      run({
+        requestId: 'pf-done-r2',
+        journeyId: 'pf-done-j',
+        status: 'failed',
+        createdAt: '2026-08-02T00:00:00.000Z',
+      }),
+    );
 
     const rows = await buildPortfolio(deps());
     const done = rows.find((row) => row.id === 'pf-done-client');

@@ -50,7 +50,13 @@ describe('buildClientDetail', () => {
 
     const detail = await buildClientDetail('acme', deps());
 
-    expect(detail).toMatchObject({ id: 'acme', name: 'Acme', owner: 'Alex Reed', lastRun: null });
+    expect(detail).toMatchObject({
+      id: 'acme',
+      name: 'Acme',
+      owner: 'Alex Reed',
+      lastRun: null,
+      hasCompletedRun: false,
+    });
     expect(detail?.journeys).toEqual([]);
   });
 

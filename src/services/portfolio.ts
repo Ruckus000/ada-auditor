@@ -69,7 +69,10 @@ export type PortfolioDeps = {
  * link the schema has: `runs.journey_id` → `journeys.client_id`. The query
  * count is therefore proportional to journeys, not to runs — fine while an
  * agency has tens of clients, and the point at which it stops being fine is a
- * single `join`, not a redesign.
+ * single `join`, not a redesign. (Two queries per journey now, not one: the
+ * newest-run fetch above and the completed-exists probe behind
+ * `setupIncomplete` — still proportional to journeys, just with a bigger
+ * constant.)
  */
 export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[]> {
   const clients = await deps.clients.listClients();
