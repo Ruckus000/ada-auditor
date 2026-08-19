@@ -257,6 +257,10 @@ export async function DELETE(
 
   await platform.archiveJourney(journeyId);
 
+  // Accepted wrinkle: if `recordEvent` throws here, the caller sees a 500 but
+  // the archive already landed, so a retry answers 404 with nothing recorded.
+  // Left as-is because the setup screens re-derive stage from the record
+  // itself rather than trusting a client-side "it worked" — they self-heal.
   await platform.recordEvent({
     clientId,
     ...actorFields(principal),

@@ -294,19 +294,37 @@ export class PostgresPlatformStore implements PlatformStore {
     } as StoredJourney;
   }
 
-  async listJourneys(clientId?: string): Promise<StoredJourney[]> {
+  async listJourneys(
+    clientId?: string,
+    options?: { includeArchived?: boolean },
+  ): Promise<StoredJourney[]> {
     // Archived journeys are excluded here rather than filtered by callers: a
     // screen that forgets the filter would show journeys an operator retired,
     // and the archive would read as a no-op.
+    //
+    // `includeArchived` exists for one caller — minting a new journey's id —
+    // which needs archived ids in the "taken" set too. This driver's tagged
+    // template has no fragment composition, so the predicate is a branch
+    // rather than a value.
+    const includeArchived = options?.includeArchived ?? false;
+
     const rows = clientId
-      ? await this.sql<JourneyRow>`
-          select * from journeys
-          where client_id = ${clientId} and archived_at is null
-          order by name asc
-        `
-      : await this.sql<JourneyRow>`
-          select * from journeys where archived_at is null order by name asc
-        `;
+      ? includeArchived
+        ? await this.sql<JourneyRow>`
+            select * from journeys where client_id = ${clientId} order by name asc
+          `
+        : await this.sql<JourneyRow>`
+            select * from journeys
+            where client_id = ${clientId} and archived_at is null
+            order by name asc
+          `
+      : includeArchived
+        ? await this.sql<JourneyRow>`
+            select * from journeys order by name asc
+          `
+        : await this.sql<JourneyRow>`
+            select * from journeys where archived_at is null order by name asc
+          `;
 
     return rows.map((row) => this.mapJourney(row));
   }

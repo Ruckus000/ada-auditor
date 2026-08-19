@@ -149,6 +149,35 @@ describe('/api/platform/clients/[clientId]/journeys', () => {
     expect(await platform.listJourneys('acme')).toHaveLength(2);
   });
 
+  /**
+   * An archived id is retired, not vacant.
+   *
+   * `upsertJourney`'s on-conflict update preserves `archived_at`, so minting
+   * a new journey against the same id that an archived row already holds
+   * would not create a second journey — it would resurrect the archived one,
+   * born archived: a 201 the operator believes, for a row that is invisible
+   * in the catalog and unrunnable from the moment it is "created". This is
+   * the wizard's "start over with a different URL" path: archive, then
+   * create fresh under the same name.
+   */
+  it('mints a fresh id rather than resurrecting an archived journey of the same name', async () => {
+    const first = await POST(fromBrowser({ name: 'Homepage' }), params('acme'));
+    const firstId = (await first.json()).journey.id;
+    expect(firstId).toBe('acme-homepage');
+
+    await platform.archiveJourney(firstId);
+
+    const second = await POST(fromBrowser({ name: 'Homepage' }), params('acme'));
+    expect(second.status).toBe(201);
+    const secondId = (await second.json()).journey.id;
+
+    expect(secondId).not.toBe(firstId);
+    // Not just a different id: the new row has to actually be live — present,
+    // unarchived, in the client's own list — or the fix is cosmetic.
+    const ids = (await platform.listJourneys('acme')).map((j) => j.id);
+    expect(ids).toContain(secondId);
+  });
+
   it('refuses a step carrying a credential rather than a reference to one', async () => {
     // A journey is stored whole. A literal here would be a password written
     // into a database column, which is the rule the credential refs exist for.

@@ -48,6 +48,24 @@ function authed(method: string): Request {
   });
 }
 
+/**
+ * A session cookie travels on cross-site posts too, so a principal alone
+ * cannot be the gate — same reasoning as the create/schedule routes' own
+ * cross-origin cases. Without the same-origin check, any page could archive
+ * an operator's journeys just by getting them to load it.
+ */
+function crossSite(method: string): Request {
+  principalFromRequest.mockResolvedValue(OPERATOR);
+  return new Request('http://localhost/api/platform/clients/acme/journeys/acme-home', {
+    method,
+    headers: {
+      'content-type': 'application/json',
+      origin: 'https://evil.example',
+      'sec-fetch-site': 'cross-site',
+    },
+  });
+}
+
 function params(clientId: string, journeyId: string) {
   return { params: Promise.resolve({ clientId, journeyId }) };
 }
@@ -77,9 +95,20 @@ describe('DELETE /api/platform/clients/[clientId]/journeys/[journeyId]', () => {
     expect(response.status).toBe(401);
   });
 
+  it('refuses a cookie carried cross-origin', async () => {
+    const response = await DELETE(crossSite('DELETE'), params('acme', 'acme-home'));
+
+    expect(response.status).toBe(401);
+    // The refusal has to have stopped the write, not just answered 401.
+    expect((await getPlatformStore().getJourney('acme-home'))?.archivedAt).toBeUndefined();
+  });
+
   it("refuses another client's journey", async () => {
     const response = await DELETE(authed('DELETE'), params('other-client', 'acme-home'));
+
     expect(response.status).toBe(404);
+    // Same reason as above: naming the wrong client must not archive anyway.
+    expect((await getPlatformStore().getJourney('acme-home'))?.archivedAt).toBeUndefined();
   });
 
   it('archives, records who did it, and the journey leaves the list', async () => {

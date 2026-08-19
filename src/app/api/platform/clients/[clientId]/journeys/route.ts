@@ -192,7 +192,16 @@ export async function POST(
 
   // Scoped to the client, because the id is global: two clients may both have
   // a journey called "Checkout" and they are not the same journey.
-  const taken = (await platform.listJourneys()).map((journey) => journey.id);
+  //
+  // `includeArchived: true` because an archived journey's id is retired, not
+  // vacant. `upsertJourney`'s on-conflict update preserves `archived_at`, so
+  // minting a fresh journey against a list that omits archived ids would let
+  // it collide with one — and resurrect the old row as a journey that is born
+  // archived: invisible in the catalog and unrunnable from the moment it is
+  // "created".
+  const taken = (await platform.listJourneys(undefined, { includeArchived: true })).map(
+    (journey) => journey.id,
+  );
   const id = clientIdFromName(`${clientId} ${parsed.name}`, taken);
 
   await platform.upsertJourney({
