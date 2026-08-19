@@ -67,7 +67,6 @@ export const FONT = {
 export const SHADOW = {
   menu: '0 14px 32px -12px rgba(19,26,31,0.3)',
   popover: '0 1px 2px rgba(19,26,31,0.06), 0 16px 36px -12px rgba(19,26,31,0.28)',
-  modal: '0 30px 70px -20px rgba(19,26,31,0.5)',
   toast: '0 18px 42px -14px rgba(19,26,31,0.6)',
   card: '0 1px 1px rgba(31,41,38,0.03)',
   paper: '0 1px 1px rgba(31,41,38,0.04), 0 20px 50px -24px rgba(31,41,38,0.4)',

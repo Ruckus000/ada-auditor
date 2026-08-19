@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import type { PortfolioRow } from '../../../services/portfolio';
 import { VERDICT_CHIP, verdictWords } from '../lib/verdict-chip';
-import { usePlatform } from '../lib/state';
 import { T } from '../lib/tokens';
 import { FONT } from '../lib/tokens';
 import { Avatar, ChevronRight, Pill, ScreenHeading, TableHead, TableShell } from './ui';
@@ -26,7 +25,6 @@ function runDate(iso: string): string {
 }
 
 export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
-  const { actions } = usePlatform();
   const router = useRouter();
   const hasClients = clients.length > 0;
 
@@ -75,7 +73,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                   // button's name would be every cell run together.
                   aria-label={`${client.name} — ${
                     client.lastRun ? verdictWords(client.lastRun.verdict) : 'never audited'
-                  }, ${mustFix} must fix`}
+                  }, ${mustFix} must fix${client.setupIncomplete ? ', setup incomplete' : ''}`}
                   className="ph-row"
                   style={{
                     display: 'grid',
@@ -98,6 +96,15 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                     <span style={{ fontFamily: FONT.mono, fontSize: 11, color: T.inkMuted }}>
                       {client.journeyCount === 1 ? '1 journey' : `${client.journeyCount} journeys`}
                     </span>
+                    {client.setupIncomplete ? (
+                      /* Text, not a link — the row is already a <button>, and a
+                         nested interactive control is an axe violation. The row
+                         lands on the overview, which carries the Finish-setup
+                         link. */
+                      <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.accent, fontWeight: 650 }}>
+                        Setup incomplete
+                      </span>
+                    ) : null}
                   </span>
 
                   <span>
@@ -185,7 +192,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
           </span>
           <button
             type="button"
-            onClick={() => actions.patch({ modal: 'addClient' })}
+            onClick={() => router.push('/clients/new')}
             className="ph-primary"
             style={{
               marginTop: 4,

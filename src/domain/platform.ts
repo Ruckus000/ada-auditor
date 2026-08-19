@@ -281,7 +281,18 @@ export interface ClientStore {
 }
 
 export interface JourneyStore {
-  listJourneys(clientId?: string): Promise<StoredJourney[]>;
+  /**
+   * `includeArchived` exists for one caller: minting a new journey's id. An
+   * archived journey's id is retired, not vacant — `upsertJourney`'s
+   * on-conflict update preserves `archived_at`, so reusing the id would
+   * resurrect the old row as a journey that is born archived, invisible and
+   * unrunnable from the moment it is "created". Every other caller wants the
+   * default: archived journeys hidden from the catalog.
+   */
+  listJourneys(
+    clientId?: string,
+    options?: { includeArchived?: boolean },
+  ): Promise<StoredJourney[]>;
   getJourney(id: string): Promise<StoredJourney | null>;
   upsertJourney(
     journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,

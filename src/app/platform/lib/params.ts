@@ -61,6 +61,13 @@ export function parseRoute(pathname: string): PlatformRoute {
     return base;
   }
 
+  if (segments[0] === 'clients' && segments[1] === 'new') {
+    // Not a client: `scope: 'client'` keeps the header from highlighting a
+    // workspace tab, and `clientSlug` stays null because there is no record
+    // to name yet.
+    return { ...base, scope: 'client' };
+  }
+
   if (segments[0] === 'clients' && segments[1]) {
     const clientSlug = segments[1];
     const tab = segments[2] ? CLIENT_TABS[segments[2]] : 'overview';

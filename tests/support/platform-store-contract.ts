@@ -229,6 +229,32 @@ export function platformStoreContract(
       ).not.toContain('pc-journey-a');
     });
 
+    it('hides an archived journey by default and surfaces it on request', async () => {
+      // The create route mints ids against every id that exists, archived or
+      // not: an archived journey's id is retired, not vacant, because
+      // `upsertJourney`'s on-conflict update preserves `archived_at` — reusing
+      // the id would resurrect the old row born archived. This is the read
+      // path that check leans on, scoped and unscoped both.
+      const store = await seeded();
+      await store.upsertJourney({
+        id: 'pc-journey-retired',
+        clientId: CONTRACT_CLIENT,
+        name: 'Retired',
+        steps: [],
+      });
+      await store.archiveJourney('pc-journey-retired');
+
+      expect(
+        (await store.listJourneys(CONTRACT_CLIENT)).map((j) => j.id),
+      ).not.toContain('pc-journey-retired');
+      expect((await store.listJourneys()).map((j) => j.id)).not.toContain('pc-journey-retired');
+
+      const withArchived = await store.listJourneys(CONTRACT_CLIENT, { includeArchived: true });
+      const retired = withArchived.find((j) => j.id === 'pc-journey-retired');
+      expect(retired).toBeDefined();
+      expect(retired?.archivedAt).toBeDefined();
+    });
+
     it('filters a listing by client', async () => {
       const store = await seeded();
       await store.upsertClient({ id: 'pc-client-b', name: 'Other' });

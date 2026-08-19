@@ -147,9 +147,12 @@ export class MemoryPlatformStore implements PlatformStore {
 
   // ------------------------------------------------------------ journeys --
 
-  async listJourneys(clientId?: string): Promise<StoredJourney[]> {
+  async listJourneys(
+    clientId?: string,
+    options?: { includeArchived?: boolean },
+  ): Promise<StoredJourney[]> {
     return [...this.journeys.values()]
-      .filter((journey) => journey.archivedAt === undefined)
+      .filter((journey) => options?.includeArchived || journey.archivedAt === undefined)
       .filter((journey) => clientId === undefined || journey.clientId === clientId)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((journey) => structuredClone(journey));

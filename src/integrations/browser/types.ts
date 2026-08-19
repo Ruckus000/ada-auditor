@@ -96,6 +96,12 @@ export type JourneyRunnerInput = {
    * audit as a complete one.
    */
   maxPages?: number;
+  /**
+   * Walk and capture without evaluating rules. The preview endpoint's whole
+   * point: an authoring check should cost navigation, not an audit. `passCount`
+   * stays absent — "not measured" and "zero passes" are different facts.
+   */
+  skipScan?: boolean;
 };
 
 export type JourneyPageMeta = {
@@ -143,8 +149,12 @@ export type PageAudit = {
    * the measurement that decides whether they are the right numbers — and the
    * unit is deliberately the whole capture, navigate-settle through
    * artifacts-written, because that is what the cap is denominated in.
+   *
+   * `scanMs` is absent, not zero, when `skipScan` skipped the measurement
+   * entirely — the same "not measured" convention `AxeScanResult.passCount`
+   * follows, and for the same reason.
    */
-  timing: { totalMs: number; scanMs: number };
+  timing: { totalMs: number; scanMs?: number };
 };
 
 export type JourneyRunnerResult = {

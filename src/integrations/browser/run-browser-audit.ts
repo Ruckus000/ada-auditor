@@ -12,7 +12,7 @@ import { RUN_RULESET } from './axe-scan';
 import { PartialAuditError, PartialJourneyError, type AuditedPage } from './partial-run';
 import type { JourneyRunnerInput, JourneyStep, PageAudit } from './types';
 
-export type RunBrowserAuditInput = Omit<JourneyRunnerInput, 'steps'> & {
+export type RunBrowserAuditInput = Omit<JourneyRunnerInput, 'steps' | 'skipScan'> & {
   /**
    * Optional *here* and required on `JourneyRunnerInput`, which is the whole
    * invariant: this is the only layer allowed to be handed no steps, and the
@@ -118,7 +118,8 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
   const journeyStartedAt = Date.now();
   let journeyResult;
   try {
-    journeyResult = await runJourney({ ...input, allowedHosts, steps });
+    // An audit never skips its scan; the preview calls `runJourney` directly.
+    journeyResult = await runJourney({ ...input, skipScan: undefined, allowedHosts, steps });
   } catch (error) {
     // The second place a partial run lost its work. `runJourney` carries what
     // it captured out on the error; this turns those raw captures into the

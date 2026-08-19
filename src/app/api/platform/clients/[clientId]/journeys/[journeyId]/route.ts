@@ -226,3 +226,47 @@ export async function PATCH(
 
   return Response.json({ requestId, journeyId, schedule }, { status: 200 });
 }
+
+/**
+ * Archive a journey. Never a hard delete: `runs` cascades from journeys, and
+ * a client's audit history must survive the path that produced it being
+ * retired. The wizard's "start over with a different URL" lands here, because
+ * PATCH refuses `targetUrl` on purpose — re-aiming a stored journey is the
+ * one edit that must not be quiet.
+ */
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ clientId: string; journeyId: string }> },
+) {
+  const requestId = createRequestId();
+
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
+    return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
+  }
+
+  const { clientId, journeyId } = await params;
+  const platform = getPlatformStore();
+
+  const journey = await platform.getJourney(journeyId);
+  // Same ownership check as PATCH, same reasoning — and an archived journey
+  // answers 404 rather than archiving twice.
+  if (!journey || journey.clientId !== clientId || journey.archivedAt) {
+    return Response.json({ error: 'journey_not_found', requestId }, { status: 404 });
+  }
+
+  await platform.archiveJourney(journeyId);
+
+  // Accepted wrinkle: if `recordEvent` throws here, the caller sees a 500 but
+  // the archive already landed, so a retry answers 404 with nothing recorded.
+  // Left as-is because the setup screens re-derive stage from the record
+  // itself rather than trusting a client-side "it worked" — they self-heal.
+  await platform.recordEvent({
+    clientId,
+    ...actorFields(principal),
+    action: 'archived a journey',
+    subject: journey.name,
+  });
+
+  return Response.json({ requestId, journeyId }, { status: 200 });
+}

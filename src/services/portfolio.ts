@@ -34,6 +34,8 @@ export type PortfolioRow = {
     shouldFix: number;
     pagesAudited: number;
   } | null;
+  /** True until the first completed run — the portfolio's "Finish setup" hint reads this. */
+  setupIncomplete: boolean;
 };
 
 function summarise(run: StoredRunRecord): NonNullable<PortfolioRow['lastRun']> {
@@ -67,7 +69,10 @@ export type PortfolioDeps = {
  * link the schema has: `runs.journey_id` → `journeys.client_id`. The query
  * count is therefore proportional to journeys, not to runs — fine while an
  * agency has tens of clients, and the point at which it stops being fine is a
- * single `join`, not a redesign.
+ * single `join`, not a redesign. (Two queries per journey now, not one: the
+ * newest-run fetch above and the completed-exists probe behind
+ * `setupIncomplete` — still proportional to journeys, just with a bigger
+ * constant.)
  */
 export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[]> {
   const clients = await deps.clients.listClients();
@@ -90,23 +95,40 @@ export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[
         .filter((run): run is StoredRunRecord => run !== null)
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
 
+      const completedFlags = await Promise.all(
+        journeys.map(async (journey) => {
+          const [completed] = await deps.runs.list({
+            journeyId: journey.id,
+            status: 'complete',
+            limit: 1,
+          });
+          return completed !== undefined;
+        }),
+      );
+
       return {
         id: client.id,
         name: client.name,
         ...(client.owner === undefined ? {} : { owner: client.owner }),
         journeyCount: journeys.length,
         lastRun: latest ? summarise(latest) : null,
+        setupIncomplete: !completedFlags.some(Boolean),
       } as PortfolioRow;
     }),
   );
 }
+
+/** Ids that are routes, not clients: a client minted onto one would be shadowed. */
+const RESERVED_CLIENT_IDS = ['new'];
 
 /**
  * A URL-safe id derived from the client's name.
  *
  * The id *is* the slug, so `/clients/acme-outfitters` needs no lookup table
  * and stays readable. Collisions get a numeric suffix rather than silently
- * merging two clients into one row.
+ * merging two clients into one row. `RESERVED_CLIENT_IDS` gets the same
+ * treatment as a collision — a client named "New" is common enough that it
+ * cannot simply fail, and `/clients/new` is a static route, not a record.
  */
 export function clientIdFromName(name: string, taken: readonly string[] = []): string {
   const base =
@@ -116,13 +138,13 @@ export function clientIdFromName(name: string, taken: readonly string[] = []): s
       .replace(/^-+|-+$/g, '')
       .slice(0, 48) || 'client';
 
-  if (!taken.includes(base)) {
+  if (!taken.includes(base) && !RESERVED_CLIENT_IDS.includes(base)) {
     return base;
   }
 
   for (let suffix = 2; ; suffix += 1) {
     const candidate = `${base}-${suffix}`;
-    if (!taken.includes(candidate)) {
+    if (!taken.includes(candidate) && !RESERVED_CLIENT_IDS.includes(candidate)) {
       return candidate;
     }
   }
