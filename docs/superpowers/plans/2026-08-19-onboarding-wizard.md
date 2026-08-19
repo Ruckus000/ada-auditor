@@ -29,6 +29,7 @@
 | `tests/services/setup-state.test.ts` | Every record shape maps to exactly one stage |
 | `src/app/(platform)/clients/new/page.tsx` | Guarded stage-1 route (sibling of `[clientId]`, so the client layout does not wrap it) |
 | `src/app/platform/components/setup/new-client-screen.tsx` | Stage-1 form (client) |
+| `src/app/platform/components/setup/stage-indicator.tsx` | The 3-stage progress list — hook-free, so both the server dispatcher and the client stage-1 screen render it |
 | `src/app/(platform)/clients/[clientId]/setup/page.tsx` | Guarded stage 2–5 route |
 | `src/app/platform/components/setup/setup-screen.tsx` | Server dispatcher + stage indicator |
 | `src/app/platform/components/setup/stage-heading.tsx` | Client: focuses the stage heading on mount |
@@ -860,6 +861,7 @@ git commit -m "Preview endpoint: replay a journey's stored steps, audit nothing"
 **Files:**
 - Create: `src/app/(platform)/clients/new/page.tsx`
 - Create: `src/app/platform/components/setup/new-client-screen.tsx`
+- Create: `src/app/platform/components/setup/stage-indicator.tsx`
 - Delete: `src/app/platform/components/add-client-modal.tsx`
 - Modify: `src/app/platform/lib/state.ts` (drop `modal` + `ModalName`), `src/app/platform/components/platform-shell.tsx:43` (drop the modal host and its import), `src/app/platform/components/platform-provider.tsx:65` (drop `modal: null` from `goWorkspace`), `src/app/platform/components/header.tsx:134-153` (button → `router.push('/clients/new')`; the header already has no `useRouter`, add it), `src/app/platform/components/portfolio.tsx` (empty-state button → `router.push('/clients/new')`)
 
@@ -884,6 +886,43 @@ export default guarded(async function NewClientPage() {
 });
 ```
 
+- [ ] **Step 1b: The stage indicator** (`stage-indicator.tsx`) — created here because stage 1 shows it too (decided 2026-08-19); Task 9's dispatcher reuses it:
+
+```tsx
+import { FONT, T } from '../../lib/tokens';
+
+/**
+ * Where the operator is in onboarding. A list, not tabs: stages are earned by
+ * the record, never clicked into. Hook-free on purpose — the server dispatcher
+ * (Task 9) and the client stage-1 screen both render it.
+ */
+const STAGE_LABELS = ['Client', 'Site & path', 'First audit'] as const;
+
+export function StageIndicator({ current }: { current: 0 | 1 | 2 }) {
+  return (
+    <nav aria-label="Setup progress">
+      <ol style={{ display: 'flex', gap: 18, margin: 0, padding: 0, listStyle: 'none' }}>
+        {STAGE_LABELS.map((label, index) => (
+          <li
+            key={label}
+            aria-current={index === current ? 'step' : undefined}
+            style={{
+              fontFamily: FONT.sans,
+              fontSize: 12.5,
+              fontWeight: index === current ? 650 : 400,
+              color: index === current ? T.accent : index < current ? T.inkSoft : T.inkMuted,
+            }}
+          >
+            {index + 1}. {label}
+            {index < current ? ' ✓' : ''}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+```
+
 - [ ] **Step 2: The screen** (`new-client-screen.tsx`). Complete file:
 
 ```tsx
@@ -893,6 +932,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { usePlatform } from '../../lib/state';
 import { FONT, T } from '../../lib/tokens';
+import { StageIndicator } from './stage-indicator';
 
 /**
  * Stage 1: name the client. The Add Client modal, promoted to a route and
@@ -958,6 +998,9 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
 
   return (
     <div data-screen-label="Add a client" style={{ maxWidth: 520 }}>
+      <div style={{ marginBottom: 14 }}>
+        <StageIndicator current={0} />
+      </div>
       <h2 style={{ margin: '0 0 4px', fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em' }}>
         Add a client
       </h2>
@@ -1187,20 +1230,18 @@ export function StageHeading({ children }: { children: React.ReactNode }) {
 ```tsx
 import type { ClientDetail } from '../../../../services/client-detail';
 import type { SetupStage } from '../../../../services/setup-state';
-import { FONT, T } from '../../lib/tokens';
 import { FailedStage } from './failed-stage';
 import { FirstRunStage } from './first-run-stage';
 import { ResultsStage } from './results-stage';
+import { StageIndicator } from './stage-indicator';
 import { StepsStage } from './steps-stage';
 import { WhereScreen } from './where-screen';
 
 /**
- * One of five stages, plus the indicator that says which. The indicator is a
- * list, not tabs: stages are earned by the record, never clicked into.
+ * One of five stages, plus the indicator that says which (`StageIndicator`,
+ * shared with `/clients/new`, which renders it at stage 0).
  */
-const STAGE_LABELS = ['Client', 'Site & path', 'First audit'] as const;
-
-function stageIndex(stage: SetupStage['stage']): number {
+function stageIndex(stage: SetupStage['stage']): 0 | 1 | 2 {
   if (stage === 'site' || stage === 'steps') return 1;
   return 2; // first-run, running, failed, done
 }
@@ -1210,25 +1251,7 @@ export function SetupScreen({ detail, stage }: { detail: ClientDetail; stage: Se
 
   return (
     <div data-screen-label="Client setup" style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 720 }}>
-      <nav aria-label="Setup progress">
-        <ol style={{ display: 'flex', gap: 18, margin: 0, padding: 0, listStyle: 'none' }}>
-          {STAGE_LABELS.map((label, index) => (
-            <li
-              key={label}
-              aria-current={index === current ? 'step' : undefined}
-              style={{
-                fontFamily: FONT.sans,
-                fontSize: 12.5,
-                fontWeight: index === current ? 650 : 400,
-                color: index === current ? T.accent : index < current ? T.inkSoft : T.inkMuted,
-              }}
-            >
-              {index + 1}. {label}
-              {index < current ? ' ✓' : ''}
-            </li>
-          ))}
-        </ol>
-      </nav>
+      <StageIndicator current={current} />
 
       {stage.stage === 'site' ? <WhereScreen clientId={detail.id} /> : null}
       {stage.stage === 'steps' ? <StepsStage detail={detail} journey={stage.journey} /> : null}
@@ -1262,6 +1285,8 @@ git commit -m "Setup route: record-derived stage dispatch"
 
 **Files:**
 - Create (replacing the Task 9 placeholder): `src/app/platform/components/setup/where-screen.tsx`
+
+(Note: `StageIndicator` renders once in the Task 9 dispatcher — stage components must not render a second one.)
 
 - [ ] **Step 1: Implement.** Client component. Complete behaviour: schemeless normalization, the homepage fast path (auto `goto` step preserving the pasted path), the multi-page choice (journey with no steps → stage flips to `steps`), environment behind a disclosure, `MESSAGES` map:
 

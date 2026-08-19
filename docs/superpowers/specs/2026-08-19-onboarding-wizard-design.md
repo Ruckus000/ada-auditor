@@ -33,7 +33,10 @@ record, so resume, refresh, and deep-linking are free and cannot disagree with t
 
 ### `/clients/new` — Stage 1: the client
 
-The modal's two fields (name, owner) with the fixes the modal never got:
+The stage indicator renders here too — "1. Client" current, the later stages muted —
+so the operator sees the whole journey from the first field (decided 2026-08-19,
+after reviewing the mockup). The modal's two fields (name, owner) with the fixes
+the modal never got:
 
 - `maxLength={120}` on the name input, matching the server schema.
 - A human `MESSAGES` map (see Error handling) — raw codes never render.
