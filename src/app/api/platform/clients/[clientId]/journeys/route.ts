@@ -92,7 +92,25 @@ const createJourneySchema = z.object({
    * typed twice and would stale silently if this moved.
    */
   name: z.string().trim().min(1).max(MAX_JOURNEY_NAME),
-  targetUrl: z.string().url().max(2048).optional(),
+  /**
+   * Only a URL the runner would launch. `parseTargetUrl` refuses anything but
+   * http/https and any URL embedding credentials, so a scheme this schema let
+   * through — `mailto:`, `ftp:`, or `user:pass@host`, which parses as scheme
+   * `user:` — was stored as a journey every future run refuses: a permanently
+   * unrunnable row. Length before shape and the trimming caveat both per
+   * `discoveryRequestSchema` (`src/domain/discovery.ts`), which bounds the
+   * same field the same way. The userinfo check is not covered by
+   * `containsInlineCredential`, which reads step keys and never sees a URL.
+   */
+  targetUrl: z
+    .string()
+    .max(2048)
+    .pipe(z.url({ protocol: /^https?$/ }))
+    .refine((value) => {
+      const url = new URL(value);
+      return !url.username && !url.password;
+    })
+    .optional(),
   schedule: scheduleSchema.optional(),
   scheduleHour: z.number().int().min(0).max(23).optional(),
   /**
