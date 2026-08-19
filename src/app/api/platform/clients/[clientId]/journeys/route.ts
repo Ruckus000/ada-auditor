@@ -5,7 +5,11 @@ import { containsInlineCredential } from '../../../../_lib/inline-credential';
 import { actorFields } from '../../../../../../domain/operator';
 import { environmentSchema } from '../../../../../../domain/contracts';
 import { firstForbiddenAction } from '../../../../../../domain/policy';
-import { journeyRunRefusal, type StoredJourney } from '../../../../../../domain/platform';
+import {
+  journeyRunRefusal,
+  MAX_JOURNEY_NAME,
+  type StoredJourney,
+} from '../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { clientIdFromName } from '../../../../../../services/portfolio';
 import { authorizePrincipal } from '../../../../_lib/authorize';
@@ -81,7 +85,13 @@ export async function GET(
 const scheduleSchema = z.enum(['off', 'daily', 'weekly']);
 
 const createJourneySchema = z.object({
-  name: z.string().trim().min(1).max(120),
+  /**
+   * Capped in `domain/platform.ts` rather than here, so the screens that offer
+   * a name box can stop an operator before the refusal. `DiscoverPages` sets
+   * the same number as the input's `maxLength`; with the literal here it was
+   * typed twice and would stale silently if this moved.
+   */
+  name: z.string().trim().min(1).max(MAX_JOURNEY_NAME),
   targetUrl: z.string().url().max(2048).optional(),
   schedule: scheduleSchema.optional(),
   scheduleHour: z.number().int().min(0).max(23).optional(),

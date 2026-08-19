@@ -32,6 +32,21 @@ export type StoredClient = {
   createdAt: string;
 };
 
+/**
+ * The longest a journey's name may be.
+ *
+ * Exported for the same reason `MAX_STEP_TEXT` and `MAX_STEPS_PER_JOURNEY`
+ * are: the create route caps this and answers `invalid_request_body` past it,
+ * a code that names no field — so a screen that offers a name box has to know
+ * the number in order to stop an operator reaching that answer at all.
+ * `DiscoverPages` puts it on the input as `maxLength`.
+ *
+ * Here rather than in the route, because a client component importing a route
+ * module would drag the persistence layer into the browser bundle, and because
+ * a cap on a stored journey's field belongs beside the type that field is on.
+ */
+export const MAX_JOURNEY_NAME = 120;
+
 export type JourneySchedule = 'off' | 'daily' | 'weekly';
 
 export type StoredJourney = {

@@ -6,6 +6,7 @@ import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
 import { Empty } from './client-overview';
+import { DiscoverPages } from './discover-pages';
 import { JourneySchedule } from './journey-schedule';
 import { JourneyStepsEditor } from './journey-steps-editor';
 import { RunJourneyButton } from './run-journey-button';
@@ -23,9 +24,18 @@ import { RunJourneyButton } from './run-journey-button';
  * <id>/journeys/<id>/runs` walks the stored journey, and `JourneyStepsEditor`
  * rewrites what it walks.
  *
- * *Creating* a journey now lives in the setup wizard (`/clients/<id>/setup`),
- * which is where the empty state below points. The API path survives for CI
- * and scripts, documented in `docs/journeys-api.md` rather than on a screen.
+ * Nor is *creating* one API work any more, and after the merge of the setup
+ * wizard there are two honest answers rather than one. `DiscoverPages`, above,
+ * crawls a site address and turns the pages an operator ticks into a journey of
+ * `goto` steps — the fastest path, and the one already on this screen. The setup
+ * wizard (`/clients/<id>/setup`) is the guided path, and the empty state's
+ * action still points there, because a client with no journeys usually has
+ * unfinished setup rather than a missing crawl.
+ *
+ * What has gone from both is the instruction to go and use curl. The API path
+ * survives for CI and scripts and is documented in `docs/journeys-api.md`; a
+ * screen that tells an operator to use a bearer token for something it can now
+ * do itself teaches them to stop reading it.
  */
 export function ClientJourneys({ detail }: { detail: ClientDetail }) {
   return (
@@ -34,10 +44,17 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
         Journeys
       </h2>
 
+      {/*
+        Above the list and always visible: this is now the way a journey gets
+        made, and the empty state below no longer explains how because this
+        panel *is* the explanation.
+      */}
+      <DiscoverPages clientId={detail.id} />
+
       {detail.journeys.length === 0 ? (
         <Empty
           title="No journeys yet"
-          body="A journey is the path we re-walk on every run — a checkout, a booking, a sign-in. Finish this client's setup to record the first one and run it."
+          body="A journey is the path we re-walk on every run — a checkout, a booking, a sign-in. Give the panel above a site address and tick the pages that matter, or finish this client's setup to record the first one and run it."
           action={{ href: `/clients/${detail.id}/setup`, label: 'Finish setup' }}
         />
       ) : (

@@ -270,6 +270,7 @@ export function JourneyStepsEditor({
           gap: 8,
         }}
       >
+        {/* eslint-disable-next-line react-hooks/refs -- the reorder handlers below write `refocus.current`; see `lib/inert-button` */}
         {drafts.map((draft, index) => {
           const id = (name: string) => `${fieldPrefix}-${draft.key}-${name}`;
           const problem = describeDraftProblem(draft);
@@ -551,6 +552,9 @@ export function JourneyStepsEditor({
         </button>
         <button
           type="button"
+          // `save` writes `returnFocus.current`. Same false positive as the
+          // reorder buttons above — see `lib/inert-button`.
+          // eslint-disable-next-line react-hooks/refs
           {...inertWhen(busy || !writable.ok, save)}
           // Only while the sentence below is on the page: a description
           // pointing at an id that is not there is itself a violation.

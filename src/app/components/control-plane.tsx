@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { GLOSSARY, glossaryAnchorId, glossaryEntry, type GlossaryKey } from './glossary';
 import { InfoTip } from './info-tip';
 import { parseAuditResponse, type AuditResult } from './audit-types';
@@ -105,6 +106,13 @@ export function ControlPlane() {
   }, []);
 
   useEffect(() => {
+    // Both of these setState only after awaiting a response — from a callback,
+    // which is the shape `react-hooks/set-state-in-effect` documents as the
+    // correct one. It reports them anyway because its analysis does not follow
+    // the await across the function boundary: swapping the two lines just moves
+    // the report to whichever is called first. Scoped to this line rather than
+    // switched off for the file.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkStatus();
     checkSession();
     const id = setInterval(checkStatus, 30_000);
@@ -116,7 +124,6 @@ export function ControlPlane() {
   // the end — so the last stage stays put rather than claiming completion.
   useEffect(() => {
     if (!submitting) return;
-    setActiveStep(0);
     const id = setInterval(() => {
       setActiveStep((step) => Math.min(step + 1, RUN_STEPS.length - 1));
     }, 1200);
@@ -126,6 +133,7 @@ export function ControlPlane() {
   const runAudit = useCallback(
     async (chaosScenario?: string) => {
       setSubmitting(true);
+      setActiveStep(0);
       setResult(null);
       setCopied(false);
 
@@ -211,9 +219,9 @@ export function ControlPlane() {
           </div>
         </div>
         <nav className="topbar-links" aria-label="Sections">
-          <a className="skip-to-glossary" href="/">
+          <Link className="skip-to-glossary" href="/">
             ← Portfolio
-          </a>
+          </Link>
           <a className="skip-to-glossary" href="#glossary">
             Glossary
           </a>

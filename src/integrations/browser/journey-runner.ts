@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import type { Page, Response } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
+import { normalizePathname } from '../../domain/discovery';
 import { boundTitle } from '../../domain/evidence';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/ax-tree';
@@ -105,8 +106,10 @@ export function routeFromPageUrl(url: string): string {
   }
 
   // `/a/`, `/a/index.html` and `/a` are one page; all three read best as `/a`.
-  const trimmed = pathname.replace(/\/index\.html?$/i, '/').replace(/\/+$/, '');
-  return trimmed === '' ? '/' : trimmed;
+  // The rule itself lives in `domain/discovery`, because the crawler dedupes
+  // on it and two implementations of "which URLs are the same page" is the
+  // kind of drift that ends in a crawl that never terminates.
+  return normalizePathname(pathname);
 }
 
 /**
