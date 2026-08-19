@@ -54,6 +54,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
   // decision that is only possible to make from the code, not from prose
   // that has already forgotten which field it was about.
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
   const urlErrorActive = errorCode === LOCAL_INVALID_URL || errorCode === 'invalid_request_body';
 
@@ -64,7 +65,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
         ? 'Could not reach the server. Check your connection and try again.'
         : errorCode === LOCAL_INVALID_URL
           ? 'That does not look like a URL we can audit. Check it and try again.'
-          : (MESSAGES[errorCode] ?? 'Could not save that. Try again.');
+          : (MESSAGES[errorCode] ?? `Could not save that (${errorStatus}). Try again.`);
 
   const blocked = saving || raw.trim() === '';
 
@@ -85,6 +86,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
 
     setSaving(true);
     setErrorCode(null);
+    setErrorStatus(null);
 
     // The fast path writes the one step it needs itself — the target URL's
     // own path, not "/", so a pasted /shop stays audited as /shop.
@@ -110,6 +112,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
         setErrorCode(parsed?.error ?? `status_${response.status}`);
+        setErrorStatus(response.status);
         setSaving(false);
         return;
       }

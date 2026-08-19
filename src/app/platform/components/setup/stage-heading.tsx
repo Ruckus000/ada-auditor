@@ -17,7 +17,17 @@ export function StageHeading({ children }: { children: React.ReactNode }) {
     <h2
       ref={ref}
       tabIndex={-1}
-      style={{ margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em', outline: 'none' }}
+      style={{
+        margin: 0,
+        fontSize: 19,
+        fontWeight: 700,
+        letterSpacing: '-0.01em',
+        // The heading is focused under ~150px of sticky chrome (56px header
+        // + the ClientShell summary/tab bar pinned at top:56). Without a
+        // scroll margin, `focus()` on a scrolled page parks the heading
+        // underneath it — focused, announced, invisible.
+        scrollMarginTop: 150,
+      }}
     >
       {children}
     </h2>
