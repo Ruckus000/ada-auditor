@@ -8,7 +8,7 @@ on:
 
 jobs:
   unit:
-    name: Unit tests, chaos, build
+    name: Lint, unit tests, chaos, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -17,6 +17,26 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # First, and before the browser download, because it is the cheapest
+      # failure in this file — seconds against the minutes everything below
+      # costs.
+      #
+      # It is also the only thing here that runs the React Compiler rules.
+      # `eslint-config-next` enables sixteen `react-hooks/*` rules and most are
+      # errors, `react-hooks/refs` and `react-hooks/set-state-in-effect` among
+      # them: refs read during render, state set from an effect. Every other
+      # gate in this workflow renders straight past that class of defect — the
+      # unit suite does not mount these components, the build only type-checks
+      # them, and the hydration suite asserts what a page does rather than how
+      # it got there. So these rules have sat at error severity, on every
+      # commit, enforced by nothing but whoever remembered to run `npm run
+      # lint` locally.
+      #
+      # `eslint` exits 0 on warnings and 1 on errors, so this gates on errors
+      # only. The tree is clean at the time of writing (0 errors, 13
+      # `no-unused-vars` warnings), which is why this can be added without a
+      # cleanup commit in front of it.
+      - run: npm run lint
       - run: npx playwright install chromium --with-deps
       - run: npm test
       - run: npm run chaos
