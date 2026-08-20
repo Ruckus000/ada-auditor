@@ -1,3 +1,4 @@
+import { isIP } from 'node:net';
 import type { Browser, Page } from 'playwright-core';
 import {
   discoveryKey,
@@ -20,6 +21,7 @@ import {
   assertAllowedUrl,
   assertPeerAddressAllowed,
   assertSafeTargetUrl,
+  isBlockedAddress,
   UnsafeTargetError,
 } from './target-url';
 
@@ -170,7 +172,29 @@ function assertSettledInScope(settled: string, allowedHosts: string[], isEntry: 
     assertAllowedUrl(settled, allowedHosts);
   } catch (error) {
     if (isEntry && error instanceof UnsafeTargetError) {
-      throw new EntryPointRedirectedError(new URL(settled).hostname);
+      const settledHost = new URL(settled).hostname;
+
+      // Not every off-allowlist landing is a canonicalisation to answer
+      // politely. A settled host that is a literal address in private or
+      // reserved space is the SSRF guard firing — a target redirecting the
+      // crawler at loopback or the cloud metadata endpoint — and converting it
+      // would end the answer with "Discover 169.254.169.254 instead": a
+      // security refusal reported as a benign redirect, with our own copy
+      // advising the operator to aim the crawler at the address the guard
+      // exists to refuse. The refusal goes up as itself and reaches the
+      // operator as `navigation_not_allowed`. Same bracket-stripping as
+      // `assertAllowedUrl`, because an IPv6 literal arrives as `[::1]`.
+      //
+      // A *named* settled host is still converted even though it may resolve
+      // into private space — nothing here has resolved it, and if the operator
+      // takes the advice, `assertSafeTargetUrl` refuses the next crawl before
+      // a browser launches. The advice is then futile, never dangerous.
+      const bracketless = settledHost.replace(/^\[|\]$/g, '');
+      if (isIP(bracketless) !== 0 && isBlockedAddress(bracketless)) {
+        throw error;
+      }
+
+      throw new EntryPointRedirectedError(settledHost);
     }
     throw error;
   }
@@ -526,6 +550,38 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
           }
         }
       } catch (error) {
+        // A navigation that failed can still have connected. Chromium reports
+        // a response — and the context listener queues a peer check — before
+        // `goto` gives up on the document: a redirect hop that reached a
+        // private address and then a dead end, a reset mid-body, a hang after
+        // headers. The drain above runs only when `goto` *returns*, so
+        // without this one a violation from a failed navigation sat in
+        // `peerViolation` until the next iteration's drain, where it was
+        // thrown against a page that had nothing to do with it — the exact
+        // misattribution the take-and-clear above exists to prevent, one
+        // navigation later — or, when no iteration followed, was never read
+        // at all. These promises cannot reject (each carries its own
+        // `catch`), so awaiting them here is safe.
+        //
+        // The residual, stated rather than papered over: a check queued by a
+        // *late* navigation — a meta refresh or script redirect firing after
+        // `goto` already returned and the drain above already ran — can still
+        // land after every drain this iteration performs, and is then read one
+        // iteration late. Only a navigation the page makes on its own after
+        // settling can reach that window; every hop `goto` itself performed is
+        // settled here.
+        await Promise.all(peerChecks.splice(0));
+        const violation = peerViolation;
+        peerViolation = undefined;
+
+        // When both exist, the violation is the diagnosis worth keeping:
+        // "connected to a private or reserved address" names what actually
+        // happened, where the raw `goto` failure only says the document never
+        // arrived. It is also an `UnsafeTargetError`, so the entry contract
+        // below reports an entry point whose hop reached private space as the
+        // security refusal it is, rather than as "the site did not answer".
+        const failure = violation ?? error;
+
         // **One contract: this either returns a crawl or it throws.**
         //
         // Every other failure here is one page's and the walk goes on. A
@@ -554,7 +610,9 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // ours being reported to an operator as their site being down — see
         // `EntryPointUnreachableError`.
         if (next.depth === 0 && pages.length === 0) {
-          throw error instanceof UnsafeTargetError ? error : new EntryPointUnreachableError(error);
+          throw failure instanceof UnsafeTargetError
+            ? failure
+            : new EntryPointUnreachableError(failure);
         }
 
         // Bounded, because nothing else bounds it. `MAX_DISCOVERY_URLS` counts
@@ -590,7 +648,7 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
         // allowed domains` is legible, where `/offsite-redirect.html` alone
         // would read as "your own page is not in your allowed domains", which
         // is nonsense. Do not "fix" this to the settled URL.
-        recordError(next.url, error);
+        recordError(next.url, failure);
       } finally {
         // Politeness is owed to the next request, so there is no one to be
         // polite to when there is no next request. Unconditional, this charged

@@ -113,6 +113,42 @@ export function stepPathFor(pageUrl: string, targetUrl: string): string | null {
 }
 
 /**
+ * The origin a journey authored from a crawl should target: where the entry
+ * point *settled*, falling back to the typed address only when there is no
+ * entry page to read it from.
+ *
+ * This exists because of the commonest redirect on the web. The crawl follows
+ * apex→www by design — `hostAllowed` admits subdomains, or that redirect would
+ * end every crawl at depth 0 — so a crawl typed as `acme.com` returns pages
+ * that live on `www.acme.com`, every one of them. A journey built against the
+ * *typed* origin can then express none of those pages: `stepPathFor` refuses a
+ * cross-host page, correctly, and the operator is handed a full list with
+ * every row refused and told to re-crawl the site they just crawled. The
+ * origin the pages agree with is the settled entry's own, and the crawl
+ * already reports it: `DiscoveredPage.url` is where a page came to rest, and
+ * the depth-0 page is the entry.
+ *
+ * This is not a widening of what a journey may target. The settled entry
+ * passed the crawl's own scope check — it is the typed host or a subdomain of
+ * it — and pages on *other* hosts than the settled one are still refused row
+ * by row, which is `stepPathFor`'s job and stays so.
+ */
+export function journeyOriginFor(pages: DiscoveredPage[], typedTargetUrl: string): string {
+  const entry = pages.find((page) => page.depth === 0);
+  if (entry !== undefined) {
+    try {
+      return new URL(entry.url).origin;
+    } catch {
+      // A crawl's own pages are always parseable — each was built with
+      // `new URL` — but this function decides a journey's target URL for
+      // whatever caller arrives, and the typed address is the honest fallback
+      // for an entry nobody can read.
+    }
+  }
+  return new URL(typedTargetUrl).origin;
+}
+
+/**
  * A ceiling that stops a pathological site, not a target the crawl expects to
  * reach. The wall-clock budget binds first on anything real — see below.
  *

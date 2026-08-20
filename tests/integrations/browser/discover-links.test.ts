@@ -111,6 +111,9 @@ vi.mock('../../../src/integrations/browser/target-url', async (importOriginal) =
 const { discoverLinks, EntryPointRedirectedError } = await import(
   '../../../src/integrations/browser/discover-links'
 );
+// Through the mocked module, which spreads the original — so this is the same
+// class `discover-links` throws, and `instanceof` below is judging for real.
+const { UnsafeTargetError } = await import('../../../src/integrations/browser/target-url');
 
 const FIXTURES = join(process.cwd(), 'fixtures/discovery-site');
 let server: Server;
@@ -175,6 +178,17 @@ beforeAll(async () => {
 
       response.writeHead(200, { 'content-type': 'text/html' });
       response.end(`<!doctype html><title>Dead hub</title><main>${dead}${nextHub}</main>`);
+      return;
+    }
+
+    // An entry point that comes to rest on a blocked literal address. The
+    // redirect target is this same server named as `127.0.0.1`, so the
+    // navigation genuinely settles there and the only guard left standing is
+    // the settled-URL check — which must report it as the refusal it is, not
+    // as a canonicalisation to follow.
+    if (path === '/loopback-redirect.html') {
+      response.writeHead(302, { location: `http://127.0.0.1:${shared.port}/landed` });
+      response.end();
       return;
     }
 
@@ -525,6 +539,31 @@ describe('discoverLinks guards', () => {
     // maps that one string to `navigation_not_allowed` — the right answer here
     // too. Overriding it would silently drop this into the uncategorised bucket.
     expect((failure as Error).name).toBe('UnsafeTargetError');
+  }, 60_000);
+
+  /**
+   * The other way an entry point can settle wrong, and the one the polite
+   * answer must never cover. `EntryPointRedirectedError` exists so a refusal
+   * can end with "Discover <host> instead" — and a target that redirects to
+   * `127.0.0.1` (or the cloud metadata address) would put a private address in
+   * that sentence: an SSRF refusal reported as a benign redirect, with our own
+   * copy advising the operator to point the crawler at the address the guard
+   * exists to refuse.
+   *
+   * The peer check is stubbed out in this file, so the settled-URL check is
+   * the only thing standing between this navigation and a page result — which
+   * is exactly the configuration that proves the settled check itself makes
+   * the distinction, rather than being rescued by the peer check upstream.
+   */
+  it('refuses an entry point that redirects to a private address as a refusal, not a redirect', async () => {
+    const failure: unknown = await discoverLinks({
+      targetUrl: `http://${HOST}/loopback-redirect.html`,
+    }).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(UnsafeTargetError);
+    expect(failure).not.toBeInstanceOf(EntryPointRedirectedError);
+    // The sentence that must not be said: advice to discover a private address.
+    expect((failure as Error).message).not.toMatch(/discover/i);
   }, 60_000);
 
   it('names the request its completion log belongs to', async () => {

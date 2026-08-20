@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   discoveryKey,
   discoveryRequestSchema,
+  journeyOriginFor,
   MAX_DISCOVERY_URLS,
   normalizePathname,
   stepPathFor,
@@ -173,5 +174,49 @@ describe('stepPathFor', () => {
   it('answers null rather than throwing for an address it cannot read', () => {
     expect(stepPathFor('not a url', 'https://acme.com')).toBeNull();
     expect(stepPathFor('https://acme.com/', 'not a url')).toBeNull();
+  });
+});
+
+/**
+ * The origin a journey authored from a crawl should target: where the entry
+ * point settled, never merely what the operator typed.
+ *
+ * The apex-to-www redirect is the commonest on the web, and the crawl follows
+ * it by design — so every discovered page lives on `www.acme.com` while the
+ * typed address says `acme.com`. A journey built against the typed origin can
+ * then use none of them: `stepPathFor` rightly refuses every cross-host page,
+ * and the panel renders a full list of pages with every checkbox dead.
+ */
+describe('journeyOriginFor', () => {
+  it('returns the settled entry origin when the site canonicalised the typed address', () => {
+    const pages = [
+      { url: 'https://www.acme.com/', title: 'Home', depth: 0 },
+      { url: 'https://www.acme.com/pricing', title: 'Pricing', depth: 1 },
+    ];
+    expect(journeyOriginFor(pages, 'https://acme.com')).toBe('https://www.acme.com');
+  });
+
+  it('returns the typed origin when the entry settled where it was asked to', () => {
+    const pages = [{ url: 'https://acme.com/', title: 'Home', depth: 0 }];
+    expect(journeyOriginFor(pages, 'https://acme.com')).toBe('https://acme.com');
+  });
+
+  it('falls back to the typed origin when the crawl found nothing', () => {
+    expect(journeyOriginFor([], 'https://acme.com/docs/start?x=1')).toBe('https://acme.com');
+  });
+
+  it('reads the entry by depth, not by position', () => {
+    // A crawl always reports the entry first today, but this function decides
+    // a journey's target URL and must not lean on an ordering nothing pins.
+    const pages = [
+      { url: 'https://www.acme.com/pricing', title: 'Pricing', depth: 1 },
+      { url: 'https://www.acme.com/', title: 'Home', depth: 0 },
+    ];
+    expect(journeyOriginFor(pages, 'https://acme.com')).toBe('https://www.acme.com');
+  });
+
+  it('reduces a typed address with a path and query to its origin', () => {
+    const pages = [{ url: 'https://www.acme.com/docs/', title: 'Docs', depth: 0 }];
+    expect(journeyOriginFor(pages, 'https://acme.com/docs/?utm=x')).toBe('https://www.acme.com');
   });
 });
