@@ -11,6 +11,7 @@ import { PartialJourneyError } from '../../../../../../../../integrations/browse
 import type { PageAudit } from '../../../../../../../../integrations/browser/types';
 import { getPlatformStore } from '../../../../../../../../integrations/persistence';
 import { logInfo, logWarn } from '../../../../../../../../services/logger';
+import { withUrlsReduced } from '../../../../../../../../services/safe-url';
 import { consumeRunBudget } from '../../../../../../../../services/run-budget';
 import { authorizePrincipal } from '../../../../../../_lib/authorize';
 import { createRequestId } from '../../../../../../_lib/request-id';
@@ -241,8 +242,19 @@ export async function POST(
         // recognises by anchoring on that exact prefix — so a message reaching
         // this branch is, by construction, one the runner composed and never
         // one that echoes operator- or site-controlled text.
+        // Reduced again here, and the comment above is why this is not
+        // redundant. It claimed a `journey_step_failed` message is "by
+        // construction" free of site-controlled text; that was true of the
+        // template and false of what the runner interpolated into it, so this
+        // branch shipped Chromium's `net::ERR_… at https://host/cb?code=…`
+        // verbatim to an operator. `attemptStep` now reduces URLs at the point
+        // it formats the sentence, which is the real fix. This second pass is
+        // the cheap half of defence in depth: the next error path that happens
+        // to match the classifier's anchor does not get to re-open the hole,
+        // and a claim about content is enforced where the content is echoed
+        // rather than trusted from three modules away.
         ...(code === 'journey_step_failed' && error instanceof PartialJourneyError
-          ? { detail: (message.split('\n')[0] ?? '').trim() }
+          ? { detail: withUrlsReduced((message.split('\n')[0] ?? '').trim()) }
           : {}),
         pages: pageMeta(partial),
         ...screenshotFields(screenshot),

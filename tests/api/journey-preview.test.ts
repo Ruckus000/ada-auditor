@@ -267,6 +267,42 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     expect(raw).not.toContain('SECRET');
   });
 
+  /**
+   * The leak the test above did not cover, and the reason it did not.
+   *
+   * That test proves a *differently classified* error is withheld. This one is
+   * the same class the route deliberately echoes: `journey_step_failed`. The
+   * old comment justified echoing it on the grounds that such a message is
+   * "by construction" built from the runner's own sentence — true of the
+   * template, false of what `attemptStep` interpolated into it. A click wraps
+   * its navigation settle, so Chromium's `net::ERR_… at https://host/cb?code=…`
+   * became the `because` half of a sentence that matches the classifier's
+   * anchor, and went to the operator verbatim.
+   *
+   * Asserted on the raw response text, not the parsed field: a secret that
+   * escaped into any other part of the body would still be a leak.
+   */
+  it('reduces a URL carried inside the step sentence it does echo', async () => {
+    const cause = new Error(
+      'Step 2 ("login") could not click "#go": net::ERR_ABORTED at https://acme.test/cb?code=SECRET.',
+    );
+    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0 }));
+
+    const response = await POST(request(), params('acme', 'onboarding'));
+    const raw = await response.text();
+    const body = JSON.parse(raw);
+
+    expect(response.status).toBe(422);
+    expect(body.error).toBe('journey_step_failed');
+    expect(raw).not.toContain('SECRET');
+    expect(raw).not.toContain('code=');
+    // The diagnostic survives the reduction — an operator still learns which
+    // step failed, on what selector, and that the navigation aborted.
+    expect(body.detail).toBe(
+      'Step 2 ("login") could not click "#go": net::ERR_ABORTED at https://acme.test/cb.',
+    );
+  });
+
   it('omits a screenshot that would blow the response past the platform ceiling', async () => {
     const bigScreenshotPath = join(tmpdir(), 'journey-preview-test-oversized.png');
     await writeFile(bigScreenshotPath, Buffer.alloc(3_500_000, 1));
