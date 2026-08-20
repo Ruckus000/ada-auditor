@@ -7,7 +7,7 @@ import { boundTitle } from '../../domain/evidence';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/ax-tree';
 import { logInfo, logWarn } from '../../services/logger';
-import { hostnameOf, settledLocation } from '../../services/safe-url';
+import { hostnameOf, settledLocation, withUrlsReduced } from '../../services/safe-url';
 import { scanPageWithAxe } from './axe-scan';
 import { resolveCredential } from './credentials';
 import { launchChromium } from './launch';
@@ -906,9 +906,19 @@ async function attemptStep(
     // into a div — is not a timeout at all: Playwright rejects it immediately
     // with a plain `Error`, so naming the class said "it raised Error", which
     // is nothing the step's own `type` had not already said.
+    // `withUrlsReduced`, because this line is not ours. Chromium's navigation
+    // errors name their destination — `net::ERR_ABORTED at
+    // https://client.example/callback?code=…` — and a click wraps its
+    // navigation settle, so that lands here rather than in the `expect`
+    // failure below, which had been sanitised for exactly this reason. This
+    // sentence matches the anchor `classifyRunFailure` keys on, so it reaches
+    // an operator as the preview route's `detail` and the structured log as
+    // `failureReason`: the query string that carries an SSO `?code=` or a
+    // reset token had both.
     const because =
       error instanceof Error
-        ? (error.message.split('\n')[0] ?? '').trim() || `it raised ${error.name}`
+        ? withUrlsReduced((error.message.split('\n')[0] ?? '').trim()) ||
+          `it raised ${error.name}`
         : 'it raised an unknown error';
 
     throw new Error(

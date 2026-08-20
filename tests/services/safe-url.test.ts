@@ -1,5 +1,68 @@
 import { describe, expect, it } from 'vitest';
-import { hostnameOf, settledLocation } from '../../src/services/safe-url';
+import { hostnameOf, settledLocation, withUrlsReduced } from '../../src/services/safe-url';
+
+describe('withUrlsReduced', () => {
+  /**
+   * The leak this exists for, in the shape it actually shipped.
+   *
+   * `attemptStep` builds its sentence from `error.message.split('\n')[0]` and
+   * interpolates it raw. Its twin, the `expect` failure, had run its URL
+   * through `settledLocation` for exactly this reason — but a click wraps its
+   * navigation settle, so a failed navigation puts a Chromium `net::ERR_*`
+   * line, destination URL and all, into the click's message instead. That
+   * sentence matches `classifyRunFailure`'s anchor, so it is echoed to the
+   * operator as `detail` by the preview route and written verbatim into the
+   * structured log by `audit-run-handler`.
+   */
+  it('reduces a URL carried inside an error sentence', () => {
+    expect(
+      withUrlsReduced(
+        'net::ERR_ABORTED at https://client.example/callback?code=SSO-SECRET&state=xyz',
+      ),
+    ).toBe('net::ERR_ABORTED at https://client.example/callback');
+  });
+
+  it('keeps the diagnostic prose around the URL', () => {
+    // The message is the whole point — an operator fixing a stale selector
+    // needs Playwright's sentence, just not the query string in it.
+    expect(withUrlsReduced('locator.click: Timeout 10000ms exceeded')).toBe(
+      'locator.click: Timeout 10000ms exceeded',
+    );
+  });
+
+  it('leaves sentence punctuation outside the URL', () => {
+    // The runner's template ends with a full stop, so a URL at the end of the
+    // interpolated part is followed by one. Swallowing it into the URL would
+    // make `new URL` parse the trailing dot as part of the path.
+    expect(withUrlsReduced('gave up at https://client.example/cb?code=SECRET.')).toBe(
+      'gave up at https://client.example/cb.',
+    );
+  });
+
+  it('reduces every URL in a sentence, not just the first', () => {
+    expect(
+      withUrlsReduced(
+        'redirected from https://a.example/x?token=A to https://b.example/y?token=B',
+      ),
+    ).toBe('redirected from https://a.example/x to https://b.example/y');
+  });
+
+  it('reduces a file URL, which is what a fixture run navigates to', () => {
+    expect(withUrlsReduced('failed loading file:///tmp/fixtures/login.html?k=v')).toBe(
+      'failed loading file:///tmp/fixtures/login.html',
+    );
+  });
+
+  it('leaves a message with no URL in it untouched', () => {
+    expect(withUrlsReduced('it raised TimeoutError')).toBe('it raised TimeoutError');
+  });
+
+  it('does not treat a bare word containing a scheme-like prefix as a URL', () => {
+    expect(withUrlsReduced('strict mode violation: getByRole("link")')).toBe(
+      'strict mode violation: getByRole("link")',
+    );
+  });
+});
 
 describe('settledLocation', () => {
   /**

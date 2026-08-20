@@ -30,6 +30,43 @@ export function settledLocation(rawUrl: string): string {
 }
 
 /**
+ * The same reduction, applied to URLs found *inside* a message.
+ *
+ * `settledLocation` assumes the whole string is a URL, which is true when the
+ * runner composes the sentence and interpolates `page.url()` itself. It is not
+ * true of the other half of the runner's failures: `attemptStep` builds its
+ * sentence from `error.message.split('\n')[0]`, and Chromium's navigation
+ * errors carry the destination in that line — `net::ERR_ABORTED at
+ * https://client.example/callback?code=…`. A click wraps its navigation
+ * settle, so that line lands in a *click*'s failure message.
+ *
+ * That mattered more than it looks. The sentence matches the anchor
+ * `classifyRunFailure` keys on, so it was echoed to the operator as `detail`
+ * by the journey preview route, and written verbatim into the structured log
+ * by `audit-run-handler`. The `expect` path had been sanitised for precisely
+ * this reason and its twin never was, which is the failure mode of guarding a
+ * value at one call site instead of at the thing that formats it.
+ *
+ * Prose is preserved. An operator fixing a stale selector needs Playwright's
+ * sentence; they do not need the query string in it.
+ */
+const URL_IN_TEXT = /\b(?:https?|file):\/\/[^\s"'<>]+/gi;
+
+/** Punctuation that ends the runner's sentence rather than the site's URL. */
+const TRAILING_PUNCTUATION = /[.,;:!?)\]}]+$/;
+
+export function withUrlsReduced(text: string): string {
+  return text.replace(URL_IN_TEXT, (raw) => {
+    // A URL at the end of the interpolated part is followed by the template's
+    // own full stop. Swallowed into the match, `new URL` parses it as the last
+    // character of the path and prints it back inside the reduced URL.
+    const trailing = raw.match(TRAILING_PUNCTUATION)?.[0] ?? '';
+    const url = trailing ? raw.slice(0, -trailing.length) : raw;
+    return `${settledLocation(url)}${trailing}`;
+  });
+}
+
+/**
  * Just the host, for the times when even the path is more than is wanted.
  *
  * The runner logs a line each time a journey passes through a host it is not
