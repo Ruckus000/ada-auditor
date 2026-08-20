@@ -333,7 +333,17 @@ describe('platform hydration', () => {
       // transitions: `first-run` → `running` is served by one component and is
       // announced by its live region instead, so focus deliberately stays put
       // there and is not asserted.
-      expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('H2');
+      //
+      // Polled, not read once. The heading text above is in the render; the
+      // focus is set by `StageHeading`'s mount effect, which runs after it, so
+      // a single read can land in the window between them and see `BODY`. That
+      // window is small and this has never failed — but it is the same shape as
+      // the assertion that did (a one-shot read of something that becomes true
+      // asynchronously), and this suite's own idiom for anything after a
+      // navigation is `expect.poll`.
+      await expect
+        .poll(() => page.evaluate(() => document.activeElement?.tagName), { timeout: 15_000 })
+        .toBe('H2');
 
       // ---- The portfolio knows: a client with no completed run. ----
       // "Never audited" and the setup hint answer different questions, and
@@ -427,7 +437,23 @@ describe('platform hydration', () => {
       // loop cannot fire twice inside its own interval, so any gap this short
       // is a second watcher.
       const elapsed = Date.now() - startedAt;
-      expect(polls.length, 'the running stage never polled at all').toBeGreaterThan(0);
+      // No `polls.length > 0` here, deliberately. A watcher sleeps 3s before
+      // its first fetch, and this journey's target cannot resolve — the run
+      // reaches its failed row well inside that window, `start()`'s refresh
+      // renders `FailedStage` in a different JSX slot, and unmounting
+      // `FirstRunControl` cancels the watcher before it ever fetched. Zero
+      // polls is what entirely healthy code does here often enough to have
+      // flaked in CI once already. The two assertions below carry the whole
+      // regression value and are vacuously true when the run dies that fast.
+      //
+      // Which is the cost, stated plainly rather than left for someone to
+      // discover: on CI, where zero polls is the normal outcome, this stops
+      // checking anything at all. A green suite here is not evidence that the
+      // doubled-watcher defect is still fixed. The assertions are worth
+      // keeping — they cost nothing and they fire locally, where one poll does
+      // happen — but the property they defend is only genuinely safe once
+      // `FirstRunControl` has one entry path instead of two guarded by a ref.
+      // Until then this is a tripwire that is often unarmed, not a gate.
       const gaps = polls.slice(1).map((at, index) => at - polls[index]!);
       expect(gaps.filter((gap) => gap < 500), `poll gaps (ms): ${gaps.join(', ')}`).toEqual([]);
       // The bound has no slack on purpose. A watcher sleeps *before* its first
