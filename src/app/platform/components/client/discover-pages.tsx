@@ -6,6 +6,7 @@ import {
   type DiscoveredPage,
   type DiscoveryError,
   type DiscoveryTruncation,
+  journeyOriginFor,
   stepPathFor,
 } from '../../../../domain/discovery';
 import { MAX_STEP_TEXT, MAX_STEPS_PER_JOURNEY } from '../../../../domain/journey-step';
@@ -100,6 +101,13 @@ type DiscoveryResponse = {
  * next site into that box while reading this list, and a journey whose steps
  * come from one site and whose target URL comes from another is a run that
  * walks nothing.
+ *
+ * And it is where the entry *settled*, not what was typed — `journeyOriginFor`
+ * makes the argument. A crawl typed as `acme.com` follows the apex-to-www
+ * redirect and returns pages that all live on `www.acme.com`; against the
+ * typed origin, `rowFor` would refuse every one of them and the panel would
+ * hand back a full list with every checkbox dead, telling the operator to
+ * re-crawl the site they just crawled.
  */
 type Found = {
   origin: string;
@@ -286,9 +294,10 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
 
       const pages = payload?.pages ?? [];
       setFound({
-        // From the address that produced *this* result. `new URL` cannot throw
-        // on it: the route parsed the same string before crawling anything.
-        origin: new URL(targetUrl.trim()).origin,
+        // From the crawl that produced *this* result — the settled entry when
+        // there is one, else the typed address, whose `new URL` cannot throw:
+        // the route parsed the same string before crawling anything.
+        origin: journeyOriginFor(pages, targetUrl.trim()),
         pages,
         errors: payload?.errors ?? [],
         ...(payload?.truncated ? { truncated: payload.truncated } : {}),
