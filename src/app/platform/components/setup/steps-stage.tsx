@@ -7,8 +7,9 @@ import { VerifyButton } from './verify-button';
 
 /**
  * Stage 3: the path, in the same structured editor the journeys screen uses —
- * same policy, same redaction, same tests. "Verify so far" is the only thing
- * this stage adds: a walk in a real browser, no audit, nothing saved.
+ * same policy, same redaction, same tests. What this stage adds is the walk: a
+ * real browser follows the steps, no audit and nothing saved, and it starts on
+ * its own when the editor saves rather than waiting to be asked.
  */
 export function StepsStage({ detail, journey }: { detail: ClientDetail; journey: JourneySummary }) {
   return (
@@ -16,8 +17,8 @@ export function StepsStage({ detail, journey }: { detail: ClientDetail; journey:
       <StageHeading>Record the path</StageHeading>
       <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, color: T.inkSoft, maxWidth: 480, textWrap: 'pretty' }}>
         Add the steps a real user takes — go to a page, click, fill, then say what &ldquo;arrived&rdquo; looks
-        like. Save them, then verify: we walk the path in a real browser and show you where it
-        ends up. Nothing is audited or saved by a verify.
+        like. Save them and we walk the path in a real browser straight away, showing you where it
+        ends up. Nothing is audited or saved by a verify, and you can walk it again any time.
       </p>
 
       <JourneyStepsEditor

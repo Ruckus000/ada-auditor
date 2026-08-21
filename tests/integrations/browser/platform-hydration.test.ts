@@ -411,6 +411,29 @@ describe('platform hydration', () => {
       expect(wizardJourney, `journeys: ${JSON.stringify(journeys)}`).toBeTruthy();
       expect(wizardJourney!.steps?.[0]?.path).toBe('/shop');
 
+      // ---- Saving steps verifies them, with nothing else pressed. ----
+      // The stage's copy promises the sequence; this is the half that used to
+      // be an instruction. Asserted here because this is the only place in the
+      // suite where the editor and the verify control are on screen together —
+      // the journeys screen has the editor and no verify, which is also why
+      // that test can prove a save there does *not* start a walk.
+      // Unscoped, unlike the journeys-screen test: there the editor sits in a
+      // per-journey <li>, and here the stage renders exactly one, directly.
+      await page.getByRole('button', { name: 'Edit steps for Homepage' }).click();
+      await page.getByRole('button', { name: 'Add a step' }).click();
+      const newStep = page.locator('fieldset').nth(1);
+      await newStep.getByLabel('Does').selectOption('expect');
+      await newStep.getByLabel('URL contains (optional)').fill('/shop');
+      await page.getByRole('button', { name: 'Save steps' }).click();
+
+      // The walk starts itself and reports. `.invalid` cannot resolve, so the
+      // outcome is a failure panel — which is still proof the verify ran
+      // without the button being pressed, and cheaper to wait for than a
+      // success would be.
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 90_000, intervals: [1000] })
+        .toContain('The walk stopped before the end.');
+
       // ---- The failure stage: an operator's first audit not finishing is a
       // state the product has to explain, not a dead end. ----
       const startedAt = Date.now();
