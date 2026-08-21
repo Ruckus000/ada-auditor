@@ -50,46 +50,72 @@ export const maxDuration = 300;
 const MAX_INLINE_SCREENSHOT_BYTES = 2_500_000;
 
 /**
- * The last screenshot the walk wrote, inlined — `'omitted'` when it exists
- * but is too large to inline, null when nothing was captured at all. Three
- * states, not two: a preview with no evidence and a preview whose evidence
- * did not fit are different facts, and the caller needs to tell them apart to
- * answer `screenshotOmitted` correctly.
+ * Every page the walk reached, each with the screenshot taken there — as far
+ * as the response can afford.
+ *
+ * The evidence is per page because the question an operator is answering is
+ * per page: "did the path go where I meant at *this* step", not "where did it
+ * end". One trailing screenshot answered the second question only, which made
+ * a walk that went somewhere unexpected in the middle and recovered look
+ * identical to one that went straight there.
+ *
+ * The budget is shared across all of them rather than applied per screenshot,
+ * because the ceiling being defended is the *response*, and a per-item cap
+ * multiplied by twenty pages is not a cap at all. Filled last-first: the page
+ * the walk ended on is the one most likely to explain a failure, and the
+ * earlier ones degrade to `screenshotOmitted` rather than pushing the body
+ * past the limit.
+ *
+ * Three states per page, not two — a page with no screenshot on disk and a
+ * page whose screenshot did not fit are different facts, and only the second
+ * is worth telling the operator about.
  */
-async function lastScreenshot(
+type PageScreenshot = { mimeType: string; base64: string };
+
+async function pagesWithEvidence(
   pages: PageAudit[],
-): Promise<{ mimeType: string; base64: string } | 'omitted' | null> {
-  const path = [...pages].reverse().find((p) => p.artifacts.screenshotPath)?.artifacts
-    .screenshotPath;
-  if (!path) return null;
-  try {
-    const bytes = await readFile(path);
-    if (bytes.byteLength > MAX_INLINE_SCREENSHOT_BYTES) {
-      return 'omitted';
-    }
-    return { mimeType: 'image/png', base64: bytes.toString('base64') };
-  } catch {
-    // A missing file degrades the preview, it does not fail it.
-    return null;
-  }
-}
-
-/** Spreads a `lastScreenshot` result into a response body's fields. */
-function screenshotFields(
-  screenshot: Awaited<ReturnType<typeof lastScreenshot>>,
-): { screenshot: { mimeType: string; base64: string } } | { screenshotOmitted: true } | Record<string, never> {
-  if (screenshot === 'omitted') return { screenshotOmitted: true };
-  if (screenshot) return { screenshot };
-  return {};
-}
-
-/** What a screen needs to say "the walk reached these pages" — nothing else. */
-function pageMeta(pages: PageAudit[]) {
-  return pages.map((p) => ({
+): Promise<
+  Array<{
+    url: string;
+    title: string;
+    statusCode?: number;
+    screenshot?: PageScreenshot;
+    screenshotOmitted?: true;
+  }>
+> {
+  const meta = pages.map((p) => ({
     url: p.page.url,
     title: p.page.title,
     statusCode: p.page.statusCode,
   }));
+
+  const evidence = new Map<number, PageScreenshot | 'omitted'>();
+  let spent = 0;
+
+  // Last-first, so a budget that runs out costs the least useful pictures.
+  for (let index = pages.length - 1; index >= 0; index -= 1) {
+    const path = pages[index]?.artifacts.screenshotPath;
+    if (!path) continue;
+
+    try {
+      const bytes = await readFile(path);
+      if (spent + bytes.byteLength > MAX_INLINE_SCREENSHOT_BYTES) {
+        evidence.set(index, 'omitted');
+        continue;
+      }
+      spent += bytes.byteLength;
+      evidence.set(index, { mimeType: 'image/png', base64: bytes.toString('base64') });
+    } catch {
+      // A missing file degrades the preview, it does not fail it.
+    }
+  }
+
+  return meta.map((page, index) => {
+    const found = evidence.get(index);
+    if (found === 'omitted') return { ...page, screenshotOmitted: true as const };
+    if (found) return { ...page, screenshot: found };
+    return page;
+  });
 }
 
 export async function POST(
@@ -191,21 +217,24 @@ export async function POST(
       skipScan: true,
     });
 
-    const screenshot = await lastScreenshot(result.pages);
+    const pages = await pagesWithEvidence(result.pages);
     logInfo('journey_preview', {
       requestId,
       journeyId,
       steps: validated.data.length,
       pages: result.pages.length,
+      // How much of the walk the operator can actually see. A preview that
+      // reached six pages and could afford one picture is a different thing
+      // from one that shows all six, and only this number says which happened.
+      screenshots: pages.filter((page) => page.screenshot).length,
       durationMs: Date.now() - startedAt,
     });
 
     return Response.json({
       requestId,
       ok: true,
-      pages: pageMeta(result.pages),
+      pages,
       truncatedPages: result.truncatedPages,
-      ...screenshotFields(screenshot),
     });
   } catch (error) {
     const partial = error instanceof PartialJourneyError ? error.captured.pages : [];
@@ -213,13 +242,14 @@ export async function POST(
       error instanceof PartialJourneyError ? error.captured.truncatedPages : undefined;
     const message = error instanceof Error ? error.message : 'preview_failed';
     const code = classifyRunFailure(message, error instanceof Error ? error.name : undefined);
-    const screenshot = await lastScreenshot(partial);
+    const pages = await pagesWithEvidence(partial);
 
     logWarn('journey_preview_failed', {
       requestId,
       journeyId,
       reason: code,
       pages: partial.length,
+      screenshots: pages.filter((page) => page.screenshot).length,
       durationMs: Date.now() - startedAt,
     });
 
@@ -237,27 +267,24 @@ export async function POST(
         // safe to echo: `UnsafeTargetError` embeds the full page URL —
         // including the query string, where an SSO `?code=` or a reset token
         // lives — and a filesystem error would leak a tmpdir path. Only
-        // `journey_step_failed` is built exclusively from the runner's own
-        // `Step N ("action") could not …` sentence, which `classifyRunFailure`
-        // recognises by anchoring on that exact prefix — so a message reaching
-        // this branch is, by construction, one the runner composed and never
-        // one that echoes operator- or site-controlled text.
-        // Reduced again here, and the comment above is why this is not
-        // redundant. It claimed a `journey_step_failed` message is "by
-        // construction" free of site-controlled text; that was true of the
-        // template and false of what the runner interpolated into it, so this
-        // branch shipped Chromium's `net::ERR_… at https://host/cb?code=…`
-        // verbatim to an operator. `attemptStep` now reduces URLs at the point
-        // it formats the sentence, which is the real fix. This second pass is
-        // the cheap half of defence in depth: the next error path that happens
-        // to match the classifier's anchor does not get to re-open the hole,
-        // and a claim about content is enforced where the content is echoed
-        // rather than trusted from three modules away.
+        // `journey_step_failed` is anchored on the runner's own
+        // `Step N ("action") could not …` prefix, which is what
+        // `classifyRunFailure` recognises.
+        //
+        // That the runner composed the *template* was once taken to mean the
+        // whole sentence was value-free. It was not: `attemptStep` interpolates
+        // the first line of whatever Playwright threw, and a click wraps its
+        // navigation settle, so this branch shipped Chromium's `net::ERR_… at
+        // https://host/cb?code=…` verbatim to an operator. The fix is at the
+        // formatter, where the sentence is built. `withUrlsReduced` here is the
+        // cheap half of defence in depth: it enforces the claim where the
+        // content is echoed rather than trusting it from three modules away, so
+        // the next error path that happens to match the anchor cannot re-open
+        // the hole.
         ...(code === 'journey_step_failed' && error instanceof PartialJourneyError
           ? { detail: withUrlsReduced((message.split('\n')[0] ?? '').trim()) }
           : {}),
-        pages: pageMeta(partial),
-        ...screenshotFields(screenshot),
+        pages,
       },
       { status: 422 },
     );

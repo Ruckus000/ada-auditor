@@ -192,6 +192,73 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     expect(runJourney).not.toHaveBeenCalled();
   });
 
+  it('carries a screenshot on every page it could afford, last page first', async () => {
+    // The budget is shared across the whole response, so which pages get a
+    // picture is decided by what is left — and the route spends it from the
+    // last page backwards, because the page a walk ended on is the one most
+    // likely to explain what happened. Two pages fit here, the first does not.
+    const nearlyWholeBudget = join(tmpdir(), 'journey-preview-two-thirds.png');
+    await writeFile(nearlyWholeBudget, Buffer.alloc(1_400_000, 1));
+
+    try {
+      runJourney.mockResolvedValue({
+        pages: [
+          {
+            page: { url: 'https://acme.test/one', route: '/one', title: 'One' },
+            html: '',
+            axe: { violations: [], incomplete: [] },
+            axTree: [],
+            artifacts: { screenshotPath: nearlyWholeBudget },
+            pageKey: 'p001',
+            timing: { totalMs: 100 },
+          },
+          {
+            page: { url: 'https://acme.test/two', route: '/two', title: 'Two' },
+            html: '',
+            axe: { violations: [], incomplete: [] },
+            axTree: [],
+            artifacts: { screenshotPath: nearlyWholeBudget },
+            pageKey: 'p002',
+            timing: { totalMs: 100 },
+          },
+          {
+            page: { url: 'https://acme.test/three', route: '/three', title: 'Three' },
+            html: '',
+            axe: { violations: [], incomplete: [] },
+            axTree: [],
+            artifacts: { screenshotPath },
+            pageKey: 'p003',
+            timing: { totalMs: 100 },
+          },
+        ],
+        truncatedPages: 0,
+      });
+
+      const response = await POST(request(), params('acme', 'onboarding'));
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      // Order is preserved: the response reads as the path the walk took, even
+      // though the budget was spent in the opposite direction.
+      expect(body.pages.map((page: { title: string }) => page.title)).toEqual([
+        'One',
+        'Two',
+        'Three',
+      ]);
+
+      // The last two fit; the first is told it exists rather than left silent.
+      expect(body.pages[2].screenshot.mimeType).toBe('image/png');
+      expect(body.pages[1].screenshot.base64.length).toBeGreaterThan(0);
+      expect(body.pages[0].screenshot).toBeUndefined();
+      expect(body.pages[0].screenshotOmitted).toBe(true);
+
+      // And the ceiling this is all in service of still holds.
+      expect(JSON.stringify(body).length).toBeLessThan(4_500_000);
+    } finally {
+      await rm(nearlyWholeBudget, { force: true });
+    }
+  });
+
   it('walks the stored steps and answers pages plus a screenshot', async () => {
     runJourney.mockResolvedValue({
       pages: [
@@ -213,11 +280,13 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
-    expect(body.pages).toEqual([
-      { url: 'https://acme.test/', title: 'Acme', statusCode: undefined },
-    ]);
-    expect(body.screenshot.mimeType).toBe('image/png');
-    expect(body.screenshot.base64.length).toBeGreaterThan(0);
+    expect(body.pages).toHaveLength(1);
+    expect(body.pages[0].url).toBe('https://acme.test/');
+    expect(body.pages[0].title).toBe('Acme');
+    expect(body.pages[0].statusCode).toBeUndefined();
+    // The evidence rides on the page it was taken on, not on the envelope.
+    expect(body.pages[0].screenshot.mimeType).toBe('image/png');
+    expect(body.pages[0].screenshot.base64.length).toBeGreaterThan(0);
 
     const call = vi.mocked(runJourney).mock.calls[0][0];
     expect(call.skipScan).toBe(true);
@@ -327,8 +396,8 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
       const body = await response.json();
 
       expect(response.status).toBe(200);
-      expect(body.screenshot).toBeUndefined();
-      expect(body.screenshotOmitted).toBe(true);
+      expect(body.pages[0].screenshot).toBeUndefined();
+      expect(body.pages[0].screenshotOmitted).toBe(true);
     } finally {
       await rm(bigScreenshotPath, { force: true });
     }

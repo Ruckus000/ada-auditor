@@ -34,10 +34,23 @@ const MESSAGES: Record<string, string> = {
 /** A network failure never reached the server, so it never got a server error code. */
 const NETWORK_ERROR_CODE = 'network';
 
-/** `statusCode` is absent when nothing measured it — never assumed 200. */
-type PreviewPage = { url: string; title: string; statusCode?: number };
-
 type PreviewScreenshot = { mimeType: string; base64: string };
+
+/**
+ * One page the walk reached, with the picture taken there.
+ *
+ * `statusCode` is absent when nothing measured it — never assumed 200.
+ * `screenshot` is absent when none was captured, and `screenshotOmitted` says
+ * one existed but the response could not afford it; the route fills its
+ * budget from the last page backwards, so the omitted ones are the earliest.
+ */
+type PreviewPage = {
+  url: string;
+  title: string;
+  statusCode?: number;
+  screenshot?: PreviewScreenshot;
+  screenshotOmitted?: boolean;
+};
 
 type PreviewBody = {
   ok?: boolean;
@@ -45,8 +58,6 @@ type PreviewBody = {
   detail?: string;
   pages?: PreviewPage[];
   truncatedPages?: number;
-  screenshot?: PreviewScreenshot;
-  screenshotOmitted?: boolean;
 };
 
 type Outcome =
@@ -54,8 +65,6 @@ type Outcome =
       kind: 'ok';
       pages: PreviewPage[];
       truncatedPages: number;
-      screenshot?: PreviewScreenshot;
-      screenshotOmitted?: boolean;
     }
   | {
       kind: 'failed';
@@ -63,8 +72,6 @@ type Outcome =
       detail?: string;
       pages: PreviewPage[];
       truncatedPages: number;
-      screenshot?: PreviewScreenshot;
-      screenshotOmitted?: boolean;
     };
 
 export function VerifyButton({
@@ -107,8 +114,6 @@ export function VerifyButton({
           kind: 'ok',
           pages: body.pages ?? [],
           truncatedPages: body.truncatedPages ?? 0,
-          screenshot: body.screenshot,
-          screenshotOmitted: body.screenshotOmitted,
         });
       } else if (body?.ok === false) {
         // A walk that launched and then failed — `error` is always present
@@ -119,8 +124,6 @@ export function VerifyButton({
           detail: body.detail,
           pages: body.pages ?? [],
           truncatedPages: body.truncatedPages ?? 0,
-          screenshot: body.screenshot,
-          screenshotOmitted: body.screenshotOmitted,
         });
       } else {
         // No `ok` at all: refused before a browser launched.
@@ -229,17 +232,51 @@ export function VerifyButton({
             </p>
           ) : null}
 
-          {outcome.screenshot ? (
-            // eslint-disable-next-line @next/next/no-img-element -- the bytes arrive inline as a data: URI; next/image optimizes fetched assets and has nothing to add to bytes already in memory
-            <img
-              src={`data:${outcome.screenshot.mimeType};base64,${outcome.screenshot.base64}`}
-              alt={`Screenshot of the last page the walk reached${lastPage?.title ? `: ${lastPage.title}` : ''}`}
-              style={{ maxWidth: '100%', borderRadius: 8, border: `1px solid ${T.rule}` }}
-            />
-          ) : outcome.screenshotOmitted ? (
-            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, color: T.inkMuted }}>
-              The screenshot was too large to inline.
-            </p>
+          {/*
+            One entry per page the walk reached, in the order it reached them,
+            so the operator reads the path as a sequence rather than being
+            handed only its destination. A walk that detoured through a consent
+            wall and recovered used to look exactly like one that went straight
+            there; now the detour is visible where it happened.
+
+            An ordered list because the order is the content — `<ol>` says that
+            to a screen reader, where a stack of images says nothing.
+          */}
+          {outcome.pages.length > 0 ? (
+            <ol
+              style={{
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
+            >
+              {outcome.pages.map((page, index) => (
+                <li key={`${page.url}-${index}`} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.inkMuted }}>
+                    {index + 1}. {page.title || 'Untitled page'}
+                    {page.statusCode ? ` · ${page.statusCode}` : ''}
+                  </span>
+
+                  {page.screenshot ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- the bytes arrive inline as a data: URI; next/image optimizes fetched assets and has nothing to add to bytes already in memory
+                    <img
+                      src={`data:${page.screenshot.mimeType};base64,${page.screenshot.base64}`}
+                      alt={`Screenshot of page ${index + 1} of ${outcome.pages.length}${
+                        page.title ? `: ${page.title}` : ''
+                      }`}
+                      style={{ maxWidth: '100%', borderRadius: 8, border: `1px solid ${T.rule}` }}
+                    />
+                  ) : page.screenshotOmitted ? (
+                    <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.inkMuted }}>
+                      Screenshot too large to include in this response.
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
           ) : null}
         </div>
       ) : null}
