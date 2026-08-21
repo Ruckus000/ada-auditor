@@ -15,6 +15,7 @@ import {
 } from '../../../../domain/journey-step-draft';
 import { isActionAllowed } from '../../../../domain/policy';
 import { inertWhen } from '../../lib/inert-button';
+import { JOURNEY_STEPS_SAVED } from '../../lib/journey-events';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -233,6 +234,24 @@ export function JourneyStepsEditor({
       returnFocus.current = true;
       setOpen(false);
       router.refresh();
+
+      // Announce the save so a verify control beside this editor can walk the
+      // path that was just written, without anybody having to press a second
+      // button.
+      //
+      // An event rather than a callback prop, because of where the pair is
+      // composed: three wizard stages put this editor next to `VerifyButton`,
+      // and all three are *server* components, which cannot hand a function to
+      // a client one. The alternatives were restructuring those three around a
+      // client wrapper whose only job is to hold a number, or threading a
+      // `useImperativeHandle` through both — more machinery than a named
+      // announcement, and no more traceable.
+      //
+      // Scoped by `journeyId`, so a screen showing two editors cannot make one
+      // journey's save verify a different journey's path.
+      window.dispatchEvent(
+        new CustomEvent(JOURNEY_STEPS_SAVED, { detail: { journeyId } }),
+      );
     } catch {
       setError('Could not reach the server.');
     } finally {

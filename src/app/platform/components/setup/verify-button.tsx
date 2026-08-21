@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { inertWhen } from '../../lib/inert-button';
+import { JOURNEY_STEPS_SAVED, journeyIdFromSavedEvent } from '../../lib/journey-events';
 import { FONT, T } from '../../lib/tokens';
 
 /**
- * Walk a journey's *stored* steps without auditing it. The preview route
- * spends the same run budget and hits the same policy checks a real run
- * does, but scans nothing and saves nothing — so an operator can see where a
- * path actually ends up while they are still shaping the steps, not only
- * after committing to the first scored audit.
+ * Walk a journey's *stored* steps without auditing it. The preview route hits
+ * the same policy checks a real run does, but scans nothing, saves nothing,
+ * and spends the preview budget rather than the audits' — so an operator can
+ * see where a path actually ends up while they are still shaping the steps,
+ * without the loop costing a client their scheduled audit.
+ *
+ * It also runs itself. A successful save from the editor beside it triggers a
+ * walk, so "save, then verify" is the flow rather than an instruction.
  *
  * Two error surfaces, because the route answers two different kinds of "no":
  * a refusal before a browser ever launches (no target, no steps, the budget
@@ -95,6 +99,41 @@ export function VerifyButton({
       : errorCode === NETWORK_ERROR_CODE
         ? 'Could not reach the server.'
         : (MESSAGES[errorCode] ?? 'That did not verify. Try again.');
+
+  /**
+   * Save, then verify — without the operator pressing this button.
+   *
+   * The stage's own copy already promises the sequence ("Save them, then
+   * verify"), and until now the second half was a thing you had to remember.
+   * The editor announces a successful save and this walks the path that was
+   * just written, which is the loop authoring actually is: change a selector,
+   * see where it lands, change it again.
+   *
+   * Kept as a listener rather than a call the editor makes directly because
+   * the two are composed by server components in three stages and cannot share
+   * a prop; `lib/journey-events` holds the contract. The id check is what
+   * keeps a screen with two editors from verifying the wrong journey.
+   *
+   * `verify()` refuses to start while one is already running, so a burst of
+   * saves cannot stack walks — the last one that arrives while idle wins, and
+   * the budget only pays for what actually ran.
+   */
+  useEffect(() => {
+    function onSaved(event: Event) {
+      if (journeyIdFromSavedEvent(event) !== journeyId) return;
+      // Called from an event, never during the effect: the React Compiler
+      // rules this repo now enforces in CI refuse state set from an effect
+      // body, and rightly — an effect that sets state on mount is a render
+      // loop waiting to happen.
+      void verify();
+    }
+
+    window.addEventListener(JOURNEY_STEPS_SAVED, onSaved);
+    return () => window.removeEventListener(JOURNEY_STEPS_SAVED, onSaved);
+    // `verify` is redeclared each render and closes over `busy`; re-subscribing
+    // per render keeps the handler reading current state rather than the state
+    // it was born with.
+  });
 
   async function verify() {
     if (busy) return;
