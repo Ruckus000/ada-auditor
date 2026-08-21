@@ -12,7 +12,7 @@ import type { PageAudit } from '../../../../../../../../integrations/browser/typ
 import { getPlatformStore } from '../../../../../../../../integrations/persistence';
 import { logInfo, logWarn } from '../../../../../../../../services/logger';
 import { withUrlsReduced } from '../../../../../../../../services/safe-url';
-import { consumeRunBudget } from '../../../../../../../../services/run-budget';
+import { consumePreviewBudget } from '../../../../../../../../services/run-budget';
 import { authorizePrincipal } from '../../../../../../_lib/authorize';
 import { createRequestId } from '../../../../../../_lib/request-id';
 import { getRunCounter } from '../../../../../../_lib/run-counter';
@@ -31,9 +31,13 @@ import { classifyRunFailure } from '../../../../../../_lib/run-failure';
  * It replays the *stored* steps. The editor saves first, then verifies — one
  * source of truth, no "preview of unsaved steps" variant to disagree with it.
  *
- * It spends the shared run budget. Browser time against a client's live site
- * is the cost `AUDITOR_MAX_RUNS_PER_HOUR` exists to cap, and a preview is
- * exactly that; a free variant would be the loophole.
+ * It spends a budget — its own, `AUDITOR_MAX_PREVIEWS_PER_HOUR`. Browser time
+ * against a client's live site is a real cost and a free variant would be the
+ * loophole, so previews are counted; but they are counted separately from
+ * audits, because sharing one ceiling made authoring and auditing compete for
+ * it. An operator iterating on a stale selector could spend the hour's audits
+ * without running one, and the scheduler would then refuse a real client's
+ * audit because somebody was typing.
  */
 
 // Launches Chromium, exactly like the runs route beside it.
@@ -179,7 +183,7 @@ export async function POST(
   }
   const allowedHosts = [targetHostname, ...(journey.allowedHosts ?? [])];
 
-  const budget = await consumeRunBudget(getRunCounter());
+  const budget = await consumePreviewBudget(getRunCounter());
   if (!budget.allowed) {
     logWarn('run_budget_exceeded', {
       requestId,

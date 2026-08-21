@@ -38,6 +38,56 @@ export interface RunCounter {
 export const DEFAULT_MAX_RUNS_PER_HOUR = 20;
 export const DEFAULT_MAX_RUNS_PER_DAY = 100;
 
+/**
+ * Previews count separately, against their own ceiling.
+ *
+ * A preview is the runner minus the audit: same Chromium, same walk, but no
+ * axe scan, no advisory call, and nothing persisted. So it costs browser time
+ * and not much else, where a run costs browser time plus an Opus call — which
+ * is most of what the audit budget is defending.
+ *
+ * Sharing one counter made authoring compete with auditing for the same
+ * twenty, and the loser was whichever happened second. An operator iterating
+ * on a stale selector could spend the hour's audits without running one, and
+ * the scheduler would then refuse a real client's audit because somebody was
+ * typing. Two counters means the failure mode of authoring is "wait to verify
+ * again", never "the audit that was due did not happen".
+ *
+ * Higher than the run ceiling because verifying is a loop and auditing is a
+ * decision: shaping one journey's steps is ten or twenty walks, and a client
+ * gets audited once. These numbers are a starting point rather than a
+ * measurement, in the same spirit as `DEFAULT_MAX_PAGES` — the thing that will
+ * replace the guess is `journey_preview`'s `durationMs` across a real
+ * authoring session, not a tighter argument here.
+ */
+export const DEFAULT_MAX_PREVIEWS_PER_HOUR = 40;
+export const DEFAULT_MAX_PREVIEWS_PER_DAY = 200;
+
+/** What separates one budget from another: its counter keys and its limits. */
+type BudgetSpec = {
+  prefix: 'runs' | 'previews';
+  hourEnv: string;
+  dayEnv: string;
+  hourDefault: number;
+  dayDefault: number;
+};
+
+const RUNS: BudgetSpec = {
+  prefix: 'runs',
+  hourEnv: 'AUDITOR_MAX_RUNS_PER_HOUR',
+  dayEnv: 'AUDITOR_MAX_RUNS_PER_DAY',
+  hourDefault: DEFAULT_MAX_RUNS_PER_HOUR,
+  dayDefault: DEFAULT_MAX_RUNS_PER_DAY,
+};
+
+const PREVIEWS: BudgetSpec = {
+  prefix: 'previews',
+  hourEnv: 'AUDITOR_MAX_PREVIEWS_PER_HOUR',
+  dayEnv: 'AUDITOR_MAX_PREVIEWS_PER_DAY',
+  hourDefault: DEFAULT_MAX_PREVIEWS_PER_HOUR,
+  dayDefault: DEFAULT_MAX_PREVIEWS_PER_DAY,
+};
+
 export type Env = Record<string, string | undefined>;
 
 function limitFrom(env: Env, name: string, fallback: number): number {
@@ -53,11 +103,21 @@ export type BudgetVerdict = {
   resetsInSeconds?: number;
 };
 
-/** `runs:hour:YYYYMMDDHH` — the key is the clock. */
-export function windowKeys(now: Date): { hour: string; day: string } {
+/**
+ * `runs:hour:YYYYMMDDHH` — the key is the clock.
+ *
+ * The prefix is what keeps the two budgets from spending each other: previews
+ * write `previews:hour:…`, so the same window can refuse one and allow the
+ * other. It defaults to `runs` because every caller before previews existed
+ * meant runs, and a default here is cheaper than an argument at each of them.
+ */
+export function windowKeys(
+  now: Date,
+  prefix: 'runs' | 'previews' = 'runs',
+): { hour: string; day: string } {
   const iso = now.toISOString();
   const day = iso.slice(0, 10).replace(/-/g, '');
-  return { hour: `runs:hour:${day}${iso.slice(11, 13)}`, day: `runs:day:${day}` };
+  return { hour: `${prefix}:hour:${day}${iso.slice(11, 13)}`, day: `${prefix}:day:${day}` };
 }
 
 function secondsToNextHour(now: Date): number {
@@ -81,9 +141,33 @@ export async function consumeRunBudget(
   now: Date = new Date(),
   env: Env = process.env,
 ): Promise<BudgetVerdict> {
-  const maxPerHour = limitFrom(env, 'AUDITOR_MAX_RUNS_PER_HOUR', DEFAULT_MAX_RUNS_PER_HOUR);
-  const maxPerDay = limitFrom(env, 'AUDITOR_MAX_RUNS_PER_DAY', DEFAULT_MAX_RUNS_PER_DAY);
-  const keys = windowKeys(now);
+  return consumeBudget(RUNS, counter, now, env);
+}
+
+/**
+ * The same, spent against the preview ceiling instead.
+ *
+ * Separate entry point rather than a flag, so a call site cannot spend the
+ * wrong budget by passing the wrong boolean — the name at the call site says
+ * which thing is being paid for.
+ */
+export async function consumePreviewBudget(
+  counter: RunCounter,
+  now: Date = new Date(),
+  env: Env = process.env,
+): Promise<BudgetVerdict> {
+  return consumeBudget(PREVIEWS, counter, now, env);
+}
+
+async function consumeBudget(
+  spec: BudgetSpec,
+  counter: RunCounter,
+  now: Date,
+  env: Env,
+): Promise<BudgetVerdict> {
+  const maxPerHour = limitFrom(env, spec.hourEnv, spec.hourDefault);
+  const maxPerDay = limitFrom(env, spec.dayEnv, spec.dayDefault);
+  const keys = windowKeys(now, spec.prefix);
 
   let hourCount: number;
   let dayCount: number;
@@ -92,7 +176,14 @@ export async function consumeRunBudget(
     dayCount = await counter.increment(keys.day, secondsToNextDay(now));
   } catch (error) {
     logWarn('run_budget_degraded', {
-      note: 'The run counter is unreachable, so this run was allowed uncounted.',
+      // Which ceiling stopped being enforced, now that there are two of them.
+      // Without this the line cannot tell "we stopped counting audits" from
+      // "we stopped counting previews", and those are different sizes of
+      // problem — one is the bill, the other is browser time.
+      budget: spec.prefix,
+      note: `The ${spec.prefix} counter is unreachable, so this ${
+        spec.prefix === 'runs' ? 'run' : 'preview'
+      } was allowed uncounted.`,
       reason: error instanceof Error ? error.message : 'unknown error',
     });
     return { allowed: true };

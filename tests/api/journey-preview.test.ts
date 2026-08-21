@@ -84,6 +84,7 @@ let runs: InstanceType<typeof MemoryRunStore>;
 
 describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', () => {
   const originalMaxRunsPerHour = process.env.AUDITOR_MAX_RUNS_PER_HOUR;
+  const originalMaxPreviewsPerHour = process.env.AUDITOR_MAX_PREVIEWS_PER_HOUR;
 
   beforeEach(async () => {
     runJourney.mockReset();
@@ -113,6 +114,10 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     resetRunStore();
     if (originalMaxRunsPerHour === undefined) delete process.env.AUDITOR_MAX_RUNS_PER_HOUR;
     else process.env.AUDITOR_MAX_RUNS_PER_HOUR = originalMaxRunsPerHour;
+    // Restored too, or the ceiling of 1 set by the preview-budget test leaks
+    // into every test after it and refuses walks those tests expect to run.
+    if (originalMaxPreviewsPerHour === undefined) delete process.env.AUDITOR_MAX_PREVIEWS_PER_HOUR;
+    else process.env.AUDITOR_MAX_PREVIEWS_PER_HOUR = originalMaxPreviewsPerHour;
   });
 
   it('refuses an unauthenticated request', async () => {
@@ -414,8 +419,10 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     expect(after).toEqual(before);
   });
 
-  it('spends the run budget', async () => {
-    process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
+  it('spends the preview budget', async () => {
+    // Previews are not free — browser time against a client's live site is a
+    // real cost, and an uncounted variant would be the loophole.
+    process.env.AUDITOR_MAX_PREVIEWS_PER_HOUR = '1';
     runJourney.mockResolvedValue({ pages: [], truncatedPages: 0 });
 
     const first = await POST(request(), params('acme', 'onboarding'));
@@ -426,5 +433,20 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
 
     expect(second.status).toBe(429);
     expect(secondBody.error).toBe('run_budget_exceeded');
+  });
+
+  it('does not spend the audit budget', async () => {
+    // The point of the split. Authoring is a loop — ten or twenty walks while
+    // shaping one journey's steps — and auditing is a decision. On one shared
+    // counter the loop could drain the hour's audits without running a single
+    // one, and the scheduler would then refuse a real client's audit because
+    // somebody was typing. An audit ceiling of one must not refuse a second
+    // preview.
+    process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
+    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0 });
+
+    expect((await POST(request(), params('acme', 'onboarding'))).status).toBe(200);
+    expect((await POST(request(), params('acme', 'onboarding'))).status).toBe(200);
+    expect((await POST(request(), params('acme', 'onboarding'))).status).toBe(200);
   });
 });
