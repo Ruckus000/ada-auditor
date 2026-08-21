@@ -367,6 +367,13 @@ describe('platform hydration', () => {
       // and by then this client is fully onboarded, so the incomplete-setup
       // hint has retired and no axe pass has ever rendered it. State-dependent
       // UI only gets covered from inside the walk that produces the state.
+      // Axe's `document-title` rule reads `document.title`, and the App Router
+      // applies a route's metadata *after* the render whose text the assertion
+      // above polled for. Scanning in that window reports a serious violation
+      // against a page that has a title a moment later — which is what turned
+      // master red once already. Waiting for the title is the whole fix; it is
+      // the same shape as every other post-navigation check in this file.
+      await expect.poll(() => page.title(), { timeout: 15_000 }).not.toBe('');
       const seededAxe = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
       expect(
         seededAxe.violations
@@ -423,6 +430,13 @@ describe('platform hydration', () => {
       // states (it walks each route once, cold). After Fixes 1-2 this state
       // includes the editor and the credentials panel, which is the point:
       // nothing here has been swept by axe until this assertion exists.
+      // Axe's `document-title` rule reads `document.title`, and the App Router
+      // applies a route's metadata *after* the render whose text the assertion
+      // above polled for. Scanning in that window reports a serious violation
+      // against a page that has a title a moment later — which is what turned
+      // master red once already. Waiting for the title is the whole fix; it is
+      // the same shape as every other post-navigation check in this file.
+      await expect.poll(() => page.title(), { timeout: 15_000 }).not.toBe('');
       const failedAxe = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
       expect(
         failedAxe.violations
