@@ -12,6 +12,14 @@ jobs:
   prune:
     name: Delete evidence past its retention window
     runs-on: ubuntu-latest
+    # `issues: write` because the failure step below files one, and this
+    # repository's default workflow token is read-only — without this the
+    # alerting about a silent failure would itself fail silently, which is the
+    # exact shape of the problem it exists to fix. `contents: read` is spelled
+    # out because naming any permission drops the rest to none.
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -28,3 +36,45 @@ jobs:
           # still prunes, and says `databaseCleared: false` so the gap is
           # visible rather than silent.
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # This job failed eleven nights running and nobody knew. Its own header
+      # says retention is enforced on a schedule "so it does not depend on
+      # anyone remembering" — but a scheduled job that fails into an empty room
+      # depends on exactly that, and it only surfaced because someone happened
+      # to ask about a red badge.
+      #
+      # An issue rather than a chat message, because the failure then persists
+      # until it is closed instead of scrolling out of view, and because it
+      # needs no secret and no third-party service that can itself be
+      # misconfigured.
+      #
+      # One issue, not one a night. `smoke-real.yml` already records this
+      # project's position — a job that goes red repeatedly "trains people to
+      # ignore red" — and eleven identical issues would do the same. Reopening
+      # a closed one is deliberate too: it means a recurrence after somebody
+      # thought it was fixed lands on the same thread, with its history.
+      - name: File an issue if the sweep did not run
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TITLE='Artifact retention sweep is failing'
+          BODY=$(printf '%s\n' \
+            'The scheduled sweep did not complete, so audit evidence past its retention window is not being deleted.' \
+            '' \
+            "Failed run: ${RUN_URL}" \
+            '' \
+            'This evidence is screenshots and DOM snapshots of authenticated pages on client systems, so the retention window is the point of the job. It will keep failing nightly until the cause is fixed; this issue is updated rather than duplicated.')
+          # Exact title match over open *and* closed, so a recurrence reopens
+          # the original thread rather than starting a parallel one.
+          EXISTING=$(gh issue list --state all --limit 100 --json number,title \
+            --jq "first(.[] | select(.title == \"${TITLE}\") | .number) // empty")
+          if [ -n "${EXISTING}" ]; then
+            gh issue reopen "${EXISTING}" 2>/dev/null || true
+            gh issue comment "${EXISTING}" --body "${BODY}"
+            echo "updated issue #${EXISTING}"
+          else
+            gh issue create --title "${TITLE}" --body "${BODY}"
+          fi
