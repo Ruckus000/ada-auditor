@@ -55,7 +55,7 @@ describe('buildClientDetail', () => {
       name: 'Acme',
       owner: 'Alex Reed',
       lastRun: null,
-      hasCompletedRun: false,
+      completedRun: null,
     });
     expect(detail?.journeys).toEqual([]);
   });
@@ -289,7 +289,7 @@ describe('buildClientDetail, on credentials', () => {
  * a failed retry sits on top of an old success and must not un-onboard a
  * client who already cleared setup once.
  */
-describe('buildClientDetail, on hasCompletedRun', () => {
+describe('buildClientDetail, on completedRun', () => {
   it('reports whether any journey ever completed a run', async () => {
     await platform.upsertClient({ id: 'cd-hcr-client', name: 'Has Completed Run' });
     await platform.upsertJourney({
@@ -319,7 +319,36 @@ describe('buildClientDetail, on hasCompletedRun', () => {
 
     const detail = await buildClientDetail('cd-hcr-client', deps());
 
-    expect(detail?.hasCompletedRun).toBe(true);
+    expect(detail?.completedRun).toMatchObject({
+      journeyId: 'cd-hcr-j',
+      run: { requestId: 'cd-hcr-old' },
+    });
+  });
+
+  /**
+   * Archiving the journey that holds a client's only completed run does not
+   * un-onboard them. The run is still in the database and still on the
+   * findings screen — and "start over" on the wizard's failed stage archives a
+   * journey, so this was reachable from the product's own buttons.
+   */
+  it('counts a completed run on a journey that has since been archived', async () => {
+    await platform.upsertClient({ id: 'cd-arch-client', name: 'Archived Journey' });
+    await platform.upsertJourney({
+      id: 'cd-arch-j',
+      clientId: 'cd-arch-client',
+      name: 'Checkout',
+      steps: [],
+    });
+    await runs.saveRun(
+      run({ requestId: 'cd-arch-r', journeyId: 'cd-arch-j', status: 'complete' }),
+    );
+    await platform.archiveJourney('cd-arch-j');
+
+    const detail = await buildClientDetail('cd-arch-client', deps());
+
+    // The catalog still hides it; the onboarding fact does not.
+    expect(detail?.journeys).toEqual([]);
+    expect(detail?.completedRun).toMatchObject({ journeyId: 'cd-arch-j' });
   });
 
   it('a failed-only history is not a completed run', async () => {
@@ -335,6 +364,6 @@ describe('buildClientDetail, on hasCompletedRun', () => {
 
     const detail = await buildClientDetail('cd-hcr2-client', deps());
 
-    expect(detail?.hasCompletedRun).toBe(false);
+    expect(detail?.completedRun).toBeNull();
   });
 });

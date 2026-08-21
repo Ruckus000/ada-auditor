@@ -297,6 +297,25 @@ export interface JourneyStore {
   upsertJourney(
     journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,
   ): Promise<void>;
+  /**
+   * Insert a journey only if its id is free, and say whether it was.
+   *
+   * Minting an id used to be read-then-write: list the taken ids, derive one
+   * that is not among them, then `upsertJourney`. Nothing made that pair
+   * atomic and the write could never fail — the on-conflict update always
+   * succeeds — so two creates racing on the same client and name observed the
+   * same taken set, derived the same id, and the second silently overwrote the
+   * first: one operator's journey, target, steps and credential refs replaced,
+   * with no error anywhere. The caller now retries with the next suffix on
+   * `false` instead of trusting a list.
+   *
+   * An archived journey's id is taken, not vacant: the row is still there, so
+   * the insert still conflicts. That is the same protection the
+   * `includeArchived` list gave the old path, without the full-table read.
+   */
+  createJourney(
+    journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,
+  ): Promise<boolean>;
   /** Archive, never delete: deleting a journey cascades away its run history. */
   archiveJourney(id: string): Promise<void>;
   /**

@@ -82,6 +82,14 @@ export async function GET(
   );
 }
 
+/**
+ * How many suffixes to try before giving up on a name. Each attempt is one
+ * insert that answered "taken", so the ceiling exists to bound a pathological
+ * case, not an ordinary one — the second journey called "Checkout" costs one
+ * extra round trip.
+ */
+const MAX_ID_ATTEMPTS = 25;
+
 const scheduleSchema = z.enum(['off', 'daily', 'weekly']);
 
 const createJourneySchema = z.object({
@@ -244,19 +252,16 @@ export async function POST(
   // Scoped to the client, because the id is global: two clients may both have
   // a journey called "Checkout" and they are not the same journey.
   //
-  // `includeArchived: true` because an archived journey's id is retired, not
-  // vacant. `upsertJourney`'s on-conflict update preserves `archived_at`, so
-  // minting a fresh journey against a list that omits archived ids would let
-  // it collide with one — and resurrect the old row as a journey that is born
-  // archived: invisible in the catalog and unrunnable from the moment it is
-  // "created".
-  const taken = (await platform.listJourneys(undefined, { includeArchived: true })).map(
-    (journey) => journey.id,
-  );
-  const id = clientIdFromName(`${clientId} ${parsed.name}`, taken);
-
-  await platform.upsertJourney({
-    id,
+  // Minted against the store rather than against a list read a moment earlier.
+  // The list version was a read-then-write with no uniqueness behind it and an
+  // `upsertJourney` that could not fail, so two creates racing on the same
+  // client and name derived the same id and the second silently replaced the
+  // first. `createJourney` inserts only into a free id and says whether it
+  // did; a taken one — including an archived journey's, whose row still exists
+  // — sends this round again with the next suffix. It also drops what used to
+  // be a `select *` over every client's journeys, steps and all, just to read
+  // ids.
+  const draft = {
     clientId,
     name: parsed.name,
     ...(parsed.targetUrl ? { targetUrl: parsed.targetUrl } : {}),
@@ -265,7 +270,25 @@ export async function POST(
     ...(parsed.allowedHosts ? { allowedHosts: parsed.allowedHosts } : {}),
     ...(parsed.environment ? { environment: parsed.environment } : {}),
     steps: parsed.steps ?? [],
-  });
+  };
+
+  const refused: string[] = [];
+  let id: string | null = null;
+  for (let attempt = 0; attempt < MAX_ID_ATTEMPTS; attempt += 1) {
+    const candidate = clientIdFromName(`${clientId} ${parsed.name}`, refused);
+    if (await platform.createJourney({ id: candidate, ...draft })) {
+      id = candidate;
+      break;
+    }
+    refused.push(candidate);
+  }
+
+  if (id === null) {
+    // Twenty-five journeys of the same name under one client, or a store
+    // refusing every insert. Either way this is a 409 and not a 500: nothing
+    // is wrong with the request, the name is just unavailable.
+    return Response.json({ error: 'journey_id_unavailable', requestId }, { status: 409 });
+  }
 
   await platform.recordEvent({
     clientId,

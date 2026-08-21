@@ -368,6 +368,29 @@ export class PostgresPlatformStore implements PlatformStore {
     `;
   }
 
+  /** See `JourneyStore.createJourney`: the insert is the lock. */
+  async createJourney(
+    journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,
+  ): Promise<boolean> {
+    const rows = await this.sql<{ id: string }>`
+      insert into journeys (
+        id, client_id, name, target_url, environment, schedule, schedule_hour,
+        allowed_hosts, steps, updated_at
+      )
+      values (
+        ${journey.id}, ${journey.clientId}, ${journey.name},
+        ${journey.targetUrl ?? null}, ${journey.environment ?? 'production'},
+        ${journey.schedule ?? 'off'}, ${journey.scheduleHour ?? null},
+        ${journey.allowedHosts ?? null},
+        ${JSON.stringify(journey.steps ?? [])}::jsonb, now()
+      )
+      on conflict (id) do nothing
+      returning id
+    `;
+
+    return rows.length > 0;
+  }
+
   /**
    * One statement: select the due rows and stamp them in the same breath.
    *

@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState } from 'react';
+import { NETWORK_ERROR_CODE, useErrorCode } from '../../lib/error-copy';
+import { errorStyle, inputStyle, labelStyle } from '../../lib/field-styles';
 import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 import { StageHeading } from './stage-heading';
@@ -13,18 +15,24 @@ import { StageHeading } from './stage-heading';
  * button, an error CODE resolved to prose only at render, and `aria-invalid`
  * tied to the one field an error can actually be about.
  */
-const MESSAGES: Record<string, string> = {
-  invalid_request_body: 'That does not look like a URL we can audit. Check it and try again.',
-  unauthorized: 'Your session expired. Reload and sign in again.',
-  inline_credential: 'A step carried a credential of its own. Use a stored credential by name instead.',
-};
-
-/** A network failure never reached the server, so it never got a server error code. */
-const NETWORK_ERROR_CODE = 'network';
 /** `normalizeUrl` rejected the input before any request went out — a code this form invents itself. */
 const LOCAL_INVALID_URL = 'local_invalid_url';
 /** `normalizeUrl` found a `user:pass@host` before any request went out — its own local code too. */
 const LOCAL_URL_CREDENTIALS = 'local_url_credentials';
+
+const INVALID_URL = 'That does not look like a URL we can audit. Check it and try again.';
+
+const MESSAGES: Record<string, string> = {
+  invalid_request_body: INVALID_URL,
+  // Aliased rather than given a second sentence of its own — the same mistake
+  // ("that is not a URL we can audit") should not be able to drift into two
+  // different descriptions of itself.
+  [LOCAL_INVALID_URL]: INVALID_URL,
+  [LOCAL_URL_CREDENTIALS]:
+    'Remove the username and password from the URL — credentials never belong in an address.',
+  inline_credential:
+    'A step carried a credential of its own. Use a stored credential by name instead.',
+};
 
 type Mode = 'homepage' | 'journey';
 type Environment = 'production' | 'preview' | 'staging';
@@ -94,27 +102,15 @@ export function WhereScreen({ clientId }: { clientId: string }) {
   // a URL-shaped code gets to mark the URL field invalid (see below) — a
   // decision that is only possible to make from the code, not from prose
   // that has already forgotten which field it was about.
-  const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const { errorCode, errorMessage, setErrorCode, clearError } = useErrorCode(
+    MESSAGES,
+    (status) => `Could not save that (${status}). Try again.`,
+  );
 
   const urlErrorActive =
     errorCode === LOCAL_INVALID_URL ||
     errorCode === LOCAL_URL_CREDENTIALS ||
     errorCode === 'invalid_request_body';
-
-  const errorMessage =
-    errorCode === null
-      ? null
-      : errorCode === NETWORK_ERROR_CODE
-        ? 'Could not reach the server. Check your connection and try again.'
-        : errorCode === LOCAL_INVALID_URL
-          // Aliased rather than a second sentence of its own — the same
-          // mistake ("that is not a URL we can audit") should not be able to
-          // drift into two different descriptions of itself.
-          ? MESSAGES.invalid_request_body
-          : errorCode === LOCAL_URL_CREDENTIALS
-            ? 'Remove the username and password from the URL — credentials never belong in an address.'
-            : (MESSAGES[errorCode] ?? `Could not save that (${errorStatus}). Try again.`);
 
   const blocked = saving || raw.trim() === '';
 
@@ -140,8 +136,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
     const url = normalized;
 
     setSaving(true);
-    setErrorCode(null);
-    setErrorStatus(null);
+    clearError();
 
     const body = journeyDraft(mode, url, environment);
 
@@ -154,8 +149,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
 
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
-        setErrorCode(parsed?.error ?? `status_${response.status}`);
-        setErrorStatus(response.status);
+        setErrorCode(parsed?.error ?? `status_${response.status}`, response.status);
         setSaving(false);
         return;
       }
@@ -308,23 +302,6 @@ export function WhereScreen({ clientId }: { clientId: string }) {
   );
 }
 
-const labelStyle = {
-  fontFamily: FONT.sans,
-  fontSize: 12,
-  fontWeight: 650,
-  color: T.inkSoft,
-} as const;
-
-const inputStyle = {
-  padding: '9px 11px',
-  borderRadius: 8,
-  border: `1px solid ${T.rule}`,
-  background: '#fff',
-  fontFamily: FONT.sans,
-  fontSize: 13.5,
-  color: T.ink,
-} as const;
-
 const urlInputStyle = {
   ...inputStyle,
   fontFamily: FONT.mono,
@@ -339,15 +316,4 @@ const radioLabelStyle = {
   fontSize: 13,
   color: T.inkSoft,
   cursor: 'pointer',
-} as const;
-
-const errorStyle = {
-  margin: 0,
-  padding: '9px 12px',
-  borderRadius: 8,
-  background: T.failWash,
-  border: `1px solid ${T.failEdge}`,
-  color: T.failDeep,
-  fontFamily: FONT.sans,
-  fontSize: 12.5,
 } as const;

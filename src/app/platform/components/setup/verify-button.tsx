@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { NETWORK_ERROR_CODE, useErrorCode } from '../../lib/error-copy';
+import { errorStyle } from '../../lib/field-styles';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
@@ -21,18 +23,18 @@ import { FONT, T } from '../../lib/tokens';
  * refusal, with its own panel rather than a one-line alert.
  */
 
+/**
+ * This form's own codes. The shared ones — `unauthorized`, `journey_not_found`,
+ * the budget — come from `SHARED_ERROR_MESSAGES`; `invalid_journey_steps` is
+ * overridden here because this button is about to *walk* those steps, not run
+ * them.
+ */
 const MESSAGES: Record<string, string> = {
   journey_not_runnable: 'This journey has no target URL, so nothing can walk it.',
   journey_has_no_steps: 'Save at least one step first.',
   invalid_journey_steps: 'These stored steps are not ones a walk could follow.',
-  run_budget_exceeded: 'The run budget for this window is used up. Try again later.',
-  unauthorized: 'Your session expired. Reload and sign in again.',
-  journey_not_found: 'That journey is no longer on this client.',
   action_not_allowed_here: 'One of these steps does something this journey’s environment does not allow.',
 };
-
-/** A network failure never reached the server, so it never got a server error code. */
-const NETWORK_ERROR_CODE = 'network';
 
 /** `statusCode` is absent when nothing measured it — never assumed 200. */
 type PreviewPage = { url: string; title: string; statusCode?: number };
@@ -80,19 +82,15 @@ export function VerifyButton({
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   // The code, not the sentence — see `where-screen.tsx`. Only set for a
   // pre-walk refusal; a walk that ran and failed is `outcome`, not this.
-  const [errorCode, setErrorCode] = useState<string | null>(null);
-
-  const errorMessage =
-    errorCode === null
-      ? null
-      : errorCode === NETWORK_ERROR_CODE
-        ? 'Could not reach the server.'
-        : (MESSAGES[errorCode] ?? 'That did not verify. Try again.');
+  const { errorMessage, setErrorCode, clearError } = useErrorCode(
+    MESSAGES,
+    () => 'That did not verify. Try again.',
+  );
 
   async function verify() {
     if (busy) return;
     setBusy(true);
-    setErrorCode(null);
+    clearError();
     setOutcome(null);
 
     try {
@@ -138,6 +136,22 @@ export function VerifyButton({
     outcome?.kind === 'ok'
       ? `The path works — walked ${outcome.pages.length} ${outcome.pages.length === 1 ? 'page' : 'pages'}, ended on “${lastPage?.title || 'an untitled page'}”.`
       : '';
+  /**
+   * What the live region says once the walk is over — either outcome.
+   *
+   * It used to say `successSentence`, which is `''` for a failure: a screen
+   * reader heard "Walking the path in a real browser…" and then the region
+   * emptied, while the panel below reported the failure to everyone else. The
+   * panel is a plain `div`, neither focused nor live, so nothing announced it.
+   * In an accessibility-auditing product that is the defect class the tool
+   * itself reports.
+   */
+  const outcomeSentence =
+    outcome === null
+      ? ''
+      : outcome.kind === 'ok'
+        ? successSentence
+        : `The walk stopped before the end. ${outcome.detail ?? describeRunFailure(outcome.error)}`;
 
   return (
     <span style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
@@ -170,24 +184,12 @@ export function VerifyButton({
           to be listening in two places to hear how a verify ended.
         */}
         <span role="status" style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-          {busy ? 'Walking the path in a real browser — usually under a minute.' : successSentence}
+          {busy ? 'Walking the path in a real browser — usually under a minute.' : outcomeSentence}
         </span>
       </span>
 
       {errorMessage ? (
-        <p
-          role="alert"
-          style={{
-            margin: 0,
-            padding: '9px 12px',
-            borderRadius: 8,
-            background: T.failWash,
-            border: `1px solid ${T.failEdge}`,
-            color: T.failDeep,
-            fontFamily: FONT.sans,
-            fontSize: 12.5,
-          }}
-        >
+        <p role="alert" style={errorStyle}>
           {errorMessage}
         </p>
       ) : null}

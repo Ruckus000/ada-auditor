@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { NETWORK_ERROR_CODE, useErrorCode } from '../../lib/error-copy';
 import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
@@ -26,13 +27,6 @@ const POLL_INTERVAL_MS = 3000;
  *  fetches themselves are the only slack. */
 const MAX_POLLS = 100;
 
-const MESSAGES: Record<string, string> = {
-  invalid_journey_steps: 'This journey’s stored steps are not valid. Record it again.',
-  journey_not_found: 'That journey is no longer on this client.',
-  unauthorized: 'Your session expired. Reload and sign in again.',
-  run_budget_exceeded: 'The run budget for this window is used up. Try again later.',
-};
-
 type Phase = 'idle' | 'starting' | 'running' | 'slow';
 
 export function FirstRunControl({
@@ -48,7 +42,12 @@ export function FirstRunControl({
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>(pollUrl ? 'running' : 'idle');
-  const [error, setError] = useState<string | null>(null);
+  // Every code this control can receive is a shared one, so it names no map of
+  // its own — the sentence is still derived at render, never stored.
+  const { errorMessage, setErrorCode, clearError } = useErrorCode(
+    {},
+    (status) => `That did not start (${status}). Try again.`,
+  );
   const cancelled = useRef(false);
   /**
    * One watcher, however many entry paths. A run started by this instance's
@@ -81,9 +80,17 @@ export function FirstRunControl({
 
         try {
           const response = await fetch(url);
+          // Re-checked after the awaits, not only before them. The operator
+          // can navigate away while a poll is in flight, and `router.refresh()`
+          // below would then re-fetch Server Component data for whatever route
+          // they landed on — an unnecessary round trip and a repaint on an
+          // unrelated screen. The pre-sleep check alone leaves that window
+          // open for one whole fetch.
+          if (cancelled.current) return;
           if (!response.ok) continue;
 
           const payload = (await response.json()) as { run?: { status?: string } };
+          if (cancelled.current) return;
           const status = payload.run?.status;
           if (status === 'complete' || status === 'failed') {
             setPhase('idle');
@@ -96,6 +103,7 @@ export function FirstRunControl({
       }
 
       // Out of patience, not out of run.
+      if (cancelled.current) return;
       setPhase('slow');
       router.refresh();
     } finally {
@@ -117,7 +125,7 @@ export function FirstRunControl({
 
   async function start() {
     setPhase('starting');
-    setError(null);
+    clearError();
     cancelled.current = false;
 
     try {
@@ -131,14 +139,9 @@ export function FirstRunControl({
         | null;
 
       if (!response.ok) {
-        // The MESSAGES lookup first; an unmapped code never reaches the
-        // screen raw — `payload.error` is a machine code (house rule: error
-        // codes in state, human messages derived), not a sentence an
-        // operator should read.
-        setError(
-          (payload?.error && MESSAGES[payload.error]) ??
-            `That did not start (${response.status}). Try again.`,
-        );
+        // The code, never the raw payload — house rule: error codes in state,
+        // human messages derived (`lib/error-copy`).
+        setErrorCode(payload?.error ?? `status_${response.status}`, response.status);
         setPhase('idle');
         return;
       }
@@ -148,10 +151,17 @@ export function FirstRunControl({
       setPhase('running');
       router.refresh();
 
+      // No `else` returning to `idle`. A 202 whose body did not parse —
+      // truncated, proxy-mangled — is still a started run: the placeholder row
+      // was saved before the response, so the refresh above re-derives the
+      // running stage and hands this same mounted instance a `pollUrl`, which
+      // the effect picks up. Dropping to `idle` here left a clickable "Run the
+      // first audit" button under a heading reading "First audit running…" —
+      // and a second click really did start a second Chromium walk, because
+      // nothing in the runs route dedupes an in-flight run.
       if (payload?.pollUrl) await poll(payload.pollUrl);
-      else setPhase('idle');
     } catch {
-      setError('Could not reach the server.');
+      setErrorCode(NETWORK_ERROR_CODE);
       setPhase('idle');
     }
   }
@@ -160,9 +170,9 @@ export function FirstRunControl({
 
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      {error && (
+      {errorMessage && (
         <span role="alert" style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.fail }}>
-          {error}
+          {errorMessage}
         </span>
       )}
 

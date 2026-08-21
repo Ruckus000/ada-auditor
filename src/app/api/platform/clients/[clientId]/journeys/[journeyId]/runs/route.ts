@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { environmentSchema } from '../../../../../../../../domain/contracts';
 import { actorFields } from '../../../../../../../../domain/operator';
 import { journeyRunRefusal } from '../../../../../../../../domain/platform';
+import { firstForbiddenAction } from '../../../../../../../../domain/policy';
 import { getPlatformStore } from '../../../../../../../../integrations/persistence';
 import {
   journeyStepSchema,
@@ -95,6 +96,24 @@ export async function POST(
   // rows written before the column existed, and `production` is the strictest
   // policy — widening is a deliberate act, never a fallback.
   const environment = parsed.environment ?? (journey.environment as 'production') ?? 'production';
+
+  // Refused before a browser launches, not at step N of a client's live site.
+  //
+  // The preview route beside this one has always checked; this one did not,
+  // and it is the route that accepts an `environment` override — so a journey
+  // authored under production, where `submit-safe` and `mutate-test-data` are
+  // forbidden, could be run with the policy widened by the caller and its
+  // steps checked only as the runner reached them. That is the mid-walk
+  // failure the create and patch routes' upfront checks exist to prevent, and
+  // the two routes being parallel copies of one gate chain is how the gap went
+  // unnoticed for as long as it did.
+  const forbidden = firstForbiddenAction(steps, environment);
+  if (forbidden) {
+    return Response.json(
+      { error: 'action_not_allowed_here', requestId, action: forbidden },
+      { status: 422 },
+    );
+  }
 
   const result = await startRun(
     {

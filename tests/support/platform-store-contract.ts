@@ -229,12 +229,64 @@ export function platformStoreContract(
       ).not.toContain('pc-journey-a');
     });
 
+    /**
+     * The create route's id minting rests entirely on this: it derives a
+     * candidate, offers it, and tries the next suffix on a refusal. A store
+     * whose insert quietly overwrote instead would turn two operators creating
+     * the same journey name at the same moment into one journey, the second
+     * replacing the first's target, steps and credential refs with no error.
+     */
+    it('creates a journey only into a free id, and says which happened', async () => {
+      const store = await seeded();
+
+      expect(
+        await store.createJourney({
+          id: 'pc-journey-new',
+          clientId: CONTRACT_CLIENT,
+          name: 'First',
+          steps: [],
+        }),
+      ).toBe(true);
+
+      expect(
+        await store.createJourney({
+          id: 'pc-journey-new',
+          clientId: CONTRACT_CLIENT,
+          name: 'Second',
+          steps: [],
+        }),
+      ).toBe(false);
+
+      // Refused, not merged: the first journey is untouched.
+      expect((await store.getJourney('pc-journey-new'))?.name).toBe('First');
+    });
+
+    it('treats an archived journey’s id as taken', async () => {
+      // An archived id is retired, not vacant. Reusing it would resurrect the
+      // old row — `upsertJourney`'s on-conflict update preserves `archived_at`
+      // — as a journey born archived: invisible in the catalog and unrunnable
+      // from the moment it is "created".
+      const store = await seeded();
+      await store.upsertJourney({
+        id: 'pc-journey-gone',
+        clientId: CONTRACT_CLIENT,
+        name: 'Gone',
+        steps: [],
+      });
+      await store.archiveJourney('pc-journey-gone');
+
+      expect(
+        await store.createJourney({
+          id: 'pc-journey-gone',
+          clientId: CONTRACT_CLIENT,
+          name: 'Reborn',
+          steps: [],
+        }),
+      ).toBe(false);
+    });
+
     it('hides an archived journey by default and surfaces it on request', async () => {
-      // The create route mints ids against every id that exists, archived or
-      // not: an archived journey's id is retired, not vacant, because
-      // `upsertJourney`'s on-conflict update preserves `archived_at` — reusing
-      // the id would resurrect the old row born archived. This is the read
-      // path that check leans on, scoped and unscoped both.
+      // The read path `includeArchived` exists for, scoped and unscoped both.
       const store = await seeded();
       await store.upsertJourney({
         id: 'pc-journey-retired',

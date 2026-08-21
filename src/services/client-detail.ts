@@ -7,6 +7,7 @@ import {
   type JourneyRunRefusal,
   type JourneyStore,
 } from '../domain/platform';
+import { newestCompletedRun } from './completed-run';
 import { credentialsForSteps, type CredentialPresence } from './credential-presence';
 import { displaySeverity } from './presentation/severity';
 import { runVerdict, type VerdictKind } from './presentation/verdict';
@@ -80,6 +81,18 @@ export type JourneySummary = {
    * after a browser had launched and walked that far.
    */
   credentials: CredentialPresence[];
+  /**
+   * When the journey was recorded, which is what makes "the journey the wizard
+   * is walking" a stable answer.
+   *
+   * Both stores list journeys `order by name asc`, so a selection that took the
+   * first runnable one changed its mind whenever a second journey was added or
+   * an existing one renamed — the Run button would launch a journey the
+   * operator never authored. Nothing records which journey the wizard walks, so
+   * the resolver picks the oldest instead: a fact about the row that no later
+   * edit moves.
+   */
+  createdAt: string;
   lastRun: RunSummary | null;
 };
 
@@ -128,12 +141,20 @@ export type ClientDetail = {
   /** The newest run across every journey, or null before the first one. */
   lastRun: RunSummary | null;
   /**
-   * Whether any journey has ever finished a run. Derived, never stored — this
-   * is what "onboarded" means, and what the setup screens key their terminal
-   * stage on. Newest-run checks cannot answer it: a failed retry would hide an
-   * old success and un-onboard a client.
+   * The newest run that actually finished, and the journey that produced it —
+   * null until the first one does. Derived, never stored: this is what
+   * "onboarded" means, and what the setup screens key their terminal stage on.
+   *
+   * Newest-run checks cannot answer it: a failed retry would hide an old
+   * success and un-onboard a client. Nor can `lastRun`, which is why the run
+   * travels with the flag rather than beside it — the results screen renders
+   * the audit that completed, and reading `lastRun` there put a later failed
+   * rerun's empty numbers under the heading "First audit complete".
+   *
+   * `journeyId` may name a journey absent from `journeys` above: archiving the
+   * journey does not unmake the run, and the client stays onboarded either way.
    */
-  hasCompletedRun: boolean;
+  completedRun: { journeyId: string; run: RunSummary } | null;
 };
 
 /** The slowest page's wall clock, or null when no page carries a measurement. */
@@ -190,50 +211,52 @@ export async function buildClientDetail(
     return null;
   }
 
-  const journeys = await deps.journeys.listJourneys(client.id);
+  // Archived rows fetched, then filtered out of the catalog. `journeys` below
+  // is what the screens list, and must not show a journey an operator retired;
+  // the completed-run probe has to count one, because archiving the journey
+  // that holds a client's only finished audit is not un-onboarding them.
+  const stored = await deps.journeys.listJourneys(client.id, { includeArchived: true });
+  const journeys = stored.filter((journey) => !journey.archivedAt);
 
-  const summaries = await Promise.all(
-    journeys.map(async (journey): Promise<JourneySummary> => {
-      const [run] = await deps.runs.list({ journeyId: journey.id, limit: 1 });
+  const summarising = journeys.map(async (journey): Promise<JourneySummary> => {
+    const [run] = await deps.runs.list({ journeyId: journey.id, limit: 1 });
 
-      return {
-        id: journey.id,
-        name: journey.name,
-        ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
-        // `toStepViews` carries the guard `stepCount` used to: `steps` is
-        // jsonb written before any validation existed, so a row can hold
-        // something that is not an array, and it answers `[]` rather than
-        // letting `undefined` reach the screen as "undefined steps".
-        steps: toStepViews(journey.steps),
-        runRefusal: journeyRunRefusal(journey),
-        schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
-        // Parsed rather than cast: `environment` is a free `string?` on the
-        // stored row, so a value written before the schema existed — or by
-        // hand — must not reach the editor as an `Environment` it is not.
-        // Anything unrecognised falls to `production`, the same default the
-        // run route applies, because the safe answer is the strict one.
-        environment: environmentSchema.safeParse(journey.environment).data ?? 'production',
-        credentials: credentialsForSteps(journey.steps),
-        lastRun: run ? summariseRun(run) : null,
-      };
-    }),
-  );
+    return {
+      id: journey.id,
+      name: journey.name,
+      ...(journey.targetUrl === undefined ? {} : { targetUrl: journey.targetUrl }),
+      // `toStepViews` carries the guard `stepCount` used to: `steps` is
+      // jsonb written before any validation existed, so a row can hold
+      // something that is not an array, and it answers `[]` rather than
+      // letting `undefined` reach the screen as "undefined steps".
+      steps: toStepViews(journey.steps),
+      runRefusal: journeyRunRefusal(journey),
+      schedule: (journey.schedule as 'off' | 'daily' | 'weekly') ?? 'off',
+      // Parsed rather than cast: `environment` is a free `string?` on the
+      // stored row, so a value written before the schema existed — or by
+      // hand — must not reach the editor as an `Environment` it is not.
+      // Anything unrecognised falls to `production`, the same default the
+      // run route applies, because the safe answer is the strict one.
+      environment: environmentSchema.safeParse(journey.environment).data ?? 'production',
+      credentials: credentialsForSteps(journey.steps),
+      createdAt: journey.createdAt,
+      lastRun: run ? summariseRun(run) : null,
+    };
+  });
+
+  // The two waves share no data, so they overlap. Serialized — which is how
+  // this and the portfolio's twin were written — every render paid two full
+  // round-trip latencies back to back for facts neither wave needed from the
+  // other.
+  const [summaries, completed] = await Promise.all([
+    Promise.all(summarising),
+    newestCompletedRun(stored, deps.runs),
+  ]);
 
   const lastRun = summaries
     .map((journey) => journey.lastRun)
     .filter((run): run is RunSummary => run !== null)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
-
-  const completedFlags = await Promise.all(
-    journeys.map(async (journey) => {
-      const [completed] = await deps.runs.list({
-        journeyId: journey.id,
-        status: 'complete',
-        limit: 1,
-      });
-      return completed !== undefined;
-    }),
-  );
 
   return {
     id: client.id,
@@ -242,6 +265,8 @@ export async function buildClientDetail(
     createdAt: client.createdAt,
     journeys: summaries,
     lastRun: lastRun ?? null,
-    hasCompletedRun: completedFlags.some(Boolean),
+    completedRun: completed
+      ? { journeyId: completed.journeyId, run: summariseRun(completed) }
+      : null,
   };
 }

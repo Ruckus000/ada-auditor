@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { usePlatform } from '../../lib/state';
+import { NETWORK_ERROR_CODE, useErrorCode } from '../../lib/error-copy';
+import { errorStyle, inputStyle, labelStyle, noteStyle } from '../../lib/field-styles';
 import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 import { ScreenHeading } from '../ui';
@@ -15,11 +17,7 @@ import { StageIndicator } from './stage-indicator';
  */
 const MESSAGES: Record<string, string> = {
   invalid_request_body: 'Check the client’s name — it needs 1 to 120 characters.',
-  unauthorized: 'Your session expired. Reload and sign in again.',
 };
-
-/** A network failure never reached the server, so it never got a server error code. */
-const NETWORK_ERROR_CODE = 'network';
 
 export function NewClientScreen({ existingNames }: { existingNames: string[] }) {
   const { actions } = usePlatform();
@@ -34,19 +32,14 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
   // `invalid_request_body` gets to describe the name field (see below) — a
   // decision that is only possible to make from the code, not from prose that
   // has already forgotten which field it was about.
-  const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const { errorCode, errorMessage, setErrorCode, clearError } = useErrorCode(
+    MESSAGES,
+    (status) => `Could not add the client (${status}). Try again.`,
+  );
 
   const duplicate = existingNames.some(
     (existing) => existing.trim().toLowerCase() === name.trim().toLowerCase(),
   );
-
-  const errorMessage =
-    errorCode === null
-      ? null
-      : errorCode === NETWORK_ERROR_CODE
-        ? 'Could not reach the server. Check your connection and try again.'
-        : (MESSAGES[errorCode] ?? `Could not add the client (${errorStatus}). Try again.`);
 
   const blocked = saving || name.trim() === '';
 
@@ -60,8 +53,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
     if (name.trim() === '') return;
 
     setSaving(true);
-    setErrorCode(null);
-    setErrorStatus(null);
+    clearError();
 
     try {
       const response = await fetch('/api/platform/clients', {
@@ -75,8 +67,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
         | null;
 
       if (!response.ok || !body?.client) {
-        setErrorCode(body?.error ?? 'unknown');
-        setErrorStatus(response.status);
+        setErrorCode(body?.error ?? 'unknown', response.status);
         setSaving(false);
         return;
       }
@@ -222,37 +213,3 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
     </div>
   );
 }
-
-const labelStyle = {
-  fontFamily: FONT.sans,
-  fontSize: 12,
-  fontWeight: 650,
-  color: T.inkSoft,
-} as const;
-
-const inputStyle = {
-  padding: '9px 11px',
-  borderRadius: 8,
-  border: `1px solid ${T.rule}`,
-  background: '#fff',
-  fontFamily: FONT.sans,
-  fontSize: 13.5,
-  color: T.ink,
-} as const;
-
-const noteStyle = {
-  fontFamily: FONT.sans,
-  fontSize: 11.5,
-  color: T.inkMuted,
-} as const;
-
-const errorStyle = {
-  margin: 0,
-  padding: '9px 12px',
-  borderRadius: 8,
-  background: T.failWash,
-  border: `1px solid ${T.failEdge}`,
-  color: T.failDeep,
-  fontFamily: FONT.sans,
-  fontSize: 12.5,
-} as const;

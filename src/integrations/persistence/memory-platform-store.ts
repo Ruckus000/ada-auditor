@@ -191,6 +191,22 @@ export class MemoryPlatformStore implements PlatformStore {
     this.journeys.set(journey.id, structuredClone(next));
   }
 
+  /**
+   * Mirrors the Postgres `on conflict (id) do nothing`: a taken id — archived
+   * or not — is refused rather than overwritten. Single-threaded here, so this
+   * cannot demonstrate the race it exists to close; what it holds is the
+   * behaviour the caller's retry loop is written against.
+   */
+  async createJourney(
+    journey: Omit<StoredJourney, 'createdAt' | 'updatedAt' | 'archivedAt'>,
+  ): Promise<boolean> {
+    if (this.journeys.has(journey.id)) {
+      return false;
+    }
+    await this.upsertJourney(journey);
+    return true;
+  }
+
   /** Mirrors the Postgres claim, including the interval slack. */
   async claimDueJourneys(limit: number, now: Date = new Date()): Promise<StoredJourney[]> {
     const hour = now.getUTCHours();

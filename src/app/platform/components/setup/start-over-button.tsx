@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { NETWORK_ERROR_CODE, useErrorCode } from '../../lib/error-copy';
 import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
@@ -15,46 +16,36 @@ import { FONT, T } from '../../lib/tokens';
  * stage — one more wall in front of an operator who already needs a way out
  * would cost more than it protects.
  */
-const MESSAGES: Record<string, string> = {
-  journey_not_found: 'That journey is no longer on this client.',
-  unauthorized: 'Your session expired. Reload and sign in again.',
-};
-
-/** A network failure never reached the server, so it never got a server error code. */
-const NETWORK_ERROR_CODE = 'network';
-
 export function StartOverButton({ clientId, journeyId }: { clientId: string; journeyId: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [errorCode, setErrorCode] = useState<string | null>(null);
+  // Every code this button can receive is one more than one form receives, so
+  // it carries no map of its own.
+  const { errorMessage, setErrorCode, clearError } = useErrorCode(
+    {},
+    () => 'Could not archive the journey. Try again.',
+  );
 
   async function startOver() {
     if (busy) return;
     setBusy(true);
-    setErrorCode(null);
+    clearError();
     try {
       const response = await fetch(`/api/platform/clients/${clientId}/journeys/${journeyId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setErrorCode(body?.error ?? `status_${response.status}`);
+        setErrorCode(body?.error ?? `status_${response.status}`, response.status);
         setBusy(false);
         return;
       }
       router.refresh();
     } catch {
-      setErrorCode('network');
+      setErrorCode(NETWORK_ERROR_CODE);
       setBusy(false);
     }
   }
-
-  const errorMessage =
-    errorCode === null
-      ? null
-      : errorCode === NETWORK_ERROR_CODE
-        ? 'Could not reach the server. Check your connection and try again.'
-        : (MESSAGES[errorCode] ?? 'Could not archive the journey. Try again.');
 
   return (
     <span style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>

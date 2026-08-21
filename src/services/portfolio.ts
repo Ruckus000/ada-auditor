@@ -1,5 +1,6 @@
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
 import type { ClientStore, JourneyStore } from '../domain/platform';
+import { newestCompletedRun } from './completed-run';
 import { displaySeverity } from './presentation/severity';
 import { runVerdict, type VerdictKind } from './presentation/verdict';
 
@@ -70,23 +71,32 @@ export type PortfolioDeps = {
  * count is therefore proportional to journeys, not to runs — fine while an
  * agency has tens of clients, and the point at which it stops being fine is a
  * single `join`, not a redesign. (Two queries per journey now, not one: the
- * newest-run fetch above and the completed-exists probe behind
- * `setupIncomplete` — still proportional to journeys, just with a bigger
- * constant.)
+ * newest-run fetch above and the completed-run probe behind `setupIncomplete`
+ * — still proportional to journeys, just with a bigger constant, and the two
+ * waves overlap rather than waiting on each other.)
  */
 export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[]> {
   const clients = await deps.clients.listClients();
 
   return Promise.all(
     clients.map(async (client) => {
-      const journeys = await deps.journeys.listJourneys(client.id);
+      // Archived rows fetched, then filtered out of the count. The row shows
+      // the live catalog; `newestCompletedRun` is deliberately given the whole
+      // list, archived included — see its own note, and the client page, which
+      // makes the same split for the same reason.
+      const stored = await deps.journeys.listJourneys(client.id, { includeArchived: true });
+      const journeys = stored.filter((journey) => !journey.archivedAt);
 
-      const latestPerJourney = await Promise.all(
-        journeys.map(async (journey) => {
-          const [run] = await deps.runs.list({ journeyId: journey.id, limit: 1 });
-          return run ?? null;
-        }),
-      );
+      // Two waves, no data between them, so they overlap rather than queue.
+      const [latestPerJourney, completed] = await Promise.all([
+        Promise.all(
+          journeys.map(async (journey) => {
+            const [run] = await deps.runs.list({ journeyId: journey.id, limit: 1 });
+            return run ?? null;
+          }),
+        ),
+        newestCompletedRun(stored, deps.runs),
+      ]);
 
       // Newest across every journey the client owns. A run still in flight
       // counts: the portfolio should show "scanning" rather than yesterday's
@@ -95,24 +105,13 @@ export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[
         .filter((run): run is StoredRunRecord => run !== null)
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
 
-      const completedFlags = await Promise.all(
-        journeys.map(async (journey) => {
-          const [completed] = await deps.runs.list({
-            journeyId: journey.id,
-            status: 'complete',
-            limit: 1,
-          });
-          return completed !== undefined;
-        }),
-      );
-
       return {
         id: client.id,
         name: client.name,
         ...(client.owner === undefined ? {} : { owner: client.owner }),
         journeyCount: journeys.length,
         lastRun: latest ? summarise(latest) : null,
-        setupIncomplete: !completedFlags.some(Boolean),
+        setupIncomplete: completed === null,
       } as PortfolioRow;
     }),
   );

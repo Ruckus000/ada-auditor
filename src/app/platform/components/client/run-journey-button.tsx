@@ -100,9 +100,15 @@ export function RunJourneyButton({
 
       try {
         const response = await fetch(pollUrl);
+        // Re-checked after the awaits, not only before them: an unmount during
+        // an in-flight poll would otherwise still reach `router.refresh()`,
+        // re-fetching Server Component data for whatever route the operator
+        // navigated to.
+        if (cancelled.current) return;
         if (!response.ok) continue;
 
         const payload = (await response.json()) as { run?: { status?: string } };
+        if (cancelled.current) return;
         const status = payload.run?.status;
         if (status === 'complete' || status === 'failed') {
           setPhase('idle');
@@ -115,6 +121,7 @@ export function RunJourneyButton({
     }
 
     // Out of patience, not out of run.
+    if (cancelled.current) return;
     setPhase('slow');
     router.refresh();
   }

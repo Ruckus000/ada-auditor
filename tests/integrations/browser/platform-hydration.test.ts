@@ -427,7 +427,14 @@ describe('platform hydration', () => {
       // loop cannot fire twice inside its own interval, so any gap this short
       // is a second watcher.
       const elapsed = Date.now() - startedAt;
-      expect(polls.length, 'the running stage never polled at all').toBeGreaterThan(0);
+      // No `polls.length > 0` here, deliberately. A watcher sleeps 3s before
+      // its first fetch, and this journey's target cannot resolve — the run
+      // reaches its failed row well inside that window, `start()`'s refresh
+      // renders `FailedStage` in a different JSX slot, and unmounting
+      // `FirstRunControl` cancels the watcher before it ever fetched. Zero
+      // polls is what entirely healthy code does here often enough to have
+      // flaked in CI once already. The two assertions below carry the whole
+      // regression value and are vacuously true when the run dies that fast.
       const gaps = polls.slice(1).map((at, index) => at - polls[index]!);
       expect(gaps.filter((gap) => gap < 500), `poll gaps (ms): ${gaps.join(', ')}`).toEqual([]);
       // The bound has no slack on purpose. A watcher sleeps *before* its first

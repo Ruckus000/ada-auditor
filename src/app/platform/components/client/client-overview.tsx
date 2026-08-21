@@ -72,7 +72,7 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
             </p>
           ) : null}
 
-          {!detail.hasCompletedRun ? (
+          {detail.completedRun === null ? (
             // The state the portfolio's "Setup incomplete" hint names, made
             // actionable where the row lands. Without this, a client whose
             // first audit *failed* had `lastRun` set — so the empty state

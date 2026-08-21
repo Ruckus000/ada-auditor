@@ -267,6 +267,29 @@ describe('buildPortfolio, on setupIncomplete', () => {
 
     expect(done?.setupIncomplete).toBe(false);
   });
+
+  it('a completed run on a since-archived journey still counts as set up', async () => {
+    // The twin of the client page's case: the row must not flip back to
+    // "Setup incomplete" because the journey that produced the audit was
+    // retired. The two screens are compared side by side, so they have to
+    // answer the same way — which is why one helper computes both.
+    await seedClient('pf-arch-client', 'Archived Journey');
+    await platform.upsertJourney({
+      id: 'pf-arch-j',
+      clientId: 'pf-arch-client',
+      name: 'Checkout',
+      steps: [],
+    });
+    await runs.saveRun(
+      run({ requestId: 'pf-arch-r', journeyId: 'pf-arch-j', status: 'complete' }),
+    );
+    await platform.archiveJourney('pf-arch-j');
+
+    const row = (await buildPortfolio(deps())).find((r) => r.id === 'pf-arch-client');
+
+    expect(row?.journeyCount).toBe(0);
+    expect(row?.setupIncomplete).toBe(false);
+  });
 });
 
 describe('clientIdFromName', () => {

@@ -59,7 +59,9 @@ export function SetupScreen({ detail, stage }: { detail: ClientDetail; stage: Se
       {stage.stage === 'failed' ? (
         <FailedStage detail={detail} journey={stage.journey} failureReason={stage.failureReason} />
       ) : null}
-      {stage.stage === 'done' ? <ResultsStage detail={detail} /> : null}
+      {stage.stage === 'done' ? (
+        <ResultsStage detail={detail} journey={stage.journey} run={stage.run} />
+      ) : null}
     </div>
   );
 }
