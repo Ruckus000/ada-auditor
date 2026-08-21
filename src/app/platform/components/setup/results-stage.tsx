@@ -50,6 +50,45 @@ export function ResultsStage({ detail }: { detail: ClientDetail }) {
           />
         ) : null}
       </span>
+
+      {/*
+        The enrichment prompt, and it stops asking once it has been answered.
+        Shown only while this client still has the single journey the wizard
+        walked: an operator who has already recorded a second one has done the
+        thing this asks for, and repeating it then would be the screen nagging
+        about work already finished. `detail.journeys` excludes archived
+        journeys (`listJourneys` filters them at the store, deliberately), so
+        this counts what the client actually has rather than what it ever had.
+
+        It links to the journeys screen rather than back into the wizard. The
+        spec says "Stage 3 authoring", and at the time that meant the wizard's
+        step editor — but a client with a completed run derives the terminal
+        stage, so /setup cannot show stage 3 again without lying about what the
+        record says. Authoring a *second* journey now lives on the journeys
+        screen, where the discovery panel is "the way a journey gets made".
+        Sending an operator somewhere that works beats honouring the wording of
+        a sentence written before that screen existed.
+      */}
+      {detail.journeys.length === 1 ? (
+        <p
+          style={{
+            margin: 0,
+            padding: '11px 14px',
+            borderRadius: 9,
+            border: `1px dashed ${T.ruleStrong}`,
+            fontFamily: FONT.sans,
+            fontSize: 13,
+            color: T.inkSoft,
+            maxWidth: 520,
+            textWrap: 'pretty',
+          }}
+        >
+          Real users sign in and check out — record that journey to audit what they actually hit.{' '}
+          <Link href={`/clients/${detail.id}/journeys`} style={{ color: T.accentInk, fontWeight: 650 }}>
+            Record another journey
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

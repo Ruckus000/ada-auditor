@@ -513,7 +513,16 @@ describe('platform hydration', () => {
       await expect
         .poll(() => page.innerText('body'), { timeout: 30_000 })
         .toContain('First audit complete');
-      expect(await page.innerText('body')).toContain('Go to the findings');
+      const terminal = await page.innerText('body');
+      expect(terminal).toContain('Go to the findings');
+
+      // The enrichment prompt. This client has exactly the one journey the
+      // wizard walked, which is the only state the prompt appears in — an
+      // operator who has already recorded a second one is not asked again.
+      expect(terminal).toContain('record that journey to audit what they actually hit');
+      expect(
+        await page.getByRole('link', { name: 'Record another journey' }).getAttribute('href'),
+      ).toBe(`/clients/${CLIENT}/journeys`);
 
       // And the hint retires itself — derived, never stored, so nothing had to
       // remember to clear it. The row is asserted positively first: a negative
