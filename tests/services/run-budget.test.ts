@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  DEFAULT_MAX_PREVIEWS_PER_HOUR,
   DEFAULT_MAX_RUNS_PER_DAY,
   DEFAULT_MAX_RUNS_PER_HOUR,
+  consumePreviewBudget,
   consumeRunBudget,
   runBudgetLimits,
   windowKeys,
@@ -118,5 +120,52 @@ describe('consumeRunBudget', () => {
     expect(JSON.parse(warn.mock.calls[0]![0] as string).type).toBe('run_budget_degraded');
 
     warn.mockRestore();
+  });
+});
+
+describe('consumePreviewBudget', () => {
+  /**
+   * The property the split exists for: two counters, so authoring cannot
+   * spend the audits. Asserted from both directions, because a single-sided
+   * check would pass against a bug that merely renamed the key.
+   */
+  it('does not touch the run counter', async () => {
+    const counts = counter();
+
+    await consumePreviewBudget(counts, NOON, {});
+
+    expect(Object.keys(counts.counts)).toEqual(['previews:hour:2026081012', 'previews:day:20260810']);
+    expect(counts.counts['runs:hour:2026081012']).toBeUndefined();
+  });
+
+  it('is not refused by a spent run budget', async () => {
+    const counts = counter({
+      'runs:hour:2026081012': DEFAULT_MAX_RUNS_PER_HOUR,
+      'runs:day:20260810': DEFAULT_MAX_RUNS_PER_DAY,
+    });
+
+    expect(await consumePreviewBudget(counts, NOON, {})).toEqual({ allowed: true });
+  });
+
+  it('refuses once its own hourly ceiling is reached', async () => {
+    const counts = counter({ 'previews:hour:2026081012': DEFAULT_MAX_PREVIEWS_PER_HOUR });
+
+    const verdict = await consumePreviewBudget(counts, NOON, {});
+
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.window).toBe('hour');
+  });
+
+  it('takes its ceiling from its own env var, not the run one', async () => {
+    // A ceiling of 1 on runs must not cap previews, and vice versa — the
+    // mistake this guards against is one spec object reading the other's name.
+    const counts = counter();
+
+    expect(
+      (await consumePreviewBudget(counts, NOON, { AUDITOR_MAX_RUNS_PER_HOUR: '1' })).allowed,
+    ).toBe(true);
+    expect(
+      (await consumePreviewBudget(counts, NOON, { AUDITOR_MAX_PREVIEWS_PER_HOUR: '1' })).allowed,
+    ).toBe(false);
   });
 });
