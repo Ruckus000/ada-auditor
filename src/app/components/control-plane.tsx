@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { GLOSSARY, glossaryAnchorId, glossaryEntry, type GlossaryKey } from './glossary';
 import { InfoTip } from './info-tip';
 import { parseAuditResponse, type AuditResult } from './audit-types';
@@ -105,10 +106,20 @@ export function ControlPlane() {
   }, []);
 
   useEffect(() => {
-    checkStatus();
-    checkSession();
+    // The first check is scheduled rather than called in the effect body. Both
+    // of these set state, and doing that synchronously from an effect cascades
+    // a second render before the first has painted; neither has an answer to
+    // show until its fetch returns anyway. Cleared on unmount with the
+    // interval, so a console closed inside the first tick starts nothing.
+    const first = setTimeout(() => {
+      void checkStatus();
+      void checkSession();
+    }, 0);
     const id = setInterval(checkStatus, 30_000);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
   }, [checkStatus, checkSession]);
 
   // Advance the progress list while a run is in flight. These are indicative
@@ -116,7 +127,6 @@ export function ControlPlane() {
   // the end — so the last stage stays put rather than claiming completion.
   useEffect(() => {
     if (!submitting) return;
-    setActiveStep(0);
     const id = setInterval(() => {
       setActiveStep((step) => Math.min(step + 1, RUN_STEPS.length - 1));
     }, 1200);
@@ -126,6 +136,10 @@ export function ControlPlane() {
   const runAudit = useCallback(
     async (chaosScenario?: string) => {
       setSubmitting(true);
+      // Reset here rather than in the effect that ticks the list: the run
+      // starting is this event, and an effect that reacted to it was setting
+      // state a second time for something already known at the source.
+      setActiveStep(0);
       setResult(null);
       setCopied(false);
 
@@ -211,9 +225,12 @@ export function ControlPlane() {
           </div>
         </div>
         <nav className="topbar-links" aria-label="Sections">
-          <a className="skip-to-glossary" href="/">
+          {/* A route, so `next/link`: a bare anchor here reloads the whole
+              app to reach a page the router already has. The glossary link
+              below stays an anchor — it goes to a hash on this page. */}
+          <Link className="skip-to-glossary" href="/">
             ← Portfolio
-          </a>
+          </Link>
           <a className="skip-to-glossary" href="#glossary">
             Glossary
           </a>

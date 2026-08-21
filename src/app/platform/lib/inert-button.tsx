@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import type { ButtonHTMLAttributes, MouseEvent } from 'react';
 
 /**
  * A control that is unavailable without dropping the keyboard user's place.
@@ -28,32 +28,49 @@ import type { MouseEvent } from 'react';
  *
  * The early return is not optional decoration. `aria-disabled` is a claim made
  * to assistive technology and nothing else — the button still takes clicks, and
- * Enter or Space on a focused button *is* a click. Bundling the attribute and
- * the guard into one call is what stops a call site shipping the claim without
- * the behaviour behind it.
+ * Enter or Space on a focused button *is* a click. Rendering the attribute and
+ * the guard from one component is what stops a call site shipping the claim
+ * without the behaviour behind it.
+ *
+ * A component rather than the prop-spreading helper this used to be. Every call
+ * site passes a handler that touches a ref — a cancellation flag, the id of the
+ * button to refocus after a move — and handing such a function to a plain
+ * function during render is what `react-hooks/refs` refuses, because it cannot
+ * see that the handler is only ever called from a click. Passing it as a JSX
+ * prop says exactly that, and the invariant above gets stronger on the way
+ * past: the attribute and the guard are now impossible to separate, where a
+ * spread could be dropped and the `aria-disabled` written by hand.
  *
  * What this does not do is style the control. An inert button that still looks
  * live is its own defect, so every call site pairs this with the muted
  * treatment it already used for `disabled`.
  */
-export function inertWhen(
-  isInert: boolean,
-  onClick: (event: MouseEvent<HTMLButtonElement>) => void,
-): {
-  'aria-disabled': true | undefined;
+export function InertableButton({
+  isInert,
+  onClick,
+  children,
+  ...rest
+}: {
+  isInert: boolean;
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
-} {
-  return {
-    // Omitted rather than `aria-disabled="false"`, so the DOM of a live control
-    // is the DOM it had before any of this.
-    'aria-disabled': isInert || undefined,
-    onClick(event) {
-      if (isInert) {
-        // Matters for `type="submit"`: without this the form still submits.
-        event.preventDefault();
-        return;
-      }
-      onClick(event);
-    },
-  };
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'disabled' | 'aria-disabled'>) {
+  return (
+    <button
+      type="button"
+      {...rest}
+      // Omitted rather than `aria-disabled="false"`, so the DOM of a live
+      // control is the DOM it had before any of this.
+      aria-disabled={isInert || undefined}
+      onClick={(event) => {
+        if (isInert) {
+          // Matters for `type="submit"`: without this the form still submits.
+          event.preventDefault();
+          return;
+        }
+        onClick(event);
+      }}
+    >
+      {children}
+    </button>
+  );
 }

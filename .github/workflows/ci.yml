@@ -8,7 +8,7 @@ on:
 
 jobs:
   unit:
-    name: Unit tests, chaos, build
+    name: Lint, unit tests, chaos, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -17,6 +17,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # First, and before the browser download: a lint error is the cheapest
+      # failure in this file, and the React Compiler rules in it catch a class
+      # of defect — refs read during render, state set from an effect — that
+      # every other suite here renders straight past.
+      - run: npm run lint
       - run: npx playwright install chromium --with-deps
       - run: npm test
       - run: npm run chaos

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { JourneyRunRefusal } from '../../../../domain/platform';
-import { inertWhen } from '../../lib/inert-button';
+import { InertableButton } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -181,9 +181,9 @@ export function RunJourneyButton({
         {phase === 'running' ? 'Running…' : phase === 'slow' ? 'Still running — reload later' : ''}
       </span>
 
-      <button
-        type="button"
-        {...inertWhen(busy, start)}
+      <InertableButton
+        isInert={busy}
+        onClick={start}
         // Every row is otherwise another identically-named control in a screen
         // reader's list. It also holds the name *still* while the run goes:
         // the visible label changes underneath it, and renaming the focused
@@ -203,7 +203,7 @@ export function RunJourneyButton({
       >
         {/* The label changes, not just the colour. */}
         {phase === 'starting' ? 'Starting…' : phase === 'running' ? 'Running…' : 'Run now'}
-      </button>
+      </InertableButton>
     </span>
   );
 }

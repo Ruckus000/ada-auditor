@@ -208,7 +208,14 @@ export function Modal({
 }) {
   const card = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
-  closeRef.current = onClose;
+  // Kept current in an effect rather than during render: writing a ref while
+  // rendering is what `react-hooks/refs` refuses, and the initial value above
+  // already covers the first paint. The Escape handler below reads it, so it
+  // calls the latest `onClose` without the keydown listener being torn down
+  // and re-added on every render.
+  useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
 
   // `aria-modal` is a promise to the user that the rest of the page is out of
   // reach. Without these three behaviours it is a lie: focus starts outside the

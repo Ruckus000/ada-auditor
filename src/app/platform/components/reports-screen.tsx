@@ -41,7 +41,7 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
             textWrap: 'pretty',
           }}
         >
-          None issued yet. Open a client's findings and issue one from the run you want it to
+          None issued yet. Open a client&rsquo;s findings and issue one from the run you want it to
           report — the link points at that run and no other.
         </div>
       ) : (

@@ -14,7 +14,7 @@ import {
   type StepDraft,
 } from '../../../../domain/journey-step-draft';
 import { isActionAllowed } from '../../../../domain/policy';
-import { inertWhen } from '../../lib/inert-button';
+import { InertableButton } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -444,34 +444,34 @@ export function JourneyStepsEditor({
                     `<body>` in the middle of reordering a list — with the
                     keyboard the only way to reorder one.
                   */}
-                  <button
-                    type="button"
+                  <InertableButton
                     // Keyed on the draft, not the position: after the move it
                     // is the same step's button, one row further up.
                     data-move={`${draft.key}-earlier`}
-                    {...inertWhen(index === 0, () => {
+                    isInert={index === 0}
+                    onClick={() => {
                       refocus.current = `${draft.key}-earlier`;
                       move(index, -1);
-                    })}
+                    }}
                     // Re-read after a move, so the focused button says where
                     // the step ended up.
                     aria-label={`Move step ${index + 1} earlier`}
                     style={index === 0 ? inertSmallButtonStyle : smallButtonStyle}
                   >
                     ↑
-                  </button>
-                  <button
-                    type="button"
+                  </InertableButton>
+                  <InertableButton
                     data-move={`${draft.key}-later`}
-                    {...inertWhen(index === drafts.length - 1, () => {
+                    isInert={index === drafts.length - 1}
+                    onClick={() => {
                       refocus.current = `${draft.key}-later`;
                       move(index, 1);
-                    })}
+                    }}
                     aria-label={`Move step ${index + 1} later`}
                     style={index === drafts.length - 1 ? inertSmallButtonStyle : smallButtonStyle}
                   >
                     ↓
-                  </button>
+                  </InertableButton>
                   <button
                     type="button"
                     onClick={() =>
@@ -549,16 +549,16 @@ export function JourneyStepsEditor({
         >
           Add a step
         </button>
-        <button
-          type="button"
-          {...inertWhen(busy || !writable.ok, save)}
+        <InertableButton
+          isInert={busy || !writable.ok}
+          onClick={save}
           // Only while the sentence below is on the page: a description
           // pointing at an id that is not there is itself a violation.
           aria-describedby={writable.ok ? undefined : `${fieldPrefix}-save-refused`}
           style={busy || !writable.ok ? inertSmallButtonStyle : smallButtonStyle}
         >
           {busy ? 'Saving…' : 'Save steps'}
-        </button>
+        </InertableButton>
         <button
           type="button"
           onClick={() => {

@@ -29,16 +29,20 @@ const COPY: Record<ReadyState, { headline: string; tone: string }> = {
 };
 
 function useRelativeTime(timestamp: number | null): string {
-  const [, force] = useState(0);
+  // The clock is state, not a re-render counter that reads `Date.now()` while
+  // rendering. Same ticking label, but every reading is taken at a moment the
+  // component decided on — a render React repeats for its own reasons cannot
+  // silently produce a different answer.
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (timestamp == null) return;
-    const id = setInterval(() => force((n) => n + 1), 5_000);
+    const id = setInterval(() => setNow(Date.now()), 5_000);
     return () => clearInterval(id);
   }, [timestamp]);
 
   if (timestamp == null) return '';
-  const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+  const seconds = Math.max(0, Math.round((now - timestamp) / 1000));
   if (seconds < 5) return 'just now';
   if (seconds < 60) return `${seconds}s ago`;
   return `${Math.round(seconds / 60)}m ago`;
