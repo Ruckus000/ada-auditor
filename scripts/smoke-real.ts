@@ -82,10 +82,25 @@ async function main(): Promise<void> {
     // is not clickable at any point. `:visible` is defined as exactly that
     // pair of conditions, and it applies before `nth=`, so the index counts
     // only links a click could land on.
+    //
+    // Same host, because the run is already confined to one. With `:visible`
+    // fixed, the walk got a step further and clicked "Sign in" on
+    // `https://www.w3.org/`, and `assertSettledOnTarget` refused
+    // `auth.w3.org` — correctly, and for the reason its own comment gives:
+    // ending on an identity provider means the run walked somebody else's
+    // login page, which scores well because a login page is small and tidy.
+    // A blind index has no idea which links leave the site, so it is told.
+    //
+    // Root-relative or absolute-on-the-target's-origin, and never
+    // protocol-relative — `//evil.example` is off-site with an on-site look.
+    // This subsumes the `#` and `mailto:` exclusions that used to be spelled
+    // out here, since neither starts with `/`. It also drops document-relative
+    // links, which only shrinks the pool and is safe: the walk picks a
+    // different link, it does not leave the host.
     ...Array.from({ length: Math.max(0, stepCount - 1) }, (_step, index) => ({
       action: 'navigate',
       type: 'click',
-      selector: `a[href]:not([href^="#"]):not([href^="mailto:"]):visible >> nth=${index}`,
+      selector: `a:is([href^="/"], [href^="${entry.origin}/"]):not([href^="//"]):visible >> nth=${index}`,
     })),
   ];
 
