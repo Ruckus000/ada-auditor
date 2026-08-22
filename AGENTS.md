@@ -43,6 +43,12 @@ Supporting Netflix practices we adopt:
   every deterministic finding carries the `pageUrl` it was found on
 - Explicit `platformHint` wins over rendered-DOM heuristics
 - AI advisory is independent of deterministic hits; `gateable: false` in v1
+- **A check axe could not decide never fails a run.** `incomplete` results map
+  to `needs-review` through the same mapper as violations, so they carry a
+  conformance level like anything else — and the gate keys on that level. They
+  are the human-review queue, and counting them would invert the sentence that
+  produces them: "axe could not reach a verdict on these, so they are never a
+  failure." They are excluded from the score for the same reason
 - Run contracts are enforced (scope, confidence `minReport`, `failureMode`)
 - Forbidden production actions never execute
 - A run may only navigate to hosts in `scope.allowedDomains`; an empty scope
@@ -157,8 +163,27 @@ Chromium launches on a Vercel function:
   touch it, and a run without complete evidence scores `null` rather than
   zero, because the denominator is unknown. Stored with `score_version` so a
   formula change cannot silently reinterpret historical runs. Note a run can
-  score well and still fail CI: one critical finding fails a run regardless of
-  the rate.
+  score well and still fail: the score is a rate and the verdict is not, so one
+  unmet success criterion fails a run however many checks passed around it.
+- **Conformance gate: the success criterion decides, not axe's impact**
+  (`blockingFindings` in `services/reporting.ts`). A run fails when a
+  deterministic finding cites a Level **A or AA** criterion. Impact is Deque's
+  operational triage — how bad a thing is to hit — and WCAG conformance is
+  binary per criterion, so gating on impact crossed two axes and was wrong both
+  ways: of axe-core 4.12.1's 105 rules, 30 are best-practice and cite no
+  criterion at all, so a `critical` recommendation asserted non-conformance,
+  while a real Level AA failure rated `moderate` never did. Colour contrast is
+  1.4.3 at Level AA; a page failing it does not conform, whatever the impact
+  rating. Three exclusions carry weight — advisory findings (`gateable: false`),
+  `needs-review` (a steady-state rule above), and rules citing no criterion.
+  AAA is out because AA
+  is the bar ADA claims are argued against. Stored with `gate_version`, for the
+  reason `score_version` exists; **absent means not recorded**, never
+  "version 1", the same stance `intent.ruleset` takes.
+  **Expect most real sites to read "does not conform"** — most real sites do
+  not conform to WCAG AA. `www.dsrfund.org`, the first real client audited
+  (2026-08-22), returned 83 findings and `fail`; it read `pass` under the old
+  gate with none of them rated `critical`.
 - **Vocabulary mapping lives in `services/presentation/`**, not beside the
   components: deciding whether the product says `pass` or "we could not tell"
   is a business rule with a steady-state contract behind it. `VerdictKind`
@@ -166,6 +191,12 @@ Chromium launches on a Vercel function:
   folding `needs-review` into a low-priority bucket would delete the
   human-review queue, and folding `advisory` anywhere would contradict
   `gateable: false`.
+  **Every surface goes through `runVerdict`, including the client's report.**
+  `report-html.ts` keyed its copy on `ciStatus` instead, which holds only
+  `pass | fail | inconclusive` and which `risk` cannot reach — so a run with
+  unresolved findings read "No blocking issues found" on the document a
+  client's counsel reads while every operator screen said `risk`. Two
+  definitions of one rule, and the softer one was on the copy that mattered.
 - **Triage is keyed on finding identity, per client** (`finding_triage`), never
   on the per-run `findings` row: `saveRun` deletes and reinserts a run's
   children on every write — inside one transaction, so a reader never sees the
