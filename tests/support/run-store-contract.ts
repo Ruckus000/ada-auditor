@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
 import type { RunStore, StoredRunRecord } from '../../src/domain/persistence';
 import { RUN_STALE_AFTER_MS } from '../../src/domain/run-staleness';
@@ -21,7 +22,24 @@ import { RUN_STALE_AFTER_MS } from '../../src/domain/run-staleness';
  * do with the store.
  */
 
-export const CONTRACT_JOURNEY = 'contract-journey';
+/**
+ * This process's own corner of the database.
+ *
+ * Every id the contract writes starts here, and the Postgres suites delete
+ * exactly this prefix. Runs used to share one `contract-`/`pc-` namespace and
+ * clear it in a `beforeEach`, so two CI runs against the same `DATABASE_URL`
+ * deleted each other's fixtures between a write and the read checking it —
+ * foreign-key violations against rows that should have existed, on diffs that
+ * could not have caused them. The workaround was to let one run near the
+ * database at a time; this is the fix that makes the job parallel again.
+ *
+ * Random per process rather than derived from `GITHUB_RUN_ID`, so it works the
+ * same way locally, where two developers can share a database just as easily
+ * as two runners can.
+ */
+export const CONTRACT_PREFIX = `contract-${randomUUID().slice(0, 8)}`;
+
+export const CONTRACT_JOURNEY = `${CONTRACT_PREFIX}-journey`;
 
 export function runRecord(
   overrides: Partial<StoredRunRecord> & Pick<StoredRunRecord, 'requestId'>,
@@ -40,7 +58,7 @@ export function runRecord(
 }
 
 const FULL_RECORD = runRecord({
-  requestId: 'contract-full',
+  requestId: `${CONTRACT_PREFIX}-full`,
   ciStatus: 'fail',
   evidenceStatus: 'complete',
   durationMs: 1234,
@@ -267,7 +285,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
   it('returns null for a run that does not exist', async () => {
     const store = await makeStore();
-    expect(await store.getRun('contract-missing')).toBeNull();
+    expect(await store.getRun(`${CONTRACT_PREFIX}-missing`)).toBeNull();
   });
 
   it('overwrites the running placeholder rather than colliding with it', async () => {
@@ -275,10 +293,10 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // when it finishes. If the second write did not replace the first, every
     // poll would see a run stuck at `running` forever.
     const store = await makeStore();
-    await store.saveRun(runRecord({ requestId: 'contract-upsert', status: 'running' }));
+    await store.saveRun(runRecord({ requestId: `${CONTRACT_PREFIX}-upsert`, status: 'running' }));
     await store.saveRun(
       runRecord({
-        requestId: 'contract-upsert',
+        requestId: `${CONTRACT_PREFIX}-upsert`,
         status: 'complete',
         ciStatus: 'fail',
         pages: [
@@ -292,7 +310,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
       }),
     );
 
-    const stored = await store.getRun('contract-upsert');
+    const stored = await store.getRun(`${CONTRACT_PREFIX}-upsert`);
     expect(stored?.status).toBe('complete');
     expect(stored?.ciStatus).toBe('fail');
     expect(stored?.pages).toHaveLength(1);
@@ -306,10 +324,10 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // in `finding_triage`, keyed on the finding's identity. If this test ever
     // starts failing, that decision has been quietly reversed.
     const store = await makeStore();
-    await store.saveRun(runRecord({ requestId: 'contract-rewrite', status: 'running' }));
-    await store.saveRun({ ...FULL_RECORD, requestId: 'contract-rewrite' });
+    await store.saveRun(runRecord({ requestId: `${CONTRACT_PREFIX}-rewrite`, status: 'running' }));
+    await store.saveRun({ ...FULL_RECORD, requestId: `${CONTRACT_PREFIX}-rewrite` });
 
-    const stored = await store.getRun('contract-rewrite');
+    const stored = await store.getRun(`${CONTRACT_PREFIX}-rewrite`);
     expect(stored?.findings).toHaveLength(FULL_RECORD.findings.length);
     expect(stored?.findings[0].selector).toBe('#hero');
     expect(stored?.pages).toHaveLength(2);
@@ -331,36 +349,36 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
   it('finds the most recent run for a journey and environment', async () => {
     const store = await makeStore();
     await store.saveRun(
-      runRecord({ requestId: 'contract-old', createdAt: '2026-08-08T10:00:00.000Z' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-old`, createdAt: '2026-08-08T10:00:00.000Z' }),
     );
     await store.saveRun(
-      runRecord({ requestId: 'contract-new', createdAt: '2026-08-08T11:00:00.000Z' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-new`, createdAt: '2026-08-08T11:00:00.000Z' }),
     );
 
     const latest = await store.getLatestRun(CONTRACT_JOURNEY, 'staging');
-    expect(latest?.requestId).toBe('contract-new');
+    expect(latest?.requestId).toBe(`${CONTRACT_PREFIX}-new`);
   });
 
   it('excludes the current run so a baseline is the one before it', async () => {
     const store = await makeStore();
     await store.saveRun(
-      runRecord({ requestId: 'contract-old', createdAt: '2026-08-08T10:00:00.000Z' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-old`, createdAt: '2026-08-08T10:00:00.000Z' }),
     );
     await store.saveRun(
-      runRecord({ requestId: 'contract-new', createdAt: '2026-08-08T11:00:00.000Z' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-new`, createdAt: '2026-08-08T11:00:00.000Z' }),
     );
 
-    const baseline = await store.getLatestRun(CONTRACT_JOURNEY, 'staging', 'contract-new');
-    expect(baseline?.requestId).toBe('contract-old');
+    const baseline = await store.getLatestRun(CONTRACT_JOURNEY, 'staging', `${CONTRACT_PREFIX}-new`);
+    expect(baseline?.requestId).toBe(`${CONTRACT_PREFIX}-old`);
   });
 
   it('does not mistake another journey or environment for this one', async () => {
     const store = await makeStore();
     await store.saveRun(
-      runRecord({ requestId: 'contract-other-journey', journeyId: 'contract-other' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-other-journey`, journeyId: `${CONTRACT_PREFIX}-other` }),
     );
     await store.saveRun(
-      runRecord({ requestId: 'contract-other-env', environment: 'production' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-other-env`, environment: 'production' }),
     );
 
     expect(await store.getLatestRun(CONTRACT_JOURNEY, 'staging')).toBeNull();
@@ -370,7 +388,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // Called out in the Phase 1 plan and never delivered, so until now there
     // was no way to enumerate history at all.
     const store = await makeStore();
-    for (const [i, id] of ['contract-1', 'contract-2', 'contract-3'].entries()) {
+    for (const [i, id] of [`${CONTRACT_PREFIX}-1`, `${CONTRACT_PREFIX}-2`, `${CONTRACT_PREFIX}-3`].entries()) {
       await store.saveRun(
         runRecord({ requestId: id, createdAt: `2026-08-08T1${i}:00:00.000Z` }),
       );
@@ -378,45 +396,45 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     const runs = await store.list({ journeyId: CONTRACT_JOURNEY });
     expect(runs.map((run) => run.requestId)).toEqual([
-      'contract-3',
-      'contract-2',
-      'contract-1',
+      `${CONTRACT_PREFIX}-3`,
+      `${CONTRACT_PREFIX}-2`,
+      `${CONTRACT_PREFIX}-1`,
     ]);
   });
 
   it('filters a listing by journey and environment', async () => {
     const store = await makeStore();
-    await store.saveRun(runRecord({ requestId: 'contract-a' }));
+    await store.saveRun(runRecord({ requestId: `${CONTRACT_PREFIX}-a` }));
     await store.saveRun(
-      runRecord({ requestId: 'contract-b', journeyId: 'contract-other' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-b`, journeyId: `${CONTRACT_PREFIX}-other` }),
     );
-    await store.saveRun(runRecord({ requestId: 'contract-c', environment: 'production' }));
+    await store.saveRun(runRecord({ requestId: `${CONTRACT_PREFIX}-c`, environment: 'production' }));
 
     const runs = await store.list({ journeyId: CONTRACT_JOURNEY, environment: 'staging' });
-    expect(runs.map((run) => run.requestId)).toEqual(['contract-a']);
+    expect(runs.map((run) => run.requestId)).toEqual([`${CONTRACT_PREFIX}-a`]);
   });
 
   it('filters by status, so "a completed run exists" is one query', async () => {
     const store = await makeStore();
     await store.saveRun(
       runRecord({
-        requestId: 'contract-rsc-complete-1',
-        journeyId: 'contract-rsc-journey',
+        requestId: `${CONTRACT_PREFIX}-rsc-complete-1`,
+        journeyId: `${CONTRACT_PREFIX}-rsc-journey`,
         status: 'complete',
       }),
     );
     await store.saveRun(
       runRecord({
-        requestId: 'contract-rsc-failed-1',
-        journeyId: 'contract-rsc-journey',
+        requestId: `${CONTRACT_PREFIX}-rsc-failed-1`,
+        journeyId: `${CONTRACT_PREFIX}-rsc-journey`,
         status: 'failed',
       }),
     );
 
-    const completed = await store.list({ journeyId: 'contract-rsc-journey', status: 'complete' });
+    const completed = await store.list({ journeyId: `${CONTRACT_PREFIX}-rsc-journey`, status: 'complete' });
 
-    expect(completed.map((run) => run.requestId)).toContain('contract-rsc-complete-1');
-    expect(completed.map((run) => run.requestId)).not.toContain('contract-rsc-failed-1');
+    expect(completed.map((run) => run.requestId)).toContain(`${CONTRACT_PREFIX}-rsc-complete-1`);
+    expect(completed.map((run) => run.requestId)).not.toContain(`${CONTRACT_PREFIX}-rsc-failed-1`);
     expect(completed.every((run) => run.status === 'complete')).toBe(true);
   });
 
@@ -431,18 +449,18 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     await store.saveRun(
       runRecord({
-        requestId: 'contract-stale-filter-1',
-        journeyId: 'contract-stale-filter-j',
+        requestId: `${CONTRACT_PREFIX}-stale-filter-1`,
+        journeyId: `${CONTRACT_PREFIX}-stale-filter-j`,
         status: 'running',
         createdAt: longAgo,
         startedAt: longAgo,
       }),
     );
 
-    const runs = await store.list({ journeyId: 'contract-stale-filter-j', status: 'running' });
-    expect(runs.map((run) => run.requestId)).toContain('contract-stale-filter-1');
-    expect(runs.find((run) => run.requestId === 'contract-stale-filter-1')?.status).toBe('failed');
-    expect(runs.find((run) => run.requestId === 'contract-stale-filter-1')?.failureReason).toBe(
+    const runs = await store.list({ journeyId: `${CONTRACT_PREFIX}-stale-filter-j`, status: 'running' });
+    expect(runs.map((run) => run.requestId)).toContain(`${CONTRACT_PREFIX}-stale-filter-1`);
+    expect(runs.find((run) => run.requestId === `${CONTRACT_PREFIX}-stale-filter-1`)?.status).toBe('failed');
+    expect(runs.find((run) => run.requestId === `${CONTRACT_PREFIX}-stale-filter-1`)?.failureReason).toBe(
       'run_timed_out',
     );
   });
@@ -469,7 +487,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // and against a hosted Postgres that is a second of pure latency for a row
     // this test does not need — the pair below proves the limit truncates just
     // as well as a trio would.
-    for (const [i, id] of ['contract-1', 'contract-2'].entries()) {
+    for (const [i, id] of [`${CONTRACT_PREFIX}-1`, `${CONTRACT_PREFIX}-2`].entries()) {
       await store.saveRun(
         runRecord({ requestId: id, createdAt: `2026-08-08T1${i}:00:00.000Z` }),
       );
@@ -507,14 +525,14 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     await store.saveRun(
       runRecord({
-        requestId: 'contract-abandoned',
+        requestId: `${CONTRACT_PREFIX}-abandoned`,
         status: 'running',
         createdAt: longAgo,
         startedAt: longAgo,
       }),
     );
 
-    const read = await store.getRun('contract-abandoned');
+    const read = await store.getRun(`${CONTRACT_PREFIX}-abandoned`);
     expect(read?.status).toBe('failed');
     expect(read?.failureReason).toBe('run_timed_out');
   });
@@ -525,14 +543,14 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     await store.saveRun(
       runRecord({
-        requestId: 'contract-inflight',
+        requestId: `${CONTRACT_PREFIX}-inflight`,
         status: 'running',
         createdAt: justNow,
         startedAt: justNow,
       }),
     );
 
-    expect((await store.getRun('contract-inflight'))?.status).toBe('running');
+    expect((await store.getRun(`${CONTRACT_PREFIX}-inflight`))?.status).toBe('running');
   });
 
   /**
@@ -548,15 +566,15 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     const longAgo = new Date(Date.now() - 3 * RUN_STALE_AFTER_MS).toISOString();
 
     await store.saveRun(
-      runRecord({ requestId: 'contract-sweep-a', status: 'running', createdAt: longAgo, startedAt: longAgo }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-sweep-a`, status: 'running', createdAt: longAgo, startedAt: longAgo }),
     );
     await store.saveRun(
-      runRecord({ requestId: 'contract-sweep-b', status: 'complete', createdAt: longAgo, startedAt: longAgo }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-sweep-b`, status: 'complete', createdAt: longAgo, startedAt: longAgo }),
     );
 
     expect(await store.reconcileStaleRuns(RUN_STALE_AFTER_MS)).toBeGreaterThanOrEqual(1);
     // A finished run is not touched, whatever its age.
-    expect((await store.getRun('contract-sweep-b'))?.status).toBe('complete');
+    expect((await store.getRun(`${CONTRACT_PREFIX}-sweep-b`))?.status).toBe('complete');
   });
 
 
@@ -573,7 +591,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     await store.saveRun(
       runRecord({
-        requestId: 'contract-pruned',
+        requestId: `${CONTRACT_PREFIX}-pruned`,
         createdAt: old,
         pages: [
           {
@@ -595,7 +613,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // Absent, not empty: the page never had evidence as far as anyone reading
     // it later is concerned, and `{}` versus missing is a distinction this
     // store already keeps everywhere else.
-    expect((await store.getRun('contract-pruned'))?.pages?.[0]).not.toHaveProperty('artifacts');
+    expect((await store.getRun(`${CONTRACT_PREFIX}-pruned`))?.pages?.[0]).not.toHaveProperty('artifacts');
   });
 
   it('leaves evidence inside the retention window alone', async () => {
@@ -603,7 +621,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     await store.saveRun(
       runRecord({
-        requestId: 'contract-fresh',
+        requestId: `${CONTRACT_PREFIX}-fresh`,
         createdAt: new Date().toISOString(),
         pages: [
           {
@@ -621,7 +639,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
       new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     );
 
-    expect((await store.getRun('contract-fresh'))?.pages?.[0]?.artifacts).toEqual({
+    expect((await store.getRun(`${CONTRACT_PREFIX}-fresh`))?.pages?.[0]?.artifacts).toEqual({
       screenshotUrl: 'https://blob.test/fresh.png',
     });
   });
@@ -638,9 +656,9 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
    */
   it('keeps a run that recorded no intent distinguishable from one that did', async () => {
     const store = await makeStore();
-    await store.saveRun(runRecord({ requestId: 'contract-no-intent' }));
+    await store.saveRun(runRecord({ requestId: `${CONTRACT_PREFIX}-no-intent` }));
 
-    const read = await store.getRun('contract-no-intent');
+    const read = await store.getRun(`${CONTRACT_PREFIX}-no-intent`);
 
     expect(read).not.toBeNull();
     expect(read).not.toHaveProperty('intent');
@@ -661,12 +679,12 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     // bug rather than catching it.
     const ruleset = 'axe-core@4.12.1+target-size';
     await store.saveRun(
-      runRecord({ requestId: 'contract-intent', intent: { steps, ruleset } }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-intent`, intent: { steps, ruleset } }),
     );
 
     // Order and shape both, because the comparison serialises: a store that
     // reordered keys or entries would make two identical runs incomparable.
-    expect((await store.getRun('contract-intent'))?.intent).toEqual({ steps, ruleset });
+    expect((await store.getRun(`${CONTRACT_PREFIX}-intent`))?.intent).toEqual({ steps, ruleset });
   });
 
   /**
@@ -682,12 +700,12 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     const store = await makeStore();
     const steps = [{ action: 'navigate', type: 'goto', path: '/checkout' }];
 
-    await store.saveRun(runRecord({ requestId: 'contract-intent-resave', intent: { steps } }));
+    await store.saveRun(runRecord({ requestId: `${CONTRACT_PREFIX}-intent-resave`, intent: { steps } }));
     await store.saveRun(
-      runRecord({ requestId: 'contract-intent-resave', status: 'failed', failureReason: 'x' }),
+      runRecord({ requestId: `${CONTRACT_PREFIX}-intent-resave`, status: 'failed', failureReason: 'x' }),
     );
 
-    const read = await store.getRun('contract-intent-resave');
+    const read = await store.getRun(`${CONTRACT_PREFIX}-intent-resave`);
 
     expect(read?.status).toBe('failed');
     expect(read?.intent).toEqual({ steps });

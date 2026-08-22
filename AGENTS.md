@@ -118,6 +118,13 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - Shared contracts run against a database that already holds real rows, so
   scope every assertion. `listClients()` and `listEvents()` take no filter that
   can isolate them: assert with `toContain`, never `toEqual`/`toHaveLength`
+- Every identity a contract writes is built from `CONTRACT_PREFIX` or
+  `PLATFORM_PREFIX`, never a literal — ids *and* emails, because
+  `operators.email` is unique and a shared literal collides outright. The
+  prefixes are random per process, so runs sharing one `DATABASE_URL` cannot
+  see each other; a literal reintroduces the failure that reddened master over
+  a documentation-only diff. Cleanup lives in `tests/support/contract-cleanup.ts`
+  and `postgres-contract-isolation.test.ts` is what keeps it confined
 - Keep browser launches out of the unit suite. Handler tests mock the audit; the real browser is covered by `tests/integrations/browser/**` and by chaos.
 - When adding Vercel routes: add route/handler tests or chaos script assertions for terminal statuses
 - Before claiming a change works end to end, run one real audit through

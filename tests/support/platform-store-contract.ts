@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { UNASSIGNED_CLIENT_ID } from '../../src/domain/platform';
 import type { PlatformStore, TriageEntry } from '../../src/domain/platform';
@@ -24,7 +25,18 @@ import type { PlatformStore, TriageEntry } from '../../src/domain/platform';
  * the run-store contract red for reasons that had nothing to do with the store.
  */
 
-export const CONTRACT_CLIENT = 'pc-client-a';
+/**
+ * This process's own corner of the database. See `CONTRACT_PREFIX` in
+ * `run-store-contract.ts` for why it exists; this is the catalog half.
+ *
+ * It covers the emails as well as the ids, and that is not tidiness:
+ * `operators.email` is `not null unique` with a second unique index on
+ * `lower(email)`, so two runs inserting one literal address collide outright
+ * rather than merely reading each other's rows.
+ */
+export const PLATFORM_PREFIX = `pc-${randomUUID().slice(0, 8)}`;
+
+export const CONTRACT_CLIENT = `${PLATFORM_PREFIX}-client-a`;
 
 /**
  * The runs the report cases attach to.
@@ -34,10 +46,10 @@ export const CONTRACT_CLIENT = 'pc-client-a';
  * Postgres rejected every report insert — precisely the drift this shared
  * contract exists to surface. Each harness makes them exist its own way.
  */
-export const CONTRACT_RUN_IDS = ['pc-run-a', 'pc-run-b'];
+export const CONTRACT_RUN_IDS = [`${PLATFORM_PREFIX}-run-a`, `${PLATFORM_PREFIX}-run-b`];
 
-export const CONTRACT_OPERATOR = 'pc-op-a';
-export const CONTRACT_OPERATOR_EMAIL = 'pc-operator@example.com';
+export const CONTRACT_OPERATOR = `${PLATFORM_PREFIX}-op-a`;
+export const CONTRACT_OPERATOR_EMAIL = `${PLATFORM_PREFIX}-operator@example.com`;
 
 export type PlatformContractOptions = {
   /** Called before the report cases. A no-op where nothing enforces the FK. */
@@ -134,7 +146,7 @@ export function platformStoreContract(
 
     it('returns null for a client that does not exist', async () => {
       const store = await makeStore();
-      expect(await store.getClient('pc-missing')).toBeNull();
+      expect(await store.getClient(`${PLATFORM_PREFIX}-missing`)).toBeNull();
     });
 
     it('round-trips client config', async () => {
@@ -168,14 +180,14 @@ export function platformStoreContract(
     it('round-trips a journey with its steps', async () => {
       const store = await seeded();
       await store.upsertJourney({
-        id: 'pc-journey-a',
+        id: `${PLATFORM_PREFIX}-journey-a`,
         clientId: CONTRACT_CLIENT,
         name: 'Checkout',
         targetUrl: 'https://a.example',
         steps: [{ action: 'navigate', type: 'goto', path: '/' }],
       });
 
-      const journey = await store.getJourney('pc-journey-a');
+      const journey = await store.getJourney(`${PLATFORM_PREFIX}-journey-a`);
       expect(journey).toMatchObject({ name: 'Checkout', clientId: CONTRACT_CLIENT });
       expect(journey?.steps).toEqual([{ action: 'navigate', type: 'goto', path: '/' }]);
     });
@@ -187,7 +199,7 @@ export function platformStoreContract(
       // refusal naming a host the operator did write down.
       const store = await seeded();
       await store.upsertJourney({
-        id: 'pc-journey-sso',
+        id: `${PLATFORM_PREFIX}-journey-sso`,
         clientId: CONTRACT_CLIENT,
         name: 'SSO',
         targetUrl: 'https://a.example',
@@ -195,20 +207,20 @@ export function platformStoreContract(
         steps: [{ action: 'navigate', type: 'goto', path: '/' }],
       });
       await store.upsertJourney({
-        id: 'pc-journey-plain',
+        id: `${PLATFORM_PREFIX}-journey-plain`,
         clientId: CONTRACT_CLIENT,
         name: 'Plain',
         steps: [],
       });
 
-      expect((await store.getJourney('pc-journey-sso'))?.allowedHosts).toEqual([
+      expect((await store.getJourney(`${PLATFORM_PREFIX}-journey-sso`))?.allowedHosts).toEqual([
         'acme.okta.com',
         'login.okta.com',
       ]);
       // Absent, not `[]`. Every other nullable column here reads "not
       // recorded" that way, and an empty array would make a row written before
       // the column look like one an operator deliberately cleared.
-      expect((await store.getJourney('pc-journey-plain'))?.allowedHosts).toBeUndefined();
+      expect((await store.getJourney(`${PLATFORM_PREFIX}-journey-plain`))?.allowedHosts).toBeUndefined();
     });
 
     it('archives rather than deletes', async () => {
@@ -216,17 +228,17 @@ export function platformStoreContract(
       // history. Archiving hides the journey from the catalog and keeps it.
       const store = await seeded();
       await store.upsertJourney({
-        id: 'pc-journey-a',
+        id: `${PLATFORM_PREFIX}-journey-a`,
         clientId: CONTRACT_CLIENT,
         name: 'Checkout',
         steps: [],
       });
-      await store.archiveJourney('pc-journey-a');
+      await store.archiveJourney(`${PLATFORM_PREFIX}-journey-a`);
 
-      expect(await store.getJourney('pc-journey-a')).not.toBeNull();
+      expect(await store.getJourney(`${PLATFORM_PREFIX}-journey-a`)).not.toBeNull();
       expect(
         (await store.listJourneys(CONTRACT_CLIENT)).map((j) => j.id),
-      ).not.toContain('pc-journey-a');
+      ).not.toContain(`${PLATFORM_PREFIX}-journey-a`);
     });
 
     it('hides an archived journey by default and surfaces it on request', async () => {
@@ -237,43 +249,43 @@ export function platformStoreContract(
       // path that check leans on, scoped and unscoped both.
       const store = await seeded();
       await store.upsertJourney({
-        id: 'pc-journey-retired',
+        id: `${PLATFORM_PREFIX}-journey-retired`,
         clientId: CONTRACT_CLIENT,
         name: 'Retired',
         steps: [],
       });
-      await store.archiveJourney('pc-journey-retired');
+      await store.archiveJourney(`${PLATFORM_PREFIX}-journey-retired`);
 
       expect(
         (await store.listJourneys(CONTRACT_CLIENT)).map((j) => j.id),
-      ).not.toContain('pc-journey-retired');
-      expect((await store.listJourneys()).map((j) => j.id)).not.toContain('pc-journey-retired');
+      ).not.toContain(`${PLATFORM_PREFIX}-journey-retired`);
+      expect((await store.listJourneys()).map((j) => j.id)).not.toContain(`${PLATFORM_PREFIX}-journey-retired`);
 
       const withArchived = await store.listJourneys(CONTRACT_CLIENT, { includeArchived: true });
-      const retired = withArchived.find((j) => j.id === 'pc-journey-retired');
+      const retired = withArchived.find((j) => j.id === `${PLATFORM_PREFIX}-journey-retired`);
       expect(retired).toBeDefined();
       expect(retired?.archivedAt).toBeDefined();
     });
 
     it('filters a listing by client', async () => {
       const store = await seeded();
-      await store.upsertClient({ id: 'pc-client-b', name: 'Other' });
+      await store.upsertClient({ id: `${PLATFORM_PREFIX}-client-b`, name: 'Other' });
       await store.upsertJourney({
-        id: 'pc-journey-a',
+        id: `${PLATFORM_PREFIX}-journey-a`,
         clientId: CONTRACT_CLIENT,
         name: 'A',
         steps: [],
       });
       await store.upsertJourney({
-        id: 'pc-journey-b',
-        clientId: 'pc-client-b',
+        id: `${PLATFORM_PREFIX}-journey-b`,
+        clientId: `${PLATFORM_PREFIX}-client-b`,
         name: 'B',
         steps: [],
       });
 
       const ids = (await store.listJourneys(CONTRACT_CLIENT)).map((j) => j.id);
-      expect(ids).toContain('pc-journey-a');
-      expect(ids).not.toContain('pc-journey-b');
+      expect(ids).toContain(`${PLATFORM_PREFIX}-journey-a`);
+      expect(ids).not.toContain(`${PLATFORM_PREFIX}-journey-b`);
     });
   });
 
@@ -317,10 +329,10 @@ export function platformStoreContract(
 
     it('scopes triage to its client', async () => {
       const store = await seeded();
-      await store.upsertClient({ id: 'pc-client-b', name: 'Other' });
+      await store.upsertClient({ id: `${PLATFORM_PREFIX}-client-b`, name: 'Other' });
       await store.setTriage(triageEntry());
 
-      expect(await store.listTriage('pc-client-b')).toEqual([]);
+      expect(await store.listTriage(`${PLATFORM_PREFIX}-client-b`)).toEqual([]);
     });
 
     it('clears a decision', async () => {
@@ -341,16 +353,16 @@ export function platformStoreContract(
     it('finds a report by its share token', async () => {
       const store = await makeStore();
       await store.createReport({
-        id: 'pc-report-a',
-        requestId: 'pc-run-a',
-        shareToken: 'pc-token-a',
+        id: `${PLATFORM_PREFIX}-report-a`,
+        requestId: `${PLATFORM_PREFIX}-run-a`,
+        shareToken: `${PLATFORM_PREFIX}-token-a`,
         audience: 'legal',
         title: 'Contract report',
       });
 
-      expect(await store.getReportByToken('pc-token-a')).toMatchObject({
-        id: 'pc-report-a',
-        requestId: 'pc-run-a',
+      expect(await store.getReportByToken(`${PLATFORM_PREFIX}-token-a`)).toMatchObject({
+        id: `${PLATFORM_PREFIX}-report-a`,
+        requestId: `${PLATFORM_PREFIX}-run-a`,
         audience: 'legal',
       });
     });
@@ -360,28 +372,28 @@ export function platformStoreContract(
       // a speed bump. A revoked token must stop resolving immediately.
       const store = await makeStore();
       await store.createReport({
-        id: 'pc-report-a',
-        requestId: 'pc-run-a',
-        shareToken: 'pc-token-a',
+        id: `${PLATFORM_PREFIX}-report-a`,
+        requestId: `${PLATFORM_PREFIX}-run-a`,
+        shareToken: `${PLATFORM_PREFIX}-token-a`,
       });
-      await store.revokeShareToken('pc-report-a');
+      await store.revokeShareToken(`${PLATFORM_PREFIX}-report-a`);
 
-      expect(await store.getReportByToken('pc-token-a')).toBeNull();
-      expect(await store.getReport('pc-report-a')).not.toBeNull();
+      expect(await store.getReportByToken(`${PLATFORM_PREFIX}-token-a`)).toBeNull();
+      expect(await store.getReport(`${PLATFORM_PREFIX}-report-a`)).not.toBeNull();
     });
 
     it('returns null for an unknown token rather than throwing', async () => {
       const store = await makeStore();
-      expect(await store.getReportByToken('pc-token-nope')).toBeNull();
+      expect(await store.getReportByToken(`${PLATFORM_PREFIX}-token-nope`)).toBeNull();
     });
 
     it('lists reports for the runs asked for', async () => {
       const store = await makeStore();
-      await store.createReport({ id: 'pc-report-a', requestId: 'pc-run-a' });
-      await store.createReport({ id: 'pc-report-b', requestId: 'pc-run-b' });
+      await store.createReport({ id: `${PLATFORM_PREFIX}-report-a`, requestId: `${PLATFORM_PREFIX}-run-a` });
+      await store.createReport({ id: `${PLATFORM_PREFIX}-report-b`, requestId: `${PLATFORM_PREFIX}-run-b` });
 
-      const ids = (await store.listReports(['pc-run-a'])).map((r) => r.id);
-      expect(ids).toEqual(['pc-report-a']);
+      const ids = (await store.listReports([`${PLATFORM_PREFIX}-run-a`])).map((r) => r.id);
+      expect(ids).toEqual([`${PLATFORM_PREFIX}-report-a`]);
     });
 
     it('returns nothing for an empty request list without querying', async () => {
@@ -444,7 +456,7 @@ export function platformStoreContract(
       await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
       await store.upsertOperator({
         id: CONTRACT_OPERATOR,
-        email: 'pc-actor@example.com',
+        email: `${PLATFORM_PREFIX}-actor@example.com`,
         name: 'Contract Actor',
         passwordHash: 'scrypt$16384$8$1$c2FsdA==$aGFzaA==',
       });
@@ -539,11 +551,11 @@ export function platformStoreContract(
     });
 
     it('claims a journey due this hour', async () => {
-      await scheduled('pc-journey-due');
+      await scheduled(`${PLATFORM_PREFIX}-journey-due`);
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).toContain('pc-journey-due');
+      expect(claimed.map((journey) => journey.id)).toContain(`${PLATFORM_PREFIX}-journey-due`);
     });
 
     /**
@@ -557,27 +569,27 @@ export function platformStoreContract(
      * dropped run is the failure that matters most here.
      */
     it('makes a released journey claimable again', async () => {
-      await scheduled('pc-journey-released');
+      await scheduled(`${PLATFORM_PREFIX}-journey-released`);
 
       await store_.claimDueJourneys(10);
       expect(
         (await store_.claimDueJourneys(10)).map((journey) => journey.id),
-      ).not.toContain('pc-journey-released');
+      ).not.toContain(`${PLATFORM_PREFIX}-journey-released`);
 
-      await store_.releaseJourneyClaim('pc-journey-released');
+      await store_.releaseJourneyClaim(`${PLATFORM_PREFIX}-journey-released`);
 
       expect((await store_.claimDueJourneys(10)).map((journey) => journey.id)).toContain(
-        'pc-journey-released',
+        `${PLATFORM_PREFIX}-journey-released`,
       );
     });
 
     it('releases a journey that was never claimed without complaining', async () => {
       // The tick releases on any dispatch failure and cannot know whether the
       // claim landed. Throwing here would turn a failed run into a failed tick.
-      await scheduled('pc-journey-unclaimed');
+      await scheduled(`${PLATFORM_PREFIX}-journey-unclaimed`);
 
-      await expect(store_.releaseJourneyClaim('pc-journey-unclaimed')).resolves.toBeUndefined();
-      await expect(store_.releaseJourneyClaim('pc-journey-missing')).resolves.toBeUndefined();
+      await expect(store_.releaseJourneyClaim(`${PLATFORM_PREFIX}-journey-unclaimed`)).resolves.toBeUndefined();
+      await expect(store_.releaseJourneyClaim(`${PLATFORM_PREFIX}-journey-missing`)).resolves.toBeUndefined();
     });
 
     /**
@@ -586,12 +598,12 @@ export function platformStoreContract(
      * ticks both start the same journey.
      */
     it('does not claim the same journey twice in a window', async () => {
-      await scheduled('pc-journey-once');
+      await scheduled(`${PLATFORM_PREFIX}-journey-once`);
 
       await store_.claimDueJourneys(10);
       const second = await store_.claimDueJourneys(10);
 
-      expect(second.map((journey) => journey.id)).not.toContain('pc-journey-once');
+      expect(second.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-once`);
     });
 
     /**
@@ -606,40 +618,40 @@ export function platformStoreContract(
      * a client billed for it.
      */
     it('does not hand the same journey to two concurrent claims', async () => {
-      await scheduled('pc-journey-race');
+      await scheduled(`${PLATFORM_PREFIX}-journey-race`);
 
       const [first, second] = await Promise.all([
         store_.claimDueJourneys(10),
         store_.claimDueJourneys(10),
       ]);
 
-      const claims = [...first, ...second].filter((journey) => journey.id === 'pc-journey-race');
+      const claims = [...first, ...second].filter((journey) => journey.id === `${PLATFORM_PREFIX}-journey-race`);
       expect(claims).toHaveLength(1);
     });
 
     it('leaves an unscheduled journey alone', async () => {
-      await scheduled('pc-journey-off', { schedule: 'off' });
+      await scheduled(`${PLATFORM_PREFIX}-journey-off`, { schedule: 'off' });
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-off');
+      expect(claimed.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-off`);
     });
 
     it('leaves a journey scheduled for a different hour alone', async () => {
-      await scheduled('pc-journey-later', { scheduleHour: (thisHour + 5) % 24 });
+      await scheduled(`${PLATFORM_PREFIX}-journey-later`, { scheduleHour: (thisHour + 5) % 24 });
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-later');
+      expect(claimed.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-later`);
     });
 
     // Scheduling a journey with no target would book a recurring failure.
     it('never claims a journey with no target URL', async () => {
-      await scheduled('pc-journey-targetless', { targetUrl: undefined });
+      await scheduled(`${PLATFORM_PREFIX}-journey-targetless`, { targetUrl: undefined });
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-targetless');
+      expect(claimed.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-targetless`);
     });
 
     /**
@@ -653,11 +665,11 @@ export function platformStoreContract(
      * because this contract only ever seeded `undefined`.
      */
     it('never claims a journey whose target URL is empty', async () => {
-      await scheduled('pc-journey-blank-target', { targetUrl: '' });
+      await scheduled(`${PLATFORM_PREFIX}-journey-blank-target`, { targetUrl: '' });
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-blank-target');
+      expect(claimed.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-blank-target`);
     });
 
     /**
@@ -670,11 +682,11 @@ export function platformStoreContract(
      * run route refuses, not a subset of it.
      */
     it('never claims a journey with no steps', async () => {
-      await scheduled('pc-journey-stepless', { steps: [] });
+      await scheduled(`${PLATFORM_PREFIX}-journey-stepless`, { steps: [] });
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-stepless');
+      expect(claimed.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-stepless`);
     });
 
     /**
@@ -685,22 +697,22 @@ export function platformStoreContract(
      * journey.
      */
     it('never claims a journey whose steps are not an array', async () => {
-      await scheduled('pc-journey-badsteps', {
+      await scheduled(`${PLATFORM_PREFIX}-journey-badsteps`, {
         steps: { banana: 1 } as unknown as unknown[],
       });
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-badsteps');
+      expect(claimed.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-badsteps`);
     });
 
     it('never claims an archived journey', async () => {
-      await scheduled('pc-journey-archived');
-      await store_.archiveJourney('pc-journey-archived');
+      await scheduled(`${PLATFORM_PREFIX}-journey-archived`);
+      await store_.archiveJourney(`${PLATFORM_PREFIX}-journey-archived`);
 
       const claimed = await store_.claimDueJourneys(10);
 
-      expect(claimed.map((journey) => journey.id)).not.toContain('pc-journey-archived');
+      expect(claimed.map((journey) => journey.id)).not.toContain(`${PLATFORM_PREFIX}-journey-archived`);
     });
 
     // The Postgres store claims across the whole table, so this asserts the
@@ -712,9 +724,9 @@ export function platformStoreContract(
     // invocation with its own browser. Only real Postgres can fail it — the
     // memory double slices the array and is right by construction.
     it('honours the limit', async () => {
-      await scheduled('pc-journey-a');
-      await scheduled('pc-journey-b');
-      await scheduled('pc-journey-c');
+      await scheduled(`${PLATFORM_PREFIX}-journey-a`);
+      await scheduled(`${PLATFORM_PREFIX}-journey-b`);
+      await scheduled(`${PLATFORM_PREFIX}-journey-c`);
 
       expect((await store_.claimDueJourneys(2)).length).toBeLessThanOrEqual(2);
     });
@@ -775,8 +787,8 @@ export function platformStoreContract(
 
     it('reports an unknown operator as absent rather than throwing', async () => {
       const store = await makeStore();
-      expect(await store.getOperator('pc-op-nobody')).toBeNull();
-      expect(await store.getOperatorByEmail('pc-nobody@example.com')).toBeNull();
+      expect(await store.getOperator(`${PLATFORM_PREFIX}-op-nobody`)).toBeNull();
+      expect(await store.getOperatorByEmail(`${PLATFORM_PREFIX}-nobody@example.com`)).toBeNull();
     });
 
     // Upsert is by email, not id: a disabled operator keeps their row, so an
@@ -786,7 +798,7 @@ export function platformStoreContract(
       const store = await makeStore();
       await seedOperator(store);
       await store.upsertOperator({
-        id: 'pc-op-a-different-id',
+        id: `${PLATFORM_PREFIX}-op-a-different-id`,
         email: CONTRACT_OPERATOR_EMAIL,
         name: 'Renamed Operator',
         passwordHash: hash,
@@ -809,7 +821,7 @@ export function platformStoreContract(
       await seedOperator(store);
 
       await store.upsertOperator({
-        id: 'pc-op-a-shouted',
+        id: `${PLATFORM_PREFIX}-op-a-shouted`,
         email: CONTRACT_OPERATOR_EMAIL.toUpperCase(),
         name: 'Shouted Operator',
         passwordHash: hash,
