@@ -32,6 +32,8 @@ describe('GET /api/ready', () => {
   const originalKvToken = process.env.KV_REST_API_TOKEN;
   const originalSessionSecret = process.env.AUDITOR_SESSION_SECRET;
   const originalCronSecret = process.env.CRON_SECRET;
+  const originalBlobToken = process.env.BLOB_READ_WRITE_TOKEN;
+  const originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
 
   beforeEach(() => {
     process.env.DATABASE_URL = 'postgres://test/db';
@@ -53,6 +55,10 @@ describe('GET /api/ready', () => {
     else process.env.AUDITOR_SESSION_SECRET = originalSessionSecret;
     if (originalCronSecret === undefined) delete process.env.CRON_SECRET;
     else process.env.CRON_SECRET = originalCronSecret;
+    if (originalBlobToken === undefined) delete process.env.BLOB_READ_WRITE_TOKEN;
+    else process.env.BLOB_READ_WRITE_TOKEN = originalBlobToken;
+    if (originalAnthropicKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
   });
 
   it('is ready when AUDITOR_RUN_TOKEN meets MIN_TOKEN_LENGTH', async () => {
@@ -106,11 +112,61 @@ describe('GET /api/ready', () => {
     process.env.CRON_SECRET = 'cron-secret-16chars';
     process.env.KV_REST_API_URL = 'https://kv.test';
     process.env.KV_REST_API_TOKEN = 'kv-token';
+    process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
 
     const body = await (await GET()).json();
     expect(body.checks.unlockThrottleDurable).toBe(true);
     expect(body.checks.unlockThrottleReachable).toBe(true);
     expect(body.checks.sessionSecretDedicated).toBe(true);
+    expect(body.checks.blobConfigured).toBe(true);
+    expect(body.warnings).toEqual([]);
+  });
+
+  it('warns when nothing is configured to store evidence', async () => {
+    // The reason this check exists, and it is not "a setting is missing".
+    //
+    // `createEvidenceBundle` decides a page's evidence is complete from the
+    // *local* artifact paths, which the runner always writes. Without a blob
+    // token `getArtifactStore()` returns the no-op store, so nothing is
+    // uploaded and no URL is recorded — and the run still reports
+    // `evidenceStatus: 'complete'` while every later read of that evidence
+    // answers `pruned`. A conformance report whose evidence cannot be produced
+    // is the failure this product exists to prevent, and until now nothing
+    // anywhere said the store was missing.
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    process.env.AUDITOR_SESSION_SECRET = 'session-secret-16chars';
+    process.env.CRON_SECRET = 'cron-secret-16chars';
+    process.env.KV_REST_API_URL = 'https://kv.test';
+    process.env.KV_REST_API_TOKEN = 'kv-token';
+    delete process.env.BLOB_READ_WRITE_TOKEN;
+
+    const response = await GET();
+    const body = await response.json();
+
+    // Reported, never gating: a deployment auditing to local disk is a working
+    // control plane, and 503 would take the console down over it.
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('ready');
+    expect(body.checks.blobConfigured).toBe(false);
+    expect(body.warnings.join(' ')).toContain('evidence_storage_not_configured');
+  });
+
+  it('reports whether the advisory is configured without warning about it', async () => {
+    // Deferred on purpose, so it is a fact to read rather than a complaint to
+    // scroll past. A warnings array that always has something in it is one
+    // nobody reads, which is how the retention sweep failed eleven nights —
+    // the same reason `chaosEnabled` is a plain check.
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    process.env.AUDITOR_SESSION_SECRET = 'session-secret-16chars';
+    process.env.CRON_SECRET = 'cron-secret-16chars';
+    process.env.KV_REST_API_URL = 'https://kv.test';
+    process.env.KV_REST_API_TOKEN = 'kv-token';
+    process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
+    delete process.env.ANTHROPIC_API_KEY;
+
+    const body = await (await GET()).json();
+
+    expect(body.checks.advisoryConfigured).toBe(false);
     expect(body.warnings).toEqual([]);
   });
 
