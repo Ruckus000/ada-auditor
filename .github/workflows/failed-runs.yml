@@ -183,11 +183,22 @@ jobs:
               '' \
               'Most likely causes: AUDITOR_RUN_TOKEN was rotated without updating the repository secret, or the deployment moved.')
           elif [ "${TRUNCATED}" = "true" ]; then
+            # Titled for the truncation, because not covering the window is the
+            # more serious fact — but it carries the failure list too. Folding
+            # this into the meta branch first made the worse night produce the
+            # *less* actionable alert: a count with no request ids to look up,
+            # where an ordinary night hands over the lot. The ids are the one
+            # thing safe to publish, so there is no reason to withhold them
+            # exactly when something is already wrong.
             TITLE='The failed-run check could not cover its window'
             BODY=$(printf '%s\n' \
               "The runs endpoint returned its maximum of ${RUN_LIMIT} records, so runs older than the newest ${RUN_LIMIT} were never examined and this job cannot say whether any of them failed." \
               '' \
-              "It matched ${FAILED_COUNT} failure(s) in what it could see, since ${SINCE}." \
+              "It matched ${FAILED_COUNT} failure(s) in what it could see, since ${SINCE}:" \
+              '' \
+              "$(cat failures.md)" \
+              '' \
+              'Look each request id up in the console for the client, the journey and what went wrong — deliberately not published here, because this repository is public.' \
               '' \
               "Checked by: ${RUN_URL}" \
               '' \

@@ -414,6 +414,20 @@ Read this before claiming something works.
   than per-operator because the bill is shared, enforced inside `startRun` so
   every caller inherits it. It **fails open**: a cost control that becomes an
   outage has made things worse.
+- **A run refused before it is recorded is invisible to everything.** Not just
+  to a screen — to every query there is. `run_budget_exceeded` deliberately
+  leaves no row (`audit-run-handler.ts`: "a refused run must leave no row
+  behind, because it never started... nothing failed, the run was declined"),
+  and when `/api/cron/tick` cannot dispatch — a 429, a 400, a network error —
+  it calls `releaseClaim` and writes nothing either. So a client's scheduled
+  audit can fail to happen with no run record, no activity event, nothing on
+  the journey row, and nothing for `.github/workflows/failed-runs.yml` to find.
+  That workflow covers runs that **executed** and failed, plus runs reconciled
+  to `run_timed_out`, and says so rather than implying more.
+  Recorded here rather than fixed because the fix is a decision, not a patch:
+  a row for a run that never started needs an answer for what it means to
+  regression baselines, to the score, and to the portfolio's newest-run-per-
+  journey read. Do not add one without that answer.
 
 ## Agent behavior
 
