@@ -17,9 +17,11 @@ describe('retentionDays', () => {
     else process.env.ARTIFACT_RETENTION_DAYS = original;
   });
 
-  it('defaults to 30 days', () => {
+  it('defaults to 90 days', () => {
+    // Ninety covers a remediation cycle and a quarterly review. Thirty expired
+    // the evidence behind a report while the client was still working from it.
     delete process.env.ARTIFACT_RETENTION_DAYS;
-    expect(retentionDays()).toBe(30);
+    expect(retentionDays()).toBe(90);
   });
 
   it('honours an explicit window', () => {
@@ -33,7 +35,7 @@ describe('retentionDays', () => {
       // A misconfigured window must not silently mean "keep client screenshots
       // indefinitely".
       process.env.ARTIFACT_RETENTION_DAYS = value;
-      expect(retentionDays()).toBe(30);
+      expect(retentionDays()).toBe(90);
     },
   );
 });

@@ -90,6 +90,15 @@ jobs:
         env:
           SMOKE_URL: ${{ inputs.url }}
           SMOKE_STEPS: ${{ inputs.steps }}
+          # Twice the default, because the default is calibrated for a page the
+          # runner already has in hand and this walk is a shared GitHub runner
+          # clicking through somebody else's site. Both observed flakes were a
+          # click timing out at ten seconds on markup that was fine.
+          #
+          # Deliberately no retry. This is the only check that exercises the
+          # built bundle against a real site, and re-running it until it passes
+          # is how a suite stops catching the thing it exists for.
+          AUDITOR_STEP_TIMEOUT_MS: '20000'
         run: npm run smoke:real -- --url "$SMOKE_URL" --steps "$SMOKE_STEPS"
 
       # The interesting failures — a mangled axe bundle, a Chromium that will

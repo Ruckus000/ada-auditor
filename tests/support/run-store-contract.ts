@@ -109,6 +109,23 @@ const FULL_RECORD = runRecord({
  * Postgres suite namespaces its request ids and deletes them afterwards).
  */
 export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore): void {
+  it('reads a run back with no notion of who is asking', async () => {
+    // There is no tenancy, and that is the design rather than an oversight:
+    // one organisation, every operator sees every client, no table carries a
+    // tenant column. "Any authenticated caller can read any run" is intended.
+    //
+    // Pinned here because the dangerous version of this is not the design — it
+    // is somebody later *assuming* isolation exists, or half-introducing it.
+    // `getRun` takes a request id and nothing else, and this test fails the
+    // moment it grows a second parameter, which is the point at which the
+    // decision has to be made in `schema.sql` first.
+    const store = await makeStore();
+    await store.saveRun(FULL_RECORD);
+
+    expect(await store.getRun(FULL_RECORD.requestId)).not.toBeNull();
+    expect(store.getRun.length).toBe(1);
+  });
+
   it('round-trips a run without losing a field', async () => {
     // Fields have been dropped silently here before — a stored finding once
     // kept only {code, severity, source}, which left a saved run unable to say
