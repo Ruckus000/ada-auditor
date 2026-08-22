@@ -186,9 +186,10 @@ function toRecord(
     record.score = run.score;
     record.scoreVersion = run.score_version ?? 1;
   }
-  // Unconditional, unlike the score: every run has a verdict, including the
-  // inconclusive ones the score deliberately withholds a number for.
-  record.gateVersion = run.gate_version ?? 1;
+  // Only when the row carried one. Defaulting here would have this store
+  // return a field `MemoryRunStore` does not, which is the drift the shared
+  // contract exists to catch — and it did.
+  if (run.gate_version !== null) record.gateVersion = run.gate_version;
   if (run.status) record.status = run.status as StoredRunRecord['status'];
   if (run.failure_reason !== null) record.failureReason = run.failure_reason;
   if (run.started_at !== null) record.startedAt = toIso(run.started_at);
@@ -273,7 +274,7 @@ export class PostgresRunStore implements RunStore {
         ${record.status ?? 'complete'}, ${record.failureReason ?? null},
         ${record.durationMs}, ${record.browserMode ?? false},
         ${record.truncatedPages ?? 0}, ${record.score ?? null},
-        ${record.scoreVersion ?? 1}, ${record.gateVersion ?? 1}, ${record.createdAt},
+        ${record.scoreVersion ?? 1}, ${record.gateVersion ?? null}, ${record.createdAt},
         ${record.startedAt ?? record.createdAt},
         ${record.phaseMs ? JSON.stringify(record.phaseMs) : null},
         ${record.intent ? JSON.stringify(record.intent) : null}

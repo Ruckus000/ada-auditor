@@ -188,10 +188,11 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     ...(input.score !== null && input.score !== undefined
       ? { score: input.score, scoreVersion: input.scoreVersion ?? 1 }
       : {}),
-    // Unconditional, unlike the score. Every run reaches a verdict — including
-    // the inconclusive ones the score withholds a number for — so "which gate
-    // decided this" is always answerable and always worth recording.
-    gateVersion: input.gateVersion ?? 1,
+    // Passed through, never defaulted. `?? 1` here would stamp "version 1"
+    // onto a verdict this build's gate produced, which is the one thing the
+    // field exists to prevent. Absent means the caller reached no verdict —
+    // a run that died before `summarizeRun` ever ran.
+    ...(input.gateVersion === undefined ? {} : { gateVersion: input.gateVersion }),
     ...(input.status ? { status: input.status } : {}),
     ...(input.failureReason ? { failureReason: input.failureReason } : {}),
   };

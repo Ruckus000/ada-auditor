@@ -167,6 +167,19 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     });
   });
 
+  it('leaves an unrecorded gate version absent rather than inventing one', async () => {
+    // `FULL_RECORD` carries no gate version, and it must come back carrying
+    // none. The first version of this column was `not null default 1`, so
+    // Postgres answered `gateVersion: 1` for a record that never had one while
+    // `MemoryRunStore` answered nothing — a store that invents a field the
+    // other does not is exactly the drift this contract exists to catch, and
+    // `round-trips a run without losing a field` caught it.
+    const store = await makeStore();
+    await store.saveRun(FULL_RECORD);
+
+    expect(await store.getRun(FULL_RECORD.requestId)).not.toHaveProperty('gateVersion');
+  });
+
   it('round-trips which gate produced the verdict', async () => {
     // `ciStatus` is the other claim in a client report, and it moved once
     // already: version 1 failed a run on an axe `critical` impact, version 2

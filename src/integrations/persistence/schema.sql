@@ -529,6 +529,14 @@ alter table journeys add column if not exists allowed_hosts text[];
 -- question behind it has changed, and a client's trend line would show a cliff
 -- where no site changed at all.
 --
--- Runs written before this default to 1 — the gate that failed a run on an
--- axe `critical` impact. Version 2 follows the WCAG success criterion instead.
-alter table runs add column if not exists gate_version smallint not null default 1;
+-- Nullable, and absent means *not recorded* rather than "version 1" — the
+-- stance `intent.ruleset` documents for the same kind of provenance field. A
+-- store that invents a version the record never carried is a store that has
+-- drifted from `MemoryRunStore`, which holds what it was handed; the shared
+-- contract catches exactly that.
+--
+-- The two `alter column` lines are for databases that already took an earlier
+-- form of this column as `not null default 1`. Both are no-ops otherwise.
+alter table runs add column if not exists gate_version smallint;
+alter table runs alter column gate_version drop not null;
+alter table runs alter column gate_version drop default;
