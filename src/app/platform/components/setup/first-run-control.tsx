@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
@@ -49,76 +49,88 @@ export function FirstRunControl({
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>(pollUrl ? 'running' : 'idle');
   const [error, setError] = useState<string | null>(null);
-  const cancelled = useRef(false);
+
   /**
-   * One watcher, however many entry paths. A run started by this instance's
-   * own click reaches `poll` twice: once from `start()`'s tail, and once from
-   * the `[pollUrl]` effect after the refresh re-derives the stage as
-   * `running` and hands this same mounted instance a `pollUrl`. Whichever
-   * arrives first owns the watch; the other bails here — without this, both
-   * loops ran for the life of the run, doubling the poll load and firing two
-   * refreshes at completion.
+   * One watch, cancelled by whoever started it.
+   *
+   * A plain object rather than a ref, because the thing being cancelled is a
+   * *particular* watch and not the component. The previous shape was one
+   * shared `cancelled` ref plus a `watching` ref to stop two entry paths
+   * racing into the same loop — a guard around a design that permitted the
+   * defect. There is one entry path now (see the effect below), so the guard
+   * has nothing to guard, and a token per watch means a superseded loop stops
+   * because its own token was cancelled rather than because a shared flag
+   * happened to be in the right state when it next looked.
    */
-  const watching = useRef(false);
+  async function poll(url: string, token: { cancelled: boolean }) {
+    for (let attempt = 0; attempt < MAX_POLLS; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      if (token.cancelled) return;
 
-  // Stops the poll when the operator navigates away mid-run. Without this the
-  // loop kept running against an unmounted component and called `setPhase` on
-  // it — the ref was read but nothing ever set it, so it read as if it
-  // cancelled something and did not.
-  useEffect(() => {
-    return () => {
-      cancelled.current = true;
-    };
-  }, []);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) continue;
 
-  async function poll(url: string) {
-    if (watching.current) return;
-    watching.current = true;
-    try {
-      for (let attempt = 0; attempt < MAX_POLLS; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-        if (cancelled.current) return;
-
-        try {
-          const response = await fetch(url);
-          if (!response.ok) continue;
-
-          const payload = (await response.json()) as { run?: { status?: string } };
-          const status = payload.run?.status;
-          if (status === 'complete' || status === 'failed') {
-            setPhase('idle');
-            router.refresh();
-            return;
-          }
-        } catch {
-          // A failed poll is not a failed run. Keep watching.
+        const payload = (await response.json()) as { run?: { status?: string } };
+        const status = payload.run?.status;
+        if (status === 'complete' || status === 'failed') {
+          setPhase('idle');
+          router.refresh();
+          return;
         }
+      } catch {
+        // A failed poll is not a failed run. Keep watching.
       }
-
-      // Out of patience, not out of run.
-      setPhase('slow');
-      router.refresh();
-    } finally {
-      watching.current = false;
     }
+
+    // Out of patience, not out of run.
+    setPhase('slow');
+    router.refresh();
   }
 
-  // Mounts already running: `pollUrl` means a run is in flight on the record
-  // this page just rendered, not one this component instance started. The
-  // effect (not the click handler) is what starts watching it.
+  /**
+   * The only way a watch ever starts.
+   *
+   * `pollUrl` means a run is in flight on the record this page rendered —
+   * whether it was started on a previous visit or by this instance's own
+   * click a moment ago, because `start()` refreshes and the server hands the
+   * same mounted instance a `pollUrl`.
+   *
+   * That second case is why `start()` no longer polls. It used to, and the
+   * effect fired as well, so one run was watched twice: two loops for its
+   * whole life, double the request rate, two refreshes at completion. A
+   * `watching` ref made whichever arrived first win, which is a guard around
+   * a design that permits the defect rather than a design that does not. One
+   * caller means there is nothing to arbitrate.
+   *
+   * The cost, stated because it is real: watching begins after the refresh
+   * lands rather than the instant the 202 does — a few hundred milliseconds
+   * later, against a 3s poll interval, while the live region already says the
+   * audit is starting.
+   *
+   * The cleanup is what makes a superseded watch stop. It covers unmount,
+   * which a separate mount effect used to do, and also a `pollUrl` that
+   * changes to a different run — previously that started a second loop and
+   * relied on the ref to refuse it.
+   */
   useEffect(() => {
     if (!pollUrl) return;
-    cancelled.current = false;
-    void poll(pollUrl);
-    // `poll` closes over nothing reactive besides `pollUrl` itself — `router`
-    // and the `cancelled` ref are both stable across renders.
+
+    const token = { cancelled: false };
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- `poll` sets state only after `await`ing a 3s timer, so nothing here runs during the effect; the rule cannot see past the async boundary, and this is the case its own docs describe as legitimate — synchronising React with an external system that reports back later
+    void poll(pollUrl, token);
+
+    return () => {
+      token.cancelled = true;
+    };
+    // `poll` is redeclared each render and closes over nothing reactive but
+    // `pollUrl`; `router` is stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollUrl]);
 
   async function start() {
     setPhase('starting');
     setError(null);
-    cancelled.current = false;
 
     try {
       const response = await fetch(
@@ -126,9 +138,11 @@ export function FirstRunControl({
         { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' },
       );
 
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string; pollUrl?: string }
-        | null;
+      // `pollUrl` is deliberately not read from here. The 202 carries one,
+      // and using it was the second entry into the watcher; where the run is
+      // watched from is the server's answer after the refresh, not this
+      // response's.
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
 
       if (!response.ok) {
         // The MESSAGES lookup first; an unmapped code never reaches the
@@ -144,12 +158,16 @@ export function FirstRunControl({
       }
 
       // The row exists as `running` the moment the 202 lands, so refreshing
-      // now shows this stage as running while the poll waits for the result.
+      // now re-derives this stage with a `pollUrl`, and the effect above picks
+      // the run up. This function's job ends here.
+      //
+      // There is no `else setPhase('idle')` any more, and its absence is the
+      // point: what happens next is whatever the server says the stage is. A
+      // run that finished inside the round-trip re-derives a different stage
+      // and this component is replaced rather than left holding a phase it
+      // decided for itself.
       setPhase('running');
       router.refresh();
-
-      if (payload?.pollUrl) await poll(payload.pollUrl);
-      else setPhase('idle');
     } catch {
       setError('Could not reach the server.');
       setPhase('idle');
@@ -184,7 +202,6 @@ export function FirstRunControl({
 
       <button
         type="button"
-        // eslint-disable-next-line react-hooks/refs -- `start` reads refs only when the click invokes it; `inertWhen` just builds props at render
         {...inertWhen(busy, start)}
         aria-label={`Run the first audit of ${journeyName}`}
         style={{
