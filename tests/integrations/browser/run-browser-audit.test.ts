@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 import { runBrowserAudit } from '../../../src/integrations/browser/run-browser-audit';
 import { PartialAuditError } from '../../../src/integrations/browser/partial-run';
+import type { DeterministicFinding } from '../../../src/services/deterministic-audit';
 
 const FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
 
@@ -70,7 +71,13 @@ describe('runBrowserAudit', () => {
       expect(report.ciStatus).toBe('fail');
       // `image-alt` is axe's rule id; the old hand-rolled code was
       // `missing-image-alt` and carried no selector to go with it.
-      const imageAlt = report.findings.find((finding) => finding.code === 'image-alt');
+      // Narrowed by predicate: `findings` is a union, and `selector` belongs
+      // to the deterministic half. `AiAdvisoryFinding['code']` is the literal
+      // `'ai-advisory'`, so matching any other code excludes it — the runtime
+      // check and the type check are the same check.
+      const imageAlt = report.findings.find(
+        (finding): finding is DeterministicFinding => finding.code === 'image-alt',
+      );
       expect(imageAlt).toBeDefined();
       expect(imageAlt?.selector).toBeTruthy();
     } finally {

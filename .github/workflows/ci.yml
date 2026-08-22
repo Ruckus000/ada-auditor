@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [master]
 
+# A superseded run proves nothing about the head anyone will merge, and these
+# jobs each launch several real Chromium instances. Master is excluded on
+# purpose: every commit there is a merge somebody will bisect later, so its
+# result is worth the minutes even when the next merge lands behind it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 jobs:
   unit:
     name: Lint, unit tests, chaos, build
@@ -37,6 +45,23 @@ jobs:
       # `no-unused-vars` warnings), which is why this can be added without a
       # cleanup commit in front of it.
       - run: npm run lint
+      # Beside `lint` and before the browser download, for the same reason: it
+      # is seconds against the minutes below it.
+      #
+      # `next build` type-checks too, but through `tsconfig.json`, which
+      # excludes `tests/integrations/**` — so the browser and hydration suites,
+      # the two that drive a real browser and the two whose failures have
+      # reddened master, were type-checked by nothing at all. Turning this on
+      # found seven errors that had been sitting in them, including five
+      # `expect.poll` calls passing Playwright's `intervals: [n]` to Vitest,
+      # which takes `interval: n` — so the option was dropped and those polls
+      # ran at Vitest's 50ms default instead of the 1–3s they asked for, two of
+      # them inside the wizard walk that keeps flaking.
+      #
+      # `npm run build:kernel` is not this: it emits, and it excludes
+      # `src/app/**`. See `tsconfig.typecheck.json` for why this is a third
+      # config rather than a widening of the first.
+      - run: npm run typecheck
       - run: npx playwright install chromium --with-deps
       - run: npm test
       - run: npm run chaos

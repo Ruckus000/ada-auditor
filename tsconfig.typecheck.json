@@ -1,0 +1,32 @@
+{
+  // The typecheck CI runs, and the only one that sees `tests/integrations/**`.
+  //
+  // `tsconfig.json` excludes that directory so `next build` does not typecheck
+  // a Playwright suite it will never bundle. The cost was that the browser and
+  // hydration suites — the two that drive a real browser, and the two whose
+  // failures have reddened master — were typechecked by nothing. #35 recorded
+  // the symptom at the time: "moving them broke the browser suite on a missing
+  // import, and `tsc` stayed clean, because `tests/integrations/**` is
+  // excluded from it."
+  //
+  // Same compiler options as the app, one wider `include`, so a file cannot be
+  // strict here and loose there.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    "scripts/**/*.ts",
+    "vitest.config.ts",
+    "vitest.browser.config.ts",
+    "vitest.db.config.ts",
+    "vitest.hydration.config.ts",
+    "eslint.config.mjs"
+  ],
+  "exclude": ["node_modules"]
+}
