@@ -523,3 +523,20 @@ alter table run_pages add column if not exists status_code integer;
 -- a pass-through host is never audited, every hop's peer address is
 -- range-checked, and the run must still come to rest on the target.
 alter table journeys add column if not exists allowed_hosts text[];
+
+-- Which gate produced `ci_status`. Same reason `score_version` exists, for the
+-- same kind of claim: a stored `pass` means nothing on its own once the
+-- question behind it has changed, and a client's trend line would show a cliff
+-- where no site changed at all.
+--
+-- Nullable, and absent means *not recorded* rather than "version 1" — the
+-- stance `intent.ruleset` documents for the same kind of provenance field. A
+-- store that invents a version the record never carried is a store that has
+-- drifted from `MemoryRunStore`, which holds what it was handed; the shared
+-- contract catches exactly that.
+--
+-- The two `alter column` lines are for databases that already took an earlier
+-- form of this column as `not null default 1`. Both are no-ops otherwise.
+alter table runs add column if not exists gate_version smallint;
+alter table runs alter column gate_version drop not null;
+alter table runs alter column gate_version drop default;

@@ -89,16 +89,31 @@ describe('axe engine against a real page', () => {
     expect(imageAlt?.severity).toBe('critical');
   }, 120_000);
 
-  it('fails the run and counts only critical findings as blocking', async () => {
+  it('fails the run, counting every unmet success criterion as blocking', async () => {
+    // This asserted the opposite bound until the gate moved: that blocking was
+    // strictly fewer than total, because contrast is `serious` -> `major` and
+    // `major` did not gate. That was axe's impact scale deciding a WCAG
+    // question. Conformance is binary per criterion — contrast is 1.4.3 at
+    // Level AA — so a page failing it does not conform, whatever Deque rates
+    // the impact.
+    //
+    // Every finding this fixture produces cites a real criterion, so blocking
+    // legitimately equals total here. What still must not gate is asserted
+    // where it can be stated exactly rather than inferred from a fixture's
+    // contents: `tests/services/reporting.test.ts` covers best-practice rules,
+    // `needs-review`, AAA and advisory findings one at a time.
     const report = await auditViolationsPage();
 
     expect(report.evidenceStatus).toBe('complete');
     expect(report.ciStatus).toBe('fail');
     expect(report.executiveSummary.blockingFindings).toBeGreaterThan(0);
-    // Contrast is `serious` -> `major`, which must not gate a run.
-    expect(report.executiveSummary.blockingFindings).toBeLessThan(
-      report.executiveSummary.totalFindings,
+
+    // Every blocking finding is one axe decided against, never one it could
+    // not decide — the review queue is not a conformance failure.
+    const gating = report.findings.filter(
+      (f) => f.source === 'deterministic' && f.severity !== 'needs-review',
     );
+    expect(report.executiveSummary.blockingFindings).toBeLessThanOrEqual(gating.length);
   }, 120_000);
 
   it('reports violations on a page the journey only passes through', async () => {

@@ -211,6 +211,8 @@ export type StoredRunRecord = {
   score?: number;
   /** Which formula produced `score`. See `services/score.ts`. */
   scoreVersion?: number;
+  /** Which gate produced `ciStatus`. See `GATE_VERSION` in `services/reporting.ts`. */
+  gateVersion?: number;
   status?: RunStatus;
   /** Populated when `status` is `failed`; a stable code, never raw error text. */
   failureReason?: string;
