@@ -3,6 +3,8 @@ import { createRedisClient } from '../_lib/redis';
 import { isThrottleKvConfigured, KvThrottleStore } from '../_lib/unlock-throttle';
 import { isDatabaseConfigured } from '../../../integrations/persistence';
 import { sessionSecretIsShared } from '../_lib/principal';
+import { isBlobConfigured } from '../../../integrations/artifacts/blob-store';
+import { isAiAdvisoryConfigured } from '../../../services/ai-advisory';
 
 /**
  * Deploy-time readiness.
@@ -81,6 +83,8 @@ export async function GET() {
     unlockThrottleReachable: await throttleAnswers(),
     sessionSecretDedicated: !sessionSecretIsShared(),
     cronSecretConfigured: Boolean(process.env.CRON_SECRET),
+    blobConfigured: isBlobConfigured(),
+    advisoryConfigured: isAiAdvisoryConfigured(),
     chaosEnabled: process.env.CHAOS_ENABLED === 'true',
   };
 
@@ -122,6 +126,34 @@ export async function GET() {
       'session_secret_shared_with_run_token: no AUDITOR_SESSION_SECRET, so operator sessions are signed with AUDITOR_RUN_TOKEN and rotating it signs everyone out.',
     );
   }
+
+  /**
+   * Evidence with nowhere to go, which is the one degradation that reaches a
+   * client's report.
+   *
+   * `createEvidenceBundle` decides a page is complete from the *local*
+   * artifact paths, and the runner always writes those. Without a token
+   * `getArtifactStore()` returns the no-op store, so nothing is uploaded and
+   * no URL is recorded — and the run still reports `evidenceStatus:
+   * 'complete'` while every later read answers `pruned`. An upload that
+   * *fails* correctly fails the run; an absent store does not, so this warning
+   * is the only thing standing between a missing token and a conformance
+   * document whose evidence cannot be produced.
+   *
+   * Reported rather than gating, like the rest: a control plane writing to
+   * local disk still works, and 503 over it would be worse than the gap.
+   */
+  if (!checks.blobConfigured) {
+    warnings.push(
+      'evidence_storage_not_configured: no BLOB_READ_WRITE_TOKEN, so run evidence is written to a filesystem that disappears with the invocation. Runs will still report complete evidence, and reading it back will answer 410.',
+    );
+  }
+
+  // `advisoryConfigured` is reported and deliberately never warned about. It
+  // is off by decision, and a warnings array with a permanent entry is one
+  // people stop reading — which is how the retention sweep failed eleven
+  // nights unnoticed. `chaosEnabled` sets the same precedent: a plain check
+  // that gates nothing until it is actually wrong.
 
   // The deploy checklist tells an operator to look for an empty warnings
   // array, so anything that makes results untrustworthy has to appear in it.
