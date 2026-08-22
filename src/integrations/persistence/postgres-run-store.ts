@@ -63,6 +63,7 @@ type RunRow = {
   truncated_pages: number;
   score: number | null;
   score_version: number | null;
+  gate_version: number | null;
   created_at: Date | string;
   started_at: Date | string | null;
   phase_ms: Record<string, number> | null;
@@ -185,6 +186,9 @@ function toRecord(
     record.score = run.score;
     record.scoreVersion = run.score_version ?? 1;
   }
+  // Unconditional, unlike the score: every run has a verdict, including the
+  // inconclusive ones the score deliberately withholds a number for.
+  record.gateVersion = run.gate_version ?? 1;
   if (run.status) record.status = run.status as StoredRunRecord['status'];
   if (run.failure_reason !== null) record.failureReason = run.failure_reason;
   if (run.started_at !== null) record.startedAt = toIso(run.started_at);
@@ -261,7 +265,7 @@ export class PostgresRunStore implements RunStore {
       insert into runs (
         request_id, journey_id, environment, platform, evidence_status,
         ci_status, status, failure_reason, duration_ms, browser_mode,
-        truncated_pages, score, score_version, created_at, started_at, phase_ms,
+        truncated_pages, score, score_version, gate_version, created_at, started_at, phase_ms,
         intent
       ) values (
         ${record.requestId}, ${record.journeyId}, ${record.environment},
@@ -269,7 +273,7 @@ export class PostgresRunStore implements RunStore {
         ${record.status ?? 'complete'}, ${record.failureReason ?? null},
         ${record.durationMs}, ${record.browserMode ?? false},
         ${record.truncatedPages ?? 0}, ${record.score ?? null},
-        ${record.scoreVersion ?? 1}, ${record.createdAt},
+        ${record.scoreVersion ?? 1}, ${record.gateVersion ?? 1}, ${record.createdAt},
         ${record.startedAt ?? record.createdAt},
         ${record.phaseMs ? JSON.stringify(record.phaseMs) : null},
         ${record.intent ? JSON.stringify(record.intent) : null}
@@ -287,6 +291,7 @@ export class PostgresRunStore implements RunStore {
         truncated_pages = excluded.truncated_pages,
         score = excluded.score,
         score_version = excluded.score_version,
+        gate_version = excluded.gate_version,
         -- The earliest write wins. toStoredRunRecord mints a fresh createdAt
         -- on every call, so taking excluded here moved the timestamp to
         -- completion time on the write that finishes a run -- making the

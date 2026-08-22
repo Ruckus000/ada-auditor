@@ -251,6 +251,7 @@ async function executeRun(
       truncatedPages: report.truncatedPages,
       score: report.score,
       scoreVersion: report.scoreVersion,
+      gateVersion: report.gateVersion,
       status: 'complete',
     });
     await store.saveRun(storedRun);

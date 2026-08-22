@@ -167,6 +167,18 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     });
   });
 
+  it('round-trips which gate produced the verdict', async () => {
+    // `ciStatus` is the other claim in a client report, and it moved once
+    // already: version 1 failed a run on an axe `critical` impact, version 2
+    // on an unmet WCAG success criterion. A stored `pass` cannot be compared
+    // across that change without knowing which question it answered.
+    const store = await makeStore();
+    await store.saveRun({ ...FULL_RECORD, gateVersion: 2 });
+
+    const stored = await store.getRun(FULL_RECORD.requestId);
+    expect(stored?.gateVersion).toBe(2);
+  });
+
   it('round-trips the page HTTP status, and leaves absent absent', async () => {
     // The fact behind the judgement. A page degraded by a missing screenshot
     // and a page degraded by a 500 read identically without it, and they need

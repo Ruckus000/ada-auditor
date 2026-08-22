@@ -523,3 +523,12 @@ alter table run_pages add column if not exists status_code integer;
 -- a pass-through host is never audited, every hop's peer address is
 -- range-checked, and the run must still come to rest on the target.
 alter table journeys add column if not exists allowed_hosts text[];
+
+-- Which gate produced `ci_status`. Same reason `score_version` exists, for the
+-- same kind of claim: a stored `pass` means nothing on its own once the
+-- question behind it has changed, and a client's trend line would show a cliff
+-- where no site changed at all.
+--
+-- Runs written before this default to 1 — the gate that failed a run on an
+-- axe `critical` impact. Version 2 follows the WCAG success criterion instead.
+alter table runs add column if not exists gate_version smallint not null default 1;

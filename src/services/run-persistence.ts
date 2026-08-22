@@ -26,6 +26,7 @@ type PersistRunInput = {
   truncatedPages?: number;
   score?: number | null;
   scoreVersion?: number;
+  gateVersion?: number;
   status?: RunStatus;
   failureReason?: string;
 };
@@ -187,6 +188,10 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     ...(input.score !== null && input.score !== undefined
       ? { score: input.score, scoreVersion: input.scoreVersion ?? 1 }
       : {}),
+    // Unconditional, unlike the score. Every run reaches a verdict — including
+    // the inconclusive ones the score withholds a number for — so "which gate
+    // decided this" is always answerable and always worth recording.
+    gateVersion: input.gateVersion ?? 1,
     ...(input.status ? { status: input.status } : {}),
     ...(input.failureReason ? { failureReason: input.failureReason } : {}),
   };
