@@ -1,10 +1,15 @@
 import { neon } from '@neondatabase/serverless';
-import { afterAll, beforeEach, describe } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe } from 'vitest';
 import {
   PostgresRunStore,
   type SqlClient,
 } from '../../../src/integrations/persistence/postgres-run-store';
-import { runStoreContract } from '../../support/run-store-contract';
+import {
+  abandonedCutoff,
+  clearRunContractRows,
+  sweepRunContractRows,
+} from '../../support/contract-cleanup';
+import { CONTRACT_PREFIX, runStoreContract } from '../../support/run-store-contract';
 
 /**
  * The real store, against a real Neon database.
@@ -21,22 +26,17 @@ import { runStoreContract } from '../../support/run-store-contract';
 const sql = neon(process.env.DATABASE_URL!) as SqlClient;
 
 /**
- * Every record the contract writes is prefixed `contract-`. Deleting exactly
- * those keeps the suite from touching a real run that happens to share the
- * database — `truncate` would be quicker and would also delete evidence
- * someone might still need.
+ * Cleanup lives in `tests/support/contract-cleanup.ts` so the isolation suite
+ * drives the same code this one does. See there for why there are two deletes
+ * and why the sweep takes a cutoff rather than an interval.
  */
-async function clearContractRows(): Promise<void> {
-  await sql`delete from runs where request_id like 'contract-%'`;
-  // `saveRun` materialises a journey row for every run, so the contract leaves
-  // journeys behind too. Left alone they show up on the Portfolio under
-  // "Unassigned" — test litter appearing in the product.
-  await sql`delete from journeys where id like 'contract-%'`;
-}
+const clearOwnRows = () => clearRunContractRows(sql, CONTRACT_PREFIX);
+const sweepAbandonedRows = () => sweepRunContractRows(sql, abandonedCutoff());
 
 describe('PostgresRunStore', () => {
-  beforeEach(clearContractRows);
-  afterAll(clearContractRows);
+  beforeAll(sweepAbandonedRows);
+  beforeEach(clearOwnRows);
+  afterAll(clearOwnRows);
 
   runStoreContract(() => new PostgresRunStore(sql));
 });

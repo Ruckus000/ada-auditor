@@ -1,9 +1,15 @@
 import { neon } from '@neondatabase/serverless';
-import { afterAll, beforeEach, describe } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe } from 'vitest';
 import { PostgresPlatformStore } from '../../../src/integrations/persistence/postgres-platform-store';
 import type { SqlClient } from '../../../src/integrations/persistence/postgres-run-store';
 import {
+  abandonedCutoff,
+  clearPlatformContractRows,
+  sweepPlatformContractRows,
+} from '../../support/contract-cleanup';
+import {
   CONTRACT_RUN_IDS,
+  PLATFORM_PREFIX,
   platformStoreContract,
 } from '../../support/platform-store-contract';
 
@@ -18,36 +24,30 @@ import {
 
 const sql = neon(process.env.DATABASE_URL!) as SqlClient;
 
+/** The journey the seeded runs hang from, inside this run's namespace. */
+const SEED_JOURNEY = `${PLATFORM_PREFIX}-journey-seed`;
+
 /**
- * Deletes exactly what the contract created. Ordered by dependency, because
- * `finding_triage`, `client_config` and `journeys` all cascade from `clients`
- * — dropping the parent first would work, but naming each table keeps the
- * cleanup honest about what the contract touches.
+ * Cleanup lives in `tests/support/contract-cleanup.ts` so the isolation suite
+ * drives the same code this one does — including the ordering, which the
+ * foreign keys make load-bearing.
  */
-async function clearContractRows(): Promise<void> {
-  await sql`delete from finding_triage where client_id like 'pc-%'`;
-  await sql`delete from activity_events where client_id like 'pc-%'`;
-  await sql`delete from reports where id like 'pc-%'`;
-  await sql`delete from runs where request_id like 'pc-%'`;
-  await sql`delete from journeys where id like 'pc-%'`;
-  await sql`delete from client_config where client_id like 'pc-%'`;
-  await sql`delete from clients where id like 'pc-%'`;
-  // Last: `activity_events.actor_operator_id` and
-  // `finding_triage.assignee_operator_id` both reference this table, so the
-  // rows pointing at it have to go first.
-  await sql`delete from operators where id like 'pc-%'`;
-}
+const clearOwnRows = () => clearPlatformContractRows(sql, PLATFORM_PREFIX);
+const sweepAbandonedRows = () => sweepPlatformContractRows(sql, abandonedCutoff());
 
 /**
  * `reports.request_id` is a foreign key, so a report needs a run to point at.
  * Inserted directly rather than through `PostgresRunStore` to keep this suite
  * about the catalog store — but it has to be real, and the FK is the reason
  * the shared contract needs this hook at all.
+ *
+ * The journey is namespaced like everything else; `client-unassigned` is not,
+ * because it is a real row the product defines and the upsert is idempotent.
  */
 async function seedRuns(): Promise<void> {
   await sql`
     insert into journeys (id, client_id, name)
-    values ('pc-journey-seed', 'client-unassigned', 'pc-journey-seed')
+    values (${SEED_JOURNEY}, 'client-unassigned', ${SEED_JOURNEY})
     on conflict (id) do nothing
   `;
 
@@ -57,7 +57,7 @@ async function seedRuns(): Promise<void> {
         request_id, journey_id, environment, platform,
         evidence_status, ci_status, status
       ) values (
-        ${requestId}, 'pc-journey-seed', 'staging', 'generic',
+        ${requestId}, ${SEED_JOURNEY}, 'staging', 'generic',
         'complete', 'pass', 'complete'
       )
       on conflict (request_id) do nothing
@@ -66,8 +66,9 @@ async function seedRuns(): Promise<void> {
 }
 
 describe('PostgresPlatformStore', () => {
-  beforeEach(clearContractRows);
-  afterAll(clearContractRows);
+  beforeAll(sweepAbandonedRows);
+  beforeEach(clearOwnRows);
+  afterAll(clearOwnRows);
 
   platformStoreContract(() => new PostgresPlatformStore(sql), { seedRuns });
 });
