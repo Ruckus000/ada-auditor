@@ -82,10 +82,12 @@ describe('runJourney', () => {
      * `page.waitForLoadState` answers about the document that is current when
      * it is called. A click that navigates from script has only *scheduled*
      * one at that point, so the wait returned against the page being left,
-     * `capturePage` read that page's URL, matched it against the previous
-     * capture, and returned — dropping the page the click actually reached.
-     * Silently: a revisit is not counted into `truncatedPages` and is not
-     * logged, so the run reported success and the page was simply gone.
+     * `capturePage` read that page's URL, matched it against a page already
+     * audited, and returned — dropping the page the click actually reached.
+     * The run then reported success with the page simply gone: a revisit is
+     * not counted into `truncatedPages`, and until #72 it was not logged
+     * either. It is logged now, but as `audit_revisited_page`, which is the
+     * wrong story — nothing looped here.
      *
      * On CI this surfaced as `['/login.html']` against the demo journey's two
      * pages, once, and looked like a flake. It is not a flake; it is a race

@@ -187,10 +187,15 @@ const DEFAULT_EXPECT_TIMEOUT_MS = 30_000;
  * inside a submit handler, which is what `fixtures/journey-app/login.html`
  * does and what most login forms do — only *schedules* one. So the wait could
  * resolve instantly against the page the click was leaving, and `capturePage`
- * would then read that page's URL, match it against the previous capture, and
- * return: the page the click actually reached was never audited, never
- * counted into `truncatedPages`, and never logged. Run #129 is that, exactly —
- * `['/login.html']` where the demo journey has two pages.
+ * would then read that page's URL, match it against a page already audited,
+ * and return: the page the click actually reached was never audited. Run #129
+ * is that, exactly — `['/login.html']` where the demo journey has two pages.
+ *
+ * Since #72 that return logs `audit_revisited_page`, so the drop is no longer
+ * silent — but the line names a *revisit*, and this is not one. Nothing looped;
+ * the walk simply asked where it was before the answer had changed. A log that
+ * misdescribes what happened is why this is fixed here rather than left to be
+ * read off a log line.
  *
  * Client-facing, not a test artifact: on a real audit this silently deletes a
  * page from a client's report, and the report says nothing is missing.
