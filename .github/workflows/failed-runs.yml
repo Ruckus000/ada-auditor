@@ -1,0 +1,150 @@
+name: Failed runs
+
+# A scheduled client audit that fails is seen by a human within a day.
+#
+# It was not. `/api/cron/tick` dispatches a run and returns 200 long before it
+# finishes — the work happens under `waitUntil` — so the tick counts it as
+# `started`, writes "Scheduler started a scheduled run" to the activity feed,
+# and never learns the outcome. Nothing on the journey row records one either:
+# "dispatched" and "audited successfully" are the same state there.
+#
+# The screens do not close the gap. The portfolio is the only view spanning
+# clients and its rows carry no `failureReason` at all, and both the portfolio
+# and the client detail read one run per journey — so last night's failure is
+# erased by tonight's success before anyone opens the page.
+#
+# An issue rather than a chat message, and one issue rather than one a night,
+# for the reasons `prune-artifacts.yml` sets out: it persists until somebody
+# closes it, it needs no secret beyond the one below and no third-party service
+# that can itself be misconfigured, and a job that goes red repeatedly trains
+# people to ignore red.
+on:
+  schedule:
+    # 06:47 UTC — after the overnight hours a daily journey is most likely to
+    # be scheduled for, and offset off the hour so it does not queue behind
+    # everything else that runs at :00.
+    - cron: '47 6 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Deployment to query'
+        required: false
+        default: 'https://ada-auditor-psi.vercel.app'
+
+# The default token is read-only once any permission is named.
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  failed-runs:
+    name: Report runs that failed in the last day
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Reads the *returned* status rather than filtering server-side, and that
+      # is load-bearing. A run whose invocation died is stored `running` and
+      # only becomes `failed` when `reconcileRunStatus` sees it on read, so a
+      # query filtering stored status would miss precisely the failures nobody
+      # noticed. `/api/audit/runs` reconciles on the way out.
+      - name: Ask the deployment what failed
+        id: scan
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://ada-auditor-psi.vercel.app' }}
+          AUDITOR_RUN_TOKEN: ${{ secrets.AUDITOR_RUN_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${AUDITOR_RUN_TOKEN}" ]; then
+            echo "::error::AUDITOR_RUN_TOKEN is not set, so this check cannot run"
+            exit 1
+          fi
+
+          # `limit` is capped at 100 by the route. At today's volumes that is
+          # far more than a day; if it ever is not, the count below is a floor
+          # rather than a total, and the issue says so.
+          curl --fail --silent --show-error --max-time 30 \
+            -H "authorization: Bearer ${AUDITOR_RUN_TOKEN}" \
+            "${BASE_URL}/api/audit/runs?limit=100" > runs.json
+
+          SINCE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+
+          # ISO-8601 UTC is fixed-width and zero-padded, so a string comparison
+          # orders it correctly and no date parsing is needed. The `sub` drops
+          # the milliseconds our timestamps carry, which `fromdateiso8601`
+          # would refuse anyway.
+          jq -r --arg since "${SINCE}" '
+            [ .runs[]
+              | select(.status == "failed")
+              | select((.createdAt | sub("\\.[0-9]+Z$"; "Z")) > $since)
+            ]
+            | "count=\(length)"
+          ' runs.json >> "$GITHUB_OUTPUT"
+
+          jq -r --arg since "${SINCE}" '
+            [ .runs[]
+              | select(.status == "failed")
+              | select((.createdAt | sub("\\.[0-9]+Z$"; "Z")) > $since)
+            ]
+            | .[]
+            | "- `\(.journeyId)` (\(.environment)) — \(.failureReason // "no reason recorded") — \(.createdAt) — run `\(.requestId)`"
+          ' runs.json > failures.md
+
+          echo "since=${SINCE}" >> "$GITHUB_OUTPUT"
+          cat failures.md
+
+      # `always()`, because the case this job exists to prevent is a check that
+      # quietly stopped checking. If the step above cannot reach the deployment
+      # or the token has rotated, that is itself worth an issue — the retention
+      # sweep failed eleven nights into an empty room for exactly that reason.
+      #
+      # One block for both outcomes rather than two near-identical ones: the
+      # title and body are decided first, and the filing is written once.
+      - name: File an issue if there is something to say
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No `actions/checkout` in this job — it needs no source. `gh` infers
+          # the repository from the checkout otherwise, so it is named here.
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          FAILED_COUNT: ${{ steps.scan.outputs.count }}
+          SINCE: ${{ steps.scan.outputs.since }}
+        run: |
+          set -euo pipefail
+
+          if [ "${SCAN_OUTCOME}" != "success" ]; then
+            TITLE='The failed-run check could not run'
+            BODY=$(printf '%s\n' \
+              'This job could not ask the deployment which runs failed, so nobody is watching scheduled audits until it is fixed.' \
+              '' \
+              "Failed run: ${RUN_URL}" \
+              '' \
+              'Most likely causes: AUDITOR_RUN_TOKEN was rotated without updating the repository secret, or the deployment URL changed.')
+          elif [ "${FAILED_COUNT}" != "0" ]; then
+            TITLE='A scheduled audit failed'
+            BODY=$(printf '%s\n' \
+              "${FAILED_COUNT} run(s) failed since ${SINCE}. A failed run produces no findings and no score, so any client it belongs to has no audit for that night." \
+              '' \
+              "$(cat failures.md)" \
+              '' \
+              "Checked by: ${RUN_URL}" \
+              '' \
+              'This issue is updated rather than duplicated, and is not closed automatically — a quiet night does not mean the cause was fixed.')
+          else
+            echo "no runs failed in the last day"
+            exit 0
+          fi
+
+          # Exact title match over open *and* closed, so a recurrence reopens
+          # the original thread rather than starting a parallel one.
+          EXISTING=$(gh issue list --state all --limit 100 --json number,title \
+            --jq "first(.[] | select(.title == \"${TITLE}\") | .number) // empty")
+          if [ -n "${EXISTING}" ]; then
+            gh issue reopen "${EXISTING}" 2>/dev/null || true
+            gh issue comment "${EXISTING}" --body "${BODY}"
+            echo "updated issue #${EXISTING}"
+          else
+            gh issue create --title "${TITLE}" --body "${BODY}"
+          fi
