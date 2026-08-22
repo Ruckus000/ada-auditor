@@ -178,6 +178,38 @@ const DEFAULT_STEP_TIMEOUT_MS = 10_000;
  */
 const DEFAULT_EXPECT_TIMEOUT_MS = 30_000;
 
+/**
+ * How long a click is given to *start* navigating before the walk moves on.
+ *
+ * `page.waitForLoadState` answers about the document that is current when it
+ * is called; Playwright's own documentation says the navigation must already
+ * have been committed. A click that navigates from script — `location.href =`
+ * inside a submit handler, which is what `fixtures/journey-app/login.html`
+ * does and what most login forms do — only *schedules* one. So the wait could
+ * resolve instantly against the page the click was leaving, and `capturePage`
+ * would then read that page's URL, match it against a page already audited,
+ * and return: the page the click actually reached was never audited. Run #129
+ * is that, exactly — `['/login.html']` where the demo journey has two pages.
+ *
+ * Since #72 that return logs `audit_revisited_page`, so the drop is no longer
+ * silent — but the line names a *revisit*, and this is not one. Nothing looped;
+ * the walk simply asked where it was before the answer had changed. A log that
+ * misdescribes what happened is why this is fixed here rather than left to be
+ * read off a log line.
+ *
+ * Client-facing, not a test artifact: on a real audit this silently deletes a
+ * page from a client's report, and the report says nothing is missing.
+ *
+ * A grace rather than a requirement, because a click that does not navigate is
+ * ordinary and this runner supports it — the capture below is written around
+ * that case. So the cost of the fix is bounded by this number, paid once per
+ * non-navigating click, against a run budget measured in hundreds of seconds.
+ * Two seconds is far longer than a commit takes on a machine that is not
+ * pathologically loaded, and short enough that a journey of clicks that never
+ * navigate cannot spend a run on waiting.
+ */
+const NAVIGATION_SETTLE_MS = 2_000;
+
 export function resolveExpectTimeoutMs(explicit?: number): number {
   if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
     return Math.floor(explicit);
@@ -874,7 +906,29 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       // fire. The wrapper it moved inside is covered; this one line's presence
       // in it is not.
       await attemptStep(index, step, async () => {
+        // Subscribed *before* the click, not after, which is the whole point:
+        // a navigation the click starts can commit before `click()` resolves,
+        // and a listener attached afterwards would miss it and then wait the
+        // full grace for a second navigation that never comes.
+        //
+        // `framenavigated` on the main frame is the commit signal —
+        // `waitForLoadState` below is meaningful only once it has fired. Both
+        // outcomes are handled here (`.then(ok, err)`) so a click that throws
+        // cannot leave this rejecting into nobody's hands: an orphaned
+        // navigation promise killing the process is a mistake this file has
+        // already made once, in the per-response safety checks.
+        const committed = page
+          .waitForEvent('framenavigated', {
+            predicate: (frame) => frame === page.mainFrame(),
+            timeout: NAVIGATION_SETTLE_MS,
+          })
+          .then(
+            () => true,
+            () => false,
+          );
+
         await page.click(step.selector, { timeout: stepTimeoutMs });
+        await committed;
         await page.waitForLoadState('domcontentloaded');
       });
       await assertNavigationsWereSafe();

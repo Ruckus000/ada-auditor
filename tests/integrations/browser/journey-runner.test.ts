@@ -75,6 +75,103 @@ describe('runJourney', () => {
     }
   }, 60_000);
 
+  it('audits the page a click reaches, even when the navigation starts after the click', async () => {
+    /**
+     * The defect run #129 reported, made deterministic.
+     *
+     * `page.waitForLoadState` answers about the document that is current when
+     * it is called. A click that navigates from script has only *scheduled*
+     * one at that point, so the wait returned against the page being left,
+     * `capturePage` read that page's URL, matched it against a page already
+     * audited, and returned — dropping the page the click actually reached.
+     * The run then reported success with the page simply gone: a revisit is
+     * not counted into `truncatedPages`, and until #72 it was not logged
+     * either. It is logged now, but as `audit_revisited_page`, which is the
+     * wrong story — nothing looped here.
+     *
+     * On CI this surfaced as `['/login.html']` against the demo journey's two
+     * pages, once, and looked like a flake. It is not a flake; it is a race
+     * whose losing side needs the navigation to be slower than the click, and
+     * `deferred-nav.html` makes it slower on purpose.
+     *
+     * Fails without the `framenavigated` wait in `journey-runner`: the
+     * assertion below sees one page.
+     */
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'deferred',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'deferred-nav.html' },
+          { action: 'navigate', type: 'click', selector: '#go' },
+        ],
+      });
+
+      expect(result.pages.map((p) => p.page.route)).toEqual([
+        '/deferred-nav.html',
+        '/dashboard-clean.html',
+      ]);
+
+      // Not merely present in the list — actually captured. A page counted but
+      // unscanned measures nothing, which is the failure mode one layer down.
+      for (const audited of result.pages) {
+        await expect(fileExists(audited.artifacts.screenshotPath!)).resolves.toBe(true);
+        await expect(fileExists(audited.artifacts.domSnapshotPath!)).resolves.toBe(true);
+      }
+
+      // And nothing claimed the walk was cut short, because it was not.
+      expect(result.truncatedPages).toBe(0);
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it('does not stall on a click that never navigates', async () => {
+    /**
+     * The other side of the grace above.
+     *
+     * `NAVIGATION_SETTLE_MS` is waited out in full by any click that does not
+     * navigate, and this runner supports those — `capturePage` is written
+     * around the case. So the cost has to stay bounded and be measured rather
+     * than assumed: `#delete-account` on the login fixture is a `type="button"`
+     * with no handler, which is exactly that shape.
+     *
+     * The ceiling is deliberately loose. It is not asserting the grace is
+     * 2000ms; it is asserting the walk still ends promptly, so a future
+     * increase does not quietly turn every non-navigating click into a
+     * multi-second wait against a run budget measured in hundreds of seconds.
+     */
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const startedAt = Date.now();
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'no-nav',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'inspect', type: 'click', selector: '#delete-account' },
+        ],
+      });
+      const elapsed = Date.now() - startedAt;
+
+      // The click moved nothing, so there is one page, not two — the dedup
+      // this guard must not have broken.
+      expect(result.pages.map((p) => p.page.route)).toEqual(['/login.html']);
+      expect(elapsed).toBeLessThan(30_000);
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('scans a page the journey only passes through', async () => {
     // The whole point. A journey stepping past a page with real violations and
     // ending somewhere clean used to report nothing at all, because only the

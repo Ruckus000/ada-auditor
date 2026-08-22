@@ -94,6 +94,18 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - Domain/service unit tests required for contract and reporting changes
 - Chaos-style regressions required for steady-state claims (incomplete evidence, hint conflicts, scope fail-closed, complete-evidence CI fail path)
 - Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos`, `npm run build` and `npm run test:hydration` evidence
+- `npm run typecheck`, not bare `tsc`, and it is a CI gate. `tsconfig.json`
+  excludes `tests/integrations/**` so `next build` will not type-check a
+  Playwright suite it never bundles — which meant the browser and hydration
+  suites were type-checked by nothing, and “tsc clean” in a commit message was
+  a claim about a config that could not see the files being changed. Turning it
+  on found seven errors already sitting there, five of them `expect.poll` calls
+  passing Playwright’s `intervals: [n]` to Vitest, which takes `interval: n`
+- A browser-suite assertion that reads live DOM goes through `expect.poll`, not
+  a single read. Three have now failed as one-shot reads of something that
+  becomes true asynchronously, and each cost a red master and a follow-up PR.
+  Polling the *scan* is the fix for an axe race; polling something else in
+  front of a single scan only narrows the window
 - Structured events go through `services/logger`. `tests/services/log-shape.test.ts`
   greps the tree for hand-built JSON envelopes, because five call sites had
   already drifted — one keyed its event `event` instead of `type`, so a pipeline

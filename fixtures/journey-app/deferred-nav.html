@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Deferred navigation</title>
+  </head>
+  <body>
+    <main>
+      <h1>Deferred navigation</h1>
+      <p>
+        The click below navigates from a timer rather than from the event that
+        started it, so the navigation is scheduled well after
+        <code>page.click()</code> has resolved.
+      </p>
+      <button id="go" type="button">Continue</button>
+    </main>
+    <script>
+      // A real login form does this implicitly: `preventDefault()`, then some
+      // asynchronous work — a fetch, a session write, a framework router —
+      // and only then `location.href`. `login.html` is that shape already;
+      // this one names a delay instead of leaving it to chance, so the test
+      // built on it fails for a reason rather than on a machine's mood.
+      //
+      // 300ms is comfortably inside `NAVIGATION_SETTLE_MS` (2000ms) and
+      // comfortably outside the window in which `page.click()` resolves.
+      document.getElementById('go').addEventListener('click', function () {
+        setTimeout(function () {
+          window.location.href = 'dashboard-clean.html';
+        }, 300);
+      });
+    </script>
+  </body>
+</html>

@@ -197,6 +197,27 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     expect(await store.getRun(FULL_RECORD.requestId)).not.toHaveProperty('gateVersion');
   });
 
+  it('leaves an unrecorded score version absent, even on a scored run', async () => {
+    // The same defect one column over, and the reason it outlived the one
+    // above: `FULL_RECORD` carries a `scoreVersion`, so the round-trip
+    // assertion never asked what a scored run with no version does. Postgres
+    // answered 1 — `score_version` was `not null default 1` and the writer
+    // coalesced to match — while `MemoryRunStore` answered nothing.
+    //
+    // `score` stays, because the reader only reaches the version inside
+    // `if (run.score !== null)`: dropping the score too would pass against a
+    // store that had never been fixed.
+    const store = await makeStore();
+    const unversioned: StoredRunRecord = { ...FULL_RECORD };
+    delete unversioned.scoreVersion;
+
+    await store.saveRun(unversioned);
+
+    const stored = await store.getRun(FULL_RECORD.requestId);
+    expect(stored?.score).toBe(87);
+    expect(stored).not.toHaveProperty('scoreVersion');
+  });
+
   it('round-trips which gate produced the verdict', async () => {
     // `ciStatus` is the other claim in a client report, and it moved once
     // already: version 1 failed a run on an axe `critical` impact, version 2

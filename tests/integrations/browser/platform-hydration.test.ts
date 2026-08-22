@@ -145,6 +145,39 @@ async function openAuthenticatedPage(): Promise<Page> {
   return context.newPage();
 }
 
+/**
+ * One axe pass, rendered as the string the assertions compare against ''.
+ *
+ * Always through `expect.poll` below, never once. Three assertions in this file
+ * have now failed as a one-shot read of something that becomes true
+ * asynchronously — `polls > 0`, the stage-heading focus check, and the
+ * `document-title` violation that reddened master after #67 — and the scan is
+ * the same shape as all three: it reads live DOM at whatever instant it
+ * happens to run.
+ *
+ * The previous attempt at the last of those polled `page.title()` and then
+ * scanned. That narrows the window; it cannot close it. `axe-core`'s
+ * `doc-has-title` check is `var title = document.title; return
+ * !!sanitize(title)` — evaluated *during* `analyze()`, a second or so after
+ * the poll that proved the title was there. Polling the scan itself is what
+ * closes it, because the thing being retried is the thing that can be
+ * transiently wrong.
+ *
+ * It weakens nothing. A real violation is still a violation on every attempt,
+ * so it survives to the timeout and fails with its rule id and selector
+ * intact; only a state that stops being true clears. The cost is that a
+ * genuine regression takes the timeout to go red instead of failing at once.
+ */
+async function axeViolations(page: Page, builder = { options: OUR_RULES }): Promise<string> {
+  const results = await new AxeBuilder({ page }).options(builder.options).analyze();
+  return results.violations
+    .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
+    .join('\n');
+}
+
+/** How long a scan may keep coming back dirty before the violations are real. */
+const AXE_SETTLE = { timeout: 15_000, interval: 1_000 } as const;
+
 /** True once React has attached a fiber to the element — i.e. it is alive. */
 async function isHydrated(page: Page, selector: string): Promise<boolean> {
   return page.evaluate((sel) => {
@@ -367,20 +400,16 @@ describe('platform hydration', () => {
       // and by then this client is fully onboarded, so the incomplete-setup
       // hint has retired and no axe pass has ever rendered it. State-dependent
       // UI only gets covered from inside the walk that produces the state.
-      // Axe's `document-title` rule reads `document.title`, and the App Router
-      // applies a route's metadata *after* the render whose text the assertion
-      // above polled for. Scanning in that window reports a serious violation
-      // against a page that has a title a moment later — which is what turned
-      // master red once already. Waiting for the title is the whole fix; it is
-      // the same shape as every other post-navigation check in this file.
-      await expect.poll(() => page.title(), { timeout: 15_000 }).not.toBe('');
-      const seededAxe = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
-      expect(
-        seededAxe.violations
-          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
-          .join('\n'),
-        'portfolio with the setup-incomplete hint',
-      ).toBe('');
+      //
+      // Polled, for the reason `axeViolations` gives: this scan is a live read
+      // of the DOM, and a transient — `document-title` against a page whose
+      // metadata has not landed yet — reddened master once already.
+      await expect
+        .poll(() => axeViolations(page), {
+          ...AXE_SETTLE,
+          message: 'portfolio with the setup-incomplete hint',
+        })
+        .toBe('');
 
       // ---- Stage 2: where. Deep-linked, because the wizard holds no state:
       // coming back to the route lands on whatever stage the record earned. ----
@@ -431,7 +460,7 @@ describe('platform hydration', () => {
       // without the button being pressed, and cheaper to wait for than a
       // success would be.
       await expect
-        .poll(() => page.innerText('body'), { timeout: 90_000, intervals: [1000] })
+        .poll(() => page.innerText('body'), { timeout: 90_000, interval: 1000 })
         .toContain('The walk stopped before the end.');
 
       // ---- The failure stage: an operator's first audit not finishing is a
@@ -439,7 +468,7 @@ describe('platform hydration', () => {
       const startedAt = Date.now();
       await page.getByRole('button', { name: /Run the first audit/ }).click();
       await expect
-        .poll(() => page.innerText('body'), { timeout: 120_000, intervals: [1000] })
+        .poll(() => page.innerText('body'), { timeout: 120_000, interval: 1000 })
         .toContain('The first audit stopped');
 
       const failed = await page.innerText('body');
@@ -453,20 +482,16 @@ describe('platform hydration', () => {
       // states (it walks each route once, cold). After Fixes 1-2 this state
       // includes the editor and the credentials panel, which is the point:
       // nothing here has been swept by axe until this assertion exists.
-      // Axe's `document-title` rule reads `document.title`, and the App Router
-      // applies a route's metadata *after* the render whose text the assertion
-      // above polled for. Scanning in that window reports a serious violation
-      // against a page that has a title a moment later — which is what turned
-      // master red once already. Waiting for the title is the whole fix; it is
-      // the same shape as every other post-navigation check in this file.
-      await expect.poll(() => page.title(), { timeout: 15_000 }).not.toBe('');
-      const failedAxe = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
-      expect(
-        failedAxe.violations
-          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
-          .join('\n'),
-        'the failed stage, with the editor and credentials panel restored',
-      ).toBe('');
+      //
+      // This is the scan that reported `document-title (serious) × 1: html`
+      // and turned master red after #67 — see `axeViolations` for why polling
+      // the scan is the fix and polling `page.title()` in front of it was not.
+      await expect
+        .poll(() => axeViolations(page), {
+          ...AXE_SETTLE,
+          message: 'the failed stage, with the editor and credentials panel restored',
+        })
+        .toBe('');
 
       // One watcher, not two. A doubled loop shows up as near-simultaneous
       // pairs — both loops sleep the same 3s, so they stay in lockstep a few
@@ -765,8 +790,14 @@ describe('platform hydration', () => {
 
     // No cookie, and both request shapes: the plain document and the RSC
     // fetch a client navigation makes. Both leaked.
+    // Typed, because the inferred union of `{}` and `{ RSC: string }` is not
+    // assignable to `HeadersInit` — the empty shape widens `RSC` to
+    // `undefined`. `tsc` never saw this file until the typecheck config that
+    // includes `tests/integrations/**` existed.
+    const requestShapes: Array<Record<string, string>> = [{}, { RSC: '1' }];
+
     for (const route of ROUTES) {
-      for (const headers of [{}, { RSC: '1' }]) {
+      for (const headers of requestShapes) {
         const response = await fetch(`${BASE}${route}`, { headers });
         const body = await response.text();
         const where = `${route} ${JSON.stringify(headers)}`;
@@ -896,7 +927,7 @@ describe('platform hydration', () => {
               .innerText();
             return row.includes('Never run');
           },
-          { timeout: 60_000, intervals: [3000] },
+          { timeout: 60_000, interval: 3000 },
         )
         .toBe(false);
     } finally {
@@ -955,12 +986,16 @@ describe('platform hydration', () => {
       // without this the largest form in the product is the one screen the
       // auditor never audits.
       await expect.poll(() => row.innerText()).toContain('needs a path');
-      const results = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
-      expect(
-        results.violations
-          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
-          .join('\n'),
-      ).toBe('');
+      // Polled like the two in the wizard walk. This one sits behind a
+      // client-side click with no navigation in front of it, so it is the same
+      // live-DOM read they are — it was simply not among the two the previous
+      // fix reached.
+      await expect
+        .poll(() => axeViolations(page), {
+          ...AXE_SETTLE,
+          message: 'the steps editor, open on a half-finished row',
+        })
+        .toBe('');
 
       const added = row.locator('fieldset').nth(1);
       await added.getByLabel('Does').selectOption('expect');
@@ -986,7 +1021,7 @@ describe('platform hydration', () => {
             };
             return journeys.find((one) => one.id === journey.id)?.steps;
           },
-          { timeout: 30_000, intervals: [1000] },
+          { timeout: 30_000, interval: 1000 },
         )
         // The API's own projection, not the stored row: this route answers
         // with `toStepViews` so a literal value a legacy step is carrying
@@ -1354,12 +1389,18 @@ describe('platform hydration', () => {
       // axe cannot see the difference, which is why it is asserted here.
       expect(await panel.locator('p[aria-live="polite"]', { hasText: 'picked.' }).count()).toBe(1);
 
-      const results = await new AxeBuilder({ page }).analyze();
-      expect(
-        results.violations
-          .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
-          .join('\n'),
-      ).toBe('');
+      // `OUR_RULES`, like every other scan here. This one called `.analyze()`
+      // bare, so it ran axe's defaults — which leave `target-size` and the rest
+      // of `ENABLED_BY_US` switched off, and held this panel to a lower
+      // standard than the product holds a client's site to. That is the exact
+      // thing the block at the top of this file exists to prevent, and it was
+      // the only scan in the file not doing it.
+      await expect
+        .poll(() => axeViolations(page), {
+          ...AXE_SETTLE,
+          message: 'the discovery panel, four pages picked and the name still empty',
+        })
+        .toBe('');
 
       // A failed *second* crawl. The list from the first deliberately stays —
       // blanking somebody's work over a typo'd address is the worse mistake —
@@ -1465,7 +1506,7 @@ describe('platform hydration', () => {
             const match = journeys.find((one) => one.name === 'Picked Pages');
             return match ? { targetUrl: match.targetUrl, steps: match.steps } : null;
           },
-          { timeout: 30_000, intervals: [1000] },
+          { timeout: 30_000, interval: 1000 },
         )
         .toEqual({
           // The origin captured when the result landed, not re-read off the
@@ -1754,26 +1795,37 @@ describe('platform accessibility', () => {
       await page.goto(`${BASE}${route}`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      const results = await new AxeBuilder({ page }).options(OUR_RULES).analyze();
-
       // Name the rule and the element on failure: "expected 0, got 2" would
       // send the next reader back to a browser to find out what broke. The
       // landmark outline comes along because a landmark rule is meaningless
       // without knowing what the page actually rendered — CI once failed
       // `landmark-one-main` on routes that were green locally, and the bare
       // rule id said nothing about why.
-      const outline = await page.evaluate(() => ({
-        mains: document.querySelectorAll('main').length,
-        banners: document.querySelectorAll('header').length,
-        locked: document.body.innerText.includes('Sign in'),
-        bodyChars: document.body.innerHTML.length,
-      }));
+      //
+      // Polled like the in-page scans, and the outline is built inside the
+      // poll so it describes the attempt that actually failed rather than a
+      // snapshot taken before the last one. This sweep navigates cold and
+      // waits for hydration, so it is the least exposed scan in the file — but
+      // "least exposed" is what was said about the other four before three of
+      // them failed, and a retry costs nothing on a green run.
+      await expect
+        .poll(
+          async () => {
+            const detail = await axeViolations(page);
+            if (!detail) return '';
 
-      const detail = results.violations
-        .map((v) => `${v.id} (${v.impact}) × ${v.nodes.length}: ${v.nodes[0]?.target.join(' ')}`)
-        .join('\n');
+            const outline = await page.evaluate(() => ({
+              mains: document.querySelectorAll('main').length,
+              banners: document.querySelectorAll('header').length,
+              locked: document.body.innerText.includes('Sign in'),
+              bodyChars: document.body.innerHTML.length,
+            }));
 
-      expect(detail, `page outline: ${JSON.stringify(outline)}`).toBe('');
+            return `${detail}\npage outline: ${JSON.stringify(outline)}`;
+          },
+          { ...AXE_SETTLE, message: `axe on ${route}` },
+        )
+        .toBe('');
     } finally {
       await page.close();
     }

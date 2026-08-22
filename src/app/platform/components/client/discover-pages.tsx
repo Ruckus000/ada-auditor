@@ -705,12 +705,29 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
                         is already paid. (`inertWhen` is also typed for a
                         button's `onClick` and does not fit an `onChange`.)
                       */}
+                      {/*
+                        24x24, because a bare `<input type="checkbox">` renders
+                        at about 13px and WCAG 2.2 SC 2.5.8 asks for 24 — and
+                        `target-size` is a rule this product switches *on* when
+                        it audits a client (`ENABLED_BY_US`). The hydration
+                        suite scanned this panel with axe's defaults instead of
+                        ours, which leave `target-size` off, so the one screen
+                        in the product with a checkbox was the one held to a
+                        lower standard than the sites it reports on. Two
+                        serious violations, on the control an operator clicks
+                        most on this screen.
+
+                        The only checkbox in the product, so this is a local
+                        style rather than a token: a shared one would be a
+                        house style declared by a sample of one.
+                      */}
                       <input
                         id={boxId}
                         type="checkbox"
                         checked={selected.has(page.url)}
                         onChange={() => toggle(page.url)}
                         disabled={blockedBy !== null}
+                        style={{ width: 24, height: 24, margin: 0, flexShrink: 0 }}
                       />
                       <label
                         htmlFor={boxId}
