@@ -51,10 +51,10 @@ export function FirstRunStage({
 
         Withheld while running: a mid-run edit is the journeys screen's
         problem, not the wizard's, and this component's mounted instance is
-        also the one watching the run (see `FirstRunControl`'s `watching`
-        ref) — an editor swapping in here would compete with that for the
-        operator's attention without being able to change what is already
-        in flight.
+        also the one watching the run (`FirstRunControl`'s effect on
+        `pollUrl`) — an editor swapping in here would compete with that for
+        the operator's attention without being able to change what is
+        already in flight.
       */}
       {!runningRequestId ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

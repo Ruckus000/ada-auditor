@@ -47,8 +47,9 @@ export function SetupScreen({ detail, stage }: { detail: ClientDetail; stage: Se
           would remount, destroy the pressed button, and dump focus. It also
           means `StageHeading` changes text here without refocusing — the
           documented exception in stage-heading.tsx — and that `FirstRunControl`
-          receives `pollUrl` on its mounted instance, which is why its
-          `watching` guard exists. */}
+          receives `pollUrl` on the same instance whose click started the run,
+          which is how that run gets watched at all: `start()` does not poll,
+          so the effect on `pollUrl` is the only entry to the watch. */}
       {stage.stage === 'first-run' || stage.stage === 'running' ? (
         <FirstRunStage
           detail={detail}
