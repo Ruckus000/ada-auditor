@@ -483,9 +483,41 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         return;
       }
 
-      // A click that did not move the page is not a second page. Scanning it
-      // again would double its findings and pay twice for the same evidence.
-      if (pages.length > 0 && pages[pages.length - 1].page.url === url) {
+      /**
+       * A page already audited is not a second page. Scanning it again would
+       * double its findings and pay twice for the same evidence.
+       *
+       * Against the whole walk, not just the page before it. Comparing only
+       * with `pages[pages.length - 1]` caught a click that did not navigate
+       * and nothing else, so a journey that looped — `/` to `/help/search`
+       * back to `/` — went straight past it and audited `/` twice. That run
+       * reported six pages where it had walked five, counted one page's
+       * findings twice in `totalFindings`, and, because `scoreRun` sums
+       * passed and failed across pages, weighted that page double in the
+       * conformance rate a client reads.
+       *
+       * By URL, which is also the only identity this product has for a page:
+       * `findingKey` is `source:code:pageUrl:selector` with no notion of
+       * which visit, so two audits of one URL were never distinguishable
+       * downstream. Auditing a URL twice has never been representable — the
+       * walk was doing it anyway.
+       *
+       * Said out loud, unlike the narrower check this replaces. A click that
+       * does not navigate is unremarkable; arriving somewhere already audited
+       * means the journey's steps loop, which is the operator's to know. Not
+       * counted into `truncatedPages` for the reason the off-host skip above
+       * gives: that number means the cap cut the walk short, and this is not
+       * that.
+       */
+      if (pages.some((audited) => audited.page.url === url)) {
+        logInfo('audit_revisited_page', {
+          journeyId: input.journeyId,
+          stepId: input.stepId,
+          // The route, not the URL — a query string can carry a session token
+          // and this line goes to a log. `routeFromPageUrl` is what every
+          // other page-identifying field here is built from.
+          route: routeFromPageUrl(url),
+        });
         return;
       }
 
