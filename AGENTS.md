@@ -49,7 +49,12 @@ Supporting Netflix practices we adopt:
   are the human-review queue, and counting them would invert the sentence that
   produces them: "axe could not reach a verdict on these, so they are never a
   failure." They are excluded from the score for the same reason
-- Run contracts are enforced (scope, confidence `minReport`, `failureMode`)
+- Run contracts are enforced for **scope** and **confidence `minReport`**. This bullet
+  also claimed `failureMode`, and that was not true: it is written to the contract
+  (`run-browser-audit.ts:171`) and read by nothing. Same for `confidencePolicy.minContinue`,
+  `recoveryPolicy.*` and `actionPolicy.mode` — all written, none read. Chaos asserts the
+  two that are real (`empty_scope_denies_the_journey`, and `minReport` via the advisory
+  tests); do not add the others to this list until something reads them
 - Forbidden production actions never execute
 - A run may only navigate to hosts in `scope.allowedDomains`; an empty scope
   denies everything rather than allowing it

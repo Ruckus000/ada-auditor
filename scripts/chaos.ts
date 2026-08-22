@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   CHAOS_SCENARIOS,
+  DEFAULT_CHAOS_FIXTURE_DIR,
   expectedCiStatusForScenario,
   isChaosEnabled,
   resolveChaosRunParams,
@@ -43,6 +44,8 @@ async function main(): Promise<void> {
         artifactsDir,
         omitAxTree: params.omitAxTree,
         steps: params.steps,
+        maxPages: params.maxPages,
+        platformHint: params.platformHint,
       });
 
       if (report.ciStatus !== expected) {
@@ -61,6 +64,42 @@ async function main(): Promise<void> {
         if (onPassedThroughPage.length < 5) {
           fail(
             `scenario ${scenario}: expected >=5 findings on the page walked through, got ${onPassedThroughPage.length}`,
+          );
+        }
+      }
+
+      // A run the cap cut short has to say so. Silence here reads as "we
+      // audited the site" to a client who has no other way to know how much of
+      // it was seen, which is the one thing a partial audit must never do.
+      if (scenario === 'browser_page_cap_truncates') {
+        if (report.pages.length !== 2) {
+          fail(`scenario ${scenario}: expected the cap to hold at 2 pages, got ${report.pages.length}`);
+        }
+
+        if (report.truncatedPages !== 1) {
+          fail(
+            `scenario ${scenario}: expected truncatedPages=1, got ${report.truncatedPages} — a cap that does not report what it skipped is a silent partial audit`,
+          );
+        }
+
+        // And the pages it did audit still carry their findings, so truncation
+        // cannot be a way for a violation to go unreported.
+        const insideTheCap = report.findings.filter(
+          (finding) =>
+            finding.source === 'deterministic' && finding.pageUrl.endsWith('violations.html'),
+        );
+
+        if (insideTheCap.length === 0) {
+          fail(`scenario ${scenario}: truncation dropped the findings on a page inside the cap`);
+        }
+      }
+
+      // The hint wins over the markup. The fixture says React; only the hint
+      // being read produces WordPress.
+      if (scenario === 'browser_hint_beats_markup') {
+        if (report.platform.id !== 'wordpress') {
+          fail(
+            `scenario ${scenario}: expected the explicit hint to win, got platform=${report.platform.id}`,
           );
         }
       }
@@ -164,6 +203,57 @@ async function main(): Promise<void> {
   logInfo('chaos_result', {
     scenario: 'discovery_refuses_private_entry_point',
     targets: unsafeDiscoveryTargets.length,
+    pass: true,
+  });
+
+  /**
+   * An empty scope denies everything rather than allowing it.
+   *
+   * Free-standing rather than a `CHAOS_SCENARIOS` entry, for the same reason
+   * the discovery check above is: the table compares a report's `ciStatus`,
+   * and a refusal produces no report at all. That is the point — the guard
+   * runs before the browser launches, so an out-of-scope journey is never
+   * walked and never has pages to store.
+   *
+   * The steady-state rule names the fail-*closed* direction specifically, and
+   * that is the half a permissive default would break silently: `[]` is not
+   * nullish, so it must not fall through to "allow this journey". A unit test
+   * proves the comparison; this proves the comparison is still what
+   * `runBrowserAudit` asks before it does anything.
+   */
+  console.log('CHAOS: asserting an empty run scope denies rather than allows');
+
+  const deniedArtifactsDir = await mkdtemp(join(tmpdir(), 'ada-chaos-scope-'));
+  let scopeRefusal: unknown;
+
+  try {
+    await runBrowserAudit({
+      journeyId: 'demo-login',
+      environment: 'staging',
+      stepId: 'denied',
+      fixtureDir: DEFAULT_CHAOS_FIXTURE_DIR,
+      artifactsDir: deniedArtifactsDir,
+      allowedJourneyIds: [],
+      steps: [{ action: 'navigate', type: 'goto', path: 'login.html' }],
+    });
+    fail('an empty run scope allowed a journey instead of denying it');
+  } catch (error) {
+    scopeRefusal = error;
+  } finally {
+    await rm(deniedArtifactsDir, { recursive: true, force: true });
+  }
+
+  // The message, because that is all this refusal carries — it predates the
+  // typed guards and throws a plain Error. Asserting only "something threw"
+  // would pass if the fixture path broke instead, which is exactly the way
+  // this scenario could quietly stop testing anything.
+  const scopeMessage = scopeRefusal instanceof Error ? scopeRefusal.message : String(scopeRefusal);
+  if (!scopeMessage.includes('not allowed by run contract scope')) {
+    fail(`an empty run scope refused with the wrong reason: ${scopeMessage}`);
+  }
+
+  logInfo('chaos_result', {
+    scenario: 'empty_scope_denies_the_journey',
     pass: true,
   });
 

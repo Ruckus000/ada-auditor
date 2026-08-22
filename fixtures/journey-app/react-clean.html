@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!--
+  A page whose markup says React, for the one claim that needs the markup and
+  the hint to disagree.
+
+  `reactAdapter.detect` matches `data-reactroot`, so served without a hint this
+  page resolves to `react`. The chaos scenario hints `wordpress` against it, and
+  only the hint winning can produce WordPress — a hint that agreed with the DOM
+  would pass whether or not it was ever read.
+
+  Otherwise deliberately clean, modelled on `dashboard-clean.html`: language,
+  title, alt text, one heading. The scenario asserts a platform, and a page with
+  violations would make it assert two things at once.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Account</title>
+  </head>
+  <body>
+    <div id="root" data-reactroot="">
+      <main>
+        <h1>Account</h1>
+        <img src="avatar.png" alt="Your avatar" />
+        <p>Signed in.</p>
+      </main>
+    </div>
+  </body>
+</html>
