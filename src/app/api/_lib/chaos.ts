@@ -16,13 +16,17 @@ export type ChaosScenario =
   | 'browser_omit_ax_tree'
   | 'browser_complete_critical'
   | 'browser_complete_clean'
-  | 'browser_passthrough_violations';
+  | 'browser_passthrough_violations'
+  | 'browser_page_cap_truncates'
+  | 'browser_hint_beats_markup';
 
 export const CHAOS_SCENARIOS: ChaosScenario[] = [
   'browser_omit_ax_tree',
   'browser_complete_critical',
   'browser_complete_clean',
   'browser_passthrough_violations',
+  'browser_page_cap_truncates',
+  'browser_hint_beats_markup',
 ];
 
 export function isChaosEnabled(): boolean {
@@ -36,6 +40,10 @@ export type ChaosRunParams = {
   fixtureDir: string;
   omitAxTree?: boolean;
   steps?: JourneyStep[];
+  /** Below the journey's page count, for the scenario that forces truncation. */
+  maxPages?: number;
+  /** Set against conflicting markup, never with it. */
+  platformHint?: string;
 };
 
 export const DEFAULT_CHAOS_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
@@ -93,6 +101,40 @@ export function resolveChaosRunParams(
           { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
         ],
       };
+    case 'browser_page_cap_truncates':
+      // The cap is the one number here with no measurement behind it, and its
+      // value is not what this asserts. The claim is that a run the cap cut
+      // short *says so* — `truncatedPages` non-zero and a warn on the way past
+      // — so it can never be read as a complete audit of the site. Three pages
+      // against a cap of two is the smallest thing that can be true or false.
+      //
+      // The violations sit inside the cap deliberately: truncation must not be
+      // able to hide a finding on a page that was audited.
+      return {
+        ...base,
+        stepId: 'capped',
+        maxPages: 2,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'violations.html' },
+          { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
+        ],
+      };
+    case 'browser_hint_beats_markup':
+      // `platformHint` wins over rendered-DOM heuristics — a steady-state rule
+      // that was unit-tested and never exercised through a real run, so
+      // nothing proved the hint was still wired from this input to
+      // `resolvePlatformMetadata`. "The check was right, nothing called it" is
+      // a fault this repo has shipped three times by its own account.
+      //
+      // The fixture declares itself React; the hint says WordPress. A hint
+      // agreeing with the markup would pass whether or not it was ever read.
+      return {
+        ...base,
+        stepId: 'hinted',
+        platformHint: 'wordpress',
+        steps: [{ action: 'navigate', type: 'goto', path: 'react-clean.html' }],
+      };
   }
 }
 
@@ -108,5 +150,9 @@ export function expectedCiStatusForScenario(
       return 'pass';
     case 'browser_passthrough_violations':
       return 'fail';
+    case 'browser_page_cap_truncates':
+      return 'fail';
+    case 'browser_hint_beats_markup':
+      return 'pass';
   }
 }
