@@ -318,7 +318,23 @@ alter table runs add column if not exists score integer
 -- Which formula produced it. A score is a claim in a client report, so
 -- changing how it is computed must not silently reinterpret every historical
 -- run.
+--
+-- Nullable, and for the reason `gate_version` is: `not null default 1` made
+-- Postgres answer `scoreVersion: 1` for a run that recorded none, while
+-- `MemoryRunStore` answered nothing, and a store that invents a field the
+-- other does not is the drift `runStoreContract` exists to catch. That is not
+-- hypothetical here — it is the same defect `gate_version` shipped with and
+-- was fixed for one column over, still live in this one because `FULL_RECORD`
+-- happened to carry a `scoreVersion` and so never asked the question.
+--
+-- The rows already holding 1 keep it, and should: this column was added when
+-- score versioning began, so 1 is a true statement about every run written
+-- under the old default, not a backfilled guess. `drop default` only stops
+-- *new* rows being given a version nobody recorded. Both `alter column` lines
+-- are no-ops on a database that never took the earlier form.
 alter table runs add column if not exists score_version smallint not null default 1;
+alter table runs alter column score_version drop not null;
+alter table runs alter column score_version drop default;
 
 -- The score's inputs, per page. `checks_passed` is new evidence: axe reports
 -- passes and `scanPageWithAxe` discarded them, so until now there was no

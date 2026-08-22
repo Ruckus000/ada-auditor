@@ -184,7 +184,11 @@ function toRecord(
   if (run.truncated_pages > 0) record.truncatedPages = run.truncated_pages;
   if (run.score !== null) {
     record.score = run.score;
-    record.scoreVersion = run.score_version ?? 1;
+    // Only when the row carried one, same as the gate below. The `?? 1` this
+    // replaces invented a version for a scored run that recorded none, which
+    // is the drift the contract caught for `gate_version` — and would have
+    // caught here too, had `FULL_RECORD` not carried a `scoreVersion`.
+    if (run.score_version !== null) record.scoreVersion = run.score_version;
   }
   // Only when the row carried one. Defaulting here would have this store
   // return a field `MemoryRunStore` does not, which is the drift the shared
@@ -274,7 +278,7 @@ export class PostgresRunStore implements RunStore {
         ${record.status ?? 'complete'}, ${record.failureReason ?? null},
         ${record.durationMs}, ${record.browserMode ?? false},
         ${record.truncatedPages ?? 0}, ${record.score ?? null},
-        ${record.scoreVersion ?? 1}, ${record.gateVersion ?? null}, ${record.createdAt},
+        ${record.scoreVersion ?? null}, ${record.gateVersion ?? null}, ${record.createdAt},
         ${record.startedAt ?? record.createdAt},
         ${record.phaseMs ? JSON.stringify(record.phaseMs) : null},
         ${record.intent ? JSON.stringify(record.intent) : null}
