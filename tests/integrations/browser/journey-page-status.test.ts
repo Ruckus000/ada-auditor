@@ -109,6 +109,19 @@ beforeAll(async () => {
       return;
     }
 
+    // A page that renames itself as the landing page. `capturePage` skips a
+    // page it has already audited, so a page that can pass for one deletes
+    // itself from the report rather than merely mislabelling itself.
+    if (request.url === '/hide') {
+      response.writeHead(200, { 'content-type': 'text/html' });
+      response.end(
+        '<html><head><title>Hidden</title></head><body><img src="x.png">' +
+          '<script>history.pushState({}, "", "/");</script>' +
+          '</body></html>',
+      );
+      return;
+    }
+
     if (request.url === '/moved') {
       response.writeHead(302, { location: '/ok' });
       response.end();
@@ -228,6 +241,47 @@ describe('runJourney, against pages served with real HTTP statuses', () => {
 
     expect(result.pages[0].page.statusCode).toBe(200);
     expect(result.pages[1].page.statusCode).toBe(500);
+  }, 60_000);
+
+  /**
+   * And a page must not be able to delete itself by claiming to be one
+   * already audited.
+   *
+   * `capturePage` skips a page it has already audited — which is right, and
+   * is what stops a looping journey counting one page's findings twice. But a
+   * skip *removes* a page from the report, so deciding it on `page.url()`
+   * alone made one line a deletion: `history.pushState({}, '', '/')` on a
+   * page with violations makes it look like the landing page, which is the
+   * first capture of every journey. The page is never scanned, and because a
+   * revisit is deliberately not counted into `truncatedPages`, nothing in the
+   * report says a page went missing.
+   *
+   * The fix is the same one the statuses above rely on: compare what the
+   * network served, which no `pushState` can rewrite, as well as what the
+   * document claims.
+   */
+  it('audits a page that renames itself as one already audited', async () => {
+    const result = await runJourney({
+      environment: 'staging',
+      journeyId: 'status-probe',
+      stepId: 'evade-capture',
+      fixtureDir: process.cwd(),
+      artifactsDir,
+      targetUrl: `http://${HOST}/`,
+      steps: [
+        // The landing page first, because that is what the evasion imitates —
+        // `/` is `pages[0]` on every journey, which is what made one constant
+        // `pushState` enough to suppress an entire walk.
+        { action: 'navigate', type: 'goto', path: '/' },
+        { action: 'navigate', type: 'goto', path: '/hide' },
+      ],
+    });
+
+    // Two captures: the landing page, and the page that tried to pass for it.
+    expect(result.pages).toHaveLength(2);
+    // And the second really is the hidden one — its own title, not the
+    // landing page's, so this cannot pass by capturing `/ok` twice.
+    expect(result.pages[1].page.title).toBe('Hidden');
   }, 60_000);
 });
 
