@@ -177,6 +177,45 @@ describe('runJourney', () => {
     }
   }, 60_000);
 
+  it('audits a page once however many times the walk lands on it', async () => {
+    // A walk that loops back is not a longer audit. The same page scanned
+    // twice contributed its findings twice to `totalFindings`, and its check
+    // counts twice to the score — which sums passed and failed across pages,
+    // so a revisited page was weighted double in the conformance rate a
+    // client reads.
+    //
+    // The revisit here is deliberately *not* adjacent. The guard this covers
+    // used to compare only against the previously audited page, so a loop
+    // through any other page walked straight past it.
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'revisit',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'violations.html' },
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+        ],
+      });
+
+      expect(result.pages.map((audited) => audited.page.route)).toEqual([
+        '/login.html',
+        '/violations.html',
+      ]);
+      // Not truncation: the cap did not cut this walk short, and reporting a
+      // skipped revisit as a page we could not reach would say something
+      // true in a way that means something false.
+      expect(result.truncatedPages).toBe(0);
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('returns degraded artifacts when ax tree capture is omitted', async () => {
     const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
 

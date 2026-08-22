@@ -305,7 +305,17 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   let navigationViolation: Error | undefined;
 
   /**
-   * The status of the most recent main-frame navigation, per page.
+   * The most recent main-frame navigation, per page: its status and the URL
+   * the network actually served.
+   *
+   * The URL is here for the same reason the status is, and buys the same
+   * thing. `capturePage` refuses to audit a page it has already audited, and
+   * deciding that on `page.url()` alone handed the audited site a way to
+   * delete itself from its own report: `history.pushState({}, '', '/')` on a
+   * page with violations makes it look like the landing page, which was
+   * audited first, so the capture is skipped and the violations never reach
+   * the report. Comparing what was *served* as well closes it — see the
+   * identity check in `capturePage`.
    *
    * Filled from the response listener below rather than from `page.goto`'s
    * return value, which is what this looked like at first. `goto` is one of
@@ -335,7 +345,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
    * A `WeakMap` because the key is a live Playwright object; there is one page
    * in practice, and nothing here should keep it alive.
    */
-  const mainFrameStatus = new WeakMap<Page, number>();
+  const mainFrameNavigation = new WeakMap<Page, { status: number; url: string }>();
 
   /**
    * Every credential value this run has resolved, so it can be kept out of
@@ -400,7 +410,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     // costs nothing to make the guard unconditionally first.
     const navigated = frame.page();
     if (navigated) {
-      mainFrameStatus.set(navigated, response.status());
+      mainFrameNavigation.set(navigated, { status: response.status(), url: response.url() });
     }
   });
 
@@ -425,6 +435,17 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // partial run lost its work.
   const pages: PageAudit[] = [];
   let truncatedPages = 0;
+
+  /**
+   * Which pages have already been captured, by the pair that identifies one:
+   * what the network served, and what the document then claimed to be.
+   *
+   * Beside `pages` rather than inside it because `PageAudit` is stored and
+   * read by screens, and the served URL is needed for exactly one decision in
+   * this file. See the identity check in `capturePage` for what the pair
+   * buys.
+   */
+  const capturedPages = new Set<string>();
 
   try {
     const { steps } = input;
@@ -483,9 +504,67 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         return;
       }
 
-      // A click that did not move the page is not a second page. Scanning it
-      // again would double its findings and pay twice for the same evidence.
-      if (pages.length > 0 && pages[pages.length - 1].page.url === url) {
+      /**
+       * A page already audited is not a second page. Scanning it again would
+       * double its findings and pay twice for the same evidence.
+       *
+       * Against the whole walk, not just the page before it. Comparing only
+       * with `pages[pages.length - 1]` caught a click that did not navigate
+       * and nothing else, so a journey that looped — `/` to `/help/search`
+       * back to `/` — went straight past it and audited `/` twice. That run
+       * reported six pages where it had walked five, counted one page's
+       * findings twice in `totalFindings`, and, because `scoreRun` sums
+       * passed and failed across pages, weighted that page double in the
+       * conformance rate a client reads.
+       *
+       * **Both halves, because the page controls one of them.** Widening the
+       * comparison to the whole walk also widened what a `pushState` could
+       * do with it: skipping a capture *removes* a page from the report, so
+       * one line on a page with violations — `history.pushState({}, '', '/')`
+       * — made it look like the landing page, which is `pages[0]` on every
+       * journey, and deleted it from its own audit. `truncatedPages` is not
+       * incremented here, so nothing in the report said a page was missed.
+       * The narrower check was reachable the same way, but only by matching
+       * the immediately preceding URL, which moves at every step; one
+       * constant now suppressed the entire walk.
+       *
+       * `mainFrameNavigation` is what the network served, and no page can
+       * rewrite that — neither a `pushState` nor a fragment change produces a
+       * navigation response, which is the same property that makes the status
+       * beside it trustworthy. Requiring both to match keeps every case
+       * honest:
+       *
+       * - a real navigation back to an audited page matches both, and is the
+       *   revisit this guard exists for;
+       * - a click that does not navigate changes neither, and is skipped as
+       *   it always was;
+       * - a `pushState` onto an audited page's URL leaves what was served
+       *   different, so the page is audited rather than deleted;
+       * - a client-side route change in a single-page app is the same case as
+       *   the one above, and is likewise audited rather than collapsed into
+       *   the view before it.
+       *
+       * Said out loud, unlike the narrower check this replaces. A click that
+       * does not navigate is unremarkable; arriving somewhere already audited
+       * means the journey's steps loop, which is the operator's to know. Not
+       * counted into `truncatedPages` for the reason the off-host skip above
+       * gives: that number means the cap cut the walk short, and this is not
+       * that.
+       */
+      const servedUrl = mainFrameNavigation.get(page)?.url ?? url;
+      // A newline cannot appear in either half, so the pair cannot be forged
+      // by pushing a separator into a path.
+      const identity = `${servedUrl}\n${url}`;
+
+      if (capturedPages.has(identity)) {
+        logInfo('audit_revisited_page', {
+          journeyId: input.journeyId,
+          stepId: input.stepId,
+          // The route, not the URL — a query string can carry a session token
+          // and this line goes to a log. `routeFromPageUrl` is what every
+          // other page-identifying field here is built from.
+          route: routeFromPageUrl(url),
+        });
         return;
       }
 
@@ -571,7 +650,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       }
 
       pages.push({
-        page: { url, route, title, statusCode: mainFrameStatus.get(page) },
+        page: { url, route, title, statusCode: mainFrameNavigation.get(page)?.status },
         html,
         axe,
         axTree,
@@ -589,6 +668,10 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
           ...(input.skipScan ? {} : { scanMs }),
         },
       });
+
+      // After the push, so a capture that threw on its way here is not
+      // recorded as one that happened.
+      capturedPages.add(identity);
     };
 
     // A redirect can land somewhere the pre-navigation checks never saw. That
