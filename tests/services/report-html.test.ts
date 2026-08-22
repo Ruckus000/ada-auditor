@@ -116,6 +116,33 @@ describe('renderRunReport — content', () => {
     );
   });
 
+  it('does not call a run clean when it found issues that simply do not block', () => {
+    // The gate gives `pass` to any run with no *critical* finding, so a site
+    // with eighty-six unresolved failures earns the same `ciStatus` as one
+    // with none. Every platform screen already tells those apart — `runVerdict`
+    // answers `risk` for the first — but this report keyed its copy on
+    // `ciStatus`, which `risk` cannot reach. The operator's screen said one
+    // thing and the client's document said another, and the document was the
+    // softer of the two.
+    //
+    // The first real client audit produced exactly this run: 86 findings,
+    // none critical, `ciStatus: pass`.
+    const html = renderRunReport(
+      run({ ciStatus: 'pass', findings: [finding({ severity: 'major' })] }),
+    );
+
+    expect(html).not.toContain('No blocking issues found');
+    expect(html).toContain('Issues found, none blocking');
+  });
+
+  it('still reads clean when a run really did find nothing', () => {
+    // The other half, so the fix above cannot be "always say issues were
+    // found" — a genuinely clean run must keep saying so.
+    expect(renderRunReport(run({ ciStatus: 'pass', findings: [] }))).toContain(
+      'No blocking issues found',
+    );
+  });
+
   it('cites the success criterion and level', () => {
     const html = renderRunReport(run());
 

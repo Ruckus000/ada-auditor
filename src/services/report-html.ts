@@ -1,4 +1,5 @@
 import type { StoredFinding, StoredRunRecord } from '../domain/persistence';
+import { runVerdict } from './presentation/verdict';
 
 /**
  * Renders a stored run as a print-ready HTML report.
@@ -26,11 +27,31 @@ const SEVERITY_LABEL: Record<string, string> = {
   advisory: 'Advisory',
 };
 
+/**
+ * Keyed by the verdict a screen would show, not by `ciStatus`.
+ *
+ * `ciStatus` holds only `pass | fail | inconclusive`, and the gate gives
+ * `pass` to any run with no *critical* finding — so a site with eighty-six
+ * unresolved failures earned the same word as one with none. Every platform
+ * screen already told those apart, because they go through `runVerdict`, which
+ * answers `risk` for "nothing blocking, but not clean". This document did not,
+ * and so said the softer of the two things the product believed — on the copy
+ * a client's counsel reads rather than the one an operator glances at.
+ *
+ * That was a second definition of a rule `services/presentation/verdict.ts`
+ * exists to hold, and its own comment calls a business rule rather than
+ * presentation garnish. There is one definition again.
+ */
 const VERDICT_COPY: Record<string, { title: string; detail: string }> = {
   fail: {
     title: 'Does not conform',
     detail:
       'Blocking issues were found against the WCAG success criteria checked automatically.',
+  },
+  risk: {
+    title: 'Issues found, none blocking',
+    detail:
+      'Automated checks found failures against the WCAG success criteria checked here. None is classed as blocking, and every one is listed below. Automated testing cannot establish full conformance on its own.',
   },
   pass: {
     title: 'No blocking issues found',
@@ -231,8 +252,13 @@ function renderPageGroup(group: PageGroup): string {
 }
 
 export function renderRunReport(run: StoredRunRecord): string {
-  const verdict = VERDICT_COPY[run.ciStatus] ?? {
-    title: escapeHtml(run.ciStatus),
+  const verdictKind = runVerdict({
+    status: run.status,
+    ciStatus: run.ciStatus,
+    findings: run.findings,
+  });
+  const verdict = VERDICT_COPY[verdictKind] ?? {
+    title: escapeHtml(verdictKind),
     detail: '',
   };
 
@@ -271,6 +297,7 @@ export function renderRunReport(run: StoredRunRecord): string {
   .verdict { padding: 12pt 14pt; border-radius: 6px; border: 1px solid #d8dce3; background: #f7f8fa; }
   .verdict.fail { border-color: #e0b4b4; background: #fdf5f5; }
   .verdict.pass { border-color: #b8d9c0; background: #f4faf5; }
+  .verdict.risk { border-color: #e6c08a; background: #fdf6ec; }
   .verdict.inconclusive { border-color: #ddd0a8; background: #fdfaf2; }
   .verdict h2 { margin: 0 0 4pt; border: 0; padding: 0; font-size: 14pt; }
   .verdict p { margin: 0; color: #454b57; }
@@ -311,7 +338,7 @@ export function renderRunReport(run: StoredRunRecord): string {
     run ${escapeHtml(run.requestId)}
   </p>
 
-  <section class="verdict ${escapeHtml(run.ciStatus)}">
+  <section class="verdict ${escapeHtml(verdictKind)}">
     <h2>${verdict.title}</h2>
     <p>${verdict.detail}</p>
     <ul class="counts">
