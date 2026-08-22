@@ -182,8 +182,10 @@ Chromium launches on a Vercel function:
   "version 1", the same stance `intent.ruleset` takes.
   **Expect most real sites to read "does not conform"** — most real sites do
   not conform to WCAG AA. `www.dsrfund.org`, the first real client audited
-  (2026-08-22), returned 83 findings and `fail`; it read `pass` under the old
-  gate with none of them rated `critical`.
+  (2026-08-21), returned **86 findings and `pass`** under the old gate, none of
+  them rated `critical`. Re-audited under this one it returned `fail`, on 83 —
+  the totals differ by a few between runs because it is a live site, not
+  because the gate changed what was counted.
 - **Vocabulary mapping lives in `services/presentation/`**, not beside the
   components: deciding whether the product says `pass` or "we could not tell"
   is a business rule with a steady-state contract behind it. `VerdictKind`
