@@ -1,6 +1,6 @@
 name: Failed runs
 
-# A scheduled client audit that fails is seen by a human within a day.
+# A production audit that ran and failed is seen by a human within a day.
 #
 # It was not. `/api/cron/tick` dispatches a run and returns 200 long before it
 # finishes — the work happens under `waitUntil` — so the tick counts it as
@@ -13,11 +13,37 @@ name: Failed runs
 # and the client detail read one run per journey — so last night's failure is
 # erased by tonight's success before anyone opens the page.
 #
+# ## What this does not cover, said here rather than discovered later
+#
+# It reads recorded runs, so it sees a run that executed and failed, and a run
+# reconciled to `run_timed_out`. It cannot see a run that was refused *before*
+# it was recorded: a dispatch that never landed (the tick calls `releaseClaim`
+# and writes no row) or a `run_budget_exceeded` refusal, which is deliberately
+# not a failure — "nothing failed, the run was declined". Those leave nothing
+# for any query to find, here or on any screen. Changing that is a design
+# decision about what such a row would mean to baselines and scoring, not
+# something this job should paper over. So it never reports "all is well",
+# only what it actually checked.
+#
+# ## Why an issue, and why it says so little
+#
 # An issue rather than a chat message, and one issue rather than one a night,
 # for the reasons `prune-artifacts.yml` sets out: it persists until somebody
-# closes it, it needs no secret beyond the one below and no third-party service
-# that can itself be misconfigured, and a job that goes red repeatedly trains
-# people to ignore red.
+# closes it, it needs no third-party service that can itself be misconfigured,
+# and a job that goes red repeatedly trains people to ignore red.
+#
+# But this repository is public and `prune-artifacts.yml` only ever reports our
+# own infrastructure. A run belongs to a client, and `journeyId` is
+# `clientIdFromName(clientId + journey name)` — it reads as `acme-corp-checkout`.
+# Publishing that would say, on the public internet and with a timestamp, that
+# a named organisation is a client and that its accessibility audit is failing.
+#
+# So nothing identifying is published: the `requestId` is a `randomUUID`, the
+# environment is one of four words, and `failureReason` is a closed enum of
+# codes. An operator takes the requestId to the authenticated console and finds
+# the client, the journey and the findings there. The redaction happens in the
+# `jq` rather than at the point of printing, because the Actions log of a public
+# repository is as public as the issue.
 on:
   schedule:
     # 06:47 UTC — after the overnight hours a daily journey is most likely to
@@ -25,32 +51,50 @@ on:
     # everything else that runs at :00.
     - cron: '47 6 * * *'
   workflow_dispatch:
-    inputs:
-      base_url:
-        description: 'Deployment to query'
-        required: false
-        default: 'https://ada-auditor-psi.vercel.app'
 
 # The default token is read-only once any permission is named.
 permissions:
   contents: read
   issues: write
 
+env:
+  # Pinned rather than a dispatch input. An input here would let whoever runs
+  # this workflow choose which host receives `AUDITOR_RUN_TOKEN` as a bearer
+  # header — the same trust `selfUrl()` in the tick route refuses to place in a
+  # request header, for the same reason. Dispatch needs write access, so the
+  # actor is already trusted; that is a reason not to hand them the token
+  # anyway, not a reason it is safe. Pointing this elsewhere means editing the
+  # file, where it is reviewable.
+  BASE_URL: 'https://ada-auditor-psi.vercel.app'
+  # Above the 24h schedule period on purpose. GitHub's scheduled runs are
+  # best-effort and routinely late, and a lookback equal to the period leaves
+  # the drift as time no run ever examined. Re-reporting the same failure is
+  # free — the issue is deduplicated by title and updated rather than
+  # duplicated.
+  LOOKBACK_HOURS: '26'
+  # The route caps `limit` at 100. If a response comes back holding exactly
+  # this many, the window may extend past what was read and "nothing failed" is
+  # not a claim this job can make — see the truncation branch below.
+  RUN_LIMIT: '100'
+
 jobs:
   failed-runs:
-    name: Report runs that failed in the last day
+    name: Report production runs that failed in the last day
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      # Reads the *returned* status rather than filtering server-side, and that
-      # is load-bearing. A run whose invocation died is stored `running` and
-      # only becomes `failed` when `reconcileRunStatus` sees it on read, so a
-      # query filtering stored status would miss precisely the failures nobody
+      # Reads the *returned* status rather than filtering server-side on it,
+      # and that is load-bearing. A run whose invocation died is stored
+      # `running` and only becomes `failed` when `reconcileRunStatus` sees it on
+      # read, so a stored-status query would miss precisely the failures nobody
       # noticed. `/api/audit/runs` reconciles on the way out.
+      #
+      # `environment` *is* filtered server-side, because that one is stored
+      # exactly and narrowing it also narrows the payload: `list()` hydrates
+      # every run with its pages and findings, `htmlSnippet` included.
       - name: Ask the deployment what failed
         id: scan
         env:
-          BASE_URL: ${{ inputs.base_url || 'https://ada-auditor-psi.vercel.app' }}
           AUDITOR_RUN_TOKEN: ${{ secrets.AUDITOR_RUN_TOKEN }}
         run: |
           set -euo pipefail
@@ -60,46 +104,50 @@ jobs:
             exit 1
           fi
 
-          # `limit` is capped at 100 by the route. At today's volumes that is
-          # far more than a day; if it ever is not, the count below is a floor
-          # rather than a total, and the issue says so.
-          curl --fail --silent --show-error --max-time 30 \
+          # A minute rather than thirty seconds: this is a hydrated payload and
+          # it grows with history. If it still cannot complete, curl fails and
+          # the meta issue fires — a check that cannot finish should say so.
+          curl --fail --silent --show-error --max-time 60 \
             -H "authorization: Bearer ${AUDITOR_RUN_TOKEN}" \
-            "${BASE_URL}/api/audit/runs?limit=100" > runs.json
+            "${BASE_URL}/api/audit/runs?environment=production&limit=${RUN_LIMIT}" > runs.json
 
-          SINCE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          SINCE=$(date -u -d "${LOOKBACK_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
+          echo "since=${SINCE}" >> "$GITHUB_OUTPUT"
+
+          # How many runs came back at all, so truncation can be detected. Not
+          # how many failed.
+          jq -r '"returned=\(.runs | length)"' runs.json >> "$GITHUB_OUTPUT"
 
           # ISO-8601 UTC is fixed-width and zero-padded, so a string comparison
           # orders it correctly and no date parsing is needed. The `sub` drops
           # the milliseconds our timestamps carry, which `fromdateiso8601`
           # would refuse anyway.
+          #
+          # The projection is the redaction: requestId, environment, reason,
+          # timestamp. No `journeyId`, and nothing else from the record.
           jq -r --arg since "${SINCE}" '
             [ .runs[]
               | select(.status == "failed")
               | select((.createdAt | sub("\\.[0-9]+Z$"; "Z")) > $since)
+              | { requestId, environment, reason: (.failureReason // "no reason recorded"), createdAt }
             ]
-            | "count=\(length)"
-          ' runs.json >> "$GITHUB_OUTPUT"
+          ' runs.json > failed.json
 
-          jq -r --arg since "${SINCE}" '
-            [ .runs[]
-              | select(.status == "failed")
-              | select((.createdAt | sub("\\.[0-9]+Z$"; "Z")) > $since)
-            ]
-            | .[]
-            | "- `\(.journeyId)` (\(.environment)) — \(.failureReason // "no reason recorded") — \(.createdAt) — run `\(.requestId)`"
-          ' runs.json > failures.md
+          jq -r '"count=\(length)"' failed.json >> "$GITHUB_OUTPUT"
 
-          echo "since=${SINCE}" >> "$GITHUB_OUTPUT"
+          jq -r '.[] | "- run `\(.requestId)` (\(.environment)) — \(.reason) — \(.createdAt)"' \
+            failed.json > failures.md
+
           cat failures.md
 
       # `always()`, because the case this job exists to prevent is a check that
-      # quietly stopped checking. If the step above cannot reach the deployment
-      # or the token has rotated, that is itself worth an issue — the retention
-      # sweep failed eleven nights into an empty room for exactly that reason.
+      # quietly stopped checking. If the step above cannot reach the deployment,
+      # or the token has rotated, or the window could not be covered, that is
+      # itself worth an issue — the retention sweep failed eleven nights into an
+      # empty room for exactly that reason.
       #
-      # One block for both outcomes rather than two near-identical ones: the
-      # title and body are decided first, and the filing is written once.
+      # One block for every outcome rather than near-identical ones: the title
+      # and body are decided first, and the filing is written once.
       - name: File an issue if there is something to say
         if: always()
         env:
@@ -110,30 +158,56 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SCAN_OUTCOME: ${{ steps.scan.outcome }}
           FAILED_COUNT: ${{ steps.scan.outputs.count }}
+          RETURNED: ${{ steps.scan.outputs.returned }}
           SINCE: ${{ steps.scan.outputs.since }}
         run: |
           set -euo pipefail
 
+          # Truncation is not a clean night — it is a check that did not cover
+          # its window — so it joins the "could not run" branch rather than
+          # becoming a third kind of alert. It is also the tripwire for adding a
+          # lighter projection to `/api/audit/runs`: until this fires, one does
+          # not need to exist.
+          if [ "${SCAN_OUTCOME}" = "success" ] && [ "${RETURNED}" = "${RUN_LIMIT}" ]; then
+            TRUNCATED=true
+          else
+            TRUNCATED=false
+          fi
+
           if [ "${SCAN_OUTCOME}" != "success" ]; then
             TITLE='The failed-run check could not run'
             BODY=$(printf '%s\n' \
-              'This job could not ask the deployment which runs failed, so nobody is watching scheduled audits until it is fixed.' \
+              'This job could not ask the deployment which runs failed, so nobody is watching production audits until it is fixed.' \
               '' \
               "Failed run: ${RUN_URL}" \
               '' \
-              'Most likely causes: AUDITOR_RUN_TOKEN was rotated without updating the repository secret, or the deployment URL changed.')
-          elif [ "${FAILED_COUNT}" != "0" ]; then
-            TITLE='A scheduled audit failed'
+              'Most likely causes: AUDITOR_RUN_TOKEN was rotated without updating the repository secret, or the deployment moved.')
+          elif [ "${TRUNCATED}" = "true" ]; then
+            TITLE='The failed-run check could not cover its window'
             BODY=$(printf '%s\n' \
-              "${FAILED_COUNT} run(s) failed since ${SINCE}. A failed run produces no findings and no score, so any client it belongs to has no audit for that night." \
+              "The runs endpoint returned its maximum of ${RUN_LIMIT} records, so runs older than the newest ${RUN_LIMIT} were never examined and this job cannot say whether any of them failed." \
               '' \
-              "$(cat failures.md)" \
+              "It matched ${FAILED_COUNT} failure(s) in what it could see, since ${SINCE}." \
               '' \
               "Checked by: ${RUN_URL}" \
               '' \
-              'This issue is updated rather than duplicated, and is not closed automatically — a quiet night does not mean the cause was fixed.')
+              'Run volume has outgrown a single page. The fix is a narrower query — the endpoint currently returns each run fully hydrated, with its pages and findings.')
+          elif [ "${FAILED_COUNT}" != "0" ]; then
+            TITLE='A production audit failed'
+            BODY=$(printf '%s\n' \
+              "${FAILED_COUNT} production run(s) failed since ${SINCE}. A failed run produces no findings and no score, so whichever client it belongs to has no audit for that night." \
+              '' \
+              "$(cat failures.md)" \
+              '' \
+              'Look each request id up in the console for the client, the journey and what went wrong — deliberately not published here, because this repository is public.' \
+              '' \
+              "Checked by: ${RUN_URL}" \
+              '' \
+              'This covers runs that were recorded. A run refused before it was recorded — a dispatch that never landed, or a spent run budget — leaves no row and is not counted above.' \
+              '' \
+              'Updated rather than duplicated, and not closed automatically: a quiet night does not mean the cause was fixed.')
           else
-            echo "no runs failed in the last day"
+            echo "no recorded production run failed since ${SINCE}"
             exit 0
           fi
 
