@@ -17,11 +17,27 @@ import type { JourneyArtifacts } from '../browser/types';
  * These are screenshots and DOM snapshots of authenticated pages on client
  * systems. They contain whatever real end users had on screen. They are stored
  * private, addressed by an unguessable path, and swept after
- * `ARTIFACT_RETENTION_DAYS` (default 30) by `scripts/prune-artifacts.ts`.
+ * `ARTIFACT_RETENTION_DAYS` (default 90) by `scripts/prune-artifacts.ts`.
  * Retention is a property of the feature, not a follow-up.
  */
 
-const DEFAULT_RETENTION_DAYS = 30;
+/**
+ * Ninety days, and the number is a decision rather than an inheritance.
+ *
+ * Thirty was shorter than a remediation cycle: a client fixes findings over a
+ * quarter, and the evidence behind the report they are working from expired
+ * before they finished. Ninety covers that cycle and a quarterly review.
+ *
+ * Not longer, and the reason is the same one that makes the store private —
+ * this is captured end-user data on a client's authenticated pages, and how
+ * long it exists is part of what a client is agreeing to. Indefinite retention
+ * would need a data-processing agreement behind it, not a default.
+ *
+ * A default rather than a deployed `ARTIFACT_RETENTION_DAYS`, so the decision
+ * is in the repo where it can be read and reviewed, and cannot be forgotten on
+ * the next environment.
+ */
+const DEFAULT_RETENTION_DAYS = 90;
 
 export function retentionDays(): number {
   const configured = Number(process.env.ARTIFACT_RETENTION_DAYS);

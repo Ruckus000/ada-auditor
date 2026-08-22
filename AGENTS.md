@@ -60,6 +60,13 @@ Supporting Netflix practices we adopt:
   denies everything rather than allowing it
 - Credentials are referenced, never inlined — no secret in a request body, a
   stored journey, or a run log
+- **There is no tenancy, and that is the design.** One organisation: every
+  operator sees every client, and "any authenticated caller can read any run"
+  is intended rather than a hole. No table has a tenant column. The dangerous
+  version of this is not the design — it is somebody later assuming isolation
+  exists, or half-introducing it — so the run-store contract pins that `getRun`
+  takes a request id and nothing else. If this changes, it changes in
+  `schema.sql` first, and the contract test is where you will notice
 
 ### Full-cycle expectations
 
