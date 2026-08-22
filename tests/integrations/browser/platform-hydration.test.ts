@@ -508,14 +508,18 @@ describe('platform hydration', () => {
       // flaked in CI once already. The two assertions below carry the whole
       // regression value and are vacuously true when the run dies that fast.
       //
-      // Which is the cost, stated plainly rather than left for someone to
-      // discover: on CI, where zero polls is the normal outcome, this stops
-      // checking anything at all. A green suite here is not evidence that the
-      // doubled-watcher defect is still fixed. The assertions are worth
-      // keeping — they cost nothing and they fire locally, where one poll does
-      // happen — but the property they defend is only genuinely safe once
-      // `FirstRunControl` has one entry path instead of two guarded by a ref.
-      // Until then this is a tripwire that is often unarmed, not a gate.
+      // Which used to be the whole problem: on CI, where zero polls is the
+      // normal outcome, these assertions check nothing, so a green suite was
+      // not evidence the doubled-watcher defect was still fixed. That is no
+      // longer what the property rests on. `FirstRunControl` has one entry
+      // into its watcher — the `[pollUrl]` effect, which also owns the
+      // cancellation — so a second loop is not something a guard refuses, it
+      // is something the code cannot express. `start()` no longer polls.
+      //
+      // These stay as a tripwire against that being undone, and they are
+      // honest about their reach: armed only when a poll actually fires,
+      // which on this journey is seldom. The guarantee is structural; this is
+      // the alarm on top of it.
       const gaps = polls.slice(1).map((at, index) => at - polls[index]!);
       expect(gaps.filter((gap) => gap < 500), `poll gaps (ms): ${gaps.join(', ')}`).toEqual([]);
       // The bound has no slack on purpose. A watcher sleeps *before* its first
