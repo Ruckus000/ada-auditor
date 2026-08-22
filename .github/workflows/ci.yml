@@ -102,6 +102,36 @@ jobs:
     # database holding real client evidence is a blast radius nobody needs.
     name: Database store contract
     runs-on: ubuntu-latest
+    # One at a time, across every branch and every run.
+    #
+    # `vitest.db.config.ts` sets `fileParallelism: false` and says why: "the
+    # suite shares one database, and parallel files would delete each other's
+    # rows between a write and the read that checks it." That is true one level
+    # up too, and nothing enforced it — every run points at the same
+    # `DATABASE_URL`, and both contracts call `clearContractRows` in a
+    # `beforeEach` that deletes `contract-%` and `pc-%` *globally*.
+    #
+    # So two runs overlapping is one run deleting the other's fixtures
+    # mid-test. It is not theoretical: runs #158, #159 and #160 started within
+    # nine seconds of each other and all three failed, on a mix of foreign-key
+    # violations (`Key (client_id)=(pc-client-a) is not present in table
+    # "clients"`) and reads that came back empty — while #157, the same branch
+    # alone four minutes earlier, passed. It took master red with it, for a
+    # reason no diff could explain, which is the most expensive kind of red.
+    #
+    # `cancel-in-progress: false`, because a half-run contract leaves rows
+    # behind: this queues rather than kills. The honest cost is that a third
+    # run arriving while one is queued cancels the queued one — a cancelled
+    # check is a re-run, and a re-run is cheaper than a corrupted one.
+    #
+    # The durable fix is a per-run namespace (or a schema, or a Neon branch)
+    # so the job can be parallel again. That means threading an id through
+    # `run-store-contract.ts` and `platform-store-contract.ts`, whose fixture
+    # ids are literals today; worth doing, bigger than this, and not something
+    # to land blind — this sandbox has no `DATABASE_URL` to test it against.
+    concurrency:
+      group: ci-database-contract
+      cancel-in-progress: false
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
