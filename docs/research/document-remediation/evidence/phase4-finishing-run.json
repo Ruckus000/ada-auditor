@@ -1,0 +1,74 @@
+[
+  {
+    "document": "01-simple-text",
+    "ms": 246,
+    "error": null,
+    "bytes": 67310
+  },
+  {
+    "document": "02-two-column",
+    "ms": 134,
+    "error": null,
+    "bytes": 71183
+  },
+  {
+    "document": "03-simple-table",
+    "ms": 112,
+    "error": null,
+    "bytes": 54213
+  },
+  {
+    "document": "04-difficult-table",
+    "ms": 122,
+    "error": null,
+    "bytes": 56845
+  },
+  {
+    "document": "05-images-captioned",
+    "ms": 114,
+    "error": null,
+    "bytes": 444138
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "ms": 109,
+    "error": null,
+    "bytes": 418020
+  },
+  {
+    "document": "07-complex-chart",
+    "ms": 124,
+    "error": null,
+    "bytes": 63536
+  },
+  {
+    "document": "08-slide-layout",
+    "ms": 124,
+    "error": null,
+    "bytes": 199596
+  },
+  {
+    "document": "09-scanned",
+    "ms": 101,
+    "error": null,
+    "bytes": 109624
+  },
+  {
+    "document": "10-metadata-problems",
+    "ms": 123,
+    "error": null,
+    "bytes": 53142
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "ms": 127,
+    "error": null,
+    "bytes": 68098
+  },
+  {
+    "document": "12-kitchen-sink",
+    "ms": 140,
+    "error": null,
+    "bytes": 550553
+  }
+]
