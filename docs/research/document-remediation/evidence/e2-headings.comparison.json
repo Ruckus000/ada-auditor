@@ -1,0 +1,671 @@
+[
+  {
+    "document": "01-simple-text",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 26,
+      "textChars": 1133,
+      "pages": 1,
+      "lang": "en",
+      "title": "Quarterly Operations Summary",
+      "headings": [
+        "H1",
+        "H2",
+        "H3",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Q u a r t e r l y O p e r a t i o n s S u m m a r y"
+        },
+        {
+          "level": "H2",
+          "text": "T h r o u g h p u t"
+        },
+        {
+          "level": "H3",
+          "text": "Regional detail"
+        },
+        {
+          "level": "H2",
+          "text": "A c t i o n s c a r r i e d f o r w a r d"
+        },
+        {
+          "level": "H2",
+          "text": "A p p r o v a l se q u e n c e"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "02-two-column",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H3\"], ground truth [\"H1\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 1363,
+      "pages": 2,
+      "lang": "en",
+      "title": "Coastal Depot Review",
+      "headings": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a st a l D e p o t R e v i e w"
+        },
+        {
+          "level": "H2",
+          "text": "Fi n a n c i a l p o si t i o n"
+        },
+        {
+          "level": "H3",
+          "text": "N o r t h w in d L o g is t ic s · C o a s t a l D e p o t R e v ie w · P a g e 1 o f 1"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "03-simple-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "table 1 has 21 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 53,
+      "textChars": 418,
+      "pages": 1,
+      "lang": "en",
+      "title": "Depot Throughput by Quarter",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Depot Throughput by Quarter"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t a i n e r s h a n d l e d , b y d e p o t a n d q u a r t e r ( h u n d r e d s)"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 21,
+          "tr": 5
+        }
+      ]
+    }
+  },
+  {
+    "document": "04-difficult-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "1 table(s) in ground truth, 0 detected"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 868,
+      "pages": 1,
+      "lang": "en",
+      "title": "Fleet Utilisation Detail",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Fl e e t U t i l i sa t i o n De t a i l"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "05-images-captioned",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 4,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "4 Figure elements for 3 expected (2 meaningful + 1 distinct repeated) — 1 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H1\"], ground truth [\"H1\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 814,
+      "pages": 2,
+      "lang": "en",
+      "title": "Coastal Quay Site Report",
+      "headings": [
+        "H1",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Coastal Quay Site Report"
+        },
+        {
+          "level": "H1",
+          "text": "D e p o t a p r o n"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1: The western quay at low tide, viewed from the depot apron. The berth allocated to Northwind is the second from the left.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: The northern apron, which would be surrendered under the reduced-footprint option. Two shunters are visible at the far edge.",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 6,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 4\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 5\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "5 Figure elements for 4 expected (4 meaningful + 0 distinct repeated) — 1 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 22,
+      "textChars": 293,
+      "pages": 2,
+      "lang": "en",
+      "title": "Asset Register Extract",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Asset Register Extract"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 4",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 5",
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 0,
+          "td": 7,
+          "tr": 2
+        }
+      ]
+    }
+  },
+  {
+    "document": "07-complex-chart",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 524,
+      "pages": 1,
+      "lang": "en",
+      "title": "Throughput Trend Analysis",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Throughput Trend Analysis"
+        },
+        {
+          "level": "H2",
+          "text": "Containers handled per quarter (hundreds)"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "08-slide-layout",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 313,
+      "pages": 1,
+      "lang": "en",
+      "title": "Coastal Options — Board Slide",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a s t a l : t h r e e w a y s f o r w a r d"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "09-scanned",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no text layer — OCR did not run"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 2,
+      "textChars": 0,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [],
+      "headingTexts": [],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "10-metadata-problems",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 1006,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "N o t i c e d e c o n f o r m i t é — C o m p l i a n c e N o t i c e"
+        },
+        {
+          "level": "H2",
+          "text": "E n g l i sh se c t i o n"
+        },
+        {
+          "level": "H2",
+          "text": "S e c t i o n f r a n ç a i se"
+        },
+        {
+          "level": "H2",
+          "text": "C l o si n g"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 3,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "2 Figure elements for 1 expected (1 meaningful + 0 distinct repeated) — 1 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 16,
+      "textChars": 896,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "T e r m s o f A c c e s s"
+        },
+        {
+          "level": "H2",
+          "text": "E l i g i b i l i t y"
+        },
+        {
+          "level": "H2",
+          "text": "A p p l y i n g"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t a c t"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "12-kitchen-sink",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 3,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "omission",
+        "msg": "2 table(s) in ground truth, 1 detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 1 has 21 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\",\"H2\",\"H3\",\"H4\",\"H1\",\"H1\",\"H2\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\",\"H2\",\"H3\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 122,
+      "textChars": 2252,
+      "pages": 6,
+      "lang": "en",
+      "title": "Coastal Depot: Annual Review 2026",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H3",
+        "H4",
+        "H1",
+        "H1",
+        "H2",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a st a l De p o t"
+        },
+        {
+          "level": "H2",
+          "text": "Contents"
+        },
+        {
+          "level": "H2",
+          "text": "Summary"
+        },
+        {
+          "level": "H2",
+          "text": "Throughput"
+        },
+        {
+          "level": "H3",
+          "text": "C o n t a i n e r s h a n d l e d , b y d e p o t a n d q u a r t e r ( h u n d r e d s)"
+        },
+        {
+          "level": "H4",
+          "text": "Quarterly trend by depot"
+        },
+        {
+          "level": "H1",
+          "text": "Fleet utilisation"
+        },
+        {
+          "level": "H1",
+          "text": "Site"
+        },
+        {
+          "level": "H2",
+          "text": "Figure 2: The northern apron, which the reduced-footprint option would surrender."
+        },
+        {
+          "level": "H1",
+          "text": "Options and recommendation"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1: The western quay at low tide. The Northwind berth is second from the left.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: The northern apron, which the reduced-footprint option would surrender.",
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 0,
+          "td": 21,
+          "tr": 5
+        }
+      ]
+    }
+  }
+]

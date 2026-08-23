@@ -8,6 +8,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 
 /**
@@ -28,11 +29,14 @@ public final class Inspect {
 
     private static final List<String> HEADINGS = List.of("H1", "H2", "H3", "H4", "H5", "H6");
 
-    private final List<String> headings = new ArrayList<>();
+    private final List<String[]> headings = new ArrayList<>();  // {type, text}
     private final List<String[]> figures = new ArrayList<>();   // {type, alt, actualText}
     private final List<int[]> tables = new ArrayList<>();       // {th, td, tr}
     private Map<String, Object> roleMap;
     private int elements = 0;
+    /** Shared with Headings, so the tool that measures and the tool that acts
+        cannot disagree about what a heading says. */
+    private StructText text;
 
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
@@ -48,6 +52,8 @@ public final class Inspect {
 
             StringBuilder json = new StringBuilder("{\n");
             json.append("  \"hasStructTree\": ").append(root != null).append(",\n");
+
+            text = new StructText(doc);
 
             if (root != null) {
                 roleMap = root.getRoleMap();
@@ -65,9 +71,17 @@ public final class Inspect {
 
             json.append("  \"headings\": [");
             for (int i = 0; i < headings.size(); i++) {
-                json.append(i > 0 ? ", " : "").append(q(headings.get(i)));
+                json.append(i > 0 ? ", " : "").append(q(headings.get(i)[0]));
             }
             json.append("],\n");
+
+            json.append("  \"headingTexts\": [\n");
+            for (int i = 0; i < headings.size(); i++) {
+                json.append("    {\"level\": ").append(q(headings.get(i)[0]))
+                    .append(", \"text\": ").append(q(headings.get(i)[1])).append("}")
+                    .append(i < headings.size() - 1 ? "," : "").append("\n");
+            }
+            json.append("  ],\n");
 
             json.append("  \"figures\": [\n");
             for (int i = 0; i < figures.size(); i++) {
@@ -112,7 +126,9 @@ public final class Inspect {
             int[] table = enclosingTable;
 
             if (HEADINGS.contains(type)) {
-                headings.add(type);
+                // Text matters as much as level: knowing a document has one
+                // heading too many says nothing about which one is wrong.
+                headings.add(new String[] { type, text.of(el) });
             } else if ("Figure".equals(type) || "Formula".equals(type)) {
                 figures.add(new String[] {
                     type, el.getAlternateDescription(), el.getActualText(),
