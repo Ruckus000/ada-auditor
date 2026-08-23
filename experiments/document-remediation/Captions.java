@@ -29,11 +29,18 @@ import org.apache.pdfbox.util.Vector;
  * assertions in the corpus. Nothing here generates a description; it only moves
  * one the author already wrote.
  *
- * Scope is deliberately one technique. Where no caption associates
- * confidently the existing Alt is left ALONE rather than cleared, so the
- * measurement isolates what caption extraction removes and changes nothing
- * else. Whether an un-captioned figure should keep a placeholder or lose its
- * Alt is a policy question for after the numbers exist.
+ * Where a caption associates confidently, it becomes the figure's Alt. Where
+ * none does, the existing Alt is REMOVED.
+ *
+ * That second half is a decision, taken on evidence, and it costs something on
+ * purpose. "image 1" satisfies PDF/UA and tells a screen-reader user nothing,
+ * so it is a false assertion wearing a pass. Removing it leaves the figure with
+ * no alternative, which fails 7.3-1 and drops the document to INCONCLUSIVE —
+ * an omission a human can see, in place of a claim they cannot.
+ *
+ * The alternative of marking undescribed figures as artifacts was rejected:
+ * that asserts they are decorative, which we do not know, and hides them
+ * instead of reporting them.
  *
  * Usage: Captions <in.pdf> <out.pdf>          (writes a JSON report to stdout)
  */
@@ -102,16 +109,26 @@ public final class Captions {
             PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
             if (root != null) collectFigures(root, figures);
 
-            int applied = 0, noCaption = 0, unlocated = 0, captionsFound = 0;
+            int applied = 0, noCaption = 0, unlocated = 0, cleared = 0;
             for (PDStructureElement fig : figures) {
                 Box box = locate(fig, keyed, pageIndex);
+                // An unlocated figure is left exactly as found. We could not
+                // read where it is, so we know nothing about it either way.
                 if (box == null) { unlocated++; continue; }
+
                 int page = pageOf(fig, keyed, pageIndex);
                 String caption = page < 0 ? null : findCaption(new Placement(page, box), linesByPage.get(page));
-                if (caption == null) { noCaption++; continue; }
-                captionsFound++;
-                fig.setAlternateDescription(caption);
-                applied++;
+
+                if (caption != null) {
+                    fig.setAlternateDescription(caption);
+                    applied++;
+                } else {
+                    noCaption++;
+                    if (fig.getAlternateDescription() != null) {
+                        fig.setAlternateDescription(null);
+                        cleared++;
+                    }
+                }
             }
 
             doc.save(out);
@@ -121,9 +138,9 @@ public final class Captions {
             j.append(",\"figures\":").append(figures.size());
             j.append(",\"located\":").append(figures.size() - unlocated);
             j.append(",\"unlocated\":").append(unlocated);
-            j.append(",\"captionsFound\":").append(captionsFound);
             j.append(",\"applied\":").append(applied);
             j.append(",\"noCaption\":").append(noCaption);
+            j.append(",\"cleared\":").append(cleared);
             j.append("}");
             System.out.println(j);
         }

@@ -31,11 +31,12 @@ for (const f of readdirSync(IN).filter((x) => x.endsWith('.pdf')).sort()) {
     name.padEnd(30),
     error ? `ERROR ${error}` :
     `${String(r.ms).padStart(4)}ms  images=${String(r.images).padStart(2)} figures=${String(r.figures).padStart(2)} ` +
-    `located=${String(r.located).padStart(2)} unlocated=${String(r.unlocated).padStart(2)} applied=${r.applied} noCaption=${r.noCaption}`,
+    `located=${String(r.located).padStart(2)} applied=${r.applied} noCaption=${r.noCaption} cleared=${r.cleared}`,
   );
 }
 
 writeFileSync(join(OUT, 'run.json'), JSON.stringify(rows, null, 2));
 const applied = rows.reduce((a, r) => a + (r.applied ?? 0), 0);
+const cleared = rows.reduce((a, r) => a + (r.cleared ?? 0), 0);
 const unlocated = rows.reduce((a, r) => a + (r.unlocated ?? 0), 0);
-console.log(`\ncaptions applied: ${applied}   figures not locatable via MCID (left untouched): ${unlocated}`);
+console.log(`\ncaptions applied: ${applied}   placeholder Alts cleared: ${cleared}   unlocated (untouched): ${unlocated}`);
