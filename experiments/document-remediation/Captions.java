@@ -39,12 +39,6 @@ import org.apache.pdfbox.util.Vector;
  */
 public final class Captions {
 
-    /** "Figure 3:", "Fig. 2 —", "Plate 1", "Figure 1 (a-c):" */
-    private static final java.util.regex.Pattern CAPTION_START = java.util.regex.Pattern.compile(
-        "^\\s*(figure|fig\\.?|plate|chart|diagram|illustration|exhibit|photo|image)\\s*"
-        + "([0-9]+|[ivxlc]+)\\s*(\\([^)]*\\))?\\s*[:.\\u2013\\u2014-]",
-        java.util.regex.Pattern.CASE_INSENSITIVE);
-
     /** Caption must start within this many points of the image edge. */
     private static final float MAX_GAP = 46f;
     /** And overlap the image horizontally by at least this fraction of its width. */
@@ -148,7 +142,7 @@ public final class Captions {
         float bestGap = Float.MAX_VALUE;
 
         for (Line line : lines) {
-            if (!CAPTION_START.matcher(line.text()).find()) continue;
+            if (!CaptionPattern.OPENING.matcher(line.text()).find()) continue;
             if (line.box().overlapX(p.box()) < MIN_OVERLAP * p.box().w()) continue;
 
             float gap = line.box().y0() >= p.box().y1()
@@ -172,7 +166,7 @@ public final class Captions {
         for (Line line : lines) {
             if (line == best) continue;
             if (line.box().y0() < best.box().y1()) continue;
-            if (CAPTION_START.matcher(line.text()).find()) continue;
+            if (CaptionPattern.OPENING.matcher(line.text()).find()) continue;
             // Overlap is measured against the SHORTER line, not the caption's
             // first line. A wrapped caption's last line is usually short, and
             // requiring it to cover half the full-width first line dropped it

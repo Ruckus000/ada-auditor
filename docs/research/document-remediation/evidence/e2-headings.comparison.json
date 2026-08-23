@@ -80,15 +80,11 @@
     "document": "03-simple-table",
     "verdict": "NEEDS_REVIEW",
     "ua1": true,
-    "assertions": 1,
+    "assertions": 0,
     "defects": [
       {
         "kind": "omission",
         "msg": "table 1 has 21 data cells and zero /TH — header relationships absent"
-      },
-      {
-        "kind": "assertion",
-        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
       }
     ],
     "structure": {
@@ -99,17 +95,12 @@
       "lang": "en",
       "title": "Depot Throughput by Quarter",
       "headings": [
-        "H1",
-        "H2"
+        "H1"
       ],
       "headingTexts": [
         {
           "level": "H1",
           "text": "Depot Throughput by Quarter"
-        },
-        {
-          "level": "H2",
-          "text": "C o n t a i n e r s h a n d l e d , b y d e p o t a n d q u a r t e r ( h u n d r e d s)"
         }
       ],
       "figures": [],
@@ -541,8 +532,8 @@
   },
   {
     "document": "12-kitchen-sink",
-    "verdict": "NEEDS_REVIEW",
-    "ua1": true,
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
     "assertions": 3,
     "defects": [
       {
@@ -563,7 +554,7 @@
       },
       {
         "kind": "assertion",
-        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\",\"H2\",\"H3\",\"H4\",\"H1\",\"H1\",\"H2\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\",\"H2\",\"H3\",\"H2\"]"
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H2\",\"H2\",\"H2\",\"H4\",\"H1\",\"H1\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\",\"H2\",\"H3\",\"H2\"]"
       }
     ],
     "structure": {
@@ -578,11 +569,9 @@
         "H2",
         "H2",
         "H2",
-        "H3",
         "H4",
         "H1",
         "H1",
-        "H2",
         "H1"
       ],
       "headingTexts": [
@@ -603,10 +592,6 @@
           "text": "Throughput"
         },
         {
-          "level": "H3",
-          "text": "C o n t a i n e r s h a n d l e d , b y d e p o t a n d q u a r t e r ( h u n d r e d s)"
-        },
-        {
           "level": "H4",
           "text": "Quarterly trend by depot"
         },
@@ -617,10 +602,6 @@
         {
           "level": "H1",
           "text": "Site"
-        },
-        {
-          "level": "H2",
-          "text": "Figure 2: The northern apron, which the reduced-footprint option would surrender."
         },
         {
           "level": "H1",
