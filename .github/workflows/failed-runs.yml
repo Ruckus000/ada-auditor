@@ -83,6 +83,72 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # Asks whether the deployment is configured before asking it anything
+      # else, because on 2026-08-23 it was not and this job found out the
+      # expensive way: `AUDITOR_RUN_TOKEN` was set nowhere — not here, not in
+      # Vercel — so the scan below exited on its own guard and filed #85.
+      #
+      # `ready/route.ts` already says "the deploy checklist tells an operator to
+      # look for an empty warnings array". That check existed and was performed
+      # by hand, which is another way of saying it was performed when somebody
+      # remembered. This is the same check on a schedule.
+      #
+      # Unauthenticated on purpose — `/api/ready` takes no `Request` and reads
+      # no header, so this runs even when the very credential it is checking is
+      # the thing that is missing. That is the whole point: a readiness probe
+      # that needed the token could not report the token gone.
+      #
+      # No `--fail`: readiness answers 503 when it is not ready, and the body is
+      # exactly what this step needs to read. curl still exits non-zero for a
+      # network failure, which `set -e` turns into a skipped scan and the meta
+      # issue below.
+      - name: Ask the deployment whether it is configured
+        id: ready
+        run: |
+          set -euo pipefail
+
+          STATUS=$(curl --silent --show-error --max-time 20 \
+            -o ready.json -w '%{http_code}' "${BASE_URL}/api/ready")
+
+          if [ "${STATUS}" != '200' ] && [ "${STATUS}" != '503' ]; then
+            echo "reason=/api/ready answered HTTP ${STATUS}" >> "$GITHUB_OUTPUT"
+            echo "::error::/api/ready answered HTTP ${STATUS}"
+            exit 1
+          fi
+
+          # Deliberately NOT "warnings is empty". `blobConfigured`,
+          # `unlockThrottleDurable` and `sessionSecretDedicated` can each warn on
+          # a deployment that is working, and a check that is permanently red is
+          # one people stop reading — which is how the retention sweep failed
+          # eleven nights into an empty room. Two conditions, both of which mean
+          # production audits are not happening:
+          #
+          #  - `status` is gated on `auditorRunTokenConfigured` and
+          #    `runStoreConfigured`, so not-ready means the machine credential or
+          #    the database is gone. This is the one that fired on 08-23.
+          #  - `cron_secret_not_configured` means Vercel's hourly call carries no
+          #    bearer, `authorized()` in `cron/tick/route.ts` falls through to
+          #    `isRunAuthorized`, and every journey schedule silently never
+          #    fires. Nothing else in this job can see that: it reads *recorded*
+          #    runs, and a tick that never authorized records nothing.
+          READY=$(jq -r '.status' ready.json)
+          NO_CRON=$(jq -r '[.warnings[] | select(startswith("cron_secret_not_configured"))] | length' ready.json)
+
+          if [ "${READY}" != 'ready' ]; then
+            REASON=$(jq -r '[.checks | to_entries[] | select(.value == false) | .key] | join(", ")' ready.json)
+            echo "reason=/api/ready reports ${READY}; failing checks: ${REASON}" >> "$GITHUB_OUTPUT"
+            echo "::error::/api/ready reports ${READY} (failing: ${REASON})"
+            exit 1
+          fi
+
+          if [ "${NO_CRON}" != '0' ]; then
+            echo "reason=CRON_SECRET is not configured, so journey schedules never fire" >> "$GITHUB_OUTPUT"
+            echo "::error::CRON_SECRET is not configured, so journey schedules never fire"
+            exit 1
+          fi
+
+          echo "the deployment reports ready, with a cron secret configured"
+
       # Reads the *returned* status rather than filtering server-side on it,
       # and that is load-bearing. A run whose invocation died is stored
       # `running` and only becomes `failed` when `reconcileRunStatus` sees it on
@@ -157,6 +223,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          # Empty unless readiness itself is what failed. Outputs written before
+          # a step exits non-zero survive it, which is what makes this readable
+          # from the branch that fires precisely because that step failed.
+          READY_CAUSE: ${{ steps.ready.outputs.reason }}
           FAILED_COUNT: ${{ steps.scan.outputs.count }}
           RETURNED: ${{ steps.scan.outputs.returned }}
           SINCE: ${{ steps.scan.outputs.since }}
@@ -176,12 +246,22 @@ jobs:
 
           if [ "${SCAN_OUTCOME}" != "success" ]; then
             TITLE='The failed-run check could not run'
+            # The readiness step runs first and skips the scan when it fails, so
+            # `SCAN_OUTCOME` is "skipped" rather than "failure" in that case and
+            # lands here either way — one branch, as before. What changes is that
+            # `READY_CAUSE` usually knows the answer now, where the line below it
+            # could only ever offer a guess.
+            if [ -n "${READY_CAUSE}" ]; then
+              CAUSE="The deployment said why: ${READY_CAUSE}"
+            else
+              CAUSE='Most likely causes: AUDITOR_RUN_TOKEN was rotated without updating the repository secret, or the deployment moved.'
+            fi
             BODY=$(printf '%s\n' \
               'This job could not ask the deployment which runs failed, so nobody is watching production audits until it is fixed.' \
               '' \
               "Failed run: ${RUN_URL}" \
               '' \
-              'Most likely causes: AUDITOR_RUN_TOKEN was rotated without updating the repository secret, or the deployment moved.')
+              "${CAUSE}")
           elif [ "${TRUNCATED}" = "true" ]; then
             # Titled for the truncation, because not covering the window is the
             # more serious fact — but it carries the failure list too. Folding
