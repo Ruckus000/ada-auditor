@@ -10,8 +10,20 @@ machine-verifiable PDF/UA checks performed by veraPDF?
 
 ## The answer
 
-**Yes, and it is not close.** 15,167 ua1 failures fell to 3, across twelve
-documents, using 97 lines of Java that write four document-catalog entries.
+**The cheap PDF machinery works. The remediation product is unproven.**
+
+Those are two findings and the second is the important one. Leading with the
+first — as an earlier draft of this document did — makes the spike read as a
+success when what it actually produced is a much sharper question.
+
+**Machine validation: yes, and it is not close.** 15,167 ua1 failures fell to 3,
+across twelve documents, using 97 lines of Java that write four
+document-catalog entries.
+
+**Genuine accessibility: no.** Straight-through remediation was 2 of 12. The
+distance between those two results is the whole finding: getting a PDF to pass
+veraPDF turns out to be easy, and getting it to be accessible turns out to be
+the hard part that remains untouched.
 
 **The kill criterion did not fire.** No category C work — no structure-tree
 surgery, no re-parenting, no synthesised header relationships — was required or
@@ -32,6 +44,8 @@ conformance is the product.
 
 **Straight-through remediation was 2 of 12 — 17%** — against a machine pass rate
 of 75%. The gap between those two numbers is the entire finding of this spike.
+
+17% is the product. 75% is a property of the validator.
 
 ## Why not PROCEED
 
