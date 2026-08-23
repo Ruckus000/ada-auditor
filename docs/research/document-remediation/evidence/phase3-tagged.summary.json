@@ -1,0 +1,749 @@
+[
+  {
+    "document": "01-simple-text",
+    "pages": 1,
+    "bytes": 80787,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 11301,
+      "failedChecks": 1038,
+      "wallMs": 723,
+      "rules": [
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "7.2-24",
+          "failed": 1,
+          "description": "Natural language in the Contents entry for annotations shall be determined"
+        },
+        {
+          "id": "7.2-22",
+          "failed": 1,
+          "description": "Natural language for text in Alt attribute shall be determined"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 1034,
+          "description": "Natural language for text in page content shall be determined"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 8854,
+      "failedChecks": 4,
+      "wallMs": 664,
+      "rules": [
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        }
+      ]
+    }
+  },
+  {
+    "document": "02-two-column",
+    "pages": 2,
+    "bytes": 85691,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 13418,
+      "failedChecks": 1259,
+      "wallMs": 684,
+      "rules": [
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 1257,
+          "description": "Natural language for text in page content shall be determined"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 9823,
+      "failedChecks": 4,
+      "wallMs": 674,
+      "rules": [
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        }
+      ]
+    }
+  },
+  {
+    "document": "03-simple-table",
+    "pages": 1,
+    "bytes": 64582,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 4738,
+      "failedChecks": 356,
+      "wallMs": 634,
+      "rules": [
+        {
+          "id": "7.2-34",
+          "failed": 354,
+          "description": "Natural language for text in page content shall be determined"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 5171,
+      "failedChecks": 4,
+      "wallMs": 648,
+      "rules": [
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        }
+      ]
+    }
+  },
+  {
+    "document": "04-difficult-table",
+    "pages": 1,
+    "bytes": 64146,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 5967,
+      "failedChecks": 513,
+      "wallMs": 644,
+      "rules": [
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 511,
+          "description": "Natural language for text in page content shall be determined"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 4734,
+      "failedChecks": 4,
+      "wallMs": 630,
+      "rules": [
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "05-images-captioned",
+    "pages": 2,
+    "bytes": 455002,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 7962,
+      "failedChecks": 736,
+      "wallMs": 654,
+      "rules": [
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "7.2-22",
+          "failed": 4,
+          "description": "Natural language for text in Alt attribute shall be determined"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 730,
+          "description": "Natural language for text in page content shall be determined"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 6034,
+      "failedChecks": 4,
+      "wallMs": 654,
+      "rules": [
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "pages": 2,
+    "bytes": 424062,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 2981,
+      "failedChecks": 254,
+      "wallMs": 650,
+      "rules": [
+        {
+          "id": "7.2-22",
+          "failed": 5,
+          "description": "Natural language for text in Alt attribute shall be determined"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 247,
+          "description": "Natural language for text in page content shall be determined"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 2892,
+      "failedChecks": 4,
+      "wallMs": 678,
+      "rules": [
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        }
+      ]
+    }
+  },
+  {
+    "document": "07-complex-chart",
+    "pages": 1,
+    "bytes": 70730,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 4530,
+      "failedChecks": 378,
+      "wallMs": 679,
+      "rules": [
+        {
+          "id": "7.2-34",
+          "failed": 376,
+          "description": "Natural language for text in page content shall be determined"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 3721,
+      "failedChecks": 4,
+      "wallMs": 677,
+      "rules": [
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        }
+      ]
+    }
+  },
+  {
+    "document": "08-slide-layout",
+    "pages": 1,
+    "bytes": 205284,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 3251,
+      "failedChecks": 301,
+      "wallMs": 671,
+      "rules": [
+        {
+          "id": "7.2-22",
+          "failed": 1,
+          "description": "Natural language for text in Alt attribute shall be determined"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 298,
+          "description": "Natural language for text in page content shall be determined"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 2551,
+      "failedChecks": 4,
+      "wallMs": 681,
+      "rules": [
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "09-scanned",
+    "pages": 1,
+    "bytes": 109841,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 24,
+      "failedChecks": 4,
+      "wallMs": 561,
+      "rules": [
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.2-22",
+          "failed": 1,
+          "description": "Natural language for text in Alt attribute shall be determined"
+        },
+        {
+          "id": "7.1-10",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a ViewerPreferences dictionary containing a DisplayDocTitle key, whose value shall be true"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 82,
+      "failedChecks": 5,
+      "wallMs": 558,
+      "rules": [
+        {
+          "id": "8.11.2-1",
+          "failed": 1,
+          "description": "The ViewerPreferences dictionary of the document catalog dictionary shall be present and shall contain at least the DisplayDocTitle key with a value of true, as described in ISO 32000-2:2020, Table 147"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        }
+      ]
+    }
+  },
+  {
+    "document": "10-metadata-problems",
+    "pages": 1,
+    "bytes": 63343,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 10037,
+      "failedChecks": 943,
+      "wallMs": 714,
+      "rules": [
+        {
+          "id": "7.2-34",
+          "failed": 940,
+          "description": "Natural language for text in page content shall be determined"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "7.1-10",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a ViewerPreferences dictionary containing a DisplayDocTitle key, whose value shall be true"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 7396,
+      "failedChecks": 5,
+      "wallMs": 706,
+      "rules": [
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.11.2-1",
+          "failed": 1,
+          "description": "The ViewerPreferences dictionary of the document catalog dictionary shall be present and shall contain at least the DisplayDocTitle key with a value of true, as described in ISO 32000-2:2020, Table 147"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "pages": 1,
+    "bytes": 79171,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 9181,
+      "failedChecks": 887,
+      "wallMs": 678,
+      "rules": [
+        {
+          "id": "7.2-24",
+          "failed": 2,
+          "description": "Natural language in the Contents entry for annotations shall be determined"
+        },
+        {
+          "id": "7.1-10",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a ViewerPreferences dictionary containing a DisplayDocTitle key, whose value shall be true"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 878,
+          "description": "Natural language for text in page content shall be determined"
+        },
+        {
+          "id": "7.2-22",
+          "failed": 4,
+          "description": "Natural language for text in Alt attribute shall be determined"
+        },
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 6809,
+      "failedChecks": 5,
+      "wallMs": 657,
+      "rules": [
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        },
+        {
+          "id": "8.11.2-1",
+          "failed": 1,
+          "description": "The ViewerPreferences dictionary of the document catalog dictionary shall be present and shall contain at least the DisplayDocTitle key with a value of true, as described in ISO 32000-2:2020, Table 147"
+        }
+      ]
+    }
+  },
+  {
+    "document": "12-kitchen-sink",
+    "pages": 6,
+    "bytes": 582518,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 13969,
+      "failedChecks": 836,
+      "wallMs": 733,
+      "rules": [
+        {
+          "id": "7.1-8",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-1:2008, 14.3.2. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "7.2-34",
+          "failed": 824,
+          "description": "Natural language for text in page content shall be determined"
+        },
+        {
+          "id": "7.2-22",
+          "failed": 7,
+          "description": "Natural language for text in Alt attribute shall be determined"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "7.2-24",
+          "failed": 3,
+          "description": "Natural language in the Contents entry for annotations shall be determined"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 15470,
+      "failedChecks": 4,
+      "wallMs": 717,
+      "rules": [
+        {
+          "id": "8.11.1-2",
+          "failed": 1,
+          "description": "The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as defined in ISO 32000-2:2020, 14.3. The metadata stream dictionary shall contain entry Type with value /Metadata and entry Subtype with value /XML"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "6.2-1",
+          "failed": 1,
+          "description": "The document catalog dictionary shall include a MarkInfo dictionary containing an entry, Marked, whose value shall be true"
+        },
+        {
+          "id": "8.4.4-1",
+          "failed": 1,
+          "description": "The default natural language for content and text strings shall be specified using the Lang entry, with a non-empty value, in the catalog dictionary"
+        }
+      ]
+    }
+  }
+]
