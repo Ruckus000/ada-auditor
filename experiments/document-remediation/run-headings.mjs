@@ -20,7 +20,8 @@ for (const f of readdirSync(IN).filter((x) => x.endsWith('.pdf')).sort()) {
   rows.push({ document: name, error, ...report });
   const r = rows.at(-1);
   console.log(name.padEnd(30), error ? `ERROR ${error}`
-    : `headings=${String(r.headings).padStart(2)} demoted(length)=${r.demotedLength} demoted(noLetters)=${r.demotedNoLetters} kept=${r.kept}`);
+    : `headings=${String(r.headings).padStart(2)} length=${r.demotedLength} noLetters=${r.demotedNoLetters} pageMarker=${r.demotedPageMarker} kept=${r.kept}`);
 }
 writeFileSync(join(OUT, 'run.json'), JSON.stringify(rows, null, 2));
-console.log(`\ndemoted: ${rows.reduce((a, r) => a + (r.demotedLength ?? 0) + (r.demotedNoLetters ?? 0), 0)}`);
+const total = rows.reduce((a, r) => a + (r.demotedLength ?? 0) + (r.demotedNoLetters ?? 0) + (r.demotedPageMarker ?? 0), 0);
+console.log(`\ndemoted: ${total}`);

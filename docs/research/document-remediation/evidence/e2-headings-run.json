@@ -5,6 +5,7 @@
     "headings": 5,
     "demotedLength": 0,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 5
   },
   {
@@ -13,7 +14,8 @@
     "headings": 3,
     "demotedLength": 0,
     "demotedNoLetters": 0,
-    "kept": 3
+    "demotedPageMarker": 1,
+    "kept": 2
   },
   {
     "document": "03-simple-table",
@@ -21,6 +23,7 @@
     "headings": 2,
     "demotedLength": 0,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 2
   },
   {
@@ -29,6 +32,7 @@
     "headings": 1,
     "demotedLength": 0,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 1
   },
   {
@@ -37,6 +41,7 @@
     "headings": 5,
     "demotedLength": 3,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 2
   },
   {
@@ -45,6 +50,7 @@
     "headings": 1,
     "demotedLength": 0,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 1
   },
   {
@@ -53,6 +59,7 @@
     "headings": 3,
     "demotedLength": 1,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 2
   },
   {
@@ -61,6 +68,7 @@
     "headings": 4,
     "demotedLength": 0,
     "demotedNoLetters": 3,
+    "demotedPageMarker": 0,
     "kept": 1
   },
   {
@@ -69,6 +77,7 @@
     "headings": 0,
     "demotedLength": 0,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 0
   },
   {
@@ -77,6 +86,7 @@
     "headings": 4,
     "demotedLength": 0,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 4
   },
   {
@@ -85,6 +95,7 @@
     "headings": 4,
     "demotedLength": 0,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 4
   },
   {
@@ -93,6 +104,7 @@
     "headings": 11,
     "demotedLength": 1,
     "demotedNoLetters": 0,
+    "demotedPageMarker": 0,
     "kept": 10
   }
 ]

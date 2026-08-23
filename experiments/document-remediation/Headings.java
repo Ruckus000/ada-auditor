@@ -30,6 +30,13 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
  *   R2 NO LETTERS. Document 08's slide numerals "1", "2", "3" each became an
  *      H1. A heading with no letter in it is an ornament.
  *
+ *   R3 PAGE MARKER. Document 02's running footer became an H3. This is a text
+ *      rule rather than page-furniture detection on purpose: the occurrence is
+ *      singular in the development corpus, it appears on one page only so
+ *      cross-page repetition cannot see it, and it sits at the top of page 2
+ *      where a legitimate H1 also lives — so a margin-band rule would be
+ *      actively unsafe. Geometry here would be a subsystem built for one case.
+ *
  * Usage: Headings <in.pdf> <out.pdf>
  */
 public final class Headings {
@@ -46,6 +53,17 @@ public final class Headings {
     // truth was deliberately not consulted when choosing this.
     private static final int MAX_DENSE_CHARS = 80;
 
+    /**
+     * R3 PAGE MARKER. "Page 3", "Page 1 of 1", "2 of 7" — a heading carrying one
+     * is a running header or footer.
+     *
+     * Matched on the whitespace-stripped text for the same reason as R1. A real
+     * heading containing the word "Page" without a digit beside it ("Page
+     * Layout") does not match, and a bare digit is already covered by R2.
+     */
+    private static final java.util.regex.Pattern PAGE_MARKER =
+        java.util.regex.Pattern.compile("page\\d|\\d+of\\d+", java.util.regex.Pattern.CASE_INSENSITIVE);
+
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
             System.err.println("usage: Headings <in.pdf> <out.pdf>");
@@ -54,7 +72,7 @@ public final class Headings {
 
         try (PDDocument doc = Loader.loadPDF(new File(args[0]))) {
             PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
-            int headings = 0, byLength = 0, byNoLetters = 0;
+            int headings = 0, byLength = 0, byNoLetters = 0, byPageMarker = 0;
 
             if (root != null) {
                 StructText text = new StructText(doc);
@@ -74,12 +92,15 @@ public final class Headings {
 
                     if (tooLong) { el.setStructureType("P"); byLength++; }
                     else if (noLetters) { el.setStructureType("P"); byNoLetters++; }
+                    else if (PAGE_MARKER.matcher(dense).find()) { el.setStructureType("P"); byPageMarker++; }
                 }
             }
 
             doc.save(args[1]);
-            System.out.printf("{\"headings\":%d,\"demotedLength\":%d,\"demotedNoLetters\":%d,\"kept\":%d}%n",
-                headings, byLength, byNoLetters, headings - byLength - byNoLetters);
+            System.out.printf(
+                "{\"headings\":%d,\"demotedLength\":%d,\"demotedNoLetters\":%d,\"demotedPageMarker\":%d,\"kept\":%d}%n",
+                headings, byLength, byNoLetters, byPageMarker,
+                headings - byLength - byNoLetters - byPageMarker);
         }
     }
 }

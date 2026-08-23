@@ -47,15 +47,10 @@
   },
   {
     "document": "02-two-column",
-    "verdict": "NEEDS_REVIEW",
+    "verdict": "DELIVERABLE",
     "ua1": true,
-    "assertions": 1,
-    "defects": [
-      {
-        "kind": "assertion",
-        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H3\"], ground truth [\"H1\",\"H2\"]"
-      }
-    ],
+    "assertions": 0,
+    "defects": [],
     "structure": {
       "hasStructTree": true,
       "structureElements": 12,
@@ -65,8 +60,7 @@
       "title": "Coastal Depot Review",
       "headings": [
         "H1",
-        "H2",
-        "H3"
+        "H2"
       ],
       "headingTexts": [
         {
@@ -76,10 +70,6 @@
         {
           "level": "H2",
           "text": "Fi n a n c i a l p o si t i o n"
-        },
-        {
-          "level": "H3",
-          "text": "N o r t h w in d L o g is t ic s · C o a s t a l D e p o t R e v ie w · P a g e 1 o f 1"
         }
       ],
       "figures": [],
