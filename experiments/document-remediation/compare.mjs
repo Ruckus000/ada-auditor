@@ -29,6 +29,26 @@ const validation = Object.fromEntries(
 const PLACEHOLDER = /^\s*(image|figure|picture|graphic)\s*\d*\s*$/i;
 const STOP = new Set(['the','a','an','of','at','in','on','and','or','is','are','to','from','which','that','with','its','it','as','by','for','was','were','be','this','their']);
 
+/**
+ * Header names ground truth records for a table, from whichever shape it used:
+ * a two-dimensional headerStructure, a flat columnHeaders list, or rowHeaders.
+ * Annotations like "Depot (rowspan 2)" carry the name plus a note; keep the name.
+ */
+function expectedHeaders(g) {
+  const out = [];
+  for (const row of Object.values(g.headerStructure ?? {})) {
+    if (Array.isArray(row)) out.push(...row);
+  }
+  if (Array.isArray(g.columnHeaders)) out.push(...g.columnHeaders);
+  // rowHeaders is sometimes prose ("registration column, 60 values ...") rather
+  // than a list. Only a list names cells.
+  if (Array.isArray(g.rowHeaders)) out.push(...g.rowHeaders);
+  return out.map((h) => String(h).replace(/\s*\([^)]*\)\s*/g, ' '));
+}
+
+/** Comparable form: extraction yields glyph-spaced text, so drop everything but letters and digits. */
+const norm = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
 const significant = (s) =>
   new Set((s ?? '').toLowerCase().match(/[a-z]{3,}/g)?.filter((w) => !STOP.has(w)) ?? []);
 
@@ -106,8 +126,28 @@ function defectsFor(gt, s) {
     omit(`${gtTables.length} table(s) in ground truth, ${s.tables.length} detected`);
   }
   for (const [i, t] of s.tables.entries()) {
-    if (gtTables[i] && t.th === 0) {
+    const g = gtTables[i];
+    if (!g) continue;
+    if (t.th === 0) {
       omit(`table ${i + 1} has ${t.td} data cells and zero /TH — header relationships absent`);
+      continue;
+    }
+    // Counting headers is not checking them. "zero /TH" was the only table
+    // test here, so a pass that marked EVERY cell a header would have cleared
+    // the omission and scored no assertion at all — the fix and the measurement
+    // would both have looked good while the document got worse. Compare the
+    // promoted cells against the headers ground truth actually names.
+    const want = new Set(expectedHeaders(g).map(norm).filter(Boolean));
+    if (!want.size) continue;
+    const got = t.thTexts.map(norm).filter(Boolean);
+
+    const invented = got.filter((x) => !want.has(x));
+    if (invented.length) {
+      assert_(`table ${i + 1}: ${invented.length} cell(s) promoted to /TH that ground truth does not name as headers`);
+    }
+    const missing = [...want].filter((x) => !got.includes(x));
+    if (missing.length) {
+      omit(`table ${i + 1}: ${missing.length} ground-truth header(s) not promoted to /TH`);
     }
   }
   // A layout table must NOT become a data table.

@@ -99,7 +99,19 @@
         "Southern",
         "Coastal"
       ],
-      "blankCells": 0
+      "blankCells": 0,
+      "headerStructure": {
+        "row1": [
+          "Depot (rowspan 2)",
+          "Review period (colspan 4, group header)"
+        ],
+        "row2": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ]
+      }
     },
     {
       "name": "fleet utilisation",
@@ -130,7 +142,21 @@
         "Shunter"
       ],
       "blankCells": 2,
-      "blankCellMeaning": "not operated at that depot; not zero"
+      "blankCellMeaning": "not operated at that depot; not zero",
+      "headerStructure": {
+        "row1": [
+          "Vehicle class (rowspan 2)",
+          "Northern (colspan 2)",
+          "Coastal (colspan 2)",
+          "Notes (rowspan 2)"
+        ],
+        "row2": [
+          "Units",
+          "Util. %",
+          "Units",
+          "Util. %"
+        ]
+      }
     }
   ],
   "figures": [
@@ -206,5 +232,14 @@
     "borderless table with blank cells",
     "logo repeats five times"
   ],
-  "pagesNote": "Measured, not estimated: cover plus five content pages. The page-3 entries in headingHierarchy refer to content page numbering as printed in the footers, which lags the physical page index by one."
+  "pagesNote": "Measured, not estimated: cover plus five content pages. The page-3 entries in headingHierarchy refer to content page numbering as printed in the footers, which lags the physical page index by one.",
+  "groundTruthCorrections": [
+    {
+      "date": "2026-08-23",
+      "field": "tables[].headerStructure",
+      "reason": "Both tables declared mergedCells and rowHeaders but no headerStructure, so their column headers were never named. The throughput table is the same table as 03-simple-table's, where headerStructure IS declared \u2014 an inconsistency in the original fixture, not a change of intent.",
+      "found": "A strengthened comparator check (TH contents vs ground truth, not just TH count) reported 6 cells 'promoted to /TH that ground truth does not name'. Those 6 were the legitimate column headers. The remediation was correct; the fixture was incomplete.",
+      "effect": "Adds the header names already implied by mergedCells and by the document's own HTML. No expectation was weakened or altered to accommodate a result."
+    }
+  ]
 }

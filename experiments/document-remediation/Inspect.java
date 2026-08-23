@@ -31,7 +31,21 @@ public final class Inspect {
 
     private final List<String[]> headings = new ArrayList<>();  // {type, text}
     private final List<String[]> figures = new ArrayList<>();   // {type, alt, actualText}
-    private final List<int[]> tables = new ArrayList<>();       // {th, td, tr}
+    /**
+     * Per table: cell counts, and the TEXT of every cell promoted to TH.
+     *
+     * Counts alone cannot catch a bad header pass. A tool that marked every
+     * cell TH would clear the "zero /TH" omission and look like a fix, because
+     * nothing was checking WHICH cells became headers. The texts are what let
+     * the comparator verify promotions against ground truth instead of trusting
+     * that some header is better than none.
+     */
+    private static final class Tbl {
+        int th, td, tr;
+        final List<String> thTexts = new ArrayList<>();
+    }
+
+    private final List<Tbl> tables = new ArrayList<>();
     private Map<String, Object> roleMap;
     private int elements = 0;
     /** Shared with Headings, so the tool that measures and the tool that acts
@@ -95,13 +109,18 @@ public final class Inspect {
 
             json.append("  \"tables\": [");
             for (int i = 0; i < tables.size(); i++) {
-                int[] t = tables.get(i);
-                json.append(i > 0 ? ", " : "")
-                    .append("{\"th\": ").append(t[0])
-                    .append(", \"td\": ").append(t[1])
-                    .append(", \"tr\": ").append(t[2]).append("}");
+                Tbl t = tables.get(i);
+                json.append(i > 0 ? ",\n    " : "\n    ")
+                    .append("{\"th\": ").append(t.th)
+                    .append(", \"td\": ").append(t.td)
+                    .append(", \"tr\": ").append(t.tr)
+                    .append(", \"thTexts\": [");
+                for (int k = 0; k < t.thTexts.size(); k++) {
+                    json.append(k > 0 ? ", " : "").append(q(t.thTexts.get(k)));
+                }
+                json.append("]}");
             }
-            json.append("]\n}");
+            json.append("\n  ]\n}");
 
             System.out.println(json);
         }
@@ -117,13 +136,13 @@ public final class Inspect {
         return type;
     }
 
-    private void walk(PDStructureNode node, int[] enclosingTable) {
+    private void walk(PDStructureNode node, Tbl enclosingTable) {
         for (Object kid : node.getKids()) {
             if (!(kid instanceof PDStructureElement el)) continue;
             elements++;
 
             String type = standard(el.getStructureType());
-            int[] table = enclosingTable;
+            Tbl table = enclosingTable;
 
             if (HEADINGS.contains(type)) {
                 // Text matters as much as level: knowing a document has one
@@ -134,16 +153,16 @@ public final class Inspect {
                     type, el.getAlternateDescription(), el.getActualText(),
                 });
             } else if ("Table".equals(type)) {
-                table = new int[] { 0, 0, 0 };
+                table = new Tbl();
                 tables.add(table);
             }
 
             // Counted against the nearest enclosing Table so a document with two
             // tables does not pool its header cells into one score.
             if (table != null) {
-                if ("TH".equals(type)) table[0]++;
-                else if ("TD".equals(type)) table[1]++;
-                else if ("TR".equals(type)) table[2]++;
+                if ("TH".equals(type)) { table.th++; table.thTexts.add(text.of(el)); }
+                else if ("TD".equals(type)) table.td++;
+                else if ("TR".equals(type)) table.tr++;
             }
 
             walk(el, table);
