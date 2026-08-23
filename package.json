@@ -44,6 +44,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@opendataloader/pdf": "^2.5.0",
     "@types/node": "^26.1.2",
     "@types/picomatch": "^4.0.3",
     "@types/react": "^19.2.17",
