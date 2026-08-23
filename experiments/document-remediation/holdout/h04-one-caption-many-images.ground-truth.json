@@ -1,0 +1,19 @@
+{
+  "document": "h04-one-caption-many-images",
+  "tests": "One caption governing three images in a row, followed by a separate single-image figure.",
+  "attacks": "Nearest-caption association. Three images share one caption; binding it to each individually asserts the same description for three different views, and binding it to only the nearest leaves two undescribed.",
+  "title": "Apron Survey Panels",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Apron Survey Panels" }],
+  "readingOrder": ["H1","intro","three-panel group","group caption","bridging paragraph","Figure 2 image","Figure 2 caption"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "grouped panels (3 images)", "captionPresent": true, "grouped": true, "imageCount": 3,
+      "caption": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 m only.",
+      "correctTreatment": "One Figure element covering the group, or three sharing the group caption with sub-identification. Three identical independent descriptions is wrong." },
+    { "id": "photo-depot.png solo", "captionPresent": true,
+      "caption": "Figure 2: The drainage channel at the apron's northern edge." }
+  ],
+  "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["one caption for three images", "a fourth image that must not absorb the group caption"]
+}

@@ -9,7 +9,7 @@
 // the ground truth authored before any tool touched the file.
 //
 // Usage: node compare.mjs <pdfDir> <phase5SummaryJson>
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
 
@@ -142,7 +142,8 @@ function defectsFor(gt, s) {
 const rows = [];
 for (const f of readdirSync(pdfDir).filter((x) => x.endsWith('.pdf')).sort()) {
   const name = basename(f, '.pdf');
-  const gt = JSON.parse(readFileSync(join('corpus', `${name}.ground-truth.json`)));
+  const gtDir = existsSync(join('corpus', `${name}.ground-truth.json`)) ? 'corpus' : 'holdout';
+  const gt = JSON.parse(readFileSync(join(gtDir, `${name}.ground-truth.json`)));
   const s = inspect(join(pdfDir, f));
   const defects = defectsFor(gt, s);
   const compliant = validation[name]?.ua1?.compliant ?? false;
@@ -155,7 +156,7 @@ for (const f of readdirSync(pdfDir).filter((x) => x.endsWith('.pdf')).sort()) {
   for (const x of defects) console.log(`    ${x.kind === ASSERTION ? '!' : '-'} ${x.msg}`);
 }
 
-writeFileSync('out/comparison.json', JSON.stringify(rows, null, 2));
+writeFileSync(process.env.COMPARISON_OUT ?? 'out/comparison.json', JSON.stringify(rows, null, 2));
 
 const n = rows.length;
 const c = (v) => rows.filter((r) => r.verdict === v).length;

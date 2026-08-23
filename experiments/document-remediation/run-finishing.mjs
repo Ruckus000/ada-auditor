@@ -9,9 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
 
 const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
-const IN = 'out/phase3-tagged';
-const OUT = 'out/phase4-finished';
-const LANG = 'en';
+const [IN = 'out/phase3-tagged', OUT = 'out/phase4-finished', LANG = 'en'] = process.argv.slice(2);
 
 mkdirSync(OUT, { recursive: true });
 const files = readdirSync(IN).filter((f) => f.endsWith('.pdf')).sort();

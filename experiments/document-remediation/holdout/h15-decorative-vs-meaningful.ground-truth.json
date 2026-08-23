@@ -1,0 +1,24 @@
+{
+  "document": "h15-decorative-vs-meaningful",
+  "tests": "A large prominent decorative band that carries nothing, and a small icon-sized image that carries the document's entire subject.",
+  "attacks": "Size-based decorative classification, in both directions. Large-is-meaningful describes the band; small-is-decorative discards the mark. Either is an assertion failure — the first invents content, the second silently drops the only copy of the document's subject.",
+  "title": "Signage Standard",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Signage Standard" },
+    { "level": 2, "text": "Approved mark" }, { "level": 2, "text": "Prohibited variations" }
+  ],
+  "readingOrder": ["H1","decorative band","note","H2 Approved mark","the mark","note","H2 Prohibited variations","para","decorative band"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "logo-northwind.png", "captionPresent": false, "meaningful": true, "size": "24mm, icon-sized",
+      "note": "Small but load-bearing. The adjacent note is a legitimate extraction source: 'the approved mark itself'." }
+  ],
+  "decorativeGraphics": [
+    { "id": "rule-divider.png", "occurrences": 2, "size": "full width, 26mm tall",
+      "expectedHandling": "Artifact. Large and prominent, and still carries nothing." }
+  ],
+  "expectedFigureCount": 1,
+  "links": [], "artifacts": ["both decorative bands"],
+  "intentionalProblems": ["size and significance are inversely related"]
+}

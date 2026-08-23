@@ -1,0 +1,620 @@
+[
+  {
+    "document": "h01-big-text-not-heading",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H1\",\"H1\",\"H1\",\"H2\",\"H3\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 704,
+      "pages": 1,
+      "lang": "en",
+      "title": "Tariff Schedule 2026",
+      "headings": [
+        "H1",
+        "H1",
+        "H1",
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h02-headings-look-like-body",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H3\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 7,
+      "textChars": 853,
+      "pages": 1,
+      "lang": "en",
+      "title": "Berth Allocation Procedure",
+      "headings": [],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h03-captions-above",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 3,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Plate 1: Rail wear on the seaward leg, measured at 4.2 mm ag...\""
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Plate 2: The landward leg at the same inspection, showing we...\""
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 533,
+      "pages": 1,
+      "lang": "en",
+      "title": "Crane Inspection Record",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h04-one-caption-many-images",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 6,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 4\" presented as a description"
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120...\""
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 2: The drainage channel at the apron's northern edge....\""
+      },
+      {
+        "kind": "assertion",
+        "msg": "4 Figure elements for 2 expected (2 meaningful + 0 distinct repeated) — 2 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 398,
+      "pages": 1,
+      "lang": "en",
+      "title": "Apron Survey Panels",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 4",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h05-logo-moves",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 5,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 4\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "4 Figure elements for 1 expected (0 meaningful + 1 distinct repeated) — 3 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 405,
+      "pages": 3,
+      "lang": "en",
+      "title": "Quarterly Circular",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 4",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h06-mixed-table-borders",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "3 table(s) in ground truth, 1 detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 1 has 9 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 31,
+      "textChars": 360,
+      "pages": 1,
+      "lang": "en",
+      "title": "Depot Cost Comparison",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 9,
+          "tr": 3
+        }
+      ]
+    }
+  },
+  {
+    "document": "h07-three-level-headers",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "table 1 has 42 data cells and zero /TH — header relationships absent"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 94,
+      "textChars": 364,
+      "pages": 1,
+      "lang": "en",
+      "title": "Consolidated Movements",
+      "headings": [
+        "H1"
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 42,
+          "tr": 6
+        }
+      ]
+    }
+  },
+  {
+    "document": "h08-table-spans-pages",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "table 1 has 116 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 564,
+      "textChars": 2027,
+      "pages": 3,
+      "lang": "en",
+      "title": "Vehicle Register",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 116,
+          "tr": 29
+        },
+        {
+          "th": 0,
+          "td": 132,
+          "tr": 33
+        }
+      ]
+    }
+  },
+  {
+    "document": "h09-three-column",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 767,
+      "pages": 1,
+      "lang": "en",
+      "title": "Port Bulletin",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h10-sidebar-callouts",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 978,
+      "pages": 1,
+      "lang": "en",
+      "title": "Storage Policy",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h11-chart-labels-as-headings",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 390,
+      "pages": 1,
+      "lang": "en",
+      "title": "Utilisation Dashboard",
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H2"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h12-visible-title-no-metadata",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 8,
+      "textChars": 480,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H1"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h13-first-big-text-not-title",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H2\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 445,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h14-mixed-scan",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 9,
+      "textChars": 605,
+      "pages": 3,
+      "lang": "en",
+      "title": "Lease File Bundle",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h15-decorative-vs-meaningful",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 4,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "3 Figure elements for 1 expected (1 meaningful + 0 distinct repeated) — 2 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 462,
+      "pages": 1,
+      "lang": "en",
+      "title": "Signage Standard",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h16-inconsistent-hierarchy",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H2\",\"H3\",\"H4\",\"H2\",\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H3\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 15,
+      "textChars": 755,
+      "pages": 1,
+      "lang": "en",
+      "title": "Operations Manual Extract",
+      "headings": [
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H2",
+        "H1",
+        "H2"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  }
+]

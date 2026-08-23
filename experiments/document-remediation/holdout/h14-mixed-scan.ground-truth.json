@@ -1,0 +1,26 @@
+{
+  "document": "h14-mixed-scan",
+  "tests": "A three-page bundle where pages 1 and 3 have a text layer and page 2 is a scanned image with none.",
+  "attacks": "Whole-document OCR decisions. A pipeline that asks 'is this document scanned?' gets the wrong answer either way: skip OCR and page 2 is lost, force OCR and pages 1 and 3 get re-recognised text over a perfectly good text layer — which replaces correct characters with OCR guesses and is an assertion failure.",
+  "generation": "Pages 1 and 3 render natively from h14-mixed-scan.html; page 2 renders from h14-mixed-scan.scan.html to PNG, becomes a one-page PDF via `pdfbox fromimage`, and the three are assembled with `pdfbox split` and `pdfbox merge`.",
+  "title": "Lease File Bundle",
+  "language": "en",
+  "pages": 3,
+  "pageTextLayer": { "1": true, "2": false, "3": true },
+  "headingHierarchy": [
+    { "level": 1, "text": "Lease File Bundle", "page": 1 },
+    { "level": 2, "text": "Contents", "page": 1 },
+    { "level": 2, "text": "Response of 19 August", "page": 3 }
+  ],
+  "headingHierarchyNote": "Page 2's 'PORT AUTHORITY · WESTERN QUAY' is visually a heading but is inside the scan. It only becomes recoverable after OCR, and is excluded from the expected sequence above because a non-OCR run cannot be faulted for missing it.",
+  "readingOrder": ["p1 H1","p1 intro","p1 H2 Contents","p1 para","p2 scanned letter","p3 H2 Response of 19 August","p3 two paras"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "page 2 full-page scan", "page": 2, "meaningful": true,
+      "expectedHandling": "OCR to a text layer, then normal tagging. Describing the page as a figure with alt text is wrong — it is a page of text, not an image of a thing." }
+  ],
+  "decorativeGraphics": [],
+  "expectedOutcome": "Correct results are OCR applied to page 2 only, or NEEDS_REVIEW naming page 2 as un-recovered. Applying OCR to pages 1 and 3 is an assertion failure even if the recognised text happens to be close.",
+  "links": [], "artifacts": [],
+  "intentionalProblems": ["mixed text-layer and image-only pages in one document"]
+}

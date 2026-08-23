@@ -12,10 +12,24 @@ vision model, no frontier API?
 
 The deterministic system has to fail before AI earns a place in the pipeline.
 
-## Gate
+## Gates — two, and the first is the important one
 
-**≥80% of the deterministically reachable subset, with zero semantic false
-positives anywhere.**
+**1. Zero false assertions on the holdout. Hard failure.**
+
+A *false assertion* is the pipeline stating something that contradicts ground
+truth: placeholder alt text presented as a description, a decorative graphic
+described as content, an invented heading, a caption bound to the wrong figure,
+TH on a cell that is not a header, OCR text laid over a page that already had a
+correct text layer.
+
+It is distinct from an *omission* — no alt, no heading, no TH. Omissions are
+honest and a human sees the gap. Assertions mislead, and they look like success:
+"image 1" fills the Alt slot, satisfies veraPDF, and leaves a reviewer no signal.
+
+`compare.mjs` separates the two and exits non-zero on any assertion. **A lower
+delivery rate with zero false assertions beats a higher one with any.**
+
+**2. ≥80% of the deterministically reachable subset.**
 
 Expressed against the reachable subset rather than the whole corpus, because
 the corpus has a ceiling. Four of the twelve development documents — 06, 08, 10,
@@ -72,10 +86,21 @@ types it.
 3. **Borderless table detection** via `tableMethod: cluster`.
 4. **OCR** via the self-hosted hybrid server (`opendataloader-pdf[hybrid]`).
    Costs and infrastructure to be recorded — it is a second service.
-5. **Missing-title policy.** Not a technique but a decision: three documents fail
-   only on `dc:title`. A client-supplied title is category A. Deriving one from
-   the largest text on page 1 is inference and needs a decision before it is
-   built.
+5. **Heading inference.** Promoted to a first-class technique on evidence rather
+   than intuition: headings independently block documents that have no figures
+   and no tables at all. It is also the largest single source of false
+   assertions after placeholder alt text — 6 on the development corpus, and on
+   the holdout it is the dominant failure.
+   Both directions must be handled. h01 has four large non-headings; h02 has
+   five headings at body size and weight. A size threshold that fixes one breaks
+   the other.
+
+6. **Missing-title policy.** A client-supplied title is category A. Deriving one
+   from page content is inference, and the holdout pins the boundary: **h12 has
+   an unambiguous visible title that extraction should recover; h13's largest
+   text is a DRAFT watermark and its second largest a classification marking.**
+   A largest-text-wins rule passes h12 and titles h13 "DRAFT", which is a false
+   assertion. Either solve the pair or decline both and report NEEDS_REVIEW.
 
 ## Tuning rule — changed from Experiment 1
 
@@ -94,14 +119,44 @@ Three corpora, and the ordering is what makes the middle one mean anything.
 | Corpus | Role |
 |---|---|
 | **Development** — the existing 12 | Discover problems, choose configuration. **Not modified to accommodate fixes.** |
-| **Synthetic holdout** — 10–20 new | Did it generalise? |
+| **Synthetic holdout** — 16, frozen and committed | Did it generalise? |
 | **Real-world** — later | Does it survive contact with reality? Not in this experiment. |
 
 **The holdout is generated and committed before any remediation code is
 written, and is not inspected during tuning.** Per-document failures on it are
-not looked at; it runs once, at the end, and only the aggregate is reported.
-Without that rule the holdout quietly becomes a second development corpus —
-particularly since the same person authors it and writes the fixes.
+not looked at; it runs at predefined checkpoints only — the baseline below, and
+one final evaluation — and only the aggregate is reported. Without that rule the
+holdout quietly becomes a second development corpus, particularly since the same
+party authors it and writes the fixes.
+
+Documents and ground truth are not altered after seeing results unless a fixture
+is demonstrably wrong, and any such correction is documented explicitly.
+
+### Baselines, both recorded before any remediation
+
+| | Development (12) | Holdout (16) |
+|---|---|---|
+| DELIVERABLE | 1 — 8% | **2 — 13%** |
+| NEEDS_REVIEW | 8 | 12 |
+| INCONCLUSIVE | 3 | 2 |
+| **False assertions** | **26 across 9/12** | **25 across 11/16** |
+| Omissions | 14 | 12 |
+
+The holdout is doing its job. Two findings from the baseline worth carrying
+forward:
+
+- **Reading order is a strength, not a gap.** h09 (three columns plus a spanning
+  banner) and h10 (three sidebars beside a main column) are the only two
+  DELIVERABLE documents, both clean. XY-Cut++ handles layouts harder than
+  anything in the development corpus.
+- **Heading detection fails in both directions on adjacent documents.** h01
+  yields `["H1","H1","H1","H1","H2","H3"]` against a ground truth of
+  `["H1","H2","H2"]`; h02 yields `[]` against five real headings. Any single
+  threshold satisfies at most one of them.
+
+Corpus design detail in
+[`experiments/document-remediation/holdout/README.md`](../../../experiments/document-remediation/holdout/README.md),
+which is canonical.
 
 ## Non-goals
 

@@ -12,8 +12,9 @@ import { convert } from '@opendataloader/pdf';
 import { readdirSync, mkdirSync, writeFileSync, statSync, renameSync, existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
-const IN = 'out/corpus';
-const OUT = 'out/phase3-tagged';
+// Two callers now — development corpus and holdout — so the directories are
+// arguments rather than a second copy of the file.
+const [IN = 'out/corpus', OUT = 'out/phase3-tagged'] = process.argv.slice(2);
 mkdirSync(OUT, { recursive: true });
 
 const files = readdirSync(IN).filter((f) => f.endsWith('.pdf')).sort();

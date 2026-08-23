@@ -1,0 +1,25 @@
+{
+  "document": "h11-chart-labels-as-headings",
+  "tests": "A chart whose title, subtitle and axis labels are set larger and bolder than the document's own H2 headings.",
+  "attacks": "Heading detection by relative font size. The chart title at 17px bold is larger than the real H2s. Promoting it produces four invented headings and simultaneously strips the chart of its own title.",
+  "title": "Utilisation Dashboard",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Utilisation Dashboard" },
+    { "level": 2, "text": "Berth occupancy" },
+    { "level": 2, "text": "Next review" }
+  ],
+  "mustNotBeHeadings": ["Berth Occupancy by Month","Western quay, 2026","Occupancy %","Month of year"],
+  "readingOrder": ["H1","H2 Berth occupancy","para","chart","description para","H2 Next review","para"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "inline SVG bar chart", "captionPresent": false,
+      "chartTitle": "Berth Occupancy by Month", "chartSubtitle": "Western quay, 2026",
+      "axes": { "x": "Month of year (Jan-Jun)", "y": "Occupancy %" },
+      "values": { "Jan": 48, "Feb": 58, "Mar": 66, "Apr": 75, "May": 69, "Jun": 80 },
+      "adjacentProse": "Occupancy rose from 48% in January to 80% in June, with a dip in May.",
+      "correctTreatment": "One Figure whose description draws on the chart title and the adjacent prose. Its internal labels belong to the figure and must not surface as document structure." }
+  ],
+  "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["chart internals larger than real headings","chart title would be lost if promoted to a heading"]
+}

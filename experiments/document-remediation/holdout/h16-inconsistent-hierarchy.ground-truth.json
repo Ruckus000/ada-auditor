@@ -1,0 +1,24 @@
+{
+  "document": "h16-inconsistent-hierarchy",
+  "tests": "Four level-2 headings styled four different ways — one larger than expected, one set at body size in uppercase — and two level-3 headings styled differently from each other.",
+  "attacks": "Level assignment by clustering on font size. 'Storage' and 'Records' are body-sized, so a size clusterer demotes them below their own subsections. 'Receiving' and 'Dispatch' at 15pt may be promoted toward H1. The result is a hierarchy that is internally inconsistent rather than merely wrong.",
+  "title": "Operations Manual Extract",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Operations Manual Extract" },
+    { "level": 2, "text": "Receiving", "styledAs": "15pt bold" },
+    { "level": 3, "text": "Discrepancies", "styledAs": "12.5pt italic" },
+    { "level": 2, "text": "Storage", "styledAs": "10.5pt bold uppercase — body size" },
+    { "level": 3, "text": "Segregation", "styledAs": "12.5pt bold coloured" },
+    { "level": 2, "text": "Dispatch", "styledAs": "15pt bold" },
+    { "level": 2, "text": "Records", "styledAs": "10.5pt bold uppercase — body size" }
+  ],
+  "readingOrder": ["H1","intro","Receiving","para","Discrepancies","para","Storage","para","Segregation","para","Dispatch","para","Records","para"],
+  "lists": [], "tables": [], "figures": [], "decorativeGraphics": [],
+  "links": [], "artifacts": [],
+  "intentionalProblems": [
+    "two H2s are smaller than their own H3 subsections",
+    "H2s styled two different ways, H3s styled two different ways",
+    "no consistent size-to-level mapping exists in the document"
+  ]
+}

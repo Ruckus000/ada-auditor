@@ -1,0 +1,20 @@
+{
+  "document": "h13-first-big-text-not-title",
+  "tests": "The largest and second-largest text on page one are a DRAFT watermark and a confidentiality marking. The real title is third, smaller, and lower.",
+  "attacks": "The exact rule h12 rewards. A largest-text-wins title extractor names this document 'DRAFT'. This document exists so that passing h12 cannot be achieved by a rule that fails here — the pair has to be solved together or the extractor must decline both.",
+  "title": null,
+  "expectedTitleAfterRemediation": "Northern Apron Surrender: Heads of Terms",
+  "titleExtractable": false,
+  "titleExtractionBasis": "NOT deterministically extractable by size. Correct outcomes are the true title, or declining to set one and reporting NEEDS_REVIEW. Setting 'DRAFT' or 'COMMERCIAL IN CONFIDENCE' is an assertion failure.",
+  "mustNotBeTitle": ["DRAFT", "COMMERCIAL IN CONFIDENCE", "Version 0.3"],
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Northern Apron Surrender: Heads of Terms", "markup": "styled div" },
+    { "level": 2, "text": "Parties" }, { "level": 2, "text": "Term" }
+  ],
+  "mustNotBeHeadings": ["DRAFT", "COMMERCIAL IN CONFIDENCE"],
+  "readingOrder": ["DRAFT watermark","classification marking","title","version line","intro","H2 Parties","para","H2 Term","para"],
+  "lists": [], "tables": [], "figures": [], "decorativeGraphics": [],
+  "links": [], "artifacts": ["DRAFT watermark", "classification marking"],
+  "intentionalProblems": ["largest text is a watermark","second largest is a classification marking","true title is third by size"]
+}

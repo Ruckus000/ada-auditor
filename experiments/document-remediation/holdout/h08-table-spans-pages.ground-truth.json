@@ -1,0 +1,47 @@
+{
+  "document": "h08-table-spans-pages",
+  "tests": "A single 60-row table split across page boundaries, with the header row repeated on each continuation page.",
+  "attacks": "Per-page table detection. The correct answer is ONE table of 25 rows. Two tables of 4 columns is an assertion failure, and so is treating the repeated header as a data row.",
+  "title": "Vehicle Register",
+  "language": "en",
+  "headingHierarchy": [
+    {
+      "level": 1,
+      "text": "Vehicle Register"
+    }
+  ],
+  "readingOrder": [
+    "H1",
+    "intro",
+    "table (continues across the page break)",
+    "closing"
+  ],
+  "lists": [],
+  "tables": [
+    {
+      "borders": "full",
+      "columns": 4,
+      "bodyRows": 60,
+      "headerRows": 1,
+      "spansPages": true,
+      "columnHeaders": [
+        "Registration",
+        "Class",
+        "Year",
+        "Odometer"
+      ],
+      "rowHeaders": "registration column, 60 values NW-1001 to NW-1060",
+      "expectedTableCount": 1,
+      "repeatedHeaderNote": "The header repeats visually at the top of the continuation page. It is one logical header, not a second table and not a data row."
+    }
+  ],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": [
+    "repeated header row on the continuation page"
+  ],
+  "intentionalProblems": [
+    "table spans a page break with a repeated header"
+  ]
+}
