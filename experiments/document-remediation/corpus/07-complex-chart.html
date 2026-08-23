@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Throughput Trend Analysis</title>
+<style>
+  @page { size: A4; margin: 18mm; }
+  body { font: 11pt/1.5 Georgia, serif; color: #111; }
+  h1 { font-size: 18pt; margin: 0 0 8pt; }
+  svg { display: block; margin: 14pt 0; }
+  .cap { font-size: 9.5pt; color: #333; }
+</style>
+</head>
+<body>
+<h1>Throughput Trend Analysis</h1>
+<p>The chart below plots containers handled per quarter for the three depots across the
+review period. It is the only place the per-quarter series appears; the summary table
+elsewhere reports totals only.</p>
+
+<svg width="460" height="270" viewBox="0 0 460 270" xmlns="http://www.w3.org/2000/svg"
+     font-family="Georgia, serif">
+  <text x="230" y="16" text-anchor="middle" font-size="13" font-weight="bold">Containers handled per quarter (hundreds)</text>
+
+  <line x1="52" y1="40" x2="52" y2="212" stroke="#333" stroke-width="1.5"/>
+  <line x1="52" y1="212" x2="430" y2="212" stroke="#333" stroke-width="1.5"/>
+
+  <text x="46" y="216" text-anchor="end" font-size="9">0</text>
+  <text x="46" y="173" text-anchor="end" font-size="9">60</text>
+  <text x="46" y="130" text-anchor="end" font-size="9">120</text>
+  <text x="46" y="87"  text-anchor="end" font-size="9">180</text>
+  <text x="46" y="46"  text-anchor="end" font-size="9">240</text>
+  <text x="16" y="126" font-size="9" transform="rotate(-90 16 126)" text-anchor="middle">Containers</text>
+
+  <text x="105" y="228" text-anchor="middle" font-size="9">Q1</text>
+  <text x="195" y="228" text-anchor="middle" font-size="9">Q2</text>
+  <text x="285" y="228" text-anchor="middle" font-size="9">Q3</text>
+  <text x="375" y="228" text-anchor="middle" font-size="9">Q4</text>
+  <text x="240" y="246" text-anchor="middle" font-size="9">Quarter</text>
+
+  <polyline fill="none" stroke="#1f4e9c" stroke-width="2.5"
+            points="105,80 195,75 285,67 375,54"/>
+  <polyline fill="none" stroke="#8c1f1f" stroke-width="2.5" stroke-dasharray="6 3"
+            points="105,110 195,113 285,108 375,109"/>
+  <polyline fill="none" stroke="#2c7a3f" stroke-width="2.5" stroke-dasharray="2 3"
+            points="105,142 195,145 285,147 375,150"/>
+
+  <circle cx="105" cy="80" r="3" fill="#1f4e9c"/><circle cx="195" cy="75" r="3" fill="#1f4e9c"/>
+  <circle cx="285" cy="67" r="3" fill="#1f4e9c"/><circle cx="375" cy="54" r="3" fill="#1f4e9c"/>
+
+  <rect x="300" y="252" width="16" height="3" fill="#1f4e9c"/>
+  <text x="322" y="257" font-size="9">Northern</text>
+  <rect x="372" y="252" width="16" height="3" fill="#8c1f1f"/>
+  <text x="394" y="257" font-size="9">Southern</text>
+  <rect x="228" y="252" width="16" height="3" fill="#2c7a3f"/>
+  <text x="250" y="257" font-size="9">Coastal</text>
+</svg>
+
+<p class="cap">Northern rises steadily across all four quarters. Southern is flat within
+noise. Coastal declines slowly and continuously, and is the only series that ends below
+where it began.</p>
+</body>
+</html>

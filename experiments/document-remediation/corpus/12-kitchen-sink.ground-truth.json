@@ -1,0 +1,82 @@
+{
+  "document": "12-kitchen-sink",
+  "tests": "A realistic difficult business report combining most other corpus cases in one file across five pages.",
+  "adversarial": true,
+  "adversarialFeatures": [
+    "cover page whose largest text is the title but which has no metadata title backing it",
+    "table of contents as a plain ordered list with no links and no page numbers",
+    "CSS multi-column text on one page only",
+    "one fully ruled table and one borderless table with merged headers and blank cells",
+    "an inline SVG chart duplicating the ruled table's data",
+    "two captioned photographs and one uncaptioned decorative rule",
+    "a logo repeating in the brand bar on four of five pages"
+  ],
+  "title": "Coastal Depot: Annual Review 2026",
+  "language": "en",
+  "pages": 5,
+  "headingHierarchy": [
+    { "level": 1, "text": "Coastal Depot", "page": 1 },
+    { "level": 2, "text": "Contents", "page": 2 },
+    { "level": 2, "text": "Summary", "page": 3 },
+    { "level": 2, "text": "Throughput", "page": 3 },
+    { "level": 2, "text": "Fleet utilisation", "page": 4 },
+    { "level": 2, "text": "Site", "page": 4 },
+    { "level": 3, "text": "Northern apron", "page": 4 },
+    { "level": 2, "text": "Options and recommendation", "page": 5 }
+  ],
+  "readingOrder": [
+    "cover logo, title, subtitles",
+    "page 2 brand bar (artifact), Contents heading, TOC list, footer (artifact)",
+    "page 3 brand bar, Summary heading, three column-flowed paragraphs, Throughput heading, ruled table with caption, chart, chart description, footer",
+    "page 4 brand bar, Fleet utilisation heading, note paragraph, borderless table, decorative rule, Site heading, Figure 1 + caption, Northern apron heading, Figure 2 + caption, footer",
+    "page 5 brand bar, Options heading, three-item list, closing paragraph with two links, footer"
+  ],
+  "readingOrderNote": "The page-3 Summary uses CSS columns, so its three paragraphs flow down the left column then the right. Only that section is multi-column.",
+  "lists": [
+    { "type": "ordered", "items": 5, "purpose": "table of contents", "page": 2 },
+    { "type": "unordered", "items": 3, "purpose": "options", "page": 5 }
+  ],
+  "tables": [
+    { "name": "throughput", "borders": "fully ruled", "columns": 5, "bodyRows": 3,
+      "mergedCells": [{ "cell": "Depot", "rowspan": 2 }, { "cell": "Review period", "colspan": 4 }],
+      "rowHeaders": ["Northern", "Southern", "Coastal"], "blankCells": 0 },
+    { "name": "fleet utilisation", "borders": "none", "columns": 6, "bodyRows": 3,
+      "mergedCells": [{ "cell": "Vehicle class", "rowspan": 2 }, { "cell": "Northern", "colspan": 2 },
+                      { "cell": "Coastal", "colspan": 2 }, { "cell": "Notes", "rowspan": 2 }],
+      "rowHeaders": ["Rigid 18t", "Artic 44t", "Shunter"], "blankCells": 2,
+      "blankCellMeaning": "not operated at that depot; not zero" }
+  ],
+  "figures": [
+    { "id": "photo-quay.png", "page": 4, "captionPresent": true,
+      "caption": "Figure 1: The western quay at low tide. The Northwind berth is second from the left.",
+      "expectedAltTextSource": "extraction from caption" },
+    { "id": "photo-depot.png", "page": 4, "captionPresent": true,
+      "caption": "Figure 2: The northern apron, which the reduced-footprint option would surrender.",
+      "expectedAltTextSource": "extraction from caption" },
+    { "id": "inline SVG chart", "page": 3, "captionPresent": false,
+      "adjacentProse": "Northern rises across all four quarters, Southern is flat, and Coastal declines continuously.",
+      "expectedAltTextSource": "adjacent prose, plus the ruled table above carries the same data",
+      "note": "This chart is redundant with the throughput table, unlike document 07 where the chart is the only source." }
+  ],
+  "repeatedImages": [
+    { "id": "logo-northwind.png", "occurrences": 5, "pages": [1, 2, 3, 4, 5],
+      "expectedHandling": "One description or artifact treatment. Five independent descriptions is a failure." }
+  ],
+  "decorativeGraphics": [
+    { "id": "rule-divider.png", "page": 4, "expectedHandling": "artifact" },
+    { "id": "brand bar and footer rules", "expectedHandling": "artifact" }
+  ],
+  "expectedAltText": [],
+  "links": [
+    { "text": "Coastal depot page", "href": "https://example.org/operations/coastal" },
+    { "text": "estates office", "href": "https://example.org/estates" }
+  ],
+  "artifacts": ["brand bar on pages 2-5", "footer on pages 2-5", "page number text", "decorative rule"],
+  "intentionalProblems": [
+    "no alt attributes on any figure",
+    "TOC entries are not links and carry no page numbers",
+    "the cover title is visual only",
+    "borderless table with blank cells",
+    "logo repeats five times"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "document": "02-two-column",
+  "tests": "Reading order recovery on a multi-column layout built from absolute positioning, with a full-width heading band interrupting the columns and a callout straddling the gutter.",
+  "adversarial": true,
+  "adversarialFeatures": [
+    "columns are absolutely positioned, so there is no flow order in the source geometry",
+    "a full-width heading band interrupts the column pair mid-page",
+    "the callout straddles the gutter and belongs to neither column",
+    "lower columns resume beneath the band, so column order restarts"
+  ],
+  "title": "Coastal Depot Review",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Coastal Depot Review" },
+    { "level": 2, "text": "Financial position" }
+  ],
+  "readingOrder": [
+    "H1 Coastal Depot Review",
+    "full-width intro paragraph",
+    "left column paragraph 1", "left column paragraph 2",
+    "right column paragraph 1", "right column paragraph 2",
+    "callout note",
+    "H2 Financial position",
+    "lower-left paragraph",
+    "lower-right paragraph",
+    "footer"
+  ],
+  "readingOrderNote": "Callout placement is genuinely ambiguous. Accept it anywhere after the upper columns and before the H2; anything else is wrong.",
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [
+    "2px rule above the Financial position band",
+    "4px left border on the callout",
+    "1px rule above the footer"
+  ],
+  "expectedAltText": [],
+  "links": [],
+  "artifacts": ["footer", "page number text"],
+  "intentionalProblems": [
+    "reading order is not derivable from source order, only from geometry",
+    "the H2 band is styled bold text rather than carrying any semantic weight into the PDF"
+  ]
+}

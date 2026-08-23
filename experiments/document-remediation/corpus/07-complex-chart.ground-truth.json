@@ -1,0 +1,41 @@
+{
+  "document": "07-complex-chart",
+  "tests": "A chart carrying information available nowhere else in the document. Tests whether the pipeline recognises that a chart needs a long description rather than a short alt text.",
+  "adversarial": true,
+  "adversarialFeatures": [
+    "the chart is inline SVG, so its text labels are extractable as page text rather than being locked inside a raster image",
+    "the per-quarter series appears nowhere else, so the chart is not redundant decoration",
+    "three series distinguished partly by colour and partly by dash pattern",
+    "legend is positioned below the axis label and out of visual reading order"
+  ],
+  "title": "Throughput Trend Analysis",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Throughput Trend Analysis" }],
+  "readingOrder": ["H1", "intro paragraph", "chart", "trailing description paragraph"],
+  "lists": [],
+  "tables": [],
+  "figures": [
+    {
+      "id": "inline SVG line chart",
+      "chartTitle": "Containers handled per quarter (hundreds)",
+      "axes": { "x": "Quarter (Q1..Q4)", "y": "Containers (0..240, hundreds)" },
+      "series": [
+        { "name": "Northern", "style": "solid blue", "values": [184, 191, 203, 221], "trend": "rising steadily" },
+        { "name": "Southern", "style": "dashed red", "values": [142, 139, 145, 144], "trend": "flat within noise" },
+        { "name": "Coastal", "style": "dotted green", "values": [98, 94, 91, 88], "trend": "slow continuous decline" }
+      ],
+      "captionPresent": false,
+      "adjacentProse": "Northern rises steadily across all four quarters. Southern is flat within noise. Coastal declines slowly and continuously, and is the only series that ends below where it began.",
+      "correctAccessibleTreatment": "Requires a long description conveying all three trends and the axis ranges, not a short alt text. The adjacent prose is a legitimate extraction source and covers the trends but omits the axis ranges and the values."
+    }
+  ],
+  "decorativeGraphics": [],
+  "expectedAltText": [],
+  "expectedOutcome": "A short alt text such as 'a line chart' is a WCAG 1.1.1 failure with better grammar. Correct results are either a long description extracted from the adjacent prose, or NEEDS_REVIEW.",
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": [
+    "chart content is not available in a table anywhere",
+    "SVG text labels may be recovered as loose page text and mistaken for body content rather than figure internals"
+  ]
+}

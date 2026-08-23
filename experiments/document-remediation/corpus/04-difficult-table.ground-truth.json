@@ -1,0 +1,49 @@
+{
+  "document": "04-difficult-table",
+  "tests": "Borderless table with two-level headers, merged cells in both directions, genuinely blank cells, and a wrapping free-text column that makes rows unequal in height.",
+  "adversarial": true,
+  "adversarialFeatures": [
+    "no ruling lines at all — cell boundaries are whitespace only",
+    "two-level column headers with depot names spanning paired sub-columns",
+    "rowspan on the first and last columns",
+    "blank cells that mean 'not operated', not zero",
+    "a wrapping notes column producing rows of very unequal height"
+  ],
+  "title": "Fleet Utilisation Detail",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Fleet Utilisation Detail" }],
+  "readingOrder": ["H1", "intro paragraph", "table", "closing paragraph"],
+  "lists": [],
+  "tables": [
+    {
+      "caption": null,
+      "borders": "none",
+      "columns": 6,
+      "bodyRows": 4,
+      "headerStructure": {
+        "row1": ["Vehicle class (rowspan 2)", "Northern (colspan 2)", "Southern (colspan 2)", "Notes carried forward... (rowspan 2)"],
+        "row2": ["Units", "Util. %", "Units", "Util. %"]
+      },
+      "rowHeaders": ["Rigid 18t", "Artic 44t", "Shunter", "Van 3.5t"],
+      "headerRelationships": "Each numeric cell is governed by a depot group header (Northern/Southern), a measure sub-header (Units/Util. %), and a row header (vehicle class).",
+      "mergedCells": [
+        { "cell": "Vehicle class", "rowspan": 2 },
+        { "cell": "Northern", "colspan": 2 },
+        { "cell": "Southern", "colspan": 2 },
+        { "cell": "Notes carried forward from the previous review cycle", "rowspan": 2 }
+      ],
+      "blankCells": 4,
+      "blankCellMeaning": "Class not operated at that depot. Semantically distinct from zero; a remediation that fills these with 0 is wrong."
+    }
+  ],
+  "figures": [],
+  "decorativeGraphics": [],
+  "expectedAltText": [],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": [
+    "borderless layout means the table may not be detected as a table at all",
+    "blank cells may be dropped rather than preserved as empty",
+    "the unequal row heights caused by the notes column may break row association"
+  ]
+}

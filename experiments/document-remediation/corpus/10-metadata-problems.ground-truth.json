@@ -1,0 +1,47 @@
+{
+  "document": "10-metadata-problems",
+  "tests": "Document-level metadata failures in isolation: no title, no declared language, and mixed natural languages requiring a language change marker on a passage.",
+  "adversarial": true,
+  "adversarialFeatures": [
+    "no <title> element, so the PDF should carry no document title",
+    "no lang attribute on <html>",
+    "body text in two natural languages",
+    "a French block quotation inside an otherwise English document",
+    "headings are styled divs, carrying no semantics even in the source"
+  ],
+  "title": null,
+  "expectedTitleAfterRemediation": "Cannot be derived deterministically from metadata because none exists. The visible first line 'Notice de conformité — Compliance Notice' is the only candidate, and using it is an inference, not a deterministic fix.",
+  "language": null,
+  "expectedLanguage": "en, with the French passages carrying their own language marker",
+  "headingHierarchy": [
+    { "level": 1, "text": "Notice de conformité — Compliance Notice", "markup": "styled div" },
+    { "level": 2, "text": "English section", "markup": "styled div" },
+    { "level": 2, "text": "Section française", "markup": "styled div" },
+    { "level": 2, "text": "Closing", "markup": "styled div" }
+  ],
+  "readingOrder": [
+    "title line", "intro paragraph", "English section heading", "English paragraph",
+    "French section heading", "French paragraph", "French block quotation",
+    "Closing heading", "closing paragraph"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": ["block quotation left border"],
+  "expectedAltText": [],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": [
+    "missing document title metadata",
+    "missing document language declaration",
+    "missing DisplayDocTitle viewer preference",
+    "language changes within the body that need per-passage marking",
+    "all headings are visual only"
+  ],
+  "relevantMatterhornConditions": [
+    "7.2-34 natural language for text shall be determined",
+    "7.1-8 catalog shall contain a Metadata key",
+    "7.1-11 logical structure",
+    "ISO 14289-1 7.1 DisplayDocTitle"
+  ]
+}
