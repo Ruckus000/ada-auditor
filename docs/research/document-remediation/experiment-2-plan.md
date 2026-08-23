@@ -1,11 +1,12 @@
 # Experiment 2 — closing the semantic gap
 
 **Status:** plan, not started. Experiment 1 concluded PROCEED WITH CONDITIONS at
-17% straight-through. Nothing here is a production feature.
+8% straight-through, as measured by compare.mjs. Nothing here is a production
+feature.
 
 ## Question
 
-Can straight-through remediation be raised from 17% using **only deterministic
+Can straight-through remediation be raised from 8% using **only deterministic
 and extractive techniques plus documented OpenDataLoader configuration** — no
 vision model, no frontier API?
 

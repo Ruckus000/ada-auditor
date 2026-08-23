@@ -20,7 +20,7 @@ success when what it actually produced is a much sharper question.
 across twelve documents, using 97 lines of Java that write four
 document-catalog entries.
 
-**Genuine accessibility: no.** Straight-through remediation was 2 of 12. The
+**Genuine accessibility: no.** Straight-through remediation was 1 of 12. The
 distance between those two results is the whole finding: getting a PDF to pass
 veraPDF turns out to be easy, and getting it to be accessible turns out to be
 the hard part that remains untouched.
@@ -42,10 +42,14 @@ approach; it is a value a client supplies.
 The technical premise holds. What does not hold is the assumption that machine
 conformance is the product.
 
-**Straight-through remediation was 2 of 12 — 17%** — against a machine pass rate
+**Straight-through remediation was 1 of 12 — 8%** — against a machine pass rate
 of 75%. The gap between those two numbers is the entire finding of this spike.
 
-17% is the product. 75% is a property of the validator.
+8% is the product. 75% is a property of the validator.
+
+(Originally reported as 2/12. That came from hand classification; `compare.mjs`
+measures it and finds document 02's heading sequence does not match ground
+truth. See the correction in `results.md`.)
 
 ## Why not PROCEED
 

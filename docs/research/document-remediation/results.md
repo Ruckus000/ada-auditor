@@ -13,7 +13,7 @@ Failure counts are veraPDF `ua1` failed checks.
 | Document | Type | Pages | Initial | After ODL | After finish | New | ODL ms | Finish ms | veraPDF ms | Total ms | In → Out bytes | Verdict |
 |---|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---|---|
 | 01-simple-text | control | 1 | 2080 | 1038 | **0** | – | 321 | 246 | 728 | 1295 | 64k → 67k | **DELIVERABLE** |
-| 02-two-column | reading order | 2 | 2521 | 1259 | **0** | – | 261 | 134 | 722 | 1117 | 69k → 71k | **DELIVERABLE** |
+| 02-two-column | reading order | 2 | 2521 | 1259 | **0** | – | 261 | 134 | 722 | 1117 | 69k → 71k | NEEDS_REVIEW |
 | 03-simple-table | ruled table | 1 | 776 | 356 | **0** | – | 212 | 112 | 707 | 1031 | 54k → 54k | NEEDS_REVIEW |
 | 04-difficult-table | borderless table | 1 | 1025 | 513 | **0** | – | 207 | 122 | 657 | 986 | 56k → 57k | NEEDS_REVIEW |
 | 05-images-captioned | captioned figures | 2 | 1471 | 736 | **0** | – | 248 | 114 | 777 | 1139 | 444k → 444k | NEEDS_REVIEW |
@@ -34,8 +34,10 @@ Failure counts are veraPDF `ua1` failed checks.
 | Total after OpenDataLoader | **7,505** |
 | Total after finishing pass | **3** |
 | Machine pass rate (ua1 clean) | **9/12 — 75%** |
-| Straight-through remediation (DELIVERABLE) | **2/12 — 17%** |
-| Needs review | 7/12 — 58% |
+| Straight-through remediation (DELIVERABLE) | **1/12 — 8%** |
+| Needs review | 8/12 — 67% |
+| Total semantic defects | 40 |
+| Semantic false positives | **0** |
 | Inconclusive | 3/12 — 25% |
 | Median total processing | **1094 ms/document** |
 | Range | 792 – 1295 ms |
@@ -47,6 +49,29 @@ wearing a percentile's name.
 
 **Peak memory was not measured.** The plan listed it as "where practical" and it
 was not instrumented. Recorded as a gap rather than estimated.
+
+## Correction — these verdicts are now measured, not judged
+
+The verdict column originally came from a hand-written map in `report.mjs` that
+I populated by inspecting output, and it reported **2/12 DELIVERABLE**. It was
+wrong.
+
+`compare.mjs` now derives each verdict from two independent sources — veraPDF
+for machine conformance and a PDFBox structure-tree walk (`Inspect.java`)
+checked against the ground-truth sidecars. Under measurement the figure is
+**1/12**. Document 02 passes ua1 and has correct reading order, but its heading
+sequence is `["H1","H2","H3"]` against a ground truth of `["H1","H2"]` — a
+defect the eye missed and the comparator did not.
+
+The direction of that error is the point: hand classification was **too
+generous**, by exactly the amount that makes a spike look better than it is.
+Every number below is regenerated from `out/comparison.json`.
+
+It also resolves the open question this document previously recorded as
+unverifiable. Heading accuracy *can* now be checked, and the result is mixed
+rather than bad: documents 01, 10 and 11 match their authored hierarchy exactly
+— including 10 and 11, whose headings are styled `div`s with no semantics even
+in the source. Six others do not.
 
 ## What the finishing pass did
 
@@ -131,7 +156,9 @@ baseline with 5 failures, the fewest in the corpus, because it contains no text
 to fail language checks on. A pipeline scored on failure count would rank the
 one document it cannot remediate at all as its easiest case.
 
-**Heading level accuracy was not rigorously verified.** Heading tags are present
-in the output, but confirming levels against ground truth needs a proper
-structure-tree walk, and the token-counting used here is not reliable enough to
-support a claim. Open question, not a finding.
+**Heading level accuracy is now verified** by `Inspect.java`'s structure-tree
+walk, which supersedes the token-counting this document originally relied on.
+That token-counting reported 27 `/H1` occurrences for a document with one
+heading, which is why the claim was withheld. Nine of twelve documents have a
+heading sequence that does not match their authored hierarchy; three match
+exactly.

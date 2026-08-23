@@ -14,22 +14,12 @@ const p5   = load('out/phase5-final/summary.json');
 const odl  = Object.fromEntries(JSON.parse(readFileSync('out/phase3-tagged/run.json')).map((r) => [r.document, r]));
 const fin  = Object.fromEntries(JSON.parse(readFileSync('out/phase4-finished/run.json')).map((r) => [r.document, r]));
 
-// Verified against ground truth by inspecting the phase-4 output, not inferred
-// from validator results. Empty string means no semantic defect found.
-const SEMANTIC = {
-  '01-simple-text':               '',
-  '02-two-column':                '',
-  '03-simple-table':              'table tagged but zero /TH — all header relationships lost',
-  '04-difficult-table':           'borderless table not detected as a table at all (zero /Table)',
-  '05-images-captioned':          'alt text is "image 1".."image 4" despite captions directly beneath each figure',
-  '06-images-uncaptioned':        'four meaningful graphics all alt "image N"; decorative rule described too',
-  '07-complex-chart':             'chart carries placeholder alt; no long description',
-  '08-slide-layout':              'photograph carries placeholder alt',
-  '09-scanned':                   'no text layer — OCR unavailable on the free path',
-  '10-metadata-problems':         'no title to copy; French passages labelled en by the document /Lang',
-  '11-deliberately-inaccessible': 'no title to copy; 11 authored barriers invisible to PDF/UA machine checks',
-  '12-kitchen-sink':              'eight figures with placeholder alt; borderless table undetected',
-};
+// Verdicts come from compare.mjs, which derives them from veraPDF plus a
+// structure-tree walk checked against ground truth. They used to come from a
+// map in this file that I populated by eye, and that map was wrong: it called
+// 02 deliverable when its heading sequence does not match ground truth. Run
+// `node compare.mjs out/phase4-finished out/phase5-final/summary.json` first.
+const cmp = Object.fromEntries(JSON.parse(readFileSync('out/comparison.json')).map((r) => [r.document, r]));
 
 const TYPE = {
   '01-simple-text': 'control', '02-two-column': 'reading order',
@@ -44,16 +34,10 @@ const rows = Object.keys(p5).sort().map((n) => {
   const b = base[n], t = p3v[n], f = p5[n];
   const beforeIds = new Set(b.ua1.rules.map((r) => r.id));
   const introduced = f.ua1.rules.filter((r) => !beforeIds.has(r.id)).map((r) => r.id);
-  const semantic = SEMANTIC[n];
-
-  let verdict;
-  if (!f.ua1.compliant) verdict = 'INCONCLUSIVE';
-  else if (semantic) verdict = 'NEEDS_REVIEW';
-  else verdict = 'DELIVERABLE';
-
+  const { verdict, defects } = cmp[n];
   const reason = !f.ua1.compliant
-    ? `ua1 fails: ${f.ua1.rules.map((r) => r.id).join(', ')}${semantic ? '; ' + semantic : ''}`
-    : (semantic || 'machine checks pass; no semantic defect found against ground truth');
+    ? `ua1 fails: ${f.ua1.rules.map((r) => r.id).join(', ')}${defects.length ? '; ' + defects.length + ' semantic defect(s)' : ''}`
+    : (defects.length ? `${defects.length} semantic defect(s): ${defects[0]}` : 'machine checks pass; no semantic defect against ground truth');
 
   return {
     document: n, type: TYPE[n], pages: f.pages,
@@ -62,7 +46,7 @@ const rows = Object.keys(p5).sort().map((n) => {
     odlMs: odl[n].ms, finishMs: fin[n].ms, veraMs: f.ua1.wallMs,
     totalMs: odl[n].ms + fin[n].ms + f.ua1.wallMs,
     inBytes: b.bytes, outBytes: f.bytes,
-    verdict, reason,
+    verdict, defects: defects.length, reason,
   };
 });
 
@@ -83,6 +67,8 @@ const agg = {
   totalAfterOdl: rows.reduce((s, r) => s + r.afterOdl, 0),
   totalAfterFinish: rows.reduce((s, r) => s + r.afterFinish, 0),
   customRemediationLines: 97,
+  totalSemanticDefects: rows.reduce((s, r) => s + r.defects, 0),
+  semanticFalsePositives: rows.filter((r) => r.verdict === 'DELIVERABLE' && r.defects > 0).length,
 };
 
 writeFileSync('out/results.json', JSON.stringify({ rows, agg }, null, 2));
@@ -95,6 +81,7 @@ for (const r of rows) {
     String(r.initial).padStart(6), String(r.afterOdl).padStart(6), String(r.afterFinish).padStart(5),
     r.introduced.padEnd(7).slice(0, 7),
     `${String(r.totalMs).padStart(5)}ms`,
+    `def=${String(r.defects).padStart(2)}`,
     r.verdict,
   );
 }
