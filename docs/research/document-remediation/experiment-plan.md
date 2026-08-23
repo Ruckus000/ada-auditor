@@ -101,15 +101,31 @@ proceed.
 
 ## Reproduction
 
+From the repository root:
+
 ```bash
-# toolchain (idempotent)
-experiments/document-remediation/fetch-tools.sh
-
-# dependencies
 npm ci
-
-# phases — added as each lands
+experiments/document-remediation/fetch-tools.sh
 ```
+
+Then from `experiments/document-remediation/`, with
+`export JAVA_HOME=/opt/homebrew/opt/openjdk@17`:
+
+```bash
+node make-images.mjs                                  # corpus PNGs (deterministic)
+node generate-corpus.mjs                              # phase 1: corpus -> out/corpus
+node validate.mjs out/corpus out/phase2-baseline      # phase 2: baselines
+node run-opendataloader.mjs                           # phase 3: free tagged-pdf path
+node validate.mjs out/phase3-tagged out/phase3-validated
+"$JAVA_HOME/bin/javac" -cp vendor/pdfbox-app-3.0.8.jar -d out/classes Finish.java
+node run-finishing.mjs                                # phase 4: category-A pass
+node validate.mjs out/phase4-finished out/phase5-final  # phase 5: independent validation
+node check-fixes.mjs                                  # regression assertions
+node report.mjs                                       # results table -> out/results.json
+```
+
+`validate.mjs` is the same script in all three phases; the fixer never
+validates itself.
 
 ## Measurements collected
 
