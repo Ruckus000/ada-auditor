@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Slow deferred navigation</title>
+  </head>
+  <body>
+    <main>
+      <h1>Slow deferred navigation</h1>
+      <p>
+        The click below navigates from a timer that outlasts the runner's
+        navigation grace, so the walk reaches its capture while the old
+        document is still current.
+      </p>
+      <!-- The delay lives in an attribute so the test can read it and assert
+           it still exceeds the runner's grace. See the script below. -->
+      <button id="go" type="button" data-delay="2500">Continue</button>
+    </main>
+    <script>
+      // `deferred-nav.html` with one number changed, and the number is the
+      // whole point — so this is a sibling file rather than a `?delay=`
+      // parameter on that one. Fixture journeys resolve their path through
+      // `resolveNavigationUrl`, which for a `file:` run is a filesystem
+      // resolve: a query string would be read as part of the filename and the
+      // navigation would 404 on a file that does not exist.
+      //
+      // 2500ms is outside `NAVIGATION_SETTLE_MS` (2000ms) on purpose. That is
+      // a loaded runner reproduced deliberately — master #185 hit it by
+      // accident, dropping `/dashboard.html` from the demo journey because the
+      // grace expiring was read as "this click did not navigate", and
+      // `capturePage` then deduped against the page it had not left yet.
+      //
+      // The cost is 2.5s in one browser test, paid to cover a defect whose
+      // production symptom is a page missing from a client's conformance
+      // report with nothing saying it is missing.
+      //
+      // If `NAVIGATION_SETTLE_MS` ever rises above this, the test built on
+      // this fixture stops proving anything and starts passing for the wrong
+      // reason — the grace would cover the delay and the branch under test
+      // would never run. So the number lives in `data-delay` above, where the
+      // test reads it and asserts the relationship rather than trusting this
+      // comment to stay true.
+      var button = document.getElementById('go');
+      button.addEventListener('click', function () {
+        setTimeout(function () {
+          window.location.href = 'dashboard-clean.html';
+        }, Number(button.dataset.delay));
+      });
+    </script>
+  </body>
+</html>

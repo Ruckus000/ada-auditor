@@ -1,5 +1,5 @@
 import { access } from 'node:fs/promises';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -7,6 +7,7 @@ import { createEvidenceBundle } from '../../../src/domain/evidence';
 import type { PartialJourneyError } from '../../../src/integrations/browser/partial-run';
 import {
   buildDefaultDemoJourneySteps,
+  NAVIGATION_SETTLE_MS,
   resolveStepTimeoutMs,
   runJourney,
 } from '../../../src/integrations/browser/journey-runner';
@@ -125,6 +126,67 @@ describe('runJourney', () => {
       }
 
       // And nothing claimed the walk was cut short, because it was not.
+      expect(result.truncatedPages).toBe(0);
+    } finally {
+      await rm(artifactsDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it('keeps the page when the navigation outlasts the settle grace', async () => {
+    /**
+     * The case the grace above could not cover, and the one that came back.
+     *
+     * Master #185 failed the demo-journey assertion at the top of this file
+     * with `['/login.html']` — the exact pre-fix symptom, after the fix. The
+     * grace expired before the commit on a loaded runner (the browser suite
+     * logged 116s of test time inside 63.8s of wall clock), the walk moved on,
+     * and `capturePage` deduped against the page it had not left yet.
+     *
+     * `deferred-nav.html` above cannot catch this: its 300ms delay is inside
+     * the grace, so it passes whether or not the runner distinguishes "did not
+     * navigate" from "has not navigated yet". `slow-nav.html` is the same
+     * fixture with a delay outside the grace — a loaded runner reproduced on
+     * purpose instead of waited for.
+     *
+     * Fails against a runner that only waits out `NAVIGATION_SETTLE_MS`: one
+     * page where there are two.
+     */
+    const fixture = await readFile(join(FIXTURE_DIR, 'slow-nav.html'), 'utf8');
+    const delayMs = Number(/data-delay="(\d+)"/.exec(fixture)?.[1]);
+
+    // Without this the test can pass for the wrong reason: raise
+    // `NAVIGATION_SETTLE_MS` past the fixture's delay and the grace covers it,
+    // the request-evidence branch never runs, and a green result would say
+    // nothing at all.
+    expect(delayMs).toBeGreaterThan(NAVIGATION_SETTLE_MS);
+
+    const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
+
+    try {
+      const result = await runJourney({
+        environment: 'test',
+        journeyId: 'demo-login',
+        stepId: 'slow',
+        fixtureDir: FIXTURE_DIR,
+        artifactsDir,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'slow-nav.html' },
+          { action: 'navigate', type: 'click', selector: '#go' },
+        ],
+      });
+
+      expect(result.pages.map((p) => p.page.route)).toEqual([
+        '/slow-nav.html',
+        '/dashboard-clean.html',
+      ]);
+
+      // Counted is not captured, and a page listed but unscanned measures
+      // nothing — the same check the deferred case makes, for the same reason.
+      for (const audited of result.pages) {
+        await expect(fileExists(audited.artifacts.screenshotPath!)).resolves.toBe(true);
+        await expect(fileExists(audited.artifacts.domSnapshotPath!)).resolves.toBe(true);
+      }
+
       expect(result.truncatedPages).toBe(0);
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });
