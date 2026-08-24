@@ -61,6 +61,7 @@ here" and you have the whole picture.**
 |---|---|
 | [real-documents-results.md](real-documents-results.md) | Nine real municipal PDFs, first contact. Robustness and conformance. *Its conformance framing is superseded by `legal-standard.md`; the measurements stand.* |
 | [table-header-verification.md](table-header-verification.md) | The liability test. 4 of 195 asserted headers wrong, with the mechanism. |
+| [build-options.md](build-options.md) | How to build the three blocking conditions. No new dependency needed for any. |
 | [human-effort.md](human-effort.md) | Two documents finished by hand. Work items, estimates, and what the 98% figure hides. |
 | [tagged-input.md](tagged-input.md) | Both paths for documents that arrive already tagged. |
 | [real-failure-classification.md](real-failure-classification.md) | Every remaining failure categorised. *Re-cut along WCAG in `legal-standard.md`.* |
