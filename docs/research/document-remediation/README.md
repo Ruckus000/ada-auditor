@@ -19,9 +19,10 @@ here" and you have the whole picture.**
 - **The blockers are not what we thought.** Legally, the nine real documents are
   blocked by a document title and alt text. The font-level failures we spent a
   classification on are not WCAG criteria at all.
-- **The open liability:** 195 table header cells were asserted into nine real
-  documents and none has been verified. Under WCAG 1.3.1 a wrong header is a
-  manufactured barrier, not a missing fix. **This gates any restart.**
+- **The open liability is measured, and it is small.** Of 195 table headers
+  asserted into nine real documents, **4 are wrong** — see
+  [table-header-verification.md](table-header-verification.md). `Tables.java`
+  stays.
 - **North-star metric:** human minutes per page, target under 5. Never measured.
 - **Holdout 2 is sealed.** Both checkpoints unspent, and their value fell once
   real documents showed the synthetic corpus unrepresentative in kind rather
@@ -29,8 +30,12 @@ here" and you have the whole picture.**
 
 ## Known open questions, so they are not rediscovered a fourth time
 
-1. **Are the 195 table headers correct?** Untested. Gates everything.
+1. **Table header inversion.** `Tables.java` R1 treats the leading all-bold row
+   as the header row. In a KPI summary block the emphasised row is the *values*,
+   so four figures were marked as headers over their own labels. Known fix — a
+   row of pure currency is not a header row — deliberately not implemented yet.
 2. **How many human minutes does a document actually cost?** Never measured.
+   This is the north-star metric.
 3. **The pipeline re-tags unconditionally.** Five of nine real documents arrived
    already tagged; one that was four failures from conformance came out with
    twenty-seven. Measured both ways in [tagged-input.md](tagged-input.md); no
@@ -46,6 +51,7 @@ here" and you have the whole picture.**
 | | |
 |---|---|
 | [real-documents-results.md](real-documents-results.md) | Nine real municipal PDFs, first contact. Robustness and conformance. *Its conformance framing is superseded by `legal-standard.md`; the measurements stand.* |
+| [table-header-verification.md](table-header-verification.md) | The liability test. 4 of 195 asserted headers wrong, with the mechanism. |
 | [tagged-input.md](tagged-input.md) | Both paths for documents that arrive already tagged. |
 | [real-failure-classification.md](real-failure-classification.md) | Every remaining failure categorised. *Re-cut along WCAG in `legal-standard.md`.* |
 | [abstention-results.md](abstention-results.md) | Global abstention: 16 assertions → 8, deliverables 5 → 8. Development corpora. |
