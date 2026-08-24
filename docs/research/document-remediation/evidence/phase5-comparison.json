@@ -1,0 +1,552 @@
+[
+  {
+    "document": "01-simple-text",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 26,
+      "textChars": 1133,
+      "pages": 1,
+      "lang": "en",
+      "title": "Quarterly Operations Summary",
+      "headings": [
+        "H1",
+        "H2",
+        "H3",
+        "H2",
+        "H2"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "02-two-column",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H3\"], ground truth [\"H1\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 1363,
+      "pages": 2,
+      "lang": "en",
+      "title": "Coastal Depot Review",
+      "headings": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "03-simple-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "table 1 has 21 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 53,
+      "textChars": 418,
+      "pages": 1,
+      "lang": "en",
+      "title": "Depot Throughput by Quarter",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 21,
+          "tr": 5
+        }
+      ]
+    }
+  },
+  {
+    "document": "04-difficult-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "1 table(s) in ground truth, 0 detected"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 868,
+      "pages": 1,
+      "lang": "en",
+      "title": "Fleet Utilisation Detail",
+      "headings": [
+        "H1"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "05-images-captioned",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 6,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 4\" presented as a description"
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 1: The western quay at low tide, viewed from the depo...\""
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 2: The northern apron, which would be surrendered und...\""
+      },
+      {
+        "kind": "assertion",
+        "msg": "4 Figure elements for 3 expected (2 meaningful + 1 distinct repeated) — 1 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\",\"H1\",\"H2\"], ground truth [\"H1\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 814,
+      "pages": 2,
+      "lang": "en",
+      "title": "Coastal Quay Site Report",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H1",
+        "H2"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 4",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 6,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 4\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 5\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "5 Figure elements for 4 expected (4 meaningful + 0 distinct repeated) — 1 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 22,
+      "textChars": 293,
+      "pages": 2,
+      "lang": "en",
+      "title": "Asset Register Extract",
+      "headings": [
+        "H1"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 4",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 5",
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 0,
+          "td": 7,
+          "tr": 2
+        }
+      ]
+    }
+  },
+  {
+    "document": "07-complex-chart",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H3\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 524,
+      "pages": 1,
+      "lang": "en",
+      "title": "Throughput Trend Analysis",
+      "headings": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "08-slide-layout",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 2,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H1\",\"H1\",\"H1\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 313,
+      "pages": 1,
+      "lang": "en",
+      "title": "Coastal Options — Board Slide",
+      "headings": [
+        "H1",
+        "H1",
+        "H1",
+        "H1"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "09-scanned",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no text layer — OCR did not run"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 2,
+      "textChars": 0,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "10-metadata-problems",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 1006,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 3,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "2 Figure elements for 1 expected (1 meaningful + 0 distinct repeated) — 1 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 16,
+      "textChars": 896,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "12-kitchen-sink",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 5,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 1\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 2\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 3\" presented as a description"
+      },
+      {
+        "kind": "assertion",
+        "msg": "placeholder alt text \"image 4\" presented as a description"
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 1: The western quay at low tide. The Northwind berth ...\""
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 2: The northern apron, which the reduced-footprint op...\""
+      },
+      {
+        "kind": "omission",
+        "msg": "2 table(s) in ground truth, 1 detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 1 has 21 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\",\"H2\",\"H3\",\"H4\",\"H3\",\"H1\",\"H1\",\"H2\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\",\"H2\",\"H3\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 122,
+      "textChars": 2252,
+      "pages": 6,
+      "lang": "en",
+      "title": "Coastal Depot: Annual Review 2026",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H3",
+        "H4",
+        "H3",
+        "H1",
+        "H1",
+        "H2",
+        "H1"
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "image 1",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 2",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 3",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "image 4",
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 0,
+          "td": 21,
+          "tr": 5
+        }
+      ]
+    }
+  }
+]

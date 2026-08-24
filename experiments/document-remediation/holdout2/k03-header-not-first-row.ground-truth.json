@@ -1,0 +1,20 @@
+{
+  "document": "k03-header-not-first-row",
+  "tests": "A table whose first row is a provisional-data note spanning all columns, with the real header row second, and a bold totals row at the bottom.",
+  "attacks": "Any rule anchored on row 0. The note row is not a header. The totals row is bold and is not a header either — a leading-run-of-bold-rows rule stops before it, but a bold-anywhere rule promotes it and asserts that 'All specialities' heads a row of data.",
+  "title": "Waiting Times by Speciality",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Waiting Times by Speciality" }],
+  "readingOrder": ["H1","table","closing paragraph"],
+  "lists": [],
+  "tables": [
+    { "name": "waiting times", "borders": "full", "columns": 4, "bodyRows": 4,
+      "headerRowIndex": 1,
+      "headerStructure": { "row1": ["Speciality", "Under 18 wks", "18–52 wks", "Over 52 wks"] },
+      "rowHeaders": ["Dermatology", "Orthopaedics", "Cardiology"],
+      "mustNotBeHeaders": ["Provisional. Figures exclude patients who declined a first offered appointment.", "All specialities"],
+      "notes": "Row 0 is a note spanning four columns. The final row is a totals row: bold, but data." }
+  ],
+  "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["header is the second row", "a bold totals row that must not become a header"]
+}

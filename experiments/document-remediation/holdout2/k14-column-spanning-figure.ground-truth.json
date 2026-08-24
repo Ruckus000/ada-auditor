@@ -1,0 +1,25 @@
+{
+  "document": "k14-column-spanning-figure",
+  "tests": "A two-column flow containing one figure that spans both columns with a narrower caption beneath it, and a second figure confined to one column with its own caption.",
+  "attacks": "Reading order and caption association simultaneously. The spanning figure interrupts the column flow, and its caption is narrower than the figure, so a horizontal-overlap threshold measured against the figure's width may reject the correct caption. Figure 2's caption sits in the same column and is closer to Figure 1 in raw vertical distance on the page than a column-unaware measure expects.",
+  "title": "Estates Condition Survey",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Estates Condition Survey" },
+    { "level": 2, "text": "Roofing" },
+    { "level": 2, "text": "Windows" },
+    { "level": 2, "text": "Backlog" }
+  ],
+  "readingOrder": ["H1","H2 Roofing","para","Figure 1 (spans both columns)","Figure 1 caption","H2 Windows","para","Figure 2","Figure 2 caption","para","H2 Backlog","para"],
+  "readingOrderNote": "CSS column flow. The spanning figure and its caption interrupt both columns; everything after resumes in the left column.",
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "photo-depot.png", "captionPresent": true, "spansColumns": true,
+      "caption": "Figure 1: The west wing roof, showing ponding at the outlet and lifted seams along the parapet.",
+      "captionWidth": "narrower than the figure — one column wide beneath a two-column-wide image" },
+    { "id": "photo-quay.png", "captionPresent": true, "spansColumns": false,
+      "caption": "Figure 2: Typical window detail on the south elevation." }
+  ],
+  "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["a figure wider than its own caption", "column-spanning content interrupting a two-column flow"]
+}

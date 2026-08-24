@@ -1,0 +1,33 @@
+{
+  "document": "k11-same-image-two-meanings",
+  "tests": "One photograph used twice with different captions and different meanings, and a logo appearing both as running page furniture and, separately, as a captioned figure that is the document's subject.",
+  "attacks": "Repeat detection by image identity. Deduplicating byte-identical images and describing the first occurrence only would give Figure 2 the caption about signage when it is about lighting. Artifacting every occurrence of the logo would delete Figure 3, which is the finding the document exists to record. Identity does not determine meaning; caption does.",
+  "title": "Ward Signage Audit",
+  "language": "en",
+  "pages": 2,
+  "headingHierarchy": [
+    { "level": 1, "text": "Ward Signage Audit" },
+    { "level": 2, "text": "Corridor signage" },
+    { "level": 2, "text": "Lighting" },
+    { "level": 2, "text": "The mark itself" }
+  ],
+  "readingOrder": ["p1 brand bar (artifact)","H1","intro","H2 Corridor signage","Figure 1","caption 1","p2 brand bar (artifact)","H2 Lighting","Figure 2","caption 2","H2 The mark itself","Figure 3","caption 3"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "photo-quay.png (first use)", "captionPresent": true,
+      "caption": "Figure 1: The east corridor, showing directional signage mounted above head height and outside the reading cone." },
+    { "id": "photo-quay.png (second use)", "captionPresent": true,
+      "caption": "Figure 2: The same corridor, photographed to show the pooling of light between fittings rather than the signage.",
+      "note": "Byte-identical to Figure 1 and a different figure. Reusing Figure 1's description here is an assertion failure." },
+    { "id": "logo-northwind.png (as subject)", "captionPresent": true,
+      "caption": "Figure 3: The authority mark at the minimum permitted reproduction size, which is the subject of finding 4.",
+      "note": "The same image artifacted twice above as page furniture. Here it is content." }
+  ],
+  "repeatedImages": [
+    { "id": "logo-northwind.png (brand bar)", "occurrences": 2, "pages": [1, 2],
+      "expectedHandling": "Artifact in the brand bar only. The third occurrence is a captioned figure and must survive." }
+  ],
+  "decorativeGraphics": ["brand bar rules"],
+  "links": [], "artifacts": ["brand bar on both pages"],
+  "intentionalProblems": ["identical image bytes carrying different meanings", "an image that is both page furniture and content in one document"]
+}

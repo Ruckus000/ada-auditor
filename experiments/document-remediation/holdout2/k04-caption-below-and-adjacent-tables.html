@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Bed Occupancy Returns</title>
+<style>
+ @page{size:A4;margin:18mm} body{font:10.5pt/1.5 Georgia,serif;color:#111}
+ h1{font-size:17pt;margin:0 0 8pt}
+ table{border-collapse:collapse;width:100%;font-size:9.5pt;margin:0}
+ th,td{border:1px solid #556;padding:4pt 6pt;text-align:right}
+ th{background:#eef1f5} .l{text-align:left}
+ .tcap{font-size:9pt;color:#333;margin:4pt 0 16pt;font-style:italic}
+</style></head><body>
+<h1>Bed Occupancy Returns</h1>
+<p>Two tables sit directly against each other with no gap, and each caption sits
+below its own table rather than above it.</p>
+
+<table>
+ <tr><th class="l" scope="col">Site</th><th scope="col">Beds</th><th scope="col">Occupied</th></tr>
+ <tr><th class="l" scope="row">Riverside</th><td>240</td><td>221</td></tr>
+ <tr><th class="l" scope="row">Northgate</th><td>180</td><td>151</td></tr>
+</table>
+<div class="tcap">Table 1: General acute beds at midnight, week 34.</div>
+
+<table>
+ <tr><th class="l" scope="col">Site</th><th scope="col">Escalation</th><th scope="col">Open</th></tr>
+ <tr><th class="l" scope="row">Riverside</th><td>24</td><td>18</td></tr>
+ <tr><th class="l" scope="row">Northgate</th><td>12</td><td>12</td></tr>
+</table>
+<div class="tcap">Table 2: Escalation capacity, same period. Not included in Table 1.</div>
+</body></html>

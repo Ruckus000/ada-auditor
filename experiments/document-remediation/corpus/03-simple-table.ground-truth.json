@@ -1,0 +1,35 @@
+{
+  "document": "03-simple-table",
+  "tests": "Ruled table with a merged group header, column headers, and row headers. Fully bordered so cell boundaries are visually explicit.",
+  "adversarial": false,
+  "title": "Depot Throughput by Quarter",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Depot Throughput by Quarter" }],
+  "readingOrder": ["H1", "intro paragraph", "table caption", "table", "closing paragraph"],
+  "lists": [],
+  "tables": [
+    {
+      "caption": "Containers handled, by depot and quarter (hundreds)",
+      "borders": "fully ruled",
+      "columns": 5,
+      "bodyRows": 3,
+      "headerStructure": {
+        "row1": ["Depot (rowspan 2)", "Review period (colspan 4, group header)"],
+        "row2": ["Q1", "Q2", "Q3", "Q4"]
+      },
+      "rowHeaders": ["Northern", "Southern", "Coastal"],
+      "headerRelationships": "Each data cell is governed by one column header (Q1..Q4), the group header 'Review period', and one row header (depot name).",
+      "mergedCells": [
+        { "cell": "Depot", "rowspan": 2 },
+        { "cell": "Review period", "colspan": 4 }
+      ],
+      "blankCells": 0
+    }
+  ],
+  "figures": [],
+  "decorativeGraphics": [],
+  "expectedAltText": [],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": []
+}

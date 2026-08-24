@@ -1,0 +1,18 @@
+{
+  "document": "h01-big-text-not-heading",
+  "tests": "Large, bold, visually prominent text that is not a heading: a status stamp, two display figures with labels, and a pull quote at twice body size.",
+  "attacks": "The heuristic 'large bold text is probably a heading'. A tagger applying it produces five invented headings here.",
+  "title": "Tariff Schedule 2026",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Tariff Schedule 2026" },
+    { "level": 2, "text": "Standard rates" },
+    { "level": 2, "text": "Exclusions" }
+  ],
+  "mustNotBeHeadings": ["SUPERSEDED", "£412", "£680", "Rates are held for the full year and are not subject to the quarterly review that applies to storage charges."],
+  "readingOrder": ["H1","intro","stamp","stamp explanation","H2 Standard rates","£412","label","£680","label","pull quote","pull quote explanation","H2 Exclusions","paragraph"],
+  "lists": [], "tables": [], "figures": [],
+  "decorativeGraphics": ["stamp border"],
+  "links": [], "artifacts": [],
+  "intentionalProblems": ["four separate large-text elements that are not headings"]
+}

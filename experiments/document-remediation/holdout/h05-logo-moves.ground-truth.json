@@ -1,0 +1,21 @@
+{
+  "document": "h05-logo-moves",
+  "tests": "One logo repeated four times across three pages, in a different alignment each time and at two sizes.",
+  "attacks": "Running-artifact detection that keys on consistent position. The mark moves left, right, centre, and appears twice on the last page at different sizes, so position-based repeat detection misses it and describes it four times.",
+  "title": "Quarterly Circular",
+  "language": "en",
+  "pages": 3,
+  "headingHierarchy": [
+    { "level": 1, "text": "Quarterly Circular" },
+    { "level": 2, "text": "Scope" }, { "level": 2, "text": "Rates" }, { "level": 2, "text": "Contact" }
+  ],
+  "readingOrder": ["p1 mark","H1","intro","H2 Scope","para","p2 mark","H2 Rates","para","p3 mark","H2 Contact","para","p3 footer mark"],
+  "lists": [], "tables": [], "figures": [],
+  "repeatedImages": [
+    { "id": "logo-northwind.png", "occurrences": 4, "pages": [1,2,3],
+      "positions": ["top-left","top-right","top-centre","bottom-centre, smaller"],
+      "expectedHandling": "Recognised as one image. Marked as artifact, or described once. Four descriptions is an assertion failure." }
+  ],
+  "decorativeGraphics": ["footer rule"], "links": [], "artifacts": ["all four logo occurrences"],
+  "intentionalProblems": ["repeated image at varying position and size"]
+}

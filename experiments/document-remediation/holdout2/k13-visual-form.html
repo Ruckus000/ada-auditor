@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Incident Report Form</title>
+<style>
+ @page{size:A4;margin:18mm} body{font:11pt/1.5 Georgia,serif;color:#111}
+ h1{font-size:17pt;margin:0 0 4pt} .sub{font-size:9.5pt;color:#667;margin-bottom:14pt}
+ .row{display:flex;gap:8mm;margin:9pt 0}
+ .fld{flex:1}
+ .lab{font-size:9pt;color:#445;margin-bottom:2pt}
+ .box{border:1px solid #667;height:9mm;background:#fcfcfa}
+ .box.tall{height:26mm}
+ .checks{display:flex;gap:10mm;margin-top:3pt}
+ .chk{display:flex;align-items:center;gap:3pt;font-size:10pt}
+ .sq{width:4mm;height:4mm;border:1px solid #667;display:inline-block}
+</style></head><body>
+<h1>Incident Report Form</h1>
+<div class="sub">Complete within 24 hours. Do not record patient identifiers on this form.</div>
+
+<div class="row">
+ <div class="fld"><div class="lab">Date of incident</div><div class="box"></div></div>
+ <div class="fld"><div class="lab">Time of incident</div><div class="box"></div></div>
+ <div class="fld"><div class="lab">Location</div><div class="box"></div></div>
+</div>
+
+<div class="row">
+ <div class="fld"><div class="lab">Reported by</div><div class="box"></div></div>
+ <div class="fld"><div class="lab">Role</div><div class="box"></div></div>
+</div>
+
+<div class="row">
+ <div class="fld"><div class="lab">Description of what happened</div><div class="box tall"></div></div>
+</div>
+
+<div class="row">
+ <div class="fld">
+   <div class="lab">Degree of harm</div>
+   <div class="checks">
+     <span class="chk"><span class="sq"></span> None</span>
+     <span class="chk"><span class="sq"></span> Low</span>
+     <span class="chk"><span class="sq"></span> Moderate</span>
+     <span class="chk"><span class="sq"></span> Severe</span>
+   </div>
+ </div>
+</div>
+</body></html>

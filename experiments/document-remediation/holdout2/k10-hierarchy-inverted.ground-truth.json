@@ -1,0 +1,23 @@
+{
+  "document": "k10-hierarchy-inverted",
+  "tests": "A heading hierarchy whose visual sizes run inverted: the H1 is the smallest text on the page, level-2 headings are 17pt, and level-3 headings are 20pt — larger than their own parents.",
+  "attacks": "Level assignment by font size, in the hardest direction. Any size ordering produces a hierarchy that is internally consistent and completely wrong. Carried forward from the 'heading levels disagree' class that survived experiment 2 on both corpora.",
+  "title": "Infection Control Manual",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Infection Control Manual", "styledAs": "11pt bold uppercase — smallest heading on the page" },
+    { "level": 2, "text": "Hand hygiene", "styledAs": "17pt bold" },
+    { "level": 3, "text": "Alcohol gel", "styledAs": "20pt normal — larger than its parent" },
+    { "level": 4, "text": "Exceptions", "styledAs": "9.5pt bold — smaller than body" },
+    { "level": 2, "text": "Isolation", "styledAs": "17pt bold" },
+    { "level": 3, "text": "Cohorting", "styledAs": "20pt normal" }
+  ],
+  "readingOrder": ["H1","intro","Hand hygiene","para","Alcohol gel","para","Exceptions","para","Isolation","para","Cohorting","para"],
+  "lists": [], "tables": [], "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": [
+    "the document title is the smallest heading",
+    "level-3 headings are larger than level-2",
+    "the level-4 heading is smaller than body text",
+    "no size-to-level mapping exists that is correct"
+  ]
+}

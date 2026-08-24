@@ -1,0 +1,36 @@
+{
+  "document": "01-simple-text",
+  "tests": "Baseline control. Conventional structure with no adversarial features. A failure here is a failure on the easy case.",
+  "adversarial": false,
+  "title": "Quarterly Operations Summary",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Quarterly Operations Summary" },
+    { "level": 2, "text": "Throughput" },
+    { "level": 3, "text": "Regional detail" },
+    { "level": 2, "text": "Actions carried forward" },
+    { "level": 2, "text": "Approval sequence" }
+  ],
+  "readingOrder": [
+    "running header", "H1", "intro paragraph", "H2 Throughput", "paragraph",
+    "H3 Regional detail", "paragraph", "H2 Actions carried forward",
+    "unordered list (3 items)", "H2 Approval sequence", "ordered list (3 items)",
+    "closing paragraph with link", "running footer"
+  ],
+  "lists": [
+    { "type": "unordered", "items": 3 },
+    { "type": "ordered", "items": 3 }
+  ],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [
+    "horizontal rule under running header (CSS border, artifact)",
+    "horizontal rule above running footer (CSS border, artifact)"
+  ],
+  "expectedAltText": [],
+  "links": [
+    { "text": "quarterly operations page", "href": "https://example.org/operations/quarterly" }
+  ],
+  "artifacts": ["running header", "running footer", "page number text"],
+  "intentionalProblems": []
+}

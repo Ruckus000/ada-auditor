@@ -1,0 +1,122 @@
+{
+  "document": "h08-table-spans-pages",
+  "tests": "A single 60-row table split across page boundaries, with the header row repeated on each continuation page.",
+  "attacks": "Per-page table detection. The correct answer is ONE table of 25 rows. Two tables of 4 columns is an assertion failure, and so is treating the repeated header as a data row.",
+  "title": "Vehicle Register",
+  "language": "en",
+  "headingHierarchy": [
+    {
+      "level": 1,
+      "text": "Vehicle Register"
+    }
+  ],
+  "readingOrder": [
+    "H1",
+    "intro",
+    "table (continues across the page break)",
+    "closing"
+  ],
+  "lists": [],
+  "tables": [
+    {
+      "borders": "full",
+      "columns": 4,
+      "bodyRows": 60,
+      "headerRows": 1,
+      "spansPages": true,
+      "columnHeaders": [
+        "Registration",
+        "Class",
+        "Year",
+        "Odometer"
+      ],
+      "rowHeaders": [
+        "NW-1001",
+        "NW-1002",
+        "NW-1003",
+        "NW-1004",
+        "NW-1005",
+        "NW-1006",
+        "NW-1007",
+        "NW-1008",
+        "NW-1009",
+        "NW-1010",
+        "NW-1011",
+        "NW-1012",
+        "NW-1013",
+        "NW-1014",
+        "NW-1015",
+        "NW-1016",
+        "NW-1017",
+        "NW-1018",
+        "NW-1019",
+        "NW-1020",
+        "NW-1021",
+        "NW-1022",
+        "NW-1023",
+        "NW-1024",
+        "NW-1025",
+        "NW-1026",
+        "NW-1027",
+        "NW-1028",
+        "NW-1029",
+        "NW-1030",
+        "NW-1031",
+        "NW-1032",
+        "NW-1033",
+        "NW-1034",
+        "NW-1035",
+        "NW-1036",
+        "NW-1037",
+        "NW-1038",
+        "NW-1039",
+        "NW-1040",
+        "NW-1041",
+        "NW-1042",
+        "NW-1043",
+        "NW-1044",
+        "NW-1045",
+        "NW-1046",
+        "NW-1047",
+        "NW-1048",
+        "NW-1049",
+        "NW-1050",
+        "NW-1051",
+        "NW-1052",
+        "NW-1053",
+        "NW-1054",
+        "NW-1055",
+        "NW-1056",
+        "NW-1057",
+        "NW-1058",
+        "NW-1059",
+        "NW-1060"
+      ],
+      "expectedTableCount": 1,
+      "repeatedHeaderNote": "The header repeats visually at the top of the continuation page. It is one logical header, not a second table and not a data row.",
+      "rowHeadersNote": "The 60 registration values, extracted from the source HTML's th[scope=row] cells. Previously recorded as the prose summary quoted in groundTruthCorrections below."
+    }
+  ],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": [
+    "repeated header row on the continuation page"
+  ],
+  "intentionalProblems": [
+    "table spans a page break with a repeated header"
+  ],
+  "groundTruthCorrections": [
+    {
+      "date": "2026-08-23",
+      "field": "tables[0].rowHeaders",
+      "authorisedBy": "user, explicitly, after the final holdout checkpoint",
+      "was": "registration column, 60 values NW-1001 to NW-1060",
+      "now": "array of the 60 registration values NW-1001 \u2026 NW-1060",
+      "reason": "Prose where every other fixture in both corpora uses an array. compare.mjs only treats a list as naming cells, so this table's legitimate row headers could not be recognised. Same class of inconsistency already corrected in the development corpus for 12-kitchen-sink.",
+      "found": "The final holdout checkpoint reported 28 cells 'marked as a header but ground truth lists it as data', all of them this column.",
+      "effect": "Adds names taken verbatim from the document's own th[scope=row] cells. No expectation is weakened and no new behaviour is excused.",
+      "disclosure": "This correction was made AFTER the final checkpoint and after its result was known. It moves the headline number substantially in the pipeline's favour. Any figure derived from it is a post-hoc rescore of already-generated output, not a fresh measurement, and must be reported as such. The pre-correction result stands as the recorded outcome of the gate."
+    }
+  ]
+}

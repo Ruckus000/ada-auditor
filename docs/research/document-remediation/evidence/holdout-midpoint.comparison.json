@@ -1,0 +1,807 @@
+[
+  {
+    "document": "h01-big-text-not-heading",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H1\",\"H3\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 704,
+      "pages": 1,
+      "lang": "en",
+      "title": "Tariff Schedule 2026",
+      "headings": [
+        "H1",
+        "H1",
+        "H3"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "T a r i f f S c h e d u l e 2 0 2 6"
+        },
+        {
+          "level": "H1",
+          "text": "S U P E R S E D E D"
+        },
+        {
+          "level": "H3",
+          "text": "E x c l u si o n s"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h02-headings-look-like-body",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H3\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 7,
+      "textChars": 853,
+      "pages": 1,
+      "lang": "en",
+      "title": "Berth Allocation Procedure",
+      "headings": [],
+      "headingTexts": [],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h03-captions-above",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 533,
+      "pages": 1,
+      "lang": "en",
+      "title": "Crane Inspection Record",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Crane Inspection Record"
+        },
+        {
+          "level": "H2",
+          "text": "P l a t e 1 : R a i l w e a r o n t h e se a w a r d l e g , m e a su r e d a t 4 . 2 m m a g a i n st a t o l e r a n c e o f 3 m m ."
+        },
+        {
+          "level": "H2",
+          "text": "P l a t e 2 : T h e l a n d w a r d l e g a t t h e sa m e i n sp e c t i o n , sh o w i n g w e a r w i t h i n t o l e r a n c e a t 1 . 8 m m ."
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "Plate 1: Rail wear on the seaward leg, measured at 4.2 mm against a tolerance of 3 mm.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Plate 2: The landward leg at the same inspection, showing wear within tolerance at 1.8 mm.",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h04-one-caption-many-images",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "4 Figure elements for 2 expected (2 meaningful + 0 distinct repeated) — 2 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 398,
+      "pages": 1,
+      "lang": "en",
+      "title": "Apron Survey Panels",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Apron Survey Panels"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 m only.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 m only.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 m only.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: The drainage channel at the apron's northern edge.",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h05-logo-moves",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "4 Figure elements for 1 expected (0 meaningful + 1 distinct repeated) — 3 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 405,
+      "pages": 3,
+      "lang": "en",
+      "title": "Quarterly Circular",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Q u a r t e r l y C i r c u l a r"
+        },
+        {
+          "level": "H2",
+          "text": "S c o p e"
+        },
+        {
+          "level": "H2",
+          "text": "R a t e s"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t a c t"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h06-mixed-table-borders",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "3 table(s) in ground truth, 1 detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 1 has 9 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 31,
+      "textChars": 360,
+      "pages": 1,
+      "lang": "en",
+      "title": "Depot Cost Comparison",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "De p o t C o st C o m p a r i so n"
+        },
+        {
+          "level": "H2",
+          "text": "N o r u l e s"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 9,
+          "tr": 3
+        }
+      ]
+    }
+  },
+  {
+    "document": "h07-three-level-headers",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "table 1 has 42 data cells and zero /TH — header relationships absent"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 94,
+      "textChars": 364,
+      "pages": 1,
+      "lang": "en",
+      "title": "Consolidated Movements",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o n so l i d a t e d M o v e m e n t s"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 42,
+          "tr": 6
+        }
+      ]
+    }
+  },
+  {
+    "document": "h08-table-spans-pages",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "table 1 has 116 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 564,
+      "textChars": 2027,
+      "pages": 3,
+      "lang": "en",
+      "title": "Vehicle Register",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "V e h i c l e Re g i st e r"
+        },
+        {
+          "level": "H2",
+          "text": "T h e r e g is t e r is c o m p l e t e a s a t t h e d a t e o f is s u e ."
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 116,
+          "tr": 29
+        },
+        {
+          "th": 0,
+          "td": 132,
+          "tr": 33
+        }
+      ]
+    }
+  },
+  {
+    "document": "h09-three-column",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 767,
+      "pages": 1,
+      "lang": "en",
+      "title": "Port Bulletin",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "P o r t B u l l e t i n"
+        },
+        {
+          "level": "H2",
+          "text": "D r e d g i n g"
+        },
+        {
+          "level": "H2",
+          "text": "G a t e h o u r s"
+        },
+        {
+          "level": "H2",
+          "text": "C h a r g e s"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t a c t"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h10-sidebar-callouts",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 978,
+      "pages": 1,
+      "lang": "en",
+      "title": "Storage Policy",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Storage Policy"
+        },
+        {
+          "level": "H2",
+          "text": "E x t e n si o n s"
+        },
+        {
+          "level": "H2",
+          "text": "A b a n d o n e d g o o d s"
+        },
+        {
+          "level": "H2",
+          "text": "H a z a r d o u s c o n si g n m e n t s"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h11-chart-labels-as-headings",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 390,
+      "pages": 1,
+      "lang": "en",
+      "title": "Utilisation Dashboard",
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "U t i l i sa t i o n Da shb o a r d"
+        },
+        {
+          "level": "H2",
+          "text": "B e r t h o c c u p a n c y"
+        },
+        {
+          "level": "H1",
+          "text": "Berth Occupancy by Month"
+        },
+        {
+          "level": "H2",
+          "text": "N e x t r e v i e w"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h12-visible-title-no-metadata",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 8,
+      "textChars": 480,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a st a l De p o t L e a se R e n e w a l : O p t i o n s A p p r a i sa l"
+        },
+        {
+          "level": "H2",
+          "text": "Prepared for the Estates Committee, August 2026"
+        },
+        {
+          "level": "H1",
+          "text": "P u r p o se"
+        },
+        {
+          "level": "H1",
+          "text": "R e c o m m e n d a t i o n"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h13-first-big-text-not-title",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H2\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 445,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "D R A F T"
+        },
+        {
+          "level": "H2",
+          "text": "C O M M E R C I A L I N C O N F I D E N C E"
+        },
+        {
+          "level": "H1",
+          "text": "N o r t h e r n A p r o n S u r r e n d e r : H e a d s o f T e r m s"
+        },
+        {
+          "level": "H2",
+          "text": "P a r t i e s"
+        },
+        {
+          "level": "H2",
+          "text": "T e r m"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "h14-mixed-scan",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 9,
+      "textChars": 605,
+      "pages": 3,
+      "lang": "en",
+      "title": "Lease File Bundle",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "L e a se Fi l e B u n d l e"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t e n t s"
+        },
+        {
+          "level": "H2",
+          "text": "R e sp o n se o f 1 9 A u g u st"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h15-decorative-vs-meaningful",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "3 Figure elements for 1 expected (1 meaningful + 0 distinct repeated) — 2 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 462,
+      "pages": 1,
+      "lang": "en",
+      "title": "Signage Standard",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "S i g n a g e S t a n d a r d"
+        },
+        {
+          "level": "H2",
+          "text": "A p p r o v e d m a r k"
+        },
+        {
+          "level": "H2",
+          "text": "P r o h i b i t e d v a r i a t i o n s"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "h16-inconsistent-hierarchy",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H2\",\"H3\",\"H4\",\"H2\",\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H3\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 15,
+      "textChars": 755,
+      "pages": 1,
+      "lang": "en",
+      "title": "Operations Manual Extract",
+      "headings": [
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H2",
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "O p e r a t i o n s M a n u a l E x t r a c t"
+        },
+        {
+          "level": "H2",
+          "text": "Receiving"
+        },
+        {
+          "level": "H3",
+          "text": "D i s c r e p a n c i e s"
+        },
+        {
+          "level": "H4",
+          "text": "STORAGE"
+        },
+        {
+          "level": "H2",
+          "text": "S e g r e g a t i o n"
+        },
+        {
+          "level": "H1",
+          "text": "Dispatch"
+        },
+        {
+          "level": "H2",
+          "text": "RECORDS"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  }
+]

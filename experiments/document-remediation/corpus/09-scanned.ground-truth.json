@@ -1,0 +1,66 @@
+{
+  "document": "09-scanned",
+  "tests": "The OCR boundary. An image-only PDF with no text layer at all \u2014 rendered to PNG and rebuilt with PDFBox fromimage.",
+  "adversarial": true,
+  "generation": "Rendered to PNG via Playwright screenshot, then assembled with `pdfbox fromimage`. It is the one corpus document not produced directly by page.pdf().",
+  "adversarialFeatures": [
+    "no text layer whatsoever \u2014 every glyph is raster",
+    "slight page rotation, as a photocopy would have",
+    "monospace typewriter face and dust specks",
+    "a handwriting-style signature that OCR should not be expected to read"
+  ],
+  "title": "Lease Correspondence (scanned source)",
+  "titleNote": "The HTML title does not survive into the image-only PDF. The rebuilt PDF has no title, which is itself a finding to record.",
+  "language": "en",
+  "languageNote": "Not declared anywhere in the PDF; must be inferred, and cannot be inferred without OCR.",
+  "headingHierarchy": [
+    {
+      "level": 1,
+      "text": "RE: LEASE RENEWAL \u2014 COASTAL DEPOT, PLOT 4B",
+      "note": "visually a heading; recoverable only after OCR"
+    }
+  ],
+  "readingOrder": [
+    "letterhead",
+    "subject heading",
+    "four body paragraphs",
+    "signature",
+    "signature block name"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [
+    {
+      "id": "full-page scan",
+      "meaningful": true,
+      "expectedHandling": "The page is an image of text. Correct remediation is OCR to produce a text layer, then normal tagging. Describing the page as a figure with alt text is wrong.",
+      "captionPresent": false,
+      "captionNote": "The page is an image of text, not an image of a thing. It carries no caption and none could exist."
+    }
+  ],
+  "decorativeGraphics": [
+    "three dust specks"
+  ],
+  "expectedAltText": [],
+  "expectedOutcome": "Without OCR this must be INCONCLUSIVE. OpenDataLoader ships OCR (80+ languages), so this document measures whether that OCR path is reachable and sufficient. A DELIVERABLE verdict with no text layer would mean the pipeline certified an empty document.",
+  "links": [],
+  "artifacts": [
+    "dust specks"
+  ],
+  "intentionalProblems": [
+    "no text layer",
+    "no document title in the rebuilt PDF",
+    "no language declaration",
+    "page rotation of -0.4 degrees"
+  ],
+  "groundTruthCorrections": [
+    {
+      "date": "2026-08-24",
+      "field": "figures[0].captionPresent",
+      "was": "absent",
+      "now": false,
+      "reason": "The reachability predicate reads a missing captionPresent as captioned, so an OCR-dependent figure counted as deterministically solvable and inflated the gate denominator. Found by validate-fixtures.mjs, not by a result looking wrong.",
+      "effect": "Reduces the reachable subset by one document in each corpus. Makes the gate harder to compute favourably, not easier: it removes a document that was counted as solvable and never was."
+    }
+  ]
+}

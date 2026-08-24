@@ -1,0 +1,9 @@
+# Downloaded toolchain. Pinned versions are recorded in
+# docs/research/document-remediation/experiment-plan.md; fetch-tools.sh
+# reproduces this directory. ~50MB of JARs does not belong in git.
+vendor/
+
+# Every generated artefact: corpus PDFs and raw validator output. Regenerable
+# from corpus/ sources. Summarised numbers that survive are committed under
+# docs/research/document-remediation/.
+out/

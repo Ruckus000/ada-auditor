@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Clinic Staffing Grid</title>
+<style>
+ @page{size:A4;margin:18mm} body{font:10.5pt/1.5 Georgia,serif;color:#111}
+ h1{font-size:17pt;margin:0 0 8pt}
+ table{border-collapse:collapse;width:100%;font-size:9.5pt;margin:12pt 0}
+ th,td{border:1px solid #556;padding:4pt 6pt;text-align:left;vertical-align:top}
+ th{background:#eef1f5;font-weight:bold}
+ table.inner{width:100%;margin:0;font-size:9pt}
+ table.inner th,table.inner td{border:1px dotted #99a;padding:2pt 4pt}
+ table.inner th{background:#f6f8fa}
+</style></head><body>
+<h1>Clinic Staffing Grid</h1>
+<p>The rota column of the outer table contains a table of its own. The inner
+table has its own headers, and they are not headers of the outer table.</p>
+<table>
+ <tr><th scope="col">Clinic</th><th scope="col">Lead</th><th scope="col">Weekly rota</th></tr>
+ <tr>
+  <th scope="row">Ash Road</th><td>Dr Vance</td>
+  <td>
+    <table class="inner">
+      <tr><th scope="col">Day</th><th scope="col">Session</th></tr>
+      <tr><td>Tue</td><td>Morning</td></tr>
+      <tr><td>Thu</td><td>All day</td></tr>
+    </table>
+  </td>
+ </tr>
+ <tr>
+  <th scope="row">Beech Lane</th><td>Dr Okonjo</td>
+  <td>
+    <table class="inner">
+      <tr><th scope="col">Day</th><th scope="col">Session</th></tr>
+      <tr><td>Mon</td><td>Afternoon</td></tr>
+      <tr><td>Fri</td><td>Morning</td></tr>
+    </table>
+  </td>
+ </tr>
+</table>
+</body></html>

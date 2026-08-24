@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Utilisation Dashboard</title>
+<style>
+ @page{size:A4;margin:18mm} body{font:10.5pt/1.5 Georgia,serif;color:#111}
+ h1{font-size:17pt;margin:0 0 8pt} h2{font-size:12.5pt;margin:14pt 0 5pt}
+ svg{display:block;margin:10pt 0}
+</style></head><body>
+<h1>Utilisation Dashboard</h1>
+<h2>Berth occupancy</h2>
+<p>The chart's own title and its axis labels are set large and bold inside the graphic.
+They are figure internals, not document headings.</p>
+<svg width="440" height="240" viewBox="0 0 440 240" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">
+ <text x="220" y="22" text-anchor="middle" font-size="17" font-weight="bold">Berth Occupancy by Month</text>
+ <text x="220" y="40" text-anchor="middle" font-size="12" font-weight="bold">Western quay, 2026</text>
+ <line x1="52" y1="52" x2="52" y2="182" stroke="#333" stroke-width="1.5"/>
+ <line x1="52" y1="182" x2="420" y2="182" stroke="#333" stroke-width="1.5"/>
+ <text x="24" y="120" font-size="13" font-weight="bold" transform="rotate(-90 24 120)" text-anchor="middle">Occupancy %</text>
+ <text x="236" y="212" text-anchor="middle" font-size="13" font-weight="bold">Month of year</text>
+ <rect x="70"  y="120" width="26" height="62" fill="#1f4e9c"/>
+ <rect x="112" y="106" width="26" height="76" fill="#1f4e9c"/>
+ <rect x="154" y="96"  width="26" height="86" fill="#1f4e9c"/>
+ <rect x="196" y="84"  width="26" height="98" fill="#1f4e9c"/>
+ <rect x="238" y="92"  width="26" height="90" fill="#1f4e9c"/>
+ <rect x="280" y="78"  width="26" height="104" fill="#1f4e9c"/>
+ <text x="83"  y="196" text-anchor="middle" font-size="9">Jan</text>
+ <text x="125" y="196" text-anchor="middle" font-size="9">Feb</text>
+ <text x="167" y="196" text-anchor="middle" font-size="9">Mar</text>
+ <text x="209" y="196" text-anchor="middle" font-size="9">Apr</text>
+ <text x="251" y="196" text-anchor="middle" font-size="9">May</text>
+ <text x="293" y="196" text-anchor="middle" font-size="9">Jun</text>
+</svg>
+<p>Occupancy rose from 48% in January to 80% in June, with a dip in May.</p>
+<h2>Next review</h2>
+<p>The dashboard is reissued quarterly.</p>
+</body></html>

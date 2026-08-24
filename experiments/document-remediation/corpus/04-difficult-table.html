@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Fleet Utilisation Detail</title>
+<style>
+  @page { size: A4; margin: 18mm; }
+  body { font: 10.5pt/1.5 Georgia, serif; color: #111; }
+  h1 { font-size: 17pt; margin: 0 0 10pt; }
+  /* No borders anywhere. Cell boundaries exist only as whitespace, which is
+     the case borderless-table detection has to solve. */
+  table { border-collapse: collapse; width: 100%; margin: 16pt 0; font-size: 9.5pt; }
+  td, th { padding: 4pt 8pt; vertical-align: top; text-align: right; border: none; }
+  th { font-weight: bold; }
+  .l { text-align: left; }
+  .c { text-align: center; }
+  .wrap { width: 30%; }
+</style>
+</head>
+<body>
+<h1>Fleet Utilisation Detail</h1>
+<p>Utilisation is reported by vehicle class and by depot. Blank cells indicate that the
+class is not operated at that depot, which is different from a recorded zero.</p>
+
+<table>
+  <tr>
+    <th class="l" rowspan="2">Vehicle class</th>
+    <th class="c" colspan="2">Northern</th>
+    <th class="c" colspan="2">Southern</th>
+    <th class="l wrap" rowspan="2">Notes carried forward from the previous review cycle</th>
+  </tr>
+  <tr>
+    <th>Units</th><th>Util. %</th>
+    <th>Units</th><th>Util. %</th>
+  </tr>
+
+  <tr>
+    <th class="l" scope="row">Rigid 18t</th>
+    <td>12</td><td>81</td>
+    <td>9</td><td>77</td>
+    <td class="l wrap">Replacement cycle brought forward; three units are beyond their
+    scheduled retirement date and are being run on extended inspection.</td>
+  </tr>
+  <tr>
+    <th class="l" scope="row">Artic 44t</th>
+    <td>7</td><td>88</td>
+    <td>6</td><td>84</td>
+    <td class="l wrap">No action.</td>
+  </tr>
+  <tr>
+    <th class="l" scope="row">Shunter</th>
+    <td>2</td><td>34</td>
+    <td></td><td></td>
+    <td class="l wrap">Not operated at Southern. Both northern units are diesel and are
+    listed for retirement under the actions carried forward.</td>
+  </tr>
+  <tr>
+    <th class="l" scope="row">Van 3.5t</th>
+    <td></td><td></td>
+    <td>14</td><td>62</td>
+    <td class="l wrap">Southern only. Utilisation is low because the class is held for
+    overflow rather than scheduled work.</td>
+  </tr>
+</table>
+
+<p>Class-level utilisation is not comparable across depots where the operating pattern
+differs, which is the case for shunters and vans.</p>
+</body>
+</html>

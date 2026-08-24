@@ -1,0 +1,3070 @@
+[
+  {
+    "document": "k01-vector-chart-titles",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\",\"H3\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 477,
+      "pages": 1,
+      "lang": "en",
+      "title": "Immunisation Uptake Review",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H3",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "I m m u n i sa t i o n U p t a k e R e v i e w"
+        },
+        {
+          "level": "H2",
+          "text": "Uptake by ward"
+        },
+        {
+          "level": "H2",
+          "text": "Uptake by Ward, 2026"
+        },
+        {
+          "level": "H3",
+          "text": "Ward"
+        },
+        {
+          "level": "H2",
+          "text": "Next steps"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "k02-nested-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 25,
+      "textChars": 303,
+      "pages": 1,
+      "lang": "en",
+      "title": "Clinic Staffing Grid",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C l i n i c S t a f f i n g G r i d"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 5,
+          "td": 4,
+          "tr": 3,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "C l i n i c",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "L e a d",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "W e e k l y r o t a",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "A sh R o a d",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "D r V a n c e",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "Day Session Tue Morning Thu All day",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "B e e c h L a n e",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "D r O k o n j o",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "Day Session Mon Afternoon Fri Morning",
+              "scope": null,
+              "row": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "document": "k03-header-not-first-row",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "table 1 has 21 data cells and zero /TH — header relationships absent"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 52,
+      "textChars": 308,
+      "pages": 1,
+      "lang": "en",
+      "title": "Waiting Times by Speciality",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "W a i t i n g T i m e s b y S p e c i a l i t y"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 21,
+          "tr": 6,
+          "cells": [
+            {
+              "type": "TD",
+              "text": "P r ov i s i on a l . F i g u r e s e x c l u d e p a t i e n t s w h o d e c l i n e d a f i r s t of f e r e d a p p oi n t m e n t .",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "S p e c i a l i t y",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "U n d e r 1 8 w k s",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "1 8 – 5 2 w k s",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "O v e r 5 2 w k s",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "D e r m a t o l o g y",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "8 1 2",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 4 0",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 9",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "O r t h o p a e d i c s",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "6 0 4",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "3 8 8",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "7 7",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "C a r d i o l o g y",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "5 5 1",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "1 4 2",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "8",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "A l l sp e c i a l i t i e s",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "1 9 6 7",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "7 7 0",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "1 0 4",
+              "scope": null,
+              "row": 5
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "document": "k04-caption-below-and-adjacent-tables",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 54,
+      "textChars": 367,
+      "pages": 1,
+      "lang": "en",
+      "title": "Bed Occupancy Returns",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "B e d O c c u p a n c y Re t u r n s"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 5,
+          "td": 4,
+          "tr": 3,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "S i t e",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "B e d s",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "O c c u p i e d",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R i v e r si d e",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 4 0",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 2 1",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h g a t e",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 8 0",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 5 1",
+              "scope": null,
+              "row": 2
+            }
+          ]
+        },
+        {
+          "th": 5,
+          "td": 4,
+          "tr": 3,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "S i t e",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "E sc a l a t i o n",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "O p e n",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R i v e r si d e",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 4",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "1 8",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h g a t e",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 2",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 2",
+              "scope": null,
+              "row": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "document": "k05-nested-lists",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 19,
+      "textChars": 485,
+      "pages": 1,
+      "lang": "en",
+      "title": "Escalation Protocol",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "E sc a l a t i o n P r o t o c o l"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "k06-footnotes",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 515,
+      "pages": 1,
+      "lang": "en",
+      "title": "Screening Coverage Note",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "S c r e e n i n g C o v e r a g e N o t e"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "k07-rotated-headers",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 4,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "table 1: cell \"Scictael\" marked as a header but ground truth lists it as data"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: cell \"VaccineStS\" marked as a header but ground truth lists it as data"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: cell \"VaccineStSoIhcnikfn\" marked as a header but ground truth lists it as data"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: cell \"VaccineS\" marked as a header but ground truth lists it as data"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 1: 4 ground-truth header(s) still tagged TD"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 44,
+      "textChars": 347,
+      "pages": 1,
+      "lang": "en",
+      "title": "Vaccine Stock Matrix",
+      "headings": [],
+      "headingTexts": [],
+      "figures": [],
+      "tables": [
+        {
+          "th": 7,
+          "td": 9,
+          "tr": 4,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "Sc ic ta el",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "V a c c i n e S tS",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "V a c c i n e S tS oIh cni kfn",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "V a c c i n e S",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R i v e r si d e",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "1 4 2 0",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "3 8 0",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 1 0",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h g a t e",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "9 8 0",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 9 5",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 4 0",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "A sh R o a d",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "5 1 0",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 2 0",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "8 5",
+              "scope": null,
+              "row": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "document": "k08-heading-is-a-link",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\",\"H2\",\"H3\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 16,
+      "textChars": 467,
+      "pages": 1,
+      "lang": "en",
+      "title": "Policy Index",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H3"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Policy Index"
+        },
+        {
+          "level": "H2",
+          "text": "I n f e c t i o n C o n t r o l"
+        },
+        {
+          "level": "H2",
+          "text": "S a f e g u a r d i n g A d u l t s"
+        },
+        {
+          "level": "H2",
+          "text": "R e c o r d s M a n a g e m e n t"
+        },
+        {
+          "level": "H3",
+          "text": "R e t e n t io n s c h e d u l e s f o l l o w t h e n a t io n a l c o d e ."
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "k09-table-spans-pages",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "one table fragmented into 3 — ground truth records a single table"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 664,
+      "textChars": 2512,
+      "pages": 3,
+      "lang": "en",
+      "title": "Equipment Register",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "E q u i p m e n t Re g i st e r"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 32,
+          "td": 84,
+          "tr": 29,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "A sse t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "L o c a t i o n",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Y e a r",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "S t a t u s",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 1",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 5",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 2",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 3",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 4",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 5",
+              "scope": "Row",
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 6",
+              "scope": "Row",
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 7",
+              "scope": "Row",
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 8",
+              "scope": "Row",
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 0 9",
+              "scope": "Row",
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 0",
+              "scope": "Row",
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 1",
+              "scope": "Row",
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 2",
+              "scope": "Row",
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 4",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 3",
+              "scope": "Row",
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 5",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 4",
+              "scope": "Row",
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 5",
+              "scope": "Row",
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 6",
+              "scope": "Row",
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 7",
+              "scope": "Row",
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 8",
+              "scope": "Row",
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 1 9",
+              "scope": "Row",
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 0",
+              "scope": "Row",
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 1",
+              "scope": "Row",
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 2",
+              "scope": "Row",
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 3",
+              "scope": "Row",
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 4",
+              "scope": "Row",
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 4",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 5",
+              "scope": "Row",
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 5",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 6",
+              "scope": "Row",
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 7",
+              "scope": "Row",
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 8",
+              "scope": "Row",
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 28
+            }
+          ]
+        },
+        {
+          "th": 36,
+          "td": 96,
+          "tr": 33,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "A sse t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "L o c a t i o n",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Y e a r",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "S t a t u s",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 2 9",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 0",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 1",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 2",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 3",
+              "scope": "Row",
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 4",
+              "scope": "Row",
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 5",
+              "scope": "Row",
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 6",
+              "scope": "Row",
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 4",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 7",
+              "scope": "Row",
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 5",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 8",
+              "scope": "Row",
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 3 9",
+              "scope": "Row",
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 0",
+              "scope": "Row",
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 1",
+              "scope": "Row",
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 2",
+              "scope": "Row",
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 3",
+              "scope": "Row",
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 4",
+              "scope": "Row",
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 5",
+              "scope": "Row",
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 6",
+              "scope": "Row",
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 7",
+              "scope": "Row",
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 8",
+              "scope": "Row",
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 4",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 4 9",
+              "scope": "Row",
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 5",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 0",
+              "scope": "Row",
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 1",
+              "scope": "Row",
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 2",
+              "scope": "Row",
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 3",
+              "scope": "Row",
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 4",
+              "scope": "Row",
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 5",
+              "scope": "Row",
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 6",
+              "scope": "Row",
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 7",
+              "scope": "Row",
+              "row": 29
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 29
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 29
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 29
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 8",
+              "scope": "Row",
+              "row": 30
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 30
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 30
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 30
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 5 9",
+              "scope": "Row",
+              "row": 31
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 31
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 31
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 31
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 0",
+              "scope": "Row",
+              "row": 32
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 32
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 4",
+              "scope": null,
+              "row": 32
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 32
+            }
+          ]
+        },
+        {
+          "th": 14,
+          "td": 30,
+          "tr": 11,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "A sse t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "L o c a t i o n",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Y e a r",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "S t a t u s",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 1",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 5",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 2",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 3",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 4",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 5",
+              "scope": "Row",
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 6",
+              "scope": "Row",
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 7",
+              "scope": "Row",
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "I m a g in g",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 8",
+              "scope": "Row",
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 6 9",
+              "scope": "Row",
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "T h e a t r e",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "S e r v ic e a b l e",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TH",
+              "text": "R H - 2 0 7 0",
+              "scope": "Row",
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "C l in ic",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "W it h d r a w n",
+              "scope": null,
+              "row": 10
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "document": "k10-hierarchy-inverted",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\",\"H1\",\"H1\",\"H2\",\"H1\"], ground truth [\"H1\",\"H2\",\"H3\",\"H4\",\"H2\",\"H3\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 572,
+      "pages": 1,
+      "lang": "en",
+      "title": "Infection Control Manual",
+      "headings": [
+        "H1",
+        "H1",
+        "H1",
+        "H2",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "I N F E C T I O N C O N T R O L M A N U A L"
+        },
+        {
+          "level": "H1",
+          "text": "H a n d h y g i e n e"
+        },
+        {
+          "level": "H1",
+          "text": "A l c o h o l g e l"
+        },
+        {
+          "level": "H2",
+          "text": "I so l a t i o n"
+        },
+        {
+          "level": "H1",
+          "text": "C o h o r t in g"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "k11-same-image-two-meanings",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 22,
+      "textChars": 539,
+      "pages": 2,
+      "lang": "en",
+      "title": "Ward Signage Audit",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "W a r d S i g n a g e A u d i t"
+        },
+        {
+          "level": "H2",
+          "text": "C o r r i d o r si g n a g e"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1: The east corridor, showing directional signage mounted above head height and outside the reading cone.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 3: The authority mark at the minimum permitted reproduction size, which is the subject of finding 4.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: The same corridor, photographed to show the pooling of light between fittings rather than the signage.",
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "k12-definition-list",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 9,
+      "textChars": 635,
+      "pages": 1,
+      "lang": "en",
+      "title": "Glossary of Reporting Terms",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "G l o ssa r y o f Re p o r t i n g T e r m s"
+        },
+        {
+          "level": "H2",
+          "text": "E p i so d e"
+        },
+        {
+          "level": "H2",
+          "text": "B r e a c h"
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "k13-visual-form",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 7,
+      "textChars": 223,
+      "pages": 1,
+      "lang": "en",
+      "title": "Incident Report Form",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "I n c i d e n t Re p o r t Fo r m"
+        },
+        {
+          "level": "H2",
+          "text": "C o m p l e t e w it h in 2 4 h o u r s . D o n o t r e c o r d p a t ie n t id e n t if ie r s o n t h is f o r m ."
+        }
+      ],
+      "figures": [],
+      "tables": []
+    }
+  },
+  {
+    "document": "k14-column-spanning-figure",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 2: Typical window detail on the south elevation....\""
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 537,
+      "pages": 1,
+      "lang": "en",
+      "title": "Estates Condition Survey",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Estates Condition Survey"
+        },
+        {
+          "level": "H2",
+          "text": "R o o f i n g"
+        },
+        {
+          "level": "H2",
+          "text": "W i n d o w s"
+        },
+        {
+          "level": "H2",
+          "text": "B a c k l o g"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "Figure 1: The west wing roof, showing ponding at the outlet and lifted seams along the parapet.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": []
+    }
+  },
+  {
+    "document": "k15-vector-decoration",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: 2 rows tagged as a data table where ground truth records none"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 21,
+      "textChars": 378,
+      "pages": 1,
+      "lang": "en",
+      "title": "Annual Quality Account",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Annual Quality Account"
+        },
+        {
+          "level": "H2",
+          "text": "E sc a l a t i o n p a t h"
+        },
+        {
+          "level": "H2",
+          "text": "S e a l"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 0,
+          "td": 7,
+          "tr": 2,
+          "cells": [
+            {
+              "type": "TD",
+              "text": "W a r d",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "M a t r o n",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "D ir e c t o r",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "document": "k16-kitchen-sink",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 1 has 17 data cells and zero /TH — header relationships absent"
+      },
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H2\",\"H1\",\"H2\",\"H3\",\"H3\",\"H1\"], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H2\",\"H3\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 86,
+      "textChars": 1328,
+      "pages": 3,
+      "lang": "en",
+      "title": "Riverside Health Authority: Annual Report 2026",
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H2",
+        "H3",
+        "H3",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Riverside Health Authority"
+        },
+        {
+          "level": "H2",
+          "text": "S U M M A R Y"
+        },
+        {
+          "level": "H1",
+          "text": "P os i t i on a t y e a r e n d"
+        },
+        {
+          "level": "H2",
+          "text": "T w o s it e s m e t t h e a c c e s s s t a n d a r d . A s h R o a d d id n o t ."
+        },
+        {
+          "level": "H3",
+          "text": "A C T I V I T Y"
+        },
+        {
+          "level": "H3",
+          "text": "E S T A T E"
+        },
+        {
+          "level": "H1",
+          "text": "E p i so d e"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1: The Ash Road site, showing the temporary modular unit in use since the previous report.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: Directional signage in the main corridor at Riverside.",
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 0,
+          "td": 17,
+          "tr": 5,
+          "cells": [
+            {
+              "type": "TD",
+              "text": "Provisional. Excludes patients who declined a first offered appointment.",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "Site",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "Q1",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "Q2",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "Q3",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "Riverside",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "4120",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "4340",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "4510",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "Northgate",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2880",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2910",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "3040",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "Ash Road",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "1150",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "1120",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "1090",
+              "scope": null,
+              "row": 4
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

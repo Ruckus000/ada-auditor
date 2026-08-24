@@ -1,0 +1,56 @@
+{
+  "document": "05-images-captioned",
+  "tests": "Figures whose descriptions already exist in the document as visible captions, plus a logo repeating in a running brand bar across two pages.",
+  "adversarial": false,
+  "title": "Coastal Quay Site Report",
+  "language": "en",
+  "pages": 2,
+  "headingHierarchy": [
+    { "level": 1, "text": "Coastal Quay Site Report" },
+    { "level": 2, "text": "Depot apron" }
+  ],
+  "readingOrder": [
+    "page 1 brand bar (artifact)", "H1", "intro paragraph",
+    "Figure 1 image", "Figure 1 caption", "paragraph referencing Figure 1",
+    "page 2 brand bar (artifact)", "H2 Depot apron",
+    "Figure 2 image", "Figure 2 caption", "paragraph referencing Figure 2"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [
+    {
+      "id": "photo-quay.png",
+      "page": 1,
+      "captionPresent": true,
+      "caption": "Figure 1: The western quay at low tide, viewed from the depot apron. The berth allocated to Northwind is the second from the left.",
+      "expectedAltTextSource": "extraction from the visible caption — no model required"
+    },
+    {
+      "id": "photo-depot.png",
+      "page": 2,
+      "captionPresent": true,
+      "caption": "Figure 2: The northern apron, which would be surrendered under the reduced-footprint option. Two shunters are visible at the far edge.",
+      "expectedAltTextSource": "extraction from the visible caption — no model required"
+    }
+  ],
+  "repeatedImages": [
+    {
+      "id": "logo-northwind.png",
+      "occurrences": 2,
+      "pages": [1, 2],
+      "expectedHandling": "Recognised as the same image across pages. Described once, or marked as a running artifact. Two independent descriptions of one logo is a failure."
+    }
+  ],
+  "decorativeGraphics": ["brand bar bottom rule", "figcaption left border"],
+  "expectedAltText": [
+    { "image": "photo-quay.png", "text": "Derived from the Figure 1 caption." },
+    { "image": "photo-depot.png", "text": "Derived from the Figure 2 caption." },
+    { "image": "logo-northwind.png", "text": "Northwind Logistics — or artifact, if treated as running page furniture." }
+  ],
+  "links": [],
+  "artifacts": ["brand bar on each page", "page number text"],
+  "intentionalProblems": [
+    "img alt attributes are empty in the source, so the PDF carries no alt text; the caption is the only description available",
+    "the logo repeats and must not be described twice"
+  ]
+}

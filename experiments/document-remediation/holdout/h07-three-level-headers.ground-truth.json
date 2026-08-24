@@ -1,0 +1,24 @@
+{
+  "document": "h07-three-level-headers",
+  "tests": "Three levels of column header — year, half, measure — over a row-header column, on a landscape page.",
+  "attacks": "Header detection that assumes a single header row. Promoting only the first row to TH loses two levels; promoting all three without scope or headers attributes asserts relationships that are wrong.",
+  "title": "Consolidated Movements",
+  "language": "en",
+  "orientation": "landscape",
+  "headingHierarchy": [{ "level": 1, "text": "Consolidated Movements" }],
+  "readingOrder": ["H1","intro","table"],
+  "lists": [],
+  "tables": [
+    { "borders": "full", "columns": 9, "bodyRows": 3, "headerRows": 3,
+      "headerStructure": {
+        "row1": ["Depot (rowspan 3)","2026 (colspan 4)","2027 (colspan 4)"],
+        "row2": ["H1 (colspan 2)","H2 (colspan 2)","H1 (colspan 2)","H2 (colspan 2)"],
+        "row3": ["In","Out","In","Out","In","Out","In","Out"]
+      },
+      "rowHeaders": ["Northern","Southern","Coastal"],
+      "headerRelationships": "Every numeric cell is governed by four headers: year, half, measure, and depot. The 214 is Northern / 2026 / H1 / In.",
+      "blankCells": 0 }
+  ],
+  "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["three-level header hierarchy requiring multi-level header association"]
+}

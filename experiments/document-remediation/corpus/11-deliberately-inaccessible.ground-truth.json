@@ -1,0 +1,52 @@
+{
+  "document": "11-deliberately-inaccessible",
+  "tests": "Many known accessibility failures concentrated in one document, each recorded so remediation can be scored against a known list.",
+  "adversarial": true,
+  "title": null,
+  "language": null,
+  "headingHierarchy": [
+    { "level": 1, "text": "Terms of Access", "markup": "styled div, not a heading element" },
+    { "level": 2, "text": "Eligibility", "markup": "h4 — level skipped from 1 to 4" },
+    { "level": 2, "text": "Applying", "markup": "h4" },
+    { "level": 2, "text": "Contact", "markup": "h4" }
+  ],
+  "readingOrder": [
+    "title line", "Eligibility heading", "paragraph", "layout table (two cells)",
+    "Applying heading", "paragraph with two links", "low-contrast paragraph",
+    "logo image", "small-print paragraph", "decorative rule", "Contact heading", "paragraph"
+  ],
+  "lists": [],
+  "tables": [
+    { "purpose": "layout only", "columns": 2, "bodyRows": 1, "headers": "none",
+      "expectedHandling": "Treated as presentational. Tagging it as a data table and inventing header relationships is a regression, not a partial fix." }
+  ],
+  "figures": [
+    { "id": "logo-northwind.png", "captionPresent": false, "meaningful": true,
+      "note": "Presented as text-in-an-image. Its content exists nowhere else." }
+  ],
+  "decorativeGraphics": [
+    { "id": "rule-divider.png", "expectedHandling": "artifact" }
+  ],
+  "expectedAltText": [],
+  "links": [
+    { "text": "click here", "href": "https://example.org/apply",
+      "problem": "link purpose not determinable from link text" },
+    { "text": "click here", "href": "https://example.org/charges",
+      "problem": "duplicate link text pointing at a different destination" }
+  ],
+  "artifacts": ["decorative rule"],
+  "intentionalProblems": [
+    "no document title metadata",
+    "no language declaration",
+    "H1 is a styled div, so the document has no level-1 heading",
+    "heading levels skip from the visual H1 straight to h4",
+    "a layout table with no headers that must not be tagged as a data table",
+    "two links whose text is 'click here'",
+    "two different destinations sharing identical link text",
+    "a paragraph below the contrast threshold carrying real content (application deadline)",
+    "text presented as an image with no text alternative",
+    "an image with no alt attribute and no caption",
+    "a decorative image that must be marked as an artifact"
+  ],
+  "scoringNote": "Contrast and link-purpose are WCAG failures that PDF/UA machine checks do not cover, and veraPDF will not report them. They are here to test whether the pipeline silently reports the document as fully remediated when real barriers remain."
+}

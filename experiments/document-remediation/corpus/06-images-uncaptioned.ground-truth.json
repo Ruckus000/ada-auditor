@@ -1,0 +1,48 @@
+{
+  "document": "06-images-uncaptioned",
+  "tests": "The boundary of deterministic remediation. Four graphics with no caption, no surrounding description, and no alt attribute — nothing to extract from.",
+  "adversarial": true,
+  "adversarialFeatures": [
+    "no captions anywhere",
+    "headings are single words and describe the section, not the image",
+    "no prose references any graphic",
+    "a decorative rule appears twice and must not be described",
+    "one graphic is vector (SVG), the rest are raster"
+  ],
+  "title": "Asset Register Extract",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Asset Register Extract" },
+    { "level": 2, "text": "Site" }, { "level": 2, "text": "Apron" },
+    { "level": 2, "text": "Mark" }, { "level": 2, "text": "Layout" }
+  ],
+  "readingOrder": [
+    "H1", "intro paragraph", "decorative rule (artifact)",
+    "H2 Site", "photograph", "H2 Apron", "photograph",
+    "H2 Mark", "logo", "H2 Layout", "diagram", "decorative rule (artifact)"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [
+    { "id": "photo-quay.png", "captionPresent": false, "meaningful": true,
+      "expectedAltTextSource": "unavailable deterministically — requires a model or a human" },
+    { "id": "photo-depot.png", "captionPresent": false, "meaningful": true,
+      "expectedAltTextSource": "unavailable deterministically — requires a model or a human" },
+    { "id": "logo-northwind.png", "captionPresent": false, "meaningful": true,
+      "expectedAltTextSource": "unavailable deterministically; a human would write 'Northwind Logistics'" },
+    { "id": "inline SVG process diagram", "captionPresent": false, "meaningful": true,
+      "expectedAltTextSource": "unavailable deterministically — three linked boxes in sequence" }
+  ],
+  "decorativeGraphics": [
+    { "id": "rule-divider.png", "occurrences": 2,
+      "expectedHandling": "Marked as artifact. Giving this alt text is a failure, not a partial success." }
+  ],
+  "expectedAltText": [],
+  "expectedOutcome": "This document should not reach DELIVERABLE by automation alone. The correct result is NEEDS_REVIEW or INCONCLUSIVE. If the pipeline reports it as fully remediated, the pipeline is fabricating descriptions.",
+  "links": [],
+  "artifacts": ["both decorative rules"],
+  "intentionalProblems": [
+    "four meaningful graphics with no derivable description",
+    "one decorative graphic that must be excluded rather than described"
+  ]
+}

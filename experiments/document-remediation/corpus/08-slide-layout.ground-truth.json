@@ -1,0 +1,47 @@
+{
+  "document": "08-slide-layout",
+  "tests": "Presentation-style landscape layout with floating boxes whose visual position contradicts their logical order. AccessPDF reports PowerPoint-derived PDFs as a known weak case; this reproduces that shape.",
+  "adversarial": true,
+  "adversarialFeatures": [
+    "landscape page",
+    "absolutely positioned boxes with no flow order",
+    "box 3 sits highest on the page but is logically last; box 1 is lower-left",
+    "large numerals are visual ornament attached to headings, not list markers",
+    "purely decorative blobs and a gradient stripe with no informational content",
+    "an uncaptioned photograph"
+  ],
+  "title": "Coastal: three ways forward",
+  "language": "en",
+  "orientation": "landscape",
+  "headingHierarchy": [
+    { "level": 1, "text": "Coastal: three ways forward" }
+  ],
+  "readingOrder": [
+    "title", "kicker", "box 1 Renew as-is", "box 2 Reduce footprint",
+    "box 3 Close", "photograph"
+  ],
+  "readingOrderNote": "Logical order is 1, 2, 3 by the numerals. Pure geometry gives 3, 1, 2 because box 3 is highest. A geometry-only reading order will get this wrong, and that is the point of the document.",
+  "lists": [
+    { "type": "conceptual", "items": 3,
+      "note": "The three boxes form a numbered sequence visually but are not marked up as a list. Treating them as three separate sections is acceptable; inventing list semantics is not required." }
+  ],
+  "tables": [],
+  "figures": [
+    { "id": "photo-depot.png", "captionPresent": false, "meaningful": true,
+      "expectedAltTextSource": "unavailable deterministically" }
+  ],
+  "decorativeGraphics": [
+    { "id": "gradient stripe", "expectedHandling": "artifact" },
+    { "id": "blob g1", "expectedHandling": "artifact" },
+    { "id": "blob g2", "expectedHandling": "artifact" },
+    { "id": "large numerals 1/2/3", "expectedHandling": "Part of the heading text or an artifact. Not content in their own right." }
+  ],
+  "expectedAltText": [],
+  "links": [],
+  "artifacts": ["gradient stripe", "both blobs"],
+  "intentionalProblems": [
+    "geometric reading order disagrees with logical order",
+    "three decorative shapes that must not become figures",
+    "an uncaptioned meaningful photograph"
+  ]
+}

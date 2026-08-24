@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Depot Cost Comparison</title>
+<style>
+ @page{size:A4;margin:18mm} body{font:10.5pt/1.5 Georgia,serif;color:#111}
+ h1{font-size:17pt;margin:0 0 8pt} h2{font-size:12.5pt;margin:16pt 0 5pt}
+ table{border-collapse:collapse;width:100%;margin:10pt 0;font-size:9.5pt}
+ .ruled th,.ruled td{border:1px solid #445;padding:4pt 6pt;text-align:right}
+ .ruled th{background:#eef1f5}
+ .bare th,.bare td{border:none;padding:4pt 8pt;text-align:right}
+ .halfruled th,.halfruled td{border:none;border-bottom:1px solid #ccd;padding:4pt 6pt;text-align:right}
+ .halfruled th{border-bottom:2px solid #445}
+ .l{text-align:left}
+</style></head><body>
+<h1>Depot Cost Comparison</h1>
+<p>Three tables, three border treatments, one document. Detection must not depend on
+ruling lines being present or absent consistently.</p>
+
+<h2>Fully ruled</h2>
+<table class="ruled">
+ <tr><th class="l">Depot</th><th>Rent</th><th>Handling</th></tr>
+ <tr><th class="l" scope="row">Northern</th><td>412</td><td>188</td></tr>
+ <tr><th class="l" scope="row">Coastal</th><td>388</td><td>96</td></tr>
+</table>
+
+<h2>Horizontal rules only</h2>
+<table class="halfruled">
+ <tr><th class="l">Depot</th><th>Staff</th><th>Vehicles</th></tr>
+ <tr><th class="l" scope="row">Northern</th><td>41</td><td>19</td></tr>
+ <tr><th class="l" scope="row">Coastal</th><td>17</td><td>8</td></tr>
+</table>
+
+<h2>No rules</h2>
+<table class="bare">
+ <tr><th class="l">Depot</th><th>Utilisation</th><th>Trend</th></tr>
+ <tr><th class="l" scope="row">Northern</th><td>81</td><td>rising</td></tr>
+ <tr><th class="l" scope="row">Coastal</th><td>44</td><td>falling</td></tr>
+</table>
+</body></html>

@@ -44,6 +44,11 @@ const eslintConfig = [
       ".serena/**",
       "artifacts/**",
       "data/runs/**",
+      // Throwaway feasibility-spike code. Deliberately outside the production
+      // tsconfig `include` too, so it is typechecked and linted by nothing —
+      // the trade a spike is allowed to make and production code is not. If
+      // anything here graduates into src/, it gets linted like everything else.
+      "experiments/**",
       "next-env.d.ts",
     ],
   },

@@ -1,0 +1,20 @@
+{
+  "document": "h03-captions-above",
+  "tests": "Captions positioned ABOVE their figure, with a non-caption note directly below.",
+  "attacks": "Caption association that assumes 'the text below the image'. A below-first rule binds the wrong text to both figures — an assertion failure, not an omission.",
+  "title": "Crane Inspection Record",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Crane Inspection Record" }],
+  "readingOrder": ["H1","intro","Plate 1 caption","Plate 1 image","Plate 1 note","Plate 2 caption","Plate 2 image","Plate 2 note","closing"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "photo-quay.png", "captionPresent": true, "captionPosition": "above",
+      "caption": "Plate 1: Rail wear on the seaward leg, measured at 4.2 mm against a tolerance of 3 mm.",
+      "mustNotUse": "Photographed 2026-08-11. Camera height approximately 1.5 m." },
+    { "id": "photo-depot.png", "captionPresent": true, "captionPosition": "above",
+      "caption": "Plate 2: The landward leg at the same inspection, showing wear within tolerance at 1.8 mm.",
+      "mustNotUse": "Photographed 2026-08-11. Same camera position as Plate 1." }
+  ],
+  "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["captions above, distractor text below"]
+}

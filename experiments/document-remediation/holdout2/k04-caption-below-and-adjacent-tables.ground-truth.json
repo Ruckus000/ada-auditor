@@ -1,0 +1,25 @@
+{
+  "document": "k04-caption-below-and-adjacent-tables",
+  "tests": "Two structurally similar tables abutting with no visual gap, each captioned below rather than above, and both captions carrying a 'Table N:' marker.",
+  "attacks": "Table segmentation and caption binding at once. Adjacent same-width tables invite merging into one; the captions sit between them, so a below-the-table rule and an above-the-table rule bind to different tables and one of them is wrong. Caption 2 also mentions Table 1, so text matching on 'Table 1' can bind it backwards.",
+  "title": "Bed Occupancy Returns",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Bed Occupancy Returns" }],
+  "readingOrder": ["H1","intro","table 1","caption 1","table 2","caption 2"],
+  "lists": [],
+  "tables": [
+    { "name": "general acute", "borders": "full", "columns": 3, "bodyRows": 2,
+      "headerStructure": { "row1": ["Site", "Beds", "Occupied"] },
+      "rowHeaders": ["Riverside", "Northgate"],
+      "caption": "Table 1: General acute beds at midnight, week 34.",
+      "captionPosition": "below" },
+    { "name": "escalation", "borders": "full", "columns": 3, "bodyRows": 2,
+      "headerStructure": { "row1": ["Site", "Escalation", "Open"] },
+      "rowHeaders": ["Riverside", "Northgate"],
+      "caption": "Table 2: Escalation capacity, same period. Not included in Table 1.",
+      "captionPosition": "below" }
+  ],
+  "expectedTableCount": 2,
+  "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["two abutting tables that must not merge", "captions below", "caption 2 cross-references Table 1"]
+}

@@ -1,0 +1,395 @@
+[
+  {
+    "document": "01-simple-text",
+    "pages": 1,
+    "bytes": 67310,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 12347,
+      "failedChecks": 0,
+      "wallMs": 728,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 8860,
+      "failedChecks": 2,
+      "wallMs": 707,
+      "rules": [
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        }
+      ]
+    }
+  },
+  {
+    "document": "02-two-column",
+    "pages": 2,
+    "bytes": 71183,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 14685,
+      "failedChecks": 0,
+      "wallMs": 722,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 9829,
+      "failedChecks": 2,
+      "wallMs": 723,
+      "rules": [
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        }
+      ]
+    }
+  },
+  {
+    "document": "03-simple-table",
+    "pages": 1,
+    "bytes": 54213,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 5102,
+      "failedChecks": 0,
+      "wallMs": 707,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 5177,
+      "failedChecks": 2,
+      "wallMs": 704,
+      "rules": [
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "04-difficult-table",
+    "pages": 1,
+    "bytes": 56845,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 6488,
+      "failedChecks": 0,
+      "wallMs": 657,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 4740,
+      "failedChecks": 2,
+      "wallMs": 701,
+      "rules": [
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        }
+      ]
+    }
+  },
+  {
+    "document": "05-images-captioned",
+    "pages": 2,
+    "bytes": 444138,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 8706,
+      "failedChecks": 0,
+      "wallMs": 777,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 6040,
+      "failedChecks": 2,
+      "wallMs": 726,
+      "rules": [
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "pages": 2,
+    "bytes": 418020,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 3243,
+      "failedChecks": 0,
+      "wallMs": 667,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 2898,
+      "failedChecks": 2,
+      "wallMs": 675,
+      "rules": [
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        }
+      ]
+    }
+  },
+  {
+    "document": "07-complex-chart",
+    "pages": 1,
+    "bytes": 63536,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 4916,
+      "failedChecks": 0,
+      "wallMs": 645,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 3727,
+      "failedChecks": 2,
+      "wallMs": 692,
+      "rules": [
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "08-slide-layout",
+    "pages": 1,
+    "bytes": 199596,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 3560,
+      "failedChecks": 0,
+      "wallMs": 677,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 2557,
+      "failedChecks": 2,
+      "wallMs": 668,
+      "rules": [
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        },
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        }
+      ]
+    }
+  },
+  {
+    "document": "09-scanned",
+    "pages": 1,
+    "bytes": 109624,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 34,
+      "failedChecks": 1,
+      "wallMs": 570,
+      "rules": [
+        {
+          "id": "7.1-9",
+          "failed": 1,
+          "description": "The Metadata stream in the document's catalog dictionary shall contain a dc:title entry, where dc is the recommended prefix for the Dublin Core metadata schema as defined in the XMP specification, which clearly identifies the document"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 88,
+      "failedChecks": 3,
+      "wallMs": 585,
+      "rules": [
+        {
+          "id": "8.11.1-1",
+          "failed": 1,
+          "description": "The Metadata stream as specified in ISO 32000-2:2020, 14.3 in the document catalog dictionary shall contain a dc:title entry"
+        },
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "10-metadata-problems",
+    "pages": 1,
+    "bytes": 53142,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 10986,
+      "failedChecks": 1,
+      "wallMs": 722,
+      "rules": [
+        {
+          "id": "7.1-9",
+          "failed": 1,
+          "description": "The Metadata stream in the document's catalog dictionary shall contain a dc:title entry, where dc is the recommended prefix for the Dublin Core metadata schema as defined in the XMP specification, which clearly identifies the document"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 7402,
+      "failedChecks": 3,
+      "wallMs": 699,
+      "rules": [
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        },
+        {
+          "id": "8.11.1-1",
+          "failed": 1,
+          "description": "The Metadata stream as specified in ISO 32000-2:2020, 14.3 in the document catalog dictionary shall contain a dc:title entry"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "pages": 1,
+    "bytes": 68098,
+    "ua1": {
+      "compliant": false,
+      "passedChecks": 10074,
+      "failedChecks": 1,
+      "wallMs": 754,
+      "rules": [
+        {
+          "id": "7.1-9",
+          "failed": 1,
+          "description": "The Metadata stream in the document's catalog dictionary shall contain a dc:title entry, where dc is the recommended prefix for the Dublin Core metadata schema as defined in the XMP specification, which clearly identifies the document"
+        }
+      ]
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 6815,
+      "failedChecks": 3,
+      "wallMs": 716,
+      "rules": [
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        },
+        {
+          "id": "8.11.1-1",
+          "failed": 1,
+          "description": "The Metadata stream as specified in ISO 32000-2:2020, 14.3 in the document catalog dictionary shall contain a dc:title entry"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  },
+  {
+    "document": "12-kitchen-sink",
+    "pages": 6,
+    "bytes": 550553,
+    "ua1": {
+      "compliant": true,
+      "passedChecks": 14813,
+      "failedChecks": 0,
+      "wallMs": 762,
+      "rules": []
+    },
+    "wt1a": {
+      "compliant": false,
+      "passedChecks": 15476,
+      "failedChecks": 2,
+      "wallMs": 802,
+      "rules": [
+        {
+          "id": "6.1.3-1",
+          "failed": 1,
+          "description": "File conforming to the WTPDF 1.0 conformance level for accessibility shall include a PDF Declaration with the URI identifier \"http://pdfa.org/declarations/wtpdf#accessibility1.0\" as its pdfd:conformsTo entry"
+        },
+        {
+          "id": "8.2.5.2-2",
+          "failed": 1,
+          "description": "The structure tree root shall contain a single Document structure element as its only child. The namespace for that element shall be specified as the PDF 2.0 namespace"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "document": "h02-headings-look-like-body",
+  "tests": "Headings with no visual weight — same size, same font, normal weight. Distinguished only by capitalisation, small-caps, italics and a little leading.",
+  "attacks": "Font-size-based heading detection. The opposite failure to h01: here a size heuristic finds no headings at all and flattens a five-level document into prose.",
+  "title": "Berth Allocation Procedure",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Berth Allocation Procedure" },
+    { "level": 2, "text": "Requesting a berth" },
+    { "level": 3, "text": "Late requests" },
+    { "level": 2, "text": "Priority" },
+    { "level": 3, "text": "Disputes" }
+  ],
+  "readingOrder": ["H1","intro","H2 Requesting a berth","para","H3 Late requests","para","H2 Priority","para","H3 Disputes","para"],
+  "lists": [], "tables": [], "figures": [], "decorativeGraphics": [],
+  "links": [], "artifacts": [],
+  "intentionalProblems": ["headings are visually indistinguishable from body text except by case and leading"]
+}

@@ -1,0 +1,18 @@
+{
+  "document": "h12-visible-title-no-metadata",
+  "tests": "No title metadata, but a visible title that is unambiguous — largest text, top of page one, nothing competing.",
+  "attacks": "The missing-title policy. This is the case where extraction should succeed. Experiment 1 declined title inference as category B; this document asks whether an unambiguous case can be handled deterministically, and pairs with h13 where the same rule must NOT fire.",
+  "title": null,
+  "expectedTitleAfterRemediation": "Coastal Depot Lease Renewal: Options Appraisal",
+  "titleExtractable": true,
+  "titleExtractionBasis": "Largest text on page 1, topmost position, no competing candidate within 4pt of its size.",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Coastal Depot Lease Renewal: Options Appraisal", "markup": "styled div" },
+    { "level": 2, "text": "Purpose" }, { "level": 2, "text": "Recommendation" }
+  ],
+  "readingOrder": ["title","subtitle","intro","H2 Purpose","para","H2 Recommendation","para"],
+  "lists": [], "tables": [], "figures": [], "decorativeGraphics": [],
+  "links": [], "artifacts": [],
+  "intentionalProblems": ["no dc:title, no DocInfo title; visible title only"]
+}

@@ -1,0 +1,23 @@
+{
+  "document": "h06-mixed-table-borders",
+  "tests": "Three structurally identical tables in one document with fully ruled, horizontally ruled, and no border treatments.",
+  "attacks": "Border-based table detection, and any global configuration choice. A setting tuned for ruled tables misses the third; one tuned for borderless may over-segment the first. Whatever configuration Experiment 2 freezes has to handle all three in a single document.",
+  "title": "Depot Cost Comparison",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Depot Cost Comparison" },
+    { "level": 2, "text": "Fully ruled" }, { "level": 2, "text": "Horizontal rules only" }, { "level": 2, "text": "No rules" }
+  ],
+  "readingOrder": ["H1","intro","H2 Fully ruled","table 1","H2 Horizontal rules only","table 2","H2 No rules","table 3"],
+  "lists": [],
+  "tables": [
+    { "name": "ruled", "borders": "full", "columns": 3, "bodyRows": 2,
+      "columnHeaders": ["Depot","Rent","Handling"], "rowHeaders": ["Northern","Coastal"] },
+    { "name": "half-ruled", "borders": "horizontal only", "columns": 3, "bodyRows": 2,
+      "columnHeaders": ["Depot","Staff","Vehicles"], "rowHeaders": ["Northern","Coastal"] },
+    { "name": "bare", "borders": "none", "columns": 3, "bodyRows": 2,
+      "columnHeaders": ["Depot","Utilisation","Trend"], "rowHeaders": ["Northern","Coastal"] }
+  ],
+  "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["three border treatments requiring one global configuration"]
+}

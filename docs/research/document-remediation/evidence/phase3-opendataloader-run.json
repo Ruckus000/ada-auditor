@@ -1,0 +1,98 @@
+[
+  {
+    "document": "01-simple-text",
+    "ms": 321,
+    "error": null,
+    "produced": true,
+    "inBytes": 64341,
+    "outBytes": 80787
+  },
+  {
+    "document": "02-two-column",
+    "ms": 261,
+    "error": null,
+    "produced": true,
+    "inBytes": 69139,
+    "outBytes": 85691
+  },
+  {
+    "document": "03-simple-table",
+    "ms": 212,
+    "error": null,
+    "produced": true,
+    "inBytes": 54284,
+    "outBytes": 64582
+  },
+  {
+    "document": "04-difficult-table",
+    "ms": 207,
+    "error": null,
+    "produced": true,
+    "inBytes": 56249,
+    "outBytes": 64146
+  },
+  {
+    "document": "05-images-captioned",
+    "ms": 248,
+    "error": null,
+    "produced": true,
+    "inBytes": 443911,
+    "outBytes": 455002
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "ms": 212,
+    "error": null,
+    "produced": true,
+    "inBytes": 417586,
+    "outBytes": 424062
+  },
+  {
+    "document": "07-complex-chart",
+    "ms": 222,
+    "error": null,
+    "produced": true,
+    "inBytes": 64251,
+    "outBytes": 70730
+  },
+  {
+    "document": "08-slide-layout",
+    "ms": 208,
+    "error": null,
+    "produced": true,
+    "inBytes": 200140,
+    "outBytes": 205284
+  },
+  {
+    "document": "09-scanned",
+    "ms": 121,
+    "error": null,
+    "produced": true,
+    "inBytes": 108665,
+    "outBytes": 109841
+  },
+  {
+    "document": "10-metadata-problems",
+    "ms": 249,
+    "error": null,
+    "produced": true,
+    "inBytes": 50627,
+    "outBytes": 63343
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "ms": 268,
+    "error": null,
+    "produced": true,
+    "inBytes": 65743,
+    "outBytes": 79171
+  },
+  {
+    "document": "12-kitchen-sink",
+    "ms": 321,
+    "error": null,
+    "produced": true,
+    "inBytes": 556275,
+    "outBytes": 582518
+  }
+]
