@@ -29,3 +29,14 @@ scoring 28 correct promotions as invented, and a missing `captionPresent` key
 inflating the gate denominator. Neither was visible by reading the fixture.
 `validate-fixtures.mjs` now enforces that shape and every fixture in all three
 corpora passes it.
+
+## Checkpoint accounting
+
+**Both permitted checkpoints are unspent as of 2026-08-24.**
+
+The pipeline was re-run against holdout 2 on 2026-08-24 and reproduced the
+frozen baseline exactly. It was **not** counted as a checkpoint, by explicit
+decision: no remediation code had changed since the baseline was recorded, so
+the run could only confirm the toolchain, and only aggregates were read. A
+checkpoint is spent when the holdout is used to evaluate a change, not when it
+is used to verify the instrument.
