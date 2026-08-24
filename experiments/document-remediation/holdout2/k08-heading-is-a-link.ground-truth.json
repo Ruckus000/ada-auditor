@@ -1,0 +1,24 @@
+{
+  "document": "k08-heading-is-a-link",
+  "tests": "Section headings that are themselves hyperlinks, alongside an ordinary inline link in body text.",
+  "attacks": "Element nesting. The correct structure is a heading CONTAINING a link. Tagging the link and losing the heading costs navigation; tagging the heading and losing the link costs the destination; emitting them as siblings duplicates the text. Also tests whether the version/reviewed line is mistaken for a subheading.",
+  "title": "Policy Index",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Policy Index" },
+    { "level": 2, "text": "Infection Control", "isLink": true },
+    { "level": 2, "text": "Safeguarding Adults", "isLink": true },
+    { "level": 2, "text": "Records Management", "isLink": true }
+  ],
+  "mustNotBeHeadings": ["Version 7 · reviewed March 2026", "Version 4 · reviewed January 2026", "Version 11 · reviewed August 2026"],
+  "readingOrder": ["H1","intro","H2 Infection Control","meta","para with inline link","H2 Safeguarding Adults","meta","para","H2 Records Management","meta","para"],
+  "lists": [], "tables": [], "figures": [], "decorativeGraphics": [],
+  "links": [
+    { "text": "Infection Control", "href": "https://example.org/policy/infection-control", "insideHeading": true },
+    { "text": "personal protective equipment policy", "href": "https://example.org/policy/ppe", "insideHeading": false },
+    { "text": "Safeguarding Adults", "href": "https://example.org/policy/safeguarding", "insideHeading": true },
+    { "text": "Records Management", "href": "https://example.org/policy/records", "insideHeading": true }
+  ],
+  "artifacts": [],
+  "intentionalProblems": ["headings containing links", "version lines that resemble subheadings"]
+}

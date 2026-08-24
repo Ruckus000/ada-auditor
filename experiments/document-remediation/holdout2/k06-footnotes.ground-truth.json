@@ -1,0 +1,19 @@
+{
+  "document": "k06-footnotes",
+  "tests": "Superscript footnote markers in body text and a footnote block below a partial-width rule.",
+  "attacks": "Reading order and note association. The markers are tiny isolated digits sitting above the baseline — candidates for being dropped, merged into the adjacent word ('74.2%1'), or promoted as their own elements. The footnote block is small text after a rule and may be read as page furniture and artifacted away, which would delete the statement that the two bowel figures are not comparable.",
+  "title": "Screening Coverage Note",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Screening Coverage Note" }],
+  "readingOrder": ["H1","paragraph with markers 1 and 2","paragraph with marker 3","separator rule","footnote 1","footnote 2","footnote 3"],
+  "footnotes": [
+    { "marker": "1", "text": "Weighted by eligible population at the mid-year estimate.", "referencedFrom": "74.2%" },
+    { "marker": "2", "text": "Bowel screening moved from a two-year to a 30-month cycle in the prior year; the two figures are not directly comparable.", "referencedFrom": "bowel programme" },
+    { "marker": "3", "text": "Rounding applied at one decimal place throughout.", "referencedFrom": "unchanged within rounding" }
+  ],
+  "mustNotBeArtifacts": ["the footnote block — it carries substantive qualification, not page furniture"],
+  "lists": [], "tables": [], "figures": [],
+  "decorativeGraphics": ["the 38% width separator rule"],
+  "links": [], "artifacts": ["separator rule"],
+  "intentionalProblems": ["superscript markers may merge into adjacent text", "footnote block resembles a footer"]
+}

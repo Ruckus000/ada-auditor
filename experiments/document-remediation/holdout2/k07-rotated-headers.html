@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Vaccine Stock Matrix</title>
+<style>
+ @page{size:A4;margin:20mm} body{font:10.5pt/1.5 Georgia,serif;color:#111}
+ h1{font-size:17pt;margin:0 0 8pt}
+ table{border-collapse:collapse;margin:26pt 0 12pt;font-size:9.5pt}
+ th,td{border:1px solid #556;padding:4pt 7pt;text-align:center}
+ th.rot{background:#eef1f5;height:52mm;vertical-align:bottom;padding-bottom:5pt;width:11mm}
+ th.rot div{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-weight:bold}
+ th.l{text-align:left;background:#eef1f5}
+</style></head><body>
+<h1>Vaccine Stock Matrix</h1>
+<p>Column headers are set vertically. The text runs bottom-to-top and is the same
+size as the body, distinguished only by orientation and shading.</p>
+<table>
+ <tr>
+  <th class="l" scope="col">Site</th>
+  <th class="rot" scope="col"><div>Influenza</div></th>
+  <th class="rot" scope="col"><div>Pneumococcal</div></th>
+  <th class="rot" scope="col"><div>Shingles</div></th>
+ </tr>
+ <tr><th class="l" scope="row">Riverside</th><td>1420</td><td>380</td><td>210</td></tr>
+ <tr><th class="l" scope="row">Northgate</th><td>980</td><td>295</td><td>140</td></tr>
+ <tr><th class="l" scope="row">Ash Road</th><td>510</td><td>120</td><td>85</td></tr>
+</table>
+<p>Stock is reported as doses held at the close of the reporting week.</p>
+</body></html>

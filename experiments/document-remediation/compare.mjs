@@ -26,6 +26,8 @@ const validation = Object.fromEntries(
   JSON.parse(readFileSync(summaryPath)).map((r) => [r.document, r]),
 );
 
+const GROUND_TRUTH_DIRS = ['corpus', 'holdout', 'holdout2'];
+
 const PLACEHOLDER = /^\s*(image|figure|picture|graphic)\s*\d*\s*$/i;
 const STOP = new Set(['the','a','an','of','at','in','on','and','or','is','are','to','from','which','that','with','its','it','as','by','for','was','were','be','this','their']);
 
@@ -240,7 +242,13 @@ function defectsFor(gt, s) {
 const rows = [];
 for (const f of readdirSync(pdfDir).filter((x) => x.endsWith('.pdf')).sort()) {
   const name = basename(f, '.pdf');
-  const gtDir = existsSync(join('corpus', `${name}.ground-truth.json`)) ? 'corpus' : 'holdout';
+  // Search the known fixture directories rather than guessing between two.
+  // The previous two-way guess fell through to 'holdout' for anything it did
+  // not find in 'corpus', so a third corpus failed with a misleading path.
+  const gtDir = GROUND_TRUTH_DIRS.find((d) => existsSync(join(d, `${name}.ground-truth.json`)));
+  if (!gtDir) {
+    throw new Error(`no ground truth for "${name}" in ${GROUND_TRUTH_DIRS.join(', ')}`);
+  }
   const gt = JSON.parse(readFileSync(join(gtDir, `${name}.ground-truth.json`)));
   const s = inspect(join(pdfDir, f));
   const defects = defectsFor(gt, s);

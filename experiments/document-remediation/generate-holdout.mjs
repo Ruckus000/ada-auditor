@@ -10,12 +10,14 @@ import { resolve, basename } from 'node:path';
 
 const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const PDFBOX = 'vendor/pdfbox-app-3.0.8.jar';
-const OUT = 'out/holdout';
+// Third caller now (holdout, holdout2, and re-runs of either), so the
+// directories are arguments rather than another copy of the file.
+const [SRC = 'holdout', OUT = 'out/holdout'] = process.argv.slice(2);
 const pdfbox = (...args) => execFileSync(`${JAVA_HOME}/bin/java`, ['-jar', PDFBOX, ...args], { stdio: 'ignore' });
 
 mkdirSync(OUT, { recursive: true });
 
-const docs = readdirSync('holdout')
+const docs = readdirSync(SRC)
   .filter((f) => f.endsWith('.html') && !f.endsWith('.scan.html'))
   .sort();
 
@@ -31,11 +33,11 @@ for (const file of docs) {
   const started = Date.now();
 
   const page = await context.newPage();
-  await page.goto('file://' + resolve('holdout', file), { waitUntil: 'load' });
+  await page.goto('file://' + resolve(SRC, file), { waitUntil: 'load' });
   const native = await page.pdf({ printBackground: true, preferCSSPageSize: true });
   await page.close();
 
-  const scanSrc = resolve('holdout', `${name}.scan.html`);
+  const scanSrc = resolve(SRC, `${name}.scan.html`);
   if (!existsSync(scanSrc)) {
     writeFileSync(pdfPath, native);
   } else {

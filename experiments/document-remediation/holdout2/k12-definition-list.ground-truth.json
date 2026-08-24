@@ -1,0 +1,22 @@
+{
+  "document": "k12-definition-list",
+  "tests": "A description list where bold terms sit at the left margin with indented definitions, and two terms carry two definitions each.",
+  "attacks": "Structure choice. The bold left-margin terms are strong candidates for promotion to headings, which would make each definition a section body and lose the term-definition pairing. Flattening to paragraphs loses which definition belongs to which term — and the second Spell definition explicitly contradicts the first, so a wrong pairing changes the meaning rather than merely degrading it.",
+  "title": "Glossary of Reporting Terms",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Glossary of Reporting Terms" }],
+  "mustNotBeHeadings": ["Episode", "Spell", "Coverage", "Breach"],
+  "readingOrder": ["H1","intro","definition list of four terms"],
+  "lists": [
+    { "type": "description", "terms": 4,
+      "pairs": [
+        { "term": "Episode", "definitions": 1 },
+        { "term": "Spell", "definitions": 2 },
+        { "term": "Coverage", "definitions": 2 },
+        { "term": "Breach", "definitions": 1 }
+      ],
+      "note": "A description list, not an unordered list and not a sequence of headings. Terms bind to the definitions beneath them." }
+  ],
+  "tables": [], "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["bold terms that look like headings", "terms with multiple definitions", "two Spell definitions that contradict each other if mispaired"]
+}

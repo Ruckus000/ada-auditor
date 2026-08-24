@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Annual Quality Account</title>
+<style>
+ @page{size:A4;margin:18mm} body{font:11pt/1.5 Georgia,serif;color:#111;position:relative}
+ h1{font-size:18pt;margin:0 0 8pt} h2{font-size:12.5pt;margin:16pt 0 5pt}
+ /* Large vector ornament: meaningless, and the biggest graphic on the page. */
+ svg.ornament{display:block;width:100%;height:30mm;margin:10pt 0}
+ /* Small vector diagram: carries the only statement of the escalation path. */
+ svg.path{display:block;width:56mm;margin:10pt 0}
+ .note{font-size:9.5pt;color:#556}
+ img.seal{width:18mm;display:block;margin:10pt 0}
+</style></head><body>
+<h1>Annual Quality Account</h1>
+
+<svg class="ornament" viewBox="0 0 600 90" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="g"><stop offset="0" stop-color="#dce6f2"/><stop offset="1" stop-color="#eef2e6"/></linearGradient></defs>
+  <rect x="0" y="0" width="600" height="90" fill="url(#g)"/>
+  <circle cx="90" cy="45" r="30" fill="#ffffff" opacity="0.5"/>
+  <circle cx="150" cy="45" r="18" fill="#ffffff" opacity="0.4"/>
+  <circle cx="500" cy="45" r="24" fill="#ffffff" opacity="0.45"/>
+</svg>
+<p class="note">The band above is a decorative header ornament. It is the largest
+graphic in the document and carries no information.</p>
+
+<h2>Escalation path</h2>
+<svg class="path" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, serif">
+  <rect x="2" y="18" width="52" height="24" fill="none" stroke="#334" stroke-width="1.5"/>
+  <rect x="74" y="18" width="52" height="24" fill="none" stroke="#334" stroke-width="1.5"/>
+  <rect x="146" y="18" width="52" height="24" fill="none" stroke="#334" stroke-width="1.5"/>
+  <text x="28" y="34" font-size="8" text-anchor="middle">Ward</text>
+  <text x="100" y="34" font-size="8" text-anchor="middle">Matron</text>
+  <text x="172" y="34" font-size="8" text-anchor="middle">Director</text>
+  <line x1="54" y1="30" x2="74" y2="30" stroke="#334" stroke-width="1.5"/>
+  <line x1="126" y1="30" x2="146" y2="30" stroke="#334" stroke-width="1.5"/>
+</svg>
+<p class="note">The small diagram above is the only statement of the escalation
+path in this document. It is not repeated in the text.</p>
+
+<h2>Seal</h2>
+<img class="seal" src="../corpus/img/logo-northwind.png" alt="">
+<p class="note">The mark above certifies the account and is referred to in the
+audit letter.</p>
+</body></html>

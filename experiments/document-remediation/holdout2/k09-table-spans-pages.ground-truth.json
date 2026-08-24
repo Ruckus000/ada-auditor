@@ -1,0 +1,120 @@
+{
+  "document": "k09-table-spans-pages",
+  "tests": "One 70-row table spanning several pages, with the header row repeated at the top of each continuation.",
+  "attacks": "Per-page table detection. Experiment 2 detected the equivalent document as two tables where ground truth records one, and the repeated header rows became extra promoted headers. Carried forward deliberately as a known-unsolved class.",
+  "title": "Equipment Register",
+  "language": "en",
+  "headingHierarchy": [
+    {
+      "level": 1,
+      "text": "Equipment Register"
+    }
+  ],
+  "readingOrder": [
+    "H1",
+    "intro",
+    "table continuing across page breaks",
+    "closing paragraph"
+  ],
+  "lists": [],
+  "tables": [
+    {
+      "name": "equipment register",
+      "borders": "full",
+      "columns": 4,
+      "bodyRows": 70,
+      "spansPages": true,
+      "expectedTableCount": 1,
+      "headerStructure": {
+        "row1": [
+          "Asset",
+          "Location",
+          "Year",
+          "Status"
+        ]
+      },
+      "rowHeaders": [
+        "RH-2001",
+        "RH-2002",
+        "RH-2003",
+        "RH-2004",
+        "RH-2005",
+        "RH-2006",
+        "RH-2007",
+        "RH-2008",
+        "RH-2009",
+        "RH-2010",
+        "RH-2011",
+        "RH-2012",
+        "RH-2013",
+        "RH-2014",
+        "RH-2015",
+        "RH-2016",
+        "RH-2017",
+        "RH-2018",
+        "RH-2019",
+        "RH-2020",
+        "RH-2021",
+        "RH-2022",
+        "RH-2023",
+        "RH-2024",
+        "RH-2025",
+        "RH-2026",
+        "RH-2027",
+        "RH-2028",
+        "RH-2029",
+        "RH-2030",
+        "RH-2031",
+        "RH-2032",
+        "RH-2033",
+        "RH-2034",
+        "RH-2035",
+        "RH-2036",
+        "RH-2037",
+        "RH-2038",
+        "RH-2039",
+        "RH-2040",
+        "RH-2041",
+        "RH-2042",
+        "RH-2043",
+        "RH-2044",
+        "RH-2045",
+        "RH-2046",
+        "RH-2047",
+        "RH-2048",
+        "RH-2049",
+        "RH-2050",
+        "RH-2051",
+        "RH-2052",
+        "RH-2053",
+        "RH-2054",
+        "RH-2055",
+        "RH-2056",
+        "RH-2057",
+        "RH-2058",
+        "RH-2059",
+        "RH-2060",
+        "RH-2061",
+        "RH-2062",
+        "RH-2063",
+        "RH-2064",
+        "RH-2065",
+        "RH-2066",
+        "RH-2067",
+        "RH-2068",
+        "RH-2069",
+        "RH-2070"
+      ],
+      "repeatedHeaderNote": "The header repeats visually on each continuation page. It is one logical header, not a second table and not data."
+    }
+  ],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": [
+    "repeated header rows on continuation pages"
+  ],
+  "intentionalProblems": [
+    "table spans page breaks with a repeated header"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "document": "k16-kitchen-sink",
+  "tests": "A realistic three-page report combining most of the corpus's individual attacks: an inverted heading hierarchy, a note row above a table header, a ruled and a borderless table with captions below, two captioned figures, a description list with a doubled definition, a footnote, a vector ornament, and a logo repeating in a brand bar.",
+  "attacks": "All of the above at once, in a document that looks entirely ordinary.",
+  "title": "Riverside Health Authority: Annual Report 2026",
+  "language": "en",
+  "pages": 3,
+  "headingHierarchy": [
+    { "level": 1, "text": "Riverside Health Authority", "styledAs": "24pt" },
+    { "level": 2, "text": "Summary", "styledAs": "9.5pt bold uppercase — smaller than body" },
+    { "level": 3, "text": "Position at year end", "styledAs": "14pt italic — larger than its parent" },
+    { "level": 2, "text": "Activity", "styledAs": "9.5pt bold uppercase" },
+    { "level": 2, "text": "Estate", "styledAs": "9.5pt bold uppercase" },
+    { "level": 3, "text": "Signage", "styledAs": "14pt italic" },
+    { "level": 2, "text": "Glossary", "styledAs": "9.5pt bold uppercase" }
+  ],
+  "mustNotBeHeadings": ["Annual Report 2026 · presented to the Board", "Episode", "Breach", "Table 1: Completed episodes by site and quarter.", "Table 2: Establishment and vacancy rate, borderless by house style."],
+  "readingOrder": [
+    "p1 brand bar (artifact)","H1","subtitle","ornament (artifact)","H2 Summary","para with footnote marker","H3 Position at year end","para","p1 footer (artifact)",
+    "p2 brand bar","H2 Activity","table 1 note row","table 1","caption 1","table 2","caption 2","p2 footer",
+    "p3 brand bar","H2 Estate","Figure 1","caption 1","H3 Signage","Figure 2","caption 2","H2 Glossary","description list","footnote 1","p3 footer"
+  ],
+  "lists": [
+    { "type": "description", "terms": 2,
+      "pairs": [ { "term": "Episode", "definitions": 1 }, { "term": "Breach", "definitions": 2 } ] }
+  ],
+  "tables": [
+    { "name": "activity", "borders": "full", "columns": 4, "bodyRows": 3, "headerRowIndex": 1,
+      "headerStructure": { "row1": ["Site", "Q1", "Q2", "Q3"] },
+      "rowHeaders": ["Riverside", "Northgate", "Ash Road"],
+      "caption": "Table 1: Completed episodes by site and quarter.", "captionPosition": "below",
+      "mustNotBeHeaders": ["Provisional. Excludes patients who declined a first offered appointment."] },
+    { "name": "establishment", "borders": "none", "columns": 3, "bodyRows": 3,
+      "headerStructure": { "row1": ["Site", "Staff", "Vacancy %"] },
+      "rowHeaders": ["Riverside", "Northgate", "Ash Road"],
+      "caption": "Table 2: Establishment and vacancy rate, borderless by house style.", "captionPosition": "below" }
+  ],
+  "expectedTableCount": 2,
+  "figures": [
+    { "id": "photo-depot.png", "captionPresent": true,
+      "caption": "Figure 1: The Ash Road site, showing the temporary modular unit in use since the previous report." },
+    { "id": "photo-quay.png", "captionPresent": true,
+      "caption": "Figure 2: Directional signage in the main corridor at Riverside." }
+  ],
+  "repeatedImages": [
+    { "id": "logo-northwind.png", "occurrences": 3, "pages": [1, 2, 3],
+      "expectedHandling": "artifact in the brand bar" }
+  ],
+  "footnotes": [
+    { "marker": "1", "text": "Backlog measured at the last day of the reporting year.", "referencedFrom": "four years" }
+  ],
+  "decorativeGraphics": [
+    { "id": "inline SVG ornament", "expectedHandling": "artifact or never tagged" },
+    { "id": "brand bar and footer rules", "expectedHandling": "artifact" }
+  ],
+  "links": [], "artifacts": ["brand bar on all three pages", "footer on all three pages", "ornament"],
+  "intentionalProblems": [
+    "H2s smaller than body text while H3s are larger than their parents",
+    "a note row above the table header",
+    "one ruled and one borderless table with captions below both",
+    "description list terms that look like headings",
+    "a doubled definition for Breach",
+    "a footnote block resembling a footer",
+    "a vector ornament larger than any meaningful graphic"
+  ]
+}

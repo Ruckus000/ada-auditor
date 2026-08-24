@@ -1,0 +1,18 @@
+{
+  "document": "k07-rotated-headers",
+  "tests": "Column headers rendered vertically, running bottom-to-top, at body text size.",
+  "attacks": "Every geometry assumption at once. Rotated glyphs break the horizontal-line grouping that reading order, caption association and header detection all rely on; the header cells are tall and narrow, so a row-based grid reader may not align them with the columns beneath. Font weight is the only non-geometric signal available, and the rotated text is the same size as the body.",
+  "title": "Vaccine Stock Matrix",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Vaccine Stock Matrix" }],
+  "readingOrder": ["H1","intro","table","closing paragraph"],
+  "lists": [],
+  "tables": [
+    { "name": "stock matrix", "borders": "full", "columns": 4, "bodyRows": 3,
+      "headerStructure": { "row1": ["Site", "Influenza", "Pneumococcal", "Shingles"] },
+      "rowHeaders": ["Riverside", "Northgate", "Ash Road"],
+      "headerOrientation": "The three vaccine headers are rotated 90 degrees, reading bottom-to-top. 'Site' is horizontal." }
+  ],
+  "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["vertical column headers", "headers at body size, distinguished by weight and shading only"]
+}

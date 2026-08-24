@@ -1,0 +1,24 @@
+{
+  "document": "k01-vector-chart-titles",
+  "tests": "A chart whose title, subtitle and both axis labels are vector text set larger and heavier than the document's real headings, in a document with no Figure or Table element anywhere.",
+  "attacks": "Containment geometry. There is no region to be contained by — the chart is SVG text over vector paths, so no Figure and no Table exists. Reaching this needs vector-density analysis. Carried forward from the unsolved class in experiment 2.",
+  "title": "Immunisation Uptake Review",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Immunisation Uptake Review" },
+    { "level": 2, "text": "Uptake by ward" },
+    { "level": 2, "text": "Next steps" }
+  ],
+  "mustNotBeHeadings": ["Uptake by Ward, 2026", "First dose, children under five", "Percent", "Ward"],
+  "readingOrder": ["H1","H2 Uptake by ward","intro","chart","description","H2 Next steps","para"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "inline SVG bar chart", "captionPresent": false, "meaningful": true,
+      "chartTitle": "Uptake by Ward, 2026",
+      "values": { "Ash": 71, "Beech": 81, "Cedar": 56, "Elm": 89, "Fir": 45 },
+      "adjacentProse": "Uptake ranges from 45% in Fir to 89% in Elm. The pattern tracks deprivation rather than clinic capacity.",
+      "expectedAltTextSource": "adjacent prose plus the chart title; not deterministically available today" }
+  ],
+  "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["chart internals larger and bolder than real headings", "no Figure or Table region exists"]
+}

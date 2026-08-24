@@ -1,0 +1,23 @@
+{
+  "document": "k02-nested-table",
+  "tests": "A table nested inside a cell of another table, each with its own header row.",
+  "attacks": "Header inference that treats a table as a flat grid. The inner Day/Session headers belong to the inner table only; promoting them into the outer table's header set, or flattening the two into one grid, invents relationships. Also tests whether a nested table is detected as a table at all.",
+  "title": "Clinic Staffing Grid",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Clinic Staffing Grid" }],
+  "readingOrder": ["H1","intro","outer table (rota cells each contain an inner table)"],
+  "lists": [],
+  "tables": [
+    { "name": "outer", "borders": "full", "columns": 3, "bodyRows": 2,
+      "headerStructure": { "row1": ["Clinic", "Lead", "Weekly rota"] },
+      "rowHeaders": ["Ash Road", "Beech Lane"],
+      "containsNestedTables": 2,
+      "headerRelationships": "Clinic/Lead/Weekly rota head the outer columns. Ash Road and Beech Lane head the outer rows. Day and Session head NOTHING in the outer table." },
+    { "name": "inner (Ash Road rota)", "borders": "dotted", "columns": 2, "bodyRows": 2,
+      "headerStructure": { "row1": ["Day", "Session"] }, "rowHeaders": [] },
+    { "name": "inner (Beech Lane rota)", "borders": "dotted", "columns": 2, "bodyRows": 2,
+      "headerStructure": { "row1": ["Day", "Session"] }, "rowHeaders": [] }
+  ],
+  "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
+  "intentionalProblems": ["nested tables with independent header scopes"]
+}

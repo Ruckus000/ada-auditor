@@ -1,0 +1,24 @@
+{
+  "document": "k13-visual-form",
+  "tests": "A form drawn entirely with borders and labels — no real form fields exist in the PDF. Six labelled entry boxes and a four-option checkbox row.",
+  "attacks": "The gap between what a document looks like and what it is. There are no widget annotations, so nothing here can become an accessible form field by tagging alone; the honest outcome is that the labels are content, the boxes are graphics, and the document is reported as needing human work. Inventing form semantics is an assertion. Equally, artifacting the empty boxes silently deletes the fact that anything is fillable.",
+  "title": "Incident Report Form",
+  "language": "en",
+  "headingHierarchy": [{ "level": 1, "text": "Incident Report Form" }],
+  "mustNotBeHeadings": ["Date of incident", "Time of incident", "Location", "Reported by", "Role", "Description of what happened", "Degree of harm"],
+  "readingOrder": ["H1","instruction line","three field labels and boxes","two field labels and boxes","description label and box","Degree of harm label","four checkbox options"],
+  "formFields": [
+    { "label": "Date of incident", "control": "ruled box, no widget" },
+    { "label": "Time of incident", "control": "ruled box, no widget" },
+    { "label": "Location", "control": "ruled box, no widget" },
+    { "label": "Reported by", "control": "ruled box, no widget" },
+    { "label": "Role", "control": "ruled box, no widget" },
+    { "label": "Description of what happened", "control": "tall ruled box, no widget" },
+    { "label": "Degree of harm", "control": "four drawn squares labelled None, Low, Moderate, Severe" }
+  ],
+  "expectedOutcome": "No real form fields exist, so this cannot reach DELIVERABLE by tagging. Correct results are NEEDS_REVIEW or INCONCLUSIVE naming the form as unaddressable.",
+  "lists": [], "tables": [], "figures": [],
+  "decorativeGraphics": ["field boxes and checkbox squares are graphics, not content"],
+  "links": [], "artifacts": [],
+  "intentionalProblems": ["a form with no form fields", "labels that are not headings", "empty boxes carrying meaning by position"]
+}

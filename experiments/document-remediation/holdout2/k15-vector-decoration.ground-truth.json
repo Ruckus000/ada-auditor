@@ -1,0 +1,28 @@
+{
+  "document": "k15-vector-decoration",
+  "tests": "A large gradient vector ornament carrying nothing, a small vector diagram carrying the document's only statement of the escalation path, and a small raster seal that is content.",
+  "attacks": "Decorative classification where size is inverted AND the graphics are vector. The experiment-2 technique keys on raster image bytes and aspect ratio, so neither SVG becomes a Figure at all — the ornament is correctly not described, but the escalation diagram is silently lost, which is an omission nothing reports. Any size-based rule additionally keeps the ornament and drops the seal.",
+  "title": "Annual Quality Account",
+  "language": "en",
+  "headingHierarchy": [
+    { "level": 1, "text": "Annual Quality Account" },
+    { "level": 2, "text": "Escalation path" },
+    { "level": 2, "text": "Seal" }
+  ],
+  "readingOrder": ["H1","decorative ornament","note","H2 Escalation path","escalation diagram","note","H2 Seal","seal image","note"],
+  "lists": [], "tables": [],
+  "figures": [
+    { "id": "inline SVG escalation diagram", "captionPresent": false, "meaningful": true,
+      "content": "Three linked boxes in sequence: Ward, Matron, Director.",
+      "note": "Vector, so it may never become a Figure element. Its content appears nowhere else in the document.",
+      "expectedAltTextSource": "the adjacent note identifies what it is but not what it says" },
+    { "id": "logo-northwind.png (seal)", "captionPresent": false, "meaningful": true,
+      "note": "18mm, the smallest graphic on the page, and content." }
+  ],
+  "decorativeGraphics": [
+    { "id": "inline SVG gradient ornament", "size": "full width, 30mm tall — the largest graphic",
+      "expectedHandling": "artifact, or never tagged at all" }
+  ],
+  "links": [], "artifacts": ["the ornament"],
+  "intentionalProblems": ["size inversely related to significance", "meaningful content drawn as vector rather than raster", "a decorative graphic larger than everything meaningful"]
+}

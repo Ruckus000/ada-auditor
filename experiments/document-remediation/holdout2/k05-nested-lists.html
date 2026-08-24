@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Escalation Protocol</title>
+<style>
+ @page{size:A4;margin:20mm} body{font:11pt/1.55 Georgia,serif;color:#111}
+ h1{font-size:17pt;margin:0 0 10pt}
+ ol,ul{margin:6pt 0 6pt 18pt} li{margin:3pt 0}
+ /* Third level uses no marker at all, only indentation. */
+ ul.bare{list-style:none;margin-left:14pt} ul.bare li:before{content:"— ";color:#667}
+</style></head><body>
+<h1>Escalation Protocol</h1>
+<p>Three levels of nesting, with the innermost level carrying no list marker.</p>
+<ol>
+ <li>Assess the patient and record observations.
+   <ul>
+     <li>If NEWS2 is 5 or above, escalate immediately.</li>
+     <li>If NEWS2 is 3 or 4, repeat within the hour.
+       <ul class="bare">
+         <li>Record the repeat even when unchanged.</li>
+         <li>Note who was informed and when.</li>
+       </ul>
+     </li>
+   </ul>
+ </li>
+ <li>Contact the responsible clinician.
+   <ul>
+     <li>Out of hours, contact the on-call registrar instead.</li>
+   </ul>
+ </li>
+ <li>Document the outcome before the end of the shift.</li>
+</ol>
+<p>The protocol is reviewed annually.</p>
+</body></html>
