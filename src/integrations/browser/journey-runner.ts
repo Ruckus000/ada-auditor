@@ -202,13 +202,31 @@ const DEFAULT_EXPECT_TIMEOUT_MS = 30_000;
  *
  * A grace rather than a requirement, because a click that does not navigate is
  * ordinary and this runner supports it — the capture below is written around
- * that case. So the cost of the fix is bounded by this number, paid once per
+ * that case. So the cost is bounded by this number, paid once per
  * non-navigating click, against a run budget measured in hundreds of seconds.
- * Two seconds is far longer than a commit takes on a machine that is not
- * pathologically loaded, and short enough that a journey of clicks that never
- * navigate cannot spend a run on waiting.
+ *
+ * ## Why this is not enough on its own
+ *
+ * An earlier version of this comment argued that two seconds is "far longer
+ * than a commit takes on a machine that is not pathologically loaded". Master
+ * run #185 was that machine — the browser suite logged 116s of test time
+ * inside 63.8s of wall clock — and the demo journey came back with one page
+ * where it has two: the failure described above, after the fix meant to end
+ * it.
+ *
+ * Raising this number would not fix it, only move it. A click that does not
+ * navigate and a click whose navigation is merely slow are indistinguishable
+ * at the moment the grace expires: neither has changed the URL, and a
+ * navigation scheduled on a timer has not even issued a request yet. Any value
+ * here is a guess about somebody else's machine, and this one is bounded from
+ * below by having to stay cheap enough to pay on every click.
+ *
+ * So the walk stops relying on it alone. After the last step it settles once
+ * more and captures again — see the end of the step loop. That wait is paid
+ * per run rather than per click, which is what lets it be a real wait instead
+ * of a guess.
  */
-const NAVIGATION_SETTLE_MS = 2_000;
+export const NAVIGATION_SETTLE_MS = 2_000;
 
 export function resolveExpectTimeoutMs(explicit?: number): number {
   if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
@@ -935,9 +953,62 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       await capturePage();
     }
 
-    // A journey whose steps never navigated still landed somewhere, and that
-    // somewhere is what the old single-scan behaviour would have audited.
-    if (pages.length === 0) {
+    // The last step's navigation may still be on its way.
+    //
+    // `NAVIGATION_SETTLE_MS` bounds how long a *click* waits, and it has to
+    // stay short: it is paid by every click that does not navigate, and this
+    // runner supports those. But a grace that expires is not proof the click
+    // did not navigate — a login handler that awaits a fetch, writes a session
+    // and only then assigns `location.href` can cross it — and the walk then
+    // captures the page it has not left yet, where the dedupe matches a page
+    // already audited and drops the arrival. Runs #129 and #185 are both that,
+    // both on the last step, and the second happened after the per-click wait
+    // was added.
+    //
+    // Nothing observable distinguishes "did not navigate" from "has not
+    // navigated yet" at the moment the grace expires — a navigation scheduled
+    // on a timer has not even issued its request. So this stops predicting and
+    // waits once, at the end, where the cost is paid per run instead of per
+    // click and can therefore be a real wait rather than a guess.
+    //
+    // `capturePage` is safe to call unconditionally: if nothing moved, the
+    // identity matches a page already captured and it returns.
+    //
+    // Called *before* waiting, so the wait is skipped in the common case. A
+    // capture costs an axe scan, a screenshot and an AX tree — seconds — and a
+    // navigation that crossed the grace has usually landed during the previous
+    // one. Only if this adds nothing is the walk's end still ambiguous, and
+    // only then is there anything to wait for.
+    //
+    // This also subsumes the old `if (pages.length === 0)` fallback: a journey
+    // whose steps never navigated still landed somewhere, and this captures
+    // that somewhere for the same reason it captures a late arrival.
+    // Skipped once the cap is reached, and that is not an optimisation.
+    // `capturePage` counts a capture it refuses for the cap into
+    // `truncatedPages`, which means "the walk was cut short" — a number that
+    // reaches the operator. Re-asking where we already are is not a page the
+    // cap skipped, and without this guard these calls inflated it from 1 to 3
+    // on the cap test.
+    const capturedBeforeSettle = pages.length;
+    if (capturedBeforeSettle < maxPages) {
+      await capturePage();
+    }
+
+    if (pages.length === capturedBeforeSettle && capturedBeforeSettle < maxPages) {
+      await page
+        .waitForEvent('framenavigated', {
+          predicate: (frame) => frame === page.mainFrame(),
+          timeout: NAVIGATION_SETTLE_MS,
+        })
+        .then(
+          () => page.waitForLoadState('domcontentloaded').catch(() => undefined),
+          // Nothing arrived, which is the ordinary case: the walk ended where
+          // it already was. Swallowed rather than thrown for the reason the
+          // click wait gives — an orphaned navigation promise has killed this
+          // process before.
+          () => undefined,
+        );
+
       await capturePage();
     }
 
