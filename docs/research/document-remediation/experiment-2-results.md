@@ -53,16 +53,56 @@ artifacting.
 | placeholder alt | 14 | **0** |
 | heading over-detection | 7 | 5 |
 | extra Figure elements | 3 | 2 |
-| **table: header wrongly promoted** | 0 | **28** |
+| **table: header wrongly promoted** | 0 | **28** → **0** after fixture correction |
 
 Caption extraction plus the clear-Alt policy eliminated the largest class
 completely on documents built to attack it. That result is real and it
 transferred.
 
 At the midpoint — before tables — the holdout stood at 10 assertions against a
-baseline of 25, a 60% reduction. **The table technique is what reversed it.**
+baseline of 25. Rescored against the corrected fixture the final run is 9, so
+the table technique did **not** reverse the trend; the fixture did. The
+techniques hold a roughly 64% assertion reduction on unseen adversarial
+documents.
 
-## The disputed 28, and why the fixture was not amended
+## The disputed 28 — resolved, and the fixture corrected
+
+**Update, same day, authorised explicitly by the user after the checkpoint.**
+
+The h08 fixture has been corrected: `rowHeaders` now lists the 60 registration
+values, taken verbatim from the document's own `th[scope=row]` cells, replacing
+the prose summary. The correction is recorded inside the fixture under
+`groundTruthCorrections`, including a disclosure that it was made after the
+result was known.
+
+Rescoring the **same output bytes** against the corrected fixture:
+
+| | Recorded outcome | Post-hoc rescore |
+|---|---:|---:|
+| False assertions | 37 across 9/16 | **9 across 9/16** |
+| Omissions | 10 | 11 |
+| DELIVERABLE | 3/16 | 3/16 |
+| Gate 1 — zero assertions | FAIL | **FAIL** |
+| Gate 2 — ≥80% reachable | FAIL (25%) | **FAIL (25%)** |
+
+The 28 were entirely a measurement artifact. **The table technique promoted no
+wrong headers on the holdout at all** — after correction, h08 carries zero table
+assertions. Its residue is one heading over-detection and one omission.
+
+The rescore is not a fresh measurement. The pipeline was not re-run, no new
+holdout checkpoint was spent, and the recorded outcome of the gate remains the
+37. Both figures are reported because the honest reading needs both: the gate
+was evaluated against a fixture we later found to be wrong, and it failed under
+either.
+
+The remaining h08 omission is informative: *"32 ground-truth headers still
+tagged TD"*. Its table was split into two — 32 TH and 36 TH — and `compare.mjs`
+matches ground truth to detected tables positionally, so the 36 in the second
+table are invisible and counted as missing. The technique promoted 68 headers
+across the split where 64 were expected; the excess is the header row repeated
+on each continuation page.
+
+## Why the fixture was originally left alone
 
 All 28 table assertions come from one document, `h08-table-spans-pages`, and
 name its registration column (`NW-1001`, `NW-1002`, …) as cells wrongly promoted
@@ -75,13 +115,16 @@ treats a list as naming cells, so it cannot recognise those as legitimate row
 headers. It is the same class of fixture inconsistency already found and
 corrected in the development corpus for `12-kitchen-sink`.
 
-**The fixture has not been amended.** Correcting a holdout after seeing that it
-costs 28 assertions is precisely the goalpost-moving the freeze rule exists to
-prevent, and the correction would move the headline number a long way in our
-favour. It is recorded here for a human decision instead.
+The fixture was **not** amended at checkpoint time. Correcting a holdout after
+seeing that it costs 28 assertions is precisely the goalpost-moving the freeze
+rule exists to prevent, and the correction moves the headline a long way in our
+favour. It was recorded for a human decision, which is the process the freeze
+rule is for — not a prohibition on ever fixing a fixture, but a requirement that
+someone other than the party benefiting decides.
 
-It does not change the verdict. Excluding all 28 leaves 9 assertions against a
-required zero, and gate 2 is unaffected at 25%.
+The user authorised the correction, and it is applied above. The verdict was
+unchanged either way, which is what made the disclosure easy; had it flipped the
+gate, the right answer would have been a fresh holdout rather than a rescore.
 
 ### A real defect the comparator only partly sees
 
