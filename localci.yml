@@ -1,0 +1,38 @@
+# Local CI for ada-auditor. See ~/Documents/Coding/localci.
+#
+# Mirrors .github/workflows/ci.yml, minus the scaffolding that only exists
+# because a CI runner starts empty. Notably absent: `npm ci`.
+#
+# `npm ci` deletes node_modules and reinstalls from the lockfile. On a runner
+# that is free and necessary. Here it would wipe the tree you are working in --
+# and the suite runs detached, in the background, while you keep editing. The
+# working tree's node_modules IS what local CI should be testing. Lockfile
+# integrity is a real concern and this does not cover it; that belongs in a
+# check that runs on a schedule, not on every push.
+
+# Blocks `git push`. 9 seconds, and it is the only thing here that runs the
+# React Compiler rules -- eslint-config-next has sixteen react-hooks/* rules at
+# error severity, and no other gate in this file sees that class of defect.
+gate:
+  - npm run lint
+  - npm run typecheck
+
+# Runs detached after the push, reporting as a commit status when it finishes.
+# Ordered cheapest-first, so a failure costs the least time possible: the run
+# stops at the first non-zero exit.
+suite:
+  - npm test
+  # CHAOS_ENABLED is a per-step env in ci.yml. A step here is just a shell
+  # command, so an inline prefix covers it without the engine needing per-step
+  # env as a feature. The script hard-fails without it rather than skipping,
+  # which is why this is not optional.
+  - CHAOS_ENABLED=true npm run chaos
+  - npm run build
+  - npm run test:hydration
+  - npm run test:browser
+  # The same store contract the unit suite runs against an in-memory double,
+  # this time against real Postgres -- the only thing that catches the two
+  # drifting apart. Skipped without a DATABASE_URL, exactly as CI skips it, so
+  # that a machine without the Neon branch configured is not permanently red.
+  # localci reads DATABASE_URL from a git-ignored .env in this directory.
+  - if [ -n "$DATABASE_URL" ]; then npm run migrate && npm run test:db; else echo "DATABASE_URL not set - Postgres store contract skipped"; fi
