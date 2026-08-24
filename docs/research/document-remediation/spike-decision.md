@@ -6,6 +6,28 @@
 [decision.md](decision.md) is the record of what came before, not a live
 recommendation.
 
+> ## Withdrawn in part, 2026-08-24
+>
+> **The STOP below rests on 0 of 9 documents reaching PDF/UA conformance. That is
+> not the standard anyone is required to meet.** The operative standard is
+> WCAG 2.1 Level AA — see [legal-standard.md](legal-standard.md).
+>
+> Re-scored against WCAG, **6 of the 20 remaining failures have no counterpart at
+> all**: unembedded fonts, `CIDSet`, glyph widths, optional-content naming. Those
+> are precisely the "category E" failures this document uses to argue that six of
+> nine are unreachable. What actually blocks them is a document title (2.4.2) on
+> six and alt text (1.1.1) on five.
+>
+> **What still stands:** STOP on zero-touch, unattended automation. Nothing here
+> delivers a finished document without a human.
+>
+> **What is withdrawn:** STOP on the product line. The reasoning that produced it
+> measured the wrong standard.
+>
+> Not yet resolved, and it gates any restart: the pipeline asserted 195 table
+> header cells into these nine documents and verified none. Under WCAG 1.3.1 a
+> wrong header is not a missing fix, it is a manufactured barrier.
+
 # STOP
 
 **On the product as specified: a client sends a PDF, we return a remediated
