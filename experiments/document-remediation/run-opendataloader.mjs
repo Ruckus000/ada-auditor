@@ -1,9 +1,15 @@
 // Phase 3: the free OpenDataLoader tagged-PDF path, and nothing else.
 //
-// Defaults only. `tableMethod: cluster` and the hybrid backends exist and might
-// improve the numbers, but tuning options until the result looks good is the
-// failure mode this spike is built to avoid. Defaults are what an integration
-// would ship on day one, so defaults are what gets measured.
+// Defaults only, still. `tableMethod: cluster` and the hybrid backends exist and
+// might improve the numbers, but tuning options until the result looks good is
+// the failure mode this spike is built to avoid. Defaults are what an
+// integration would ship on day one, so defaults are what gets measured.
+//
+// ODL_OPTS exists for the tagger comparison and changes nothing by default. It
+// is deliberately an environment variable rather than a flag: a comparison arm
+// is a property of the run, not of the pipeline, and the pipeline should not
+// grow a knob for every experiment. An empty value is exactly today's
+// behaviour, so the baseline arm cannot be accidentally altered.
 //
 // Timing is per convert() call and therefore includes JVM startup: the package
 // spawns a JVM per call, which is a per-document cost the research review
@@ -15,6 +21,8 @@ import { basename, join } from 'node:path';
 // Two callers now — development corpus and holdout — so the directories are
 // arguments rather than a second copy of the file.
 const [IN = 'out/corpus', OUT = 'out/phase3-tagged'] = process.argv.slice(2);
+const EXTRA = process.env.ODL_OPTS ? JSON.parse(process.env.ODL_OPTS) : {};
+if (Object.keys(EXTRA).length) console.log(`options: ${JSON.stringify(EXTRA)}`);
 mkdirSync(OUT, { recursive: true });
 
 const files = readdirSync(IN).filter((f) => f.endsWith('.pdf')).sort();
@@ -25,7 +33,7 @@ for (const f of files) {
   const started = Date.now();
   let error = null;
   try {
-    await convert([join(IN, f)], { outputDir: OUT, format: 'tagged-pdf', quiet: true });
+    await convert([join(IN, f)], { outputDir: OUT, format: 'tagged-pdf', quiet: true, ...EXTRA });
   } catch (e) {
     error = String(e?.message ?? e);
   }
