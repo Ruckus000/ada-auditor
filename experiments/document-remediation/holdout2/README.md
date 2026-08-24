@@ -70,18 +70,27 @@ be unsolved rather than only against new ones.
 
 ## Frozen baseline — current pipeline, recorded before any experiment-3 work
 
+**Re-recorded after the comparator gained reading-order and list checks.** A
+baseline measured with one instrument cannot be compared against a checkpoint
+measured with another, so extending `compare.mjs` obliges a fresh baseline. That
+is not a checkpoint — no technique is under test — and only aggregates were read.
+
 | | |
 |---|---|
-| DELIVERABLE | **3/16** |
-| NEEDS_REVIEW | 9/16 |
+| DELIVERABLE | **0/16** |
+| NEEDS_REVIEW | 12/16 |
 | INCONCLUSIVE | 4/16 |
-| **False assertions** | **11 across 8/16** |
-| Omissions | 14 |
+| **False assertions** | **23 across 12/16** |
+| Omissions | 20 |
 | Deterministically reachable | **14/16** (k01 and k15 blocked on uncaptioned figures) |
 | Gate 1 — zero assertions | **FAIL** |
-| Gate 2 — ≥80% of reachable | **3/14 = 21% — FAIL** |
+| Gate 2 — ≥80% of reachable | **0/14 = 0% — FAIL** |
 
-Assertions: heading over-detection 4, table headers wrongly promoted 4, table
-fragmented 1, table invented 1, heading levels disagree 1.
+Assertions: table 6, heading over-detection 4, list count 4, list items 4, list
+nesting 3, reading order 1, heading levels disagree 1.
+
+The earlier figure of 3 deliverable / 11 assertions was measured before lists and
+reading order were checked at all. It was not wrong; it was blind to two whole
+classes of defect.
 
 Raw: `../../docs/research/document-remediation/evidence/holdout2-baseline.comparison.json`

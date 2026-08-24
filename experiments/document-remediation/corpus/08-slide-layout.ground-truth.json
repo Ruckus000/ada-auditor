@@ -14,34 +14,70 @@
   "language": "en",
   "orientation": "landscape",
   "headingHierarchy": [
-    { "level": 1, "text": "Coastal: three ways forward" }
+    {
+      "level": 1,
+      "text": "Coastal: three ways forward"
+    }
   ],
   "readingOrder": [
-    "title", "kicker", "box 1 Renew as-is", "box 2 Reduce footprint",
-    "box 3 Close", "photograph"
+    "title",
+    "kicker",
+    "box 1 Renew as-is",
+    "box 2 Reduce footprint",
+    "box 3 Close",
+    "photograph"
   ],
   "readingOrderNote": "Logical order is 1, 2, 3 by the numerals. Pure geometry gives 3, 1, 2 because box 3 is highest. A geometry-only reading order will get this wrong, and that is the point of the document.",
   "lists": [
-    { "type": "conceptual", "items": 3,
-      "note": "The three boxes form a numbered sequence visually but are not marked up as a list. Treating them as three separate sections is acceptable; inventing list semantics is not required." }
+    {
+      "type": "conceptual",
+      "items": 3,
+      "note": "The three boxes form a numbered sequence visually but are not marked up as a list. Treating them as three separate sections is acceptable; inventing list semantics is not required."
+    }
   ],
   "tables": [],
   "figures": [
-    { "id": "photo-depot.png", "captionPresent": false, "meaningful": true,
-      "expectedAltTextSource": "unavailable deterministically" }
+    {
+      "id": "photo-depot.png",
+      "captionPresent": false,
+      "meaningful": true,
+      "expectedAltTextSource": "unavailable deterministically"
+    }
   ],
   "decorativeGraphics": [
-    { "id": "gradient stripe", "expectedHandling": "artifact" },
-    { "id": "blob g1", "expectedHandling": "artifact" },
-    { "id": "blob g2", "expectedHandling": "artifact" },
-    { "id": "large numerals 1/2/3", "expectedHandling": "Part of the heading text or an artifact. Not content in their own right." }
+    {
+      "id": "gradient stripe",
+      "expectedHandling": "artifact"
+    },
+    {
+      "id": "blob g1",
+      "expectedHandling": "artifact"
+    },
+    {
+      "id": "blob g2",
+      "expectedHandling": "artifact"
+    },
+    {
+      "id": "large numerals 1/2/3",
+      "expectedHandling": "Part of the heading text or an artifact. Not content in their own right."
+    }
   ],
   "expectedAltText": [],
   "links": [],
-  "artifacts": ["gradient stripe", "both blobs"],
+  "artifacts": [
+    "gradient stripe",
+    "both blobs"
+  ],
   "intentionalProblems": [
     "geometric reading order disagrees with logical order",
     "three decorative shapes that must not become figures",
     "an uncaptioned meaningful photograph"
-  ]
+  ],
+  "readingOrderAnchors": [
+    "Coastal: three ways forward",
+    "Renew as-is",
+    "Reduce footprint",
+    "Close"
+  ],
+  "readingOrderAnchorsNote": "Literal text expected in this relative order in the tagged content. readingOrder above is prose and cannot be matched automatically; these can. Logical order is 1,2,3 by the numerals. Pure geometry gives 3,1,2 because box 3 sits highest."
 }

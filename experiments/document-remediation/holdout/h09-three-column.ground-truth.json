@@ -5,15 +5,67 @@
   "title": "Port Bulletin",
   "language": "en",
   "headingHierarchy": [
-    { "level": 1, "text": "Port Bulletin" },
-    { "level": 2, "text": "Dredging" }, { "level": 2, "text": "Gate hours" },
-    { "level": 2, "text": "Charges" }, { "level": 2, "text": "Contact" }
+    {
+      "level": 1,
+      "text": "Port Bulletin"
+    },
+    {
+      "level": 2,
+      "text": "Dredging"
+    },
+    {
+      "level": 2,
+      "text": "Gate hours"
+    },
+    {
+      "level": 2,
+      "text": "Charges"
+    },
+    {
+      "level": 2,
+      "text": "Contact"
+    }
   ],
-  "readingOrder": ["H1","strapline","H2 Dredging","para","H2 Gate hours","para","spanning banner","H2 Charges","para","H2 Contact","para"],
+  "readingOrder": [
+    "H1",
+    "strapline",
+    "H2 Dredging",
+    "para",
+    "H2 Gate hours",
+    "para",
+    "spanning banner",
+    "H2 Charges",
+    "para",
+    "H2 Contact",
+    "para"
+  ],
   "readingOrderNote": "CSS column flow, so content fills column 1, then 2, then 3. The banner spans all three and interrupts. Exact placement of the banner relative to surrounding paragraphs is genuinely ambiguous; accept it anywhere between the Gate hours paragraph and the Charges heading.",
-  "lists": [], "tables": [],
-  "mustNotBeTables": ["the column rules are decorative vertical lines, not table borders"],
-  "figures": [], "decorativeGraphics": ["double rule under H1","two column rules","banner left border"],
-  "links": [], "artifacts": ["strapline"],
-  "intentionalProblems": ["three-column flow","full-width interrupt","column rules resembling table ruling"]
+  "lists": [],
+  "tables": [],
+  "mustNotBeTables": [
+    "the column rules are decorative vertical lines, not table borders"
+  ],
+  "figures": [],
+  "decorativeGraphics": [
+    "double rule under H1",
+    "two column rules",
+    "banner left border"
+  ],
+  "links": [],
+  "artifacts": [
+    "strapline"
+  ],
+  "intentionalProblems": [
+    "three-column flow",
+    "full-width interrupt",
+    "column rules resembling table ruling"
+  ],
+  "readingOrderAnchors": [
+    "Port Bulletin",
+    "Dredging",
+    "Gate hours",
+    "Charges",
+    "Contact"
+  ],
+  "readingOrderAnchorsNote": "Literal text expected in this relative order in the tagged content. readingOrder above is prose and cannot be matched automatically; these can. Excludes the spanning banner, whose placement ground truth records as ambiguous."
 }

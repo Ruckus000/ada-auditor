@@ -47,7 +47,54 @@
         }
       ],
       "figures": [],
-      "tables": []
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "I m m u n i sa t i o n U p t a k e R e v i e w"
+        },
+        {
+          "type": "H2",
+          "text": "Uptake by ward"
+        },
+        {
+          "type": "P",
+          "text": "Two charts follow. Their titles, subtitles and axis labels are drawn as vector text and ar"
+        },
+        {
+          "type": "P",
+          "text": "Percent"
+        },
+        {
+          "type": "H2",
+          "text": "Uptake by Ward, 2026"
+        },
+        {
+          "type": "P",
+          "text": "First dose, children under five"
+        },
+        {
+          "type": "P",
+          "text": "Ash Beech Cedar Elm Fir"
+        },
+        {
+          "type": "H3",
+          "text": "Ward"
+        },
+        {
+          "type": "P",
+          "text": "Uptake ranges from 45% in Fir to 89% in Elm. The pattern tracks deprivation rather than cl"
+        },
+        {
+          "type": "H2",
+          "text": "Next steps"
+        },
+        {
+          "type": "P",
+          "text": "Outreach clinics are proposed for Fir and Cedar before the winter round."
+        }
+      ]
     }
   },
   {
@@ -143,6 +190,57 @@
               "row": 2
             }
           ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "C l i n i c S t a f f i n g G r i d"
+        },
+        {
+          "type": "P",
+          "text": "The rota column of the outer table contains a table of its own. The inner table has its ow"
+        },
+        {
+          "type": "Table",
+          "text": "C l i n i c L e a d W e e k l y r o t a A sh R o a d D r V a n c e Day Session Tue Morning"
+        },
+        {
+          "type": "P",
+          "text": "C l i n i c"
+        },
+        {
+          "type": "P",
+          "text": "L e a d"
+        },
+        {
+          "type": "P",
+          "text": "W e e k l y r o t a"
+        },
+        {
+          "type": "P",
+          "text": "A sh R o a d"
+        },
+        {
+          "type": "P",
+          "text": "D r V a n c e"
+        },
+        {
+          "type": "P",
+          "text": "Day Session Tue Morning Thu All day"
+        },
+        {
+          "type": "P",
+          "text": "B e e c h L a n e"
+        },
+        {
+          "type": "P",
+          "text": "D r O k o n j o"
+        },
+        {
+          "type": "P",
+          "text": "Day Session Mon Afternoon Fri Morning"
         }
       ]
     }
@@ -309,15 +407,127 @@
             }
           ]
         }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "W a i t i n g T i m e s b y S p e c i a l i t y"
+        },
+        {
+          "type": "Table",
+          "text": "P r ov i s i on a l . F i g u r e s e x c l u d e p a t i e n t s w h o d e c l i n e d a "
+        },
+        {
+          "type": "P",
+          "text": "P r ov i s i on a l . F i g u r e s e x c l u d e p a t i e n t s w h o d e c l i n e d a "
+        },
+        {
+          "type": "P",
+          "text": "S p e c i a l i t y"
+        },
+        {
+          "type": "P",
+          "text": "U n d e r 1 8 w k s"
+        },
+        {
+          "type": "P",
+          "text": "1 8 – 5 2 w k s"
+        },
+        {
+          "type": "P",
+          "text": "O v e r 5 2 w k s"
+        },
+        {
+          "type": "P",
+          "text": "D e r m a t o l o g y"
+        },
+        {
+          "type": "P",
+          "text": "8 1 2"
+        },
+        {
+          "type": "P",
+          "text": "2 4 0"
+        },
+        {
+          "type": "P",
+          "text": "1 9"
+        },
+        {
+          "type": "P",
+          "text": "O r t h o p a e d i c s"
+        },
+        {
+          "type": "P",
+          "text": "6 0 4"
+        },
+        {
+          "type": "P",
+          "text": "3 8 8"
+        },
+        {
+          "type": "P",
+          "text": "7 7"
+        },
+        {
+          "type": "P",
+          "text": "C a r d i o l o g y"
+        },
+        {
+          "type": "P",
+          "text": "5 5 1"
+        },
+        {
+          "type": "P",
+          "text": "1 4 2"
+        },
+        {
+          "type": "P",
+          "text": "8"
+        },
+        {
+          "type": "P",
+          "text": "A l l sp e c i a l i t i e s"
+        },
+        {
+          "type": "P",
+          "text": "1 9 6 7"
+        },
+        {
+          "type": "P",
+          "text": "7 7 0"
+        },
+        {
+          "type": "P",
+          "text": "1 0 4"
+        },
+        {
+          "type": "P",
+          "text": "The over-52-week cohort is concentrated in orthopaedics."
+        }
       ]
     }
   },
   {
     "document": "k04-caption-below-and-adjacent-tables",
-    "verdict": "DELIVERABLE",
+    "verdict": "NEEDS_REVIEW",
     "ua1": true,
-    "assertions": 0,
-    "defects": [],
+    "assertions": 3,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "1 list(s) tagged, ground truth records 0 — list structure over content that has none"
+      },
+      {
+        "kind": "assertion",
+        "msg": "2 list items tagged, ground truth records 0"
+      },
+      {
+        "kind": "assertion",
+        "msg": "list nesting 1 deep, ground truth records 0"
+      }
+    ],
     "structure": {
       "hasStructTree": true,
       "structureElements": 54,
@@ -458,15 +668,136 @@
             }
           ]
         }
+      ],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 2
+        }
+      ],
+      "order": [
+        {
+          "type": "H1",
+          "text": "B e d O c c u p a n c y Re t u r n s"
+        },
+        {
+          "type": "P",
+          "text": "Two tables sit directly against each other with no gap, and each caption sits below its ow"
+        },
+        {
+          "type": "Table",
+          "text": "S i t e B e d s O c c u p i e d R i v e r si d e 2 4 0 2 2 1 N o r t h g a t e 1 8 0 1 5 1"
+        },
+        {
+          "type": "P",
+          "text": "S i t e"
+        },
+        {
+          "type": "P",
+          "text": "B e d s"
+        },
+        {
+          "type": "P",
+          "text": "O c c u p i e d"
+        },
+        {
+          "type": "P",
+          "text": "R i v e r si d e"
+        },
+        {
+          "type": "P",
+          "text": "2 4 0"
+        },
+        {
+          "type": "P",
+          "text": "2 2 1"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h g a t e"
+        },
+        {
+          "type": "P",
+          "text": "1 8 0"
+        },
+        {
+          "type": "P",
+          "text": "1 5 1"
+        },
+        {
+          "type": "L",
+          "text": "Table 1: General acute beds at midnight, week 34. Table 2: Escalation capacity, same perio"
+        },
+        {
+          "type": "LI",
+          "text": "Table 1: General acute beds at midnight, week 34."
+        },
+        {
+          "type": "LI",
+          "text": "Table 2: Escalation capacity, same period. Not included in Table 1."
+        },
+        {
+          "type": "Table",
+          "text": "S i t e E sc a l a t i o n O p e n R i v e r si d e 2 4 1 8 N o r t h g a t e 1 2 1 2"
+        },
+        {
+          "type": "P",
+          "text": "S i t e"
+        },
+        {
+          "type": "P",
+          "text": "E sc a l a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "O p e n"
+        },
+        {
+          "type": "P",
+          "text": "R i v e r si d e"
+        },
+        {
+          "type": "P",
+          "text": "2 4"
+        },
+        {
+          "type": "P",
+          "text": "1 8"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h g a t e"
+        },
+        {
+          "type": "P",
+          "text": "1 2"
+        },
+        {
+          "type": "P",
+          "text": "1 2"
+        }
       ]
     }
   },
   {
     "document": "k05-nested-lists",
-    "verdict": "DELIVERABLE",
+    "verdict": "NEEDS_REVIEW",
     "ua1": true,
     "assertions": 0,
-    "defects": [],
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "1 list(s) tagged, ground truth records 4"
+      },
+      {
+        "kind": "omission",
+        "msg": "3 list items tagged, ground truth records 8"
+      },
+      {
+        "kind": "omission",
+        "msg": "list nesting 1 deep, ground truth records 3 — nesting flattened"
+      }
+    ],
     "structure": {
       "hasStructTree": true,
       "structureElements": 19,
@@ -484,15 +815,84 @@
         }
       ],
       "figures": [],
-      "tables": []
+      "tables": [],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 3
+        }
+      ],
+      "order": [
+        {
+          "type": "H1",
+          "text": "E sc a l a t i o n P r o t o c o l"
+        },
+        {
+          "type": "P",
+          "text": "T h r e e l e v e l s o f n e s t in g , w it h t h e in n e r m o s t l e v e l c a r r y"
+        },
+        {
+          "type": "L",
+          "text": "1 . A s s e s s t h e p a t ie n t a n d r e c o r d o b s e r v a t io n s . I f N E W S "
+        },
+        {
+          "type": "LI",
+          "text": "1 . A s s e s s t h e p a t ie n t a n d r e c o r d o b s e r v a t io n s . I f N E W S "
+        },
+        {
+          "type": "P",
+          "text": "I f N E W S 2 is 5 o r a b o v e , e s c a l a t e im m e d ia t e l y ."
+        },
+        {
+          "type": "P",
+          "text": "I f N E W S 2 is 3 o r 4 , r e p e a t w it h in t h e h o u r ."
+        },
+        {
+          "type": "P",
+          "text": "— R e c o r d t h e r e p e a t e v e n w h e n u n c h a n g e d ."
+        },
+        {
+          "type": "P",
+          "text": "— N o t e w h o w a s in f o r m e d a n d w h e n ."
+        },
+        {
+          "type": "LI",
+          "text": "2 . C o n t a c t t h e r e s p o n s ib l e c l in ic ia n . O u t o f h o u r s , c o n "
+        },
+        {
+          "type": "P",
+          "text": "O u t o f h o u r s , c o n t a c t t h e o n - c a l l r e g is t r a r in s t e a d ."
+        },
+        {
+          "type": "LI",
+          "text": "3 . D o c u m e n t t h e o u t c o m e b e f o r e t h e e n d o f t h e s h if t ."
+        },
+        {
+          "type": "P",
+          "text": "T h e p r o t o c o l is r e v ie w e d a n n u a l l y ."
+        }
+      ]
     }
   },
   {
     "document": "k06-footnotes",
-    "verdict": "DELIVERABLE",
+    "verdict": "NEEDS_REVIEW",
     "ua1": true,
-    "assertions": 0,
-    "defects": [],
+    "assertions": 3,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "1 list(s) tagged, ground truth records 0 — list structure over content that has none"
+      },
+      {
+        "kind": "assertion",
+        "msg": "3 list items tagged, ground truth records 0"
+      },
+      {
+        "kind": "assertion",
+        "msg": "list nesting 1 deep, ground truth records 0"
+      }
+    ],
     "structure": {
       "hasStructTree": true,
       "structureElements": 14,
@@ -510,7 +910,43 @@
         }
       ],
       "figures": [],
-      "tables": []
+      "tables": [],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 3
+        }
+      ],
+      "order": [
+        {
+          "type": "H1",
+          "text": "S c r e e n i n g C o v e r a g e N o t e"
+        },
+        {
+          "type": "P",
+          "text": "C o v e r a g e a c r o s s t h e t h r e e p r o g r a m m e s r e a c h e d 7 4 . 2 % 1 "
+        },
+        {
+          "type": "P",
+          "text": "C e r v ic a l c o v e r a g e h e l d a t 7 1 . 8 % , u n c h a n g e d w it h in r o u n"
+        },
+        {
+          "type": "L",
+          "text": "1 W e ig h t e d b y e l ig ib l e p o p u l a t io n a t t h e m id - y e a r e s t im a "
+        },
+        {
+          "type": "LI",
+          "text": "1 W e ig h t e d b y e l ig ib l e p o p u l a t io n a t t h e m id - y e a r e s t im a "
+        },
+        {
+          "type": "LI",
+          "text": "2 B o w e l s c r e e n in g m o v e d f r o m a t w o - y e a r t o a 3 0 - m o n t h c y"
+        },
+        {
+          "type": "LI",
+          "text": "3 R o u n d in g a p p l ie d a t o n e d e c im a l p l a c e t h r o u g h o u t ."
+        }
+      ]
     }
   },
   {
@@ -658,6 +1094,101 @@
             }
           ]
         }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "P",
+          "text": "V a c c i n e S tS oIh cni kfn MlPg aunl teee rnus izm xao"
+        },
+        {
+          "type": "P",
+          "text": "Column headers are set vertically. The text runs bottom-to-top and is the same size as the"
+        },
+        {
+          "type": "Table",
+          "text": "Sc ic ta el V a c c i n e S tS V a c c i n e S tS oIh cni kfn V a c c i n e S R i v e r si"
+        },
+        {
+          "type": "P",
+          "text": "Sc ic ta el"
+        },
+        {
+          "type": "P",
+          "text": "V a c c i n e S tS"
+        },
+        {
+          "type": "P",
+          "text": "V a c c i n e S tS oIh cni kfn"
+        },
+        {
+          "type": "P",
+          "text": "V a c c i n e S"
+        },
+        {
+          "type": "P",
+          "text": "R i v e r si d e"
+        },
+        {
+          "type": "P",
+          "text": "1 4 2 0"
+        },
+        {
+          "type": "P",
+          "text": "3 8 0"
+        },
+        {
+          "type": "P",
+          "text": "2 1 0"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h g a t e"
+        },
+        {
+          "type": "P",
+          "text": "9 8 0"
+        },
+        {
+          "type": "P",
+          "text": "2 9 5"
+        },
+        {
+          "type": "P",
+          "text": "1 4 0"
+        },
+        {
+          "type": "P",
+          "text": "A sh R o a d"
+        },
+        {
+          "type": "P",
+          "text": "5 1 0"
+        },
+        {
+          "type": "P",
+          "text": "1 2 0"
+        },
+        {
+          "type": "P",
+          "text": "8 5"
+        },
+        {
+          "type": "P",
+          "text": "MlPg aunl teee rnus izm xao Column headers are set vertically. The text runs bottom-to-top"
+        },
+        {
+          "type": "P",
+          "text": "oIh cni kfn MlPg aunl teee rnus izm xao"
+        },
+        {
+          "type": "P",
+          "text": "tS oIh cni kfn MlPg aunl teee rnus"
+        },
+        {
+          "type": "P",
+          "text": "Stock is reported as doses held at the close of the reporting week."
+        }
       ]
     }
   },
@@ -709,7 +1240,54 @@
         }
       ],
       "figures": [],
-      "tables": []
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Policy Index"
+        },
+        {
+          "type": "P",
+          "text": "E a c h s e c t io n h e a d in g b e l o w is it s e l f a h y p e r l in k t o t h e f u"
+        },
+        {
+          "type": "H2",
+          "text": "I n f e c t i o n C o n t r o l"
+        },
+        {
+          "type": "P",
+          "text": "Version 7 · reviewed March 2026"
+        },
+        {
+          "type": "P",
+          "text": "A p p l ie s t o a l l c l in ic a l a r e a s . S e e a l s o t h e p e r s o n a l p r o"
+        },
+        {
+          "type": "H2",
+          "text": "S a f e g u a r d i n g A d u l t s"
+        },
+        {
+          "type": "P",
+          "text": "Version 4 · reviewed January 2026"
+        },
+        {
+          "type": "P",
+          "text": "R e f e r r a l r o u t e s a r e s e t o u t in a n n e x e B ."
+        },
+        {
+          "type": "H2",
+          "text": "R e c o r d s M a n a g e m e n t"
+        },
+        {
+          "type": "P",
+          "text": "Version 11 · reviewed August 2026"
+        },
+        {
+          "type": "H3",
+          "text": "R e t e n t io n s c h e d u l e s f o l l o w t h e n a t io n a l c o d e ."
+        }
+      ]
     }
   },
   {
@@ -2514,6 +3092,1201 @@
             }
           ]
         }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "E q u i p m e n t Re g i st e r"
+        },
+        {
+          "type": "P",
+          "text": "S e v e n t y r o w s o v e r s e v e r a l p a g e s . T h e h e a d e r r o w r e p e a "
+        },
+        {
+          "type": "Table",
+          "text": "A sse t L o c a t i o n Y e a r S t a t u s R H - 2 0 0 1 T h e a t r e 2 0 1 5 S e r v ic"
+        },
+        {
+          "type": "P",
+          "text": "A sse t"
+        },
+        {
+          "type": "P",
+          "text": "L o c a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "Y e a r"
+        },
+        {
+          "type": "P",
+          "text": "S t a t u s"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 1"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 2"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 3"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 4"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 5"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 6"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 7"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 8"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 0 9"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 0"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 1"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 2"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 3"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 4"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 7"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 8"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "Table",
+          "text": "A sse t L o c a t i o n Y e a r S t a t u s R H - 2 0 2 9 T h e a t r e 2 0 1 9 S e r v ic"
+        },
+        {
+          "type": "P",
+          "text": "A sse t"
+        },
+        {
+          "type": "P",
+          "text": "L o c a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "Y e a r"
+        },
+        {
+          "type": "P",
+          "text": "S t a t u s"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 2 9"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 0"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 1"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 2"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 3"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 4"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 5"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 6"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 7"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 8"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 3 9"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 0"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 1"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 2"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 3"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 4"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 5"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 6"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 7"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 8"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 4 9"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 0"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 1"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 2"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 3"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 4"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 5"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 6"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 7"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 8"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 5 9"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 0"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 4"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "Table",
+          "text": "A sse t L o c a t i o n Y e a r S t a t u s R H - 2 0 6 1 T h e a t r e 2 0 1 5 S e r v ic"
+        },
+        {
+          "type": "P",
+          "text": "A sse t"
+        },
+        {
+          "type": "P",
+          "text": "L o c a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "Y e a r"
+        },
+        {
+          "type": "P",
+          "text": "S t a t u s"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 1"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 2"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 3"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 4"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 5"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 6"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 7"
+        },
+        {
+          "type": "P",
+          "text": "I m a g in g"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 8"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 6 9"
+        },
+        {
+          "type": "P",
+          "text": "T h e a t r e"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "S e r v ic e a b l e"
+        },
+        {
+          "type": "P",
+          "text": "R H - 2 0 7 0"
+        },
+        {
+          "type": "P",
+          "text": "C l in ic"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "W it h d r a w n"
+        },
+        {
+          "type": "P",
+          "text": "T h e r e g is t e r is c o m p l e t e a s a t t h e r e p o r t i n g d a t e ."
+        }
       ]
     }
   },
@@ -2565,14 +4338,65 @@
         }
       ],
       "figures": [],
-      "tables": []
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "I N F E C T I O N C O N T R O L M A N U A L"
+        },
+        {
+          "type": "P",
+          "text": "T h e h e a d in g s iz e s in t h is d o c u m e n t r u n in t h e w r o n g d ir e c t "
+        },
+        {
+          "type": "H1",
+          "text": "H a n d h y g i e n e"
+        },
+        {
+          "type": "P",
+          "text": "D e c o n t a m in a t io n is r e q u ir e d b e f o r e a n d a f t e r e v e r y p a t "
+        },
+        {
+          "type": "H1",
+          "text": "A l c o h o l g e l"
+        },
+        {
+          "type": "P",
+          "text": "G e l is n o t e f f e c t ive a g a in s t s p o r e - f o r m in g o r g a n is m s ."
+        },
+        {
+          "type": "P",
+          "text": "E x c e p t i o n s"
+        },
+        {
+          "type": "P",
+          "text": "S o a p a n d w a t e r is r e q u ir e d a f t e r c o n t a c t w it h a p a t ie n t w "
+        },
+        {
+          "type": "H2",
+          "text": "I so l a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "S id e r o o m s a r e a l l o c a t e d b y t h e in f e c t io n p r e v e n t io n t e "
+        },
+        {
+          "type": "H1",
+          "text": "C o h o r t in g"
+        },
+        {
+          "type": "P",
+          "text": "C o h o r t in g is p e r m it t e d w h e r e s id e r o o m s a r e e x h a u s t e d ."
+        }
+      ]
     }
   },
   {
     "document": "k11-same-image-two-meanings",
     "verdict": "INCONCLUSIVE",
     "ua1": false,
-    "assertions": 0,
+    "assertions": 3,
     "defects": [
       {
         "kind": "omission",
@@ -2581,6 +4405,18 @@
       {
         "kind": "omission",
         "msg": "heading under-detection — got [\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "assertion",
+        "msg": "2 list(s) tagged, ground truth records 0 — list structure over content that has none"
+      },
+      {
+        "kind": "assertion",
+        "msg": "4 list items tagged, ground truth records 0"
+      },
+      {
+        "kind": "assertion",
+        "msg": "list nesting 1 deep, ground truth records 0"
       }
     ],
     "structure": {
@@ -2626,7 +4462,75 @@
           "actualText": null
         }
       ],
-      "tables": []
+      "tables": [],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 1
+        },
+        {
+          "depth": 1,
+          "items": 3
+        }
+      ],
+      "order": [
+        {
+          "type": "Figure",
+          "text": ""
+        },
+        {
+          "type": "H1",
+          "text": "W a r d S i g n a g e A u d i t"
+        },
+        {
+          "type": "P",
+          "text": "T h e s a m e p h o t o g r a p h a p p e a r s t w ic e w it h d if f e r e n t m e a n i"
+        },
+        {
+          "type": "H2",
+          "text": "C o r r i d o r si g n a g e"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1: The east corridor, showing directional signage mounted above head height and out"
+        },
+        {
+          "type": "L",
+          "text": "Figure 1: The east corridor, showing directional signage mounted above head height and out"
+        },
+        {
+          "type": "LI",
+          "text": "Figure 1: The east corridor, showing directional signage mounted above head height and out"
+        },
+        {
+          "type": "L",
+          "text": "L i g h t i n g Figure 2: The same corridor, photographed to show the pooling of light bet"
+        },
+        {
+          "type": "LI",
+          "text": "L i g h t i n g"
+        },
+        {
+          "type": "LI",
+          "text": "Figure 2: The same corridor, photographed to show the pooling of light between fittings ra"
+        },
+        {
+          "type": "P",
+          "text": "T h e m a r k i t se l f"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 3: The authority mark at the minimum permitted reproduction size, which is the subj"
+        },
+        {
+          "type": "LI",
+          "text": "Figure 3: The authority mark at the minimum permitted reproduction size, which is the subj"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 2: The same corridor, photographed to show the pooling of light between fittings ra"
+        }
+      ]
     }
   },
   {
@@ -2638,6 +4542,18 @@
       {
         "kind": "assertion",
         "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\"], ground truth [\"H1\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "0 list(s) tagged, ground truth records 1"
+      },
+      {
+        "kind": "omission",
+        "msg": "0 list items tagged, ground truth records 4"
+      },
+      {
+        "kind": "omission",
+        "msg": "list nesting 0 deep, ground truth records 1 — nesting flattened"
       }
     ],
     "structure": {
@@ -2667,7 +4583,42 @@
         }
       ],
       "figures": [],
-      "tables": []
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "G l o ssa r y o f Re p o r t i n g T e r m s"
+        },
+        {
+          "type": "P",
+          "text": "T e r m s a r e s e t b o l d a t t h e l e f t m a r g in w it h t h e ir d e f in it io "
+        },
+        {
+          "type": "H2",
+          "text": "E p i so d e"
+        },
+        {
+          "type": "P",
+          "text": "A c o n t in u o u s p e r io d u n d e r t h e c a r e o f o n e c o n s u l t a n t ."
+        },
+        {
+          "type": "P",
+          "text": "S p e l l A c o n t in u o u s p e r io d a s a n a d m it t e d p a t ie n t , f r o m a "
+        },
+        {
+          "type": "P",
+          "text": "C o v e r a g e T h e p r o p o r t io n o f a n e l ig ib l e p o p u l a t io n s c r e "
+        },
+        {
+          "type": "H2",
+          "text": "B r e a c h"
+        },
+        {
+          "type": "P",
+          "text": "A w a it e x c e e d in g t h e a p p l ic a b l e s t a n d a r d ."
+        }
+      ]
     }
   },
   {
@@ -2703,14 +4654,41 @@
         }
       ],
       "figures": [],
-      "tables": []
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "I n c i d e n t Re p o r t Fo r m"
+        },
+        {
+          "type": "H2",
+          "text": "C o m p l e t e w it h in 2 4 h o u r s . D o n o t r e c o r d p a t ie n t id e n t if i"
+        },
+        {
+          "type": "P",
+          "text": "N o n e"
+        },
+        {
+          "type": "P",
+          "text": "L o w"
+        },
+        {
+          "type": "P",
+          "text": "M o d e r a t e"
+        },
+        {
+          "type": "P",
+          "text": "S e v e r e"
+        }
+      ]
     }
   },
   {
     "document": "k14-column-spanning-figure",
     "verdict": "INCONCLUSIVE",
     "ua1": false,
-    "assertions": 0,
+    "assertions": 1,
     "defects": [
       {
         "kind": "omission",
@@ -2719,6 +4697,10 @@
       {
         "kind": "omission",
         "msg": "caption present but no figure alt reflects it: \"Figure 2: Typical window detail on the south elevation....\""
+      },
+      {
+        "kind": "assertion",
+        "msg": "reading order: \"figure2typicalwindowdetail\" appears out of sequence"
       }
     ],
     "structure": {
@@ -2764,7 +4746,62 @@
           "actualText": null
         }
       ],
-      "tables": []
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Estates Condition Survey"
+        },
+        {
+          "type": "H2",
+          "text": "R o o f i n g"
+        },
+        {
+          "type": "P",
+          "text": "T h e f l a t r o o f o v e r t h e w e s t w in g is a t t h e e n d o f it s s e r v ic "
+        },
+        {
+          "type": "P",
+          "text": "b a c k l o g ."
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1: The west wing roof, showing ponding at the outlet and lifted seams along the par"
+        },
+        {
+          "type": "Caption",
+          "text": "F ig u r e 1 : T h e w e s t w in g r o o f , s h o w in g p o n d in g a t t h e o u t l "
+        },
+        {
+          "type": "P",
+          "text": "F ig u r e 2 : T y p ic a l w in d o w d e t a il o n t h e s o u t h e l e v a t i o n ."
+        },
+        {
+          "type": "P",
+          "text": "N o f u r t h e r w o r k is p r o p o s e d t o t h e w in d o w s w it h in t h is s u r"
+        },
+        {
+          "type": "H2",
+          "text": "W i n d o w s"
+        },
+        {
+          "type": "Figure",
+          "text": "S e c o n d a r y g l a z in g w a s f it t e d t h r o u g h o u t in t h e p r e v io u "
+        },
+        {
+          "type": "Caption",
+          "text": "S e c o n d a r y g l a z in g w a s f it t e d t h r o u g h o u t in t h e p r e v io u "
+        },
+        {
+          "type": "H2",
+          "text": "B a c k l o g"
+        },
+        {
+          "type": "P",
+          "text": "T h e t o t a l b a c k l o g is d o m in a t e d b y t h e r o o f in g it e m a b o v e "
+        }
+      ]
     }
   },
   {
@@ -2865,6 +4902,53 @@
             }
           ]
         }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Annual Quality Account"
+        },
+        {
+          "type": "P",
+          "text": "T h e b a n d a b o v e is a d e c o r a t ive h e a d e r o r n a m e n t . I t is t h e "
+        },
+        {
+          "type": "H2",
+          "text": "E sc a l a t i o n p a t h"
+        },
+        {
+          "type": "Table",
+          "text": "W a r d M a t r o n D ir e c t o r"
+        },
+        {
+          "type": "P",
+          "text": "W a r d"
+        },
+        {
+          "type": "P",
+          "text": "M a t r o n"
+        },
+        {
+          "type": "P",
+          "text": "D ir e c t o r"
+        },
+        {
+          "type": "P",
+          "text": "T h e s m a l l d ia g r a m a b o v e is t h e o n l y s t a t e m e n t o f t h e e s c "
+        },
+        {
+          "type": "H2",
+          "text": "S e a l"
+        },
+        {
+          "type": "Figure",
+          "text": "T h e m a r k a b o v e c e r t if ie s t h e a c c o u n t a n d is r e f e r r e d t o i"
+        },
+        {
+          "type": "Caption",
+          "text": "T h e m a r k a b o v e c e r t if ie s t h e a c c o u n t a n d is r e f e r r e d t o i"
+        }
       ]
     }
   },
@@ -2872,7 +4956,7 @@
     "document": "k16-kitchen-sink",
     "verdict": "INCONCLUSIVE",
     "ua1": false,
-    "assertions": 1,
+    "assertions": 3,
     "defects": [
       {
         "kind": "omission",
@@ -2889,6 +4973,14 @@
       {
         "kind": "assertion",
         "msg": "heading levels disagree at equal count — got [\"H1\",\"H2\",\"H1\",\"H2\",\"H3\",\"H3\",\"H1\"], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H2\",\"H3\",\"H2\"]"
+      },
+      {
+        "kind": "assertion",
+        "msg": "5 list(s) tagged, ground truth records 1 — list structure over content that has none"
+      },
+      {
+        "kind": "assertion",
+        "msg": "7 list items tagged, ground truth records 2"
       }
     ],
     "structure": {
@@ -3063,6 +5155,226 @@
               "row": 4
             }
           ]
+        }
+      ],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 1
+        },
+        {
+          "depth": 1,
+          "items": 2
+        },
+        {
+          "depth": 1,
+          "items": 1
+        },
+        {
+          "depth": 1,
+          "items": 2
+        },
+        {
+          "depth": 1,
+          "items": 1
+        }
+      ],
+      "order": [
+        {
+          "type": "Figure",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": "R ive r s id e H e a l t h A u t h o r it y · A n n u a l R e p o r t 2 0 2 6"
+        },
+        {
+          "type": "H1",
+          "text": "Riverside Health Authority"
+        },
+        {
+          "type": "P",
+          "text": "Annual Report 2026 · presented to the Board"
+        },
+        {
+          "type": "H2",
+          "text": "S U M M A R Y"
+        },
+        {
+          "type": "P",
+          "text": "A c t iv it y r o s e a c r o s s a l l t h r e e s it e s w h il e t h e b a c k l o g f "
+        },
+        {
+          "type": "H1",
+          "text": "P os i t i on a t y e a r e n d"
+        },
+        {
+          "type": "H2",
+          "text": "T w o s it e s m e t t h e a c c e s s s t a n d a r d . A s h R o a d d id n o t ."
+        },
+        {
+          "type": "L",
+          "text": "R ive r s id e H e a l t h A u t h o r it y · P a g e 1"
+        },
+        {
+          "type": "LI",
+          "text": "R ive r s id e H e a l t h A u t h o r it y · P a g e 1"
+        },
+        {
+          "type": "H3",
+          "text": "A C T I V I T Y"
+        },
+        {
+          "type": "Table",
+          "text": "Provisional. Excludes patients who declined a first offered appointment. Site Q1 Q2 Q3 Riv"
+        },
+        {
+          "type": "P",
+          "text": "Provisional. Excludes patients who declined a first offered appointment."
+        },
+        {
+          "type": "P",
+          "text": "Site"
+        },
+        {
+          "type": "P",
+          "text": "Q1"
+        },
+        {
+          "type": "P",
+          "text": "Q2"
+        },
+        {
+          "type": "P",
+          "text": "Q3"
+        },
+        {
+          "type": "P",
+          "text": "Riverside"
+        },
+        {
+          "type": "P",
+          "text": "4120"
+        },
+        {
+          "type": "P",
+          "text": "4340"
+        },
+        {
+          "type": "P",
+          "text": "4510"
+        },
+        {
+          "type": "P",
+          "text": "Northgate"
+        },
+        {
+          "type": "P",
+          "text": "2880"
+        },
+        {
+          "type": "P",
+          "text": "2910"
+        },
+        {
+          "type": "P",
+          "text": "3040"
+        },
+        {
+          "type": "P",
+          "text": "Ash Road"
+        },
+        {
+          "type": "P",
+          "text": "1150"
+        },
+        {
+          "type": "P",
+          "text": "1120"
+        },
+        {
+          "type": "P",
+          "text": "1090"
+        },
+        {
+          "type": "L",
+          "text": "T a b l e 1 : C om p l e t e d e p i s od e s b y s i t e a n d q u a r t e r . Site Staff"
+        },
+        {
+          "type": "LI",
+          "text": "T a b l e 1 : C om p l e t e d e p i s od e s b y s i t e a n d q u a r t e r . Site Staff"
+        },
+        {
+          "type": "P",
+          "text": "Site Staff Vacancy % Riverside 412 6.1 Northgate 288 9.4 Ash Road 96 18.2"
+        },
+        {
+          "type": "LI",
+          "text": "T a b l e 2 : E s t a b l i s h m e n t a n d v a c a n c y r a t e , b or d e r l e s s b"
+        },
+        {
+          "type": "L",
+          "text": "R ive r s id e H e a l t h A u t h o r it y · P a g e 2"
+        },
+        {
+          "type": "LI",
+          "text": "R ive r s id e H e a l t h A u t h o r it y · P a g e 2"
+        },
+        {
+          "type": "H3",
+          "text": "E S T A T E"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1: The Ash Road site, showing the temporary modular unit in use since the previous "
+        },
+        {
+          "type": "L",
+          "text": "F ig u r e 1 : T h e A s h R o a d s it e , s h o w in g t h e t e m p o r a r y m o d u l"
+        },
+        {
+          "type": "LI",
+          "text": "F ig u r e 1 : T h e A s h R o a d s it e , s h o w in g t h e t e m p o r a r y m o d u l"
+        },
+        {
+          "type": "P",
+          "text": "S i g n a g e"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 2: Directional signage in the main corridor at Riverside."
+        },
+        {
+          "type": "LI",
+          "text": "F ig u r e 2 : D ir e c t io n a l s ig n a g e in t h e m a in c o r r id o r a t R iv e "
+        },
+        {
+          "type": "P",
+          "text": "G L O S S A R Y"
+        },
+        {
+          "type": "H1",
+          "text": "E p i so d e"
+        },
+        {
+          "type": "P",
+          "text": "A c o n t in u o u s p e r io d u n d e r t h e c a r e o f o n e c o n s u l t a n t ."
+        },
+        {
+          "type": "P",
+          "text": "B r e a c h A w a it e x c e e d in g t h e a p p l ic a b l e s t a n d a r d . C o u n t"
+        },
+        {
+          "type": "P",
+          "text": "1 B a c k l o g m e a s u r e d a t t h e l a s t d a y o f t h e r e p o r t in g y e a r"
+        },
+        {
+          "type": "L",
+          "text": "R ive r s id e H e a l t h A u t h o r it y · P a g e 3 · E n d"
+        },
+        {
+          "type": "LI",
+          "text": "R ive r s id e H e a l t h A u t h o r it y · P a g e 3 · E n d"
         }
       ]
     }

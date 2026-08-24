@@ -48,6 +48,18 @@ public final class Inspect {
     }
 
     private final List<Tbl> tables = new ArrayList<>();
+
+    /** Block-level elements in structure order — the document's reading order. */
+    private final List<String[]> order = new ArrayList<>();   // {type, text}
+
+    /** Lists, with nesting depth and direct item count. */
+    private static final class Lst {
+        int depth, items;
+    }
+    private final List<Lst> lists = new ArrayList<>();
+
+    private static final List<String> BLOCK = List.of(
+        "H1", "H2", "H3", "H4", "H5", "H6", "P", "Figure", "Table", "L", "LI", "Caption", "Formula");
     private Map<String, Object> roleMap;
     private int elements = 0;
     /** Shared with Headings, so the tool that measures and the tool that acts
@@ -127,7 +139,23 @@ public final class Inspect {
                 }
                 json.append("]}");
             }
-            json.append("\n  ]\n}");
+            json.append("\n  ],\n");
+
+            json.append("  \"lists\": [");
+            for (int i = 0; i < lists.size(); i++) {
+                json.append(i > 0 ? ", " : "")
+                    .append("{\"depth\": ").append(lists.get(i).depth)
+                    .append(", \"items\": ").append(lists.get(i).items).append("}");
+            }
+            json.append("],\n");
+
+            json.append("  \"order\": [\n");
+            for (int i = 0; i < order.size(); i++) {
+                json.append("    {\"type\": ").append(q(order.get(i)[0]))
+                    .append(", \"text\": ").append(q(order.get(i)[1])).append("}")
+                    .append(i < order.size() - 1 ? "," : "").append("\n");
+            }
+            json.append("  ]\n}");
 
             System.out.println(json);
         }
@@ -144,12 +172,33 @@ public final class Inspect {
     }
 
     private void walk(PDStructureNode node, Tbl enclosingTable) {
+        walk(node, enclosingTable, null, 0);
+    }
+
+    private void walk(PDStructureNode node, Tbl enclosingTable, Lst enclosingList, int listDepth) {
         for (Object kid : node.getKids()) {
             if (!(kid instanceof PDStructureElement el)) continue;
             elements++;
 
             String type = standard(el.getStructureType());
             Tbl table = enclosingTable;
+            Lst list = enclosingList;
+            int depth = listDepth;
+
+            if (BLOCK.contains(type)) {
+                String t = text.of(el);
+                order.add(new String[] { type, t.length() > 90 ? t.substring(0, 90) : t });
+            }
+            if ("L".equals(type)) {
+                list = new Lst();
+                depth = listDepth + 1;
+                list.depth = depth;
+                lists.add(list);
+            } else if ("LI".equals(type) && list != null && depth == listDepth) {
+                // Counted against the nearest enclosing list only, so a nested
+                // list's items are not also credited to its parent.
+                list.items++;
+            }
 
             if (HEADINGS.contains(type)) {
                 // Text matters as much as level: knowing a document has one
@@ -180,7 +229,7 @@ public final class Inspect {
                 }
             }
 
-            walk(el, table);
+            walk(el, table, list, depth);
         }
     }
 

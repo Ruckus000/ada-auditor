@@ -11,14 +11,22 @@
   "title": "Coastal Depot Review",
   "language": "en",
   "headingHierarchy": [
-    { "level": 1, "text": "Coastal Depot Review" },
-    { "level": 2, "text": "Financial position" }
+    {
+      "level": 1,
+      "text": "Coastal Depot Review"
+    },
+    {
+      "level": 2,
+      "text": "Financial position"
+    }
   ],
   "readingOrder": [
     "H1 Coastal Depot Review",
     "full-width intro paragraph",
-    "left column paragraph 1", "left column paragraph 2",
-    "right column paragraph 1", "right column paragraph 2",
+    "left column paragraph 1",
+    "left column paragraph 2",
+    "right column paragraph 1",
+    "right column paragraph 2",
     "callout note",
     "H2 Financial position",
     "lower-left paragraph",
@@ -36,9 +44,24 @@
   ],
   "expectedAltText": [],
   "links": [],
-  "artifacts": ["footer", "page number text"],
+  "artifacts": [
+    "footer",
+    "page number text"
+  ],
   "intentionalProblems": [
     "reading order is not derivable from source order, only from geometry",
     "the H2 band is styled bold text rather than carrying any semantic weight into the PDF"
-  ]
+  ],
+  "readingOrderAnchors": [
+    "Coastal Depot Review",
+    "The depot lease expires within the year",
+    "Coastal has operated below its designed capacity",
+    "Staffing has been held flat throughout",
+    "Two options are open",
+    "A third option, closure",
+    "Financial position",
+    "Rent is the dominant cost",
+    "The reduced-footprint option saves"
+  ],
+  "readingOrderAnchorsNote": "Literal text expected in this relative order in the tagged content. readingOrder above is prose and cannot be matched automatically; these can. Excludes the callout, whose placement ground truth records as genuinely ambiguous."
 }
