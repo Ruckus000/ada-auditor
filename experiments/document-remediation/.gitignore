@@ -7,3 +7,10 @@ vendor/
 # from corpus/ sources. Summarised numbers that survive are committed under
 # docs/research/document-remediation/.
 out/
+
+# Real client-like documents pulled from public municipal sites, and the ground
+# truth hand-authored for them. Both stay local: the source files are somebody
+# else's bytes, and ground truth quotes their text. Nothing here is regenerable
+# from the repo, so it is listed in real/SOURCES.md instead — URLs and hashes,
+# not content.
+real/
