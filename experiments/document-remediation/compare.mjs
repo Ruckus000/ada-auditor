@@ -30,20 +30,28 @@ const PLACEHOLDER = /^\s*(image|figure|picture|graphic)\s*\d*\s*$/i;
 const STOP = new Set(['the','a','an','of','at','in','on','and','or','is','are','to','from','which','that','with','its','it','as','by','for','was','were','be','this','their']);
 
 /**
- * Header names ground truth records for a table, from whichever shape it used:
- * a two-dimensional headerStructure, a flat columnHeaders list, or rowHeaders.
+ * Header names ground truth records for a table, each tagged with the scope it
+ * should carry. The role is half the relationship: a cell correctly identified
+ * as a header but scoped Column when it heads a row announces the wrong
+ * association to a screen reader, and veraPDF only checks that a Scope exists,
+ * never that it is right.
+ *
  * Annotations like "Depot (rowspan 2)" carry the name plus a note; keep the name.
  */
 function expectedHeaders(g) {
-  const out = [];
+  const out = new Map(); // normalised text -> expected Scope
+  const add = (label, scope) => {
+    const k = norm(String(label).replace(/\s*\([^)]*\)\s*/g, ' '));
+    if (k) out.set(k, scope);
+  };
   for (const row of Object.values(g.headerStructure ?? {})) {
-    if (Array.isArray(row)) out.push(...row);
+    if (Array.isArray(row)) for (const h of row) add(h, 'Column');
   }
-  if (Array.isArray(g.columnHeaders)) out.push(...g.columnHeaders);
+  if (Array.isArray(g.columnHeaders)) for (const h of g.columnHeaders) add(h, 'Column');
   // rowHeaders is sometimes prose ("registration column, 60 values ...") rather
   // than a list. Only a list names cells.
-  if (Array.isArray(g.rowHeaders)) out.push(...g.rowHeaders);
-  return out.map((h) => String(h).replace(/\s*\([^)]*\)\s*/g, ' '));
+  if (Array.isArray(g.rowHeaders)) for (const h of g.rowHeaders) add(h, 'Row');
+  return out;
 }
 
 /** Comparable form: extraction yields glyph-spaced text, so drop everything but letters and digits. */
@@ -137,17 +145,24 @@ function defectsFor(gt, s) {
     // the omission and scored no assertion at all — the fix and the measurement
     // would both have looked good while the document got worse. Compare the
     // promoted cells against the headers ground truth actually names.
-    const want = new Set(expectedHeaders(g).map(norm).filter(Boolean));
+    const want = expectedHeaders(g);
     if (!want.size) continue;
-    const got = t.thTexts.map(norm).filter(Boolean);
 
-    const invented = got.filter((x) => !want.has(x));
-    if (invented.length) {
-      assert_(`table ${i + 1}: ${invented.length} cell(s) promoted to /TH that ground truth does not name as headers`);
+    const headers = t.cells.filter((c) => c.type === 'TH');
+    const seen = new Set();
+    for (const c of headers) {
+      const k = norm(c.text);
+      if (!k) continue;
+      seen.add(k);
+      if (!want.has(k)) {
+        assert_(`table ${i + 1}: cell "${c.text.replace(/\s+/g, '')}" marked as a header but ground truth lists it as data`);
+      } else if (c.scope !== want.get(k)) {
+        assert_(`table ${i + 1}: header "${c.text.replace(/\s+/g, '')}" has Scope=${c.scope ?? 'none'} but heads a ${want.get(k) === 'Row' ? 'row' : 'column'}`);
+      }
     }
-    const missing = [...want].filter((x) => !got.includes(x));
+    const missing = [...want.keys()].filter((x) => !seen.has(x));
     if (missing.length) {
-      omit(`table ${i + 1}: ${missing.length} ground-truth header(s) not promoted to /TH`);
+      omit(`table ${i + 1}: ${missing.length} ground-truth header(s) still tagged TD`);
     }
   }
   // A layout table must NOT become a data table.

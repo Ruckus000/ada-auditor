@@ -104,16 +104,133 @@
           "th": 9,
           "td": 12,
           "tr": 5,
-          "thTexts": [
-            "D e p o t",
-            "R e v i e w p e r i o d",
-            "Q 1",
-            "Q 2",
-            "Q 3",
-            "Q 4",
-            "N o r t h e r n",
-            "S o u t h e r n",
-            "C o a st a l"
+          "cells": [
+            {
+              "type": "TH",
+              "text": "D e p o t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R e v i e w p e r i o d",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Q 1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 3",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 4",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h e r n",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 8 4",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 9 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 3",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 2 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "S o u t h e r n",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 2",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 3 9",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 5",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 4",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "C o a st a l",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 8",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 4",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 1",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "8 8",
+              "scope": null,
+              "row": 4
+            }
           ]
         }
       ]
@@ -267,7 +384,50 @@
           "th": 0,
           "td": 7,
           "tr": 2,
-          "thTexts": []
+          "cells": [
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 1
+            }
+          ]
         }
       ]
     }
@@ -581,16 +741,133 @@
           "th": 9,
           "td": 12,
           "tr": 5,
-          "thTexts": [
-            "D e p o t",
-            "R e v i e w p e r i o d",
-            "Q 1",
-            "Q 2",
-            "Q 3",
-            "Q 4",
-            "N o r t h e r n",
-            "S o u t h e r n",
-            "C o a st a l"
+          "cells": [
+            {
+              "type": "TH",
+              "text": "D e p o t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R e v i e w p e r i o d",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Q 1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 3",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 4",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h e r n",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 8 4",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 9 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 3",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 2 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "S o u t h e r n",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 2",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 3 9",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 5",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 4",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "C o a st a l",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 8",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 4",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 1",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "8 8",
+              "scope": null,
+              "row": 4
+            }
           ]
         }
       ]

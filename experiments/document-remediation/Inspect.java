@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
@@ -42,7 +43,8 @@ public final class Inspect {
      */
     private static final class Tbl {
         int th, td, tr;
-        final List<String> thTexts = new ArrayList<>();
+        /** {type, text, scope, rowIndex} per cell, in document order. */
+        final List<String[]> cells = new ArrayList<>();
     }
 
     private final List<Tbl> tables = new ArrayList<>();
@@ -114,9 +116,14 @@ public final class Inspect {
                     .append("{\"th\": ").append(t.th)
                     .append(", \"td\": ").append(t.td)
                     .append(", \"tr\": ").append(t.tr)
-                    .append(", \"thTexts\": [");
-                for (int k = 0; k < t.thTexts.size(); k++) {
-                    json.append(k > 0 ? ", " : "").append(q(t.thTexts.get(k)));
+                    .append(", \"cells\": [");
+                for (int k = 0; k < t.cells.size(); k++) {
+                    String[] c = t.cells.get(k);
+                    json.append(k > 0 ? ", " : "")
+                        .append("{\"type\": ").append(q(c[0]))
+                        .append(", \"text\": ").append(q(c[1]))
+                        .append(", \"scope\": ").append(q(c[2]))
+                        .append(", \"row\": ").append(c[3]).append("}");
                 }
                 json.append("]}");
             }
@@ -160,13 +167,41 @@ public final class Inspect {
             // Counted against the nearest enclosing Table so a document with two
             // tables does not pool its header cells into one score.
             if (table != null) {
-                if ("TH".equals(type)) { table.th++; table.thTexts.add(text.of(el)); }
-                else if ("TD".equals(type)) table.td++;
-                else if ("TR".equals(type)) table.tr++;
+                if ("TR".equals(type)) {
+                    table.tr++;
+                } else if ("TH".equals(type) || "TD".equals(type)) {
+                    if ("TH".equals(type)) table.th++; else table.td++;
+                    // Row index matters as much as the text. A header with the
+                    // right words in the wrong row is still an invented
+                    // relationship, and a set comparison cannot see it.
+                    table.cells.add(new String[] {
+                        type, text.of(el), scopeOf(el), String.valueOf(table.tr - 1),
+                    });
+                }
             }
 
             walk(el, table);
         }
+    }
+
+    /** /Scope from the cell's Table attribute dictionary, or null if it has none. */
+    private static String scopeOf(PDStructureElement el) {
+        org.apache.pdfbox.cos.COSBase a = el.getCOSObject().getDictionaryObject(COSName.A);
+        if (a instanceof org.apache.pdfbox.cos.COSDictionary d) return nameAt(d);
+        if (a instanceof org.apache.pdfbox.cos.COSArray arr) {
+            for (int i = 0; i < arr.size(); i++) {
+                if (arr.getObject(i) instanceof org.apache.pdfbox.cos.COSDictionary d2) {
+                    String v = nameAt(d2);
+                    if (v != null) return v;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String nameAt(org.apache.pdfbox.cos.COSDictionary d) {
+        org.apache.pdfbox.cos.COSBase v = d.getDictionaryObject(COSName.getPDFName("Scope"));
+        return v instanceof COSName n ? n.getName() : null;
     }
 
     private static String q(String s) {
