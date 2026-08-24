@@ -5,15 +5,60 @@
   "title": "Storage Policy",
   "language": "en",
   "headingHierarchy": [
-    { "level": 1, "text": "Storage Policy" },
-    { "level": 2, "text": "Extensions" }, { "level": 2, "text": "Abandoned goods" },
-    { "level": 2, "text": "Hazardous consignments" }
+    {
+      "level": 1,
+      "text": "Storage Policy"
+    },
+    {
+      "level": 2,
+      "text": "Extensions"
+    },
+    {
+      "level": 2,
+      "text": "Abandoned goods"
+    },
+    {
+      "level": 2,
+      "text": "Hazardous consignments"
+    }
   ],
-  "mustNotBeHeadings": ["At a glance", "Worked example", "See also"],
-  "readingOrder": ["H1","intro","H2 Extensions","para","H2 Abandoned goods","para","H2 Hazardous consignments","para","sidebar 1","sidebar 2","sidebar 3"],
-  "readingOrderNote": "The main column must stay contiguous. Sidebars are supplementary and belong after it, or clearly delimited as asides — not interleaved between main-column paragraphs.",
-  "lists": [], "tables": [], "figures": [],
-  "decorativeGraphics": ["three sidebar top rules"],
-  "links": [], "artifacts": [],
-  "intentionalProblems": ["three sidebars competing with main-column reading order","bold lead-ins that are not headings"]
+  "mustNotBeHeadings": [
+    "At a glance",
+    "Worked example",
+    "See also"
+  ],
+  "readingOrder": [
+    "H1",
+    "intro",
+    "H2 Extensions",
+    "para",
+    "H2 Abandoned goods",
+    "para",
+    "H2 Hazardous consignments",
+    "para",
+    "sidebar 1",
+    "sidebar 2",
+    "sidebar 3"
+  ],
+  "readingOrderNote": "The main column must stay contiguous. Sidebars are supplementary and belong after it, or clearly delimited as asides \u2014 not interleaved between main-column paragraphs.",
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [
+    "three sidebar top rules"
+  ],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": [
+    "three sidebars competing with main-column reading order",
+    "bold lead-ins that are not headings"
+  ],
+  "readingOrderAnchors": [
+    "Storage Policy",
+    "Free storage runs for five working days",
+    "Extensions",
+    "Abandoned goods",
+    "Hazardous consignments"
+  ],
+  "readingOrderAnchorsNote": "Literal text expected in this relative order in the tagged content. readingOrder above is prose and cannot be matched automatically; these can. Main column only. The main argument must stay contiguous; sidebars interleaved between these anchors break it."
 }

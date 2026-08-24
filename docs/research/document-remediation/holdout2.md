@@ -12,8 +12,12 @@ Holdout 2 is the holdout.
 
 ## Frozen baseline
 
-3/16 DELIVERABLE · 11 false assertions across 8/16 · 14 omissions ·
+0/16 DELIVERABLE · 23 false assertions across 12/16 · 20 omissions ·
 14/16 deterministically reachable · both gates FAIL.
+
+Re-recorded after the comparator gained reading-order and list checks: a baseline
+taken with one instrument cannot be compared against a checkpoint taken with
+another. The earlier 3/16 and 11 assertions were blind to both classes.
 
 Recorded against the pipeline as it stands at the end of experiment 2, so any
 future technique is measured from here.

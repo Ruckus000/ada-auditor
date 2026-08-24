@@ -1,17 +1,64 @@
 {
   "document": "k05-nested-lists",
   "tests": "Three levels of list nesting mixing ordered and unordered, where the third level has no list marker and is distinguished only by indentation and an em dash.",
-  "attacks": "List structure recovery. Flattening the nesting loses the conditional logic entirely — 'Record the repeat even when unchanged' belongs under the NEWS2 3-or-4 branch, not as a peer of 'Assess the patient'. The markerless third level is the part a geometry-driven tagger is most likely to read as paragraphs.",
+  "attacks": "List structure recovery. Flattening the nesting loses the conditional logic entirely \u2014 'Record the repeat even when unchanged' belongs under the NEWS2 3-or-4 branch, not as a peer of 'Assess the patient'. The markerless third level is the part a geometry-driven tagger is most likely to read as paragraphs.",
   "title": "Escalation Protocol",
   "language": "en",
-  "headingHierarchy": [{ "level": 1, "text": "Escalation Protocol" }],
-  "readingOrder": ["H1","intro","three-level list","closing paragraph"],
-  "lists": [
-    { "type": "ordered", "level": 1, "items": 3 },
-    { "type": "unordered", "level": 2, "items": 2, "parentItem": "Assess the patient and record observations." },
-    { "type": "unordered", "level": 3, "items": 2, "markers": "none, em dash via CSS", "parentItem": "If NEWS2 is 3 or 4, repeat within the hour." },
-    { "type": "unordered", "level": 2, "items": 1, "parentItem": "Contact the responsible clinician." }
+  "headingHierarchy": [
+    {
+      "level": 1,
+      "text": "Escalation Protocol"
+    }
   ],
-  "tables": [], "figures": [], "decorativeGraphics": [], "links": [], "artifacts": [],
-  "intentionalProblems": ["three-level nesting", "innermost level has no marker", "mixed ordered and unordered"]
+  "readingOrder": [
+    "H1",
+    "intro",
+    "three-level list",
+    "closing paragraph"
+  ],
+  "lists": [
+    {
+      "type": "ordered",
+      "level": 1,
+      "items": 3
+    },
+    {
+      "type": "unordered",
+      "level": 2,
+      "items": 2,
+      "parentItem": "Assess the patient and record observations."
+    },
+    {
+      "type": "unordered",
+      "level": 3,
+      "items": 2,
+      "markers": "none, em dash via CSS",
+      "parentItem": "If NEWS2 is 3 or 4, repeat within the hour."
+    },
+    {
+      "type": "unordered",
+      "level": 2,
+      "items": 1,
+      "parentItem": "Contact the responsible clinician."
+    }
+  ],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": [
+    "three-level nesting",
+    "innermost level has no marker",
+    "mixed ordered and unordered"
+  ],
+  "readingOrderAnchors": [
+    "Assess the patient and record observations",
+    "If NEWS2 is 5 or above",
+    "If NEWS2 is 3 or 4",
+    "Record the repeat even when unchanged",
+    "Contact the responsible clinician",
+    "Document the outcome"
+  ],
+  "readingOrderAnchorsNote": "Literal text expected in this relative order in the tagged content. readingOrder above is prose and cannot be matched automatically; these can. The level-3 items must follow their own parent branch, not float to the end."
 }

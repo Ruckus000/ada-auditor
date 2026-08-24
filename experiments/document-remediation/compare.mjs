@@ -227,6 +227,83 @@ function defectsFor(gt, s) {
     else assert_(`heading levels disagree at equal count — ${detail}`);
   }
 
+  // --- lists ---------------------------------------------------------------
+  //
+  // A "conceptual" list is excluded deliberately. Document 08's three numbered
+  // boxes look like a sequence and its ground truth says treating them as
+  // separate sections is acceptable and inventing list semantics is not
+  // required — so demanding structure there would penalise the correct answer.
+  const gtLists = (gt.lists ?? []).filter((l) => l.type !== 'conceptual');
+  if (gtLists.length || s.lists.length) {
+    const wantCount = gtLists.length;
+    const gotCount = s.lists.length;
+    if (gotCount > wantCount) {
+      assert_(`${gotCount} list(s) tagged, ground truth records ${wantCount} — list structure over content that has none`);
+    } else if (gotCount < wantCount) {
+      omit(`${gotCount} list(s) tagged, ground truth records ${wantCount}`);
+    }
+
+    // A description list's items are its terms.
+    const wantItems = gtLists.reduce((n, l) => n + (l.items ?? l.terms ?? 0), 0);
+    const gotItems = s.lists.reduce((n, l) => n + l.items, 0);
+    if (gotItems > wantItems) {
+      assert_(`${gotItems} list items tagged, ground truth records ${wantItems}`);
+    } else if (gotItems < wantItems) {
+      omit(`${gotItems} list items tagged, ground truth records ${wantItems}`);
+    }
+
+    // Nesting carries meaning: a level-3 item under "if NEWS2 is 3 or 4" is a
+    // condition of that branch, and flattening makes it a peer instruction.
+    const wantDepth = Math.max(0, ...gtLists.map((l) => l.level ?? 1));
+    const gotDepth = Math.max(0, ...s.lists.map((l) => l.depth));
+    if (gotDepth > wantDepth) {
+      assert_(`list nesting ${gotDepth} deep, ground truth records ${wantDepth}`);
+    } else if (gotDepth < wantDepth) {
+      omit(`list nesting ${gotDepth} deep, ground truth records ${wantDepth} — nesting flattened`);
+    }
+  }
+
+  // --- reading order -------------------------------------------------------
+  //
+  // Ground truth records readingOrder as prose descriptors ("left column
+  // paragraph 1"), which nothing can match automatically. Two things can be
+  // checked without rewriting 44 fixtures.
+  //
+  // First, headings must appear in the order ground truth lists them. The
+  // heading checks above compare levels; the same elements carry text, and text
+  // out of sequence is a reading-order defect that a level comparison cannot
+  // see.
+  const wantHeadTexts = (gt.headingHierarchy ?? []).map((h) => norm(h.text));
+  const gotHeadTexts = (s.headingTexts ?? []).map((h) => norm(h.text));
+  if (wantHeadTexts.length && wantHeadTexts.length === gotHeadTexts.length) {
+    const sameSet = [...wantHeadTexts].sort().join('|') === [...gotHeadTexts].sort().join('|');
+    if (sameSet && wantHeadTexts.join('|') !== gotHeadTexts.join('|')) {
+      assert_('headings appear in a different order than ground truth records — reading order is wrong');
+    }
+  }
+
+  // Second, where a document exists to test order, its fixture names literal
+  // anchors that must appear in that relative sequence.
+  const anchors = (gt.readingOrderAnchors ?? []).map(norm).filter(Boolean);
+  if (anchors.length) {
+    const flat = s.order.map((o) => norm(o.text));
+    let at = -1;
+    let broken = null;
+    for (const a of anchors) {
+      const i = flat.findIndex((t, j) => j > at && t.includes(a));
+      if (i === -1) { broken = a; break; }
+      at = i;
+    }
+    if (broken !== null) {
+      const present = s.order.some((o) => norm(o.text).includes(broken));
+      if (present) {
+        assert_(`reading order: "${broken.slice(0, 34)}" appears out of sequence`);
+      } else {
+        omit(`reading order: "${broken.slice(0, 34)}" not found in the tagged content`);
+      }
+    }
+  }
+
   // --- text ----------------------------------------------------------------
   const expectsText = !(gt.intentionalProblems ?? []).some((p) => /no text layer/i.test(p));
   if (expectsText && s.textChars < 50) omit(`expected text but extracted ${s.textChars} chars`);
