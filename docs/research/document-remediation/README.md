@@ -10,7 +10,7 @@ here" and you have the whole picture.**
 |---|---|
 | **[legal-standard.md](legal-standard.md)** | What the law actually requires, what it does not, the deadlines, the market rate, and the definition of good remediation. **The authoritative statement of what we are aiming at.** |
 | **[working-agreement.md](working-agreement.md)** | How the project spent two experiments measuring the wrong thing, and the mechanisms that stop it recurring. |
-| **[spike-decision.md](spike-decision.md)** | The closing decision. **Read its correction banner first** — the STOP is withdrawn in part. |
+| **[decision-2026-08-24.md](decision-2026-08-24.md)** | **The current decision: PROCEED WITH CONDITIONS**, as a service, with three blocking gaps named. |
 
 ## Where things stand
 
@@ -74,6 +74,7 @@ here" and you have the whole picture.**
 
 | | why |
 |---|---|
+| [spike-decision.md](spike-decision.md) | Its STOP measured PDF/UA conformance, not the legal standard. Superseded by `decision-2026-08-24.md`; carries a banner. |
 | [experiment-2-decision.md](experiment-2-decision.md) | Two of its three findings were falsified by the abstention run. Carries a banner. |
 | [experiment-2-results.md](experiment-2-results.md) | Its development table predates the reading-order and list checks. Carries a banner. |
 | [decision.md](decision.md) | Experiment 1's PROCEED WITH CONDITIONS. Condition 6 — run real documents — has now been answered. |
