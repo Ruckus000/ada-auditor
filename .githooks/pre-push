@@ -1,0 +1,11 @@
+#!/bin/sh
+# Installed by localci. Runs the gate phase; a non-zero exit blocks the push.
+if command -v localci >/dev/null 2>&1; then
+	exec localci pre-push
+elif [ -x "/Users/jphilistin/.cargo/bin/localci" ]; then
+	exec "/Users/jphilistin/.cargo/bin/localci" pre-push
+else
+	echo "localci: not installed, cannot run the gate. Push blocked." >&2
+	echo "Install it, or use: git push --no-verify" >&2
+	exit 1
+fi
