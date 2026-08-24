@@ -3,6 +3,22 @@
 **Date:** 2026-08-24 · Written after the gate failed, against the pipeline and
 comparator as they stand at commit `5009d8a`.
 
+> ## Partly superseded, 2026-08-24
+>
+> Findings 1 and 3 were tested by a global abstention pass and **both failed**.
+> Over-detection turned out to be removable rather than a floor: development
+> `DELIVERABLE` went 5/28 to 8/28 and the reachable rate 25% to 40%, so the
+> "25% ceiling" is not one. And abstention does not merely trade an assertion
+> for an omission — where invented structure is the whole defect, removing it
+> leaves a correct document, so for those the two gates move together.
+>
+> Finding 2 held, and turned out to be actionable: 8 of its 12 over-detections
+> are gone. The STOP below still stands as written, since it was a stop on
+> adding *detectors* and abstention adds none — but its stated reason no longer
+> does. See [abstention-results.md](abstention-results.md).
+>
+> Measured on the development corpora only. Holdout 2 is untouched.
+
 # STOP — on deterministic-only remediation
 
 Not a stop on the product. Experiment 1's **PROCEED WITH CONDITIONS**
@@ -51,7 +67,7 @@ legitimate — it is a development corpus now, both of its checkpoints having be
 spent during Experiment 2. It reproduced the recorded post-hoc rescore of **10
 assertions** exactly.
 
-## Finding 1 — the techniques worked, and the ceiling is 25%
+## Finding 1 — the techniques worked, and the ceiling is 25% [FALSIFIED — 40%]
 
 The reductions Experiment 2 achieved are real and they transferred to unseen
 documents. Placeholder alt text — `"image 1"` presented to a screen reader as a
@@ -88,7 +104,15 @@ was built specifically for this class; the residue that survives it is
 semantic — a chart axis label that is typographically indistinguishable from a
 section heading, a hierarchy the author applied inconsistently.
 
-## Finding 3 — the two gates pull in opposite directions [V]
+## Finding 3 — the two gates pull in opposite directions [FALSIFIED]
+
+> The premise below is right and the inference from it is not. `compare.mjs`
+> does treat an omission exactly as it treats an assertion. But abstention only
+> *produces* an omission where the correct structure is genuinely missing. Where
+> the invented structure was the whole defect, removing it leaves nothing behind
+> — the document is correct, not merely honest. Three documents became
+> DELIVERABLE that way. Abstention cures over-detection; it cannot cure
+> omission, and only the second half of that is what makes the gates oppose.
 
 This is the finding that decides the question, and it is a property of the
 system rather than a measurement that better code could improve.
