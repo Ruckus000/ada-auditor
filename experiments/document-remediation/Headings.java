@@ -16,9 +16,20 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
  * reader loses navigation and a reviewer can see the gap. Promoting a
  * non-heading costs a false assertion — invented structure a reader navigates
  * by, with nothing to signal it is wrong. Under the gate those are not
- * comparable, so this pass can only ever trade an assertion for an omission.
+ * comparable, so demotion is the direction that can only ever cost an omission.
  *
- * Rules, all from the development corpus:
+ * THAT ARGUMENT IS INCOMPLETE, and nine real municipal documents showed how.
+ * Demotion is not level-neutral. Remove the H2 sitting between an H1 and an H3
+ * and the survivors skip a level, which is not an omission at all — it is
+ * PDF/UA 7.4.2-1, a conformance failure this pass created in a document that
+ * did not have it. nyc-notice-form went H1,H2,H3 to a lone H3;
+ * lacity-clerk-misc went H1,H1,H1,H2,H3,H2 to H1,H1,H1,H3. Twenty-eight
+ * synthetic documents never had a demotion land between two levels, so the hole
+ * in the reasoning was invisible until real input found it. R8 closes it: a
+ * removal that leaves the document invalid is not a removal this pass is
+ * entitled to make.
+ *
+ * Rules, all from the development corpus except R8, which is from the real one:
  *
  *   R1 LENGTH. Whole body paragraphs are being tagged as headings — five of
  *      them across documents 03, 05, 07 and 12. The longest real heading in
@@ -70,6 +81,17 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
  *      by. That was recorded here as needing vector-density analysis. It did
  *      not — R6 reaches it from the other side, by what follows rather than by
  *      what encloses.
+ *
+ *   R8 KEEP THE HIERARCHY VALID. After every other rule has had its say, if
+ *      what survives does not start at H1 or skips a level, demotions are put
+ *      back in document order until it does. Restoring all of them returns the
+ *      input unchanged, so this terminates; and if the input hierarchy was
+ *      already invalid, no demotion of ours can fix it, so the pass does
+ *      nothing rather than adding its own damage on top.
+ *
+ *      This is abstaining from abstention, and it is the same principle one
+ *      level up: the pass may only make a change it can justify, and a change
+ *      that breaks what it leaves behind is not justified.
  *
  *   R3 PAGE MARKER. Document 02's running footer became an H3. This is a text
  *      rule rather than page-furniture detection on purpose: the occurrence is
@@ -143,7 +165,8 @@ public final class Headings {
         try (PDDocument doc = Loader.loadPDF(new File(args[0]))) {
             PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
             int headings = 0, byLength = 0, byNoLetters = 0, byPageMarker = 0,
-                byCaptionText = 0, byTable = 0, byShortFollowing = 0, byNothingAfter = 0;
+                byCaptionText = 0, byTable = 0, byShortFollowing = 0, byNothingAfter = 0,
+                restored = 0;
 
             if (root != null) {
                 StructText text = new StructText(doc);
@@ -181,7 +204,11 @@ public final class Headings {
                         next == null ? 0 : text.of(next).replaceAll("\\s", "").length());
                 }
 
-                for (PDStructureElement el : found) {
+                // DECIDE first, apply later. R8 needs to see the whole
+                // surviving sequence before any of it is changed.
+                String[] why = new String[found.size()];
+                for (int i = 0; i < found.size(); i++) {
+                    PDStructureElement el = found.get(i);
                     String t = text.of(el);
                     // An empty heading is left alone: we cannot read it, so we
                     // do not know it is wrong, and guessing is the thing this
@@ -198,13 +225,41 @@ public final class Headings {
                     boolean shortAfter = "P".equals(after)
                         && nextChars.getOrDefault(key, Integer.MAX_VALUE) < MIN_FOLLOWING_CHARS;
 
-                    if (tooLong) { el.setStructureType("P"); byLength++; }
-                    else if (noLetters) { el.setStructureType("P"); byNoLetters++; }
-                    else if (PAGE_MARKER.matcher(dense).find()) { el.setStructureType("P"); byPageMarker++; }
-                    else if (CaptionPattern.OPENING.matcher(dense).find()) { el.setStructureType("P"); byCaptionText++; }
-                    else if (belongsToTable(text.boxOf(el), tables)) { el.setStructureType("P"); byTable++; }
-                    else if (nothingAfter) { el.setStructureType("P"); byNothingAfter++; }
-                    else if (shortAfter) { el.setStructureType("P"); byShortFollowing++; }
+                    if (tooLong) why[i] = "length";
+                    else if (noLetters) why[i] = "noLetters";
+                    else if (PAGE_MARKER.matcher(dense).find()) why[i] = "pageMarker";
+                    else if (CaptionPattern.OPENING.matcher(dense).find()) why[i] = "captionText";
+                    else if (belongsToTable(text.boxOf(el), tables)) why[i] = "inTable";
+                    else if (nothingAfter) why[i] = "nothingAfter";
+                    else if (shortAfter) why[i] = "shortFollowing";
+                }
+
+                // R8. Restore demotions in document order until what survives is
+                // a valid hierarchy. Terminates: every pass either restores one
+                // heading or stops, and restoring all of them returns the input.
+                // If the input was itself invalid, no demotion can fix it and
+                // this bails with the document unchanged, which is no worse than
+                // what arrived.
+                while (!validHierarchy(found, why, root.getRoleMap())) {
+                    int i = 0;
+                    while (i < why.length && why[i] == null) i++;
+                    if (i == why.length) break;
+                    why[i] = null;
+                    restored++;
+                }
+
+                for (int i = 0; i < found.size(); i++) {
+                    if (why[i] == null) continue;
+                    found.get(i).setStructureType("P");
+                    switch (why[i]) {
+                        case "length" -> byLength++;
+                        case "noLetters" -> byNoLetters++;
+                        case "pageMarker" -> byPageMarker++;
+                        case "captionText" -> byCaptionText++;
+                        case "inTable" -> byTable++;
+                        case "nothingAfter" -> byNothingAfter++;
+                        default -> byShortFollowing++;
+                    }
                 }
             }
 
@@ -212,12 +267,37 @@ public final class Headings {
             System.out.printf(
                 "{\"headings\":%d,\"length\":%d,\"noLetters\":%d,\"pageMarker\":%d,"
                 + "\"captionText\":%d,\"inTable\":%d,\"nothingAfter\":%d,\"shortFollowing\":%d,"
-                + "\"kept\":%d}%n",
+                + "\"restoredForHierarchy\":%d,\"kept\":%d}%n",
                 headings, byLength, byNoLetters, byPageMarker, byCaptionText, byTable,
-                byNothingAfter, byShortFollowing,
+                byNothingAfter, byShortFollowing, restored,
                 headings - byLength - byNoLetters - byPageMarker - byCaptionText - byTable
                     - byNothingAfter - byShortFollowing);
         }
+    }
+
+    /**
+     * R8. Is what survives demotion a valid heading hierarchy?
+     *
+     * PDF/UA 7.4.2-1: if any heading is used, the first shall be H1, and levels
+     * shall not skip. An empty sequence is valid — a document with no headings
+     * is legal, just poorer.
+     */
+    private static boolean validHierarchy(List<PDStructureElement> found, String[] why,
+                                          java.util.Map<String, Object> roleMap) {
+        int previous = 0;
+        for (int i = 0; i < found.size(); i++) {
+            if (why[i] != null) continue;            // demoted, so not a heading any more
+            String type = standard(found.get(i), roleMap);
+            if (type.length() != 2 || type.charAt(0) != 'H') continue;
+            int level = type.charAt(1) - '0';
+            if (previous == 0) {
+                if (level != 1) return false;        // first heading must be H1
+            } else if (level - previous > 1) {
+                return false;                        // levels may descend by one at a time
+            }
+            previous = level;
+        }
+        return true;
     }
 
     /** The element's type after the role map, which is how Inspect reads it too. */
