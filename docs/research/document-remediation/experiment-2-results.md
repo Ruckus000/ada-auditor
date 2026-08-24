@@ -126,14 +126,48 @@ The user authorised the correction, and it is applied above. The verdict was
 unchanged either way, which is what made the disclosure easy; had it flipped the
 gate, the right answer would have been a fresh holdout rather than a rescore.
 
-### A real defect the comparator only partly sees
+### The defect underneath — since fixed in the harness
 
 `h08`'s table was detected as **two tables** (th 32/84 and 36/96) where ground
-truth records `expectedTableCount: 1, spansPages: true`. `compare.mjs` matches
-ground-truth tables to detected tables positionally, so the second detected
-table has no counterpart and is skipped entirely. Per-page table detection
-across a page break is a genuine failure, and the harness is currently blind to
-roughly half of it.
+truth records `expectedTableCount: 1, spansPages: true`. `compare.mjs` matched
+ground-truth tables to detected tables *positionally*, so the second had no
+counterpart at index 1 and was skipped entirely — 36 promoted headers invisible,
+while the 32 in the first fragment were scored against the whole ground truth
+and reported as mostly missing.
+
+Matching is now by content overlap: a detected table belongs to whichever
+ground-truth table its cell texts overlap most. That allows one logical table to
+be found in several pieces, reports the fragmentation as the structural
+misstatement it is, and names a detected table matching nothing as invented
+structure rather than ignoring it.
+
+**Three numbers for the same output bytes**, and the differences are all
+measurement rather than remediation:
+
+| Measurement | Holdout assertions |
+|---|---:|
+| At the checkpoint — prose fixture, positional matching | **37** |
+| Corrected fixture, positional matching | 9 |
+| Corrected fixture, content matching | **10** |
+
+The last is the most accurate. It is one *higher* than the middle because h08's
+fragmentation now registers as an assertion instead of being half-invisible, and
+its spurious "32 headers still tagged TD" omission correctly disappears once
+both fragments are counted together.
+
+**37 remains the recorded outcome of the gate**, because that is what the gate
+was evaluated against. The gate fails on all three readings.
+
+### The same fix found an invented table in the development corpus
+
+Doc 06 records `"tables": []` in ground truth, and OpenDataLoader had tagged a
+2-row, 7-cell **data table over a grid of photographs**. Announcing rows and
+columns over content that has neither misleads exactly as much as a wrong header
+does, and positional matching skipped it silently because there was no
+ground-truth table at index 0 to compare against.
+
+Development corpus assertions go 3 → 4. An honest increase: the defect was
+always there and the harness could not see it.
 
 ## What this says about the product
 

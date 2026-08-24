@@ -129,46 +129,89 @@ function defectsFor(gt, s) {
   }
 
   // --- tables --------------------------------------------------------------
+  //
+  // Ground-truth tables and detected tables were matched by index, which
+  // assumes the pipeline finds exactly the tables that exist, in order. It does
+  // not. h08's single table spanning three pages is detected as two, and the
+  // second had no counterpart at index 1, so it was skipped outright — 36
+  // promoted headers invisible to the harness while the 32 in the first table
+  // were scored against the whole ground truth and reported as mostly missing.
+  //
+  // Match on content instead. A detected table belongs to whichever ground-truth
+  // table its cell texts overlap most, which lets one logical table be found in
+  // several pieces, and lets a detected table that matches nothing be named as
+  // invented structure rather than quietly ignored.
   const gtTables = (gt.tables ?? []).filter((t) => t.purpose !== 'layout only');
-  if (gtTables.length > s.tables.length) {
-    omit(`${gtTables.length} table(s) in ground truth, ${s.tables.length} detected`);
-  }
-  for (const [i, t] of s.tables.entries()) {
-    const g = gtTables[i];
-    if (!g) continue;
-    if (t.th === 0) {
-      omit(`table ${i + 1} has ${t.td} data cells and zero /TH — header relationships absent`);
-      continue;
-    }
-    // Counting headers is not checking them. "zero /TH" was the only table
-    // test here, so a pass that marked EVERY cell a header would have cleared
-    // the omission and scored no assertion at all — the fix and the measurement
-    // would both have looked good while the document got worse. Compare the
-    // promoted cells against the headers ground truth actually names.
-    const want = expectedHeaders(g);
-    if (!want.size) continue;
+  const hasLayoutTable = (gt.tables ?? []).some((t) => t.purpose === 'layout only');
 
-    const headers = t.cells.filter((c) => c.type === 'TH');
+  const assignedTo = s.tables.map((t) => {
+    const got = new Set(t.cells.map((c) => norm(c.text)).filter(Boolean));
+    let best = -1;
+    let bestHits = 0;
+    gtTables.forEach((g, gi) => {
+      let hits = 0;
+      for (const k of expectedHeaders(g).keys()) if (got.has(k)) hits++;
+      if (hits > bestHits) { bestHits = hits; best = gi; }
+    });
+    return best;
+  });
+
+  // A detected table matching no ground-truth table is structure nobody wrote.
+  // Announcing rows and columns over content that has neither misleads exactly
+  // as much as a wrong header does.
+  s.tables.forEach((t, i) => {
+    if (assignedTo[i] !== -1) return;
+    assert_(hasLayoutTable
+      ? `table ${i + 1}: a layout table tagged as a data table — relationships invented`
+      : `table ${i + 1}: ${t.tr} rows tagged as a data table where ground truth records none`);
+  });
+
+  gtTables.forEach((g, gi) => {
+    const parts = s.tables.map((t, i) => (assignedTo[i] === gi ? { t, i } : null)).filter(Boolean);
+    if (!parts.length) {
+      omit(`a ground-truth table was not detected`);
+      return;
+    }
+    // One logical table found as several is a structural misstatement: a
+    // reader meets two tables where the document has one, and the header row
+    // repeated on each continuation page becomes data in the fragments.
+    if (parts.length > 1) {
+      assert_(`one table fragmented into ${parts.length} — ground truth records a single table`);
+    }
+
+    const label = parts.map((p) => p.i + 1).join('+');
+    const cells = parts.flatMap((p) => p.t.cells);
+    const td = parts.reduce((n, p) => n + p.t.td, 0);
+    const headers = cells.filter((c) => c.type === 'TH');
+
+    if (!headers.length) {
+      omit(`table ${label} has ${td} data cells and zero /TH — header relationships absent`);
+      return;
+    }
+
+    // Counting headers is not checking them. "zero /TH" was once the only test
+    // here, so a pass marking EVERY cell a header would have cleared the
+    // omission and scored no assertion at all.
+    const want = expectedHeaders(g);
+    if (!want.size) return;
+
     const seen = new Set();
     for (const c of headers) {
       const k = norm(c.text);
       if (!k) continue;
+      if (seen.has(k)) continue;  // a header repeated across fragments is one header
       seen.add(k);
       if (!want.has(k)) {
-        assert_(`table ${i + 1}: cell "${c.text.replace(/\s+/g, '')}" marked as a header but ground truth lists it as data`);
+        assert_(`table ${label}: cell "${c.text.replace(/\s+/g, '')}" marked as a header but ground truth lists it as data`);
       } else if (c.scope !== want.get(k)) {
-        assert_(`table ${i + 1}: header "${c.text.replace(/\s+/g, '')}" has Scope=${c.scope ?? 'none'} but heads a ${want.get(k) === 'Row' ? 'row' : 'column'}`);
+        assert_(`table ${label}: header "${c.text.replace(/\s+/g, '')}" has Scope=${c.scope ?? 'none'} but heads a ${want.get(k) === 'Row' ? 'row' : 'column'}`);
       }
     }
     const missing = [...want.keys()].filter((x) => !seen.has(x));
     if (missing.length) {
-      omit(`table ${i + 1}: ${missing.length} ground-truth header(s) still tagged TD`);
+      omit(`table ${label}: ${missing.length} ground-truth header(s) still tagged TD`);
     }
-  }
-  // A layout table must NOT become a data table.
-  if ((gt.tables ?? []).some((t) => t.purpose === 'layout only') && s.tables.length > gtTables.length) {
-    assert_('layout table tagged as a data table — header relationships invented');
-  }
+  });
 
   // --- headings ------------------------------------------------------------
   // Over- and under-detection are different failures. Extra headings are

@@ -244,7 +244,7 @@
     "defects": [
       {
         "kind": "omission",
-        "msg": "1 table(s) in ground truth, 0 detected"
+        "msg": "a ground-truth table was not detected"
       }
     ],
     "structure": {
@@ -327,7 +327,7 @@
     "document": "06-images-uncaptioned",
     "verdict": "INCONCLUSIVE",
     "ua1": false,
-    "assertions": 0,
+    "assertions": 1,
     "defects": [
       {
         "kind": "omission",
@@ -340,6 +340,10 @@
       {
         "kind": "omission",
         "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: 2 rows tagged as a data table where ground truth records none"
       },
       {
         "kind": "omission",
@@ -661,7 +665,7 @@
       },
       {
         "kind": "omission",
-        "msg": "2 table(s) in ground truth, 1 detected"
+        "msg": "a ground-truth table was not detected"
       },
       {
         "kind": "assertion",

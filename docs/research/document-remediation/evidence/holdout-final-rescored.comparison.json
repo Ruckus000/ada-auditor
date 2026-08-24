@@ -228,7 +228,11 @@
     "defects": [
       {
         "kind": "omission",
-        "msg": "3 table(s) in ground truth, 1 detected"
+        "msg": "a ground-truth table was not detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
       },
       {
         "kind": "omission",
@@ -612,11 +616,11 @@
     "document": "h08-table-spans-pages",
     "verdict": "NEEDS_REVIEW",
     "ua1": true,
-    "assertions": 1,
+    "assertions": 2,
     "defects": [
       {
-        "kind": "omission",
-        "msg": "table 1: 32 ground-truth header(s) still tagged TD"
+        "kind": "assertion",
+        "msg": "one table fragmented into 2 — ground truth records a single table"
       },
       {
         "kind": "assertion",
