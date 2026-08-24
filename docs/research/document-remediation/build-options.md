@@ -86,15 +86,29 @@ unbolded, typographically identical to body text — distinguished only by
 position, being the first centred block on page 1, which is a different and
 simpler rule.
 
-**Honest verdict:** a bold-plus-short rule is small, defensible and recovers
-roughly a third. It is also **promotion, which is assertion**, and promotion is
-where this project has actually been hurt — the only wrong claims we ever found
-came from `Tables.java` promoting. `Headings.java` was made demotion-only for
-that reason. Reversing it is the single riskiest change available and should
-carry the same unanimity discipline `Tables.java` uses.
+> **Superseded the same day. This verdict was wrong and it was wrong for the
+> usual reason — it was drawn from one document.**
+>
+> The bold-plus-short rule was extended into a six-signal score and tested on two
+> more documents. It promotes a **venue address** on `nola-cpc-notice` and a
+> **table column header** on `orono-fee-schedule`. Every signal it uses measures
+> *visual prominence*, and a date, an address and a column header are all
+> visually prominent. See
+> [heading-promotion-options.md](heading-promotion-options.md).
+>
+> The original verdict is left below rather than deleted, because "small,
+> defensible and recovers roughly a third" is exactly how a rule reads when it
+> has only been tried once.
 
-The cheaper honest alternative remains: state that heading structure is human
-work and price it in.
+~~a bold-plus-short rule is small, defensible and recovers roughly a third.~~ It
+is **promotion, which is assertion**, and promotion is where this project has
+actually been hurt — the only wrong claims we ever found came from `Tables.java`
+promoting. `Headings.java` was made demotion-only for that reason.
+
+The alternatives that survive testing are in
+[heading-promotion-options.md](heading-promotion-options.md): author-supplied
+outlines as corroboration, `--use-struct-tree`, source-document remediation, and
+a local layout model via OpenDataLoader's own hybrid backend.
 
 ## 3 · Table header inversion — no research needed
 

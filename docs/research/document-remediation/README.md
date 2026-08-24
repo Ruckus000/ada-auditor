@@ -1,8 +1,8 @@
 # Document remediation — research index
 
-Seventeen documents accumulated here across two experiments and a real-document
-run, with no entry point. This is the entry point. **Read the three under "Start
-here" and you have the whole picture.**
+22 documents across two experiments, a real-document run, and a legal
+review. This is the entry point. **Read the three under "Start here" and you
+have the whole picture.**
 
 ## Start here
 
@@ -10,7 +10,14 @@ here" and you have the whole picture.**
 |---|---|
 | **[legal-standard.md](legal-standard.md)** | What the law actually requires, what it does not, the deadlines, the market rate, and the definition of good remediation. **The authoritative statement of what we are aiming at.** |
 | **[working-agreement.md](working-agreement.md)** | How the project spent two experiments measuring the wrong thing, and the mechanisms that stop it recurring. |
-| **[decision-2026-08-24.md](decision-2026-08-24.md)** | **The current decision: PROCEED WITH CONDITIONS**, as a service, with three blocking gaps named. |
+| **[decision-2026-08-24.md](decision-2026-08-24.md)** | **The current decision: PROCEED WITH CONDITIONS**, with three blocking gaps named. **Read its banner** — it predates the zero-human constraint. |
+
+## The current constraint
+
+**Zero human input at any stage** (set 2026-08-24, after
+`decision-2026-08-24.md` was written). That decision assumed a human supplied
+the judgement, so it carries a banner. Measurements in it stand; assumptions
+about human time do not.
 
 ## Where things stand
 
@@ -23,7 +30,12 @@ here" and you have the whole picture.**
   asserted into nine real documents, **4 are wrong** — see
   [table-header-verification.md](table-header-verification.md). `Tables.java`
   stays.
-- **North-star metric:** human minutes per page, target under 5. First estimate
+- **Heading promotion has no working solution yet.** The typographic approach was
+  built and killed on evidence. The leading option is a local layout model —
+  rejected in Experiment 1 on an assumption that no longer holds.
+- **North-star metric:** human minutes per page, target under 5. *Superseded by
+  the zero-human constraint, but retained as the measure of how much work is
+  left to automate.* First estimate
   is **~3–4 for a simple page and ~6 for a table-heavy one** — straddling the
   threshold. See [human-effort.md](human-effort.md).
 - **The pipeline delivers less than the 98% figure suggests.** On both documents

@@ -25,6 +25,10 @@ It was a clear finding drawn from one document.
 | ua1 failures, all nine | 6,946 | **129** | 4,654 |
 | conformant | 0/9 | 0/9 | 0/9 |
 
+*"Conformant" here means PDF/UA, which is not the standard anyone is required to
+meet — see [legal-standard.md](legal-standard.md). It is used as a relative
+measure between the two paths, not as a product verdict.*
+
 **Path A is 22× better on exactly the documents the sturgis case argued against
 re-tagging.**
 
