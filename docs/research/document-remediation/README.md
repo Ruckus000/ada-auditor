@@ -77,6 +77,7 @@ about human time do not.
 |---|---|
 | [real-documents-results.md](real-documents-results.md) | Nine real municipal PDFs, first contact. Robustness and conformance. *Its conformance framing is superseded by `legal-standard.md`; the measurements stand.* |
 | [table-header-verification.md](table-header-verification.md) | The liability test. 4 of 195 asserted headers wrong, with the mechanism. |
+| [contrast-results.md](contrast-results.md) | **WCAG 1.4.3 now detectable.** Finds both planted defects and 3 of 9 real documents. |
 | [tagger-comparison-results.md](tagger-comparison-results.md) | **A layout model made the pipeline worse** — 8 assertions to 26. Heading promotion still unsolved. |
 | [tagger-comparison-prediction.md](tagger-comparison-prediction.md) | Prediction registered before testing four taggers against ground truth. |
 | [heading-promotion-options.md](heading-promotion-options.md) | Options for heading promotion under a no-human constraint. The typographic scorer was built and killed. |
