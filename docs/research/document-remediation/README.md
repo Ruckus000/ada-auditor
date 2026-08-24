@@ -23,7 +23,12 @@ here" and you have the whole picture.**
   asserted into nine real documents, **4 are wrong** — see
   [table-header-verification.md](table-header-verification.md). `Tables.java`
   stays.
-- **North-star metric:** human minutes per page, target under 5. Never measured.
+- **North-star metric:** human minutes per page, target under 5. First estimate
+  is **~3–4 for a simple page and ~6 for a table-heavy one** — straddling the
+  threshold. See [human-effort.md](human-effort.md).
+- **The pipeline delivers less than the 98% figure suggests.** On both documents
+  finished by hand it shipped zero headings and zero table headers. 98% of
+  machine-checkable failures removed is not 98% of the work done.
 - **Holdout 2 is sealed.** Both checkpoints unspent, and their value fell once
   real documents showed the synthetic corpus unrepresentative in kind rather
   than degree.
@@ -34,8 +39,12 @@ here" and you have the whole picture.**
    as the header row. In a KPI summary block the emphasised row is the *values*,
    so four figures were marked as headers over their own labels. Known fix — a
    row of pure currency is not a header row — deliberately not implemented yet.
-2. **How many human minutes does a document actually cost?** Never measured.
-   This is the north-star metric.
+2. **Contrast (1.4.3) is unmeasurable with what we have.** A real fee schedule
+   sets values in red on white at roughly 4.0:1, below the 4.5:1 minimum, and
+   nothing we built can see it. We would have shipped it as remediated.
+3. **Demotion-only caps what we can deliver.** `Headings.java` cannot add a
+   heading, so a document whose real headings were never tagged gets zero
+   headings from us — correctly and uselessly.
 3. **The pipeline re-tags unconditionally.** Five of nine real documents arrived
    already tagged; one that was four failures from conformance came out with
    twenty-seven. Measured both ways in [tagged-input.md](tagged-input.md); no
@@ -52,6 +61,7 @@ here" and you have the whole picture.**
 |---|---|
 | [real-documents-results.md](real-documents-results.md) | Nine real municipal PDFs, first contact. Robustness and conformance. *Its conformance framing is superseded by `legal-standard.md`; the measurements stand.* |
 | [table-header-verification.md](table-header-verification.md) | The liability test. 4 of 195 asserted headers wrong, with the mechanism. |
+| [human-effort.md](human-effort.md) | Two documents finished by hand. Work items, estimates, and what the 98% figure hides. |
 | [tagged-input.md](tagged-input.md) | Both paths for documents that arrive already tagged. |
 | [real-failure-classification.md](real-failure-classification.md) | Every remaining failure categorised. *Re-cut along WCAG in `legal-standard.md`.* |
 | [abstention-results.md](abstention-results.md) | Global abstention: 16 assertions → 8, deliverables 5 → 8. Development corpora. |
