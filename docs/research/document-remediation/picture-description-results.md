@@ -58,7 +58,7 @@ capability looked broken before the threshold was found.
 
 | | |
 |---|---|
-| SmolVLM download | ~1 GB |
+| SmolVLM download plus cache | **9.2 GB** |
 | `lacity-clerk-misc`, 5 pages | **21 s** with enrichment against ~1 s without |
 
 ## A correction I owe
