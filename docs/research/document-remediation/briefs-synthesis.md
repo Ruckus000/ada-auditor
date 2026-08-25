@@ -1,5 +1,8 @@
 # Both briefs, synthesised — the two paths fail in opposite directions
 
+
+> **CORRECTED, 2026-08-25.** Numbers here were produced by a comparator that could not see figure under-tagging. Assertions across the 28 development documents are **13, not 8**, and DELIVERABLE is **6, not 8**. See [instrument-correction.md](instrument-correction.md).
+
 **Date:** 2026-08-25 · Written in the coordinating chat under
 [briefs/README.md](briefs/README.md) rule 9. Source results are
 [source-export-results.md](source-export-results.md) on

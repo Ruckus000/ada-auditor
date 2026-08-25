@@ -1,5 +1,8 @@
 # Brief C, reviewed — the export is honest, with one systematic exception
 
+
+> **CORRECTED, 2026-08-25.** Arm R+UA is **21 assertions and 0 DELIVERABLE**, not 17 and 2 — four were invisible, and all four come from Brief C's `alt=""` → decorative repair deleting meaningful images. The exporter's honesty is unaffected; **our repair asserted**. See [instrument-correction.md](instrument-correction.md).
+
 **Date:** 2026-08-25 · Coordinating chat, under [briefs/README.md](briefs/README.md)
 rule 9. Brief C's results are [source-native-results.md](source-native-results.md)
 on `claude/brief-c-source-native` and are not edited here.

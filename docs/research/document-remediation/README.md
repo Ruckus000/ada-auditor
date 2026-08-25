@@ -53,11 +53,6 @@ about human time do not.
 
 ## Known open questions, so they are not rediscovered a fourth time
 
-0. **`compare.mjs` cannot see figure under-tagging.** `[V]` It asserts on too many
-   `/Figure` elements and never on too few, so a document that lost all four of
-   its meaningful images scored DELIVERABLE with zero defects. **Every arm scored
-   since abstention was introduced is suspect on this axis.** Highest priority in
-   the project. See [brief-c-synthesis.md](brief-c-synthesis.md).
 1. **Table header inversion.** `Tables.java` R1 treats the leading all-bold row
    as the header row. In a KPI summary block the emphasised row is the *values*,
    so four figures were marked as headers over their own labels. Known fix — a
@@ -98,6 +93,7 @@ in both reproduced when re-derived from raw output.**
 | [vlm-scale-results.md](vlm-scale-results.md) | **B, result.** `[V]` 7B scores 6/6 content facts on bare pixels **and** fabricates a regulatory requirement under a real department's name. **Scale makes alt text more dangerous, not safer.** |
 | [briefs-synthesis.md](briefs-synthesis.md) | **The joint finding: the source path omits, every inference path asserts.** Only one clears a gate set at zero assertions. |
 | [source-native-results.md](source-native-results.md) | **C, result.** `[V]` Ten probes, zero assertions — the exporter does not infer. One systematic exception: it stamps `Scope=Column` on any header-styled cell. |
+| **[instrument-correction.md](instrument-correction.md)** | **`compare.mjs` was blind to figure under-tagging; every number it produced is restated here.** Abstention is 13 assertions and 6 DELIVERABLE, not 8 and 8. Brief C's repaired arm asserts 21 times and delivers nothing. **Fixed and tested.** |
 | [brief-c-synthesis.md](brief-c-synthesis.md) | **The scope repair is abstention, not interpretation** — and `compare.mjs` cannot see figure under-tagging, which puts every number since abstention in doubt. |
 
 ## Current — findings that still hold

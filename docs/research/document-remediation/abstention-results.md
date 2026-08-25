@@ -1,5 +1,8 @@
 # Global abstention — results
 
+
+> **CORRECTED, 2026-08-25.** Numbers here were produced by a comparator that could not see figure under-tagging. Assertions across the 28 development documents are **13, not 8**, and DELIVERABLE is **6, not 8**. See [instrument-correction.md](instrument-correction.md).
+
 **Date:** 2026-08-24 · 28 development documents: corpus (12) and holdout 1 (16).
 **Holdout 2 was not run. Both of its checkpoints remain unspent.**
 
