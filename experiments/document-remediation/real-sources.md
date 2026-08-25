@@ -44,3 +44,25 @@ c5a90c9efcdc3edb89133af9566308a30d94f86ad4fd81126950e168a457ea38  nyc-notice-for
 c5beddb21aad2f11339473d49a14d9ac4adad7d5df219ff369f4249422cde76b  sturgis-agenda.pdf
 ad1003f057df8b77563ddf72ac42f1d7838cd6cbbf23002e0d70aeed2249cb37  tml-statutes-table.pdf
 ```
+
+## Real Word sources — added 2026-08-25
+
+The first genuine client-format `.docx` files in the project. Everything before
+this was a PDF, or a synthetic HTML corpus converted to ODF, which is two
+conversions from anything a client sends.
+
+Town of Manchester, NY — Town Board, published on the town's own site.
+Public records. **Files are gitignored like everything else in `real/`.**
+
+Page: https://manchesterny.org/town-board
+
+```
+cf8d76d37525897b…  manchester-tb-agenda.docx    22,043 bytes  Feb 2023 TB Meeting Agenda
+470c910e4f5664bf…  manchester-tb-minutes.docx   55,677 bytes  Feb 2023 TB Meeting Minutes
+```
+
+Full hashes:
+```
+cf8d76d37525897b047af7786009ebb407483d054a351ab91a3b162f39b96b82  manchester-tb-agenda.docx
+470c910e4f5664bfae891d56734378adc97251e992f1b23c9ac4b0c2fff6f270  manchester-tb-minutes.docx
+```
