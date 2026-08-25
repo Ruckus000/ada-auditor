@@ -93,6 +93,10 @@ in both reproduced when re-derived from raw output.**
 | [vlm-scale-results.md](vlm-scale-results.md) | **B, result.** `[V]` 7B scores 6/6 content facts on bare pixels **and** fabricates a regulatory requirement under a real department's name. **Scale makes alt text more dangerous, not safer.** |
 | [briefs-synthesis.md](briefs-synthesis.md) | **The joint finding: the source path omits, every inference path asserts.** Only one clears a gate set at zero assertions. |
 | [source-native-results.md](source-native-results.md) | **C, result.** `[V]` Ten probes, zero assertions — the exporter does not infer. One systematic exception: it stamps `Scope=Column` on any header-styled cell. |
+| **[real-tables-results.md](real-tables-results.md)** | **The scope repair fired 0 times on every real document.** Word holds up and is conformant; **Excel produces 0 header cells across 151 real tables** — no better than the incumbent. |
+| [real-docx-results.md](real-docx-results.md) | A real municipal Word agenda, UA-1 conformant, zero human input. The title survives where clients' own toolchains lose it. |
+| [tagged-reality.md](tagged-reality.md) | What "already tagged" means on real files: 8,504 elements of pure paragraphs, 0 header cells across 145 tables. |
+| [prior-art-and-options.md](prior-art-and-options.md) | What already exists, what we duplicated, and the five options. |
 | **[repair-results.md](repair-results.md)** | **21 assertions → 7, and the first document delivered clean from a source.** The scope the exporter invented is corrected after export; the repair that deleted images is deleted instead. |
 | [repair-prediction.md](repair-prediction.md) | Registered before either repair was built. 5 hits, 1 miss. |
 | **[instrument-correction.md](instrument-correction.md)** | **`compare.mjs` was blind to figure under-tagging; every number it produced is restated here.** Abstention is 13 assertions and 6 DELIVERABLE, not 8 and 8. Brief C's repaired arm asserts 21 times and delivers nothing. **Fixed and tested.** |
