@@ -10,6 +10,10 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.text.PDFTextStripper;
 
 /**
@@ -74,6 +78,54 @@ public final class Inspect {
         new Inspect().run(args[0]);
     }
 
+    /**
+     * How many image XObjects the pages draw, regardless of whether the
+     * structure tree mentions them.
+     *
+     * The comparator needs this to tell two very different failures apart, and
+     * it could not before. A meaningful image ARTIFACTED out of the tree is a
+     * positive claim that it carries no meaning: the reader is told nothing is
+     * there and veraPDF passes clean, because no Figure means no 7.3-1. A
+     * document that simply never had the image is an honest gap. Both look
+     * identical from the tree alone — `figures` is empty either way — which is
+     * how a document that lost all four of its meaningful images scored
+     * DELIVERABLE with zero defects.
+     *
+     * Reported as a count and nothing more. Deciding what it means belongs to
+     * compare.mjs, and the split is the point.
+     *
+     * Forms are walked one level deep because that is where a placed image
+     * usually lands; deeper nesting is rare and recursing needs cycle
+     * detection, which is not worth it for a count.
+     */
+    private static int imageCount(PDDocument doc) {
+        int n = 0;
+        for (PDPage page : doc.getPages()) {
+            PDResources res = page.getResources();
+            if (res == null) continue;
+            for (COSName name : res.getXObjectNames()) {
+                try {
+                    PDXObject xo = res.getXObject(name);
+                    if (xo instanceof PDImageXObject) {
+                        n++;
+                    } else if (xo instanceof PDFormXObject form) {
+                        PDResources inner = form.getResources();
+                        if (inner == null) continue;
+                        for (COSName k : inner.getXObjectNames()) {
+                            if (inner.getXObject(k) instanceof PDImageXObject) n++;
+                        }
+                    }
+                } catch (java.io.IOException e) {
+                    // An XObject we cannot parse is one we cannot count. Skipping
+                    // it undercounts, which reports an omission where there may be
+                    // an assertion — the direction that under-claims rather than
+                    // invents, which is the right way to be wrong here.
+                }
+            }
+        }
+        return n;
+    }
+
     private void run(String path) throws Exception {
         try (PDDocument doc = Loader.loadPDF(new File(path))) {
             PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
@@ -93,6 +145,7 @@ public final class Inspect {
 
             json.append("  \"structureElements\": ").append(elements).append(",\n");
             json.append("  \"textChars\": ").append(text.length()).append(",\n");
+            json.append("  \"images\": ").append(imageCount(doc)).append(",\n");
             json.append("  \"pages\": ").append(doc.getNumberOfPages()).append(",\n");
             json.append("  \"lang\": ").append(q(doc.getDocumentCatalog().getLanguage())).append(",\n");
             json.append("  \"title\": ").append(q(doc.getDocumentInformation().getTitle())).append(",\n");
