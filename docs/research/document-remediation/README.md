@@ -1,7 +1,7 @@
 # Document remediation — research index
 
-22 documents across two experiments, a real-document run, and a legal
-review. This is the entry point. **Read the three under "Start here" and you
+Two experiments, a real-document run, a legal review, and two parallel-experiment
+briefs. This is the entry point. **Read the three under "Start here" and you
 have the whole picture.**
 
 ## Start here
@@ -56,21 +56,36 @@ about human time do not.
    as the header row. In a KPI summary block the emphasised row is the *values*,
    so four figures were marked as headers over their own labels. Known fix — a
    row of pure currency is not a header row — deliberately not implemented yet.
-2. **Contrast (1.4.3) is unmeasurable with what we have.** A real fee schedule
-   sets values in red on white at roughly 4.0:1, below the 4.5:1 minimum, and
-   nothing we built can see it. We would have shipped it as remediated.
-3. **Demotion-only caps what we can deliver.** `Headings.java` cannot add a
+2. **Demotion-only caps what we can deliver.** `Headings.java` cannot add a
    heading, so a document whose real headings were never tagged gets zero
-   headings from us — correctly and uselessly.
+   headings from us — correctly and uselessly. **Brief A tests whether this is
+   avoidable rather than solvable** — the structure exists in the source and is
+   destroyed at export.
 3. **The pipeline re-tags unconditionally.** Five of nine real documents arrived
    already tagged; one that was four failures from conformance came out with
    twenty-seven. Measured both ways in [tagged-input.md](tagged-input.md); no
    policy chosen.
-4. **Contrast (1.4.3) and form fields (4.1.2)** are untouched by the pipeline and
-   unchecked by veraPDF's `ua1` profile. One of the nine real documents is a form.
+4. **Form fields (4.1.2)** are untouched by the pipeline and unchecked by
+   veraPDF's `ua1` profile. One of the nine real documents is a form.
 5. **Nothing in `experiments/` meets the production boundaries.** 3,270 lines,
    outside the production `tsconfig`, in the eslint `ignores`, linted and
    typechecked by nothing.
+
+**Closed:** contrast (1.4.3) was on this list as unmeasurable. It is now measured
+— see [contrast-results.md](contrast-results.md). It had been listed twice and
+stayed here for a day after it was solved, which is the drift the briefs below
+exist to contain.
+
+## Running now — parallel experiments
+
+Two questions are being measured in separate chats under a binding protocol.
+Both return **measurements, not conclusions**; synthesis happens here.
+
+| | question |
+|---|---|
+| **[briefs/README.md](briefs/README.md)** | **The protocol. Binding on both.** One question, a registered prediction, a fixed instrument, an explicit "not doing" list, and a stopping condition. |
+| [briefs/source-document.md](briefs/source-document.md) | **A** — does the structure we cannot reconstruct from a PDF survive an export from its source? Our own corpus is authored as HTML with correct semantics and rendered by an exporter that deletes them. |
+| [briefs/vlm-scale.md](briefs/vlm-scale.md) | **B** — is the alt-text wall the model, or the input? A falsification test of our own recorded conclusion, which came from a 256M model given no document context. |
 
 ## Current — findings that still hold
 
