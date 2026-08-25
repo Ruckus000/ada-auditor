@@ -34,9 +34,10 @@ about human time do not.
   Typographic scoring promotes an address and a column header. A local layout
   model triples wrong-level assertions and is monotonically worse the more it is
   used. The current pipeline is the best measured.
-- **Untested and written off on a false premise:** the hybrid backend does have
-  picture description (`--enrich-picture-description`), which is the alt-text
-  capability blocking five of nine real documents.
+- **Alt text has no safe option under zero-human.** The VLM was tested: it
+  describes proof-of-posting photographs as "a poster on the wall" and "the
+  building… the sky", never reaches the PDF's `/Alt`, and silently skips every
+  image under 5% of page area.
 - **North-star metric:** human minutes per page, target under 5. *Superseded by
   the zero-human constraint, but retained as the measure of how much work is
   left to automate.* First estimate
@@ -77,6 +78,7 @@ about human time do not.
 |---|---|
 | [real-documents-results.md](real-documents-results.md) | Nine real municipal PDFs, first contact. Robustness and conformance. *Its conformance framing is superseded by `legal-standard.md`; the measurements stand.* |
 | [table-header-verification.md](table-header-verification.md) | The liability test. 4 of 195 asserted headers wrong, with the mechanism. |
+| [picture-description-results.md](picture-description-results.md) | **VLM alt text tested: confident, fluent, wrong.** Worse than the placeholder it would replace. |
 | [contrast-results.md](contrast-results.md) | **WCAG 1.4.3 now detectable.** Finds both planted defects and 3 of 9 real documents. |
 | [tagger-comparison-results.md](tagger-comparison-results.md) | **A layout model made the pipeline worse** — 8 assertions to 26. Heading promotion still unsolved. |
 | [tagger-comparison-prediction.md](tagger-comparison-prediction.md) | Prediction registered before testing four taggers against ground truth. |
