@@ -10,7 +10,8 @@ have the whole picture.**
 |---|---|
 | **[legal-standard.md](legal-standard.md)** | What the law actually requires, what it does not, the deadlines, the market rate, and the definition of good remediation. **The authoritative statement of what we are aiming at.** |
 | **[working-agreement.md](working-agreement.md)** | How the project spent two experiments measuring the wrong thing, and the mechanisms that stop it recurring. |
-| **[decision-2026-08-24.md](decision-2026-08-24.md)** | **The current decision: PROCEED WITH CONDITIONS**, with three blocking gaps named. **Read its banner** — it predates the zero-human constraint. |
+| **[position-2026-08-25.md](position-2026-08-25.md)** | **The current position.** Zero of nine real documents reachable without a human, the options that leaves, and the recommendation. Supersedes `decision-2026-08-24.md`. |
+| [decision-2026-08-24.md](decision-2026-08-24.md) | Superseded. Predates the zero-human constraint and both briefs. Carries a banner. |
 
 ## The current constraint
 
@@ -76,16 +77,21 @@ about human time do not.
 stayed here for a day after it was solved, which is the drift the briefs below
 exist to contain.
 
-## Running now — parallel experiments
+## The parallel experiments — both complete
 
-Two questions are being measured in separate chats under a binding protocol.
-Both return **measurements, not conclusions**; synthesis happens here.
+Two questions measured in separate chats under a binding protocol. Both returned
+measurements; synthesis is in [briefs-synthesis.md](briefs-synthesis.md) and
+[brief-a-synthesis.md](brief-a-synthesis.md). **Neither drifted, and every number
+in both reproduced when re-derived from raw output.**
 
 | | question |
 |---|---|
 | **[briefs/README.md](briefs/README.md)** | **The protocol. Binding on both.** One question, a registered prediction, a fixed instrument, an explicit "not doing" list, and a stopping condition. |
 | [briefs/source-document.md](briefs/source-document.md) | **A** — does the structure we cannot reconstruct from a PDF survive an export from its source? Our own corpus is authored as HTML with correct semantics and rendered by an exporter that deletes them. |
 | [briefs/vlm-scale.md](briefs/vlm-scale.md) | **B** — is the alt-text wall the model, or the input? A falsification test of our own recorded conclusion, which came from a 256M model given no document context. |
+| [source-export-results.md](source-export-results.md) | **A, result.** The exporter loses the H1 — but on an HTML-import quirk in our fixtures. `[V]` A native source exports `/H1 /H2 /H3` intact. |
+| [vlm-scale-results.md](vlm-scale-results.md) | **B, result.** `[V]` 7B scores 6/6 content facts on bare pixels **and** fabricates a regulatory requirement under a real department's name. **Scale makes alt text more dangerous, not safer.** |
+| [briefs-synthesis.md](briefs-synthesis.md) | **The joint finding: the source path omits, every inference path asserts.** Only one clears a gate set at zero assertions. |
 
 ## Current — findings that still hold
 
