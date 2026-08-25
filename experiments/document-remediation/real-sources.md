@@ -66,3 +66,43 @@ Full hashes:
 cf8d76d37525897b047af7786009ebb407483d054a351ab91a3b162f39b96b82  manchester-tb-agenda.docx
 470c910e4f5664bfae891d56734378adc97251e992f1b23c9ac4b0c2fff6f270  manchester-tb-minutes.docx
 ```
+
+## Real table-bearing sources — added 2026-08-25
+
+Added to test the document class the Manchester files could not: real tables.
+Public records / public agency publications. **Gitignored like everything in
+`real/`.**
+
+**Word — NJ Dept of Community Affairs, Division of Local Government Services**
+https://www.nj.gov/dca/dlgs/programs/mc_budgets.shtml
+
+```
+nj-audit-affidavit.doc        43,008 bytes  1 table, 5 rows, no header row marked
+nj-revenue-checklist.doc      32,256 bytes  0 tables
+nj-auditor-report.docx        18,333 bytes  0 tables
+nj-cola-ordinance.docx        14,522 bytes  0 tables
+nj-budget-cap-res.docx        15,051 bytes  0 tables
+```
+
+**Note: four of five real government Word documents contain no table at all**,
+and no publicly-published municipal Word file with substantial tables could be
+found. Municipalities publish PDFs, not sources.
+
+**Excel — Kansas Dept of Administration, municipal budget workbooks**
+https://admin.ks.gov/offices/accounts-reports/local-government/municipal-services/budget-workbooks-for-budget-year2025
+
+```
+ks-city-budget.xlsx          544,310 bytes  78 sheets/tables
+ks-township-budget.xlsx      573,016 bytes  73 sheets/tables
+```
+
+Full hashes:
+```
+427cb414ae1a3f50ec9a06673b981188afe26646856d39c9208b40ce4ba826ec  nj-audit-affidavit.doc
+e9211088b5d8ec24dfa339c1789df45898b818d93147706d587ca82f6c1fd915  nj-revenue-checklist.doc
+6dfc71b7857a526b67c5ab399074b0da5027def6da7fdc170b84742ab23773b1  nj-auditor-report.docx
+c938c671fdb4bd0a921305fe89736ed78a51a9c6b3deb9e4035d706841c88298  nj-cola-ordinance.docx
+ba37bb36994126b6d7003d723425df3968603d28f93464120a2ee8ef4f4dc2c4  nj-budget-cap-res.docx
+fb84b884e707dfba0a117eb58e8ac8a5256541ef59d6e4a4fd2dcc4ec22818e2  ks-city-budget.xlsx
+b7d75cb63a717744f103e80d61a372b405e235b906eb048cb8d5d2c9a050c59b  ks-township-budget.xlsx
+```
