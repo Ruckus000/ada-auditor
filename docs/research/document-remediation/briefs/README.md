@@ -133,4 +133,5 @@ Then report the file path and a one-paragraph summary. Nothing else.
 | | question |
 |---|---|
 | [source-document.md](source-document.md) | Does the semantic structure we cannot reconstruct from a PDF survive an automated export from its source document? |
-| [vlm-scale.md](vlm-scale.md) | Is the alt-text wall a model *size* problem, as a 256M model cannot tell us? |
+| [vlm-scale.md](vlm-scale.md) | Is the alt-text wall a model *size* problem, as a 256M model cannot tell us? **Answered: no — scale makes it undetectable.** |
+| [source-native.md](source-native.md) | **Running.** Does exporting a native word-processor source ever claim something the source did not state? |
