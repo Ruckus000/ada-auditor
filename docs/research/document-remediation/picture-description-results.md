@@ -39,6 +39,21 @@ OpenDataLoader's own JSON reports `"alt_source":"missing"` for every image. The
 model runs, docling returns annotations, and the tagged-PDF writer does not
 consume them. **The capability is not wired end to end.**
 
+> **CORRECTION, 2026-08-25, from Brief B.** The image inventory in this section
+> is wrong about what it counted. `[V]` `lacity-clerk-misc` is **five full-page
+> scans — exactly one JPEG-2000 image XObject per page**, each at ~100% of page
+> area. It does not contain eight images. The "8 images, 3 described, 5 under
+> threshold" figures below describe **docling's detected layout regions**, not PDF
+> image objects, and the percentages are region areas.
+>
+> **The threshold finding itself stands and is now verified:**
+> `picture_area_threshold` defaults to `0.05` on `PictureDescriptionBaseOptions`
+> (`docling/datamodel/pipeline_options.py:726`) and accepts `0.0`. `[V]` It is a
+> setting, not a wall.
+>
+> **The conclusion of this document does not stand.** See
+> [briefs-synthesis.md](briefs-synthesis.md).
+
 **2. Most images are silently skipped.** Docling's `picture_area_threshold`
 defaults to **0.05** — a picture below 5% of page area is never described, with
 no warning. Measured:
@@ -69,6 +84,19 @@ I had grepped the npm wrapper's TypeScript options rather than the Python
 server's CLI. The capability exists. It simply does not work well enough to use.
 
 ## What this means for zero human input
+
+> **SUPERSEDED, 2026-08-25.** The section below states a mechanism —
+> *"a 256M-parameter model describes pixels, and WCAG 1.1.1 requires describing
+> purpose"* and *"no amount of prompt engineering recovers a purpose that is only
+> visible from the document's context"* — and **Brief B falsified both halves.**
+> `[V]` A 7B model conveyed the evidentiary purpose **from bare pixels, with no
+> document context at all.** The purpose was visible in the image; the earlier
+> model was simply too small to read it.
+>
+> **The outcome recorded here survives; the reason does not.** Alt text is still
+> not safe under zero human input — but because a larger model **fabricates more
+> convincingly**, not because purpose is unrecoverable. See
+> [briefs-synthesis.md](briefs-synthesis.md).
 
 **Alt text is not solvable this way.** The constraint is not compute or wiring —
 both are fixable. It is that a 256M-parameter model describes *pixels*, and WCAG
