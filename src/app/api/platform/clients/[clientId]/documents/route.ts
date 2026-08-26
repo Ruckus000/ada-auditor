@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { isPdf, logSafe } from '../../../../../../domain/document-remediation';
-import { documentLinkKind } from '../../../../../../domain/discovery';
 import type {
   ClientDocumentRecord,
   StoredDocumentConversion,
@@ -9,11 +8,12 @@ import type {
 } from '../../../../../../domain/platform';
 import { resolveJavaRuntime } from '../../../../../../integrations/documents/java-runtime';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
+import { compareDocumentInspections } from '../../../../../../services/document-regression';
 import { hostnameOf } from '../../../../../../services/safe-url';
 import { logInfo } from '../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../_lib/authorize';
 import {
-  fetchAndInspectDocumentUrl,
+  fetchAndClassifyDocumentUrl,
   inspectPdfBytes,
 } from '../../../../_lib/document-inspection';
 import { readDocumentUpload, refusalResponse } from '../../../../_lib/document-upload';
@@ -30,9 +30,12 @@ import { createRequestId } from '../../../../_lib/request-id';
  *
  * - **GET** lists the inventory: every document with the latest word on it,
  *   most recently seen first, capped by the store.
- * - **POST** `{ url, foundOn? }` fetches and inspects a document where it
- *   lives, then persists the reading against the document's row — creating
- *   the row if the inventory has never heard of the URL (a pasted address).
+ * - **POST** `{ url, foundOn? }` fetches whatever the URL actually serves —
+ *   the bytes decide, never the extension, which is what makes this the way
+ *   an operator catalogs an extensionless download endpoint. A PDF is
+ *   inspected and the reading persisted; a Word document becomes an
+ *   inventory row whose action is conversion. Rows are created only on
+ *   success (a pasted address the fetch refuses mints nothing).
  * - **PUT** (multipart, a `file` part) inspects a PDF the operator already
  *   has, same persistence, `source: 'upload'`.
  *
@@ -137,10 +140,33 @@ export async function GET(
 
   const documents = await platform.listClientDocuments(clientId);
 
+  // The document pipeline's own regression — latest two readings per
+  // document, diffed by criterion. Computed here rather than stored: it is a
+  // view over inspection history, and a stored copy would be one more thing
+  // free to disagree with the rows it summarises.
+  const diffs = compareDocumentInspections(await platform.listDocumentInspections(clientId));
+  const diffByDocument = new Map(diffs.map((diff) => [diff.documentId, diff]));
+
   return Response.json(
     {
       requestId,
-      documents: documents.map(documentResponse),
+      documents: documents.map((record) => {
+        const diff = diffByDocument.get(record.id);
+        return {
+          ...documentResponse(record),
+          ...(diff === undefined || diff.status === 'first-reading'
+            ? {}
+            : {
+                regression: {
+                  status: diff.status,
+                  newGaps: diff.newGaps,
+                  resolvedGaps: diff.resolvedGaps,
+                  unchangedCount: diff.unchangedCount,
+                  baselineAt: diff.baselineAt,
+                },
+              }),
+        };
+      }),
       count: documents.length,
     },
     { status: 200 },
@@ -155,17 +181,6 @@ export async function POST(
 
   if (!(await authorizePrincipal(request))) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
-  }
-
-  // Before the body, matching `inspect-url`: there is no point parsing a
-  // request this host cannot serve, and the fix — install a toolchain — has
-  // nothing to do with what was sent.
-  const java = resolveJavaRuntime();
-  if (!java.available) {
-    return Response.json(
-      { error: 'document_toolchain_unavailable', detail: java.reason, requestId },
-      { status: 503 },
-    );
   }
 
   const { clientId } = await params;
@@ -187,21 +202,72 @@ export async function POST(
     return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
 
-  const outcome = await fetchAndInspectDocumentUrl(parsed.data.url, requestId);
+  // One guarded fetch, either container: the bytes decide what this URL is,
+  // never its extension — municipal sites serve documents from extensionless
+  // download endpoints, and this route is how an operator catalogs one.
+  const fetched = await fetchAndClassifyDocumentUrl(parsed.data.url, requestId);
+  if (!fetched.ok) {
+    // Nothing persisted — not even a document row. See the header.
+    return refusalResponse(fetched.refusal, requestId);
+  }
+
+  const now = new Date().toISOString();
+
+  if (fetched.kind !== 'pdf') {
+    // A Word document: a byte-verified sighting the inventory records, with
+    // no inspection row — the PDF instrument did not read it, and the store
+    // holds only what an instrument said. Its action is conversion, which
+    // the screen offers on the row this creates. No JVM was needed, which is
+    // why the toolchain guard lives in the PDF branch below rather than at
+    // the top: a JVM-less host can still catalog.
+    const document = await platform.ensureClientDocument(
+      clientId,
+      {
+        url: parsed.data.url,
+        kind: fetched.kind,
+        source: 'crawl',
+        ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
+      },
+      now,
+    );
+
+    logInfo('document_recorded', {
+      requestId,
+      clientId,
+      host: hostnameOf(parsed.data.url),
+      kind: fetched.kind,
+    });
+
+    return Response.json(
+      { requestId, document: documentResponse(document) },
+      { status: 201 },
+    );
+  }
+
+  // The toolchain guard sits here, after the fetch — the kind is not known
+  // until the bytes are, so a JVM-less host pays one guarded fetch before
+  // refusing a PDF. Stated as the trade it is.
+  const java = resolveJavaRuntime();
+  if (!java.available) {
+    return Response.json(
+      { error: 'document_toolchain_unavailable', detail: java.reason, requestId },
+      { status: 503 },
+    );
+  }
+
+  const outcome = await inspectPdfBytes(fetched.bytes, requestId, 'ada-inspect-url-');
   if (!outcome.ok) {
     // Nothing persisted — not even a document row. See the header.
     return refusalResponse(outcome.refusal, requestId);
   }
 
-  const now = new Date().toISOString();
   // After the inspection succeeded, so a refusal minted nothing. The bytes
-  // just proved themselves a PDF, whatever the URL's extension claimed —
-  // an extensionless address that served a PDF is still a PDF row.
+  // proved themselves a PDF, whatever the URL's extension claimed.
   const document = await platform.ensureClientDocument(
     clientId,
     {
       url: parsed.data.url,
-      kind: documentLinkKind(parsed.data.url) ?? 'pdf',
+      kind: 'pdf',
       source: 'crawl',
       ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
     },

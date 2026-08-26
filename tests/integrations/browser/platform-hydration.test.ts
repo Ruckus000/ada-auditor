@@ -1790,6 +1790,13 @@ describe('platform hydration', () => {
       expect(text).toContain('cdn.builder.invalid/assets/budget.pdf');
       expect(text).toContain('found on /finance');
 
+      // The add-by-URL field renders — the operator's door for extensionless
+      // download endpoints. Its behaviour is route-tested; the axe pass below
+      // covers it as rendered.
+      expect(
+        await panel.getByLabel('Add a document by URL').count(),
+      ).toBe(1);
+
       // A Word document is listed with its kind and offered no Inspect button
       // — the inspection instrument reads PDFs. Its affordance is conversion,
       // exercised below.
@@ -1988,6 +1995,59 @@ describe('platform hydration', () => {
       }
     },
     180_000,
+  );
+
+  it.runIf(documentToolchain.available)(
+    'a shared report carries the document snapshot, pinned at issue',
+    async () => {
+      // The case above persisted a real inspection for this client, so a
+      // report issued NOW snapshots it — and the public page renders the gap
+      // string verbatim, behind nothing but the token. Gated with its
+      // sibling: the inspection that seeds it needs the JVM.
+      const runsResponse = await fetch(`${BASE}/api/audit/runs?limit=20`, {
+        headers: { authorization: `Bearer ${TOKEN}` },
+      });
+      const { runs: recent } = (await runsResponse.json()) as {
+        runs: Array<{ requestId: string }>;
+      };
+      expect(recent.length).toBeGreaterThan(0);
+
+      // The ownership check on the reports route refuses runs that are not
+      // this client's, so issue against the newest run that IS.
+      let shareUrl = '';
+      for (const candidate of recent) {
+        const issued = await fetch(`${BASE}/api/platform/clients/${CLIENT}/reports`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+          body: JSON.stringify({ requestId: candidate.requestId }),
+        });
+        if (issued.status === 201) {
+          const { report } = (await issued.json()) as { report?: { shareUrl?: string } };
+          shareUrl = report?.shareUrl ?? '';
+          break;
+        }
+      }
+      expect(shareUrl).toMatch(/^\/r\//);
+
+      const anonymous = await browser.newPage();
+      try {
+        const response = await anonymous.goto(`${BASE}${shareUrl}`, {
+          waitUntil: 'domcontentloaded',
+        });
+        expect(response?.status()).toBe(200);
+
+        const body = await anonymous.innerText('body');
+        expect(body).toContain('Documents');
+        // The boundary, stated in words beside a page that carries a verdict.
+        expect(body).toContain('Nothing in this section changes');
+        // The uploaded document's row, with the instrument's gap verbatim.
+        expect(body).toContain('hydration-agenda.pdf');
+        expect(body).toContain('1.3.1: the output carries no structure tree');
+      } finally {
+        await anonymous.close();
+      }
+    },
+    120_000,
   );
 
   /**

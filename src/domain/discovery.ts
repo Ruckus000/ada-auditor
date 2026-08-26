@@ -305,8 +305,11 @@ export type DocumentLinkKind = 'pdf' | 'docx' | 'doc';
  * Extension match only, and that limit is deliberate: telling a document from
  * a page without navigating would need a request the crawl is not making, and
  * the whole point of classifying is to NOT spend a navigation on it. A
- * document served from an extensionless URL is missed in this slice, and this
- * comment is where that is written down.
+ * document served from an extensionless URL is invisible to this function —
+ * it enters the frontier as a page — and the crawler catches it one step
+ * later, when the navigation turns into a download (see the `page.on
+ * ('download')` capture in `discover-links.ts`): same record, one navigation
+ * spent, which that URL was always going to cost.
  *
  * Word documents are classified alongside PDFs because both failure modes are
  * real: a `.docx` link the crawl navigates into is a navigation spent on a

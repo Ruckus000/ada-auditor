@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { actorFields } from '../../../../../../domain/operator';
+import { buildDocumentReport } from '../../../../../../services/document-report';
 import { getPlatformStore, getRunStore } from '../../../../../../integrations/persistence';
 import { authorizePrincipal } from '../../../../_lib/authorize';
 import { createRequestId } from '../../../../_lib/request-id';
@@ -39,7 +40,27 @@ export async function GET(
   );
   const reports = await platform.listReports(runs.flat().map((run) => run.requestId));
 
-  return Response.json({ requestId, reports, count: reports.length }, { status: 200 });
+  return Response.json(
+    {
+      requestId,
+      // The document snapshot is reduced to its totals: a listing does not
+      // need every report's document URLs riding along, and the full section
+      // stays on the row for the shared page to render.
+      reports: reports.map(({ documents, ...report }) => ({
+        ...report,
+        ...(documents === undefined
+          ? {}
+          : {
+              documents: {
+                documents: documents.totals.documents,
+                withGaps: documents.totals.withGaps,
+              },
+            }),
+      })),
+      count: reports.length,
+    },
+    { status: 200 },
+  );
 }
 
 const createSchema = z.object({
@@ -93,11 +114,21 @@ export async function POST(
   // strategy.
   const shareToken = randomBytes(32).toString('base64url');
 
+  // The document inventory as it stands RIGHT NOW, snapshotted into the
+  // report so the pinning guarantee covers the whole page: the shared link
+  // shows what was true when it was issued, run half and documents half
+  // alike. Never logged — document paths routinely name people, and this
+  // route's log line carries ids only.
+  const documents = await platform.listClientDocuments(clientId);
+
   await platform.createReport({
     id,
     requestId: parsed.requestId,
     ...(parsed.audience ? { audience: parsed.audience } : {}),
     ...(parsed.title ? { title: parsed.title } : {}),
+    ...(documents.length > 0
+      ? { documents: buildDocumentReport(documents, new Date().toISOString()) }
+      : {}),
     issuedBy: principal.name,
     shareToken,
   });

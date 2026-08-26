@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { isPdf, summarise } from '../../../domain/document-remediation';
+import { isPdf, isWordDocument, summarise } from '../../../domain/document-remediation';
 import type { RemediationSummary } from '../../../domain/document-remediation';
 import { inspectDocument } from '../../../integrations/documents/inspect';
 import { logWarn } from '../../../services/logger';
@@ -85,4 +85,34 @@ export async function fetchAndInspectDocumentUrl(
   }
 
   return inspectPdfBytes(fetched.bytes, requestId, 'ada-inspect-url-');
+}
+
+export type ClassifiedDocumentFetch =
+  | { ok: true; bytes: Buffer; kind: 'pdf' | 'docx' | 'doc' }
+  | { ok: false; refusal: UploadRefusal };
+
+/**
+ * One guarded fetch, either container accepted — for the route that catalogs
+ * whatever a URL turns out to be. The extension is not consulted at all:
+ * municipal sites serve documents from extensionless download endpoints, and
+ * the bytes in hand are the only honest classifier. Anything that is neither
+ * container refuses 415 through the shared check, exactly as the
+ * single-container paths do.
+ */
+export async function fetchAndClassifyDocumentUrl(
+  url: string,
+  requestId: string,
+): Promise<ClassifiedDocumentFetch> {
+  const fetched = await fetchDocumentBytes(url, requestId, {
+    accept: (bytes) => {
+      const pdf = isPdf(bytes);
+      return pdf.ok ? pdf : isWordDocument(bytes);
+    },
+    acceptHeader:
+      'application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,*/*',
+  });
+  if (!fetched.ok) {
+    return fetched;
+  }
+  return { ok: true, bytes: fetched.bytes, kind: fetched.kind as 'pdf' | 'docx' | 'doc' };
 }

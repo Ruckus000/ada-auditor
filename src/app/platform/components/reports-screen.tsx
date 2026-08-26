@@ -80,6 +80,11 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
                 {report.run
                   ? ` · ${report.run.mustFix} must fix · score ${report.run.score ?? '—'}`
                   : ' · run no longer stored'}
+                {report.documents
+                  ? ` · ${report.documents.documents} document${
+                      report.documents.documents === 1 ? '' : 's'
+                    }, ${report.documents.withGaps} with gaps`
+                  : ''}
               </span>
 
               <span style={{ fontSize: 12.5 }}>

@@ -120,7 +120,10 @@ export type DiscoverLinksInput = {
   requestId?: string;
 };
 
-type FrontierEntry = { url: string; depth: number };
+/** `foundOn` is the settled URL of the page whose markup linked this entry —
+ * carried so a navigation that turns out to be a document can record its
+ * provenance. Absent only for the entry point itself. */
+type FrontierEntry = { url: string; depth: number; foundOn?: string };
 
 /**
  * Every http or https link on the page, as absolute URLs.
@@ -378,6 +381,20 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
     const page = await context.newPage();
 
+    // A navigation that turns out to be a file: Chromium aborts the
+    // navigation and starts a download, `goto` rejects, and this event is the
+    // only witness that carries what actually happened. `[V]` Measured on a
+    // live municipal site: its documents are served from extensionless
+    // download endpoints, so they enter the frontier as pages and used to
+    // buy an error row each. The bytes are never kept — `cancel()` fires the
+    // moment the event does, and it is best-effort because a download that
+    // already failed cannot be cancelled again.
+    let pendingDownload: { url: string; suggestedFilename: string } | null = null;
+    page.on('download', (download) => {
+      pendingDownload = { url: download.url(), suggestedFilename: download.suggestedFilename() };
+      void download.cancel().catch(() => {});
+    });
+
     while (frontier.length > 0) {
       if (Date.now() - startedAt > DISCOVERY_BUDGET_MS) {
         truncated = { reason: 'budget', seen: seen.size };
@@ -607,7 +624,7 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
               continue;
             }
 
-            frontier.push({ url: href, depth: next.depth + 1 });
+            frontier.push({ url: href, depth: next.depth + 1, foundOn: settled });
           }
         }
       } catch (error) {
@@ -674,6 +691,51 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
           throw failure instanceof UnsafeTargetError
             ? failure
             : new EntryPointUnreachableError(failure);
+        }
+
+        // A navigation that became a DOWNLOAD is a document sighting, not an
+        // error. Judged by the event, never by Chromium's message text — the
+        // message is Chromium's to change. The event races `goto`'s rejection
+        // by design, so an empty pending slot gets one short wait before the
+        // decision; a race lost anyway degrades to today's behaviour, an
+        // error row, never to a wrong record. Placed after the entry contract
+        // (a target URL that is itself a download stays an entry failure — a
+        // crawl needs a page to start from) and skipped entirely when the
+        // failure is a security refusal, which is always the diagnosis worth
+        // keeping.
+        if (pendingDownload === null) await delay(100);
+        // Assigned from the page's event callback, which control-flow
+        // analysis cannot see — without the assertion the narrowing above
+        // makes this `never`.
+        const download = pendingDownload as { url: string; suggestedFilename: string } | null;
+        pendingDownload = null;
+        if (download !== null && !(failure instanceof UnsafeTargetError)) {
+          // The Content-Disposition filename is the server's own word for
+          // what it served; the URL's extension (usually absent — that is why
+          // we are here) is the fallback. `documentLinkKind` takes an href,
+          // and the bare filename gets an inert base to ride on.
+          const kind =
+            documentLinkKind(new URL(download.suggestedFilename, 'http://filename.invalid/').href) ??
+            documentLinkKind(next.url);
+
+          if (kind !== null) {
+            // Same per-kind cap bookkeeping as the extension branch. The URL
+            // is already in `seen` — it entered the frontier as a page — so
+            // dedupe needs nothing more.
+            if ((documentsByKind[kind] ?? 0) >= MAX_DISCOVERY_DOCUMENTS_PER_KIND) {
+              documentsOmitted[kind] = (documentsOmitted[kind] ?? 0) + 1;
+            } else {
+              documentsByKind[kind] = (documentsByKind[kind] ?? 0) + 1;
+              documents.push({ url: next.url, foundOn: next.foundOn ?? next.url, kind });
+            }
+            continue;
+          }
+
+          // A download of something the document pipeline has no instrument
+          // for — a spreadsheet, an archive. Still an error row, but now a
+          // truthful one, in our words rather than Chromium's.
+          recordError(next.url, new Error('answered with a download, not a page'));
+          continue;
         }
 
         // Bounded, because nothing else bounds it. `MAX_DISCOVERY_URLS` counts

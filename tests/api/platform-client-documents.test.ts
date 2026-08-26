@@ -127,11 +127,51 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('answers 503 when the host has no JVM, before fetching', async () => {
+  it('answers 503 for a PDF when the host has no JVM — after the fetch, which is the trade', async () => {
+    // The kind is not known until the bytes are, so the toolchain guard lives
+    // in the PDF branch: a JVM-less host pays one guarded fetch before
+    // refusing. What it buys is the case below — that host can still catalog
+    // a Word document.
     runtimes.java = false;
 
-    expect((await POST(jsonRequest({ url: DOC_URL }), params('acme'))).status).toBe(503);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    const response = await POST(jsonRequest({ url: DOC_URL }), params('acme'));
+
+    expect(response.status).toBe(503);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(inspectDocument).not.toHaveBeenCalled();
+    // The refusal persisted nothing.
+    expect(await platform.listClientDocuments('acme')).toEqual([]);
+  });
+
+  it('catalogs a Word URL as an inventory row, no JVM needed, no inspection persisted', async () => {
+    runtimes.java = false;
+    const names = Buffer.from('[Content_Types].xml....word/document.xml', 'latin1');
+    fetchSpy.mockResolvedValue(
+      pdfResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04, ...names])),
+    );
+
+    const response = await POST(
+      jsonRequest({ url: 'https://town.example/download?id=44', foundOn: FOUND_ON }),
+      params('acme'),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    // The bytes decided, not the extension — the URL has none.
+    expect(body.document).toMatchObject({
+      url: 'https://town.example/download?id=44',
+      kind: 'docx',
+      source: 'crawl',
+      foundOn: FOUND_ON,
+    });
+    expect(body).not.toHaveProperty('inspection');
+
+    const documents = await platform.listClientDocuments('acme');
+    expect(documents).toHaveLength(1);
+    expect(documents[0].kind).toBe('docx');
+    // A sighting, not a reading: the store holds only what an instrument said.
+    expect(await platform.listDocumentInspections('acme')).toEqual([]);
+    expect(inspectDocument).not.toHaveBeenCalled();
   });
 
   it('inspects a crawl-found document and persists the record', async () => {
@@ -218,6 +258,53 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect(body.documents[1].latestInspection.summary.gaps[0]).toContain('2.4.2');
     expect(body.documents[0]).not.toHaveProperty('latestInspection');
     expect(body.documents[0]).not.toHaveProperty('clientId');
+    // One reading is a first reading: nothing to diff, so nothing claimed.
+    expect(body.documents[1]).not.toHaveProperty('regression');
+  });
+
+  it('attaches the document regression once a second reading exists', async () => {
+    const doc = await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/a.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T09:00:00.000Z',
+    );
+    const reading = (gaps: string[], id: string, inspectedAt: string) => ({
+      id,
+      clientId: 'acme',
+      documentId: doc.id,
+      url: doc.url,
+      source: 'crawl' as const,
+      summary: {
+        title: 'no-heading-to-copy' as const,
+        sourceLanguage: null,
+        tagged: false,
+        pages: 1,
+        headings: 0,
+        tables: 0,
+        lists: 0,
+        figures: 0,
+        gaps,
+      },
+      inspectedAt,
+    });
+    await platform.saveDocumentInspection(
+      reading(
+        ['2.4.2: the document has no title, and states no heading to copy one from'],
+        'insp-base',
+        '2026-08-26T09:00:00.000Z',
+      ),
+    );
+    await platform.saveDocumentInspection(reading([], 'insp-now', '2026-08-26T10:00:00.000Z'));
+
+    const body = await (await GET(jsonRequest(), params('acme'))).json();
+
+    expect(body.documents[0].regression).toMatchObject({
+      status: 'improved',
+      newGaps: [],
+      resolvedGaps: ['2.4.2: the document has no title, and states no heading to copy one from'],
+      unchangedCount: 0,
+      baselineAt: '2026-08-26T09:00:00.000Z',
+    });
   });
 
   it('refuses a private address with the real guard, and persists nothing', async () => {
