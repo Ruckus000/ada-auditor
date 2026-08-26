@@ -7,10 +7,10 @@ import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 
 import { logWarn } from '../../services/logger';
-import type { DocumentStructure } from '../../domain/document-structure';
+import type { ConversionProvenance } from '../../domain/document-remediation';
 import { finishDocument } from './finish';
 import { inspectDocument } from './inspect';
-import { readLanguage, repairTitle, type TitleRepair } from './flat-odf';
+import { readLanguage, repairTitle } from './flat-odf';
 import { resolveLibreOffice, type LibreOfficeRuntime } from './libreoffice-runtime';
 import type { Env, JavaRuntime } from './java-runtime';
 import type { StageExecutor } from './stage';
@@ -60,8 +60,20 @@ import type { StageExecutor } from './stage';
 
 const execFileAsync = promisify(execFile);
 
-/** LibreOffice starting cold and converting a long document is seconds, not ms. */
-const DEFAULT_TIMEOUT_MS = 120_000;
+/**
+ * Per external call, and the arithmetic matters.
+ *
+ * One conversion makes **four** of them: two `soffice` runs and two JVM stages
+ * (`Finish`, then `Inspect` to verify). At the old 120s this bounded a single
+ * call and nothing bounded the whole, so a slow document could exceed the 300s
+ * function ceiling and be killed with nothing to show — the worst outcome
+ * available, since the work is done and thrown away.
+ *
+ * 60s × 4 = 240s worst case, leaving a minute for reading the upload, writing
+ * temp files and returning the bytes. Measured reality is ~15s total; this is a
+ * ceiling, not a budget to spend.
+ */
+const DEFAULT_TIMEOUT_MS = 60_000;
 
 /**
  * The export that produces a tagged, PDF/UA-declaring file.
@@ -85,21 +97,7 @@ export type ConversionFailure =
   /** Exported, but untagged — the silent downgrade a wrong filter key produces. */
   | { kind: 'not-tagged'; detail: string };
 
-/**
- * What the output claims, and where each claim came from.
- *
- * This is the beginning of the record `legal-standard.md` requires — "a record
- * of what a human verified versus what a machine asserted". Every field here is
- * traceable to the source document; nothing was decided by this pipeline.
- */
-export type ConversionProvenance = {
-  /** Whether the title was already there, transcribed from a heading, or absent. */
-  title: TitleRepair['outcome'];
-  /** The language the SOURCE declared. Null means it declared none. */
-  sourceLanguage: string | null;
-  /** The structure of the finished document, as read back. */
-  structure: DocumentStructure;
-};
+export type { ConversionProvenance };
 
 export type ConversionResult =
   | { ok: true; pdfPath: string; provenance: ConversionProvenance }
@@ -107,6 +105,7 @@ export type ConversionResult =
 
 export type ConvertOptions = {
   env?: Env;
+  /** Ceiling for EACH external call, of which one conversion makes four. */
   timeoutMs?: number;
   /** Injected by tests so the fast suite starts no external process. */
   executor?: StageExecutor;
@@ -218,7 +217,12 @@ export async function convertSourceToPdf(
     //    viewer preference PDF/UA needs.
     const finished = await finishDocument(
       { inputPath: exported, outputPath, language: sourceLanguage },
-      { runtime: options.javaRuntime, root: options.root, env: options.env },
+      {
+        runtime: options.javaRuntime,
+        root: options.root,
+        env: options.env,
+        timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+      },
     );
     if (!finished.ok) {
       return {
@@ -238,6 +242,7 @@ export async function convertSourceToPdf(
       runtime: options.javaRuntime,
       root: options.root,
       env: options.env,
+      timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     });
     if (!read.ok) {
       return {
