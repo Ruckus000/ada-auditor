@@ -21,6 +21,8 @@ const OUR_RULES = {
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Browser, Page } from 'playwright-core';
 import { launchChromium } from '../../../src/integrations/browser/launch';
+import { renderPdf } from '../../../src/integrations/browser/render-pdf';
+import { resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
 import {
   CONSOLE_COOKIE,
   createSessionValue,
@@ -1553,28 +1555,41 @@ describe('platform hydration', () => {
           }),
         }),
       );
-      await page.route('**/api/documents/inspect-url', (route) =>
-        route.fulfill({
-          status: 200,
+      // The inspect flow posts to the client-scoped persisting route now. Only
+      // the POST is stubbed — the GET on mount falls through to the real
+      // server, whose store is what the persistence sibling below exercises
+      // for real. The JVM and the fetch are covered by their own suites.
+      await page.route('**/api/platform/clients/*/documents', (route) => {
+        if (route.request().method() !== 'POST') return route.fallback();
+        return route.fulfill({
+          status: 201,
           contentType: 'application/json',
           body: JSON.stringify({
             requestId: 'stubbed',
-            url: 'https://discovered.invalid/minutes/agenda.pdf',
-            title: 'no-heading-to-copy',
-            sourceLanguage: null,
-            tagged: false,
-            pages: 4,
-            headings: 0,
-            tables: 2,
-            lists: 0,
-            figures: 3,
-            gaps: [
-              '2.4.2: the document has no title, and states no heading to copy one from',
-              '1.1.1: 3 figures with no alt text',
-            ],
+            inspection: {
+              id: 'stubbed-inspection',
+              url: 'https://discovered.invalid/minutes/agenda.pdf',
+              foundOn: 'https://discovered.invalid/meetings',
+              source: 'crawl',
+              summary: {
+                title: 'no-heading-to-copy',
+                sourceLanguage: null,
+                tagged: false,
+                pages: 4,
+                headings: 0,
+                tables: 2,
+                lists: 0,
+                figures: 3,
+                gaps: [
+                  '2.4.2: the document has no title, and states no heading to copy one from',
+                  '1.1.1: 3 figures with no alt text',
+                ],
+              },
+              inspectedAt: '2026-08-26T12:00:00.000Z',
+            },
           }),
-        }),
-      );
+        });
+      });
 
       await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
@@ -1623,6 +1638,75 @@ describe('platform hydration', () => {
       await page.close();
     }
   }, 120_000);
+
+  /**
+   * A persisted inspection survives a reload — the whole point of the slice.
+   *
+   * Through the upload flow, end to end and unstubbed: a real PDF rendered by
+   * the Chromium this suite already launches, PUT to the client-scoped route
+   * by the screen's own file input, inspected by a real JVM, persisted in the
+   * server's memory store — and read back by the GET after a reload, which
+   * nothing but that store can answer.
+   *
+   * The upload path rather than the crawl path, and not by preference: the
+   * crawl path's server-side fetch goes through the SSRF guard, which
+   * correctly refuses localhost, so there is no URL a test server can offer
+   * it. The upload carries its bytes in the request and needs no fetch.
+   *
+   * Gated on the document toolchain, which `npm run build:documents` compiles
+   * and CI's hydration job does not provision (the PDFBox jar is a download
+   * `fetch-tools.sh` makes, not a checked-in file) — so in CI this case skips
+   * and the persistence round trip is held by the route tests, which drive
+   * the same handlers over the same memory store, minus the browser. Where
+   * the toolchain exists this is the real thing.
+   */
+  const documentToolchain = resolveJavaRuntime();
+
+  it.runIf(documentToolchain.available)(
+    'a persisted document inspection survives a reload',
+    async () => {
+      const page = await openAuthenticatedPage();
+      try {
+        const pdf = await renderPdf('<h1>Meeting agenda</h1><p>Hydration fixture body.</p>');
+
+        await page.goto(`${BASE}/clients/${CLIENT}/documents`, {
+          waitUntil: 'domcontentloaded',
+        });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        await page.getByLabel('Or inspect a PDF you already have').setInputFiles({
+          name: 'hydration-agenda.pdf',
+          mimeType: 'application/pdf',
+          buffer: pdf,
+        });
+
+        // Same locator lesson as the case above: the panel is the only named
+        // region called Documents. The JVM answers in a second or two warm;
+        // the poll absorbs a cold start.
+        const panel = page.getByRole('region', { name: 'Documents' });
+        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
+
+        // The reload is the assertion. The screen's own state is gone; only
+        // the store can put the summary back.
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+        await expect
+          .poll(() => panel.innerText(), { timeout: 15_000 })
+          .toContain('hydration-agenda.pdf');
+
+        const text = await panel.innerText();
+        expect(text).toContain('Previously inspected');
+        expect(text).toContain('uploaded');
+        // The summary itself, not just the row: a Chromium-printed PDF is
+        // untagged, and the gap wording is the server's, verbatim.
+        expect(text).toContain('Not tagged');
+        expect(text).toContain('1.3.1: the output carries no structure tree');
+      } finally {
+        await page.close();
+      }
+    },
+    180_000,
+  );
 
   /**
    * The write: ticked pages become a stored journey of `goto` steps.

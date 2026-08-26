@@ -572,3 +572,44 @@ alter table runs alter column gate_version drop default;
 -- repository's first CHECK-altering migration for a field only our own writer
 -- populates is risk without a reader.
 alter table runs add column if not exists truncation_reason text;
+
+-- ---------------------------------------------------- document_inspections --
+--
+-- What the document instrument said about one of a client's documents, kept.
+-- Discovery records the PDFs a crawl saw and an operator inspects them one at
+-- a time (each inspection is a fetch plus a JVM run); before this table the
+-- result lived exactly as long as the browser tab, so an operator who
+-- inspected thirty documents and closed the tab had nothing.
+--
+-- `summary` is the RemediationSummary verbatim, `titleText` included, as
+-- jsonb: it is read and written whole, never queried into — the same shape
+-- argument as `journeys.steps` — and the database already holds client DOM
+-- snippets in `findings`, beside which a document title is mild. The rule
+-- that stays absolute is about logs, not storage: a log line carries counts
+-- and the hostname only, because document paths routinely name people.
+--
+-- `url` is the document's address for a crawl record and the operator's own
+-- filename for an upload, which is the only handle an upload has. `found_on`
+-- is the page the crawl saw the link on; nullable because an upload was found
+-- nowhere, and null means exactly that.
+--
+-- `on delete cascade` from `clients`, like `journeys`: an inspection of a
+-- client's document has no meaning once the client row is gone.
+create table if not exists document_inspections (
+  id            text primary key,
+  client_id     text not null references clients (id) on delete cascade,
+  url           text not null,
+  found_on      text,
+  -- 'crawl' | 'upload'. Text rather than a CHECK, the `truncation_reason`
+  -- stance: the values live in `domain/platform.ts`, only our own writer
+  -- populates this, and a CHECK-altering migration for it is risk without a
+  -- reader.
+  source        text not null,
+  summary       jsonb not null,
+  inspected_at  timestamptz not null default now()
+);
+
+-- Serves the one query the screen makes: a client's inspections, newest
+-- first, capped.
+create index if not exists document_inspections_client_idx
+  on document_inspections (client_id, inspected_at desc);

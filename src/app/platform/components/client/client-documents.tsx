@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -19,9 +19,11 @@ import { FONT, T } from '../../lib/tokens';
  *   site the operator should choose where to spend that.
  * - **Upload** posts a file the operator already has to the same instrument.
  *
- * Nothing here persists. Results live exactly as long as discovery's page list
- * does — until the operator leaves — because stored document findings need a
- * schema decision this screen must not preempt.
+ * Both flows go through the client-scoped routes
+ * (`/api/platform/clients/<id>/documents`), which persist what the instrument
+ * said — so an inspection outlives the tab, and the screen loads the stored
+ * records back on mount. The client-unscoped tools
+ * (`/api/documents/inspect*`) still exist for work outside a client.
  *
  * `summary.gaps` is rendered verbatim: each entry already names its WCAG
  * criterion, and the words were chosen server-side where the counting logic
@@ -48,6 +50,16 @@ type Summary = {
   lists: number;
   figures: number;
   gaps: string[];
+};
+
+/** One stored inspection, as the client-scoped routes return it. */
+type InspectionRecord = {
+  id: string;
+  url: string;
+  foundOn?: string;
+  source: 'crawl' | 'upload';
+  summary: Summary;
+  inspectedAt: string;
 };
 
 type InspectionState =
@@ -98,15 +110,18 @@ function pathOf(url: string): string {
     const parsed = new URL(url);
     return `${parsed.pathname}${parsed.search}`;
   } catch {
+    // An upload's `url` is a filename, not a URL, and reads fine as itself.
     return url;
   }
 }
 
 /**
- * One inspection result, shared by the scan rows and the upload.
+ * One inspection result, shared by the scan rows, the upload, and the stored
+ * records.
  *
- * One component rather than two renderings, so a document found by crawl and a
- * document handed over by upload cannot end up described differently.
+ * One component rather than three renderings, so a document found by crawl, a
+ * document handed over by upload and a record loaded back from the store
+ * cannot end up described differently.
  */
 function SummaryView({ summary }: { summary: Summary }) {
   return (
@@ -142,7 +157,13 @@ function SummaryView({ summary }: { summary: Summary }) {
   );
 }
 
-export function ClientDocuments({ initialTargetUrl }: { initialTargetUrl: string }) {
+export function ClientDocuments({
+  clientId,
+  initialTargetUrl,
+}: {
+  clientId: string;
+  initialTargetUrl: string;
+}) {
   const fieldPrefix = useId();
   const [targetUrl, setTargetUrl] = useState(initialTargetUrl);
   const [scanning, setScanning] = useState(false);
@@ -151,10 +172,49 @@ export function ClientDocuments({ initialTargetUrl }: { initialTargetUrl: string
   const [documentsOmitted, setDocumentsOmitted] = useState(0);
   const [inspections, setInspections] = useState<Record<string, InspectionState>>({});
   const [uploadState, setUploadState] = useState<InspectionState>({ state: 'idle' });
+  const [stored, setStored] = useState<InspectionRecord[] | null>(null);
+  const [storedError, setStoredError] = useState<string | null>(null);
 
   const headingId = `${fieldPrefix}-heading`;
   const urlId = `${fieldPrefix}-url`;
   const uploadId = `${fieldPrefix}-upload`;
+  const storedHeadingId = `${fieldPrefix}-stored`;
+
+  const documentsPath = `/api/platform/clients/${encodeURIComponent(clientId)}/documents`;
+
+  useEffect(() => {
+    // The reason this screen exists in its persisted form: what was inspected
+    // yesterday is still here today.
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const response = await fetch(documentsPath);
+        const payload = (await response.json().catch(() => null)) as {
+          inspections?: InspectionRecord[];
+          error?: string;
+        } | null;
+        if (cancelled) return;
+
+        if (!response.ok) {
+          setStoredError(`Stored inspections did not load (${payload?.error ?? `http ${response.status}`}).`);
+          return;
+        }
+        setStored(payload?.inspections ?? []);
+      } catch {
+        if (!cancelled) setStoredError('Stored inspections did not load (could not reach the server).');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [documentsPath]);
+
+  /** Newest first, replacing any earlier record of the same inspection. */
+  function remember(record: InspectionRecord) {
+    setStored((current) => [record, ...(current ?? []).filter((r) => r.id !== record.id)]);
+  }
 
   async function scan() {
     setScanning(true);
@@ -186,28 +246,29 @@ export function ClientDocuments({ initialTargetUrl }: { initialTargetUrl: string
     setInspections((current) => ({ ...current, [url]: state }));
   }
 
-  async function inspect(url: string) {
-    setInspection(url, { state: 'running' });
+  async function inspect(doc: DiscoveredDocument) {
+    setInspection(doc.url, { state: 'running' });
     try {
-      const response = await fetch('/api/documents/inspect-url', {
+      const response = await fetch(documentsPath, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: doc.url, foundOn: doc.foundOn }),
       });
       const payload = (await response.json().catch(() => null)) as
-        | (Summary & { error?: string; detail?: string })
+        | { inspection?: InspectionRecord; error?: string; detail?: string }
         | null;
 
-      if (!response.ok || !payload) {
-        setInspection(url, {
+      if (!response.ok || !payload?.inspection) {
+        setInspection(doc.url, {
           state: 'failed',
           message: payload?.detail ?? payload?.error ?? `http ${response.status}`,
         });
         return;
       }
-      setInspection(url, { state: 'done', summary: payload });
+      setInspection(doc.url, { state: 'done', summary: payload.inspection.summary });
+      remember(payload.inspection);
     } catch {
-      setInspection(url, { state: 'failed', message: 'could not reach the server' });
+      setInspection(doc.url, { state: 'failed', message: 'could not reach the server' });
     }
   }
 
@@ -216,19 +277,20 @@ export function ClientDocuments({ initialTargetUrl }: { initialTargetUrl: string
     try {
       const form = new FormData();
       form.set('file', file);
-      const response = await fetch('/api/documents/inspect', { method: 'POST', body: form });
+      const response = await fetch(documentsPath, { method: 'PUT', body: form });
       const payload = (await response.json().catch(() => null)) as
-        | (Summary & { error?: string; detail?: string })
+        | { inspection?: InspectionRecord; error?: string; detail?: string }
         | null;
 
-      if (!response.ok || !payload) {
+      if (!response.ok || !payload?.inspection) {
         setUploadState({
           state: 'failed',
           message: payload?.detail ?? payload?.error ?? `http ${response.status}`,
         });
         return;
       }
-      setUploadState({ state: 'done', summary: payload });
+      setUploadState({ state: 'done', summary: payload.inspection.summary });
+      remember(payload.inspection);
     } catch {
       setUploadState({ state: 'failed', message: 'could not reach the server' });
     }
@@ -251,7 +313,7 @@ export function ClientDocuments({ initialTargetUrl }: { initialTargetUrl: string
       <p style={noteStyle}>
         PDFs linked from the client’s site, found by the same crawl the setup screen runs. The
         crawl records them without opening them; inspection is per-document because each one costs
-        a fetch and a JVM run.
+        a fetch and a JVM run. Every inspection is kept against this client.
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8 }}>
@@ -316,7 +378,7 @@ export function ClientDocuments({ initialTargetUrl }: { initialTargetUrl: string
                     </span>
                     <button
                       type="button"
-                      onClick={() => inspect(doc.url)}
+                      onClick={() => inspect(doc)}
                       disabled={inspection.state === 'running'}
                       style={{
                         ...buttonStyle,
@@ -369,6 +431,57 @@ export function ClientDocuments({ initialTargetUrl }: { initialTargetUrl: string
           </p>
         ) : null}
       </div>
+
+      {storedError ? (
+        <p role="alert" style={{ ...noteStyle, color: T.fail }}>
+          {storedError}
+        </p>
+      ) : null}
+
+      {stored !== null && stored.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <h3
+            id={storedHeadingId}
+            style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.ink }}
+          >
+            Previously inspected
+          </h3>
+          <ul
+            aria-labelledby={storedHeadingId}
+            style={{
+              listStyle: 'none',
+              margin: 0,
+              padding: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            {stored.map((record) => (
+              <li key={record.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: FONT.mono, fontSize: 12, color: T.ink }}>
+                    {pathOf(record.url)}
+                  </span>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
+                    {record.source === 'upload'
+                      ? 'uploaded'
+                      : record.foundOn
+                        ? `found on ${pathOf(record.foundOn)}`
+                        : 'found by crawl'}
+                  </span>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
+                    {/* The date half of the ISO stamp: stable across locales,
+                        so the server-rendered and hydrated trees agree. */}
+                    {record.inspectedAt.slice(0, 10)}
+                  </span>
+                </span>
+                <SummaryView summary={record.summary} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }

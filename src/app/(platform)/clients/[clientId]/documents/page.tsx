@@ -19,5 +19,5 @@ export default guarded(async function ClientDocumentsPage({
   // nothing on record says where this client lives.
   const initialTargetUrl = detail.journeys.find((journey) => journey.targetUrl)?.targetUrl ?? '';
 
-  return <ClientDocuments initialTargetUrl={initialTargetUrl} />;
+  return <ClientDocuments clientId={clientId} initialTargetUrl={initialTargetUrl} />;
 });
