@@ -13,6 +13,12 @@
 # Blocks `git push`. 9 seconds, and it is the only thing here that runs the
 # React Compiler rules -- eslint-config-next has sixteen react-hooks/* rules at
 # error severity, and no other gate in this file sees that class of defect.
+#
+# `npm run lint` carries `--max-warnings 0`, so this is a zero-warning gate: a
+# stray unused import blocks the push, not just a broken rule. The threshold is
+# in the script rather than spelled out here, which is what keeps this file and
+# ci.yml enforcing the same thing. A binding that has to stay gets a leading
+# underscore -- see the note in eslint.config.mjs.
 gate:
   - npm run lint
   - npm run typecheck

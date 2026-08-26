@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
-import type { Page, Response } from 'playwright-core';
+import type { Page } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { normalizePathname } from '../../domain/discovery';
 import {
@@ -24,10 +24,7 @@ import {
   assertSettledOnTarget,
   isOnTargetHost,
 } from './target-url';
-import {
-  buildDefaultDemoJourneySteps,
-  resolveNavigationUrl,
-} from './demo-journey';
+import { resolveNavigationUrl } from './demo-journey';
 import type {
   JourneyArtifacts,
   JourneyRunnerInput,

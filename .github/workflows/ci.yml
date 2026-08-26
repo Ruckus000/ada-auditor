@@ -40,10 +40,23 @@ jobs:
       # commit, enforced by nothing but whoever remembered to run `npm run
       # lint` locally.
       #
-      # `eslint` exits 0 on warnings and 1 on errors, so this gates on errors
-      # only. The tree is clean at the time of writing (0 errors, 13
-      # `no-unused-vars` warnings), which is why this can be added without a
-      # cleanup commit in front of it.
+      # `eslint` exits 0 on warnings and 1 on errors, so this used to gate on
+      # errors only, with thirteen `no-unused-vars` warnings standing. The
+      # cleanup commit that paragraph deferred has now happened: six were dead
+      # imports and are gone, and the other eight were deliberate discards the
+      # rule could not see, which `eslint.config.mjs` now recognises by their
+      # leading underscore.
+      #
+      # So `npm run lint` carries `--max-warnings 0` and this step gates on
+      # warnings too. The threshold lives in the script rather than here, so the
+      # pre-push gate in `localci.yml` enforces exactly what CI does. To keep a
+      # binding this rule would otherwise flag, prefix it with `_`; that is the
+      # documented way through, and it is deliberately cheap because the
+      # alternative is somebody pushing with `--no-verify`, which skips the
+      # react-hooks rules above along with everything else.
+      #
+      # The count had already drifted from thirteen to fourteen before anyone
+      # went back to it, which is the argument for a gate rather than a tidy.
       - run: npm run lint
       # Beside `lint` and before the browser download, for the same reason: it
       # is seconds against the minutes below it.
