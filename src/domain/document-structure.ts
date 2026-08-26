@@ -109,3 +109,64 @@ export type DocumentFigure = z.infer<typeof figureSchema>;
 export function isTagged(structure: DocumentStructure): boolean {
   return structure.structureElements > 0;
 }
+
+/**
+ * A BCP-47 language tag, loosely.
+ *
+ * Not a full BCP-47 parser — enough to refuse `english`, `EN_US` and the empty
+ * string, which are the shapes a caller actually gets wrong. This matters more
+ * than it looks: `/Lang` is a **claim about the document**, written into bytes
+ * that get delivered, and a wrong one is exactly the class of defect this
+ * project calls an assertion — invisible to a reader, and worse than saying
+ * nothing at all.
+ */
+export const languageTagSchema = z
+  .string()
+  .regex(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/, 'expected a BCP-47 language tag such as `en` or `cy-GB`');
+
+/**
+ * The fields that describe what the document *says*, as opposed to what it is
+ * labelled with.
+ *
+ * Split out because the distinction is the whole safety argument for letting a
+ * repair stage write a file. A metadata pass may set `/Lang` and the XMP
+ * packet; it may not add a heading, drop a figure out of the tree or reorder
+ * anything. `title` and `lang` are absent from this list because they are the
+ * labels; everything else is the content.
+ */
+export const CONTENT_FIELDS = [
+  'structureElements',
+  'textChars',
+  'images',
+  'pages',
+  'headings',
+  'headingTexts',
+  'figures',
+  'tables',
+  'lists',
+  'order',
+] as const satisfies readonly (keyof DocumentStructure)[];
+
+/**
+ * Which content fields a repair changed — empty when it changed none.
+ *
+ * This is how "the process exited 0" becomes "the document still says what it
+ * said". A repair stage's failure mode is a delivered file carrying a wrong
+ * claim that no reviewer can see: four meaningful images artifacted out of the
+ * structure tree look identical, in the PDF, to four images that were never
+ * there. Comparing a reading taken before the repair with one taken after is
+ * what makes that visible without any ground truth to compare against — which
+ * matters, because a client's document has none.
+ *
+ * Compared by serialising rather than walking: both readings come from the same
+ * Java emitter and then through the same zod schema, so key order is fixed on
+ * both sides and a structural walk would buy nothing but its own bugs.
+ */
+export function contentChanges(
+  before: DocumentStructure,
+  after: DocumentStructure,
+): string[] {
+  return CONTENT_FIELDS.filter(
+    (field) => JSON.stringify(before[field]) !== JSON.stringify(after[field]),
+  );
+}

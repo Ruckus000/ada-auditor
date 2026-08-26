@@ -23,9 +23,9 @@ about three times with the same meaning.
 nothing. That is the trade a spike is allowed to make. Anything that graduates
 into `src/` gets held to the normal gates.
 
-## Two files have graduated
+## Three files have graduated
 
-`Inspect.java` and `StructText.java` now live in
+`Inspect.java`, `StructText.java` and `Finish.java` now live in
 [`src/integrations/documents/java/`](../../src/integrations/documents/java/) and
 are held to the normal gates. They were **moved, not copied** — `StructText` is
 used by `Headings.java` and `Tables.java` here, and two copies of a shared file

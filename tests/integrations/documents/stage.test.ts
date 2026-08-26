@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { runStage, type StageExecutor } from '../../../src/integrations/documents/stage';
+import { finishDocument } from '../../../src/integrations/documents/finish';
 import { resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
 import type { JavaRuntime } from '../../../src/integrations/documents/java-runtime';
 
@@ -185,5 +186,59 @@ describe('resolveJavaRuntime', () => {
     if (!runtime.available) {
       expect(runtime.reason).toMatch(/PDFBox|not compiled|no Java runtime found/);
     }
+  });
+});
+
+describe('finishDocument', () => {
+  it('refuses a bad language tag before the JVM starts', async () => {
+    // /Lang is a claim written into bytes somebody receives. `english` produces
+    // a file that passes every machine check and states something untrue, so
+    // this must fail closed — and must not have spawned anything.
+    const { executor, calls } = fakeExecutor('');
+    const result = await finishDocument(
+      { inputPath: 'in.pdf', outputPath: 'out.pdf', language: 'english' },
+      { runtime: RUNTIME, executor },
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.failure.kind).toBe('invalid-language');
+    expect(calls).toEqual([]);
+  });
+
+  it('passes a valid tag through to the stage', async () => {
+    const { executor, calls } = fakeExecutor('');
+    const result = await finishDocument(
+      { inputPath: 'in.pdf', outputPath: 'out.pdf', language: 'cy-GB' },
+      { runtime: RUNTIME, executor },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]).toEqual([
+      '/nonexistent/java', '-cp', '/nonexistent/cp', 'Finish', 'in.pdf', 'out.pdf', 'cy-GB',
+    ]);
+  });
+
+  it('has no default language at all', async () => {
+    // Deliberately unrepresentable: `FinishRequest.language` is required, so a
+    // caller with no answer cannot reach the stage. This asserts the runtime
+    // half of that — an empty string is not quietly treated as "unset, use en".
+    const { executor, calls } = fakeExecutor('');
+    const result = await finishDocument(
+      { inputPath: 'in.pdf', outputPath: 'out.pdf', language: '' },
+      { runtime: RUNTIME, executor },
+    );
+
+    expect(result.ok).toBe(false);
+    expect(calls).toEqual([]);
+  });
+
+  it('reports an absent toolchain without writing anything', async () => {
+    const result = await finishDocument(
+      { inputPath: 'in.pdf', outputPath: 'out.pdf', language: 'en' },
+      { runtime: { available: false, reason: 'no Java runtime found' } },
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.failure.kind).toBe('unavailable');
   });
 });

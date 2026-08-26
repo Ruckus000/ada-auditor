@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  contentChanges,
   documentStructureSchema,
   isTagged,
+  languageTagSchema,
   type DocumentStructure,
 } from '../../src/domain/document-structure';
 
@@ -111,5 +113,100 @@ describe('isTagged', () => {
 
   it('is true once the tree has elements', () => {
     expect(isTagged(documentStructureSchema.parse(REAL_OUTPUT))).toBe(true);
+  });
+});
+
+describe('contentChanges', () => {
+  const base = documentStructureSchema.parse(REAL_OUTPUT);
+
+  it('sees no content change when only the language label moves', () => {
+    // The property that makes a metadata repair safe to trust: `Finish` may set
+    // /Lang and the XMP packet, and must leave everything the document says
+    // exactly as it was.
+    const after = documentStructureSchema.parse({ ...REAL_OUTPUT, lang: 'cy-GB' });
+    expect(contentChanges(base, after)).toEqual([]);
+  });
+
+  it('sees no content change when only the title label moves', () => {
+    const after = documentStructureSchema.parse({ ...REAL_OUTPUT, title: 'Something Else' });
+    expect(contentChanges(base, after)).toEqual([]);
+  });
+
+  it('catches a figure dropping out of the structure tree', () => {
+    // The exact defect this exists for. Four meaningful images artifacted out
+    // of the tree are, in the delivered PDF, indistinguishable from four images
+    // that were never there — and `images` stays put while `figures` empties,
+    // which is what makes it detectable at all.
+    const after = documentStructureSchema.parse({ ...REAL_OUTPUT, figures: [] });
+    expect(contentChanges(base, after)).toContain('figures');
+  });
+
+  it('catches a heading being demoted', () => {
+    const after = documentStructureSchema.parse({
+      ...REAL_OUTPUT,
+      headings: ['H1'],
+      headingTexts: [{ level: 'H1', text: 'Agenda' }],
+    });
+    expect(contentChanges(base, after)).toEqual(
+      expect.arrayContaining(['headings', 'headingTexts']),
+    );
+  });
+
+  it('catches a cell being promoted to a header', () => {
+    // `Tables` does this legitimately; a metadata pass doing it would be
+    // inventing a claim about the document.
+    const after = documentStructureSchema.parse({
+      ...REAL_OUTPUT,
+      tables: [
+        {
+          ...REAL_OUTPUT.tables[0],
+          th: 2,
+          td: 1,
+          cells: [
+            { type: 'TH', text: 'Item', scope: 'Column', row: 0 },
+            { type: 'TH', text: '1', scope: 'Column', row: 0 },
+          ],
+        },
+      ],
+    });
+    expect(contentChanges(base, after)).toContain('tables');
+  });
+
+  it('catches reading order changing even when nothing is added or removed', () => {
+    // Same elements, different sequence. Counts alone would call this identical.
+    const after = documentStructureSchema.parse({
+      ...REAL_OUTPUT,
+      order: [
+        { type: 'H2', text: 'Apologies' },
+        { type: 'H1', text: 'Agenda' },
+      ],
+    });
+    expect(contentChanges(base, after)).toContain('order');
+  });
+
+  it('reports every changed field, not just the first', () => {
+    const after = documentStructureSchema.parse({
+      ...REAL_OUTPUT,
+      structureElements: 1,
+      images: 0,
+      figures: [],
+    });
+    expect(contentChanges(base, after).sort()).toEqual(['figures', 'images', 'structureElements']);
+  });
+});
+
+describe('languageTagSchema', () => {
+  it('accepts the tags real documents use', () => {
+    for (const tag of ['en', 'cy', 'en-GB', 'cy-GB', 'es-419']) {
+      expect(languageTagSchema.safeParse(tag).success, tag).toBe(true);
+    }
+  });
+
+  it('refuses shapes that would write a false claim into the file', () => {
+    // Each of these produces a PDF that passes machine validation and states
+    // something untrue about the document.
+    for (const tag of ['', 'english', 'EN_US', 'e', '  ']) {
+      expect(languageTagSchema.safeParse(tag).success, tag).toBe(false);
+    }
   });
 });

@@ -88,7 +88,9 @@ describe.skipIf(skip)('the spike still compiles against the graduated sources', 
     // The two that moved, and the two that still depend on the one that moved.
     // Naming them individually is the point: a bare "it compiled" would pass if
     // `Headings` and `Tables` had quietly stopped being built.
-    for (const required of ['Inspect', 'StructText', 'Headings', 'Tables']) {
+    // `Finish` has graduated too, and `run-finishing.mjs` still runs it from
+    // `out/classes`, so it has to come out of this pass like the rest.
+    for (const required of ['Inspect', 'StructText', 'Finish', 'Headings', 'Tables']) {
       expect(classes, `${required}.class missing`).toContain(`${required}.class`);
     }
   });

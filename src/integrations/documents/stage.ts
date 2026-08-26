@@ -60,6 +60,18 @@ export type StageFailure =
 
 export type StageResult<T> = { ok: true; value: T } | { ok: false; failure: StageFailure };
 
+/**
+ * A stage that produces a file rather than a reading.
+ *
+ * `Inspect` reports and prints JSON; `Finish` writes a PDF and prints nothing.
+ * They need different runners, and giving the writing one its own type is not
+ * ceremony: a reading stage's output is the value, while a writing stage's
+ * output is a file this process never sees, so "it worked" is genuinely all
+ * there is to return. Squeezing that into `StageResult<void>` would invite a
+ * caller to read a value that does not exist.
+ */
+export type StageOutcome = { ok: true } | { ok: false; failure: StageFailure };
+
 export type StageExecutor = (
   bin: string,
   args: string[],
@@ -73,29 +85,35 @@ function firstLine(text: string): string {
   return text.split('\n')[0]?.trim() ?? '';
 }
 
+export type StageOptions = {
+  root?: string;
+  env?: Env;
+  timeoutMs?: number;
+  maxBuffer?: number;
+  /** Injected by tests so the fast suite never starts a JVM. */
+  executor?: StageExecutor;
+  /** Injected by tests to exercise failures without a real toolchain. */
+  runtime?: JavaRuntime;
+};
+
 /**
- * `execFile`, never `exec`.
+ * Runs the JVM and hands back stdout, or a typed failure.
  *
- * Arguments are passed as an array to a binary, so a document path containing a
- * quote, a space or a semicolon is an argument and can never become shell
- * syntax. `compare.mjs` made the same choice; keeping it here means a file name
- * taken from a client's website cannot reach a shell.
+ * Shared by both public runners so that resolution, argument construction,
+ * timeout handling and error mapping cannot drift between a stage that reads
+ * and a stage that writes. The difference between them is only what happens to
+ * stdout afterwards.
+ *
+ * `execFile`, never `exec`. Arguments are passed as an array to a binary, so a
+ * document path containing a quote, a space or a semicolon is an argument and
+ * can never become shell syntax. `compare.mjs` made the same choice; keeping it
+ * here means a file name taken from a client's website cannot reach a shell.
  */
-export async function runStage<T>(
+async function spawnStage(
   stage: string,
   args: string[],
-  schema: ZodType<T>,
-  options: {
-    root?: string;
-    env?: Env;
-    timeoutMs?: number;
-    maxBuffer?: number;
-    /** Injected by tests so the fast suite never starts a JVM. */
-    executor?: StageExecutor;
-    /** Injected by tests to exercise failures without a real toolchain. */
-    runtime?: JavaRuntime;
-  } = {},
-): Promise<StageResult<T>> {
+  options: StageOptions,
+): Promise<{ ok: true; stdout: string } | { ok: false; failure: StageFailure }> {
   const runtime = options.runtime ?? resolveJavaRuntime({ root: options.root, env: options.env });
 
   if (!runtime.available) {
@@ -104,7 +122,6 @@ export async function runStage<T>(
 
   const execute = options.executor ?? defaultExecutor;
 
-  let stdout: string;
   try {
     const result = await execute(
       runtime.javaBin,
@@ -114,7 +131,7 @@ export async function runStage<T>(
         maxBuffer: options.maxBuffer ?? DEFAULT_MAX_BUFFER,
       },
     );
-    stdout = result.stdout;
+    return { ok: true, stdout: result.stdout };
   } catch (error) {
     // `execFile` rejects with the exit code, the signal, and whatever the
     // process managed to write. A timeout arrives as a kill signal rather than
@@ -143,6 +160,22 @@ export async function runStage<T>(
 
     return { ok: false, failure };
   }
+}
+
+/**
+ * Runs a stage that reports, and validates what it printed.
+ */
+export async function runStage<T>(
+  stage: string,
+  args: string[],
+  schema: ZodType<T>,
+  options: StageOptions = {},
+): Promise<StageResult<T>> {
+  const spawned = await spawnStage(stage, args, options);
+  if (!spawned.ok) {
+    return spawned;
+  }
+  const stdout = spawned.stdout;
 
   let parsed: unknown;
   try {
@@ -171,4 +204,28 @@ export async function runStage<T>(
   }
 
   return { ok: true, value: validated.data };
+}
+
+/**
+ * Runs a stage whose product is a file.
+ *
+ * Nothing is parsed, because there is nothing to parse — `Finish` writes a PDF
+ * and prints nothing at all. A zero exit means the JVM believed it succeeded,
+ * and that is the *weakest* of the guarantees this kind of stage needs: it says
+ * the process did not crash, not that the document it wrote is sound.
+ *
+ * **Verifying the output is the caller's job and is not optional.** A repair
+ * stage's failure mode is a delivered file carrying a claim that is wrong and
+ * invisible — nobody reviewing the PDF can see that a heading was demoted or an
+ * image dropped out of the structure tree. `inspectDocument` before and after,
+ * compared with `structuralChanges` in `domain/document-structure.ts`, is what
+ * turns "exited 0" into "changed only what it said it would".
+ */
+export async function runWritingStage(
+  stage: string,
+  args: string[],
+  options: StageOptions = {},
+): Promise<StageOutcome> {
+  const spawned = await spawnStage(stage, args, options);
+  return spawned.ok ? { ok: true } : { ok: false, failure: spawned.failure };
 }

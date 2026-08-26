@@ -1,8 +1,11 @@
 # Document stages
 
-The runtime home for the Java (PDFBox) stages that read and repair PDFs. One
-stage lives here so far: **`Inspect`**, which reports a document's structure tree
-and writes nothing.
+The runtime home for the Java (PDFBox) stages that read and repair PDFs.
+
+| Stage | Does | Writes a file |
+|---|---|---|
+| `Inspect` | reports the structure tree | no |
+| `Finish` | sets `MarkInfo`, `/Lang`, `DisplayDocTitle`, XMP | **yes** |
 
 ## Why this exists
 
@@ -69,14 +72,44 @@ not support that yet, deliberately — no such stage has graduated, and a parser
 guessing between the two would eventually guess wrong on a document whose text
 ends in a brace.
 
+## Verifying a stage that writes
+
+A repair stage's failure mode is a delivered file carrying a claim that is wrong
+and invisible: four meaningful images artifacted out of the structure tree look
+identical, in the PDF, to four images that were never there. A zero exit code
+says the JVM did not crash — nothing more.
+
+So `runWritingStage` returns `StageOutcome`, and **verifying the output is the
+caller's job**:
+
+```
+inspectDocument(before) → repair → inspectDocument(after)
+  → contentChanges(before, after)   // must be []
+```
+
+`contentChanges` lives in `domain/document-structure.ts` and needs no ground
+truth, which matters because a client's document has none. `Finish` claims in
+its own header that it alters no structure element; `java-finish.test.ts` is
+what holds it to that.
+
+## `/Lang` has no default, ever
+
+`finishDocument` requires a BCP-47 tag and shape-checks it. Defaulting to `en`
+would give every Welsh or bilingual document a false statement about itself —
+an *assertion*, in this project's terms, and worse than the omission it
+replaced. A caller with no answer must not call the stage.
+
 ## Graduating another stage
 
 1. Move the `.java` into `java/` (do not copy — `StructText.java` is shared, and
-   two copies drift).
+   two copies drift). `java-spike-still-compiles.test.ts` guards that edge.
 2. Add its output schema to `domain/`.
-3. Wrap it like `inspect.ts`.
+3. Wrap it like `inspect.ts` (reads) or `finish.ts` (writes).
 4. If it prints progress lines, give `runStage` an explicit mode.
+5. **If it writes, prove what it does not change** before trusting it.
 
-A **repair** stage writes a PDF, so its worst case is a delivered file carrying a
-wrong claim that no reviewer can see. `Inspect` was first precisely because it
-cannot do that.
+The remaining repair stages are harder than `Finish`, and in a specific way:
+each either deletes semantics (`Headings` demotes, `Lists` removes) or invents
+them (`Tables` promotes cells to headers). For those, `contentChanges` returning
+`[]` is the wrong bar — they are *supposed* to change content — so each needs its
+own statement of what it may and may not touch.
