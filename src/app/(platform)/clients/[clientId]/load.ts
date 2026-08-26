@@ -15,6 +15,7 @@ export const loadClient = cache(async (clientId: string): Promise<ClientDetail |
   return buildClientDetail(clientId, {
     clients: platform,
     journeys: platform,
+    credentials: platform,
     runs: getRunStore(),
   });
 });

@@ -4,11 +4,17 @@ import { toStepViews, type JourneyStepView } from '../domain/journey-step';
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
 import {
   journeyRunRefusal,
+  type ClientCredentialPresence,
+  type ClientCredentialStore,
   type ClientStore,
   type JourneyRunRefusal,
   type JourneyStore,
 } from '../domain/platform';
-import { credentialsForSteps, type CredentialPresence } from './credential-presence';
+import {
+  credentialRefsInSteps,
+  credentialsForSteps,
+  type CredentialPresence,
+} from './credential-presence';
 import { displaySeverity } from './presentation/severity';
 import { runVerdict, type VerdictKind } from './presentation/verdict';
 
@@ -79,6 +85,14 @@ export type JourneySummary = {
    * operator type a `credentialRef`, and until this the only way to find out
    * whether it resolved was to start a run and watch it fail at the login,
    * after a browser had launched and walked that far.
+   *
+   * Answered from both places a credential can live, per field: the
+   * deployment's environment variables, and the per-client store an operator
+   * writes through "Set values". Store-only was the state this screen could
+   * not see — it went on printing "no username and no password configured" in
+   * red over a login that resolves, which is worse than the silence it
+   * replaced, because an operator who believes it goes and re-pastes a
+   * credential that was already there.
    */
   credentials: CredentialPresence[];
   lastRun: RunSummary | null;
@@ -163,7 +177,32 @@ export type ClientDetailDeps = {
   clients: ClientStore;
   journeys: JourneyStore;
   runs: RunStore;
+  /**
+   * Narrowed to the presence read on purpose. `getClientCredentialValues` is
+   * the one member that decrypts, and this builds a Server Component's props —
+   * so the type itself refuses the mistake of reaching for a value here.
+   */
+  credentials: Pick<ClientCredentialStore, 'listClientCredentialRefs'>;
 };
+
+/**
+ * Env OR store, field by field.
+ *
+ * A ref the store has never heard of keeps the env answer untouched, and the
+ * store's `updatedAt` is dropped rather than spread: `CredentialPresence` is
+ * what reaches the client component, and widening it here is how a shape that
+ * is deliberately value-free starts carrying fields nobody chose to send.
+ */
+function withStoredCredentials(
+  presence: CredentialPresence[],
+  stored: ClientCredentialPresence[],
+): CredentialPresence[] {
+  return presence.map((entry) => {
+    const row = stored.find((held) => held.ref === entry.ref);
+    if (!row) return entry;
+    return { ref: entry.ref, user: entry.user || row.user, pass: entry.pass || row.pass };
+  });
+}
 
 /**
  * Null for a client that does not exist, so the route can answer 404.
@@ -184,6 +223,15 @@ export async function buildClientDetail(
   }
 
   const journeys = await deps.journeys.listJourneys(client.id);
+
+  // Once for the client, not once per journey — journeys share a client's
+  // credentials, and the refs are the same handful across all of them. Skipped
+  // entirely when no journey names one, the same stance `run-credentials`
+  // takes: a client with no logins must not pay for a catalog it has no
+  // question for.
+  const stored = journeys.some((journey) => credentialRefsInSteps(journey.steps).length > 0)
+    ? await deps.credentials.listClientCredentialRefs(client.id)
+    : [];
 
   const summaries = await Promise.all(
     journeys.map(async (journey): Promise<JourneySummary> => {
@@ -206,7 +254,7 @@ export async function buildClientDetail(
         // Anything unrecognised falls to `production`, the same default the
         // run route applies, because the safe answer is the strict one.
         environment: environmentSchema.safeParse(journey.environment).data ?? 'production',
-        credentials: credentialsForSteps(journey.steps),
+        credentials: withStoredCredentials(credentialsForSteps(journey.steps), stored),
         lastRun: run ? summariseRun(run) : null,
       };
     }),
