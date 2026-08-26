@@ -184,7 +184,13 @@ Chromium launches on a Vercel function:
   site that is public text; on an authenticated client app it is whatever real
   end-user data was on screen — the same reasoning that put run evidence in a
   private blob store. Point `AUDITOR_ADVISORY_MODEL` at a model with a
-  data-handling guarantee before running the advisory behind a login.
+  data-handling guarantee before running the advisory behind a login — or at
+  **`off`**, which disables the pass outright. The off switch exists because
+  the gateway's auth is ambient on Vercel (the deployment's own OIDC token), so
+  after #103 unsetting keys stopped being a way to say no, and the pass would
+  otherwise run on every production audit with whatever the default model is.
+  `off` wins over everything, including the injected test seam: it is a
+  statement about where evidence may go, and a test double is still a place.
 - **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
   target is checked four ways: scheme and host; every resolved address; the URL
   the page settled on after each navigation; and the address the browser

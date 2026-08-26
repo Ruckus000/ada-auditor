@@ -165,9 +165,19 @@ export function readDeploymentConfig(
     {
       key: 'advisory',
       label: 'AI advisory pass',
-      value: env.AI_GATEWAY_API_KEY || env.VERCEL_OIDC_TOKEN ? 'on' : 'off',
+      // Three states, and the two offs are different facts: `off (by
+      // configuration)` is a decision this deployment made; `off (unreachable)`
+      // is a deployment that cannot reach the gateway at all. Conflating them
+      // would send an operator hunting for a missing key that was never the
+      // reason.
+      value:
+        (env.AUDITOR_ADVISORY_MODEL ?? '').trim().toLowerCase() === 'off'
+          ? 'off (by configuration)'
+          : env.AI_GATEWAY_API_KEY || env.VERCEL_OIDC_TOKEN
+            ? 'on'
+            : 'off (unreachable)',
       detail:
-        'Judges what a rule engine cannot — alt text that says nothing, headings used for size. Runs through the Vercel AI Gateway, so the model is the `AUDITOR_ADVISORY_MODEL` string rather than a vendor SDK, and a Vercel deployment authenticates with the OIDC token it mints for itself. Advisory findings never gate a build, and their absence is never a run failure.',
+        'Judges what a rule engine cannot — alt text that says nothing, headings used for size. Runs through the Vercel AI Gateway, so the model is the `AUDITOR_ADVISORY_MODEL` string rather than a vendor SDK, and a Vercel deployment authenticates with the OIDC token it mints for itself; setting the model to `off` disables the pass outright. Advisory findings never gate a build, and their absence is never a run failure.',
       degraded: false,
     },
     {
