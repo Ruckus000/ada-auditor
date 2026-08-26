@@ -73,6 +73,13 @@ describe.skipIf(skip)('the spike still compiles against the graduated sources', 
         join(process.cwd(), PDFBOX_JAR),
         '-d',
         out,
+        // Matches the real build, and for the reason a deploy taught us:
+        // `javac` falls back to the platform default encoding, which is
+        // US-ASCII on a Linux CI box, and every em-dash in a comment becomes
+        // `unmappable character`. Without this the test would pass here and
+        // fail on any host that is not UTF-8.
+        '-encoding',
+        'UTF-8',
         ...(await readdir(SPIKE))
           .filter((n) => n.endsWith('.java'))
           .map((n) => join(SPIKE, n)),

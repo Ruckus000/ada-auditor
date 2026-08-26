@@ -60,6 +60,19 @@ const nextConfig = {
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
     ],
+    // The document stages, which spawn a JVM rather than a browser. Same class
+    // of problem as the entries above and the same fix: nothing in the route
+    // says "I need these files", that knowledge lives only here, and a route
+    // missing them builds clean and dies on its first production request.
+    //
+    // `vendor/jre` is assembled during `npm run vercel-build`, so this also
+    // depends on the tracer running after the build rather than before it.
+    // `scripts/prepare-jvm.ts` explains what it produces and why it is 40MB.
+    '/api/documents/**': [
+      './vendor/jre/**',
+      './vendor/pdfbox-app-3.0.8.jar',
+      './dist/documents/classes/**',
+    ],
   },
   experimental: {
     useTypeScriptCli: true,

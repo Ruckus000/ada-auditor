@@ -160,13 +160,24 @@ export async function GET() {
   // that gates nothing until it is actually wrong.
   //
   // `documentToolchainAvailable` and `documentConverterAvailable` follow that
-  // rule and are the strongest case for it. Document stages need a JVM and the
-  // source path needs LibreOffice; a Vercel function has neither — so on every
-  // production deployment both are false, permanently and by design. A warning
-  // here would not describe a problem, it would put an entry in the array that
-  // never clears, and the deploy checklist tells an operator to look for that
-  // array being empty. Reported in `checks`, explained in the settings screen,
-  // and silent here.
+  // rule. Neither warns, and the reasons now differ.
+  //
+  // The converter needs LibreOffice — 794MB — which will not sit beside a
+  // function, so on a deployment it is false by design. A warning would put an
+  // entry in the array that never clears, and the deploy checklist tells an
+  // operator to look for that array being empty.
+  //
+  // The toolchain used to be false for the same reason and **is not any more**:
+  // `scripts/prepare-jvm.ts` assembles a 40MB runtime during a Vercel build and
+  // `/api/documents/**` ships it. `[V]` A preview deployment confirmed it execs
+  // from `/var/task/vendor/jre` and runs `Inspect` in ~730ms.
+  //
+  // One caveat worth knowing before trusting this field on Vercel: each route
+  // is its own function with its own traced files, and this one does not carry
+  // the runtime — 40MB beside a health check to stat a path would be absurd. So
+  // it answers for THIS function and will read false while
+  // `/api/documents/inspect` works. Understating a capability is the safe
+  // direction; overstating it would send an operator to debug a working route.
 
   // The deploy checklist tells an operator to look for an empty warnings
   // array, so anything that makes results untrustworthy has to appear in it.

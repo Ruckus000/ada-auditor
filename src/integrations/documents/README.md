@@ -106,9 +106,18 @@ functions have no Java, so `available: false` is the **expected** answer in
 production, not a fault — the same distinction `ArtifactRead` makes between
 `pruned` and missing.
 
-`/api/ready` reports `documentToolchainAvailable` in `checks` and deliberately
-adds **no warning**: on every deployed environment this is permanently false, and
-a warnings array with a permanent entry is one people stop reading.
+`/api/ready` reports both capabilities in `checks` and deliberately adds **no
+warning** — a warnings array with a permanent entry is one people stop reading.
+
+**The JVM half is no longer absent in production.** `scripts/prepare-jvm.ts`
+assembles a 40MB `jlink` runtime during a Vercel build and `/api/documents/**`
+ships it, so `POST /api/documents/inspect` works on a deployment. `[V]` Proven
+on a preview: it execs from `/var/task/vendor/jre` and runs `Inspect` in ~730ms
+warm. LibreOffice — 794MB — still does not fit, so conversion stays host-local.
+
+Caveat: `/api/ready` is its own function and does not carry the runtime, so it
+will read `documentToolchainAvailable: false` while the documents route works.
+Understating a capability is the safe direction.
 
 ## Setup
 

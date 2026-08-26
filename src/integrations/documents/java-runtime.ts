@@ -36,6 +36,17 @@ export const DOCUMENT_CLASSES_DIR = join('dist', 'documents', 'classes');
 export const PDFBOX_JAR = join('vendor', `pdfbox-app-${PDFBOX_VERSION}.jar`);
 
 /**
+ * A minimal Java runtime shipped beside the function, built by
+ * `scripts/prepare-jvm.ts` during a Vercel build.
+ *
+ * `[V]` 40MB, assembled by `jlink` from exactly the modules `jdeps` reports our
+ * stages touch, and byte-identical in output to a full JDK. That is what makes
+ * the reading half of this pipeline deployable when the converting half — 794MB
+ * of LibreOffice — is not.
+ */
+export const BUNDLED_JRE_DIR = join('vendor', 'jre');
+
+/**
  * The slice of the environment this module reads.
  *
  * Deliberately looser than `NodeJS.ProcessEnv`, which Next's types make
@@ -56,7 +67,15 @@ export type JavaRuntime =
  * machine with several JDKs installed uses to pick one. `PATH` after, so a
  * plain Homebrew or system install works with no configuration at all.
  */
-function findJavaBinary(env: Env): string | null {
+function findJavaBinary(env: Env, root: string): string | null {
+  // The bundled runtime wins, because if it is present somebody put it there
+  // on purpose: a build assembled it for this deployment, and it is the one
+  // whose module set has been verified against these stages.
+  const bundled = join(root, BUNDLED_JRE_DIR, 'bin', 'java');
+  if (existsSync(bundled)) {
+    return bundled;
+  }
+
   const home = env.JAVA_HOME?.trim();
   if (home) {
     const candidate = join(home, 'bin', 'java');
@@ -95,12 +114,12 @@ export function resolveJavaRuntime(
   const root = options.root ?? process.cwd();
   const env = options.env ?? process.env;
 
-  const javaBin = findJavaBinary(env);
+  const javaBin = findJavaBinary(env, root);
   if (!javaBin) {
     return {
       available: false,
       reason:
-        'no Java runtime found: JAVA_HOME is unset or wrong and no `java` is on PATH. Install a JDK 17+ to run document stages.',
+        `no Java runtime found: nothing bundled at ${BUNDLED_JRE_DIR}, JAVA_HOME is unset or wrong, and no \`java\` is on PATH. Install a JDK 17+ to run document stages.`,
     };
   }
 
