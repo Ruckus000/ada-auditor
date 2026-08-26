@@ -482,6 +482,43 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
             if (seen.has(key)) continue;
 
+            // A document, not a page. Recorded and NEVER navigated to —
+            // before this branch existed nothing filtered by extension, so the
+            // crawl drove Chromium into PDFs it cannot audit and paid the
+            // navigation plus the politeness delay for each one. A Word link
+            // was worse: Chromium answers it with a download it then aborts
+            // (`Download is starting`), so the navigation bought an error row
+            // instead of a record.
+            //
+            // BEFORE the scope check, and that placement carries the lesson of
+            // a real site. `[V]` Measured: a municipality on a website-builder
+            // platform linked 134 documents from a single page — every PDF and
+            // Word file it publishes — all hosted on the builder's asset CDN,
+            // not the town's own hostname. Scope-first classification dropped
+            // every one of them, and a document-heavy site read as having no
+            // documents at all. A document linked from the client's own page
+            // is the client's content by reference wherever the bytes live;
+            // whose it is to *fix* is the operator's judgment, and `foundOn`
+            // is their evidence. Crawl scope is not at stake — a document is
+            // recorded, never navigated — and the URL is only ever *fetched*
+            // later by the inspection and conversion routes, behind their own
+            // SSRF guard, at an operator's explicit request.
+            //
+            // Before host resolution too: no DNS is spent on a link the crawl
+            // will not visit. `seen` gets the key so an agenda archive linking
+            // the same PDF from forty pages records it once, and so a later
+            // sighting does not re-enter this branch.
+            const documentKind = documentLinkKind(href);
+            if (documentKind !== null) {
+              seen.add(key);
+              if (documents.length >= MAX_DISCOVERY_DOCUMENTS) {
+                documentsOmitted += 1;
+              } else {
+                documents.push({ url: href, foundOn: settled, kind: documentKind });
+              }
+              continue;
+            }
+
             try {
               assertAllowedUrl(href, allowedHosts);
             } catch (error) {
@@ -531,31 +568,6 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
              * here would trade a request we should not make for a diagnosis we
              * used to give.
              */
-            // A document, not a page. Recorded and NEVER navigated to —
-            // before this branch existed nothing filtered by extension, so the
-            // crawl drove Chromium into PDFs it cannot audit and paid the
-            // navigation plus the politeness delay for each one. A Word link
-            // was worse: Chromium answers it with a download it then aborts
-            // (`Download is starting`), so the navigation bought an error row
-            // instead of a record. Placed after the scope check on purpose (a
-            // document on a third-party host is not the client's to fix) and
-            // before host resolution (no DNS spent on a link the crawl will
-            // not visit).
-            //
-            // `seen` gets the key so an agenda archive linking the same PDF
-            // from forty pages records it once, and so a later sighting does
-            // not re-enter this branch.
-            const documentKind = documentLinkKind(href);
-            if (documentKind !== null) {
-              seen.add(key);
-              if (documents.length >= MAX_DISCOVERY_DOCUMENTS) {
-                documentsOmitted += 1;
-              } else {
-                documents.push({ url: href, foundOn: settled, kind: documentKind });
-              }
-              continue;
-            }
-
             try {
               await assertHostResolves(href);
             } catch (error) {
