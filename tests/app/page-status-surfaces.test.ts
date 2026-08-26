@@ -83,7 +83,7 @@ describe('the public share page', () => {
       pages: [{ ...ERROR_PAGE, findings: [] }],
     } as unknown as SharedReport;
 
-    const html = renderToStaticMarkup(createElement(SharedReportPage, { report }));
+    const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
 
     expect(html).toContain('served 503 — not usable as evidence');
   });

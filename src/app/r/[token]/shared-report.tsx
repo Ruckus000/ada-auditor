@@ -15,7 +15,15 @@ import { FONT, T } from '../../platform/lib/tokens';
  * because of it would make this document disagree with the audit it claims to
  * report.
  */
-export function SharedReportPage({ report }: { report: SharedReport }) {
+export function SharedReportPage({
+  report,
+  token,
+}: {
+  report: SharedReport;
+  /** For the download links the documents section renders — they live under
+   * this page's own path, so the same token guards page and file alike. */
+  token: string;
+}) {
   const total = report.pages.reduce((sum, page) => sum + page.findings.length, 0);
   const failed = summariseCriteria(
     report.pages.flatMap((page) => page.findings.flatMap((finding) => finding.wcagCriteria)),
@@ -178,7 +186,7 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
         </section>
       ))}
 
-      {report.documents ? <DocumentsSection section={report.documents} /> : null}
+      {report.documents ? <DocumentsSection section={report.documents} token={token} /> : null}
 
       <footer
         style={{
@@ -210,8 +218,10 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
  */
 function DocumentsSection({
   section,
+  token,
 }: {
   section: NonNullable<SharedReport['documents']>;
+  token: string;
 }) {
   const failed = summariseCriteria(
     section.entries.flatMap((entry) => entry.gaps.map(documentGapKey)),
@@ -264,6 +274,14 @@ function DocumentsSection({
                 {entry.tagged ? 'tagged' : 'not tagged'} · {entry.pages}{' '}
                 {entry.pages === 1 ? 'page' : 'pages'}
               </span>
+              {entry.conversionId ? (
+                <>
+                  {' '}
+                  <a href={`/r/${token}/documents/${entry.conversionId}`} style={{ fontSize: 12.5 }}>
+                    Download the remediated file
+                  </a>
+                </>
+              ) : null}
               {entry.gaps.length === 0 ? (
                 <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
                   No machine-detectable gaps.

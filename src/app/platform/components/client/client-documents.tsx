@@ -56,7 +56,14 @@ type ClientDocument = {
   firstSeenAt: string;
   lastSeenAt: string;
   latestInspection?: { summary: Summary; inspectedAt: string };
-  latestConversion?: { summary: Summary; convertedAt: string; outputSha256: string };
+  latestConversion?: {
+    id: string;
+    summary: Summary;
+    convertedAt: string;
+    outputSha256: string;
+    /** Whether the delivered file itself is retrievable from the server. */
+    stored: boolean;
+  };
   /** The server's diff of the latest two readings. Absent on a first reading. */
   regression?: {
     status: 'unchanged' | 'improved' | 'regressed' | 'mixed';
@@ -774,7 +781,19 @@ export function ClientDocuments({
                     <SummaryView summary={doc.latestInspection.summary} />
                   ) : null}
                   {expanded[doc.id] && doc.latestConversion ? (
-                    <SummaryView summary={doc.latestConversion.summary} />
+                    <>
+                      {doc.latestConversion.stored ? (
+                        <p style={noteStyle}>
+                          <a
+                            href={`${documentsPath}/conversions/${doc.latestConversion.id}`}
+                          >
+                            Download the delivered file
+                          </a>{' '}
+                          — exactly the bytes the stored hash names.
+                        </p>
+                      ) : null}
+                      <SummaryView summary={doc.latestConversion.summary} />
+                    </>
                   ) : null}
                   {inspection.state === 'done' ? <SummaryView summary={inspection.summary} /> : null}
                   {inspection.state === 'failed' ? (

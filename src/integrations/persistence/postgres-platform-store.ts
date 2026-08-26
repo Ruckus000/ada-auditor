@@ -125,6 +125,7 @@ type DocumentInspectionRow = {
   found_on: string | null;
   source: string;
   summary: RemediationSummary;
+  instrument_version: number | null;
   inspected_at: Date | string;
 };
 
@@ -146,6 +147,8 @@ type DocumentConversionRow = {
   summary: RemediationSummary;
   input_sha256: string;
   output_sha256: string;
+  instrument_version: number | null;
+  artifact_url: string | null;
   converted_at: Date | string;
 };
 
@@ -728,11 +731,13 @@ export class PostgresPlatformStore implements PlatformStore {
     // memory double, which holds what it was handed.
     await this.sql`
       insert into document_inspections
-        (id, client_id, document_id, url, found_on, source, summary, inspected_at)
+        (id, client_id, document_id, url, found_on, source, summary,
+         instrument_version, inspected_at)
       values (
         ${record.id}, ${record.clientId}, ${record.documentId}, ${record.url},
         ${record.foundOn ?? null},
-        ${record.source}, ${JSON.stringify(record.summary)}::jsonb, ${record.inspectedAt}
+        ${record.source}, ${JSON.stringify(record.summary)}::jsonb,
+        ${record.instrumentVersion ?? null}, ${record.inspectedAt}
       )
       on conflict (id) do nothing
     `;
@@ -758,6 +763,7 @@ export class PostgresPlatformStore implements PlatformStore {
       ...optional('foundOn', row.found_on),
       source: row.source as DocumentInspectionSource,
       summary: row.summary,
+      ...optional('instrumentVersion', row.instrument_version),
       inspectedAt: toIso(row.inspected_at),
     } as StoredDocumentInspection;
   }
@@ -785,8 +791,10 @@ export class PostgresPlatformStore implements PlatformStore {
       summary: row.summary,
       inputSha256: row.input_sha256,
       outputSha256: row.output_sha256,
+      ...optional('instrumentVersion', row.instrument_version),
+      ...optional('artifactUrl', row.artifact_url),
       convertedAt: toIso(row.converted_at),
-    };
+    } as StoredDocumentConversion;
   }
 
   async recordDocumentSightings(
@@ -892,14 +900,24 @@ export class PostgresPlatformStore implements PlatformStore {
     // record.
     await this.sql`
       insert into document_conversions
-        (id, client_id, document_id, summary, input_sha256, output_sha256, converted_at)
+        (id, client_id, document_id, summary, input_sha256, output_sha256,
+         instrument_version, artifact_url, converted_at)
       values (
         ${record.id}, ${record.clientId}, ${record.documentId},
         ${JSON.stringify(record.summary)}::jsonb,
-        ${record.inputSha256}, ${record.outputSha256}, ${record.convertedAt}
+        ${record.inputSha256}, ${record.outputSha256},
+        ${record.instrumentVersion ?? null}, ${record.artifactUrl ?? null},
+        ${record.convertedAt}
       )
       on conflict (id) do nothing
     `;
+  }
+
+  async getDocumentConversion(id: string): Promise<StoredDocumentConversion | null> {
+    const rows = await this.sql<DocumentConversionRow>`
+      select * from document_conversions where id = ${id}
+    `;
+    return rows[0] ? this.mapConversion(rows[0]) : null;
   }
 
   // ------------------------------------------------------------ activity --

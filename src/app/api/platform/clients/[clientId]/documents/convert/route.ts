@@ -1,13 +1,14 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
-import { isWordDocument, logSafe } from '../../../../../../../domain/document-remediation';
+import { INSTRUMENT_VERSION, isWordDocument, logSafe } from '../../../../../../../domain/document-remediation';
 import type { StoredDocumentConversion } from '../../../../../../../domain/platform';
 import { resolveLibreOffice } from '../../../../../../../integrations/documents/libreoffice-runtime';
 import { resolveJavaRuntime } from '../../../../../../../integrations/documents/java-runtime';
 import { getPlatformStore } from '../../../../../../../integrations/persistence';
+import { getArtifactStore } from '../../../../../../../integrations/artifacts/blob-store';
 import { hostnameOf } from '../../../../../../../services/safe-url';
-import { logInfo } from '../../../../../../../services/logger';
+import { logInfo, logWarn } from '../../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
 import { fetchDocumentBytes } from '../../../../../_lib/document-fetch';
 import {
@@ -66,6 +67,34 @@ const WORD_ACCEPT_HEADER =
 
 function sha256(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
+}
+
+/**
+ * The delivered bytes into the blob store, under `documents/` — a prefix the
+ * evidence pruner (`prefix: 'runs/'`) never sweeps, because a delivered
+ * document is the product, not evidence with a window: it lives until its
+ * rows do. `null` from the store (no blob configured) or a throw records
+ * honest absence — the response already carries the bytes and the record
+ * carries their hash, so storage failing must not fail the conversion.
+ *
+ * Path from generated ids only, per the standing rule.
+ */
+async function storeConvertedPdf(
+  clientId: string,
+  requestId: string,
+  pdf: Buffer,
+): Promise<{ artifactUrl: string } | Record<string, never>> {
+  try {
+    const stored = await getArtifactStore().storeBytes(
+      `documents/${clientId}/${requestId}.pdf`,
+      pdf,
+      'application/pdf',
+    );
+    return stored === null ? {} : { artifactUrl: stored.url };
+  } catch {
+    logWarn('document_artifact_store_failed', { requestId, clientId });
+    return {};
+  }
 }
 
 /** Both halves named separately, because the fixes differ. */
@@ -155,6 +184,8 @@ export async function POST(
     summary: outcome.summary,
     inputSha256: sha256(fetched.bytes),
     outputSha256: sha256(outcome.pdf),
+    instrumentVersion: INSTRUMENT_VERSION,
+    ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
     convertedAt: now,
   };
   await platform.saveDocumentConversion(record);
@@ -163,6 +194,7 @@ export async function POST(
     requestId,
     clientId,
     host: hostnameOf(url),
+    stored: record.artifactUrl !== undefined,
     ...logSafe(outcome.summary),
   });
 
@@ -219,13 +251,20 @@ export async function PUT(
     summary: outcome.summary,
     inputSha256: sha256(upload.bytes),
     outputSha256: sha256(outcome.pdf),
+    instrumentVersion: INSTRUMENT_VERSION,
+    ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
     convertedAt: now,
   };
   await platform.saveDocumentConversion(record);
 
   // No host and no name: an upload has no URL, and the filename is as much a
   // path as a path is.
-  logInfo('document_converted', { requestId, clientId, ...logSafe(outcome.summary) });
+  logInfo('document_converted', {
+    requestId,
+    clientId,
+    stored: record.artifactUrl !== undefined,
+    ...logSafe(outcome.summary),
+  });
 
   return remediationResponse({ pdf: outcome.pdf, summary: outcome.summary, requestId });
 }

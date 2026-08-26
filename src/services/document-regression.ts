@@ -42,7 +42,13 @@ export type DocumentGapDiff = {
   documentId: string;
   /** The URL of the CURRENT reading — the address the diff is about. */
   url: string;
-  status: 'first-reading' | 'unchanged' | 'improved' | 'regressed' | 'mixed';
+  /**
+   * `incomparable` when the two readings were taken by different instrument
+   * versions — the same answer `walkedTheSamePath` gives page regression for
+   * a changed ruleset, and for the same reason: a vocabulary change diffed
+   * silently would report OUR change as the client's document changing.
+   */
+  status: 'first-reading' | 'unchanged' | 'improved' | 'regressed' | 'mixed' | 'incomparable';
   /** Current gap strings whose criterion is absent from the baseline. */
   newGaps: string[];
   /** Baseline gap strings whose criterion is absent from the current reading. */
@@ -86,6 +92,22 @@ export function compareDocumentInspections(
         resolvedGaps: [],
         unchangedCount: current.summary.gaps.length,
         currentAt: current.inspectedAt,
+      });
+      continue;
+    }
+
+    // Rows written before the stamp existed read as version 1 — true, because
+    // the vocabulary had not changed while they were being written.
+    if ((current.instrumentVersion ?? 1) !== (baseline.instrumentVersion ?? 1)) {
+      diffs.push({
+        documentId,
+        url: current.url,
+        status: 'incomparable',
+        newGaps: [],
+        resolvedGaps: [],
+        unchangedCount: 0,
+        currentAt: current.inspectedAt,
+        baselineAt: baseline.inspectedAt,
       });
       continue;
     }

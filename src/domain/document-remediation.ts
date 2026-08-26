@@ -70,6 +70,21 @@ export type RemediationSummary = {
  * human still has to answer, and each names the criterion it fails so it lines
  * up with `services/wcag-reference.ts` when findings integration arrives.
  */
+/**
+ * The version of the gap vocabulary `gapsIn` below emits — the same shape as
+ * `GATE_VERSION` in `services/reporting.ts`, for the same reason: a stored
+ * reading must not be reinterpreted by code that speaks differently.
+ *
+ * **Bump this whenever `gapsIn` changes which criteria it can emit or when
+ * their meaning shifts** — adding a check, removing one, renumbering. The
+ * document regression comparator refuses to diff readings across versions
+ * (`incomparable`), because a vocabulary change diffed silently would report
+ * OUR change as the client's document changing. A count inside an existing
+ * gap string changing is NOT a version bump — the comparator already keys on
+ * the criterion, not the count.
+ */
+export const INSTRUMENT_VERSION = 1;
+
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
   const gaps: string[] = [];

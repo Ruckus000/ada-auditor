@@ -32,19 +32,33 @@ import type { RemediationSummary } from '../domain/document-remediation';
  * inspection — its gaps are the honest residue of the file actually
  * delivered — else the inspection.
  */
-function latestReading(
-  record: ClientDocumentRecord,
-): { summary: RemediationSummary; at: string; by: 'inspection' | 'conversion' } | null {
+function latestReading(record: ClientDocumentRecord):
+  | {
+      summary: RemediationSummary;
+      at: string;
+      by: 'inspection' | 'conversion';
+      /** Set only when a conversion speaks AND its file is actually stored —
+       * a download handle on the public page must never point at nothing. */
+      conversionId?: string;
+    }
+  | null {
   const inspection = record.latestInspection;
   const conversion = record.latestConversion;
-  if (inspection && conversion) {
-    return conversion.convertedAt > inspection.inspectedAt
-      ? { summary: conversion.summary, at: conversion.convertedAt, by: 'conversion' }
+  const conversionReading = conversion
+    ? {
+        summary: conversion.summary,
+        at: conversion.convertedAt,
+        by: 'conversion' as const,
+        ...(conversion.artifactUrl === undefined ? {} : { conversionId: conversion.id }),
+      }
+    : null;
+
+  if (inspection && conversionReading) {
+    return conversionReading.at > inspection.inspectedAt
+      ? conversionReading
       : { summary: inspection.summary, at: inspection.inspectedAt, by: 'inspection' };
   }
-  if (conversion) {
-    return { summary: conversion.summary, at: conversion.convertedAt, by: 'conversion' };
-  }
+  if (conversionReading) return conversionReading;
   if (inspection) {
     return { summary: inspection.summary, at: inspection.inspectedAt, by: 'inspection' };
   }
@@ -82,6 +96,7 @@ export function buildDocumentReport(
       ...(record.foundOn === undefined ? {} : { foundOn: record.foundOn }),
       readAt: reading.at,
       readBy: reading.by,
+      ...(reading.conversionId === undefined ? {} : { conversionId: reading.conversionId }),
       tagged: reading.summary.tagged,
       pages: reading.summary.pages,
       gaps: [...reading.summary.gaps],

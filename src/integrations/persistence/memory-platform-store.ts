@@ -437,6 +437,9 @@ export class MemoryPlatformStore implements PlatformStore {
       ...(record.foundOn === undefined ? {} : { foundOn: record.foundOn }),
       source: record.source,
       summary: record.summary,
+      ...(record.instrumentVersion === undefined
+        ? {}
+        : { instrumentVersion: record.instrumentVersion }),
       inspectedAt: record.inspectedAt,
     };
 
@@ -586,6 +589,11 @@ export class MemoryPlatformStore implements PlatformStore {
       seq: this.nextConversionSeq++,
       record: structuredClone(record),
     });
+  }
+
+  async getDocumentConversion(id: string): Promise<StoredDocumentConversion | null> {
+    const held = this.documentConversions.get(id);
+    return held ? structuredClone(held.record) : null;
   }
 
   // ------------------------------------------------------------ activity --
