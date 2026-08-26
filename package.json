@@ -11,6 +11,7 @@
     "build": "next build",
     "build:kernel": "tsc --project tsconfig.kernel.json",
     "build:documents": "tsx scripts/build-documents.ts",
+    "vercel-build": "tsx scripts/prepare-jvm.ts && next build",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",

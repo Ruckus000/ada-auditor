@@ -17,6 +17,9 @@
     },
     "src/app/api/audit/runs/**/report.pdf/route.ts": {
       "memory": 2048
+    },
+    "src/app/api/documents/**/route.ts": {
+      "memory": 2048
     }
   },
   "crons": [

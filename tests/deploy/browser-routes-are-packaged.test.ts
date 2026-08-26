@@ -234,6 +234,25 @@ const tracingIncludes = (nextConfig.outputFileTracingIncludes ?? {}) as Record<s
 const browserRoutes = routeFiles(API_DIR).filter((file) => reachesFrom(file, LAUNCH, SRC_ROOT));
 
 /**
+ * The same problem, a different binary.
+ *
+ * A route that spawns a JVM needs a runtime, PDFBox and the compiled stages
+ * packaged beside it. Nothing in the route says so — the knowledge lives in
+ * `next.config.mjs` — which is the exact shape that cost this project two
+ * production failures with Chromium.
+ *
+ * Anchored on `stage.ts`, which is where the JVM is actually spawned, for the
+ * same reason the browser rule anchors on `launch.ts` rather than on anything
+ * that merely mentions a browser. `java-runtime.ts` would be the wrong anchor
+ * and the first run of this rule proved it: `/api/ready` imports it to *stat* a
+ * path for `documentToolchainAvailable` and spawns nothing, so keying on it
+ * demanded a 40MB runtime beside a health check.
+ */
+const JVM_SPAWN = join(SRC_ROOT, 'integrations', 'documents', 'stage.ts');
+
+const jvmRoutes = routeFiles(API_DIR).filter((file) => reachesFrom(file, JVM_SPAWN, SRC_ROOT));
+
+/**
  * The walk itself, against a tree written for the purpose.
  *
  * Everything below this block asserts about the walk's *output on today's
@@ -416,5 +435,29 @@ describe('routes that launch Chromium', () => {
     // hardcoding one number here would make this test the place memory is
     // decided.
     expect(vercelConfig.functions[key as string]?.memory ?? 0).toBeGreaterThanOrEqual(2048);
+  });
+});
+
+describe('routes that spawn a JVM', () => {
+  // Non-vacuity, for the reason the browser block gives: a list built by a
+  // resolver that quietly stopped resolving is empty, and every case below
+  // would pass by covering nothing.
+  it('are actually found by the import walk', () => {
+    expect(jvmRoutes.length, 'no route reaches java-runtime.ts').toBeGreaterThan(0);
+  });
+
+  it.each(jvmRoutes)('%s has the Java runtime packaged beside it', (file) => {
+    const page = routePath(file);
+    const key = Object.keys(tracingIncludes).find((pattern) => nextCovers(pattern, page));
+
+    expect(key, `no next.config.mjs outputFileTracingIncludes key covers ${page}`).toBeDefined();
+
+    // Three separate things, because missing any one of them is its own
+    // production failure with its own confusing error: no runtime to exec, no
+    // PDFBox to load, or no compiled stage to run.
+    const included = (tracingIncludes[key as string] ?? []).join('\n');
+    expect(included, 'the jlink-assembled runtime').toContain('vendor/jre');
+    expect(included, 'PDFBox').toContain('pdfbox-app');
+    expect(included, 'the compiled stages').toContain('dist/documents/classes');
   });
 });
