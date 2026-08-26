@@ -9,8 +9,8 @@ import {
   resolveJavaRuntime,
 } from '../../../../integrations/documents/java-runtime';
 import { inspectDocument } from '../../../../integrations/documents/inspect';
-import { authorizePrincipal } from '../../_lib/authorize';
 import { createRequestId } from '../../_lib/request-id';
+import { logInfo } from '../../../../services/logger';
 
 const execFileAsync = promisify(execFile);
 
@@ -34,8 +34,22 @@ const execFileAsync = promisify(execFile);
  * real `Inspect` over a real PDF so the answer is "the pipeline works here",
  * not "a binary started".
  *
- * It is authenticated like everything else: a diagnostic that names paths and
- * versions is not something to leave open.
+ * ## Access control, and why it is not our token
+ *
+ * A preview deployment sits behind Vercel SSO, which is what actually guards
+ * this. Our own bearer token is deliberately NOT required, because the two
+ * cannot both be satisfied from one place: a browser carries the SSO session
+ * and cannot set an Authorization header; `curl` can set the header and has no
+ * SSO session. Demanding both made the probe unreachable by anyone.
+ *
+ * So the guard is narrower and harder instead: **this refuses to exist in
+ * production.** A diagnostic that names paths and versions is not something to
+ * leave open on a real deployment, and a route that can only run where Vercel
+ * has already authenticated the caller is a smaller surface than one relying on
+ * a token that has to travel.
+ *
+ * It reports counts, versions and paths — no secrets, and no document content.
+ * And it is TEMPORARY: it goes when the spike has its answer.
  */
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -53,12 +67,14 @@ const TINY_PDF = [
   'trailer<</Root 1 0 R>>',
 ].join('\n');
 
-export async function GET(request: Request) {
+export async function GET() {
   const requestId = createRequestId();
   const startedAt = Date.now();
 
-  if (!(await authorizePrincipal(request))) {
-    return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
+  // Not reachable on a real deployment, at all. Preview and development only,
+  // where Vercel's own authentication is already in front of it.
+  if (process.env.VERCEL_ENV === 'production') {
+    return new Response('Not Found', { status: 404 });
   }
 
   const report: Record<string, unknown> = {
@@ -80,7 +96,9 @@ export async function GET(request: Request) {
     : { available: false, reason: resolved.reason };
 
   if (!resolved.available) {
-    return Response.json({ ...report, elapsedMs: Date.now() - startedAt }, { status: 503 });
+    const answer = { ...report, elapsedMs: Date.now() - startedAt };
+    logInfo('jvm_probe', answer);
+    return Response.json(answer, { status: 503 });
   }
 
   // Assumption 1, directly. `java -version` writes to stderr and exits 0.
@@ -91,7 +109,9 @@ export async function GET(request: Request) {
   } catch (error) {
     report.canExec = false;
     report.execError = String(error).split('\n')[0];
-    return Response.json({ ...report, elapsedMs: Date.now() - startedAt }, { status: 500 });
+    const answer = { ...report, elapsedMs: Date.now() - startedAt };
+    logInfo('jvm_probe', answer);
+    return Response.json(answer, { status: 500 });
   }
 
   // And the thing that actually matters: does the real stage run here?
@@ -115,10 +135,14 @@ export async function GET(request: Request) {
         }
       : { ok: false, failure: result.failure };
 
-    return Response.json(
-      { ...report, elapsedMs: Date.now() - startedAt },
-      { status: result.ok ? 200 : 500 },
-    );
+    const answer = { ...report, elapsedMs: Date.now() - startedAt };
+
+    // Logged as well as returned. Whoever opens this in a browser should not
+    // have to transcribe JSON back to anyone; the runtime log is readable with
+    // `vercel logs` and carries the same content.
+    logInfo('jvm_probe', answer);
+
+    return Response.json(answer, { status: result.ok ? 200 : 500 });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
