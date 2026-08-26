@@ -2,8 +2,7 @@ import { createRunContract } from '../../domain/contracts';
 import { createEvidenceBundle, worstEvidenceStatus } from '../../domain/evidence';
 import { createPlatformContext } from '../../domain/platforms';
 import { resolvePlatformMetadata } from '../platforms';
-import type Anthropic from '@anthropic-ai/sdk';
-import { requestAiAdvisory } from '../../services/ai-advisory';
+import { requestAiAdvisory, type AdvisoryCall } from '../../services/ai-advisory';
 import { runDeterministicAudit } from '../../services/deterministic-audit';
 import { summarizeRun } from '../../services/reporting';
 import { scoreRun } from '../../services/score';
@@ -23,7 +22,7 @@ export type RunBrowserAuditInput = Omit<JourneyRunnerInput, 'steps' | 'skipScan'
   platformHint?: string;
   allowedJourneyIds?: string[];
   /** Injected in tests so the advisory pass never reaches the network. */
-  anthropicClient?: Anthropic;
+  advisoryCall?: AdvisoryCall;
 };
 
 /**
@@ -205,7 +204,7 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
       axe: pageAudit.axe,
     })),
     minConfidence: contract.confidencePolicy.minReport,
-    client: input.anthropicClient,
+    call: input.advisoryCall,
   });
   const advisoryMs = Date.now() - advisoryStartedAt;
 

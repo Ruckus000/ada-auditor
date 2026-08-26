@@ -1,4 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { generateText, tool } from 'ai';
+import { z } from 'zod';
 import type { AxNodeSummary } from './ax-tree';
 import type { AxeScanResult } from './deterministic-audit';
 
@@ -34,48 +35,62 @@ export type AiAdvisoryFinding = {
   confidence: number;
 };
 
-const MODEL = 'claude-opus-5';
+/**
+ * The model, as a Vercel AI Gateway `provider/model` string.
+ *
+ * A string rather than a provider SDK, so changing model is configuration and
+ * not a rewrite — which is the whole reason this went through the gateway
+ * after being pinned to one vendor's client.
+ *
+ * The default is a zero-cost model. That is a deliberate trade and it has a
+ * boundary: free models on the gateway advertise neither zero data retention
+ * nor a no-training guarantee, and this pass sends the accessibility tree of
+ * every page a journey walked. On a public marketing site that is public text.
+ * On an authenticated client app it is whatever real end-user data was on
+ * screen — the same reasoning that put run evidence in a private blob store.
+ * Point `AUDITOR_ADVISORY_MODEL` at a model with a data-handling guarantee
+ * before running the advisory over an authenticated journey.
+ */
+const DEFAULT_MODEL = 'minimax/minimax-m3-free';
+
+export function advisoryModel(): string {
+  return process.env.AUDITOR_ADVISORY_MODEL || DEFAULT_MODEL;
+}
 
 /** Kept small; an advisory pass that runs long costs more than it is worth. */
 const MAX_TOKENS = 4096;
 
-const FINDINGS_TOOL: Anthropic.Tool = {
-  name: 'report_findings',
-  description:
-    'Report accessibility issues that require human judgement to identify. Call this exactly once with every finding.',
-  // `strict` guarantees the input validates against this schema, so the
-  // response needs no defensive parsing.
-  strict: true,
-  input_schema: {
-    type: 'object',
-    additionalProperties: false,
-    properties: {
-      findings: {
-        type: 'array',
-        items: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            issue: {
-              type: 'string',
-              description:
-                'The problem, in one or two sentences, naming the element it affects.',
-            },
-            confidence: {
-              type: 'number',
-              description:
-                '0 to 1. How certain you are this is a real problem for a real user.',
-            },
-          },
-          required: ['issue', 'confidence'],
-        },
-      },
-    },
-    required: ['findings'],
-  },
-};
+/**
+ * The findings the model is required to return.
+ *
+ * A zod schema rather than a hand-written JSON schema with `strict: true`.
+ * The old comment claimed strict mode meant "the response needs no defensive
+ * parsing", which was a promise about one vendor's implementation; the gateway
+ * routes to models that do not all honour it. Parsing here is real validation,
+ * so a model that returns the wrong shape produces no advisory rather than a
+ * malformed finding.
+ */
+const findingsSchema = z.object({
+  findings: z.array(
+    z.object({
+      issue: z
+        .string()
+        .describe('The problem, in one or two sentences, naming the element it affects.'),
+      confidence: z
+        .number()
+        .describe('0 to 1. How certain you are this is a real problem for a real user.'),
+    }),
+  ),
+});
 
-const SYSTEM_PROMPT = `You review web accessibility evidence and report only issues that need human judgement.
+const FINDINGS_TOOL_NAME = 'report_findings';
+
+/**
+ * Exported so a test can assert the untrusted-content framing directly. The
+ * prompt used to be reachable only by inspecting a vendor request object; the
+ * seam is now the call, so the guarantee needs its own handle.
+ */
+export const SYSTEM_PROMPT = `You review web accessibility evidence and report only issues that need human judgement.
 
 The evidence covers every page of the audited site a user journey walked through, in order. Judge each page, and also judge them together.
 
@@ -107,8 +122,21 @@ export function createAiAdvisoryFinding(input: {
   };
 }
 
+/**
+ * Whether the advisory pass has a way to reach a model.
+ *
+ * The gateway resolves auth in this order: an explicit `AI_GATEWAY_API_KEY`,
+ * then the `VERCEL_OIDC_TOKEN` that a Vercel deployment mints for itself and
+ * `vercel env pull` writes locally. Either one is enough, and on a Vercel
+ * deployment the second needs no configuration at all — which is why this
+ * check is not "is a key set".
+ *
+ * The local token is short-lived (~24h). An expired one fails the call, not
+ * this check, and a failed call degrades to no advisory — see
+ * `requestAiAdvisory`.
+ */
 export function isAiAdvisoryConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
+  return Boolean(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN);
 }
 
 /** One page's evidence, as the advisory pass sees it. */
@@ -145,18 +173,64 @@ function buildEvidence(pages: AdvisoryPage[]): string {
 }
 
 /**
+ * The one network call, isolated so the rest of this module is pure.
+ *
+ * Returns `null` rather than throwing for any answer that is not a valid tool
+ * call, so callers have one shape to handle for "no advisory happened".
+ */
+export type AdvisoryCall = (
+  evidence: string,
+) => Promise<Array<{ issue: string; confidence: number }> | null>;
+
+const callGateway: AdvisoryCall = async (evidence) => {
+  const result = await generateText({
+    // A plain `provider/model` string routes through the AI Gateway; no
+    // provider package and no provider key.
+    model: advisoryModel(),
+    system: SYSTEM_PROMPT,
+    prompt: evidence,
+    maxOutputTokens: MAX_TOKENS,
+    tools: {
+      [FINDINGS_TOOL_NAME]: tool({
+        description:
+          'Report accessibility issues that require human judgement to identify. Call this exactly once with every finding.',
+        inputSchema: findingsSchema,
+      }),
+    },
+    toolChoice: { type: 'tool', toolName: FINDINGS_TOOL_NAME },
+  });
+
+  const reported = result.toolCalls.find((c) => c.toolName === FINDINGS_TOOL_NAME);
+  if (!reported) {
+    return null;
+  }
+
+  // Validated rather than cast. The gateway routes to models that do not all
+  // enforce a tool schema, so this is where a wrong shape becomes "no
+  // advisory" instead of a malformed finding on a client's report.
+  const parsed = findingsSchema.safeParse(reported.input);
+  return parsed.success ? parsed.data.findings : null;
+};
+
+/**
  * Returns advisory findings, or an empty list if the pass cannot or should not
- * run. An audit is never failed by the advisory being unavailable: no API key
- * configured, an API error, or a safety refusal all degrade to "no advisory"
- * rather than to a failed run.
+ * run. An audit is never failed by the advisory being unavailable: no way to
+ * reach a model, a gateway or provider error, an expired OIDC token, or a
+ * refusal all degrade to "no advisory" rather than to a failed run.
  */
 export async function requestAiAdvisory(input: {
   /** Every page the journey walked, in order. One call covers all of them. */
   pages: AdvisoryPage[];
   minConfidence: number;
-  client?: Anthropic;
+  /**
+   * Injected in tests so the pass never reaches the network.
+   *
+   * The seam is the call rather than a vendor client object, because there is
+   * no vendor client any more — the model is a string the gateway resolves.
+   */
+  call?: AdvisoryCall;
 }): Promise<AiAdvisoryFinding[]> {
-  if (!input.client && !isAiAdvisoryConfigured()) {
+  if (!input.call && !isAiAdvisoryConfigured()) {
     return [];
   }
 
@@ -166,40 +240,22 @@ export async function requestAiAdvisory(input: {
     return [];
   }
 
-  const client = input.client ?? new Anthropic();
+  const call = input.call ?? callGateway;
 
-  let response: Anthropic.Message;
+  let findings: Array<{ issue: string; confidence: number }>;
   try {
-    response = await client.messages.create({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
-      tools: [FINDINGS_TOOL],
-      tool_choice: { type: 'tool', name: FINDINGS_TOOL.name },
-      messages: [{ role: 'user', content: buildEvidence(input.pages) }],
-    });
+    const reported = await call(buildEvidence(input.pages));
+    // `null` is the honest answer for a refusal, a malformed tool call, or a
+    // model that answered in prose. The advisory is additive: if it is
+    // unavailable the deterministic run still stands on its own, so none of
+    // this may surface as a run failure.
+    if (reported === null) {
+      return [];
+    }
+    findings = reported;
   } catch {
-    // The advisory is additive. If it is unavailable the deterministic run
-    // still stands on its own, so this must not surface as a run failure.
     return [];
   }
-
-  // Check why generation stopped before reading content: on a refusal the
-  // content array is empty or partial, and indexing it blindly would throw.
-  if (response.stop_reason === 'refusal') {
-    return [];
-  }
-
-  const toolUse = response.content.find(
-    (block): block is Anthropic.ToolUseBlock =>
-      block.type === 'tool_use' && block.name === FINDINGS_TOOL.name,
-  );
-
-  if (!toolUse) {
-    return [];
-  }
-
-  const { findings } = toolUse.input as { findings: Array<{ issue: string; confidence: number }> };
 
   return findings
     // The run contract's reporting threshold, finally applied to a number that
