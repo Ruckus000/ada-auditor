@@ -19,6 +19,13 @@ import { FONT, T } from '../../lib/tokens';
  *   site the operator should choose where to spend that.
  * - **Upload** posts a file the operator already has to the same instrument.
  *
+ * PDF rows are inspected; Word rows are **converted** — to a tagged PDF the
+ * operator downloads, with the pipeline's own account of the result rendered
+ * beside it. Conversion needs LibreOffice, which only some hosts have, so the
+ * screen asks the conversion route up front (`GET /api/documents/remediate`)
+ * and offers only what this deployment can do; on a host that cannot convert,
+ * the absence is stated in words rather than implied by a missing button.
+ *
  * Both flows go through the client-scoped routes
  * (`/api/platform/clients/<id>/documents`), which persist what the instrument
  * said — so an inspection outlives the tab, and the screen loads the stored
@@ -67,6 +74,57 @@ type InspectionState =
   | { state: 'running' }
   | { state: 'done'; summary: Summary }
   | { state: 'failed'; message: string };
+
+/**
+ * One conversion: the remediated file (as an object URL the operator can
+ * download) plus the pipeline's own account of what it produced.
+ */
+type ConversionState =
+  | { state: 'idle' }
+  | { state: 'running' }
+  | { state: 'done'; summary: Summary; href: string; filename: string }
+  | { state: 'failed'; message: string };
+
+/**
+ * Whether this deployment can convert at all, asked of the conversion route
+ * itself (`GET /api/documents/remediate`) — the only surface whose answer is
+ * true for the function that would do the converting. Until the answer
+ * arrives, nothing conversion-shaped renders: a button that appears and then
+ * vanishes is worse than one that arrives a moment late.
+ */
+type ConverterState = { checked: boolean; available: boolean };
+
+/** `agenda.docx` → `agenda-remediated.pdf`, purely for the download's name. */
+function pdfNameFor(sourceName: string): string {
+  const base = sourceName.split('/').pop() ?? '';
+  return `${(base.replace(/\.docx?$/i, '') || 'document')}-remediated.pdf`;
+}
+
+/**
+ * The conversion response is the PDF itself, with the summary riding in a
+ * header — one request, both halves. A refusal is JSON, same as everywhere.
+ */
+async function conversionOutcome(response: Response, filename: string): Promise<ConversionState> {
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string; detail?: string }
+      | null;
+    return {
+      state: 'failed',
+      message: payload?.detail ?? payload?.error ?? `http ${response.status}`,
+    };
+  }
+
+  let summary: Summary;
+  try {
+    summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '') as Summary;
+  } catch {
+    return { state: 'failed', message: 'the response carried no summary' };
+  }
+
+  const href = URL.createObjectURL(await response.blob());
+  return { state: 'done', summary, href, filename };
+}
 
 const inputStyle = {
   fontFamily: FONT.mono,
@@ -123,6 +181,30 @@ function pathOf(url: string): string {
  * document handed over by upload and a record loaded back from the store
  * cannot end up described differently.
  */
+/**
+ * One conversion result, shared by the scan rows and the Word upload — the
+ * same single-rendering rule `SummaryView` follows, one level up. The summary
+ * below it describes the **converted** file, so its remaining gaps are the
+ * honest residue: conversion closes tagging and carries title and language
+ * through, and what it cannot close stays red.
+ */
+function ConversionView({ conversion }: { conversion: ConversionState & { state: 'done' } }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <p style={{ ...noteStyle, color: T.ink }}>
+        Converted to tagged PDF.
+        {conversion.summary.title === 'transcribed'
+          ? ' The title was transcribed from the document’s own first heading.'
+          : ''}{' '}
+        <a href={conversion.href} download={conversion.filename}>
+          Download {conversion.filename}
+        </a>
+      </p>
+      <SummaryView summary={conversion.summary} />
+    </div>
+  );
+}
+
 function SummaryView({ summary }: { summary: Summary }) {
   return (
     <div
@@ -174,10 +256,14 @@ export function ClientDocuments({
   const [uploadState, setUploadState] = useState<InspectionState>({ state: 'idle' });
   const [stored, setStored] = useState<InspectionRecord[] | null>(null);
   const [storedError, setStoredError] = useState<string | null>(null);
+  const [converter, setConverter] = useState<ConverterState>({ checked: false, available: false });
+  const [conversions, setConversions] = useState<Record<string, ConversionState>>({});
+  const [wordUploadState, setWordUploadState] = useState<ConversionState>({ state: 'idle' });
 
   const headingId = `${fieldPrefix}-heading`;
   const urlId = `${fieldPrefix}-url`;
   const uploadId = `${fieldPrefix}-upload`;
+  const wordUploadId = `${fieldPrefix}-word-upload`;
   const storedHeadingId = `${fieldPrefix}-stored`;
 
   const documentsPath = `/api/platform/clients/${encodeURIComponent(clientId)}/documents`;
@@ -210,6 +296,32 @@ export function ClientDocuments({
       cancelled = true;
     };
   }, [documentsPath]);
+
+  useEffect(() => {
+    // Ask the conversion route itself whether this host can convert. Any
+    // failure to answer reads as "cannot": a missing button on a capable host
+    // is an inconvenience, a button on an incapable one is a promise the
+    // deployment cannot keep.
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const response = await fetch('/api/documents/remediate');
+        const payload = (await response.json().catch(() => null)) as
+          | { available?: boolean }
+          | null;
+        if (!cancelled) {
+          setConverter({ checked: true, available: response.ok && payload?.available === true });
+        }
+      } catch {
+        if (!cancelled) setConverter({ checked: true, available: false });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /** Newest first, replacing any earlier record of the same inspection. */
   function remember(record: InspectionRecord) {
@@ -269,6 +381,42 @@ export function ClientDocuments({
       remember(payload.inspection);
     } catch {
       setInspection(doc.url, { state: 'failed', message: 'could not reach the server' });
+    }
+  }
+
+  function setConversion(url: string, state: ConversionState) {
+    setConversions((current) => {
+      // A re-conversion replaces the object URL; revoke the old one rather
+      // than letting blobs accumulate for the life of the tab.
+      const previous = current[url];
+      if (previous?.state === 'done') URL.revokeObjectURL(previous.href);
+      return { ...current, [url]: state };
+    });
+  }
+
+  async function convert(doc: DiscoveredDocument) {
+    setConversion(doc.url, { state: 'running' });
+    try {
+      const response = await fetch('/api/documents/remediate-url', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url: doc.url }),
+      });
+      setConversion(doc.url, await conversionOutcome(response, pdfNameFor(pathOf(doc.url))));
+    } catch {
+      setConversion(doc.url, { state: 'failed', message: 'could not reach the server' });
+    }
+  }
+
+  async function convertUpload(file: File) {
+    setWordUploadState({ state: 'running' });
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      const response = await fetch('/api/documents/remediate', { method: 'POST', body: form });
+      setWordUploadState(await conversionOutcome(response, pdfNameFor(file.name)));
+    } catch {
+      setWordUploadState({ state: 'failed', message: 'could not reach the server' });
     }
   }
 
@@ -363,6 +511,7 @@ export function ClientDocuments({
           >
             {documents.map((doc) => {
               const inspection = inspections[doc.url] ?? { state: 'idle' };
+              const conversion = conversions[doc.url] ?? { state: 'idle' };
               return (
                 <li
                   key={doc.url}
@@ -390,12 +539,31 @@ export function ClientDocuments({
                       >
                         {inspection.state === 'running' ? 'Inspecting…' : 'Inspect'}
                       </button>
+                    ) : converter.available ? (
+                      <button
+                        type="button"
+                        onClick={() => convert(doc)}
+                        disabled={conversion.state === 'running'}
+                        style={{
+                          ...buttonStyle,
+                          marginLeft: 'auto',
+                          ...disabledStyle(conversion.state === 'running'),
+                        }}
+                      >
+                        {conversion.state === 'running' ? 'Converting…' : 'Convert to tagged PDF'}
+                      </button>
                     ) : null}
                   </span>
                   {inspection.state === 'done' ? <SummaryView summary={inspection.summary} /> : null}
                   {inspection.state === 'failed' ? (
                     <p role="alert" style={{ ...noteStyle, color: T.fail }}>
                       Inspection failed: {inspection.message}.
+                    </p>
+                  ) : null}
+                  {conversion.state === 'done' ? <ConversionView conversion={conversion} /> : null}
+                  {conversion.state === 'failed' ? (
+                    <p role="alert" style={{ ...noteStyle, color: T.fail }}>
+                      Conversion failed: {conversion.message}.
                     </p>
                   ) : null}
                 </li>
@@ -405,12 +573,12 @@ export function ClientDocuments({
         )
       ) : null}
 
-      {documents?.some((doc) => doc.kind !== 'pdf') ? (
+      {converter.checked && !converter.available && documents?.some((doc) => doc.kind !== 'pdf') ? (
         <p style={noteStyle}>
           {/* Stated rather than implied by a missing button. The absence is a
-              capability fact, not a defect in the row. */}
-          Word documents are recorded without an Inspect button — the inspection instrument reads
-          PDFs. Word’s path is conversion to tagged PDF, which this screen does not run yet.
+              capability fact about this deployment, not a defect in the row. */}
+          Word documents are recorded without a Convert button — conversion runs where LibreOffice
+          is installed, and this deployment does not have it. Inspection reads PDFs.
         </p>
       ) : null}
 
@@ -443,6 +611,36 @@ export function ClientDocuments({
           </p>
         ) : null}
       </div>
+
+      {converter.available ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <label
+            htmlFor={wordUploadId}
+            style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}
+          >
+            Or convert a Word document you already have
+          </label>
+          <input
+            id={wordUploadId}
+            type="file"
+            accept=".docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void convertUpload(file);
+            }}
+            style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.ink }}
+          />
+          {wordUploadState.state === 'running' ? <p style={noteStyle}>Converting…</p> : null}
+          {wordUploadState.state === 'done' ? (
+            <ConversionView conversion={wordUploadState} />
+          ) : null}
+          {wordUploadState.state === 'failed' ? (
+            <p role="alert" style={{ ...noteStyle, color: T.fail }}>
+              Conversion failed: {wordUploadState.message}.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {storedError ? (
         <p role="alert" style={{ ...noteStyle, color: T.fail }}>
