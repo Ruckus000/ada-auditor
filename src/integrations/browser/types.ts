@@ -183,6 +183,21 @@ export type JourneyRunnerResult = {
    */
   pages: PageAudit[];
   /**
+   * How long this walk spent waiting for a navigation that had not arrived —
+   * the per-click grace plus the one final settle, summed.
+   *
+   * Measured rather than inferred because it is the one cost
+   * `NAVIGATION_SETTLE_MS` imposes on journeys that do *not* navigate, and it
+   * is invisible in every other number here: a page's `timing.totalMs` starts
+   * at navigate-settle, so a grace that expired without producing a page is
+   * counted nowhere. Raising the grace to fix one stubborn client app would
+   * add that increase to every non-navigating click of every run, silently.
+   *
+   * Always a number, including zero: "the walk never had to wait" is a real
+   * answer, unlike the absent-means-not-measured fields above.
+   */
+  settleWaitMs: number;
+  /**
    * How many further navigations a bound refused to audit. Non-zero means this
    * run did NOT cover the whole journey.
    */

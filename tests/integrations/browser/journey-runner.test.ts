@@ -206,15 +206,36 @@ describe('runJourney', () => {
      * than assumed: `#delete-account` on the login fixture is a `type="button"`
      * with no handler, which is exactly that shape.
      *
-     * The ceiling is deliberately loose. It is not asserting the grace is
-     * 2000ms; it is asserting the walk still ends promptly, so a future
-     * increase does not quietly turn every non-navigating click into a
-     * multi-second wait against a run budget measured in hundreds of seconds.
+     * ## Why this reads `settleWaitMs` and not the clock
+     *
+     * It used to time the whole `runJourney` call and require it under 30s.
+     * That number is dominated by a browser launch, two axe scans, two
+     * screenshots and the artifact writes — none of which this test has an
+     * opinion about — and all of which stretch with whatever else the machine
+     * is doing. It went red once at 31758ms on a `localci suite` run,
+     * immediately after the hydration suite had a Next server and a second
+     * browser resident, and passed alone every time. A test that fails on load
+     * and passes on retry teaches people to retry, which is the opposite of
+     * what a guard is for.
+     *
+     * `settleWaitMs` is the runner's own measurement of the only thing this
+     * test is about: time spent waiting for a navigation that had not arrived.
+     * Two graces are paid here — the click's, and the walk's final settle,
+     * since a click that moved nothing leaves the end ambiguous — so the
+     * expected figure is about `2 × NAVIGATION_SETTLE_MS`.
+     *
+     * The ceiling stays deliberately loose, and deliberately absolute. It is
+     * not asserting the grace is 2000ms; the slack absorbs timer slop on a
+     * loaded machine, which is bounded here because these waits are timeouts
+     * rather than work. But it is a fixed number rather than a multiple of
+     * `NAVIGATION_SETTLE_MS`, because a multiple would scale with the very
+     * constant this guards and could never fail: raise the grace and every
+     * non-navigating click quietly costs seconds against a run budget measured
+     * in hundreds of them.
      */
     const artifactsDir = await mkdtemp(join(tmpdir(), 'ada-journey-'));
 
     try {
-      const startedAt = Date.now();
       const result = await runJourney({
         environment: 'test',
         journeyId: 'demo-login',
@@ -226,12 +247,18 @@ describe('runJourney', () => {
           { action: 'inspect', type: 'click', selector: '#delete-account' },
         ],
       });
-      const elapsed = Date.now() - startedAt;
 
       // The click moved nothing, so there is one page, not two — the dedup
       // this guard must not have broken.
       expect(result.pages.map((p) => p.page.route)).toEqual(['/login.html']);
-      expect(elapsed).toBeLessThan(30_000);
+
+      // Without this the ceiling below could pass for the wrong reason: a
+      // runner that stopped waiting at all, or a fixture whose button grew a
+      // handler and navigated, would report a settle near zero and look like
+      // an improvement. The grace has to have actually been paid for its cost
+      // to be the thing under test.
+      expect(result.settleWaitMs).toBeGreaterThanOrEqual(NAVIGATION_SETTLE_MS);
+      expect(result.settleWaitMs).toBeLessThan(8_000);
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });
     }

@@ -306,7 +306,7 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
 
   it('a failed walk answers the classified code and the step sentence', async () => {
     const cause = new Error('Step 2 ("login") could not click "#go": locator timed out.');
-    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0 }));
+    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0, settleWaitMs: 0 }));
 
     const response = await POST(request(), params('acme', 'onboarding'));
     const body = await response.json();
@@ -329,7 +329,7 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     const cause = new UnsafeTargetError(
       'Navigation to https://acme.test/cb?code=SECRET connected to 10.0.0.1, a private or reserved address.',
     );
-    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0 }));
+    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0, settleWaitMs: 0 }));
 
     const response = await POST(request(), params('acme', 'onboarding'));
     const raw = await response.text();
@@ -360,7 +360,7 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     const cause = new Error(
       'Step 2 ("login") could not click "#go": net::ERR_ABORTED at https://acme.test/cb?code=SECRET.',
     );
-    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0 }));
+    runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0, settleWaitMs: 0 }));
 
     const response = await POST(request(), params('acme', 'onboarding'));
     const raw = await response.text();
@@ -409,7 +409,7 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
   });
 
   it('writes no run row', async () => {
-    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0 });
+    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0, settleWaitMs: 0 });
 
     const before = await runs.list();
     const response = await POST(request(), params('acme', 'onboarding'));
@@ -423,7 +423,7 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     // Previews are not free — browser time against a client's live site is a
     // real cost, and an uncounted variant would be the loophole.
     process.env.AUDITOR_MAX_PREVIEWS_PER_HOUR = '1';
-    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0 });
+    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0, settleWaitMs: 0 });
 
     const first = await POST(request(), params('acme', 'onboarding'));
     expect(first.status).toBe(200);
@@ -443,7 +443,7 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     // somebody was typing. An audit ceiling of one must not refuse a second
     // preview.
     process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
-    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0 });
+    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0, settleWaitMs: 0 });
 
     expect((await POST(request(), params('acme', 'onboarding'))).status).toBe(200);
     expect((await POST(request(), params('acme', 'onboarding'))).status).toBe(200);
