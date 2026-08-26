@@ -139,7 +139,8 @@ npm run build:documents
 ```
 
 The source path additionally needs LibreOffice on the host (`SOFFICE_PATH`, on
-`PATH`, or the macOS application bundle). Verified against 26.2.2.2.
+`PATH`, or the macOS application bundle) **with Writer installed** — see the
+fourth measured thing below. Verified against 26.2.2.2 and 24.2.7.
 
 Fetches PDFBox 3.0.8 into `vendor/` (gitignored) and compiles
 `src/integrations/documents/java/*.java` into `dist/documents/classes`
@@ -158,7 +159,7 @@ The real-JVM tests skip themselves, naming the missing piece, when no toolchain
 is present. Their PDF fixture is generated at test time by `renderPdf()` rather
 than committed.
 
-## Three measured things about LibreOffice
+## Four measured things about LibreOffice
 
 **Filter options replace the defaults, so one wrong key silently disables
 tagging.** `[V]` `pdf:writer_pdf_Export` with a misspelled option name produced
@@ -171,6 +172,18 @@ from a source with every `fo:language` declaration stripped, and a declared `en`
 is widened to `en-US`. Both are statements the document never made, so the
 language is read from the *source* and reapplied with `Finish` — including
 reapplying nothing, which removes the claim.
+
+**A launcher is not a capability, and `soffice --version` lies about it.**
+`[V]` On Ubuntu 24.04 with `libreoffice-core` installed and `libreoffice-writer`
+absent, `soffice` exists, `--version` prints `24.2.7.2`, and **every** document
+fails to load — `.fodt` and `.txt` alike, converting to `.docx` or to `.pdf` —
+with `Error: source file could not be loaded` at **exit 0**. That is the
+`{kind: 'no-output', step: 'source-to-fodt'}` this code reports, and installing
+`libreoffice-writer` fixed all of it. Writer's modules (`libswlo.so` and
+friends) ship in that package and core ships none of them, which is why
+`libreoffice-runtime.ts` looks for them rather than for the binary alone. A
+layout it does not recognise is reported *available*: a false negative would
+refuse work the host could do, and `convert.ts` verifies its own output anyway.
 
 **It sniffs content rather than trusting the extension.** `[V]` A text file
 named `.docx` converts successfully. **A successful conversion is not evidence
