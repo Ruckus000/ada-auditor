@@ -70,18 +70,44 @@ describe('findingDisplayStatus', () => {
   it.each(['dismissed', 'accepted-risk'] as const)(
     'lets a %s decision outrank a later run re-reporting the finding',
     (triage) => {
-      // An operator said this is not a barrier. A re-run must not quietly undo
-      // that, or the dismissal is a UI toggle rather than a judgement.
-      expect(findingDisplayStatus({ inLatestRun: true, inBaseline: true, triage })).toBe(
-        'Dismissed',
+      // The property, not the word: an operator has settled this finding and a
+      // re-run must not quietly reopen it, whichever of the two settlements it
+      // was. Asserting a literal here is what let `accepted-risk` be checked
+      // by a test that was really only checking `dismissed`.
+      expect(findingDisplayStatus({ inLatestRun: true, inBaseline: true, triage })).not.toBe(
+        'Open',
       );
     },
   );
 
-  it('keeps a dismissal even once the finding stops being reported', () => {
+  it.each(['dismissed', 'accepted-risk'] as const)(
+    'keeps a %s decision even once the finding stops being reported',
+    (triage) => {
+      expect(findingDisplayStatus({ inLatestRun: false, inBaseline: true, triage })).not.toBe(
+        'Fixed',
+      );
+    },
+  );
+
+  it('says an accepted risk is accepted, not dismissed', () => {
+    // These are different decisions. "Dismissed" says nobody has to do
+    // anything because there is no barrier; "Accepted risk" says there is one
+    // and the client is living with it. Reading the second as the first is the
+    // one thing this status must never do.
     expect(
-      findingDisplayStatus({ inLatestRun: false, inBaseline: true, triage: 'dismissed' }),
+      findingDisplayStatus({ inLatestRun: true, inBaseline: true, triage: 'accepted-risk' }),
+    ).toBe('Accepted risk');
+    expect(
+      findingDisplayStatus({ inLatestRun: true, inBaseline: true, triage: 'dismissed' }),
     ).toBe('Dismissed');
+  });
+
+  it('keeps an accepted risk accepted after the finding disappears', () => {
+    // Absence is evidence that the barrier is gone, but the acceptance is a
+    // record of a decision that was made. `Fixed` would erase it.
+    expect(
+      findingDisplayStatus({ inLatestRun: false, inBaseline: true, triage: 'accepted-risk' }),
+    ).toBe('Accepted risk');
   });
 
   it('shows an assigned finding as assigned while it is still present', () => {

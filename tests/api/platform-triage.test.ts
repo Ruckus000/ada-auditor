@@ -14,6 +14,7 @@ const { DELETE, POST } = await import(
 const { MemoryPlatformStore, resetPlatformStore, setPlatformStore } = await import(
   '../../src/integrations/persistence'
 );
+const { MAX_TRIAGE_NOTE } = await import('../../src/domain/platform');
 
 const TOKEN = 'test-token-16chars';
 const KEY = 'deterministic:image-alt:https://acme.test/one:img';
@@ -142,6 +143,122 @@ describe('/api/platform/clients/[clientId]/triage', () => {
     );
 
     expect(response.status).toBe(400);
+    expect(await platform.listTriage('acme')).toEqual([]);
+  });
+
+  it('records an accepted risk as its own decision', async () => {
+    // Not a dismissal. `accepted-risk` has been in the type, the enum and the
+    // CHECK since Phase 2C with nothing able to write it, which is why every
+    // consumer branched two ways over three states.
+    const response = await POST(
+      fromBrowser({
+        findingKey: KEY,
+        state: 'accepted-risk',
+        note: 'Signed off by the client on 2026-08-20.',
+      }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ state: 'accepted-risk' });
+    expect((await platform.listTriage('acme'))[0]).toMatchObject({
+      state: 'accepted-risk',
+      note: 'Signed off by the client on 2026-08-20.',
+    });
+  });
+
+  it('will not accept a note-free accepted risk', async () => {
+    // Proving the existing refine covers this state rather than assuming it:
+    // an acceptance with nobody named and no basis given is the record an
+    // auditor would have to defend, and there would be nothing in it.
+    const response = await POST(
+      fromBrowser({ findingKey: KEY, state: 'accepted-risk' }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await platform.listTriage('acme')).toEqual([]);
+  });
+
+  it('logs an accepted risk as an acceptance, not as a dismissal', async () => {
+    // The activity feed is append-only, so this wording is the permanent
+    // record. "dismissed a finding" against an accepted barrier says the
+    // opposite of what happened.
+    await POST(
+      fromBrowser({ findingKey: KEY, state: 'accepted-risk', note: 'Client accepts.' }),
+      params('acme'),
+    );
+
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event).toMatchObject({
+      action: 'accepted the risk on a finding',
+      subject: 'image-alt',
+      metadata: { state: 'accepted-risk' },
+    });
+  });
+
+  it('refuses a note longer than the cap the screen enforces', async () => {
+    // One constant behind both, so a textarea cannot let an operator type
+    // something the route will throw away without saying which field was
+    // wrong — `invalid_request_body` names no field.
+    const response = await POST(
+      fromBrowser({ findingKey: KEY, state: 'dismissed', note: 'x'.repeat(MAX_TRIAGE_NOTE + 1) }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await platform.listTriage('acme')).toEqual([]);
+  });
+
+  it('accepts a note exactly at the cap', async () => {
+    const response = await POST(
+      fromBrowser({ findingKey: KEY, state: 'dismissed', note: 'x'.repeat(MAX_TRIAGE_NOTE) }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it('refuses an assignee who is not an account', async () => {
+    // A dangling assignee reads as handled by somebody who does not exist, and
+    // Postgres would reject the foreign key while the double accepted it.
+    const response = await POST(
+      fromBrowser({
+        findingKey: KEY,
+        state: 'assigned',
+        assignee: 'Nobody At All',
+        assigneeOperatorId: 'op-missing',
+      }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ error: 'unknown_assignee' });
+    expect(await platform.listTriage('acme')).toEqual([]);
+  });
+
+  it('refuses an assignee whose account is disabled', async () => {
+    // Disabled means out now, not "cannot sign in again". Assigning work to a
+    // disabled account is a finding nobody owns.
+    await platform.upsertOperator({
+      id: 'op-2',
+      email: 'gone@example.com',
+      name: 'Gone Away',
+      passwordHash: 'x',
+      disabledAt: '2026-08-01T00:00:00.000Z',
+    });
+
+    const response = await POST(
+      fromBrowser({
+        findingKey: KEY,
+        state: 'assigned',
+        assignee: 'Gone Away',
+        assigneeOperatorId: 'op-2',
+      }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(422);
     expect(await platform.listTriage('acme')).toEqual([]);
   });
 

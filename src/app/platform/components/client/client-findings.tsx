@@ -1,6 +1,7 @@
 import type { DisplaySeverity } from '../../../../services/presentation/severity';
 import type { FindingView, FindingsView, PageFindings } from '../../../../services/findings-view';
 import { describePageEvidence } from '../../../../services/presentation/page-evidence';
+import { triageStateLabel } from '../../../../services/presentation/triage';
 import { describeCriterion } from '../../../../services/wcag-reference';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
@@ -291,9 +292,16 @@ function FindingRow({
         </pre>
       ) : null}
 
-      {finding.triageNote ? (
+      {/* The decision, in the words `services/presentation/` chose. It used to
+          be a ternary here, which meant an accepted risk read back to the
+          operator as a dismissal — the opposite of what they decided. The note
+          is optional in this line because an assignment has none, and an
+          assignment with no note used to render nothing at all. */}
+      {finding.triage !== null ? (
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, color: T.inkMuted }}>
-          {finding.triage === 'assigned' ? 'Assigned' : 'Dismissed'}: {finding.triageNote}
+          {triageStateLabel(finding.triage)}
+          {finding.assignee ? ` to ${finding.assignee}` : ''}
+          {finding.triageNote ? `: ${finding.triageNote}` : ''}
         </p>
       ) : null}
 
