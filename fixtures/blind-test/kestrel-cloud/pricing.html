@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pricing — Kestrel Cloud</title>
+    <style>
+      body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #111417; color: #e8eaed; }
+      .bar { display: flex; gap: 18px; padding: 16px 28px; border-bottom: 1px solid #23282d; }
+      .bar a { color: #9fd0ff; text-decoration: none; }
+      main { padding: 36px 28px; max-width: 900px; }
+      .tabs { display: flex; gap: 8px; margin: 20px 0; }
+      .tab { background: #1f2429; padding: 10px 16px; border-radius: 6px 6px 0 0; cursor: pointer; }
+      .panel { background: #191d21; padding: 20px; border-radius: 0 6px 6px 6px; }
+      .switch { background: #1f2429; border: 1px solid #3a4149; border-radius: 999px; width: 52px; height: 28px; cursor: pointer; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      td { padding: 8px 10px; border-bottom: 1px solid #23282d; }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <a href="index.html">Home</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="docs.html">Docs</a>
+      <a href="signup.html">Start free</a>
+    </div>
+
+    <main>
+      <h1>Pricing</h1>
+
+      <p>
+        Billing annually saves two months.
+        <button id="toggle-annual" class="switch" type="button" role="switch" aria-checked="false"></button>
+      </p>
+
+      <div id="tabs" class="tabs" role="tablist">
+        <div id="tab-storage" class="tab" role="tab">Storage</div>
+        <div id="tab-transfer" class="tab" role="tab">Transfer</div>
+        <div id="tab-requests" class="tab" role="tab">Requests</div>
+      </div>
+
+      <div class="panel">
+        <h2>Storage</h2>
+        <p>$0.011 per GB per month, prorated per second. No minimum retention.</p>
+      </div>
+
+      <h2>Plans side by side</h2>
+      <table id="compare-table" role="presentation">
+        <tr>
+          <td>Feature</td>
+          <td>Starter</td>
+          <td>Team</td>
+          <td>Scale</td>
+        </tr>
+        <tr>
+          <td>Regions</td>
+          <td>1</td>
+          <td>3</td>
+          <td>3</td>
+        </tr>
+        <tr>
+          <td>Signed URLs</td>
+          <td>Yes</td>
+          <td>Yes</td>
+          <td>Yes</td>
+        </tr>
+        <tr>
+          <td>Support response</td>
+          <td>Community</td>
+          <td>Next day</td>
+          <td>Four hours</td>
+        </tr>
+      </table>
+    </main>
+  </body>
+</html>

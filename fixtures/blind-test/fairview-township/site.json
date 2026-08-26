@@ -1,0 +1,6 @@
+{
+  "site": "fairview-township",
+  "label": "Township of Fairview",
+  "profile": "Municipal site: tiles instead of links, meeting minutes as PDFs, an auto-refreshing alerts page.",
+  "pages": ["index.html", "meetings.html", "permits.html", "alerts.html"]
+}

@@ -1,0 +1,167 @@
+# Blind test: three fixture sites, 44 planted barriers
+
+**Date:** 2026-08-26
+**Run:** `npm run blind:test` (local, `tsx`, Chromium via `playwright-core`)
+**Sites:** `fixtures/blind-test/{ridgeline-dental,fairview-township,kestrel-cloud}`
+**Advisory:** `minimax/minimax-m3-free` — **did not run.** No gateway credential
+and no egress to the gateway from this machine, so `phaseMs.advisory` is 0 on
+all three runs and every judgement-class expectation is unanswered rather than
+answered wrongly.
+
+## What this is
+
+Three four-page static sites, each written as a plausible non-auth client — a
+dentist's brochure, a township, a SaaS signup flow — with 44 known barriers and
+correct implementations planted in them. Each is recorded in that site's
+`answer-key.json` **before** any run, with the mechanism that should catch it:
+
+| `expect` | Meaning |
+|---|---|
+| `deterministic` | an axe violation |
+| `needs-review` | axe reaches no verdict — the human-review queue |
+| `judgement` | no rule can decide it; the advisory pass or nobody |
+| `clean` | correctly built, and must not be reported at all |
+
+The point of the `clean` rows is that a detector you cannot trust to stay quiet
+is not a detector. The point of `judgement` is that it is the half of the
+product with no measurement behind it.
+
+## Result
+
+| Site | Verdict | Score | Findings | Gating | Undecided | Journey |
+|---|---|---|---|---|---|---|
+| Ridgeline Dental | `fail` | 98 | 8 | 5 | 2 | 5.6s |
+| Township of Fairview | `fail` | 97 | 13 | 3 | 2 | 4.9s |
+| Kestrel Cloud | `fail` | 97 | 11 | 5 | 0 | 4.8s |
+
+All three failed, on Level A/AA criteria, with complete evidence and no
+truncation. Twelve pages walked in 15.3s of browser time.
+
+By what was planted:
+
+| Planted as | Count | Seen | Notes |
+|---|---|---|---|
+| `deterministic` | 19 | 16 | 1 downgraded to needs-review, 2 missed |
+| `needs-review` | 4 | 2 | 2 missed |
+| `judgement` | 14 | 1 | advisory dark; the one hit was caught by a rule |
+| `clean` | 7 | 7 quiet | **zero false positives** |
+
+**Note the score.** Every site scored 97–98 while failing. That is the
+documented shape — the score is a rate over the checks axe evaluated and the
+verdict is not — but on a site where a quarter of the planted barriers were
+never detected, a 98 next to `fail` is the number a client will quote back. It
+is right by its own definition and misleading in a sentence.
+
+## What it missed, and why each one matters
+
+### 1. A form field labelled only by its placeholder is called clean (A10)
+
+`<input id="appt-date" placeholder="Preferred date">` produced no finding.
+axe's `label` rule accepts a placeholder as an accessible name, so the pass
+counts it and the human-review queue never sees it. The barrier is real —
+the label disappears the moment the user types — and this is the single most
+common form defect on small-business sites.
+
+Adjacent and better: `label-title-only` **did** fire on the township's
+title-only search box (B7). So the engine has a rule for the tooltip case and
+none for the placeholder case, and the product inherits that asymmetry
+silently.
+
+### 2. A video with no captions cannot fail a run (B6)
+
+`video-caption` came back `incomplete`, so a Level A 1.2.2 barrier lands in the
+human-review queue rather than gating. That follows the steady-state rule —
+an undecided check never fails a run — and it is correct as written. Worth
+saying out loud anyway: for a municipality publishing council recordings, the
+most consequential barrier on the site is one the gate structurally cannot
+reach.
+
+### 3. Keyboard operability is invisible (B3, C1)
+
+Both sites' primary navigation is `<div onclick>` — no role, no `tabindex`, no
+href. Nothing was reported on either. axe-core ships `focus-order-semantics`
+disabled, and the product does not turn it on. A site whose entire menu cannot
+be reached by keyboard scores 97 and fails only for unrelated reasons.
+
+This is the largest single gap the test found, because it is both severe (2.1.1
+Level A) and common in exactly the hand-rolled-widget sites this product is
+sold against.
+
+### 4. A broken skip link is noticed for the wrong reason (B1)
+
+The skip link targets `#main-content`, which does not exist. `skip-link` did
+not fire; `region` did, because the link sits outside a landmark. An operator
+reading that report is told the page has content outside landmarks, not that
+the bypass mechanism is broken. The scorer records this as
+`predictedRuleFired: false` for exactly this reason.
+
+### 5. Label-in-name is unchecked for inputs (B9)
+
+Visible label "Email address", `aria-label="Contact"`.
+`label-content-name-mismatch` never fired — it applies to elements with visible
+text inside them, and an input's label is external. 2.5.3 is therefore not
+covered for form fields at all, which is the place it matters most.
+
+### 6. Identical link text is not evaluated (B5)
+
+Five links reading "Download", each to a different PDF. Nothing.
+`identical-links-same-purpose` is not in the enabled set.
+
+### 7. ARIA widget state is unchecked (C5, C7)
+
+`role="tab"` with no `aria-selected`, no `tabindex`, no `aria-controls`:
+nothing. A real data table carrying `role="presentation"`: nothing. The engine
+checks that required ARIA attributes exist where the spec says *required*, and
+neither of these trips that test — but both destroy the semantics they claim.
+
+### 8. Everything requiring reading comprehension (13 of 14)
+
+`alt="image1"`, "Click here", a fee table whose header row is styled `td`s,
+open/closed indicated only by a green or red dot, "Error: invalid input.",
+password rules only in a placeholder, a German quotation in an English page.
+Every one of them was planted for the advisory pass; the advisory pass has
+still never run.
+
+This is not a new gap — `AGENTS.md` records it — but the test now puts a number
+on it: **14 of 44 barriers on three ordinary sites are in the class only the
+advisory can reach**, and one of them was caught by accident.
+
+## What it got right
+
+- **Zero false positives across seven correct implementations**, including a
+  decorative image with `alt=""`, a properly labelled field, a valid
+  `autocomplete` token, and a `lang`-tagged foreign-language quote. Nothing was
+  invented.
+- 16 of 19 predicted violations, by the predicted rule, with the right
+  criterion and level on each.
+- Both planted needs-review cases — white text over a photograph and over a
+  gradient — landed in the human-review queue rather than being guessed at.
+- Two barriers nobody planted: `empty-table-header` on the township's meetings
+  table and a contrast failure on the Kestrel hero. Both real.
+- Multi-page evidence held: 4/4 pages per site, complete, no truncation, and
+  every finding carried its `pageUrl`.
+
+## Suggested work, in the order the evidence supports it
+
+1. **Run the advisory once.** It is a third of what this test could not
+   measure, and the sites now exist to measure it against. `npm run blind:test`
+   in any environment with `AI_GATEWAY_API_KEY` or a Vercel OIDC token produces
+   a directly comparable scorecard.
+2. **Decide on the placeholder-as-label case.** Either enable a check for it or
+   record it as a known blind spot; today it silently counts as a pass.
+3. **Decide on keyboard operability.** `focus-order-semantics` exists and is
+   disabled upstream for false-positive reasons. Turning it on has a cost this
+   test can now measure — the seven `clean` rows are the guard against it.
+4. **Consider surfacing "reported, but not for this reason".** The skip-link
+   case is the shape of a report that reads as coverage and is not.
+
+## Reproducing
+
+```bash
+npm run blind:test                          # all three, scorecard to stdout
+npm run blind:test -- --site kestrel-cloud  # one site
+```
+
+Full reports land in `.blind-test/<site>.json` (gitignored): the whole run
+record plus the scored answer key. Nothing is written to a run store — a
+fixture audit must not appear on a portfolio screen.

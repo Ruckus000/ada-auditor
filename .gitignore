@@ -26,3 +26,7 @@ tsconfig.tsbuildinfo
 # nothing in src/, tests/ or CI reads them.
 .agents/
 skills-lock.json
+
+# Blind-test output. The fixture sites and their answer keys are checked in;
+# what one run of the auditor made of them is a measurement, not a source.
+/.blind-test/

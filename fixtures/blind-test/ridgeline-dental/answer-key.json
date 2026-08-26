@@ -1,0 +1,180 @@
+{
+  "site": "ridgeline-dental",
+  "expectations": [
+    {
+      "id": "A1",
+      "page": "index.html",
+      "selector": "#hero-img",
+      "what": "Reception photograph carries no alt attribute at all.",
+      "criterion": "1.1.1",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "image-alt",
+      "weight": "core"
+    },
+    {
+      "id": "A2",
+      "page": "index.html",
+      "selector": "#brand-cta",
+      "what": "Primary call to action is pale blue (#9ad0e8) on white — 1.7:1.",
+      "criterion": "1.4.3",
+      "level": "AA",
+      "expect": "deterministic",
+      "axeRule": "color-contrast",
+      "weight": "core"
+    },
+    {
+      "id": "A3",
+      "page": "index.html",
+      "selector": "#tagline",
+      "what": "h4 follows h1 because the designer wanted that size; two levels skipped.",
+      "criterion": "1.3.1",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "heading-order",
+      "weight": "probe",
+      "note": "axe's heading-order is best-practice and cites no criterion, so the gate ignores it by design. Watching whether it is reported at all, and whether the report says it cannot gate."
+    },
+    {
+      "id": "A4",
+      "page": "index.html",
+      "selector": "#photo-team",
+      "what": "Team photo has alt=\"image1\" — an alt attribute that describes nothing.",
+      "criterion": "1.1.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "image1",
+      "weight": "core",
+      "note": "axe cannot decide this; it is the advisory pass's headline claim."
+    },
+    {
+      "id": "A5",
+      "page": "index.html",
+      "selector": "#click-here",
+      "what": "Link text is \"Click here\" — no purpose out of context.",
+      "criterion": "2.4.4",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "click here",
+      "weight": "core"
+    },
+    {
+      "id": "A6",
+      "page": "index.html",
+      "selector": "#decorative-divider",
+      "what": "Decorative rule, correctly marked alt=\"\" role=\"presentation\".",
+      "criterion": "1.1.1",
+      "level": "A",
+      "expect": "clean",
+      "weight": "core"
+    },
+    {
+      "id": "A7",
+      "page": "services.html",
+      "selector": "#contrast-on-photo",
+      "what": "White text over a background photograph; the real contrast is unknowable from CSS.",
+      "criterion": "1.4.3",
+      "level": "AA",
+      "expect": "needs-review",
+      "axeRule": "color-contrast",
+      "weight": "core"
+    },
+    {
+      "id": "A8",
+      "page": "services.html",
+      "selector": "#price-table",
+      "what": "Fee table's header row is td cells styled bold, so no column is programmatically a header.",
+      "criterion": "1.3.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "price-table",
+      "weight": "core"
+    },
+    {
+      "id": "A9",
+      "page": "services.html",
+      "selector": "#status-ortho",
+      "what": "Green and red dots are the only indication of which services are open.",
+      "criterion": "1.4.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "colour",
+      "weight": "core"
+    },
+    {
+      "id": "A10",
+      "page": "appointment.html",
+      "selector": "#appt-date",
+      "what": "Preferred-date field is labelled by a placeholder only.",
+      "criterion": "3.3.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "label",
+      "weight": "core"
+    },
+    {
+      "id": "A11",
+      "page": "appointment.html",
+      "selector": "#appt-error",
+      "what": "Error text reads \"Error: invalid input.\" — names neither the field nor the fix.",
+      "criterion": "3.3.3",
+      "level": "AA",
+      "expect": "judgement",
+      "cue": "invalid input",
+      "weight": "core"
+    },
+    {
+      "id": "A12",
+      "page": "appointment.html",
+      "selector": "#submit-icon",
+      "what": "Submit button contains an aria-hidden arrow glyph and nothing else.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "button-name",
+      "weight": "core"
+    },
+    {
+      "id": "A13",
+      "page": "appointment.html",
+      "selector": "#appt-name",
+      "what": "Name field is correctly labelled with a for/id pair.",
+      "criterion": "3.3.2",
+      "level": "A",
+      "expect": "clean",
+      "weight": "core"
+    },
+    {
+      "id": "A14",
+      "page": "contact.html",
+      "selector": "html",
+      "what": "This page alone lost its lang attribute.",
+      "criterion": "3.1.1",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "html-has-lang",
+      "weight": "core"
+    },
+    {
+      "id": "A15",
+      "page": "contact.html",
+      "selector": "#map-frame",
+      "what": "Embedded map iframe has no title.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "frame-title",
+      "weight": "core"
+    },
+    {
+      "id": "A16",
+      "page": "contact.html",
+      "selector": "#phone-link",
+      "what": "Telephone link with the number as its text.",
+      "criterion": "2.4.4",
+      "level": "A",
+      "expect": "clean",
+      "weight": "core"
+    }
+  ]
+}

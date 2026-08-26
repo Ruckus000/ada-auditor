@@ -1,0 +1,151 @@
+{
+  "site": "fairview-township",
+  "expectations": [
+    {
+      "id": "B1",
+      "page": "index.html",
+      "selector": "#skip-link",
+      "what": "Skip link points at #main-content, which does not exist on the page.",
+      "criterion": "2.4.1",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "skip-link",
+      "weight": "probe",
+      "note": "axe's skip-link rule is best-practice and cites no criterion, so a broken bypass mechanism cannot gate the run. Worth knowing whether the report distinguishes that from a clean pass."
+    },
+    {
+      "id": "B2",
+      "page": "index.html",
+      "selector": "#alert-banner",
+      "what": "Water-main notice is amber (#e8c400) on white — 1.7:1.",
+      "criterion": "1.4.3",
+      "level": "AA",
+      "expect": "deterministic",
+      "axeRule": "color-contrast",
+      "weight": "core"
+    },
+    {
+      "id": "B3",
+      "page": "index.html",
+      "selector": "#tile-meetings",
+      "what": "Service tiles are divs with onclick handlers: no role, no href, no tabindex, unreachable by keyboard.",
+      "criterion": "2.1.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "tile",
+      "weight": "core",
+      "note": "The whole primary navigation of the site. axe-core ships focus-order-semantics disabled, so nothing deterministic will say this."
+    },
+    {
+      "id": "B4",
+      "page": "meetings.html",
+      "selector": "#minutes-table",
+      "what": "Two-axis meetings table: th cells in both directions, no scope on any of them.",
+      "criterion": "1.3.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "minutes-table",
+      "weight": "probe"
+    },
+    {
+      "id": "B5",
+      "page": "meetings.html",
+      "selector": "#dl-jan-agenda",
+      "what": "Five links reading \"Download\", each going to a different PDF.",
+      "criterion": "2.4.4",
+      "level": "A",
+      "expect": "needs-review",
+      "axeRule": "identical-links-same-purpose",
+      "weight": "probe",
+      "note": "axe returns this one undecided when it fires at all. Either outcome is informative: reported as needs-review is the human queue working; absent is a gap."
+    },
+    {
+      "id": "B6",
+      "page": "meetings.html",
+      "selector": "#meeting-video",
+      "what": "Council recording has no captions track.",
+      "criterion": "1.2.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "video-caption",
+      "weight": "core"
+    },
+    {
+      "id": "B7",
+      "page": "permits.html",
+      "selector": "#permit-search",
+      "what": "Permit search box is named only by a title attribute — a tooltip no touch user sees.",
+      "criterion": "3.3.2",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "permit-search",
+      "weight": "probe",
+      "note": "axe accepts title as an accessible name, so the deterministic pass will call this clean."
+    },
+    {
+      "id": "B8",
+      "page": "permits.html",
+      "selector": "#permit-choices",
+      "what": "Radio group has no fieldset or legend; the question \"What are you applying for?\" is a loose paragraph.",
+      "criterion": "1.3.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "applying for",
+      "weight": "core"
+    },
+    {
+      "id": "B9",
+      "page": "permits.html",
+      "selector": "#applicant-email",
+      "what": "Visible label says \"Email address\"; aria-label overrides it to \"Contact\", so speech input cannot address it.",
+      "criterion": "2.5.3",
+      "level": "AA",
+      "expect": "needs-review",
+      "axeRule": "label-content-name-mismatch",
+      "weight": "core"
+    },
+    {
+      "id": "B10",
+      "page": "alerts.html",
+      "selector": "meta",
+      "what": "Page carries meta refresh at 30 seconds, with no way to turn it off.",
+      "criterion": "2.2.1",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "meta-refresh",
+      "weight": "core"
+    },
+    {
+      "id": "B11",
+      "page": "alerts.html",
+      "selector": "#aria-hidden-link",
+      "what": "\"Full notice\" link is aria-hidden but still in the tab order.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "aria-hidden-focus",
+      "weight": "core"
+    },
+    {
+      "id": "B12",
+      "page": "alerts.html",
+      "selector": "#contrast-gradient",
+      "what": "White text across a gradient that ends near-white; contrast varies along the box.",
+      "criterion": "1.4.3",
+      "level": "AA",
+      "expect": "needs-review",
+      "axeRule": "color-contrast",
+      "weight": "core"
+    },
+    {
+      "id": "B13",
+      "page": "permits.html",
+      "selector": "#applicant-address",
+      "what": "Property address field, correctly labelled and left alone.",
+      "criterion": "3.3.2",
+      "level": "A",
+      "expect": "clean",
+      "weight": "core"
+    }
+  ]
+}
