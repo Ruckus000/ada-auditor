@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type Anthropic from '@anthropic-ai/sdk';
 import {
+  advisoryModel,
   createAiAdvisoryFinding,
   isAiAdvisoryConfigured,
   requestAiAdvisory,
+  SYSTEM_PROMPT,
   type AdvisoryPage,
 } from '../../src/services/ai-advisory';
 import type { AxeScanResult } from '../../src/services/deterministic-audit';
@@ -12,17 +13,17 @@ const EMPTY_AXE: AxeScanResult = { violations: [], incomplete: [] };
 
 const PAGE = { url: 'https://app.example.com/dashboard', title: 'Dashboard' };
 
-/** Minimal stand-in for the SDK: only `messages.create` is ever called. */
-function stubClient(response: unknown): { client: Anthropic; create: ReturnType<typeof vi.fn> } {
-  const create = vi.fn().mockResolvedValue(response);
-  return { client: { messages: { create } } as unknown as Anthropic, create };
-}
-
-function toolUseResponse(findings: Array<{ issue: string; confidence: number }>) {
-  return {
-    stop_reason: 'tool_use',
-    content: [{ type: 'tool_use', name: 'report_findings', id: 'tu_1', input: { findings } }],
-  };
+/**
+ * Stands in for the one network call.
+ *
+ * The seam used to be a vendor client object with a `messages.create` method.
+ * There is no vendor client any more — the model is a `provider/model` string
+ * the gateway resolves — so the seam is the call itself, and `null` is how it
+ * reports every answer that was not a usable tool call.
+ */
+function stubCall(findings: Array<{ issue: string; confidence: number }> | null) {
+  const call = vi.fn().mockResolvedValue(findings);
+  return { call, spy: call };
 }
 
 function advisoryPage(overrides: Partial<AdvisoryPage> = {}): AdvisoryPage {
@@ -43,40 +44,55 @@ function advisoryInput(overrides: Partial<Parameters<typeof requestAiAdvisory>[0
 }
 
 describe('isAiAdvisoryConfigured', () => {
-  const original = process.env.ANTHROPIC_API_KEY;
+  const original = process.env.AI_GATEWAY_API_KEY;
 
   afterEach(() => {
-    if (original === undefined) delete process.env.ANTHROPIC_API_KEY;
-    else process.env.ANTHROPIC_API_KEY = original;
+    if (original === undefined) delete process.env.AI_GATEWAY_API_KEY;
+    else process.env.AI_GATEWAY_API_KEY = original;
   });
 
-  it('is off without an API key', () => {
-    delete process.env.ANTHROPIC_API_KEY;
+  const originalOidc = process.env.VERCEL_OIDC_TOKEN;
+
+  afterEach(() => {
+    if (originalOidc === undefined) delete process.env.VERCEL_OIDC_TOKEN;
+    else process.env.VERCEL_OIDC_TOKEN = originalOidc;
+  });
+
+  it('is off with no way to reach the gateway', () => {
+    delete process.env.AI_GATEWAY_API_KEY;
+    delete process.env.VERCEL_OIDC_TOKEN;
     expect(isAiAdvisoryConfigured()).toBe(false);
   });
 
-  it('is on with one', () => {
-    process.env.ANTHROPIC_API_KEY = 'sk-test';
+  it('is on with an explicit gateway key', () => {
+    delete process.env.VERCEL_OIDC_TOKEN;
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    expect(isAiAdvisoryConfigured()).toBe(true);
+  });
+
+  it('is on with only an OIDC token, because a Vercel deployment mints one', () => {
+    // The deployed case needs no configuration at all, which is the reason
+    // this is not a "is a key set" check.
+    delete process.env.AI_GATEWAY_API_KEY;
+    process.env.VERCEL_OIDC_TOKEN = 'oidc-test';
     expect(isAiAdvisoryConfigured()).toBe(true);
   });
 });
 
 describe('requestAiAdvisory', () => {
-  const original = process.env.ANTHROPIC_API_KEY;
+  const original = process.env.AI_GATEWAY_API_KEY;
 
   afterEach(() => {
-    if (original === undefined) delete process.env.ANTHROPIC_API_KEY;
-    else process.env.ANTHROPIC_API_KEY = original;
+    if (original === undefined) delete process.env.AI_GATEWAY_API_KEY;
+    else process.env.AI_GATEWAY_API_KEY = original;
   });
 
   it('returns findings above the contract confidence threshold', async () => {
-    const { client } = stubClient(
-      toolUseResponse([
+    const { call } = stubCall([
         { issue: 'Alt text "image1" does not describe the image.', confidence: 0.9 },
-      ]),
-    );
+      ]);
 
-    const findings = await requestAiAdvisory(advisoryInput({ client }));
+    const findings = await requestAiAdvisory(advisoryInput({ call }));
 
     expect(findings).toEqual([
       {
@@ -93,82 +109,92 @@ describe('requestAiAdvisory', () => {
   it('applies minReport as a live gate', async () => {
     // This threshold used to compare two constants, so its result was fixed
     // when it was written. It now filters real, varying confidences.
-    const { client } = stubClient(
-      toolUseResponse([
+    const { call } = stubCall([
         { issue: 'Certain issue.', confidence: 0.95 },
         { issue: 'Borderline issue.', confidence: 0.5 },
-      ]),
-    );
+      ]);
 
-    const findings = await requestAiAdvisory(advisoryInput({ client, minConfidence: 0.7 }));
+    const findings = await requestAiAdvisory(advisoryInput({ call, minConfidence: 0.7 }));
 
     expect(findings).toHaveLength(1);
     expect(findings[0].message).toBe('Certain issue.');
   });
 
   it('never gates a run', async () => {
-    const { client } = stubClient(toolUseResponse([{ issue: 'Something.', confidence: 1 }]));
+    const { call } = stubCall([{ issue: 'Something.', confidence: 1 }]);
 
-    const findings = await requestAiAdvisory(advisoryInput({ client }));
+    const findings = await requestAiAdvisory(advisoryInput({ call }));
 
     expect(findings.every((f) => f.gateable === false)).toBe(true);
     expect(findings.every((f) => f.severity === 'advisory')).toBe(true);
   });
 
-  it('returns nothing when no API key is configured and no client is injected', async () => {
-    delete process.env.ANTHROPIC_API_KEY;
+  it('returns nothing when there is no way to reach the gateway and no call is injected', async () => {
+    delete process.env.AI_GATEWAY_API_KEY;
+    delete process.env.VERCEL_OIDC_TOKEN;
 
     expect(await requestAiAdvisory(advisoryInput())).toEqual([]);
   });
 
   it('degrades to no advisory when the API errors, rather than failing the run', async () => {
-    const create = vi.fn().mockRejectedValue(new Error('503 overloaded'));
-    const client = { messages: { create } } as unknown as Anthropic;
+    const call = vi.fn().mockRejectedValue(new Error('503 overloaded'));
 
-    await expect(requestAiAdvisory(advisoryInput({ client }))).resolves.toEqual([]);
+    await expect(requestAiAdvisory(advisoryInput({ call }))).resolves.toEqual([]);
   });
 
-  it('handles a refusal without reading the content array', async () => {
-    // On a refusal `content` can be empty; indexing it blindly would throw and
-    // turn a soft outcome into a failed audit.
-    const { client } = stubClient({ stop_reason: 'refusal', content: [] });
+  it('handles a refusal, which the call reports as no usable answer', async () => {
+    // A refusal used to arrive as an empty `content` array that would throw if
+    // indexed blindly, turning a soft outcome into a failed audit. It is now
+    // one `null`, alongside every other unusable answer.
+    const { call } = stubCall(null);
 
-    await expect(requestAiAdvisory(advisoryInput({ client }))).resolves.toEqual([]);
+    await expect(requestAiAdvisory(advisoryInput({ call }))).resolves.toEqual([]);
   });
 
   it('handles a response that called no tool', async () => {
-    const { client } = stubClient({
-      stop_reason: 'end_turn',
-      content: [{ type: 'text', text: 'Nothing to report.' }],
-    });
+    const { call } = stubCall(null);
 
-    await expect(requestAiAdvisory(advisoryInput({ client }))).resolves.toEqual([]);
+    await expect(requestAiAdvisory(advisoryInput({ call }))).resolves.toEqual([]);
   });
 
   it('accepts an empty findings list as a valid answer', async () => {
-    const { client } = stubClient(toolUseResponse([]));
+    const { call } = stubCall([]);
 
-    await expect(requestAiAdvisory(advisoryInput({ client }))).resolves.toEqual([]);
+    await expect(requestAiAdvisory(advisoryInput({ call }))).resolves.toEqual([]);
   });
 
-  it('constrains the model to the findings tool and a fixed schema', async () => {
-    const { client, create } = stubClient(toolUseResponse([]));
+  it('defaults to a gateway model string, overridable by configuration', () => {
+    // This used to assert a hardcoded vendor model id on a request object. The
+    // model is now a `provider/model` string the gateway resolves, so what is
+    // worth pinning is that it stays a gateway slug and stays configurable —
+    // swapping model must not need a code change.
+    const original = process.env.AUDITOR_ADVISORY_MODEL;
+    try {
+      delete process.env.AUDITOR_ADVISORY_MODEL;
+      expect(advisoryModel()).toContain('/');
 
-    await requestAiAdvisory(advisoryInput({ client }));
-
-    const request = create.mock.calls[0][0];
-    expect(request.model).toBe('claude-opus-5');
-    expect(request.tool_choice).toEqual({ type: 'tool', name: 'report_findings' });
-    expect(request.tools[0].strict).toBe(true);
-    expect(request.tools[0].input_schema.additionalProperties).toBe(false);
+      process.env.AUDITOR_ADVISORY_MODEL = 'openai/gpt-5.4';
+      expect(advisoryModel()).toBe('openai/gpt-5.4');
+    } finally {
+      if (original === undefined) delete process.env.AUDITOR_ADVISORY_MODEL;
+      else process.env.AUDITOR_ADVISORY_MODEL = original;
+    }
   });
 
-  it('sends the page evidence and marks it as untrusted data', async () => {
-    const { client, create } = stubClient(toolUseResponse([]));
+  it('frames the page evidence as untrusted data rather than instructions', () => {
+    // A page is third-party content and this prompt is the only thing between
+    // it and prompt injection, so it is asserted directly rather than read off
+    // a request object that no longer exists.
+    expect(SYSTEM_PROMPT).toContain('untrusted');
+    expect(SYSTEM_PROMPT).toContain('not instructions');
+  });
+
+  it('sends every page of evidence to the one call', async () => {
+    const { call, spy } = stubCall([]);
 
     await requestAiAdvisory(
       advisoryInput({
-        client,
+        call,
         pages: [
           advisoryPage({
             axe: {
@@ -189,26 +215,22 @@ describe('requestAiAdvisory', () => {
       }),
     );
 
-    const request = create.mock.calls[0][0];
-    const content = request.messages[0].content as string;
+    const content = spy.mock.calls[0][0] as string;
 
     expect(content).toContain('<accessibility_tree>');
     expect(content).toContain('<checks_needing_review>');
     expect(content).toContain('color-contrast');
-    // The page is third-party content, so the system prompt must frame it as
-    // data rather than instructions.
-    expect(request.system).toContain('untrusted');
   });
 
   it('reviews the whole journey in a single call, not one per page', async () => {
     // Per-page calls would cost N× and, worse, could never see the issues that
     // only exist across pages — navigation named differently on two screens,
     // heading structure drifting partway through the flow.
-    const { client, create } = stubClient(toolUseResponse([]));
+    const { call, spy } = stubCall([]);
 
     await requestAiAdvisory(
       advisoryInput({
-        client,
+        call,
         pages: [
           advisoryPage({ page: { url: 'https://app.example.com/login', title: 'Login' } }),
           advisoryPage({
@@ -219,9 +241,9 @@ describe('requestAiAdvisory', () => {
       }),
     );
 
-    expect(create).toHaveBeenCalledOnce();
+    expect(spy).toHaveBeenCalledOnce();
 
-    const content = create.mock.calls[0][0].messages[0].content as string;
+    const content = spy.mock.calls[0][0] as string;
     expect(content).toContain('https://app.example.com/login');
     expect(content).toContain('https://app.example.com/violations');
     expect(content).toContain('https://app.example.com/done');
@@ -231,10 +253,10 @@ describe('requestAiAdvisory', () => {
   });
 
   it('does not spend a model call when no page was captured', async () => {
-    const { client, create } = stubClient(toolUseResponse([]));
+    const { call, spy } = stubCall([]);
 
-    await expect(requestAiAdvisory(advisoryInput({ client, pages: [] }))).resolves.toEqual([]);
-    expect(create).not.toHaveBeenCalled();
+    await expect(requestAiAdvisory(advisoryInput({ call, pages: [] }))).resolves.toEqual([]);
+    expect(spy).not.toHaveBeenCalled();
   });
 });
 

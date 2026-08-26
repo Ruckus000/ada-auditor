@@ -16,7 +16,7 @@ import { delimiter, join } from 'node:path';
  * A caller that treats `available: false` as a crash has misread the contract.
  * The document pipeline runs where a toolchain exists — a developer machine, CI,
  * an operator's box — and is cleanly absent everywhere else, exactly as the AI
- * advisory is absent without `ANTHROPIC_API_KEY`.
+ * advisory is absent without a way to reach the AI Gateway.
  *
  * ## Why nothing is cached
  *

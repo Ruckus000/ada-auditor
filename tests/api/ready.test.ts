@@ -51,7 +51,8 @@ describe('GET /api/ready', () => {
   const originalSessionSecret = process.env.AUDITOR_SESSION_SECRET;
   const originalCronSecret = process.env.CRON_SECRET;
   const originalBlobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  const originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
+  const originalGatewayKey = process.env.AI_GATEWAY_API_KEY;
+  const originalOidcToken = process.env.VERCEL_OIDC_TOKEN;
 
   beforeEach(() => {
     process.env.DATABASE_URL = 'postgres://test/db';
@@ -77,8 +78,10 @@ describe('GET /api/ready', () => {
     else process.env.CRON_SECRET = originalCronSecret;
     if (originalBlobToken === undefined) delete process.env.BLOB_READ_WRITE_TOKEN;
     else process.env.BLOB_READ_WRITE_TOKEN = originalBlobToken;
-    if (originalAnthropicKey === undefined) delete process.env.ANTHROPIC_API_KEY;
-    else process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
+    if (originalGatewayKey === undefined) delete process.env.AI_GATEWAY_API_KEY;
+    else process.env.AI_GATEWAY_API_KEY = originalGatewayKey;
+    if (originalOidcToken === undefined) delete process.env.VERCEL_OIDC_TOKEN;
+    else process.env.VERCEL_OIDC_TOKEN = originalOidcToken;
   });
 
   it('is ready when AUDITOR_RUN_TOKEN meets MIN_TOKEN_LENGTH', async () => {
@@ -182,7 +185,8 @@ describe('GET /api/ready', () => {
     process.env.KV_REST_API_URL = 'https://kv.test';
     process.env.KV_REST_API_TOKEN = 'kv-token';
     process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
-    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.AI_GATEWAY_API_KEY;
+    delete process.env.VERCEL_OIDC_TOKEN;
 
     const body = await (await GET()).json();
 
@@ -203,7 +207,8 @@ describe('GET /api/ready', () => {
     process.env.KV_REST_API_URL = 'https://kv.test';
     process.env.KV_REST_API_TOKEN = 'kv-token';
     process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
-    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.AI_GATEWAY_API_KEY;
+    delete process.env.VERCEL_OIDC_TOKEN;
     documents.available = false;
     documents.converter = false;
 

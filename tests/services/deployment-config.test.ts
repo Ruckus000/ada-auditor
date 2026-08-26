@@ -17,7 +17,7 @@ describe('readDeploymentConfig', () => {
     const env = {
       DATABASE_URL: 'postgres://user:hunter2@host/db',
       BLOB_READ_WRITE_TOKEN: 'vercel_blob_rw_SECRET',
-      ANTHROPIC_API_KEY: 'sk-ant-SECRET',
+      AI_GATEWAY_API_KEY: 'gw-SECRET',
       KV_REST_API_URL: 'https://kv.example',
       AUDITOR_RUN_TOKEN: 'a-very-secret-token',
     };

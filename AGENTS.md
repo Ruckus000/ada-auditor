@@ -164,11 +164,27 @@ Chromium launches on a Vercel function:
   conformance level, a help URL and a snippet. The scan runs in
   `integrations/browser/axe-scan.ts`; `services/deterministic-audit.ts` maps its
   plain-data output and imports neither Playwright nor axe-core.
-- **AI advisory: a real `claude-opus-5` call** with strict tool use, over the
-  pruned accessibility tree plus axe's undecided checks. Judges what rules
-  cannot — alt text that says nothing, headings used for size, error text that
-  does not say what to fix. Gated on `ANTHROPIC_API_KEY`; absent or failing, the
-  run completes without it. Always `gateable: false`.
+- **AI advisory: a real model call through the Vercel AI Gateway**, with forced
+  tool use, over the pruned accessibility tree plus axe's undecided checks.
+  Judges what rules cannot — alt text that says nothing, headings used for
+  size, error text that does not say what to fix. Always `gateable: false`.
+  The model is a `provider/model` string (`AUDITOR_ADVISORY_MODEL`, default
+  `minimax/minimax-m3-free`), not a vendor SDK, so changing model is
+  configuration rather than a rewrite. Auth is the gateway's:
+  `AI_GATEWAY_API_KEY` if set, otherwise the `VERCEL_OIDC_TOKEN` a deployment
+  mints for itself — so a deployed run needs no key at all. No way to reach the
+  gateway, an expired token, a gateway error, a refusal, or a tool call that
+  does not match the schema all degrade to *no advisory*, never to a failed run.
+  The response is validated with zod rather than trusted: the previous
+  implementation relied on one vendor's `strict` tool mode, and the gateway
+  routes to models that do not all honour it.
+  **The default model is free and that has a boundary.** Free gateway models
+  advertise neither zero data retention nor a no-training guarantee, and this
+  pass sends the accessibility tree of every page a journey walked. On a public
+  site that is public text; on an authenticated client app it is whatever real
+  end-user data was on screen — the same reasoning that put run evidence in a
+  private blob store. Point `AUDITOR_ADVISORY_MODEL` at a model with a
+  data-handling guarantee before running the advisory behind a login.
 - **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
   target is checked four ways: scheme and host; every resolved address; the URL
   the page settled on after each navigation; and the address the browser
@@ -302,22 +318,23 @@ Slices 2 and 4-6 follow from that.
 
 Read this before claiming something works.
 
-- **The AI advisory has never run, anywhere.** `ANTHROPIC_API_KEY` is set in no
-  Vercel environment — not production, preview or development — and is not in
-  any local `.env.local` either. The code is real and gated correctly (absent
-  key, the run completes without it), so nothing is broken; what is untrue is
-  the description. This product is documented as hybrid — deterministic checks
-  plus an AI advisory that judges what rules cannot — and **every audit it has
-  ever produced has been deterministic-only**. `/api/ready` reports it as
-  `advisoryConfigured: false`, which is the honest signal, and it does not gate
-  readiness because a run without the advisory is a supported configuration.
-  Two things follow. The advisory line of the walk-budget reserve (60s of 120s)
-  is a guess with no measurement anywhere behind it, and `phaseMs.advisory` has
-  read `0` on every run in the database. And the half of the product that
-  catches alt text that says nothing, headings used for size, and error text
-  that does not say what to fix has never been exercised against a real site —
-  which is exactly the class of barrier the twelve-page dsrfund baseline could
-  not decide with rules alone.
+- **The AI advisory has still never run against a real site.** It was pinned to
+  one vendor's SDK and a key (`ANTHROPIC_API_KEY`) that was set in no Vercel
+  environment and no local file, so **every audit this product has ever
+  produced has been deterministic-only** and `phaseMs.advisory` reads `0` on
+  every run in the database. It now goes through the AI Gateway instead, which
+  removes the reason it was dark: a Vercel deployment authenticates with its
+  own OIDC token, so production needs no key.
+  What is still unproven is the pass itself. No run in the database has
+  exercised it end to end, which means: the walk-budget reserve's advisory line
+  (60s of 120s) remains a guess with no measurement behind it; the default
+  model has never been asked to honour the findings tool, and a model that
+  ignores it degrades to no advisory rather than announcing itself; and the
+  half of the product that catches alt text saying nothing has never been shown
+  to catch anything. The twelve-page dsrfund baseline left 88 checks the rules
+  could not decide, which is exactly the queue this pass exists to work — so
+  the first real advisory run should be over that same fixed page set, where
+  there is something specific to compare against.
 - **The unlock throttle and the run budget can both be memory-only.** Redis used to be required on
   Vercel because the run store needed it. The run store is Postgres now, so
   nothing forces Upstash to exist, and without it the throttle counts attempts
@@ -495,8 +512,8 @@ Read this before claiming something works.
   `www.dsrfund.org` in 17.6s — journey 10.1s, upload 7.1s, slowest page 1.16s.
   Upload is the phase that scales with pages, at roughly 0.6s each, so the 25s
   the reserve allows it covers twenty pages about twice over. **The advisory
-  line of the reserve is still unmeasured at zero**, because no deployment has
-  ever had an `ANTHROPIC_API_KEY` — see the advisory gap below. Twelve pages
+  line of the reserve is still unmeasured at zero**, because the advisory has
+  never run — see the advisory gap below. Twelve pages
   used 17.6s of a 300s ceiling, so neither bound came close to binding here;
   that is a fact about a marketing site, and says nothing yet about an app that
   signs a user in and renders behind it. The budget is what makes it safe to wait for that run rather than guess
