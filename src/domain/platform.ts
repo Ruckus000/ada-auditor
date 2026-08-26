@@ -213,6 +213,13 @@ export type DocumentReportEntry = {
   /** When the latest reading was taken, and by which instrument pass. */
   readAt: string;
   readBy: 'inspection' | 'conversion';
+  /**
+   * The conversion whose file speaks for this entry, when one does — the
+   * handle the shared page's download route resolves. An id, never a URL:
+   * the blob URL stays server-side, and the route re-checks the token and
+   * the report's own snapshot before streaming a byte.
+   */
+  conversionId?: string;
   tagged: boolean;
   pages: number;
   /** Verbatim gap strings — rephrasing them would be a copy free to drift. */
@@ -565,6 +572,12 @@ export type StoredDocumentInspection = {
   source: DocumentInspectionSource;
   /** The summary verbatim. A store that reworded the instrument has drifted. */
   summary: RemediationSummary;
+  /**
+   * `INSTRUMENT_VERSION` at reading time. Absent on rows written before the
+   * stamp existed — readers treat absence as version 1, which is true: the
+   * vocabulary had not changed while those rows were being written.
+   */
+  instrumentVersion?: number;
   inspectedAt: string;
 };
 
@@ -621,6 +634,19 @@ export type StoredDocumentConversion = {
   summary: RemediationSummary;
   inputSha256: string;
   outputSha256: string;
+  /** See `StoredDocumentInspection.instrumentVersion` — same stamp, same rule. */
+  instrumentVersion?: number;
+  /**
+   * Where the delivered bytes live — the blob store's own URL, the only
+   * handle in existence. Server-side only: routes STREAM through it and never
+   * serialise it into a response. Absent when no blob store was configured at
+   * conversion time — the hashes still prove what was delivered; the file
+   * itself just isn't retrievable from here. Stored under `documents/`, which
+   * the evidence pruner (`prefix: 'runs/'`) never sweeps: a delivered
+   * document is the product, not evidence with a window, and it lives until
+   * its rows do.
+   */
+  artifactUrl?: string;
   convertedAt: string;
 };
 
@@ -700,6 +726,12 @@ export interface ClientDocumentStore {
    * is a retry and the first record stands.
    */
   saveDocumentConversion(record: StoredDocumentConversion): Promise<void>;
+  /**
+   * One conversion by id — what the download routes resolve before streaming
+   * a stored file. The caller checks ownership against `clientId`; the store
+   * just answers.
+   */
+  getDocumentConversion(id: string): Promise<StoredDocumentConversion | null>;
 }
 
 export type PlatformStore = OperatorStore &

@@ -117,6 +117,27 @@ describe('compareDocumentInspections', () => {
     expect(byDoc.get('doc-mixed')?.baselineAt).toBe('2026-08-26T10:00:00.000Z');
   });
 
+  it('refuses to diff across instrument versions — incomparable, not a fabricated change', () => {
+    // The same answer walkedTheSamePath gives page regression for a changed
+    // ruleset: a vocabulary change diffed silently would report OUR change as
+    // the client's document changing. Absent stamps read as version 1.
+    const [diff] = compareDocumentInspections([
+      { ...inspection('i2', 'doc-a', '2026-08-26T11:00:00.000Z', []), instrumentVersion: 2 },
+      inspection('i1', 'doc-a', '2026-08-26T10:00:00.000Z', ['2.4.2: no title']),
+    ]);
+
+    expect(diff.status).toBe('incomparable');
+    expect(diff.newGaps).toEqual([]);
+    expect(diff.resolvedGaps).toEqual([]);
+
+    // Same version on both sides — including both absent — compares normally.
+    const [comparable] = compareDocumentInspections([
+      { ...inspection('i2', 'doc-b', '2026-08-26T11:00:00.000Z', []), instrumentVersion: 1 },
+      inspection('i1', 'doc-b', '2026-08-26T10:00:00.000Z', ['2.4.2: no title']),
+    ]);
+    expect(comparable.status).toBe('improved');
+  });
+
   it('takes the latest two readings per document out of a newest-first listing', () => {
     // Three readings: the diff must be i3 against i2, never against i1 —
     // otherwise a gap fixed two readings ago reads as freshly resolved

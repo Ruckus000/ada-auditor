@@ -43,5 +43,5 @@ export default async function SharedReportRoute({
     notFound();
   }
 
-  return <SharedReportPage report={report} />;
+  return <SharedReportPage report={report} token={token} />;
 }

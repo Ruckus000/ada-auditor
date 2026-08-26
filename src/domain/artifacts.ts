@@ -48,4 +48,15 @@ export interface ArtifactStore {
    * string anywhere in the path, so no request-forgery surface.
    */
   read(url: string): Promise<ArtifactRead>;
+  /**
+   * Stores one file's bytes and answers the store's own URL — `null` when no
+   * store is configured, which callers record as honest absence rather than
+   * an error: the hashes still prove what the bytes were.
+   *
+   * Same privacy stance as `upload`: private access, random suffix, the
+   * returned URL is the only handle and stays server-side. `path` is always
+   * built from generated ids by the caller, never from anything
+   * remote-authored.
+   */
+  storeBytes(path: string, bytes: Buffer, contentType: string): Promise<{ url: string } | null>;
 }

@@ -147,6 +147,21 @@ export class BlobArtifactStore implements ArtifactStore {
 
     return uploaded;
   }
+
+  async storeBytes(
+    path: string,
+    bytes: Buffer,
+    contentType: string,
+  ): Promise<{ url: string } | null> {
+    // Private with a random suffix, exactly as `upload` — see its comment for
+    // why both halves matter. The caller builds `path` from generated ids.
+    const { url } = await this.put(path, bytes, {
+      access: 'private',
+      addRandomSuffix: true,
+      contentType,
+    });
+    return { url };
+  }
 }
 
 /**
@@ -171,6 +186,12 @@ export class NoopArtifactStore implements ArtifactStore {
 
   async read(): Promise<ArtifactRead> {
     return { status: 'pruned' };
+  }
+
+  async storeBytes(): Promise<{ url: string } | null> {
+    // Honest absence: the caller records no pointer, and the hashes still
+    // prove what the bytes were.
+    return null;
   }
 }
 

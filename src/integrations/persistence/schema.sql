@@ -731,3 +731,16 @@ create table if not exists document_conversions (
 -- The inventory's "latest conversion" lookup and any per-document history.
 create index if not exists document_conversions_document_idx
   on document_conversions (document_id, converted_at desc);
+
+-- INSTRUMENT_VERSION at reading time (see domain/document-remediation.ts).
+-- Nullable: rows written before the stamp read as version 1, which is true —
+-- the vocabulary had not changed while they were being written.
+alter table document_inspections add column if not exists instrument_version int;
+alter table document_conversions add column if not exists instrument_version int;
+
+-- Where the delivered bytes live, when a blob store was configured at
+-- conversion time. Server-side handle only — routes stream through it, never
+-- serialise it. Under the `documents/` prefix, which the evidence pruner
+-- (`prefix: 'runs/'`) never sweeps: a delivered document is the product, not
+-- evidence with a window, and it lives until its rows do.
+alter table document_conversions add column if not exists artifact_url text;

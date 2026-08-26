@@ -115,6 +115,32 @@ describe('buildDocumentReport', () => {
     expect(section.entries[0].readBy).toBe('inspection');
   });
 
+  it('hands out a conversion download handle only when the file is actually stored', () => {
+    const conversion = (over: object) => ({
+      id: 'conv-1',
+      clientId: 'acme',
+      documentId: 'doc-1',
+      summary: summary({ tagged: true, gaps: [] }),
+      inputSha256: 'a'.repeat(64),
+      outputSha256: 'b'.repeat(64),
+      convertedAt: '2026-08-26T10:00:00.000Z',
+      ...over,
+    });
+
+    const stored = buildDocumentReport(
+      [doc({ latestConversion: conversion({ artifactUrl: 'https://blob.example/x.pdf' }) })],
+      AT,
+    );
+    expect(stored.entries[0].conversionId).toBe('conv-1');
+    // The handle is an id; the blob URL never enters the snapshot.
+    expect(JSON.stringify(stored)).not.toContain('blob.example');
+
+    // No artifact stored → no handle: a download link on the public page must
+    // never point at nothing.
+    const bare = buildDocumentReport([doc({ latestConversion: conversion({}) })], AT);
+    expect(bare.entries[0]).not.toHaveProperty('conversionId');
+  });
+
   it('never carries titleText — the shared page is public-by-token', () => {
     const section = buildDocumentReport(
       [doc({ latestInspection: inspection('2026-08-26T09:00:00.000Z') })],

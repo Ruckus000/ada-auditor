@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isPdf, logSafe } from '../../../../../../domain/document-remediation';
+import { INSTRUMENT_VERSION, isPdf, logSafe } from '../../../../../../domain/document-remediation';
 import type {
   ClientDocumentRecord,
   StoredDocumentConversion,
@@ -99,6 +99,9 @@ function conversionResponse(record: StoredDocumentConversion) {
     summary: record.summary,
     inputSha256: record.inputSha256,
     outputSha256: record.outputSha256,
+    // A flag, never the blob URL: that handle stays server-side, and the
+    // download route re-reads it from the record.
+    stored: record.artifactUrl !== undefined,
     convertedAt: record.convertedAt,
   };
 }
@@ -282,6 +285,7 @@ export async function POST(
     ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
     source: 'crawl',
     summary: outcome.summary,
+    instrumentVersion: INSTRUMENT_VERSION,
     inspectedAt: now,
   };
   await platform.saveDocumentInspection(record);
@@ -352,6 +356,7 @@ export async function PUT(
     url: name,
     source: 'upload',
     summary: outcome.summary,
+    instrumentVersion: INSTRUMENT_VERSION,
     inspectedAt: now,
   };
   await platform.saveDocumentInspection(record);

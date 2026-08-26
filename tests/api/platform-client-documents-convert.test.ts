@@ -39,6 +39,11 @@ vi.mock('../../src/app/api/_lib/authorize', () => ({
   authorizePrincipal: async () => (authorized.ok ? { kind: 'machine', name: 'CI' } : null),
 }));
 
+const { storeBytes } = vi.hoisted(() => ({ storeBytes: vi.fn() }));
+vi.mock('../../src/integrations/artifacts/blob-store', () => ({
+  getArtifactStore: () => ({ storeBytes }),
+}));
+
 const { POST, PUT } = await import(
   '../../src/app/api/platform/clients/[clientId]/documents/convert/route'
 );
@@ -120,6 +125,8 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
   beforeEach(async () => {
     convertSourceToPdf.mockReset();
     conversionSucceeds();
+    storeBytes.mockReset();
+    storeBytes.mockResolvedValue({ url: 'https://blob.example/documents/acme/stored.pdf' });
     runtimes.soffice = true;
     runtimes.java = true;
     authorized.ok = true;
@@ -163,6 +170,39 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     });
     expect(document.latestConversion?.summary.tagged).toBe(true);
     expect(document.latestConversion?.summary.title).toBe('transcribed');
+
+    // The delivered bytes went to the blob store under a GENERATED path —
+    // never the URL's own, which names a person — and the record keeps the
+    // store's URL so the download routes can stream it back.
+    expect(storeBytes).toHaveBeenCalledTimes(1);
+    const [storedPath] = storeBytes.mock.calls[0] as [string];
+    expect(storedPath).toMatch(/^documents\/acme\/[a-z0-9-]+\.pdf$/);
+    expect(storedPath).not.toContain('jane-doe');
+    expect(document.latestConversion?.artifactUrl).toBe(
+      'https://blob.example/documents/acme/stored.pdf',
+    );
+  });
+
+  it('records honest absence when no blob store is configured', async () => {
+    storeBytes.mockResolvedValue(null);
+
+    const response = await POST(request({ url: DOC_URL }), params('acme'));
+
+    expect(response.status).toBe(200);
+    const [document] = await platform.listClientDocuments('acme');
+    // The conversion succeeded and its hashes stand; only the pointer is
+    // absent — which is exactly what the download route 404s on.
+    expect(document.latestConversion).not.toHaveProperty('artifactUrl');
+  });
+
+  it('a failing blob store does not fail the conversion', async () => {
+    storeBytes.mockRejectedValue(new Error('blob outage'));
+
+    const response = await POST(request({ url: DOC_URL }), params('acme'));
+
+    expect(response.status).toBe(200);
+    const [document] = await platform.listClientDocuments('acme');
+    expect(document.latestConversion).not.toHaveProperty('artifactUrl');
   });
 
   it('converts an upload under its filename, no fetch made', async () => {

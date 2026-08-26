@@ -914,6 +914,46 @@ export function platformStoreContract(
       expect(record.latestConversion?.outputSha256).toBe('c'.repeat(64));
     });
 
+    it('round-trips the conversion stamp and artifact pointer, absence staying absent', async () => {
+      const store = await seeded();
+      const doc = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: DOC_URL, kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+
+      await store.saveDocumentConversion(
+        conversionRecord({
+          id: `${PLATFORM_PREFIX}-conv-stored`,
+          documentId: doc.id,
+          instrumentVersion: 1,
+          artifactUrl: `https://blob.example/documents/${PLATFORM_PREFIX}/a-random-suffix.pdf`,
+        }),
+      );
+      await store.saveDocumentConversion(
+        conversionRecord({
+          id: `${PLATFORM_PREFIX}-conv-bare`,
+          documentId: doc.id,
+          convertedAt: T1,
+        }),
+      );
+
+      const stored = await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-stored`);
+      expect(stored).toMatchObject({
+        instrumentVersion: 1,
+        artifactUrl: `https://blob.example/documents/${PLATFORM_PREFIX}/a-random-suffix.pdf`,
+      });
+
+      // A conversion made with no blob store reads back with the fields
+      // ABSENT — the shape a route's `stored` flag and the download route's
+      // refusal both key on.
+      const bare = await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-bare`);
+      expect(bare).not.toHaveProperty('artifactUrl');
+      expect(bare).not.toHaveProperty('instrumentVersion');
+
+      expect(await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-nope`)).toBeNull();
+    });
+
     it('keeps the first conversion when the same id is saved again', async () => {
       const store = await seeded();
       const doc = await store.ensureClientDocument(
