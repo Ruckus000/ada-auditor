@@ -79,6 +79,55 @@ describe('isAiAdvisoryConfigured', () => {
   });
 });
 
+describe('the off sentinel', () => {
+  const originals = {
+    model: process.env.AUDITOR_ADVISORY_MODEL,
+    key: process.env.AI_GATEWAY_API_KEY,
+    oidc: process.env.VERCEL_OIDC_TOKEN,
+  };
+
+  afterEach(() => {
+    for (const [env, value] of [
+      ['AUDITOR_ADVISORY_MODEL', originals.model],
+      ['AI_GATEWAY_API_KEY', originals.key],
+      ['VERCEL_OIDC_TOKEN', originals.oidc],
+    ] as const) {
+      if (value === undefined) delete process.env[env];
+      else process.env[env] = value;
+    }
+  });
+
+  it('turns the pass off even when both auth sources are present', () => {
+    // Auth became ambient in #103 — a Vercel deployment always holds an OIDC
+    // token — so "no key" stopped being a way to say no. This is the way.
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    process.env.VERCEL_OIDC_TOKEN = 'oidc-test';
+    process.env.AUDITOR_ADVISORY_MODEL = 'off';
+    expect(isAiAdvisoryConfigured()).toBe(false);
+  });
+
+  it('is case-insensitive, because an env var is typed by hand', () => {
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    process.env.AUDITOR_ADVISORY_MODEL = ' OFF ';
+    expect(isAiAdvisoryConfigured()).toBe(false);
+  });
+
+  it('leaves a real model string on', () => {
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    process.env.AUDITOR_ADVISORY_MODEL = 'openai/gpt-5.4';
+    expect(isAiAdvisoryConfigured()).toBe(true);
+  });
+
+  it('wins over an injected call, spending nothing', async () => {
+    // Off is a statement about where evidence may go, and a test double is
+    // still a place — the sentinel is checked before the seam.
+    process.env.AUDITOR_ADVISORY_MODEL = 'off';
+    const { call, spy } = stubCall([{ issue: 'x', confidence: 1 }]);
+    await expect(requestAiAdvisory(advisoryInput({ call }))).resolves.toEqual([]);
+    expect(spy).not.toHaveBeenCalled();
+  });
+});
+
 describe('requestAiAdvisory', () => {
   const original = process.env.AI_GATEWAY_API_KEY;
 

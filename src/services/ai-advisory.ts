@@ -53,8 +53,23 @@ export type AiAdvisoryFinding = {
  */
 const DEFAULT_MODEL = 'minimax/minimax-m3-free';
 
+/**
+ * The sentinel that turns the advisory off outright.
+ *
+ * Needed because #103 made authentication ambient: a Vercel deployment always
+ * holds a `VERCEL_OIDC_TOKEN`, so "no key configured" stopped being a way to
+ * say no, and the pass would otherwise run on every production audit with
+ * whatever the default model is. A deployment auditing authenticated pages
+ * must be able to refuse to send their accessibility trees anywhere at all.
+ */
+export const ADVISORY_OFF = 'off';
+
 export function advisoryModel(): string {
   return process.env.AUDITOR_ADVISORY_MODEL || DEFAULT_MODEL;
+}
+
+function advisoryDisabled(): boolean {
+  return advisoryModel().trim().toLowerCase() === ADVISORY_OFF;
 }
 
 /** Kept small; an advisory pass that runs long costs more than it is worth. */
@@ -136,6 +151,9 @@ export function createAiAdvisoryFinding(input: {
  * `requestAiAdvisory`.
  */
 export function isAiAdvisoryConfigured(): boolean {
+  if (advisoryDisabled()) {
+    return false;
+  }
   return Boolean(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN);
 }
 
@@ -230,6 +248,12 @@ export async function requestAiAdvisory(input: {
    */
   call?: AdvisoryCall;
 }): Promise<AiAdvisoryFinding[]> {
+  // Checked before the injected-call seam, not behind it: `off` is a statement
+  // about where evidence may go, and a test double is still a place.
+  if (advisoryDisabled()) {
+    return [];
+  }
+
   if (!input.call && !isAiAdvisoryConfigured()) {
     return [];
   }

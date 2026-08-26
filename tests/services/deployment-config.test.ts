@@ -52,7 +52,7 @@ describe('readDeploymentConfig', () => {
     // Advisory findings never gate a build, and their absence is never a run
     // failure. Flagging it would train an operator to ignore the warnings.
     expect(get({}, 'advisory')).toMatchObject({
-      value: 'off',
+      value: 'off (unreachable)',
       degraded: false,
     });
   });
@@ -138,5 +138,15 @@ describe('readDeploymentConfig', () => {
 
     expect(clean.degradedCount).toBe(0);
     expect(readDeploymentConfig({}).degradedCount).toBeGreaterThan(0);
+  });
+
+  it('tells apart advisory off-by-decision from off-by-unreachable', () => {
+    // Conflating the two sends an operator hunting for a missing key that was
+    // never the reason it is off.
+    expect(get({ AI_GATEWAY_API_KEY: 'gw', AUDITOR_ADVISORY_MODEL: 'off' }, 'advisory')?.value).toBe(
+      'off (by configuration)',
+    );
+    expect(get({}, 'advisory')?.value).toBe('off (unreachable)');
+    expect(get({ AI_GATEWAY_API_KEY: 'gw' }, 'advisory')?.value).toBe('on');
   });
 });
