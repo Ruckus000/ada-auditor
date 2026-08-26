@@ -1,3 +1,5 @@
+import type { TitleOutcome } from '../../domain/document-remediation';
+
 /**
  * Reading and repairing a flat ODF source, as pure string transforms.
  *
@@ -108,11 +110,13 @@ export function readLanguage(xml: string): string | null {
 
 export type TitleRepair = {
   xml: string;
-  /** What happened, for the record a delivered document has to carry. */
-  outcome:
-    | { kind: 'already-titled'; title: string }
-    | { kind: 'transcribed'; title: string }
-    | { kind: 'no-heading-to-copy' };
+  /**
+   * What happened, for the record a delivered document has to carry.
+   *
+   * The shape lives in `domain/document-remediation.ts`: the route and anything
+   * in `services/` both need it, and neither may import an integration.
+   */
+  outcome: TitleOutcome;
 };
 
 /**
