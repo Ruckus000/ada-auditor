@@ -1,5 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head><meta charset="utf-8" /><title>Deep</title></head>
-  <body><main><h1>Deep</h1><a href="/">Home</a></main></body>
+  <body>
+    <main><h1>Deep</h1><a href="/">Home</a></main>
+    <script>
+      // A real municipal site template registers one of these, and its
+      // worker-originated fetches produced responses with no frame — see the
+      // service-worker case in discover-links.test.ts.
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+    </script>
+  </body>
 </html>

@@ -63,6 +63,16 @@ vi.mock('node:dns/promises', () => ({
     if (hostname === INTERNAL_HOST) {
       return [{ address: '10.0.0.5', family: 4 }];
     }
+    // For the service-worker case only, which must crawl `localhost`: service
+    // workers exist only in secure contexts, a mapped `http://` host is not
+    // one, and `--unsafely-treat-insecure-origin-as-secure` is inert under
+    // this launch — measured, not assumed. `localhost` is natively secure, so
+    // that test enters through it; the guard's resolver must then answer
+    // something public or the entry is refused before Chromium (which
+    // resolves it natively, and locally) ever connects.
+    if (hostname === 'localhost') {
+      return [{ address: '93.184.216.34', family: 4 }];
+    }
     throw new Error(`unexpected lookup: ${hostname}`);
   },
 }));
@@ -169,6 +179,22 @@ beforeAll(async () => {
     if (path === '/minutes/agenda.pdf') {
       response.writeHead(200, { 'content-type': 'application/pdf' });
       response.end('%PDF-1.4 fixture');
+      return;
+    }
+
+    // The service worker `deep.html` registers, and the resource it fetches.
+    // The fetch sits at the worker script's top level, not in an event
+    // handler, so it fires the moment the script evaluates — which makes the
+    // frameless response it produces a certainty of every crawl that reaches
+    // `deep.html`, not a race the test might lose.
+    if (path === '/sw.js') {
+      response.writeHead(200, { 'content-type': 'text/javascript' });
+      response.end("fetch('/sw-fetched.json');");
+      return;
+    }
+    if (path === '/sw-fetched.json') {
+      response.writeHead(200, { 'content-type': 'application/json' });
+      response.end('{}');
       return;
     }
 
@@ -574,6 +600,37 @@ describe('discoverLinks guards', () => {
     );
     expect(requestedPaths).not.toContain('/forms/permit-application.docx');
   });
+
+  it('survives a page that registers a service worker', async () => {
+    // `[V]` Found on a live municipal site, not invented: its template
+    // registers a service worker, and every response the worker fetched threw
+    // `response.frame()` synchronously inside the context's response listener
+    // — an uncaughtException per response, in the server process, wedging the
+    // crawl. The fix skips frameless responses; this is the crawl that used
+    // to die.
+    //
+    // Entered through `localhost` rather than the mapped host, and only this
+    // case is: service workers exist only in secure contexts, which a mapped
+    // `http://` name is not and `localhost` natively is. The resolver fake
+    // answers a public address for it so the real entry guard passes, while
+    // Chromium resolves the name itself and connects to the loopback server.
+    requestedPaths.length = 0;
+
+    const result = await discoverLinks({
+      targetUrl: `http://localhost:${shared.port}/deep.html`,
+    });
+
+    // The worker genuinely registered and genuinely fetched — otherwise this
+    // test passes with the hazard absent. Both land through `requestedPaths`,
+    // the same witness the document cases lean on.
+    expect(requestedPaths).toContain('/sw.js');
+    expect(requestedPaths).toContain('/sw-fetched.json');
+
+    // And the crawl still did its job: the entry page and the site beyond it.
+    const paths = result.pages.map((page) => new URL(page.url).pathname);
+    expect(paths).toContain('/deep.html');
+    expect(paths).toContain('/');
+  }, 60_000);
 
   it('refuses an entry point resolving to a private address', async () => {
     await expect(discoverLinks({ targetUrl: 'http://10.0.0.1/' })).rejects.toThrow(
