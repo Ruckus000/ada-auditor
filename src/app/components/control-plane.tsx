@@ -6,7 +6,7 @@ import { GLOSSARY, glossaryAnchorId, glossaryEntry, type GlossaryKey } from './g
 import { InfoTip } from './info-tip';
 import { parseAuditResponse, type AuditResult } from './audit-types';
 import { StatusRail, type ReadyState, type SystemStatus } from './status-rail';
-import { RunForm, type PlatformHint, type RunConfig } from './run-form';
+import { RunForm, type RunConfig } from './run-form';
 import { VerdictLegend, VerdictPanel } from './verdict-panel';
 import { FindingsList, RunDetails } from './findings-list';
 import { UnlockCard } from './unlock-card';

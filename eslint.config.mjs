@@ -52,6 +52,40 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    // After the two `next` spreads, not before them: a flat config is applied in
+    // order and the later block wins. Written above them this would be silently
+    // overridden and the tree would look exactly the same, which is the failure
+    // mode worth naming because nothing about it looks wrong.
+    //
+    // A leading underscore is already how this codebase says "this binding
+    // exists because the signature or the destructuring requires it, not
+    // because anything reads it". `withoutSecret` is the clearest case: the
+    // whole purpose of `const { passwordHash: _passwordHash, ...rest }` is to
+    // *drop* the hash, and a rule that cannot see the convention reports the
+    // codebase doing precisely the right thing. Eight of the fourteen warnings
+    // this replaces were that.
+    //
+    // Severity stays `warn`. `--max-warnings 0` in the `lint` script is what
+    // makes it fail, so an editor shows these as warnings while CI still
+    // refuses them — and the flag lives in the script rather than in `ci.yml`
+    // and `localci.yml` separately, because localci exists to mirror CI and two
+    // copies of one threshold is how they stop matching.
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          // `...rest` is the idiom that drops a field; the sibling it leaves
+          // behind is the point, not an oversight.
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

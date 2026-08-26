@@ -1,4 +1,4 @@
-import type { RunStore, StoredFinding, StoredRunRecord } from '../domain/persistence';
+import type { RunStore, StoredFinding } from '../domain/persistence';
 import type { ClientStore, JourneyStore, TriageStore, TriageState } from '../domain/platform';
 import {
   displaySeverity,
