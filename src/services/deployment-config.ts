@@ -49,13 +49,42 @@ export type Env = Record<string, string | undefined>;
  * of its way to install one.
  */
 export type DeploymentFacts = {
+  /** A JVM and the compiled PDF stages. */
   documentToolchainAvailable?: boolean;
+  /** LibreOffice, for converting Word sources. */
+  documentConverterAvailable?: boolean;
 };
 
 /** Reads a positive integer env var, falling back rather than throwing. */
 function intFromEnv(env: Env, name: string, fallback: number): number {
   const raw = Number(env[name]);
   return Number.isInteger(raw) && raw > 0 ? raw : fallback;
+}
+
+/**
+ * Two independent capabilities, reported as one line an operator can act on.
+ *
+ * The PDF stages need a JVM; converting a Word source additionally needs
+ * LibreOffice. Naming which half is missing is the difference between a person
+ * installing the right thing and a person guessing.
+ */
+function documentCapability(facts: DeploymentFacts): string {
+  if (facts.documentToolchainAvailable && facts.documentConverterAvailable) return 'available';
+  if (facts.documentToolchainAvailable) return 'PDF stages only';
+  if (facts.documentConverterAvailable) return 'converter only';
+  return 'not available here';
+}
+
+function documentDetail(facts: DeploymentFacts): string {
+  const missing: string[] = [];
+  if (!facts.documentToolchainAvailable) missing.push('a JDK 17+ and `npm run build:documents`');
+  if (!facts.documentConverterAvailable) missing.push('LibreOffice');
+
+  if (missing.length === 0) {
+    return 'A Java runtime and LibreOffice are both present, so Word sources can be converted and PDFs inspected on this host.';
+  }
+
+  return `Document stages run on a JVM and the source path needs LibreOffice; a serverless function has neither, so this is expected on a deployed environment rather than a fault, and nothing else is affected by it. Where it is wanted, install: ${missing.join(' and ')}.`;
 }
 
 export function readDeploymentConfig(
@@ -132,10 +161,8 @@ export function readDeploymentConfig(
     {
       key: 'documents',
       label: 'Document remediation',
-      value: facts.documentToolchainAvailable ? 'available' : 'not available here',
-      detail: facts.documentToolchainAvailable
-        ? 'A Java runtime and the compiled document stages are present, so PDFs can be inspected on this host.'
-        : 'Document stages run on a JVM, and a serverless function has none — so this is expected on a deployed environment rather than a fault, and nothing else is affected by it. Where it is wanted: install a JDK 17+ and run `npm run build:documents`.',
+      value: documentCapability(facts),
+      detail: documentDetail(facts),
       // Never degraded. Absence is the design of this slice, not a weakness,
       // and marking it degraded would put a permanent entry in the operator's
       // warning count for a feature that was never promised here.

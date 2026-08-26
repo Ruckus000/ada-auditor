@@ -4,11 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { finishDocument } from '../../../src/integrations/documents/finish';
-import { inspectDocument } from '../../../src/integrations/documents/inspect';
-import { resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
-import { contentChanges, type DocumentStructure } from '../../../src/domain/document-structure';
-import { renderPdf } from '../../../src/integrations/browser/render-pdf';
+import { finishDocument } from '../../../../src/integrations/documents/finish';
+import { inspectDocument } from '../../../../src/integrations/documents/inspect';
+import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
+import { contentChanges, type DocumentStructure } from '../../../../src/domain/document-structure';
+import { renderPdf } from '../../../../src/integrations/browser/render-pdf';
 
 /**
  * The first stage that writes a file, held to the claim it makes about itself.
@@ -129,6 +129,36 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     if (after.ok) {
       expect(after.value.title).toBe(read.value.title);
       expect(contentChanges(read.value, after.value)).toEqual([]);
+    }
+  });
+
+  it('removes a language claim when the source declared none', async () => {
+    // `[V]` The measurement behind this: LibreOffice writes /Lang as `en-US`
+    // onto a PDF exported from a source with EVERY fo:language declaration
+    // stripped out. That is a statement the document never made, and carrying
+    // it forward would make our own toolchain the thing asserting it.
+    //
+    // `language: null` is how a caller says "the source declares none". The
+    // result fails 7.2-34 visibly, which a reviewer can see — rather than
+    // asserting a language nobody chose, which no reader can.
+    const withLang = join(dir, 'has-lang.pdf');
+    expect(
+      (await finishDocument({ inputPath: source, outputPath: withLang, language: 'en-GB' })).ok,
+    ).toBe(true);
+    const before = await inspectDocument(withLang);
+    expect(before.ok && before.value.lang).toBe('en-GB');
+
+    const cleared = join(dir, 'no-lang.pdf');
+    expect(
+      (await finishDocument({ inputPath: withLang, outputPath: cleared, language: null })).ok,
+    ).toBe(true);
+
+    const after = await inspectDocument(cleared);
+    expect(after.ok).toBe(true);
+    if (after.ok) {
+      expect(after.value.lang).toBeNull();
+      // Removing a claim must not remove content.
+      if (before.ok) expect(contentChanges(before.value, after.value)).toEqual([]);
     }
   });
 

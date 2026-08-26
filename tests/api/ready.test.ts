@@ -28,11 +28,16 @@ vi.mock('../../src/app/api/_lib/redis', async (importOriginal) => ({
  * thing on a machine that has run `npm run build:documents` and another on a
  * machine that has not.
  */
-const documents = vi.hoisted(() => ({ available: true }));
+const documents = vi.hoisted(() => ({ available: true, converter: true }));
 
 vi.mock('../../src/integrations/documents/java-runtime', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../src/integrations/documents/java-runtime')>()),
   isDocumentToolchainAvailable: () => documents.available,
+}));
+
+vi.mock('../../src/integrations/documents/libreoffice-runtime', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/integrations/documents/libreoffice-runtime')>()),
+  isDocumentConverterAvailable: () => documents.converter,
 }));
 
 const { GET } = await import('../../src/app/api/ready/route');
@@ -52,6 +57,7 @@ describe('GET /api/ready', () => {
     process.env.DATABASE_URL = 'postgres://test/db';
     redis.answers = true;
     documents.available = true;
+    documents.converter = true;
   });
 
   afterEach(() => {
@@ -199,6 +205,7 @@ describe('GET /api/ready', () => {
     process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
     delete process.env.ANTHROPIC_API_KEY;
     documents.available = false;
+    documents.converter = false;
 
     const response = await GET();
     const body = await response.json();
@@ -206,6 +213,7 @@ describe('GET /api/ready', () => {
     expect(response.status).toBe(200);
     expect(body.status).toBe('ready');
     expect(body.checks.documentToolchainAvailable).toBe(false);
+    expect(body.checks.documentConverterAvailable).toBe(false);
     expect(body.warnings).toEqual([]);
   });
 

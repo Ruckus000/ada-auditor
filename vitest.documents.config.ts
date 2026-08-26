@@ -43,7 +43,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/integrations/documents/java-*.test.ts'],
+    include: ['tests/integrations/documents/toolchain/**/*.test.ts'],
     environment: 'node',
     fileParallelism: false,
     testTimeout: 120_000,

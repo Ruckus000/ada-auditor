@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { inspectDocument } from '../../../src/integrations/documents/inspect';
-import { resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
-import { documentStructureSchema } from '../../../src/domain/document-structure';
-import { renderPdf } from '../../../src/integrations/browser/render-pdf';
+import { inspectDocument } from '../../../../src/integrations/documents/inspect';
+import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
+import { documentStructureSchema } from '../../../../src/domain/document-structure';
+import { renderPdf } from '../../../../src/integrations/browser/render-pdf';
 
 /**
  * The document boundary against a real JVM.

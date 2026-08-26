@@ -67,15 +67,25 @@ describe('readDeploymentConfig', () => {
     // permanent entry to the operator's warning count for a capability that was
     // never promised on that host — the same reason `/api/ready` reports it and
     // raises no warning.
-    const find = (available: boolean) =>
-      readDeploymentConfig({}, { documentToolchainAvailable: available }).settings.find(
-        (setting) => setting.key === 'documents',
-      );
+    const find = (java: boolean, soffice: boolean) =>
+      readDeploymentConfig({}, {
+        documentToolchainAvailable: java,
+        documentConverterAvailable: soffice,
+      }).settings.find((setting) => setting.key === 'documents');
 
-    expect(find(true)?.value).toBe('available');
-    expect(find(true)?.degraded).toBe(false);
-    expect(find(false)?.value).toBe('not available here');
-    expect(find(false)?.degraded).toBe(false);
+    expect(find(true, true)?.value).toBe('available');
+    expect(find(false, false)?.value).toBe('not available here');
+    // Naming which half is missing is the difference between installing the
+    // right thing and guessing.
+    expect(find(true, false)?.value).toBe('PDF stages only');
+    expect(find(true, false)?.detail).toMatch(/LibreOffice/);
+    expect(find(false, true)?.value).toBe('converter only');
+    expect(find(false, true)?.detail).toMatch(/JDK/);
+
+    // Never degraded, in any combination: absence is the design of this slice.
+    for (const [j, s2] of [[true, true], [true, false], [false, true], [false, false]] as const) {
+      expect(find(j, s2)?.degraded, `${j}/${s2}`).toBe(false);
+    }
     // The unanswered case renders as absent rather than throwing or claiming
     // availability nothing checked.
     expect(readDeploymentConfig({}).settings.find((s) => s.key === 'documents')?.value).toBe(

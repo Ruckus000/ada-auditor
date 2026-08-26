@@ -1,5 +1,6 @@
 import { readDeploymentConfig } from '../../../services/deployment-config';
 import { isDocumentToolchainAvailable } from '../../../integrations/documents/java-runtime';
+import { isDocumentConverterAvailable } from '../../../integrations/documents/libreoffice-runtime';
 import { SettingsScreen } from '../../platform/components/settings-screen';
 import { guarded } from '../guard';
 
@@ -14,6 +15,7 @@ export default guarded(async function WorkspaceSettingsPage() {
     <SettingsScreen
       config={readDeploymentConfig(process.env, {
         documentToolchainAvailable: isDocumentToolchainAvailable(),
+        documentConverterAvailable: isDocumentConverterAvailable(),
       })}
     />
   );

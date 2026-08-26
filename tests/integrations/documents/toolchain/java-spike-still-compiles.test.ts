@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { PDFBOX_JAR, resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
+import { PDFBOX_JAR, resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
 
 const execFileAsync = promisify(execFile);
 
