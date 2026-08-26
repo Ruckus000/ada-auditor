@@ -61,6 +61,7 @@ type RunRow = {
   duration_ms: number;
   browser_mode: boolean;
   truncated_pages: number;
+  truncation_reason: string | null;
   score: number | null;
   score_version: number | null;
   gate_version: number | null;
@@ -182,6 +183,12 @@ function toRecord(
   if (run.browser_mode) record.browserMode = true;
   if (pages.length > 0) record.pages = pages;
   if (run.truncated_pages > 0) record.truncatedPages = run.truncated_pages;
+  // Only when the row carried one — absent must come back absent, or an old run
+  // acquires a cause it never recorded. The same drift `gate_version` and
+  // `score_version` both produced before the contract caught them.
+  if (run.truncation_reason !== null) {
+    record.truncationReason = run.truncation_reason as StoredRunRecord['truncationReason'];
+  }
   if (run.score !== null) {
     record.score = run.score;
     // Only when the row carried one, same as the gate below. The `?? 1` this
@@ -270,14 +277,16 @@ export class PostgresRunStore implements RunStore {
       insert into runs (
         request_id, journey_id, environment, platform, evidence_status,
         ci_status, status, failure_reason, duration_ms, browser_mode,
-        truncated_pages, score, score_version, gate_version, created_at, started_at, phase_ms,
+        truncated_pages, truncation_reason, score, score_version, gate_version,
+        created_at, started_at, phase_ms,
         intent
       ) values (
         ${record.requestId}, ${record.journeyId}, ${record.environment},
         ${record.platform}, ${record.evidenceStatus}, ${record.ciStatus},
         ${record.status ?? 'complete'}, ${record.failureReason ?? null},
         ${record.durationMs}, ${record.browserMode ?? false},
-        ${record.truncatedPages ?? 0}, ${record.score ?? null},
+        ${record.truncatedPages ?? 0}, ${record.truncationReason ?? null},
+        ${record.score ?? null},
         ${record.scoreVersion ?? null}, ${record.gateVersion ?? null}, ${record.createdAt},
         ${record.startedAt ?? record.createdAt},
         ${record.phaseMs ? JSON.stringify(record.phaseMs) : null},
@@ -294,6 +303,10 @@ export class PostgresRunStore implements RunStore {
         duration_ms = excluded.duration_ms,
         browser_mode = excluded.browser_mode,
         truncated_pages = excluded.truncated_pages,
+        -- In the excluded list rather than coalesced: a run re-saved without a
+        -- reason was not truncated, and keeping the old value would leave a
+        -- stale cause on a walk that no longer has one.
+        truncation_reason = excluded.truncation_reason,
         score = excluded.score,
         score_version = excluded.score_version,
         gate_version = excluded.gate_version,

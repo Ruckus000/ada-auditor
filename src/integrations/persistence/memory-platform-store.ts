@@ -1,6 +1,11 @@
-import { journeyRunRefusal, UNASSIGNED_CLIENT_ID } from '../../domain/platform';
+import {
+  clampEventListLimit,
+  journeyRunRefusal,
+  UNASSIGNED_CLIENT_ID,
+} from '../../domain/platform';
 import type {
   ActivityEvent,
+  ListEventsOptions,
   PlatformStore,
   StoredClient,
   StoredJourney,
@@ -19,15 +24,25 @@ import type {
  * the same reason: a caller cannot mutate a Postgres row by holding onto the
  * object it saved, and a double that allows it hides the bug.
  */
+/**
+ * A stored decision plus the order it was written in.
+ *
+ * The sequence is kept beside the entry rather than on it so it cannot escape
+ * into a `TriageEntry` a caller reads back — the doubles' whole job is to hand
+ * out exactly the shape Postgres does.
+ */
+type StoredTriage = { entry: TriageEntry; seq: number };
+
 export class MemoryPlatformStore implements PlatformStore {
   private readonly operators = new Map<string, StoredOperatorWithSecret>();
   private readonly clients = new Map<string, StoredClient>();
   private readonly configs = new Map<string, Record<string, unknown>>();
   private readonly journeys = new Map<string, StoredJourney>();
-  private readonly triage = new Map<string, TriageEntry>();
+  private readonly triage = new Map<string, StoredTriage>();
   private readonly reports = new Map<string, StoredReport>();
   private readonly events: ActivityEvent[] = [];
   private nextEventId = 1;
+  private nextTriageSeq = 1;
 
   private static now(): string {
     return new Date().toISOString();
@@ -243,21 +258,37 @@ export class MemoryPlatformStore implements PlatformStore {
 
   async listTriage(clientId: string): Promise<TriageEntry[]> {
     return [...this.triage.values()]
-      .filter((entry) => entry.clientId === clientId)
-      .map((entry) => structuredClone(entry));
+      .filter((held) => held.entry.clientId === clientId)
+      // Newest decision first, matching `order by updated_at desc` and the
+      // index built for it. `seq` breaks the ties, and it is not decoration:
+      // `now()` here has millisecond resolution, so two writes in one
+      // millisecond — which the contract does on purpose — stamp the same
+      // instant and leave a sort on `updatedAt` alone free to return either
+      // order. Postgres does not need it because its `now()` is per
+      // transaction and these are separate statements.
+      .sort((a, b) => {
+        const left = a.entry.updatedAt ?? '';
+        const right = b.entry.updatedAt ?? '';
+        if (left !== right) return left < right ? 1 : -1;
+        return b.seq - a.seq;
+      })
+      .map((held) => structuredClone(held.entry));
   }
 
   async setTriage(entry: TriageEntry): Promise<void> {
     const key = this.triageKey(entry.clientId, entry.findingKey);
     const existing = this.triage.get(key);
-    this.triage.set(
-      key,
-      structuredClone({
+    this.triage.set(key, {
+      // A replacement is a fresh decision, so it takes a fresh sequence and
+      // sorts to the front — the same thing `updated_at = now()` does to it in
+      // Postgres.
+      seq: this.nextTriageSeq++,
+      entry: structuredClone({
         ...entry,
-        createdAt: existing?.createdAt ?? MemoryPlatformStore.now(),
+        createdAt: existing?.entry.createdAt ?? MemoryPlatformStore.now(),
         updatedAt: MemoryPlatformStore.now(),
       }),
-    );
+    });
   }
 
   async clearTriage(clientId: string, findingKey: string): Promise<void> {
@@ -317,13 +348,20 @@ export class MemoryPlatformStore implements PlatformStore {
     );
   }
 
-  async listEvents(
-    options: { clientId?: string; limit?: number } = {},
-  ): Promise<ActivityEvent[]> {
-    const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
+  async listEvents(options: ListEventsOptions = {}): Promise<ActivityEvent[]> {
+    const limit = clampEventListLimit(options.limit);
+    // Parsed rather than string-compared. Postgres casts `since` to
+    // `timestamptz` and compares instants, and the caller that matters — the
+    // failed-runs workflow — sends `2026-08-25T11:51:28Z` with no
+    // milliseconds, which sorts *before* the same instant written
+    // `…:28.000Z` as text. A lexical compare here would drop an event the
+    // Postgres store returns.
+    const since = options.since === undefined ? undefined : Date.parse(options.since);
 
     return [...this.events]
       .filter((event) => options.clientId === undefined || event.clientId === options.clientId)
+      .filter((event) => options.action === undefined || event.action === options.action)
+      .filter((event) => since === undefined || Date.parse(event.createdAt ?? '') >= since)
       // Newest first, ties broken by id — the same total order the Postgres
       // index gives, so a test cannot pass against one store and fail the other.
       .sort((a, b) => {

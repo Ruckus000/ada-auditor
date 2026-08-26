@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { SCHEDULED_RUN_NOT_STARTED } from '../../src/domain/platform';
+
 const { GET } = await import('../../src/app/api/cron/tick/route');
 const {
   MemoryPlatformStore,
@@ -315,5 +317,167 @@ describe('GET /api/cron/tick', () => {
     const body = await (await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }))).json();
 
     expect(body.reconciled).toBe(1);
+  });
+
+  /**
+   * The other half of the scheduler's record.
+   *
+   * The tick wrote an event when a dispatch landed and nothing at all when one
+   * did not, so a client's scheduled audit could fail to happen with no run
+   * row, no event, and nothing on the journey. There is deliberately still no
+   * run row — see `SCHEDULED_RUN_NOT_STARTED` — but there is now a record.
+   */
+  describe('when a due journey does not start', () => {
+    /** As the run route answers: a JSON body with a code in `error`. */
+    function refusal(status: number, body: unknown): Response {
+      return new Response(JSON.stringify(body), {
+        status,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
+    /** Silenced, and kept, because two of these cases assert on what it wrote. */
+    const silenceWarnings = () => vi.spyOn(console, 'warn').mockImplementation(() => {});
+    let warn: ReturnType<typeof silenceWarnings>;
+
+    beforeEach(() => {
+      warn = silenceWarnings();
+    });
+
+    afterEach(() => {
+      warn.mockRestore();
+    });
+
+    it('records an event carrying the journey, the status and the refusal code', async () => {
+      fetchMock.mockResolvedValue(refusal(429, { error: 'run_budget_exceeded' }));
+      await seedDueJourney('checkout', 'Checkout');
+
+      await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+      const [event] = await platform.listEvents({ clientId: 'acme' });
+      expect(event).toMatchObject({
+        actor: 'Scheduler',
+        action: SCHEDULED_RUN_NOT_STARTED,
+        subject: 'Checkout',
+      });
+      expect(event.metadata).toEqual({
+        journeyId: 'checkout',
+        status: 429,
+        code: 'run_budget_exceeded',
+      });
+
+      const types = warn.mock.calls.map((call) => JSON.parse(call[0] as string).type);
+      expect(types).toContain('scheduled_run_not_started');
+    });
+
+    // Absent, not null: a throw means no response arrived, and a null `status`
+    // would claim one did and said nothing.
+    it('omits the status entirely when the dispatch threw', async () => {
+      fetchMock.mockRejectedValue(new Error('connect ECONNREFUSED'));
+      await seedDueJourney('checkout');
+
+      await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+      const [event] = await platform.listEvents({ clientId: 'acme' });
+      expect(event.metadata).toEqual({ journeyId: 'checkout', code: 'dispatch_error' });
+      expect(event.metadata).not.toHaveProperty('status');
+    });
+
+    it('says the response was unreadable rather than storing what it said', async () => {
+      fetchMock.mockResolvedValue(
+        new Response('<html><body>502 Bad Gateway</body></html>', {
+          status: 502,
+          headers: { 'content-type': 'text/html' },
+        }),
+      );
+      await seedDueJourney('checkout');
+
+      await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+      const [event] = await platform.listEvents({ clientId: 'acme' });
+      expect(event.metadata).toMatchObject({ code: 'unreadable_response', status: 502 });
+      expect(JSON.stringify(event.metadata)).not.toContain('<html>');
+    });
+
+    /**
+     * The credential and log-injection guard, which is the reason the code is
+     * validated at all rather than merely typed.
+     *
+     * The logger redacts on the key, and nothing about `error` looks secret —
+     * so a hostile value arriving under an innocent key is exactly the case
+     * key-based redaction cannot help with. The newline is the second half: an
+     * unchecked "code" reaching a log line every consumer greps can forge a
+     * second line there.
+     */
+    it('never stores or logs a credential or a forged log line from the response body', async () => {
+      const hostile = 'Bearer sk-live-0123456789abcdef\nAUTHORIZATION';
+      fetchMock.mockResolvedValue(refusal(400, { error: hostile }));
+      await seedDueJourney('checkout');
+
+      await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+      const [event] = await platform.listEvents({ clientId: 'acme' });
+      expect(event.metadata).toMatchObject({ code: 'unreadable_response' });
+      expect(JSON.stringify(event.metadata)).not.toContain('sk-live');
+
+      const lines = warn.mock.calls.map((call) => String(call[0]));
+      expect(lines.every((line) => !line.includes('sk-live'))).toBe(true);
+    });
+
+    // The event is a record, not a substitute for the release: the journey has
+    // still not run, so a tick inside the same window must be able to retry it.
+    it('still gives the journey back after recording that it did not start', async () => {
+      fetchMock.mockResolvedValue(refusal(429, { error: 'run_budget_exceeded' }));
+      await seedDueJourney('checkout');
+
+      await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+      expect((await platform.claimDueJourneys(10)).map((journey) => journey.id)).toEqual([
+        'checkout',
+      ]);
+    });
+
+    // The record is best-effort, the same stance `releaseClaim` takes. Losing
+    // the journeys that did start to a store hiccup would be worse.
+    it('survives a store that cannot write the event', async () => {
+      fetchMock.mockResolvedValue(refusal(429, { error: 'run_budget_exceeded' }));
+      vi.spyOn(platform, 'recordEvent').mockRejectedValue(new Error('store is down'));
+      await seedDueJourney('checkout');
+
+      const response = await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+      expect(response.status).toBe(200);
+      expect((await response.json()).failed).toEqual(['checkout']);
+    });
+  });
+
+  /**
+   * The success-path `recordEvent` used to sit inside the `try` whose `catch`
+   * pushes to `failed` and releases the claim. A store hiccup *after* a
+   * dispatch that landed therefore marked a started run as failed and released
+   * the claim on a run that was in flight — so a second tick in the window
+   * could dispatch it again.
+   */
+  it('counts a successful dispatch as started even when the event write fails', async () => {
+    vi.spyOn(platform, 'recordEvent').mockRejectedValue(new Error('store is down'));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await seedDueJourney('checkout');
+
+    const body = await (await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }))).json();
+
+    expect(body.started).toEqual(['req-dispatched']);
+    expect(body.failed).toEqual([]);
+    // And the claim stands: the run is in flight, so a second tick in this
+    // window must not dispatch it a second time.
+    expect(await platform.claimDueJourneys(10)).toEqual([]);
+    warn.mockRestore();
+  });
+
+  it('writes exactly one event on the success path', async () => {
+    await seedDueJourney('checkout');
+
+    await GET(tick({ authorization: `Bearer ${CRON_SECRET}` }));
+
+    expect(await platform.listEvents({ clientId: 'acme' })).toHaveLength(1);
   });
 });

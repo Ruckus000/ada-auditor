@@ -1,5 +1,6 @@
 import type { EvidenceStatus } from '../../domain/evidence';
 import type { DeterministicFinding } from '../../services/deterministic-audit';
+import type { JourneyTruncationReason } from '../../domain/run-limits';
 import type { JourneyRunnerResult, PageAudit } from './types';
 
 /**
@@ -84,11 +85,38 @@ export class PartialAuditError extends Error {
    * short twice over, which is the one thing the cap must never say quietly.
    */
   readonly truncatedPages: number;
+  /**
+   * Which bound cut the walk short, carried for the reason `truncatedPages`
+   * is: a run that was truncated *and* then failed must not read as a complete
+   * audit, and it must not misname what stopped it either. Absent means not
+   * truncated.
+   */
+  readonly truncationReason?: JourneyTruncationReason;
+  /**
+   * What the walk cost before it died.
+   *
+   * A fourth positional argument would have been a fourth thing to get in the
+   * wrong order, so the tail is one options object. `phaseMs` is here because
+   * the failure path is exactly where a run that outran its function ends up,
+   * and until now that path recorded no timing at all — the one shape of run
+   * whose duration is most worth knowing was the one nothing measured.
+   */
+  readonly phaseMs?: Record<string, number>;
 
-  constructor(cause: Error, auditedPages: AuditedPage[], truncatedPages: number) {
+  constructor(
+    cause: Error,
+    auditedPages: AuditedPage[],
+    truncatedPages: number,
+    details: {
+      truncationReason?: JourneyTruncationReason;
+      phaseMs?: Record<string, number>;
+    } = {},
+  ) {
     super(cause.message, { cause });
     this.name = cause.name;
     this.truncatedPages = truncatedPages;
+    this.truncationReason = details.truncationReason;
+    this.phaseMs = details.phaseMs;
     defineHidden(this, 'auditedPages', auditedPages);
   }
 }

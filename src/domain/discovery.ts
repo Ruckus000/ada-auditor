@@ -243,6 +243,13 @@ export const MAX_DISCOVERY_DEPTH = 3;
  * site, the URL cap stops a fast one with thousands of pages. A `truncated`
  * result on a real site will almost always say `budget`, and that is not a
  * bug. Re-derive both from a real client crawl, not from this estimate.
+ *
+ * The audit walk now has the same pair for the same reasons — see
+ * `domain/run-limits.ts`. It inverts one detail deliberately: this crawl
+ * reports its cause in a `reason` field, while the walk emits two log event
+ * names, because `audit_page_cap_reached` already means one actionable thing
+ * in existing pipelines and redefining it silently would be worse than a
+ * second name.
  */
 export const DISCOVERY_BUDGET_MS = 60_000;
 

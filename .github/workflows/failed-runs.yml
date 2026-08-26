@@ -13,17 +13,27 @@ name: Failed runs
 # and the client detail read one run per journey — so last night's failure is
 # erased by tonight's success before anyone opens the page.
 #
-# ## What this does not cover, said here rather than discovered later
+# ## Two checks, because there are two ways a night can go wrong
 #
-# It reads recorded runs, so it sees a run that executed and failed, and a run
-# reconciled to `run_timed_out`. It cannot see a run that was refused *before*
-# it was recorded: a dispatch that never landed (the tick calls `releaseClaim`
-# and writes no row) or a `run_budget_exceeded` refusal, which is deliberately
-# not a failure — "nothing failed, the run was declined". Those leave nothing
-# for any query to find, here or on any screen. Changing that is a design
-# decision about what such a row would mean to baselines and scoring, not
-# something this job should paper over. So it never reports "all is well",
-# only what it actually checked.
+# The first reads recorded runs, so it sees a run that executed and failed, and
+# a run reconciled to `run_timed_out`.
+#
+# A run refused *before* it was recorded is invisible to that query, and still
+# leaves no row: whether a run that never started deserves one is a decision
+# about baselines, scoring and the newest-run-per-journey read, and the answer
+# was no. So the scheduler records an **activity event** instead, and the
+# second check counts those. `SCHEDULED_RUN_NOT_STARTED` in
+# `src/domain/platform.ts` is the string both sides agree on;
+# `tests/deploy/failed-runs-workflow.test.ts` is what stops them drifting.
+#
+# ## What this still does not cover, said here rather than discovered later
+#
+# A refusal to a *direct* caller — a 429 from `/api/audit/run` to CI or to the
+# console — is not the scheduler's to record, and that caller already has the
+# 429 in its hand. And a tick that never authorized writes nothing at all,
+# because it never claimed anything; the readiness step below covers that one
+# by asking whether `CRON_SECRET` exists. So this job still never reports "all
+# is well", only what it actually checked.
 #
 # ## Why an issue, and why it says so little
 #
@@ -76,6 +86,16 @@ env:
   # this many, the window may extend past what was read and "nothing failed" is
   # not a claim this job can make — see the truncation branch below.
   RUN_LIMIT: '100'
+  # The one value the second check sends, and the only thing it pins. It must
+  # equal `SCHEDULED_RUN_NOT_STARTED` in `src/domain/platform.ts`; a test in
+  # the fast suite asserts this file contains that string, because a copy-edit
+  # to the constant would otherwise leave this matching a string nothing writes
+  # — reporting zero every night, which is what a good night looks like too.
+  NOT_STARTED_ACTION: 'could not start a scheduled run'
+  # As `RUN_LIMIT`, and for the same reason: a count read off a response that
+  # came back full does not cover its window. `/api/platform/activity` caps at
+  # 200, so this is well inside what the route will answer.
+  EVENT_LIMIT: '100'
 
 jobs:
   failed-runs:
@@ -206,6 +226,62 @@ jobs:
 
           cat failures.md
 
+      # The other way a night goes wrong: a journey that was due and never
+      # started. There is no run to read, so this reads the activity event the
+      # scheduler writes instead.
+      #
+      # Filtered server-side on `action` and `since`, and that is the whole
+      # design. This step sends one pinned value and counts what comes back; it
+      # never parses free text, because an activity event carries a client id
+      # and a journey's *name* and this repository is public.
+      #
+      # The one field it does read out of the payload is `metadata.code`, and
+      # only because that value is allowlisted where it is written: the tick's
+      # `refusalCode` accepts `^[a-z][a-z0-9_]{0,63}$` and nothing else, so a
+      # response body cannot put a credential or a forged log line there. The
+      # `test` below re-checks it anyway — a row written by some future caller
+      # has not been through that allowlist, and the cost of checking twice is
+      # a line of jq.
+      - name: Ask the deployment what never started
+        id: notstarted
+        env:
+          AUDITOR_RUN_TOKEN: ${{ secrets.AUDITOR_RUN_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          SINCE=$(date -u -d "${LOOKBACK_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
+          echo "since=${SINCE}" >> "$GITHUB_OUTPUT"
+
+          # `--get --data-urlencode` rather than an interpolated query string:
+          # the action is a sentence with spaces in it.
+          curl --fail --silent --show-error --max-time 30 \
+            -H "authorization: Bearer ${AUDITOR_RUN_TOKEN}" \
+            --get \
+            --data-urlencode "action=${NOT_STARTED_ACTION}" \
+            --data-urlencode "since=${SINCE}" \
+            --data-urlencode "limit=${EVENT_LIMIT}" \
+            "${BASE_URL}/api/platform/activity" > events.json
+
+          # The server already narrowed to the action and the window, so the
+          # count of what came back *is* the answer.
+          jq -r '"count=\(.count)"' events.json >> "$GITHUB_OUTPUT"
+
+          # A count per cause, and nothing else. No client id, no journey name,
+          # no subject, no timestamp — an operator takes the cause to the
+          # authenticated Activity screen and finds the journey there.
+          jq -r '
+            [ .events[]
+              | (.metadata.code // "unrecognised")
+              | if type == "string" and test("^[a-z][a-z0-9_]{0,63}$")
+                then . else "unrecognised" end
+            ]
+            | group_by(.) | map({ code: .[0], count: length })
+            | sort_by(-.count)[]
+            | "- \(.count) × `\(.code)`"
+          ' events.json > causes.md
+
+          cat causes.md
+
       # `always()`, because the case this job exists to prevent is a check that
       # quietly stopped checking. If the step above cannot reach the deployment,
       # or the token has rotated, or the window could not be covered, that is
@@ -213,7 +289,13 @@ jobs:
       # empty room for exactly that reason.
       #
       # One block for every outcome rather than near-identical ones: the title
-      # and body are decided first, and the filing is written once.
+      # and body are decided first, and the filing is written once — now as a
+      # shell function, because there are two independent things to report.
+      #
+      # The two are filed as separate issues on purpose. A run that failed and
+      # a run that never started have different causes, different owners and
+      # different fixes; folded into one issue, closing either would close
+      # both.
       - name: File an issue if there is something to say
         if: always()
         env:
@@ -230,25 +312,38 @@ jobs:
           FAILED_COUNT: ${{ steps.scan.outputs.count }}
           RETURNED: ${{ steps.scan.outputs.returned }}
           SINCE: ${{ steps.scan.outputs.since }}
+          NOT_STARTED_OUTCOME: ${{ steps.notstarted.outcome }}
+          NOT_STARTED_COUNT: ${{ steps.notstarted.outputs.count }}
+          NOT_STARTED_SINCE: ${{ steps.notstarted.outputs.since }}
         run: |
           set -euo pipefail
 
-          # Truncation is not a clean night — it is a check that did not cover
-          # its window — so it joins the "could not run" branch rather than
-          # becoming a third kind of alert. It is also the tripwire for adding a
-          # lighter projection to `/api/audit/runs`: until this fires, one does
-          # not need to exist.
-          if [ "${SCAN_OUTCOME}" = "success" ] && [ "${RETURNED}" = "${RUN_LIMIT}" ]; then
-            TRUNCATED=true
-          else
-            TRUNCATED=false
-          fi
+          # Exact title match over open *and* closed, so a recurrence reopens
+          # the original thread rather than starting a parallel one. A function
+          # rather than a tail block, because there are now two independent
+          # things this step may have to report and only one way to report.
+          file_issue() {
+            local TITLE="$1"
+            local BODY="$2"
+            local EXISTING
+            EXISTING=$(gh issue list --state all --limit 100 --json number,title \
+              --jq "first(.[] | select(.title == \"${TITLE}\") | .number) // empty")
+            if [ -n "${EXISTING}" ]; then
+              gh issue reopen "${EXISTING}" 2>/dev/null || true
+              gh issue comment "${EXISTING}" --body "${BODY}"
+              echo "updated issue #${EXISTING}"
+            else
+              gh issue create --title "${TITLE}" --body "${BODY}"
+            fi
+          }
 
-          if [ "${SCAN_OUTCOME}" != "success" ]; then
-            TITLE='The failed-run check could not run'
-            # The readiness step runs first and skips the scan when it fails, so
-            # `SCAN_OUTCOME` is "skipped" rather than "failure" in that case and
-            # lands here either way — one branch, as before. What changes is that
+          # Either check failing means this job is not watching production, so
+          # both fold into the one meta issue and nothing else is filed. A
+          # count produced by a job that half ran is not a number to act on.
+          if [ "${SCAN_OUTCOME}" != "success" ] || [ "${NOT_STARTED_OUTCOME}" != "success" ]; then
+            # The readiness step runs first and skips the rest when it fails, so
+            # the outcomes are "skipped" rather than "failure" in that case and
+            # land here either way — one branch, as before. What changes is that
             # `READY_CAUSE` usually knows the answer now, where the line below it
             # could only ever offer a guess.
             if [ -n "${READY_CAUSE}" ]; then
@@ -257,12 +352,33 @@ jobs:
               CAUSE='Most likely causes: AUDITOR_RUN_TOKEN was rotated without updating the repository secret, or the deployment moved.'
             fi
             BODY=$(printf '%s\n' \
-              'This job could not ask the deployment which runs failed, so nobody is watching production audits until it is fixed.' \
+              'This job could not ask the deployment which runs failed, or which scheduled runs never started, so nobody is watching production audits until it is fixed.' \
               '' \
               "Failed run: ${RUN_URL}" \
               '' \
               "${CAUSE}")
-          elif [ "${TRUNCATED}" = "true" ]; then
+            file_issue 'The failed-run check could not run' "${BODY}"
+            exit 0
+          fi
+
+          # ------------------------------------------- runs that failed --
+
+          # An empty `TITLE` means "nothing to file for this half", which is
+          # what lets one filing call serve every outcome below it.
+          TITLE=''
+
+          # Truncation is not a clean night — it is a check that did not cover
+          # its window — so it joins the "could not run" branch rather than
+          # becoming a third kind of alert. It is also the tripwire for adding a
+          # lighter projection to `/api/audit/runs`: until this fires, one does
+          # not need to exist.
+          if [ "${RETURNED}" = "${RUN_LIMIT}" ]; then
+            TRUNCATED=true
+          else
+            TRUNCATED=false
+          fi
+
+          if [ "${TRUNCATED}" = "true" ]; then
             # Titled for the truncation, because not covering the window is the
             # more serious fact — but it carries the failure list too. Folding
             # this into the meta branch first made the worse night produce the
@@ -294,22 +410,52 @@ jobs:
               '' \
               "Checked by: ${RUN_URL}" \
               '' \
-              'This covers runs that were recorded. A run refused before it was recorded — a dispatch that never landed, or a spent run budget — leaves no row and is not counted above.' \
+              'This covers runs that were recorded. A scheduled run that never started leaves no row here either; it is counted separately, under its own issue.' \
               '' \
               'Updated rather than duplicated, and not closed automatically: a quiet night does not mean the cause was fixed.')
+          fi
+
+          if [ -n "${TITLE}" ]; then
+            file_issue "${TITLE}" "${BODY}"
           else
             echo "no recorded production run failed since ${SINCE}"
+          fi
+
+          # ------------------------------ journeys that never started --
+
+          # Its own issue, not a section of the one above. A run that failed and
+          # a run that never started have different causes, different owners and
+          # different fixes, and folding them together would mean closing one
+          # closes both.
+          if [ "${NOT_STARTED_COUNT}" = "0" ]; then
+            echo "every scheduled run that was due since ${NOT_STARTED_SINCE} was dispatched"
             exit 0
           fi
 
-          # Exact title match over open *and* closed, so a recurrence reopens
-          # the original thread rather than starting a parallel one.
-          EXISTING=$(gh issue list --state all --limit 100 --json number,title \
-            --jq "first(.[] | select(.title == \"${TITLE}\") | .number) // empty")
-          if [ -n "${EXISTING}" ]; then
-            gh issue reopen "${EXISTING}" 2>/dev/null || true
-            gh issue comment "${EXISTING}" --body "${BODY}"
-            echo "updated issue #${EXISTING}"
+          # The truncation guard, mirrored — but it can only ever fire on a
+          # night that is already being reported. The runs scan filters what it
+          # read, so a full page there can still mean zero failures; here the
+          # server did the filtering, so the count *is* what came back and a
+          # full page means the count is a floor rather than a total.
+          if [ "${NOT_STARTED_COUNT}" = "${EVENT_LIMIT}" ]; then
+            FLOOR="The activity endpoint returned its maximum of ${EVENT_LIMIT} events, so this is a floor rather than a total and the window is not fully covered."
           else
-            gh issue create --title "${TITLE}" --body "${BODY}"
+            FLOOR=''
           fi
+
+          BODY=$(printf '%s\n' \
+            "${NOT_STARTED_COUNT} scheduled run(s) were due since ${NOT_STARTED_SINCE} and never started. There is no failed run to look at, because there is no run at all — whichever clients they belong to simply have no audit for that night." \
+            '' \
+            'By cause:' \
+            '' \
+            "$(cat causes.md)" \
+            '' \
+            "${FLOOR}" \
+            '' \
+            'A count per cause is all that is published, and that is less actionable than the failed-run issue rather than equally so: there is no request id to look up, because there was no run. The client and the journey are on the authenticated Activity screen, filtered to this action — they are deliberately not here, because an activity event names a client and a journey and this repository is public.' \
+            '' \
+            "Checked by: ${RUN_URL}" \
+            '' \
+            'Updated rather than duplicated, and not closed automatically: a quiet night does not mean the cause was fixed.')
+
+          file_issue 'A scheduled audit did not start' "${BODY}"

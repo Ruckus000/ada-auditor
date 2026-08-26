@@ -45,6 +45,7 @@ async function main(): Promise<void> {
         omitAxTree: params.omitAxTree,
         steps: params.steps,
         maxPages: params.maxPages,
+        budgetMs: params.budgetMs,
         platformHint: params.platformHint,
       });
 
@@ -91,6 +92,44 @@ async function main(): Promise<void> {
 
         if (insideTheCap.length === 0) {
           fail(`scenario ${scenario}: truncation dropped the findings on a page inside the cap`);
+        }
+      }
+
+      // A count cap cannot bound a duration, and the walk's second bound is the
+      // one that stops a slow real site before the platform does. The claim is
+      // that a run the *clock* cut short says so, names the clock, and still
+      // reports what it found.
+      if (scenario === 'browser_time_budget_truncates') {
+        if (report.pages.length !== 1) {
+          fail(
+            `scenario ${scenario}: expected the walk to audit exactly the page it landed on, got ${report.pages.length}`,
+          );
+        }
+
+        // A spent budget must still buy one page. A zero-page run is the
+        // evidence-free outcome this bound exists to remove, not to produce.
+        if (report.truncatedPages !== 2) {
+          fail(
+            `scenario ${scenario}: expected truncatedPages=2, got ${report.truncatedPages} — a budget that does not report what it skipped is a silent partial audit`,
+          );
+        }
+
+        if (report.truncationReason !== 'budget') {
+          fail(
+            `scenario ${scenario}: expected truncationReason=budget, got ${report.truncationReason} — an operator reading "page-cap" raises a number that was not the problem`,
+          );
+        }
+
+        // And the page it did audit still carries its findings. Truncation is
+        // not a verdict modifier: the expected ciStatus above is `fail`, and it
+        // has to fail on real violations rather than on being incomplete.
+        const onTheOnePage = report.findings.filter(
+          (finding) =>
+            finding.source === 'deterministic' && finding.pageUrl.endsWith('violations.html'),
+        );
+
+        if (onTheOnePage.length === 0) {
+          fail(`scenario ${scenario}: the budget dropped the findings on the page it audited`);
         }
       }
 

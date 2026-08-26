@@ -1,4 +1,5 @@
 import type { Environment } from '../../domain/contracts';
+import type { JourneyTruncationReason } from '../../domain/run-limits';
 import type { AxNodeSummary } from '../../services/ax-tree';
 import type { AxeScanResult } from '../../services/deterministic-audit';
 
@@ -97,6 +98,18 @@ export type JourneyRunnerInput = {
    */
   maxPages?: number;
   /**
+   * How long the walk may spend *starting* new work, from before the browser
+   * launches. Defaults to `AUDITOR_WALK_BUDGET_MS`, then to what is left of the
+   * function ceiling after the reserve.
+   *
+   * A count cap cannot bound a duration, which is what this exists for: a slow
+   * real site inside the page cap was killed mid-invocation by the platform and
+   * reconciled to `run_timed_out` six minutes later, with no evidence and no
+   * findings. Zero is a legal value and means "audit the page you are on, then
+   * stop" — see `resolveWalkBudgetMs`.
+   */
+  budgetMs?: number;
+  /**
    * Walk and capture without evaluating rules. The preview endpoint's whole
    * point: an authoring check should cost navigation, not an audit. `passCount`
    * stays absent — "not measured" and "zero passes" are different facts.
@@ -170,8 +183,23 @@ export type JourneyRunnerResult = {
    */
   pages: PageAudit[];
   /**
-   * How many further navigations the page cap refused to audit. Non-zero means
-   * this run did NOT cover the whole journey.
+   * How many further navigations a bound refused to audit. Non-zero means this
+   * run did NOT cover the whole journey.
    */
   truncatedPages: number;
+  /**
+   * Which bound cut the walk short, when one did.
+   *
+   * A sibling field rather than a richer `truncatedPages`, deliberately. A
+   * second count of one fact is the drift this repository keeps paying for, and
+   * this number crosses four hops and an integer column before anybody reads
+   * it. First cause wins: a walk that hits its page cap and then its budget
+   * says `page-cap`, because that is what stopped it.
+   *
+   * Absent means not truncated — never "truncated for a reason we did not
+   * record", and never assumed to be the page cap. A run stored before the walk
+   * had a clock has no reason to name, and writing one would put words in its
+   * mouth.
+   */
+  truncationReason?: JourneyTruncationReason;
 };

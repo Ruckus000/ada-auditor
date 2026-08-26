@@ -346,10 +346,36 @@ Read this before claiming something works.
   same split as `activity_events`.
   Coverage gap: the hydration suite runs on the memory store with no accounts,
   so the zero-violation axe pass never renders this control.
-- **A dismissal is free text, not a taxonomy.** The prototype offered five
-  canned reasons ("handled elsewhere", "accepted risk, signed off"). Nobody has
-  agreed to that vocabulary, and a wrong one becomes the record an auditor
-  defends later, so the note stays free text until somebody has.
+- **A dismissal is free text, and now it says which kind of dismissal.** The
+  prototype offered five canned reasons ("handled elsewhere", "accepted risk,
+  signed off"). That vocabulary is still not adopted and should not be:
+  "handled elsewhere" is a claim about a system nobody audited, and a wrong
+  reason becomes the record an auditor defends later. **The note stays free
+  text, and stays required.** What changed is the *state*. `accepted-risk` had
+  been in `TriageState`, the route's enum, the SQL CHECK and
+  `findingDisplayStatus` since Phase 2C with no control able to produce it — a
+  state reachable everywhere except the product — so three consumers branched
+  two ways over a three-member union and an accepted barrier both rendered and
+  logged as "dismissed". The distinction it records is the one WCAG already
+  forces rather than one invented for a dropdown: conformance is binary per
+  criterion, so *this is not a barrier* (`dismissed`) and *this is a barrier
+  the client accepts* (`accepted-risk`) are different facts, and only the first
+  is a claim about the page. The note asks a different question of each —
+  "Why is this not a barrier?" against an accepted risk produces a note that
+  contradicts the state stored beside it — and that wording lives in
+  `services/presentation/triage.ts`, while the activity feed's wording stays in
+  the route, because an append-only audit record must not be re-worded by a UI
+  copy edit. Every mapping over `TriageState` is now a `Record`, never a
+  ternary, so the next member fails the build instead of quietly reusing
+  "dismissed". An accepted risk is still counted, still shown, still in the
+  shared report, and still cannot move a verdict — `buildSharedReport`'s deps
+  are a `Pick` that excludes the triage store, so that is the compiler's
+  guarantee and not a discipline. No schema change: `accepted-risk` was always
+  inside the CHECK.
+  Still absent, deliberately: **an expiry on an accepted risk.** Reviewing an
+  acceptance annually is good practice, but it needs a column, a scheduler
+  decision, and an answer for what an expired acceptance does to the verdict —
+  a decision, not a patch.
 - **Run evidence can be read back.** `GET /api/audit/runs/<id>/artifacts/
   <position>/<kind>` streams it to an authenticated caller. The URL is read
   from the run record, never from the caller — `addRandomSuffix` means the
@@ -382,22 +408,63 @@ Read this before claiming something works.
   portfolio.** `/console` and `/api/audit/runs` report it. Registering the
   journey against a client first (`POST /api/platform/clients/<id>/journeys`)
   is what puts a run on a client's screens.
-- **A page cap of 20, with one measurement behind it.** Runs record
-  `started_at` and `phase_ms`; every page records `duration_ms` and `scan_ms`;
-  `audit_run_log` carries `pagesAudited`, `slowestPageMs` and `headroomMs`
-  (what was left of the 300s budget). `npm run smoke:real -- --url <site>`
-  against a running `next start` prints all of it and suggests a cap.
-  A four-page run of the W3C BAD demo through the deployed function
+- **Two bounds on a walk: 20 pages and 180 seconds.** A count cap cannot bound
+  a duration, and until recently nothing bounded the duration at all — the walk
+  had no clock, and `MAX_RUN_DURATION_MS` said so itself ("a run is not stopped
+  at this number — the platform stops it, and rather more abruptly"). So a slow
+  real site had its invocation killed mid-flight and was reconciled to
+  `run_timed_out` up to six minutes later by the cron sweep, **with no evidence
+  and no findings**. A truncated run is a real audit of what it saw; a killed
+  run is nothing, and tuning the cap only changed which one you got by luck.
+  The walk now carries a wall clock — `AUDITOR_WALK_BUDGET_MS`, default 180s:
+  the 300s `maxDuration` less a 120s reserve for the advisory call, the
+  evidence upload, persistence and the one page that may still be in flight
+  when the deadline passes. The reserve is the named constant and the budget is
+  derived from it, so raising `maxDuration` does not silently re-plan what
+  happens after the walk. The two bounds stop different things, exactly as they
+  do in link discovery (`DISCOVERY_BUDGET_MS`): the budget stops a slow site,
+  the cap stops a fast one with a long journey, and the cap is asked first when
+  both are spent.
+  Truncation now says which (`truncationReason`, `'page-cap' | 'budget'`,
+  stored on the run; absent means not recorded, never "page cap"). Two log
+  event names, not one with a reason field: `audit_page_cap_reached` already
+  means "raise the cap" to anything watching, and a time truncation reported
+  under it sends an operator to change a number that was not the problem.
+  `audit_time_budget_reached` means the journey needs a container worker.
+  **The walk always audits at least one page**, whatever the clock says — a run
+  that captures nothing is the evidence-free outcome the budget exists to
+  remove, and a cold `@sparticuz/chromium` launch can spend the budget before a
+  page is ever opened. The budget bounds when new work *starts*, not when
+  in-flight work finishes; Playwright's per-step timeouts are deliberately not
+  clamped to it, because a wait that hits the deadline should truncate the walk
+  rather than fail the run naming a selector that was fine. Keep
+  `AUDITOR_WALK_BUDGET_MS` comfortably above `AUDITOR_EXPECT_TIMEOUT_MS`.
+  **None of this changes a verdict.** A truncated run is evidence per page, the
+  run takes the worst, the gate unchanged; it just stops claiming to be the
+  whole journey. `browser_time_budget_truncates` pins that, with the violations
+  page walked first so truncation cannot hide a finding.
+  **The cap is still 20, and still has one measurement behind it.** A four-page
+  run of the W3C BAD demo through the deployed function
   (`d62f13f4-4a33-4f14-b592-4b243c4f3e62`, 2026-08-15) took 23.0s: journey
-  20.5s, upload 1.5s, slowest page 4.0s of which 2.9s was the axe scan. Twenty
-  such pages is about 80s.
-  **That is a floor, not a budget.** Four small static documents with no
-  framework, no login and nothing deferred are the easy case; a real client app
-  renders more and waits longer, and no run against one has happened. Re-decide
-  the cap from `slowestPageMs` on a client run, not from this one. `smoke:real`
-  still cannot be driven from a sandbox with allowlisted egress, and it cannot
-  be pointed at localhost — the SSRF guard correctly refuses loopback and
-  private addresses.
+  20.5s, upload 1.5s, slowest page 4.0s of which 2.9s was the axe scan. That is
+  a floor, not a budget — four small static documents with no framework, no
+  login and nothing deferred are the easy case, and no run against a real
+  client app has happened. Re-decide the cap from `slowestPageMs` on a client
+  run. The budget is what makes it safe to wait for that run rather than guess
+  now, and `smoke-real.yml` now keeps its numbers (a job summary and an
+  uploaded `smoke-real.json`) instead of losing them to log retention, so
+  several client sites can be compared when the time comes. The 120s reserve is
+  one-third measurement and two-thirds judgement — the advisory line especially,
+  where the only observed number is 1.0s from a pass that had nothing to say —
+  and it is falsifiable from `phaseMs.advisory`, which is now recorded on the
+  failure path too. Revisit it with the cap, from the same evidence.
+  `smoke:real` still cannot be driven from a sandbox with allowlisted egress,
+  and still cannot be pointed at localhost — the SSRF guard correctly refuses
+  loopback and private addresses, and nothing here weakens it.
+  `phase_ms` is written on both paths and **read by nothing**. Kept because the
+  dataset gets read by hand when the cap is re-decided, and `run_pages.
+  duration_ms` does not say where the non-page time went. Said out loud rather
+  than left to imply it is live.
 - **The unit suites still do not exercise the app's own bundle — but the
   hydration suite does.** Vitest loads modules unbundled, so a packaging fault
   is invisible to it; that is how `@axe-core/playwright` shipped with its
@@ -445,20 +512,49 @@ Read this before claiming something works.
   than per-operator because the bill is shared, enforced inside `startRun` so
   every caller inherits it. It **fails open**: a cost control that becomes an
   outage has made things worse.
-- **A run refused before it is recorded is invisible to everything.** Not just
-  to a screen — to every query there is. `run_budget_exceeded` deliberately
-  leaves no row (`audit-run-handler.ts`: "a refused run must leave no row
-  behind, because it never started... nothing failed, the run was declined"),
-  and when `/api/cron/tick` cannot dispatch — a 429, a 400, a network error —
-  it calls `releaseClaim` and writes nothing either. So a client's scheduled
-  audit can fail to happen with no run record, no activity event, nothing on
-  the journey row, and nothing for `.github/workflows/failed-runs.yml` to find.
-  That workflow covers runs that **executed** and failed, plus runs reconciled
-  to `run_timed_out`, and says so rather than implying more.
-  Recorded here rather than fixed because the fix is a decision, not a patch:
-  a row for a run that never started needs an answer for what it means to
-  regression baselines, to the score, and to the portfolio's newest-run-per-
-  journey read. Do not add one without that answer.
+- **A run refused before it is recorded still leaves no row — and the
+  scheduler now says so anyway.** `run_budget_exceeded` leaves no run record
+  and should not (`audit-run-handler.ts`: "a refused run must leave no row
+  behind, because it never started... nothing failed, the run was declined").
+  That stands, and the reason it stands is the answer the old version of this
+  bullet asked for: `getLatestRun` has no status filter, and four "latest run"
+  reads are deliberately unfiltered (`portfolio.ts`, `client-detail.ts`,
+  `findings-view.ts`, `report-view.ts`), so a synthetic row would become the
+  last run on every screen and the next run's regression baseline, forcing
+  `incomparable` through `walkedTheSamePath`. **A run that never started is not
+  a run.**
+  What was actually being lost was the *scheduler's* knowledge, not a row.
+  `/api/cron/tick` is the only unattended caller — every other one receives the
+  429 and can act on it — and when it could not dispatch it called
+  `releaseClaim` and discarded the outcome. It now writes one activity event,
+  `SCHEDULED_RUN_NOT_STARTED` ("could not start a scheduled run"), attributed
+  to `Scheduler` with the journey name as subject and
+  `{ journeyId, status?, code }` as metadata, beside the event it already wrote
+  on success. One action string rather than one per cause: the feed renders it
+  as a sentence and one unattended reader queries it exactly, so the cause is
+  data. This does not contradict "a run is deliberately not an activity event"
+  (`services/activity-view.ts`) — that rule exists because two records of one
+  run can disagree, and a run that never started has no row to disagree with.
+  **Nothing from the dispatch response reaches a log line or a jsonb column
+  verbatim**: `code` is accepted only as a short snake_case token, so a
+  platform error page, an echoed credential, or a newline forging a second log
+  line cannot get through. The write is best-effort like `releaseClaim` — a
+  record of what happened must not cost the journeys that did start.
+  `GET /api/platform/activity` reads it back (`authorizePrincipal`, zod at the
+  boundary, exact `action`, `since`, clamped `limit`, no tenancy scoping
+  because there is none), and `.github/workflows/failed-runs.yml` asks it a
+  second question every morning. **What that workflow publishes is a count per
+  cause and nothing else** — an activity event carries the client id and the
+  journey's name, and this repository is public; the Activity screen has both.
+  Fixed in passing, because it was found here: the success-path `recordEvent`
+  sat inside the dispatch `try`, so a store hiccup after a dispatch that landed
+  marked a started run as failed *and released the claim on a run that was in
+  flight*.
+  **Still deliberately invisible:** a direct API caller's budget refusal, which
+  leaves no row and no event because the caller was told; and a tick that never
+  authorized at all, which `/api/ready`'s `cron_secret_not_configured` warning
+  covers instead. The workflow still never reports "all is well", only what it
+  actually checked.
 
 ## Agent behavior
 

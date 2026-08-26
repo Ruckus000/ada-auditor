@@ -1,3 +1,4 @@
+import type { JourneyTruncationReason } from '../domain/run-limits';
 import type {
   RunIntent,
   RunStatus,
@@ -24,6 +25,7 @@ type PersistRunInput = {
   browserMode?: boolean;
   pages?: StoredRunPage[];
   truncatedPages?: number;
+  truncationReason?: JourneyTruncationReason;
   score?: number | null;
   scoreVersion?: number;
   gateVersion?: number;
@@ -183,6 +185,10 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     // does not survive the invocation, and a partial audit read back later
     // would otherwise be indistinguishable from a complete one.
     ...(input.truncatedPages ? { truncatedPages: input.truncatedPages } : {}),
+    // Conditional for the reason absence is meaningful everywhere else on this
+    // record: a run that was not truncated has no cause to name, and a run
+    // written before the walk had a clock never had one.
+    ...(input.truncationReason ? { truncationReason: input.truncationReason } : {}),
     // A null score means "not measured" — omitted rather than stored as 0,
     // which is the worst possible score rather than the absence of one.
     ...(input.score !== null && input.score !== undefined

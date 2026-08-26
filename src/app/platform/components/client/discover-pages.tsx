@@ -11,6 +11,7 @@ import {
 } from '../../../../domain/discovery';
 import { MAX_STEP_TEXT, MAX_STEPS_PER_JOURNEY } from '../../../../domain/journey-step';
 import { MAX_JOURNEY_NAME } from '../../../../domain/platform';
+import { DEFAULT_MAX_PAGES_PER_RUN } from '../../../../domain/run-limits';
 import {
   clipHost,
   describeDepth,
@@ -71,7 +72,7 @@ import { FONT, T } from '../../lib/tokens';
 /**
  * When the panel starts saying "that is a lot of pages".
  *
- * `deployment-config.ts` defaults `AUDITOR_MAX_PAGES_PER_RUN` to 20, and a
+ * `AUDITOR_MAX_PAGES_PER_RUN` defaults to `DEFAULT_MAX_PAGES_PER_RUN`, and a
  * client component cannot read the deployment's actual value — which is
  * exactly why this is worded as roughly-how-many rather than as a rule. If it
  * were a rule, a panel holding a stale copy of the number would refuse
@@ -82,7 +83,7 @@ import { FONT, T } from '../../lib/tokens';
  * this panel posts to, known at build time and identical everywhere; this one
  * is a deployment's setting for a different route entirely.
  */
-const SOFT_PAGE_ADVICE = 20;
+const SOFT_PAGE_ADVICE = DEFAULT_MAX_PAGES_PER_RUN;
 
 type DiscoveryResponse = {
   pages?: DiscoveredPage[];

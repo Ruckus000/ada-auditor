@@ -1,3 +1,5 @@
+import { writeFile } from 'node:fs/promises';
+import { MAX_RUN_DURATION_MS, resolveWalkBudgetMs } from '../src/domain/run-limits';
 import { logInfo } from '../src/services/logger';
 import { loadEnvLocal } from './load-env';
 
@@ -15,7 +17,7 @@ import { loadEnvLocal } from './load-env';
  * written, because nothing ever measured it.
  *
  *   npm run build && npm start &          # or `next start`
- *   npm run smoke:real -- --url https://example.com --steps 6
+ *   npm run smoke:real -- --url https://example.com --steps 6 --json out.json
  *
  * Deliberately NOT wired into CI. It depends on somebody else's site staying
  * up, and a suite that fails for a third party's outage trains people to
@@ -126,6 +128,7 @@ async function main(): Promise<void> {
     pages?: RunPage[];
     durationMs?: number;
     truncatedPages?: number;
+    truncationReason?: string;
   };
 
   if (!response.ok) {
@@ -137,9 +140,19 @@ async function main(): Promise<void> {
     .map((page) => page.durationMs)
     .filter((ms): ms is number => typeof ms === 'number');
 
-  // The measurement, said plainly. `headroomMs` is the number that answers
-  // whether twenty pages was ever realistic inside a 300s function.
-  logInfo('smoke_real_result', {
+  const slowestPageMs = durations.length > 0 ? Math.max(...durations) : null;
+
+  /**
+   * The measurement, said plainly, and against the constants the product
+   * actually uses.
+   *
+   * These were hardcoded `300_000` and `240_000`, so the one script whose
+   * purpose is to produce the numbers the bounds get re-decided from measured
+   * against a copy of them. `suggestedPageCap` in particular becomes literally
+   * what it claims to be: how many of *this site's* pages fit inside the walk
+   * budget — not inside a round number somebody typed once.
+   */
+  const result = {
     target,
     requestId: body.requestId,
     ciStatus: body.ciStatus,
@@ -148,19 +161,31 @@ async function main(): Promise<void> {
     findings: body.findings?.length ?? 0,
     pagesAudited: pages.length,
     truncatedPages: body.truncatedPages ?? 0,
+    // Which bound stopped the walk, when one did. On a real site this is the
+    // reading that decides the next move: `page-cap` means raise the cap,
+    // `budget` means the pages are slower than the function is long.
+    truncationReason: body.truncationReason ?? null,
+    walkBudgetMs: resolveWalkBudgetMs(),
     wallClockMs: Date.now() - startedAt,
     runDurationMs: body.durationMs,
-    slowestPageMs: durations.length > 0 ? Math.max(...durations) : null,
+    slowestPageMs,
     medianPageMs:
       durations.length > 0 ? [...durations].sort((a, b) => a - b)[Math.floor(durations.length / 2)] : null,
-    headroomMs: 300_000 - (body.durationMs ?? 0),
-    // What the cap would be if a run should finish inside 240s of the 300s
-    // budget. A recommendation to check, not a value to apply blindly.
+    headroomMs: MAX_RUN_DURATION_MS - (body.durationMs ?? 0),
+    // How many of this site's pages fit in the walk budget. A recommendation to
+    // check, not a value to apply blindly.
     suggestedPageCap:
-      durations.length > 0
-        ? Math.max(1, Math.floor(240_000 / Math.max(...durations)))
-        : null,
-  });
+      slowestPageMs !== null ? Math.max(1, Math.floor(resolveWalkBudgetMs() / slowestPageMs)) : null,
+  };
+
+  logInfo('smoke_real_result', result);
+
+  // Byte-identical to the object logged above, so the artifact a workflow
+  // uploads and the line a human reads cannot disagree about what was measured.
+  const jsonPath = flag('json');
+  if (jsonPath) {
+    await writeFile(jsonPath, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
+  }
 
   for (const page of pages) {
     console.log(`  ${page.route ?? '?'}\t${page.durationMs ?? '?'}ms\t${page.evidenceStatus ?? '?'}`);

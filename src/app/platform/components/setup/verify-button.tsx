@@ -5,6 +5,7 @@ import { describeRunFailure } from '../../lib/run-failure-copy';
 import { inertWhen } from '../../lib/inert-button';
 import { JOURNEY_STEPS_SAVED, journeyIdFromSavedEvent } from '../../lib/journey-events';
 import { FONT, T } from '../../lib/tokens';
+import type { JourneyTruncationReason } from '../../../../domain/run-limits';
 
 /**
  * Walk a journey's *stored* steps without auditing it. The preview route hits
@@ -62,6 +63,7 @@ type PreviewBody = {
   detail?: string;
   pages?: PreviewPage[];
   truncatedPages?: number;
+  truncationReason?: JourneyTruncationReason;
 };
 
 type Outcome =
@@ -69,6 +71,7 @@ type Outcome =
       kind: 'ok';
       pages: PreviewPage[];
       truncatedPages: number;
+      truncationReason?: JourneyTruncationReason;
     }
   | {
       kind: 'failed';
@@ -76,7 +79,30 @@ type Outcome =
       detail?: string;
       pages: PreviewPage[];
       truncatedPages: number;
+      truncationReason?: JourneyTruncationReason;
     };
+
+/**
+ * Names the bound, or declines to.
+ *
+ * Three-way rather than two, because a walk truncated before the clock existed
+ * carries no reason — and "stopped at its page limit" is a plausible-sounding
+ * wrong answer, not a safe default. The operator's next move differs by cause:
+ * a page cap means shorten the journey, a budget means expect the run to take
+ * this long against a real site.
+ */
+function truncationSentence(skipped: number, reason?: JourneyTruncationReason): string {
+  const navigations =
+    skipped === 1 ? '1 more navigation was not followed' : `${skipped} more navigations were not followed`;
+
+  if (reason === 'page-cap') {
+    return `The walk reached the page limit: ${navigations}.`;
+  }
+  if (reason === 'budget') {
+    return `The walk ran out of time: ${navigations}.`;
+  }
+  return `The walk was cut short: ${navigations}.`;
+}
 
 export function VerifyButton({
   clientId,
@@ -153,6 +179,7 @@ export function VerifyButton({
           kind: 'ok',
           pages: body.pages ?? [],
           truncatedPages: body.truncatedPages ?? 0,
+          truncationReason: body.truncationReason,
         });
       } else if (body?.ok === false) {
         // A walk that launched and then failed — `error` is always present
@@ -163,6 +190,7 @@ export function VerifyButton({
           detail: body.detail,
           pages: body.pages ?? [],
           truncatedPages: body.truncatedPages ?? 0,
+          truncationReason: body.truncationReason,
         });
       } else {
         // No `ok` at all: refused before a browser launched.
@@ -264,10 +292,7 @@ export function VerifyButton({
 
           {outcome.truncatedPages > 0 ? (
             <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, color: T.inkMuted }}>
-              The walk was cut short:{' '}
-              {outcome.truncatedPages === 1
-                ? '1 more navigation was not followed.'
-                : `${outcome.truncatedPages} more navigations were not followed.`}
+              {truncationSentence(outcome.truncatedPages, outcome.truncationReason)}
             </p>
           ) : null}
 

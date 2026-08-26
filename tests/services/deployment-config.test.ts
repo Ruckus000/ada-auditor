@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { readDeploymentConfig, type Env } from '../../src/services/deployment-config';
+import { DEFAULT_RETENTION_DAYS } from '../../src/integrations/artifacts/blob-store';
+import {
+  DEFAULT_MAX_PAGES_PER_RUN,
+  DEFAULT_WALK_BUDGET_MS,
+} from '../../src/domain/run-limits';
 
 function get(env: Env, key: string) {
   return readDeploymentConfig(env).settings.find((setting) => setting.key === key);
@@ -53,12 +58,41 @@ describe('readDeploymentConfig', () => {
   });
 
   it('falls back rather than throwing on a nonsensical number', () => {
-    expect(
-      get({ AUDITOR_MAX_PAGES_PER_RUN: 'lots' }, 'pageCap')?.value,
-    ).toBe('20');
-    expect(get({ ARTIFACT_RETENTION_DAYS: '-4' }, 'retention')?.value).toBe(
-      '30 days',
+    expect(get({ AUDITOR_MAX_PAGES_PER_RUN: 'lots' }, 'pageCap')?.value).toBe(
+      String(DEFAULT_MAX_PAGES_PER_RUN),
     );
+    expect(get({ ARTIFACT_RETENTION_DAYS: '-4' }, 'retention')?.value).toBe(
+      `${DEFAULT_RETENTION_DAYS} days`,
+    );
+  });
+
+  it('reports the retention the pruner actually applies', () => {
+    // This screen said 30 days while `blob-store.ts` kept evidence for 90, on
+    // the one screen whose stated purpose is to show where the truth lives — so
+    // an operator read that a client's evidence expires three times sooner than
+    // it does. Asserted against the exported constant rather than a literal,
+    // because a literal here is what let the two drift in the first place.
+    expect(get({}, 'retention')?.value).toBe(`${DEFAULT_RETENTION_DAYS} days`);
+    expect(get({ ARTIFACT_RETENTION_DAYS: '14' }, 'retention')?.value).toBe('14 days');
+  });
+
+  it('reports the walk budget as the first of two bounds', () => {
+    // A page cap cannot bound a duration, so the screen that says what this
+    // deployment is configured to do has to name both. Seconds rather than
+    // milliseconds: the reader is deciding whether it fits inside a function.
+    expect(get({}, 'walkBudget')?.value).toBe(`${DEFAULT_WALK_BUDGET_MS / 1000}s`);
+    expect(get({ AUDITOR_WALK_BUDGET_MS: '60000' }, 'walkBudget')?.value).toBe('60s');
+    expect(get({ AUDITOR_WALK_BUDGET_MS: 'soon' }, 'walkBudget')?.value).toBe(
+      `${DEFAULT_WALK_BUDGET_MS / 1000}s`,
+    );
+    expect(get({}, 'walkBudget')?.degraded).toBe(false);
+  });
+
+  it('accepts a whole number written with a decimal point', () => {
+    // The local parser demanded `Number.isInteger`, so `20.0` read as unset
+    // here while the runner floored it and honoured it — the screen disagreeing
+    // with the thing it describes.
+    expect(get({ AUDITOR_MAX_PAGES_PER_RUN: '25.0' }, 'pageCap')?.value).toBe('25');
   });
 
   it('reports the document toolchain without ever counting it as degraded', () => {

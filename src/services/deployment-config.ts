@@ -1,4 +1,10 @@
 import { runBudgetLimits } from './run-budget';
+import { DEFAULT_RETENTION_DAYS } from '../integrations/artifacts/blob-store';
+import {
+  DEFAULT_MAX_PAGES_PER_RUN,
+  DEFAULT_WALK_BUDGET_MS,
+  positiveIntFrom,
+} from '../domain/run-limits';
 
 /**
  * What this deployment is actually configured to do.
@@ -55,10 +61,16 @@ export type DeploymentFacts = {
   documentConverterAvailable?: boolean;
 };
 
-/** Reads a positive integer env var, falling back rather than throwing. */
+/**
+ * Reads a positive integer env var, falling back rather than throwing.
+ *
+ * `positiveIntFrom` rather than a local parser. The local one demanded
+ * `Number.isInteger`, so `AUDITOR_MAX_PAGES_PER_RUN=20.0` read as unset on the
+ * one screen whose stated purpose is to say what this deployment is configured
+ * to do — while the runner floored the same value and honoured it.
+ */
 function intFromEnv(env: Env, name: string, fallback: number): number {
-  const raw = Number(env[name]);
-  return Number.isInteger(raw) && raw > 0 ? raw : fallback;
+  return positiveIntFrom(env[name], fallback);
 }
 
 /**
@@ -180,15 +192,23 @@ export function readDeploymentConfig(
     {
       key: 'pageCap',
       label: 'Pages per run',
-      value: String(intFromEnv(env, 'AUDITOR_MAX_PAGES_PER_RUN', 20)),
+      value: String(intFromEnv(env, 'AUDITOR_MAX_PAGES_PER_RUN', DEFAULT_MAX_PAGES_PER_RUN)),
       detail:
-        'A journey longer than this is truncated, and the run says so. The default has one measurement behind it — four static pages cost 4.0s each at their slowest on a production function, so twenty is roughly 80s of a 300s ceiling — but nothing has measured a real client app, which renders more and waits longer. If real journeys exceed it, that is the signal for a container worker rather than a bigger number.',
+        'The second of two bounds on a walk, and the one that stops a site with many small pages. A journey longer than this is truncated and the run says which bound did it. The default has one measurement behind it — four static pages cost 4.0s each at their slowest on a production function, so twenty is roughly 80s of a 300s ceiling — but nothing has measured a real client app, which renders more and waits longer. If real journeys exceed it, that is the signal for a container worker rather than a bigger number.',
+      degraded: false,
+    },
+    {
+      key: 'walkBudget',
+      label: 'Walk budget',
+      value: `${intFromEnv(env, 'AUDITOR_WALK_BUDGET_MS', DEFAULT_WALK_BUDGET_MS) / 1000}s`,
+      detail:
+        'The first of two bounds on a walk, and the one that stops a slow site. It bounds when the walk starts new work, never when work already in flight finishes — so keep it comfortably above `AUDITOR_EXPECT_TIMEOUT_MS`, which is how long the page still being audited may take. What is left of the 300s function ceiling after this is the reserve for upload, advisory and persistence.',
       degraded: false,
     },
     {
       key: 'retention',
       label: 'Evidence retention',
-      value: `${intFromEnv(env, 'ARTIFACT_RETENTION_DAYS', 30)} days`,
+      value: `${intFromEnv(env, 'ARTIFACT_RETENTION_DAYS', DEFAULT_RETENTION_DAYS)} days`,
       detail:
         'Screenshots of authenticated pages on client systems contain real end-user data, so `npm run prune:artifacts` sweeps anything older.',
       degraded: false,

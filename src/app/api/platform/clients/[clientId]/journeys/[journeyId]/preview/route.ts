@@ -239,11 +239,17 @@ export async function POST(
       ok: true,
       pages,
       truncatedPages: result.truncatedPages,
+      // Which bound cut the walk short, when one did. Absent means it did not —
+      // the operator authoring a journey needs to know whether to shorten it or
+      // to expect the run to time out, and those are different answers.
+      ...(result.truncationReason ? { truncationReason: result.truncationReason } : {}),
     });
   } catch (error) {
     const partial = error instanceof PartialJourneyError ? error.captured.pages : [];
     const truncatedPages =
       error instanceof PartialJourneyError ? error.captured.truncatedPages : undefined;
+    const truncationReason =
+      error instanceof PartialJourneyError ? error.captured.truncationReason : undefined;
     const message = error instanceof Error ? error.message : 'preview_failed';
     const code = classifyRunFailure(message, error instanceof Error ? error.name : undefined);
     const pages = await pagesWithEvidence(partial);
@@ -266,6 +272,7 @@ export async function POST(
         // quiet just because the run also failed. Present whenever the error
         // carries captured evidence to read it from, regardless of value.
         ...(truncatedPages !== undefined ? { truncatedPages } : {}),
+        ...(truncationReason ? { truncationReason } : {}),
         // Gated on the code, not only on the error type. `PartialJourneyError`
         // wraps whatever killed the walk, and most of what reaches here is not
         // safe to echo: `UnsafeTargetError` embeds the full page URL —
