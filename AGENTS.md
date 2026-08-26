@@ -211,12 +211,34 @@ Chromium launches on a Vercel function:
   is the bar ADA claims are argued against. Stored with `gate_version`, for the
   reason `score_version` exists; **absent means not recorded**, never
   "version 1", the same stance `intent.ruleset` takes.
-  **Expect most real sites to read "does not conform"** — most real sites do
-  not conform to WCAG AA. `www.dsrfund.org`, the first real client audited
-  (2026-08-21), returned **86 findings and `pass`** under the old gate, none of
-  them rated `critical`. Re-audited under this one it returned `fail`, on 83 —
-  the totals differ by a few between runs because it is a live site, not
-  because the gate changed what was counted.
+  **What a real site actually returns, measured rather than expected.** This
+  bullet used to say `www.dsrfund.org` was audited on 2026-08-21, returned 86
+  findings and `pass` under the old gate, and `fail` on 83 under this one. That
+  claim has no run behind it: there is **no dsrfund run in the database** — not
+  under any request id, and no `run_pages` row on that host — and the newest run
+  at the time of writing predated the cited date by six days. It did not
+  reproduce either. Corrected rather than deleted, because the number was used
+  to justify `gate_version` 2 and somebody will otherwise cite it again.
+  The reproducible measurement is `dbc70bff-d036-409f-ad17-497f472ded77`
+  (2026-08-26), a fixed twelve-page set on the same site — `/`, `/governance`,
+  `/white-paper`, `/research`, `/resources`, `/about`, `/team`, `/contact`,
+  `/press`, `/privacy`, `/terms`, `/solutions`, chosen so it can be run again
+  and compared. Complete evidence, no truncation. It returned **`pass`, score
+  99, 97 findings — and zero gating findings.**
+  The shape of those 97 is the part worth knowing, because it is not what
+  "expect most real sites to fail" predicts. Eighty-eight are `needs-review`:
+  54 citing 1.4.3 at AA and 34 citing 1.4.1 at A, almost all colour contrast
+  axe could not resolve against the backgrounds behind it. Nine are real
+  violations and every one cites **no criterion at all** — best-practice rules,
+  which this gate deliberately excludes. So the run conforms on the automated
+  evidence not because the site is clean but because **the checks that would
+  have decided it came back undecided**, and an undecided check never fails a
+  run (a steady-state rule above).
+  Read that as a limit on what a deterministic gate can claim on a real site,
+  not as a clean bill of health: the human-review queue is where this site's
+  conformance question actually lives, and it is 88 items long. A verdict of
+  `pass` with a large `needs-review` count is the normal shape of a real audit,
+  and the report should never be read as "no barriers".
 - **Vocabulary mapping lives in `services/presentation/`**, not beside the
   components: deciding whether the product says `pass` or "we could not tell"
   is a business rule with a steady-state contract behind it. `VerdictKind`
@@ -280,6 +302,22 @@ Slices 2 and 4-6 follow from that.
 
 Read this before claiming something works.
 
+- **The AI advisory has never run, anywhere.** `ANTHROPIC_API_KEY` is set in no
+  Vercel environment — not production, preview or development — and is not in
+  any local `.env.local` either. The code is real and gated correctly (absent
+  key, the run completes without it), so nothing is broken; what is untrue is
+  the description. This product is documented as hybrid — deterministic checks
+  plus an AI advisory that judges what rules cannot — and **every audit it has
+  ever produced has been deterministic-only**. `/api/ready` reports it as
+  `advisoryConfigured: false`, which is the honest signal, and it does not gate
+  readiness because a run without the advisory is a supported configuration.
+  Two things follow. The advisory line of the walk-budget reserve (60s of 120s)
+  is a guess with no measurement anywhere behind it, and `phaseMs.advisory` has
+  read `0` on every run in the database. And the half of the product that
+  catches alt text that says nothing, headings used for size, and error text
+  that does not say what to fix has never been exercised against a real site —
+  which is exactly the class of barrier the twelve-page dsrfund baseline could
+  not decide with rules alone.
 - **The unlock throttle and the run budget can both be memory-only.** Redis used to be required on
   Vercel because the run store needed it. The run store is Postgres now, so
   nothing forces Upstash to exist, and without it the throttle counts attempts
@@ -449,8 +487,19 @@ Read this before claiming something works.
   20.5s, upload 1.5s, slowest page 4.0s of which 2.9s was the axe scan. That is
   a floor, not a budget — four small static documents with no framework, no
   login and nothing deferred are the easy case, and no run against a real
-  client app has happened. Re-decide the cap from `slowestPageMs` on a client
-  run. The budget is what makes it safe to wait for that run rather than guess
+  **authenticated** client app has happened. Re-decide the cap from
+  `slowestPageMs` on such a run.
+  A second, larger measurement now exists and it is a real third-party site,
+  though still an unauthenticated one:
+  `dbc70bff-d036-409f-ad17-497f472ded77` (2026-08-26), twelve pages of
+  `www.dsrfund.org` in 17.6s — journey 10.1s, upload 7.1s, slowest page 1.16s.
+  Upload is the phase that scales with pages, at roughly 0.6s each, so the 25s
+  the reserve allows it covers twenty pages about twice over. **The advisory
+  line of the reserve is still unmeasured at zero**, because no deployment has
+  ever had an `ANTHROPIC_API_KEY` — see the advisory gap below. Twelve pages
+  used 17.6s of a 300s ceiling, so neither bound came close to binding here;
+  that is a fact about a marketing site, and says nothing yet about an app that
+  signs a user in and renders behind it. The budget is what makes it safe to wait for that run rather than guess
   now, and `smoke-real.yml` now keeps its numbers (a job summary and an
   uploaded `smoke-real.json`) instead of losing them to log retention, so
   several client sites can be compared when the time comes. The 120s reserve is
