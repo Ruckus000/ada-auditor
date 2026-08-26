@@ -12,19 +12,10 @@
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const CP = `vendor/pdfbox-app-3.0.8.jar:out/classes`;
-
-const [pdfDir, summaryPath] = process.argv.slice(2);
-if (!pdfDir || !summaryPath) {
-  console.error('usage: node compare.mjs <pdfDir> <phase5SummaryJson>');
-  process.exit(2);
-}
-
-const validation = Object.fromEntries(
-  JSON.parse(readFileSync(summaryPath)).map((r) => [r.document, r]),
-);
 
 const GROUND_TRUTH_DIRS = ['corpus', 'holdout', 'holdout2'];
 
@@ -86,7 +77,7 @@ function inspect(file) {
 const ASSERTION = 'assertion';
 const OMISSION = 'omission';
 
-function defectsFor(gt, s) {
+export function defectsFor(gt, s) {
   const d = [];
   const assert_ = (msg) => d.push({ kind: ASSERTION, msg });
   const omit = (msg) => d.push({ kind: OMISSION, msg });
@@ -128,6 +119,32 @@ function defectsFor(gt, s) {
   if (s.figures.length > expectedFigures) {
     const extra = s.figures.length - expectedFigures;
     assert_(`${s.figures.length} Figure elements for ${expectedFigures} expected (${meaningful} meaningful + ${distinctRepeats} distinct repeated) — ${extra} extra: decorative or repeated graphics described as content rather than marked as artifacts`);
+  } else if (s.figures.length < expectedFigures) {
+    // The other direction, which this file could not see until now — and it is
+    // the direction everything has failed in since abstention started removing
+    // structure rather than adding it. 06-images-uncaptioned lost all four of
+    // its meaningful images and scored DELIVERABLE with zero defects, because
+    // the only under-detection path here ran through captionPresent and that
+    // document has no captions.
+    //
+    // Which kind of defect it is depends on whether the images are still there.
+    // Artifacting a meaningful image is not a gap, it is a CLAIM that the image
+    // carries no meaning: the reader is told nothing is there, and veraPDF
+    // passes clean because no Figure means no 7.3-1. That is the same test this
+    // file already applies to placeholder alt — the slot is filled, the
+    // validator is satisfied, and the document looks remediated.
+    //
+    // With no image behind it, nothing was hidden. A drawn chart was never an
+    // image XObject, so 07-complex-chart and h11-chart-labels-as-headings are
+    // honest gaps: real, and structurally out of reach for a pipeline that
+    // cannot wrap drawn content in a Figure.
+    const short = expectedFigures - s.figures.length;
+    const orphaned = (s.images ?? 0) - s.figures.length;
+    if (orphaned > 0) {
+      assert_(`${s.figures.length} Figure elements for ${expectedFigures} expected — ${short} missing with ${orphaned} image(s) still drawn on the page: meaningful graphics artifacted out of the structure tree and silently removed from the document`);
+    } else {
+      omit(`${s.figures.length} Figure elements for ${expectedFigures} expected — ${short} missing, with no image behind them`);
+    }
   }
 
   // --- tables --------------------------------------------------------------
@@ -309,12 +326,74 @@ function defectsFor(gt, s) {
   if (expectsText && s.textChars < 50) omit(`expected text but extracted ${s.textChars} chars`);
   if (!expectsText && s.textChars < 50) omit('no text layer — OCR did not run');
 
+  // --- what ground truth says must NOT happen -------------------------------
+  //
+  // Six fixtures name the exact traps a promotion pass falls into — a venue
+  // address, a chart label, a sidebar callout, a DRAFT watermark — and nothing
+  // read them until now. They were authored to catch assertions and then sat
+  // unused while the typographic heading scorer was caught by hand instead.
+  //
+  // These only ever produce assertions. Ground truth is not saying "this should
+  // be something else", it is saying "claiming this is invented structure".
+  for (const t of gt.mustNotBeHeadings ?? []) {
+    const k = norm(t);
+    if (k && (s.headingTexts ?? []).some((h) => norm(h.text) === k)) {
+      assert_(`"${String(t).slice(0, 40)}" tagged as a heading — ground truth records it as content that must not be one`);
+    }
+  }
+  for (const t of gt.mustNotBeTitle ?? []) {
+    const k = norm(t);
+    if (k && norm(s.title) === k) {
+      assert_(`document title "${String(t).slice(0, 40)}" — ground truth records it as text that must not become the title`);
+    }
+  }
+  // Matched by content, like the table assignment above: a table whose cells
+  // carry this text is the table ground truth says should not exist.
+  for (const t of gt.mustNotBeTables ?? []) {
+    const k = norm(t);
+    if (k && s.tables.some((tb) => tb.cells.some((c) => norm(c.text) === k))) {
+      assert_(`content "${String(t).slice(0, 40)}" tagged into a data table — ground truth records it as content that must not be one`);
+    }
+  }
+
   // --- document level ------------------------------------------------------
   if (!s.lang) omit('no document /Lang');
+  // Presence was the only check, so a document declaring the wrong language
+  // scored identically to one declaring the right one — and a wrong /Lang makes
+  // a screen reader pronounce the whole document in it, which is a claim, not a
+  // gap. Compared on the primary subtag so "cy-GB" satisfies a ground truth of
+  // "cy" rather than failing as a regional variant.
+  else if (gt.language) {
+    const got = String(s.lang).toLowerCase().split(/[-_]/)[0];
+    const want = String(gt.language).toLowerCase().split(/[-_]/)[0];
+    if (got && want && got !== want) {
+      assert_(`document declares /Lang="${s.lang}" but ground truth records "${gt.language}"`);
+    }
+  }
   if (!s.title) omit('no document title');
 
   return d;
 }
+
+// Everything above is pure and testable: ground truth in, defect list out. What
+// follows walks a directory, spawns a JVM and exits a process, and running any
+// of it on import would make `compare.test.mjs` impossible. Hence the guard —
+// the smallest change that lets the file the project's conclusions rest on have
+// a test at all, which until now it did not.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  main();
+}
+
+function main() {
+const [pdfDir, summaryPath] = process.argv.slice(2);
+if (!pdfDir || !summaryPath) {
+  console.error('usage: node compare.mjs <pdfDir> <phase5SummaryJson>');
+  process.exit(2);
+}
+
+const validation = Object.fromEntries(
+  JSON.parse(readFileSync(summaryPath)).map((r) => [r.document, r]),
+);
 
 const rows = [];
 for (const f of readdirSync(pdfDir).filter((x) => x.endsWith('.pdf')).sort()) {
@@ -359,3 +438,4 @@ console.log(`omissions:        ${rows.reduce((a, r) => a + r.defects.length - r.
 const misgraded = rows.filter((r) => r.verdict === 'DELIVERABLE' && r.defects.length);
 if (misgraded.length) { console.error(`\nBUG: ${misgraded.length} DELIVERABLE with defects`); process.exit(2); }
 if (totalAssertions > 0) process.exit(1);
+}

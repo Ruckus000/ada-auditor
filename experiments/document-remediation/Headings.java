@@ -16,9 +16,20 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
  * reader loses navigation and a reviewer can see the gap. Promoting a
  * non-heading costs a false assertion — invented structure a reader navigates
  * by, with nothing to signal it is wrong. Under the gate those are not
- * comparable, so this pass can only ever trade an assertion for an omission.
+ * comparable, so demotion is the direction that can only ever cost an omission.
  *
- * Two rules, both from the development corpus:
+ * THAT ARGUMENT IS INCOMPLETE, and nine real municipal documents showed how.
+ * Demotion is not level-neutral. Remove the H2 sitting between an H1 and an H3
+ * and the survivors skip a level, which is not an omission at all — it is
+ * PDF/UA 7.4.2-1, a conformance failure this pass created in a document that
+ * did not have it. nyc-notice-form went H1,H2,H3 to a lone H3;
+ * lacity-clerk-misc went H1,H1,H1,H2,H3,H2 to H1,H1,H1,H3. Twenty-eight
+ * synthetic documents never had a demotion land between two levels, so the hole
+ * in the reasoning was invisible until real input found it. R8 closes it: a
+ * removal that leaves the document invalid is not a removal this pass is
+ * entitled to make.
+ *
+ * Rules, all from the development corpus except R8, which is from the real one:
  *
  *   R1 LENGTH. Whole body paragraphs are being tagged as headings — five of
  *      them across documents 03, 05, 07 and 12. The longest real heading in
@@ -34,6 +45,30 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
  *      definition as the caption extractor, so one line cannot be a figure's
  *      description and a document heading at once.
  *
+ *      Matched on the whitespace-stripped text. It was matched on the raw text
+ *      until h03 showed why that fails: extraction yields glyph positions, so
+ *      the line reads "P l a t e 1 : R a i l w e a r", and a pattern looking
+ *      for "plate" never sees it. Two captions escaped a rule written for
+ *      exactly them. R1 and R3 already stripped whitespace for this reason;
+ *      R4 did not.
+ *
+ *   R6 SHORT FOLLOWING PARAGRAPH. A heading whose next block is a paragraph of
+ *      fewer than 24 non-whitespace characters. A real heading introduces
+ *      prose; a chart title is followed by another chart label.
+ *
+ *      Across the 61 legitimate headings in the development corpus that are
+ *      followed by a paragraph, the shortest such paragraph is 32 characters.
+ *      The three wrong ones sit at 3 ("200"), 10 ("Containers") and 16
+ *      ("Western quay, 2026"). The threshold is placed in that gap, nearer the
+ *      wrong ones. This is what finally reaches document 07's chart title,
+ *      which R5 could not: an SVG chart offers no Table or Figure region to be
+ *      contained by, but it does put its title among its own axis labels.
+ *
+ *   R7 NOTHING FOLLOWS. A heading with no block after it anywhere in the
+ *      document. Exactly one heading in the 28 development documents has no
+ *      successor and it is h08's closing sentence, wrongly promoted. A heading
+ *      that introduces nothing introduces nothing.
+ *
  *   R5 TABLE CONTAINMENT. A table's caption carries no marker and sits at
  *      ordinary heading length — "Containers handled, by depot and quarter
  *      (hundreds)" is indistinguishable from a real heading by its words. What
@@ -41,10 +76,22 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
  *      above or below it and horizontally within it.
  *
  *      Scoped to tables because that is where the evidence is. Document 07's
- *      chart title needs the same treatment and cannot get it: the chart is SVG
- *      text over vector paths, so there is no Figure and no Table and therefore
- *      no region to be contained by. Detecting that needs vector-density
- *      analysis, which is a different technique for two occurrences.
+ *      chart title cannot be reached this way at all: the chart is SVG text
+ *      over vector paths, so there is no Figure and no Table to be contained
+ *      by. That was recorded here as needing vector-density analysis. It did
+ *      not — R6 reaches it from the other side, by what follows rather than by
+ *      what encloses.
+ *
+ *   R8 KEEP THE HIERARCHY VALID. After every other rule has had its say, if
+ *      what survives does not start at H1 or skips a level, demotions are put
+ *      back in document order until it does. Restoring all of them returns the
+ *      input unchanged, so this terminates; and if the input hierarchy was
+ *      already invalid, no demotion of ours can fix it, so the pass does
+ *      nothing rather than adding its own damage on top.
+ *
+ *      This is abstaining from abstention, and it is the same principle one
+ *      level up: the pass may only make a change it can justify, and a change
+ *      that breaks what it leaves behind is not justified.
  *
  *   R3 PAGE MARKER. Document 02's running footer became an H3. This is a text
  *      rule rather than page-furniture detection on purpose: the occurrence is
@@ -59,6 +106,25 @@ public final class Headings {
 
     private static final Set<String> LEVELS = Set.of("H1", "H2", "H3", "H4", "H5", "H6");
     private static final Set<String> TABLES = Set.of("Table");
+
+    /**
+     * What counts as a block for R6 and R7 — the same set Inspect walks to
+     * report reading order, so "the next block" means the same thing to the
+     * tool that acts and the tool that measures.
+     */
+    private static final Set<String> BLOCK = Set.of(
+        "H1", "H2", "H3", "H4", "H5", "H6", "P", "Figure", "Table", "L", "LI", "Caption", "Formula");
+
+    /**
+     * R6. Shortest paragraph that can follow a real heading, in non-whitespace
+     * characters. Development corpus: 61 legitimate headings are followed by a
+     * paragraph and the shortest is 32; the three wrong ones are at 3, 10 and
+     * 16. Set in the gap. The holdout's ground truth was not consulted.
+     */
+    private static final int MIN_FOLLOWING_CHARS = 24;
+
+    /** R7's marker for "no block follows this one". */
+    private static final String NOTHING = "\u0000end";
 
     /**
      * How far outside a table's extent a caption may sit, in points. A caption
@@ -99,7 +165,8 @@ public final class Headings {
         try (PDDocument doc = Loader.loadPDF(new File(args[0]))) {
             PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
             int headings = 0, byLength = 0, byNoLetters = 0, byPageMarker = 0,
-                byCaptionText = 0, byTable = 0;
+                byCaptionText = 0, byTable = 0, byShortFollowing = 0, byNothingAfter = 0,
+                restored = 0;
 
             if (root != null) {
                 StructText text = new StructText(doc);
@@ -112,7 +179,36 @@ public final class Headings {
                     if (b != null) tables.add(b);
                 }
 
-                for (PDStructureElement el : found) {
+                // What follows each heading, read BEFORE any demotion. Demoting
+                // a heading turns it into a P, so a loop that read the tree as
+                // it went would let one demotion change the evidence for the
+                // next. Snapshot first, decide after.
+                List<PDStructureElement> blocks =
+                    StructText.find(root, BLOCK, root.getRoleMap());
+                //
+                // Keyed by the COS dictionary, NOT by the element. Every call to
+                // getKids() builds fresh PDStructureElement wrappers around the
+                // same underlying object, so two walks of one tree return two
+                // sets of instances that are never equal to each other. Keying
+                // by element silently missed every lookup, R6 and R7 never
+                // fired, and the pass reported a clean run.
+                java.util.Map<Object, String> nextType = new java.util.HashMap<>();
+                java.util.Map<Object, Integer> nextChars = new java.util.HashMap<>();
+                for (int i = 0; i < blocks.size(); i++) {
+                    PDStructureElement next = i + 1 < blocks.size() ? blocks.get(i + 1) : null;
+                    Object key = blocks.get(i).getCOSObject();
+                    // A distinct sentinel, not "": standard() also returns ""
+                    // for an element with no /S, and R7 must not fire on that.
+                    nextType.put(key, next == null ? NOTHING : standard(next, root.getRoleMap()));
+                    nextChars.put(key,
+                        next == null ? 0 : text.of(next).replaceAll("\\s", "").length());
+                }
+
+                // DECIDE first, apply later. R8 needs to see the whole
+                // surviving sequence before any of it is changed.
+                String[] why = new String[found.size()];
+                for (int i = 0; i < found.size(); i++) {
+                    PDStructureElement el = found.get(i);
                     String t = text.of(el);
                     // An empty heading is left alone: we cannot read it, so we
                     // do not know it is wrong, and guessing is the thing this
@@ -123,21 +219,92 @@ public final class Headings {
                     boolean tooLong = dense.length() > MAX_DENSE_CHARS;
                     boolean noLetters = !t.chars().anyMatch(Character::isLetter);
 
-                    if (tooLong) { el.setStructureType("P"); byLength++; }
-                    else if (noLetters) { el.setStructureType("P"); byNoLetters++; }
-                    else if (PAGE_MARKER.matcher(dense).find()) { el.setStructureType("P"); byPageMarker++; }
-                    else if (CaptionPattern.OPENING.matcher(t).find()) { el.setStructureType("P"); byCaptionText++; }
-                    else if (belongsToTable(text.boxOf(el), tables)) { el.setStructureType("P"); byTable++; }
+                    Object key = el.getCOSObject();
+                    String after = nextType.getOrDefault(key, "P");
+                    boolean nothingAfter = NOTHING.equals(after);
+                    boolean shortAfter = "P".equals(after)
+                        && nextChars.getOrDefault(key, Integer.MAX_VALUE) < MIN_FOLLOWING_CHARS;
+
+                    if (tooLong) why[i] = "length";
+                    else if (noLetters) why[i] = "noLetters";
+                    else if (PAGE_MARKER.matcher(dense).find()) why[i] = "pageMarker";
+                    else if (CaptionPattern.OPENING.matcher(dense).find()) why[i] = "captionText";
+                    else if (belongsToTable(text.boxOf(el), tables)) why[i] = "inTable";
+                    else if (nothingAfter) why[i] = "nothingAfter";
+                    else if (shortAfter) why[i] = "shortFollowing";
+                }
+
+                // R8. Restore demotions in document order until what survives is
+                // a valid hierarchy. Terminates: every pass either restores one
+                // heading or stops, and restoring all of them returns the input.
+                // If the input was itself invalid, no demotion can fix it and
+                // this bails with the document unchanged, which is no worse than
+                // what arrived.
+                while (!validHierarchy(found, why, root.getRoleMap())) {
+                    int i = 0;
+                    while (i < why.length && why[i] == null) i++;
+                    if (i == why.length) break;
+                    why[i] = null;
+                    restored++;
+                }
+
+                for (int i = 0; i < found.size(); i++) {
+                    if (why[i] == null) continue;
+                    found.get(i).setStructureType("P");
+                    switch (why[i]) {
+                        case "length" -> byLength++;
+                        case "noLetters" -> byNoLetters++;
+                        case "pageMarker" -> byPageMarker++;
+                        case "captionText" -> byCaptionText++;
+                        case "inTable" -> byTable++;
+                        case "nothingAfter" -> byNothingAfter++;
+                        default -> byShortFollowing++;
+                    }
                 }
             }
 
             doc.save(args[1]);
             System.out.printf(
                 "{\"headings\":%d,\"length\":%d,\"noLetters\":%d,\"pageMarker\":%d,"
-                + "\"captionText\":%d,\"inTable\":%d,\"kept\":%d}%n",
+                + "\"captionText\":%d,\"inTable\":%d,\"nothingAfter\":%d,\"shortFollowing\":%d,"
+                + "\"restoredForHierarchy\":%d,\"kept\":%d}%n",
                 headings, byLength, byNoLetters, byPageMarker, byCaptionText, byTable,
-                headings - byLength - byNoLetters - byPageMarker - byCaptionText - byTable);
+                byNothingAfter, byShortFollowing, restored,
+                headings - byLength - byNoLetters - byPageMarker - byCaptionText - byTable
+                    - byNothingAfter - byShortFollowing);
         }
+    }
+
+    /**
+     * R8. Is what survives demotion a valid heading hierarchy?
+     *
+     * PDF/UA 7.4.2-1: if any heading is used, the first shall be H1, and levels
+     * shall not skip. An empty sequence is valid — a document with no headings
+     * is legal, just poorer.
+     */
+    private static boolean validHierarchy(List<PDStructureElement> found, String[] why,
+                                          java.util.Map<String, Object> roleMap) {
+        int previous = 0;
+        for (int i = 0; i < found.size(); i++) {
+            if (why[i] != null) continue;            // demoted, so not a heading any more
+            String type = standard(found.get(i), roleMap);
+            if (type.length() != 2 || type.charAt(0) != 'H') continue;
+            int level = type.charAt(1) - '0';
+            if (previous == 0) {
+                if (level != 1) return false;        // first heading must be H1
+            } else if (level - previous > 1) {
+                return false;                        // levels may descend by one at a time
+            }
+            previous = level;
+        }
+        return true;
+    }
+
+    /** The element's type after the role map, which is how Inspect reads it too. */
+    private static String standard(PDStructureElement el, java.util.Map<String, Object> roleMap) {
+        String type = el.getStructureType();
+        if (roleMap != null && type != null && roleMap.get(type) != null) return roleMap.get(type).toString();
+        return type == null ? "" : type;
     }
 
     /** Inside a table's extent, or hard against its top or bottom edge. */

@@ -14,6 +14,10 @@ tsconfig.tsbuildinfo
 # src/integrations/artifacts/ and left the repo unbuildable from a clean clone.
 /artifacts/
 /data/runs/
+# Third-party jars for the document stages, fetched by `npm run build:documents`
+# and pinned there. ~12MB of PDFBox does not belong in git, and this repo tracks
+# zero binaries — keep it that way.
+/vendor/
 .designops/
 .DS_Store
 .env*

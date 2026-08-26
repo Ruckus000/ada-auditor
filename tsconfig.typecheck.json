@@ -26,6 +26,7 @@
     "vitest.browser.config.ts",
     "vitest.db.config.ts",
     "vitest.hydration.config.ts",
+    "vitest.documents.config.ts",
     "eslint.config.mjs"
   ],
   "exclude": ["node_modules"]

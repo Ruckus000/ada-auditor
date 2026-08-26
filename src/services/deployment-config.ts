@@ -42,6 +42,26 @@ export type DeploymentConfig = {
 export type Env = Record<string, string | undefined>;
 
 /**
+ * Facts that are not environment variables.
+ *
+ * Whether a JVM and the compiled document stages exist is a question about the
+ * filesystem, and answering it means calling into `integrations/documents`.
+ * Nothing in `services/` imports an integration — that is the layering, and it
+ * is what keeps this module in the fast unit suite — so the caller resolves it
+ * and passes it down.
+ *
+ * Defaulting to `false` is deliberate: an unanswered question renders as "not
+ * available here", which is the truth on every deployment that has not gone out
+ * of its way to install one.
+ */
+export type DeploymentFacts = {
+  /** A JVM and the compiled PDF stages. */
+  documentToolchainAvailable?: boolean;
+  /** LibreOffice, for converting Word sources. */
+  documentConverterAvailable?: boolean;
+};
+
+/**
  * Reads a positive integer env var, falling back rather than throwing.
  *
  * `positiveIntFrom` rather than a local parser. The local one demanded
@@ -53,7 +73,36 @@ function intFromEnv(env: Env, name: string, fallback: number): number {
   return positiveIntFrom(env[name], fallback);
 }
 
-export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
+/**
+ * Two independent capabilities, reported as one line an operator can act on.
+ *
+ * The PDF stages need a JVM; converting a Word source additionally needs
+ * LibreOffice. Naming which half is missing is the difference between a person
+ * installing the right thing and a person guessing.
+ */
+function documentCapability(facts: DeploymentFacts): string {
+  if (facts.documentToolchainAvailable && facts.documentConverterAvailable) return 'available';
+  if (facts.documentToolchainAvailable) return 'PDF stages only';
+  if (facts.documentConverterAvailable) return 'converter only';
+  return 'not available here';
+}
+
+function documentDetail(facts: DeploymentFacts): string {
+  const missing: string[] = [];
+  if (!facts.documentToolchainAvailable) missing.push('a JDK 17+ and `npm run build:documents`');
+  if (!facts.documentConverterAvailable) missing.push('LibreOffice');
+
+  if (missing.length === 0) {
+    return 'A Java runtime and LibreOffice are both present, so Word sources can be converted and PDFs inspected on this host.';
+  }
+
+  return `Document stages run on a JVM and the source path needs LibreOffice; a serverless function has neither, so this is expected on a deployed environment rather than a fault, and nothing else is affected by it. Where it is wanted, install: ${missing.join(' and ')}.`;
+}
+
+export function readDeploymentConfig(
+  env: Env = process.env,
+  facts: DeploymentFacts = {},
+): DeploymentConfig {
   const budget = runBudgetLimits(env);
   const countersDurable = Boolean(env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL);
 
@@ -119,6 +168,16 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
       value: env.ANTHROPIC_API_KEY ? 'on' : 'off',
       detail:
         'Judges what a rule engine cannot — alt text that says nothing, headings used for size. Advisory findings never gate a build, and their absence is never a run failure.',
+      degraded: false,
+    },
+    {
+      key: 'documents',
+      label: 'Document remediation',
+      value: documentCapability(facts),
+      detail: documentDetail(facts),
+      // Never degraded. Absence is the design of this slice, not a weakness,
+      // and marking it degraded would put a permanent entry in the operator's
+      // warning count for a feature that was never promised here.
       degraded: false,
     },
     {

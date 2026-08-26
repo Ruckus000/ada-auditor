@@ -11,7 +11,21 @@ import { launchChromium } from './launch';
  * means a snippet that slipped past escaping still could not phone home, and
  * that rendering never stalls on a third-party asset.
  */
-export async function renderPdf(html: string): Promise<Buffer> {
+export async function renderPdf(
+  html: string,
+  options: {
+    /**
+     * Emit a tagged (structured) PDF.
+     *
+     * Off by default, which is what the client report has always produced —
+     * changing that is a product decision, not a side effect of adding the
+     * option. It exists because the document pipeline needs a *tagged* PDF to
+     * work against, and the alternative was a second Chromium-to-PDF path in a
+     * test that could drift from this one.
+     */
+    tagged?: boolean;
+  } = {},
+): Promise<Buffer> {
   const browser = await launchChromium({ headless: true });
 
   try {
@@ -24,6 +38,7 @@ export async function renderPdf(html: string): Promise<Buffer> {
     return await page.pdf({
       format: 'A4',
       printBackground: true,
+      tagged: options.tagged ?? false,
     });
   } finally {
     await browser.close();

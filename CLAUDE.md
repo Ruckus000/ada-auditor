@@ -39,6 +39,7 @@ and `build` must be green before claiming done.
 | `npm run test:browser` | `vitest.browser.config.ts` | `tests/integrations/browser/**` | Chromium (`npm run playwright:install`) |
 | `npm run test:hydration` | `vitest.hydration.config.ts` | drives the **built** app under `next start`, runs a real audit, asserts pages hydrated | `npm run build` first |
 | `npm run test:db` | `vitest.db.config.ts` | `postgres-*.test.ts` — the store contract against real Neon | `DATABASE_URL`, `npm run migrate` |
+| `npm run test:documents` | `vitest.documents.config.ts` | `java-*.test.ts` — the document stages against a real JVM | JDK 17+, `npm run build:documents` |
 | `npm run chaos` | `scripts/chaos.ts` | steady-state assertions | `CHAOS_ENABLED=true` (hard-fails without it) |
 
 Run a single test file or name:
@@ -94,7 +95,8 @@ centre:
   that is what keeps services in the fast unit suite.
 - **`src/integrations`** — `browser/` (Playwright, axe, launch),
   `persistence/` (Postgres + memory stores, `schema.sql`), `artifacts/` (Blob),
-  `platforms/` (WordPress/React/generic adapters).
+  `platforms/` (WordPress/React/generic adapters), `documents/` (the Java/PDFBox
+  document stages — see its own README).
 - **`src/app`** — Next.js App Router only: 20 API routes under `api/`, the
   operator console under `(platform)/`, and `r/[token]/` — the single public
   report surface outside the auth gate.
@@ -171,6 +173,12 @@ and inside `eslint.config.mjs` `ignores`, so it is typechecked and linted by
 nothing. That is the trade a spike is allowed to make. **Anything graduating
 into `src/` is held to the normal gates.** Findings live in
 `docs/research/document-remediation/`; setup is in the spike's own `README.md`.
+
+**Stages graduate by moving, not copying.** `Inspect.java` and `StructText.java`
+now live in `src/integrations/documents/java/`, and the spike compiles against
+them — `StructText` is shared with `Headings`/`Tables`, and two copies drift.
+The spike may depend on `src/`; **`src/` must never resolve a path into
+`experiments/`.**
 
 ## Environment
 

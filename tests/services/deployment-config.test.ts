@@ -95,6 +95,38 @@ describe('readDeploymentConfig', () => {
     expect(get({ AUDITOR_MAX_PAGES_PER_RUN: '25.0' }, 'pageCap')?.value).toBe('25');
   });
 
+  it('reports the document toolchain without ever counting it as degraded', () => {
+    // Absence is the design of this slice, not a weakness: document stages need
+    // a JVM and a serverless function has none. Marking it degraded would add a
+    // permanent entry to the operator's warning count for a capability that was
+    // never promised on that host — the same reason `/api/ready` reports it and
+    // raises no warning.
+    const find = (java: boolean, soffice: boolean) =>
+      readDeploymentConfig({}, {
+        documentToolchainAvailable: java,
+        documentConverterAvailable: soffice,
+      }).settings.find((setting) => setting.key === 'documents');
+
+    expect(find(true, true)?.value).toBe('available');
+    expect(find(false, false)?.value).toBe('not available here');
+    // Naming which half is missing is the difference between installing the
+    // right thing and guessing.
+    expect(find(true, false)?.value).toBe('PDF stages only');
+    expect(find(true, false)?.detail).toMatch(/LibreOffice/);
+    expect(find(false, true)?.value).toBe('converter only');
+    expect(find(false, true)?.detail).toMatch(/JDK/);
+
+    // Never degraded, in any combination: absence is the design of this slice.
+    for (const [j, s2] of [[true, true], [true, false], [false, true], [false, false]] as const) {
+      expect(find(j, s2)?.degraded, `${j}/${s2}`).toBe(false);
+    }
+    // The unanswered case renders as absent rather than throwing or claiming
+    // availability nothing checked.
+    expect(readDeploymentConfig({}).settings.find((s) => s.key === 'documents')?.value).toBe(
+      'not available here',
+    );
+  });
+
   it('counts what is degraded', () => {
     const clean = readDeploymentConfig({
       DATABASE_URL: 'postgres://host/db',

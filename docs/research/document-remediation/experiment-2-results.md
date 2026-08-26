@@ -19,6 +19,13 @@ assertions is not zero.
 
 ## Development corpus — the techniques worked
 
+> **Superseded by a stronger instrument.** The `Final` column below was measured
+> before `compare.mjs` gained reading-order and list checks. Re-scored with the
+> current comparator the same output bytes read **6 assertions and 18
+> omissions**, and `DELIVERABLE` is **2/12**, not 3/12. The committed evidence
+> file is current; this table is not. See
+> [experiment-2-decision.md](experiment-2-decision.md).
+
 | | Baseline | Final |
 |---|---:|---:|
 | False assertions | 26 | **3** |
@@ -199,3 +206,9 @@ deterministic system was built first and its ceiling has been measured.
 - **Hand verification by the party that wrote the pass is not measurement.** The
   table technique was reported as correct cell-by-cell against ground truth, and
   on the development corpus it was. The holdout is where that claim broke.
+
+## Conclusion
+
+The decision this evidence supports, together with the 28-document development
+picture and the reason no further deterministic technique closes the gap, is in
+[experiment-2-decision.md](experiment-2-decision.md).
