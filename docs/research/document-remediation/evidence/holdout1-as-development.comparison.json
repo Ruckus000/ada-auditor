@@ -1,0 +1,4397 @@
+[
+  {
+    "document": "h01-big-text-not-heading",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H1\",\"H3\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 704,
+      "pages": 1,
+      "lang": "en",
+      "title": "Tariff Schedule 2026",
+      "headings": [
+        "H1",
+        "H1",
+        "H3"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "T a r i f f S c h e d u l e 2 0 2 6"
+        },
+        {
+          "level": "H1",
+          "text": "S U P E R S E D E D"
+        },
+        {
+          "level": "H3",
+          "text": "E x c l u si o n s"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "T a r i f f S c h e d u l e 2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "R a t e s b e l o w t a k e e f f e c t f r o m t h e f ir s t o f t h e m o n t h a n d s"
+        },
+        {
+          "type": "H1",
+          "text": "S U P E R S E D E D"
+        },
+        {
+          "type": "P",
+          "text": "T h e s t a m p a b o v e is a s t a t u s m a r k e r a p p l ie d t o t h e w h o l e d "
+        },
+        {
+          "type": "P",
+          "text": "S t a n d a r d r a t e s"
+        },
+        {
+          "type": "P",
+          "text": "£ 4 1 2"
+        },
+        {
+          "type": "P",
+          "text": "per container, standard handling"
+        },
+        {
+          "type": "P",
+          "text": "£ 6 8 0"
+        },
+        {
+          "type": "P",
+          "text": "per container, refrigerated"
+        },
+        {
+          "type": "P",
+          "text": "R a t e s a r e h e l d f or t h e f u l l y e a r a n d a r e n ot s u bj e c t t o t h e"
+        },
+        {
+          "type": "P",
+          "text": "T h e s e n t e n c e a b o v e is a p u l l q u o t e l if t e d f r o m t h e b o d y t "
+        },
+        {
+          "type": "H3",
+          "text": "E x c l u si o n s"
+        },
+        {
+          "type": "P",
+          "text": "P o r t d u e s , d e m u r r a g e a n d a n y c h a r g e l e v ie d d ir e c t l y b y "
+        }
+      ]
+    }
+  },
+  {
+    "document": "h02-headings-look-like-body",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H3\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 7,
+      "textChars": 853,
+      "pages": 1,
+      "lang": "en",
+      "title": "Berth Allocation Procedure",
+      "headings": [],
+      "headingTexts": [],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "P",
+          "text": "B E R T H A L L O C A T I O N P R O C E D U R E"
+        },
+        {
+          "type": "P",
+          "text": "T h is p r o c e d u r e g o v e r n s h o w b e r t h s a r e a l l o c a t e d w h e n d"
+        },
+        {
+          "type": "P",
+          "text": "R E Q U E S T I N G A B E R T H R e q u e s t s a r e m a d e t h r o u g h t h e a u t h "
+        },
+        {
+          "type": "P",
+          "text": "L a t e r e q u e s t s A l a t e r e q u e s t d o e s n o t c r e a t e a p r io r it y "
+        },
+        {
+          "type": "P",
+          "text": "P R I O R I T Y W h e r e t w o r e q u e s t s c o m p e t e , t h e e a r l ie r b o o k"
+        },
+        {
+          "type": "P",
+          "text": "D i s p u t e s D is p u t e s a r e s e t t l e d b y t h e e s t a t e s o f f ic e r o "
+        }
+      ]
+    }
+  },
+  {
+    "document": "h03-captions-above",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 533,
+      "pages": 1,
+      "lang": "en",
+      "title": "Crane Inspection Record",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Crane Inspection Record"
+        },
+        {
+          "level": "H2",
+          "text": "P l a t e 1 : R a i l w e a r o n t h e se a w a r d l e g , m e a su r e d a t 4 . 2 m m a g a i n st a t o l e r a n c e o f 3 m m ."
+        },
+        {
+          "level": "H2",
+          "text": "P l a t e 2 : T h e l a n d w a r d l e g a t t h e sa m e i n sp e c t i o n , sh o w i n g w e a r w i t h i n t o l e r a n c e a t 1 . 8 m m ."
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "Plate 1: Rail wear on the seaward leg, measured at 4.2 mm against a tolerance of 3 mm.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Plate 2: The landward leg at the same inspection, showing wear within tolerance at 1.8 mm.",
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Crane Inspection Record"
+        },
+        {
+          "type": "P",
+          "text": "C a p t io n s in t h is r e c o r d s it a b o v e t h e im a g e t h e y d e s c r ib e "
+        },
+        {
+          "type": "H2",
+          "text": "P l a t e 1 : R a i l w e a r o n t h e se a w a r d l e g , m e a su r e d a t 4 . 2 m m "
+        },
+        {
+          "type": "Figure",
+          "text": "Plate 1: Rail wear on the seaward leg, measured at 4.2 mm against a tolerance of 3 mm."
+        },
+        {
+          "type": "Caption",
+          "text": "P h ot og r a p h e d 2 0 2 6 - 0 8 - 1 1 . C a m e r a h e i g h t a p p r ox i m a t e l"
+        },
+        {
+          "type": "H2",
+          "text": "P l a t e 2 : T h e l a n d w a r d l e g a t t h e sa m e i n sp e c t i o n , sh o w i n"
+        },
+        {
+          "type": "Figure",
+          "text": "Plate 2: The landward leg at the same inspection, showing wear within tolerance at 1.8 mm."
+        },
+        {
+          "type": "Caption",
+          "text": "P h ot og r a p h e d 2 0 2 6 - 0 8 - 1 1 . S a m e c a m e r a p os i t i on a s P l a t "
+        },
+        {
+          "type": "P",
+          "text": "B o t h p l a t e s a r e r e f e r e n c e d in t h e r e m e d i a l w o r k s o r d e r"
+        }
+      ]
+    }
+  },
+  {
+    "document": "h04-one-caption-many-images",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "4 Figure elements for 2 expected (2 meaningful + 0 distinct repeated) — 2 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 398,
+      "pages": 1,
+      "lang": "en",
+      "title": "Apron Survey Panels",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Apron Survey Panels"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 m only.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 m only.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 m only.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: The drainage channel at the apron's northern edge.",
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Apron Survey Panels"
+        },
+        {
+          "type": "P",
+          "text": "T h e t h r e e p a n e l s b e l o w s h a r e a s in g l e c a p t io n c o v e r in g t"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 "
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 "
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1 (a-c): Apron surface at chainage 40 m, 80 m and 120 m. Cracking is visible at 80 "
+        },
+        {
+          "type": "P",
+          "text": "F ig u r e 1 ( a - c ) : A p r o n s u r f a c e a t c h a in a g e 4 0 m , 8 0 m a n d 1 "
+        },
+        {
+          "type": "P",
+          "text": "A s e p a r a t e p h o t o g r a p h f o l l o w s , w it h it s o w n c a p t io n , t o"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 2: The drainage channel at the apron's northern edge."
+        },
+        {
+          "type": "Caption",
+          "text": "F ig u r e 2 : T h e d r a in a g e c h a n n e l a t t h e a p r o n ' s n o r t h e r n "
+        }
+      ]
+    }
+  },
+  {
+    "document": "h05-logo-moves",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 405,
+      "pages": 3,
+      "lang": "en",
+      "title": "Quarterly Circular",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Q u a r t e r l y C i r c u l a r"
+        },
+        {
+          "level": "H2",
+          "text": "S c o p e"
+        },
+        {
+          "level": "H2",
+          "text": "R a t e s"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t a c t"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "Figure",
+          "text": ""
+        },
+        {
+          "type": "H1",
+          "text": "Q u a r t e r l y C i r c u l a r"
+        },
+        {
+          "type": "P",
+          "text": "The same mark appears on every page of this circular, in a different position each time, a"
+        },
+        {
+          "type": "H2",
+          "text": "S c o p e"
+        },
+        {
+          "type": "P",
+          "text": "The circular covers the three operating depots and excludes the head office estate."
+        },
+        {
+          "type": "H2",
+          "text": "R a t e s"
+        },
+        {
+          "type": "P",
+          "text": "Rates are unchanged from the previous circular. The schedule is issued separately."
+        },
+        {
+          "type": "H2",
+          "text": "C o n t a c t"
+        },
+        {
+          "type": "P",
+          "text": "Enquiries to the estates office in the usual way."
+        }
+      ]
+    }
+  },
+  {
+    "document": "h06-mixed-table-borders",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 31,
+      "textChars": 360,
+      "pages": 1,
+      "lang": "en",
+      "title": "Depot Cost Comparison",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "De p o t C o st C o m p a r i so n"
+        },
+        {
+          "level": "H2",
+          "text": "N o r u l e s"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 5,
+          "td": 4,
+          "tr": 3,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "D e p o t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R e n t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "H a n d l i n g",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h e r n",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "4 1 2",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "1 8 8",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "C o a st a l",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "3 8 8",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "9 6",
+              "scope": null,
+              "row": 2
+            }
+          ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "De p o t C o st C o m p a r i so n"
+        },
+        {
+          "type": "P",
+          "text": "Three tables, three border treatments, one document. Detection must not depend on ruling l"
+        },
+        {
+          "type": "P",
+          "text": "Fu l l y r u l e d"
+        },
+        {
+          "type": "Table",
+          "text": "D e p o t R e n t H a n d l i n g N o r t h e r n 4 1 2 1 8 8 C o a st a l 3 8 8 9 6"
+        },
+        {
+          "type": "P",
+          "text": "D e p o t"
+        },
+        {
+          "type": "P",
+          "text": "R e n t"
+        },
+        {
+          "type": "P",
+          "text": "H a n d l i n g"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h e r n"
+        },
+        {
+          "type": "P",
+          "text": "4 1 2"
+        },
+        {
+          "type": "P",
+          "text": "1 8 8"
+        },
+        {
+          "type": "P",
+          "text": "C o a st a l"
+        },
+        {
+          "type": "P",
+          "text": "3 8 8"
+        },
+        {
+          "type": "P",
+          "text": "9 6"
+        },
+        {
+          "type": "P",
+          "text": "H o r i z o n t a l r u l e s o n l y"
+        },
+        {
+          "type": "P",
+          "text": "D e p o t S t a f f V e h i c l e s"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h e r n 4 1 1 9 C o a st a l 1 7 8"
+        },
+        {
+          "type": "H2",
+          "text": "N o r u l e s"
+        },
+        {
+          "type": "P",
+          "text": "D e p o t U t i l i sa t i o n T r e n d N o r t h e r n 8 1 r is in g C o a st a l 4 4 f "
+        }
+      ]
+    }
+  },
+  {
+    "document": "h07-three-level-headers",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 94,
+      "textChars": 364,
+      "pages": 1,
+      "lang": "en",
+      "title": "Consolidated Movements",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o n so l i d a t e d M o v e m e n t s"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 18,
+          "td": 24,
+          "tr": 6,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "Depot",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "2026",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "2027",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "H1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "H2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "H1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "H2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "In",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Out",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "In",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Out",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "In",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Out",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "In",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Out",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Northern",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "214",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "198",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "231",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "220",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "240",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "228",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "252",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "244",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "Southern",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "142",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "139",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "145",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "141",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "150",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "146",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "151",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "149",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TH",
+              "text": "Coastal",
+              "scope": "Row",
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "98",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "94",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "91",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "90",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "88",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "86",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "84",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "83",
+              "scope": null,
+              "row": 5
+            }
+          ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "C o n so l i d a t e d M o v e m e n t s"
+        },
+        {
+          "type": "P",
+          "text": "C o l u m n h e a d e r s a r e t h r e e l e v e l s d e e p : y e a r , t h e n h a l f "
+        },
+        {
+          "type": "Table",
+          "text": "Depot 2026 2027 H1 H2 H1 H2 In Out In Out In Out In Out Northern 214 198 231 220 240 228 2"
+        },
+        {
+          "type": "P",
+          "text": "Depot"
+        },
+        {
+          "type": "P",
+          "text": "2026"
+        },
+        {
+          "type": "P",
+          "text": "2027"
+        },
+        {
+          "type": "P",
+          "text": "H1"
+        },
+        {
+          "type": "P",
+          "text": "H2"
+        },
+        {
+          "type": "P",
+          "text": "H1"
+        },
+        {
+          "type": "P",
+          "text": "H2"
+        },
+        {
+          "type": "P",
+          "text": "In"
+        },
+        {
+          "type": "P",
+          "text": "Out"
+        },
+        {
+          "type": "P",
+          "text": "In"
+        },
+        {
+          "type": "P",
+          "text": "Out"
+        },
+        {
+          "type": "P",
+          "text": "In"
+        },
+        {
+          "type": "P",
+          "text": "Out"
+        },
+        {
+          "type": "P",
+          "text": "In"
+        },
+        {
+          "type": "P",
+          "text": "Out"
+        },
+        {
+          "type": "P",
+          "text": "Northern"
+        },
+        {
+          "type": "P",
+          "text": "214"
+        },
+        {
+          "type": "P",
+          "text": "198"
+        },
+        {
+          "type": "P",
+          "text": "231"
+        },
+        {
+          "type": "P",
+          "text": "220"
+        },
+        {
+          "type": "P",
+          "text": "240"
+        },
+        {
+          "type": "P",
+          "text": "228"
+        },
+        {
+          "type": "P",
+          "text": "252"
+        },
+        {
+          "type": "P",
+          "text": "244"
+        },
+        {
+          "type": "P",
+          "text": "Southern"
+        },
+        {
+          "type": "P",
+          "text": "142"
+        },
+        {
+          "type": "P",
+          "text": "139"
+        },
+        {
+          "type": "P",
+          "text": "145"
+        },
+        {
+          "type": "P",
+          "text": "141"
+        },
+        {
+          "type": "P",
+          "text": "150"
+        },
+        {
+          "type": "P",
+          "text": "146"
+        },
+        {
+          "type": "P",
+          "text": "151"
+        },
+        {
+          "type": "P",
+          "text": "149"
+        },
+        {
+          "type": "P",
+          "text": "Coastal"
+        },
+        {
+          "type": "P",
+          "text": "98"
+        },
+        {
+          "type": "P",
+          "text": "94"
+        },
+        {
+          "type": "P",
+          "text": "91"
+        },
+        {
+          "type": "P",
+          "text": "90"
+        },
+        {
+          "type": "P",
+          "text": "88"
+        },
+        {
+          "type": "P",
+          "text": "86"
+        },
+        {
+          "type": "P",
+          "text": "84"
+        },
+        {
+          "type": "P",
+          "text": "83"
+        }
+      ]
+    }
+  },
+  {
+    "document": "h08-table-spans-pages",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 2,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "one table fragmented into 2 — ground truth records a single table"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\"], ground truth [\"H1\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 564,
+      "textChars": 2027,
+      "pages": 3,
+      "lang": "en",
+      "title": "Vehicle Register",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "V e h i c l e Re g i st e r"
+        },
+        {
+          "level": "H2",
+          "text": "T h e r e g is t e r is c o m p l e t e a s a t t h e d a t e o f is s u e ."
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 32,
+          "td": 84,
+          "tr": 29,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "R e g i st r a t i o n",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "C l a ss",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Y e a r",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "O d o m e t e r",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 1",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "4 1 2 0 0 0",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 2",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "3 9 8 5 0 0",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 3",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "3 3 1 2 0 0",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 4",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2 8 8 9 0 0",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 5",
+              "scope": "Row",
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "2 4 1 3 0 0",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 6",
+              "scope": "Row",
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "2 3 3 8 0 0",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 7",
+              "scope": "Row",
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "1 1 9 4 0 0",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 8",
+              "scope": "Row",
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "1 0 8 7 0 0",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 0 9",
+              "scope": "Row",
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "8 4 1 0 0",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 0",
+              "scope": "Row",
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "6 1 2 0 0",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 1",
+              "scope": "Row",
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "5 9 8 0 0",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 2",
+              "scope": "Row",
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "4 4 3 0 0",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 3",
+              "scope": "Row",
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "4 1 9 0 0",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 4",
+              "scope": "Row",
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "2 8 6 0 0",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 5",
+              "scope": "Row",
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "2 6 1 0 0",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 6",
+              "scope": "Row",
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "1 1 2 0 0",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 7",
+              "scope": "Row",
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "9 8 0 0",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 8",
+              "scope": "Row",
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "4 1 0 0",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 1 9",
+              "scope": "Row",
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "2 2 0 0",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 0",
+              "scope": "Row",
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "9 0 0",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 1",
+              "scope": "Row",
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "4 0 0",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 2",
+              "scope": "Row",
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "1 5 0",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 3",
+              "scope": "Row",
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "9 0",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 4",
+              "scope": "Row",
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "4 0",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 5",
+              "scope": "Row",
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "1 0",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 6",
+              "scope": "Row",
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "2 8 8 9 0 0",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 7",
+              "scope": "Row",
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "2 8 1 5 5 0",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 8",
+              "scope": "Row",
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "2 7 4 2 0 0",
+              "scope": null,
+              "row": 28
+            }
+          ]
+        },
+        {
+          "th": 36,
+          "td": 96,
+          "tr": 33,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "R e g i st r a t i o n",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "C l a ss",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Y e a r",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "O d o m e t e r",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 2 9",
+              "scope": "Row",
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TD",
+              "text": "2 6 6 8 5 0",
+              "scope": null,
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 0",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 5 9 5 0 0",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 1",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "2 5 2 1 5 0",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 2",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2 4 4 8 0 0",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 3",
+              "scope": "Row",
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "2 3 7 4 5 0",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 4",
+              "scope": "Row",
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TD",
+              "text": "2 3 0 1 0 0",
+              "scope": null,
+              "row": 6
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 5",
+              "scope": "Row",
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TD",
+              "text": "2 2 2 7 5 0",
+              "scope": null,
+              "row": 7
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 6",
+              "scope": "Row",
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TD",
+              "text": "2 1 5 4 0 0",
+              "scope": null,
+              "row": 8
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 7",
+              "scope": "Row",
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TD",
+              "text": "2 0 8 0 5 0",
+              "scope": null,
+              "row": 9
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 8",
+              "scope": "Row",
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TD",
+              "text": "2 0 0 7 0 0",
+              "scope": null,
+              "row": 10
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 3 9",
+              "scope": "Row",
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TD",
+              "text": "1 9 3 3 5 0",
+              "scope": null,
+              "row": 11
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 0",
+              "scope": "Row",
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TD",
+              "text": "1 8 6 0 0 0",
+              "scope": null,
+              "row": 12
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 1",
+              "scope": "Row",
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TD",
+              "text": "1 7 8 6 5 0",
+              "scope": null,
+              "row": 13
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 2",
+              "scope": "Row",
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TD",
+              "text": "1 7 1 3 0 0",
+              "scope": null,
+              "row": 14
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 3",
+              "scope": "Row",
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TD",
+              "text": "1 6 3 9 5 0",
+              "scope": null,
+              "row": 15
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 4",
+              "scope": "Row",
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TD",
+              "text": "1 5 6 6 0 0",
+              "scope": null,
+              "row": 16
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 5",
+              "scope": "Row",
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TD",
+              "text": "1 4 9 2 5 0",
+              "scope": null,
+              "row": 17
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 6",
+              "scope": "Row",
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TD",
+              "text": "1 4 1 9 0 0",
+              "scope": null,
+              "row": 18
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 7",
+              "scope": "Row",
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TD",
+              "text": "1 3 4 5 5 0",
+              "scope": null,
+              "row": 19
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 8",
+              "scope": "Row",
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TD",
+              "text": "1 2 7 2 0 0",
+              "scope": null,
+              "row": 20
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 4 9",
+              "scope": "Row",
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TD",
+              "text": "1 1 9 8 5 0",
+              "scope": null,
+              "row": 21
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 0",
+              "scope": "Row",
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 2",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TD",
+              "text": "1 1 2 5 0 0",
+              "scope": null,
+              "row": 22
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 1",
+              "scope": "Row",
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 3",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TD",
+              "text": "1 0 5 1 5 0",
+              "scope": null,
+              "row": 23
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 2",
+              "scope": "Row",
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 4",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TD",
+              "text": "9 7 8 0 0",
+              "scope": null,
+              "row": 24
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 3",
+              "scope": "Row",
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 5",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TD",
+              "text": "9 0 4 5 0",
+              "scope": null,
+              "row": 25
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 4",
+              "scope": "Row",
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 6",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TD",
+              "text": "8 3 1 0 0",
+              "scope": null,
+              "row": 26
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 5",
+              "scope": "Row",
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 6",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TD",
+              "text": "7 5 7 5 0",
+              "scope": null,
+              "row": 27
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 6",
+              "scope": "Row",
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 7",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TD",
+              "text": "6 8 4 0 0",
+              "scope": null,
+              "row": 28
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 7",
+              "scope": "Row",
+              "row": 29
+            },
+            {
+              "type": "TD",
+              "text": "A r t ic 4 4 t",
+              "scope": null,
+              "row": 29
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 8",
+              "scope": null,
+              "row": 29
+            },
+            {
+              "type": "TD",
+              "text": "6 1 0 5 0",
+              "scope": null,
+              "row": 29
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 8",
+              "scope": "Row",
+              "row": 30
+            },
+            {
+              "type": "TD",
+              "text": "V a n 3 . 5 t",
+              "scope": null,
+              "row": 30
+            },
+            {
+              "type": "TD",
+              "text": "2 0 1 9",
+              "scope": null,
+              "row": 30
+            },
+            {
+              "type": "TD",
+              "text": "5 3 7 0 0",
+              "scope": null,
+              "row": 30
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 5 9",
+              "scope": "Row",
+              "row": 31
+            },
+            {
+              "type": "TD",
+              "text": "S h u n t e r",
+              "scope": null,
+              "row": 31
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 0",
+              "scope": null,
+              "row": 31
+            },
+            {
+              "type": "TD",
+              "text": "4 6 3 5 0",
+              "scope": null,
+              "row": 31
+            },
+            {
+              "type": "TH",
+              "text": "N W - 1 0 6 0",
+              "scope": "Row",
+              "row": 32
+            },
+            {
+              "type": "TD",
+              "text": "R ig id 1 8 t",
+              "scope": null,
+              "row": 32
+            },
+            {
+              "type": "TD",
+              "text": "2 0 2 1",
+              "scope": null,
+              "row": 32
+            },
+            {
+              "type": "TD",
+              "text": "3 9 0 0 0",
+              "scope": null,
+              "row": 32
+            }
+          ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "V e h i c l e Re g i st e r"
+        },
+        {
+          "type": "P",
+          "text": "T h e r e g is t e r r u n s t o m o r e r o w s t h a n f it o n o n e p a g e . T h e h "
+        },
+        {
+          "type": "Table",
+          "text": "R e g i st r a t i o n C l a ss Y e a r O d o m e t e r N W - 1 0 0 1 R ig id 1 8 t 2 0 1 "
+        },
+        {
+          "type": "P",
+          "text": "R e g i st r a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "C l a ss"
+        },
+        {
+          "type": "P",
+          "text": "Y e a r"
+        },
+        {
+          "type": "P",
+          "text": "O d o m e t e r"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 1"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "4 1 2 0 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 2"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "3 9 8 5 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 3"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "3 3 1 2 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 4"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "2 8 8 9 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 5"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "2 4 1 3 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 6"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "2 3 3 8 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 7"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "1 1 9 4 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 8"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "1 0 8 7 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 0 9"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "8 4 1 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 0"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "6 1 2 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 1"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "5 9 8 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 2"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "4 4 3 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 3"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "4 1 9 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 4"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "2 8 6 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 5"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "2 6 1 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "1 1 2 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "9 8 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "4 1 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "2 2 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "9 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "4 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "1 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "9 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "4 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "1 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "2 8 8 9 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 7"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "2 8 1 5 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 8"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "2 7 4 2 0 0"
+        },
+        {
+          "type": "Table",
+          "text": "R e g i st r a t i o n C l a ss Y e a r O d o m e t e r N W - 1 0 2 9 A r t ic 4 4 t 2 0 2"
+        },
+        {
+          "type": "P",
+          "text": "R e g i st r a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "C l a ss"
+        },
+        {
+          "type": "P",
+          "text": "Y e a r"
+        },
+        {
+          "type": "P",
+          "text": "O d o m e t e r"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 2 9"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "2 6 6 8 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 0"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "2 5 9 5 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 1"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "2 5 2 1 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 2"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "2 4 4 8 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 3"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "2 3 7 4 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 4"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "2 3 0 1 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 5"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "2 2 2 7 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 6"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "2 1 5 4 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 7"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "2 0 8 0 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 8"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "2 0 0 7 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 3 9"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "1 9 3 3 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 0"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "1 8 6 0 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 1"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "1 7 8 6 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 2"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "1 7 1 3 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 3"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "1 6 3 9 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 4"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "1 5 6 6 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 5"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "1 4 9 2 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 6"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "1 4 1 9 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 7"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "1 3 4 5 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 8"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "1 2 7 2 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 4 9"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "1 1 9 8 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 0"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 2"
+        },
+        {
+          "type": "P",
+          "text": "1 1 2 5 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 1"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 3"
+        },
+        {
+          "type": "P",
+          "text": "1 0 5 1 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 2"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 4"
+        },
+        {
+          "type": "P",
+          "text": "9 7 8 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 3"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 5"
+        },
+        {
+          "type": "P",
+          "text": "9 0 4 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 4"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 6"
+        },
+        {
+          "type": "P",
+          "text": "8 3 1 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 5"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 6"
+        },
+        {
+          "type": "P",
+          "text": "7 5 7 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 6"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 7"
+        },
+        {
+          "type": "P",
+          "text": "6 8 4 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 7"
+        },
+        {
+          "type": "P",
+          "text": "A r t ic 4 4 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 8"
+        },
+        {
+          "type": "P",
+          "text": "6 1 0 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 8"
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 1 9"
+        },
+        {
+          "type": "P",
+          "text": "5 3 7 0 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 5 9"
+        },
+        {
+          "type": "P",
+          "text": "S h u n t e r"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 0"
+        },
+        {
+          "type": "P",
+          "text": "4 6 3 5 0"
+        },
+        {
+          "type": "P",
+          "text": "N W - 1 0 6 0"
+        },
+        {
+          "type": "P",
+          "text": "R ig id 1 8 t"
+        },
+        {
+          "type": "P",
+          "text": "2 0 2 1"
+        },
+        {
+          "type": "P",
+          "text": "3 9 0 0 0"
+        },
+        {
+          "type": "H2",
+          "text": "T h e r e g is t e r is c o m p l e t e a s a t t h e d a t e o f is s u e ."
+        }
+      ]
+    }
+  },
+  {
+    "document": "h09-three-column",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 14,
+      "textChars": 767,
+      "pages": 1,
+      "lang": "en",
+      "title": "Port Bulletin",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "P o r t B u l l e t i n"
+        },
+        {
+          "level": "H2",
+          "text": "D r e d g i n g"
+        },
+        {
+          "level": "H2",
+          "text": "G a t e h o u r s"
+        },
+        {
+          "level": "H2",
+          "text": "C h a r g e s"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t a c t"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "P o r t B u l l e t i n"
+        },
+        {
+          "type": "P",
+          "text": "Issue 214 · circulated to berth holders"
+        },
+        {
+          "type": "H2",
+          "text": "D r e d g i n g"
+        },
+        {
+          "type": "P",
+          "text": "T h e w e s t e r n a p p r o a c h w il l b e d r e d g e d o v e r s ix n ig h t s b e g"
+        },
+        {
+          "type": "P",
+          "text": "e x p e c t a r e v is e d a l l o c a t io n f o r t h a t p e r io d ."
+        },
+        {
+          "type": "H2",
+          "text": "G a t e h o u r s"
+        },
+        {
+          "type": "P",
+          "text": "G a t e h o u r s r e v e r t t o t h e w in t e r s c h e d u l e a t t h e e n d o f t h"
+        },
+        {
+          "type": "P",
+          "text": "T h e n ig h t g a t e c l o s e s a n h o u r e a r l ie r f r o m t h a t d a t e a n d "
+        },
+        {
+          "type": "P",
+          "text": "N o t i c e t o b e r t h h o l d e r s. T h is b a n n e r s p a n s a l l t h r e e c o "
+        },
+        {
+          "type": "H2",
+          "text": "C h a r g e s"
+        },
+        {
+          "type": "P",
+          "text": "D e m u r r a g e is u n c h a n g e d . S t o r a g e c h a r g e s a r e s u b j e c t t"
+        },
+        {
+          "type": "H2",
+          "text": "C o n t a c t"
+        },
+        {
+          "type": "P",
+          "text": "T h e d u t y o f f ic e r is r e a c h a b l e t h r o u g h t h e u s u a l c h a n n e "
+        }
+      ]
+    }
+  },
+  {
+    "document": "h10-sidebar-callouts",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 978,
+      "pages": 1,
+      "lang": "en",
+      "title": "Storage Policy",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Storage Policy"
+        },
+        {
+          "level": "H2",
+          "text": "E x t e n si o n s"
+        },
+        {
+          "level": "H2",
+          "text": "A b a n d o n e d g o o d s"
+        },
+        {
+          "level": "H2",
+          "text": "H a z a r d o u s c o n si g n m e n t s"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Storage Policy"
+        },
+        {
+          "type": "P",
+          "text": "Free storage runs for five working days from discharge. Thereafter storage is charged dail"
+        },
+        {
+          "type": "H2",
+          "text": "E x t e n si o n s"
+        },
+        {
+          "type": "P",
+          "text": "An extension may be granted where onward transport has failed for reasons outside the cons"
+        },
+        {
+          "type": "H2",
+          "text": "A b a n d o n e d g o o d s"
+        },
+        {
+          "type": "P",
+          "text": "Goods uncollected after ninety days are treated as abandoned and are disposed of under the"
+        },
+        {
+          "type": "H2",
+          "text": "H a z a r d o u s c o n si g n m e n t s"
+        },
+        {
+          "type": "P",
+          "text": "Hazardous consignments are not eligible for free storage and are charged from the hour of "
+        },
+        {
+          "type": "P",
+          "text": "At a glance Five working days free, then charged daily. No part-day pro-rating."
+        },
+        {
+          "type": "P",
+          "text": "Worked example A container discharged on Monday and collected the following Wednesday attr"
+        },
+        {
+          "type": "P",
+          "text": "See also The tariff schedule sets the daily rate. The berth allocation procedure is separa"
+        }
+      ]
+    }
+  },
+  {
+    "document": "h11-chart-labels-as-headings",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 390,
+      "pages": 1,
+      "lang": "en",
+      "title": "Utilisation Dashboard",
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "U t i l i sa t i o n Da shb o a r d"
+        },
+        {
+          "level": "H2",
+          "text": "B e r t h o c c u p a n c y"
+        },
+        {
+          "level": "H1",
+          "text": "Berth Occupancy by Month"
+        },
+        {
+          "level": "H2",
+          "text": "N e x t r e v i e w"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "U t i l i sa t i o n Da shb o a r d"
+        },
+        {
+          "type": "H2",
+          "text": "B e r t h o c c u p a n c y"
+        },
+        {
+          "type": "P",
+          "text": "The chart's own title and its axis labels are set large and bold inside the graphic. They "
+        },
+        {
+          "type": "P",
+          "text": "Occupancy %"
+        },
+        {
+          "type": "H1",
+          "text": "Berth Occupancy by Month"
+        },
+        {
+          "type": "P",
+          "text": "Western quay, 2026"
+        },
+        {
+          "type": "P",
+          "text": "Jan Feb Mar Apr May Jun"
+        },
+        {
+          "type": "P",
+          "text": "Month of year"
+        },
+        {
+          "type": "P",
+          "text": "Occupancy rose from 48% in January to 80% in June, with a dip in May."
+        },
+        {
+          "type": "H2",
+          "text": "N e x t r e v i e w"
+        },
+        {
+          "type": "P",
+          "text": "The dashboard is reissued quarterly."
+        }
+      ]
+    }
+  },
+  {
+    "document": "h12-visible-title-no-metadata",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 8,
+      "textChars": 480,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a st a l De p o t L e a se R e n e w a l : O p t i o n s A p p r a i sa l"
+        },
+        {
+          "level": "H2",
+          "text": "Prepared for the Estates Committee, August 2026"
+        },
+        {
+          "level": "H1",
+          "text": "P u r p o se"
+        },
+        {
+          "level": "H1",
+          "text": "R e c o m m e n d a t i o n"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "C o a st a l De p o t L e a se R e n e w a l : O p t i o n s A p p r a i sa l"
+        },
+        {
+          "type": "H2",
+          "text": "Prepared for the Estates Committee, August 2026"
+        },
+        {
+          "type": "P",
+          "text": "T h is d o c u m e n t c a r r ie s n o t it l e m e t a d a t a . I t s t it l e is n o n"
+        },
+        {
+          "type": "H1",
+          "text": "P u r p o se"
+        },
+        {
+          "type": "P",
+          "text": "T o s e t o u t t h e t w o l ive o p t io n s a h e a d o f t h e r e n e w a l d e c is "
+        },
+        {
+          "type": "H1",
+          "text": "R e c o m m e n d a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "R e n e w a l o n a r e d u c e d f o o t p r in t , s u r r e n d e r in g t h e n o r t "
+        }
+      ]
+    }
+  },
+  {
+    "document": "h13-first-big-text-not-title",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading over-detection — got [\"H1\",\"H2\",\"H1\",\"H2\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 445,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "D R A F T"
+        },
+        {
+          "level": "H2",
+          "text": "C O M M E R C I A L I N C O N F I D E N C E"
+        },
+        {
+          "level": "H1",
+          "text": "N o r t h e r n A p r o n S u r r e n d e r : H e a d s o f T e r m s"
+        },
+        {
+          "level": "H2",
+          "text": "P a r t i e s"
+        },
+        {
+          "level": "H2",
+          "text": "T e r m"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "D R A F T"
+        },
+        {
+          "type": "H2",
+          "text": "C O M M E R C I A L I N C O N F I D E N C E"
+        },
+        {
+          "type": "H1",
+          "text": "N o r t h e r n A p r o n S u r r e n d e r : H e a d s o f T e r m s"
+        },
+        {
+          "type": "P",
+          "text": "V e r s io n 0 . 3 · n o t f o r c ir c u l a t io n o u t s id e t h e c o m m it t e e"
+        },
+        {
+          "type": "P",
+          "text": "T h e t w o l a r g e s t p ie c e s o f t e x t o n t h is p a g e a r e a w a t e r m a "
+        },
+        {
+          "type": "H2",
+          "text": "P a r t i e s"
+        },
+        {
+          "type": "P",
+          "text": "T h e a u t h o r it y a n d N o r t h w in d L o g is t ic s , a s l e s s e e u n d e r "
+        },
+        {
+          "type": "H2",
+          "text": "T e r m"
+        },
+        {
+          "type": "P",
+          "text": "T e n y e a r s f r o m t h e r e n e w a l d a t e , w it h a b r e a k a t f iv e ."
+        }
+      ]
+    }
+  },
+  {
+    "document": "h14-mixed-scan",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 9,
+      "textChars": 605,
+      "pages": 3,
+      "lang": "en",
+      "title": "Lease File Bundle",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "L e a se Fi l e B u n d l e"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t e n t s"
+        },
+        {
+          "level": "H2",
+          "text": "R e sp o n se o f 1 9 A u g u st"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "L e a se Fi l e B u n d l e"
+        },
+        {
+          "type": "P",
+          "text": "T h is b u n d l e in t e r l e a v e s n a t ive p a g e s w it h a s c a n n e d e x h i"
+        },
+        {
+          "type": "H2",
+          "text": "C o n t e n t s"
+        },
+        {
+          "type": "P",
+          "text": "P a g e 1 , t h is c o v e r . P a g e 2 , t h e a u t h o r it y ' s l e t t e r o f 1 4 "
+        },
+        {
+          "type": "Figure",
+          "text": ""
+        },
+        {
+          "type": "H2",
+          "text": "R e sp o n se o f 1 9 A u g u st"
+        },
+        {
+          "type": "P",
+          "text": "W e c o n f ir m r e c e ip t o f t h e l e t t e r r e p r o d u c e d a t p a g e t w o "
+        },
+        {
+          "type": "P",
+          "text": "T h e n o r t h e r n a p r o n w il l b e s u r r e n d e r e d o n t h e r e n e w a l d"
+        }
+      ]
+    }
+  },
+  {
+    "document": "h15-decorative-vs-meaningful",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "3 Figure elements for 1 expected (1 meaningful + 0 distinct repeated) — 2 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 462,
+      "pages": 1,
+      "lang": "en",
+      "title": "Signage Standard",
+      "headings": [
+        "H1",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "S i g n a g e S t a n d a r d"
+        },
+        {
+          "level": "H2",
+          "text": "A p p r o v e d m a r k"
+        },
+        {
+          "level": "H2",
+          "text": "P r o h i b i t e d v a r i a t i o n s"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "S i g n a g e S t a n d a r d"
+        },
+        {
+          "type": "Figure",
+          "text": "T h e b a n d a b o v e is a d e c o r a t ive h e a d e r g r a p h ic . I t is t h e l a"
+        },
+        {
+          "type": "Caption",
+          "text": "T h e b a n d a b o v e is a d e c o r a t ive h e a d e r g r a p h ic . I t is t h e l a"
+        },
+        {
+          "type": "H2",
+          "text": "A p p r o v e d m a r k"
+        },
+        {
+          "type": "Figure",
+          "text": "T h e s m a l l im a g e a b o v e is t h e a p p r o v e d m a r k it s e l f . I t is t "
+        },
+        {
+          "type": "Caption",
+          "text": "T h e s m a l l im a g e a b o v e is t h e a p p r o v e d m a r k it s e l f . I t is t "
+        },
+        {
+          "type": "H2",
+          "text": "P r o h i b i t e d v a r i a t i o n s"
+        },
+        {
+          "type": "Figure",
+          "text": "T h e m a r k m a y n o t b e r e c o l o u r e d , s t r e t c h e d , o r p l a c e d o "
+        },
+        {
+          "type": "Caption",
+          "text": "T h e m a r k m a y n o t b e r e c o l o u r e d , s t r e t c h e d , o r p l a c e d o "
+        }
+      ]
+    }
+  },
+  {
+    "document": "h16-inconsistent-hierarchy",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H2\",\"H3\",\"H4\",\"H2\",\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H3\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 15,
+      "textChars": 755,
+      "pages": 1,
+      "lang": "en",
+      "title": "Operations Manual Extract",
+      "headings": [
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H2",
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "O p e r a t i o n s M a n u a l E x t r a c t"
+        },
+        {
+          "level": "H2",
+          "text": "Receiving"
+        },
+        {
+          "level": "H3",
+          "text": "D i s c r e p a n c i e s"
+        },
+        {
+          "level": "H4",
+          "text": "STORAGE"
+        },
+        {
+          "level": "H2",
+          "text": "S e g r e g a t i o n"
+        },
+        {
+          "level": "H1",
+          "text": "Dispatch"
+        },
+        {
+          "level": "H2",
+          "text": "RECORDS"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "O p e r a t i o n s M a n u a l E x t r a c t"
+        },
+        {
+          "type": "P",
+          "text": "T h e f o u r s e c t io n h e a d in g s b e l o w a r e a l l a t t h e s a m e l o g ic"
+        },
+        {
+          "type": "H2",
+          "text": "Receiving"
+        },
+        {
+          "type": "P",
+          "text": "C o n s ig n m e n t s a r e c h e c k e d a g a in s t t h e m a n if e s t a t t h e g a"
+        },
+        {
+          "type": "H3",
+          "text": "D i s c r e p a n c i e s"
+        },
+        {
+          "type": "P",
+          "text": "A d is c r e p a n c y is l o g g e d a t t h e g a t e a n d d o e s n o t s t o p t h e "
+        },
+        {
+          "type": "H4",
+          "text": "STORAGE"
+        },
+        {
+          "type": "P",
+          "text": "C o n s ig n m e n t s a r e p l a c e d b y c l a s s . H a z a r d o u s g o o d s g o t"
+        },
+        {
+          "type": "H2",
+          "text": "S e g r e g a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "T h e s e g r e g a t e d a r e a is in s p e c t e d d a il y a n d it s r e g is t e r i"
+        },
+        {
+          "type": "H1",
+          "text": "Dispatch"
+        },
+        {
+          "type": "P",
+          "text": "D is p a t c h is a g a in s t a r e l e a s e d o r d e r o n l y . V e r b a l r e l e a"
+        },
+        {
+          "type": "H2",
+          "text": "RECORDS"
+        },
+        {
+          "type": "P",
+          "text": "G a t e l o g s a r e r e t a in e d f o r s ix y e a r s a n d a r e t h e r e c o r d o "
+        }
+      ]
+    }
+  }
+]

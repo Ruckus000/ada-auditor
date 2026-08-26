@@ -1,0 +1,402 @@
+[
+  {
+    "document": "01-simple-text",
+    "verdict": "NEEDS_REVIEW",
+    "state": "answerable",
+    "questions": 2,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "identify the lists and their items",
+        "answerable": true,
+        "from": "1 list(s) tagged, ground truth records 2"
+      },
+      {
+        "text": "identify the lists and their items",
+        "answerable": true,
+        "from": "3 list items tagged, ground truth records 6"
+      }
+    ]
+  },
+  {
+    "document": "02-two-column",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "03-simple-table",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "04-difficult-table",
+    "verdict": "NEEDS_REVIEW",
+    "state": "answerable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "mark up this table — it was not detected as one",
+        "answerable": true,
+        "from": "a ground-truth table was not detected"
+      }
+    ]
+  },
+  {
+    "document": "05-images-captioned",
+    "verdict": "INCONCLUSIVE",
+    "state": "unreviewable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      }
+    ]
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "verdict": "INCONCLUSIVE",
+    "state": "answerable",
+    "questions": 4,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "identify the headings and their levels",
+        "answerable": true,
+        "from": "heading under-detection — got [\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ]
+  },
+  {
+    "document": "07-complex-chart",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "08-slide-layout",
+    "verdict": "INCONCLUSIVE",
+    "state": "answerable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      }
+    ]
+  },
+  {
+    "document": "09-scanned",
+    "verdict": "INCONCLUSIVE",
+    "state": "blocked",
+    "questions": 4,
+    "blocked": 1,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "identify the headings and their levels",
+        "answerable": true,
+        "from": "heading under-detection — got [], ground truth [\"H1\"]"
+      },
+      {
+        "text": "transcribe the page — it has no text layer",
+        "answerable": false,
+        "from": "no text layer — OCR did not run"
+      },
+      {
+        "text": "supply the document title",
+        "answerable": true,
+        "from": "no document title"
+      }
+    ]
+  },
+  {
+    "document": "10-metadata-problems",
+    "verdict": "INCONCLUSIVE",
+    "state": "answerable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "supply the document title",
+        "answerable": true,
+        "from": "no document title"
+      }
+    ]
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "verdict": "INCONCLUSIVE",
+    "state": "answerable",
+    "questions": 2,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "supply the document title",
+        "answerable": true,
+        "from": "no document title"
+      }
+    ]
+  },
+  {
+    "document": "12-kitchen-sink",
+    "verdict": "INCONCLUSIVE",
+    "state": "answerable",
+    "questions": 5,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "mark up this table — it was not detected as one",
+        "answerable": true,
+        "from": "a ground-truth table was not detected"
+      },
+      {
+        "text": "identify the headings and their levels",
+        "answerable": true,
+        "from": "heading under-detection — got [\"H1\",\"H2\",\"H2\",\"H2\",\"H1\",\"H1\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\",\"H2\",\"H3\",\"H2\"]"
+      },
+      {
+        "text": "identify the lists and their items",
+        "answerable": true,
+        "from": "1 list(s) tagged, ground truth records 2"
+      },
+      {
+        "text": "identify the lists and their items",
+        "answerable": true,
+        "from": "5 list items tagged, ground truth records 8"
+      }
+    ]
+  },
+  {
+    "document": "h01-big-text-not-heading",
+    "verdict": "INCONCLUSIVE",
+    "state": "unreviewable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h02-headings-look-like-body",
+    "verdict": "NEEDS_REVIEW",
+    "state": "answerable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "identify the headings and their levels",
+        "answerable": true,
+        "from": "heading under-detection — got [], ground truth [\"H1\",\"H2\",\"H3\",\"H2\",\"H3\"]"
+      }
+    ]
+  },
+  {
+    "document": "h03-captions-above",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h04-one-caption-many-images",
+    "verdict": "NEEDS_REVIEW",
+    "state": "unreviewable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h05-logo-moves",
+    "verdict": "INCONCLUSIVE",
+    "state": "answerable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      }
+    ]
+  },
+  {
+    "document": "h06-mixed-table-borders",
+    "verdict": "NEEDS_REVIEW",
+    "state": "answerable",
+    "questions": 3,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "mark up this table — it was not detected as one",
+        "answerable": true,
+        "from": "a ground-truth table was not detected"
+      },
+      {
+        "text": "mark up this table — it was not detected as one",
+        "answerable": true,
+        "from": "a ground-truth table was not detected"
+      },
+      {
+        "text": "identify the headings and their levels",
+        "answerable": true,
+        "from": "heading under-detection — got [\"H1\",\"H2\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ]
+  },
+  {
+    "document": "h07-three-level-headers",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h08-table-spans-pages",
+    "verdict": "NEEDS_REVIEW",
+    "state": "unreviewable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h09-three-column",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h10-sidebar-callouts",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h11-chart-labels-as-headings",
+    "verdict": "DELIVERABLE",
+    "state": "deliverable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  },
+  {
+    "document": "h12-visible-title-no-metadata",
+    "verdict": "INCONCLUSIVE",
+    "state": "unreviewable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "supply the document title",
+        "answerable": true,
+        "from": "no document title"
+      }
+    ]
+  },
+  {
+    "document": "h13-first-big-text-not-title",
+    "verdict": "INCONCLUSIVE",
+    "state": "unreviewable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "supply the document title",
+        "answerable": true,
+        "from": "no document title"
+      }
+    ]
+  },
+  {
+    "document": "h14-mixed-scan",
+    "verdict": "INCONCLUSIVE",
+    "state": "answerable",
+    "questions": 1,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      }
+    ]
+  },
+  {
+    "document": "h15-decorative-vs-meaningful",
+    "verdict": "INCONCLUSIVE",
+    "state": "unreviewable",
+    "questions": 3,
+    "blocked": 0,
+    "asks": [
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      },
+      {
+        "text": "describe this image, or confirm it is decorative",
+        "answerable": true,
+        "from": "figure with no Alt and no ActualText"
+      }
+    ]
+  },
+  {
+    "document": "h16-inconsistent-hierarchy",
+    "verdict": "NEEDS_REVIEW",
+    "state": "unreviewable",
+    "questions": 0,
+    "blocked": 0,
+    "asks": []
+  }
+]

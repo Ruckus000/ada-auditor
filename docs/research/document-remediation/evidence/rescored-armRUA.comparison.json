@@ -1,0 +1,2264 @@
+[
+  {
+    "document": "01-simple-text",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 39,
+      "textChars": 1149,
+      "images": 0,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Quarterly Operations Summary",
+      "headings": [
+        "H1",
+        "H2",
+        "H3",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Quarterly Operations Summary"
+        },
+        {
+          "level": "H2",
+          "text": "Throughput"
+        },
+        {
+          "level": "H3",
+          "text": "Regional detail"
+        },
+        {
+          "level": "H2",
+          "text": "Actions carried forward"
+        },
+        {
+          "level": "H2",
+          "text": "Approval sequence"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 3
+        },
+        {
+          "depth": 1,
+          "items": 3
+        }
+      ],
+      "order": [
+        {
+          "type": "P",
+          "text": "Northwind Logistics · Internal · Page 1 of 1"
+        },
+        {
+          "type": "H1",
+          "text": "Quarterly Operations Summary"
+        },
+        {
+          "type": "P",
+          "text": "This document is the control case for the remediation corpus. Its structure is conventiona"
+        },
+        {
+          "type": "H2",
+          "text": "Throughput"
+        },
+        {
+          "type": "P",
+          "text": "Depot throughput rose across all three regions during the period under review. The gain is"
+        },
+        {
+          "type": "H3",
+          "text": "Regional detail"
+        },
+        {
+          "type": "P",
+          "text": "The northern depot absorbed most of the additional volume. Southern and coastal depots hel"
+        },
+        {
+          "type": "H2",
+          "text": "Actions carried forward"
+        },
+        {
+          "type": "L",
+          "text": "• Re-time the evening dispatch window at the northern depot. • Retire the two remaining di"
+        },
+        {
+          "type": "LI",
+          "text": "• Re-time the evening dispatch window at the northern depot."
+        },
+        {
+          "type": "P",
+          "text": "Re-time the evening dispatch window at the northern depot."
+        },
+        {
+          "type": "LI",
+          "text": "• Retire the two remaining diesel shunters."
+        },
+        {
+          "type": "P",
+          "text": "Retire the two remaining diesel shunters."
+        },
+        {
+          "type": "LI",
+          "text": "• Review the coastal depot lease before renewal."
+        },
+        {
+          "type": "P",
+          "text": "Review the coastal depot lease before renewal."
+        },
+        {
+          "type": "H2",
+          "text": "Approval sequence"
+        },
+        {
+          "type": "L",
+          "text": "1. Operations lead reviews the throughput figures. 2. Finance confirms the lease position."
+        },
+        {
+          "type": "LI",
+          "text": "1. Operations lead reviews the throughput figures."
+        },
+        {
+          "type": "P",
+          "text": "Operations lead reviews the throughput figures."
+        },
+        {
+          "type": "LI",
+          "text": "2. Finance confirms the lease position."
+        },
+        {
+          "type": "P",
+          "text": "Finance confirms the lease position."
+        },
+        {
+          "type": "LI",
+          "text": "3. Board notes the summary at the next scheduled meeting."
+        },
+        {
+          "type": "P",
+          "text": "Board notes the summary at the next scheduled meeting."
+        },
+        {
+          "type": "P",
+          "text": "Source data is published on the quarterly operations page ."
+        },
+        {
+          "type": "P",
+          "text": "Northwind Logistics · Prepared 2026-08-23 · Page 1 of 1"
+        }
+      ]
+    }
+  },
+  {
+    "document": "02-two-column",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\"], ground truth [\"H1\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "reading order: \"rentisthedominantcost\" not found in the tagged content"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 8,
+      "textChars": 1374,
+      "images": 0,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Coastal Depot Review",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Coastal Depot Review"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Coastal Depot Review"
+        },
+        {
+          "type": "P",
+          "text": "The depot lease expires within the year and the review below sets out the position ahead o"
+        },
+        {
+          "type": "P",
+          "text": "Coastal has operated below its designed capacity for six consecutive quarters. The shortfa"
+        },
+        {
+          "type": "P",
+          "text": "Staffing has been held flat throughout. No redundancy programme has been proposed and none"
+        },
+        {
+          "type": "P",
+          "text": "Two options are open. The first is renewal on the existing footprint, accepting the lower "
+        },
+        {
+          "type": "P",
+          "text": "A third option, closure, is recorded here only to note that it has been considered and set"
+        },
+        {
+          "type": "P",
+          "text": "Financial position"
+        }
+      ]
+    }
+  },
+  {
+    "document": "03-simple-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 3,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Northern\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Southern\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Coastal\" has Scope=Column but heads a row"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 53,
+      "textChars": 419,
+      "images": 0,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Depot Throughput by Quarter",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Depot Throughput by Quarter"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 9,
+          "td": 12,
+          "tr": 5,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "Depot",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Review period",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Q1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q3",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q4",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Northern",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "184",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "191",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "203",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "221",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Southern",
+              "scope": "Column",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "142",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "139",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "145",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "144",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "Coastal",
+              "scope": "Column",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "98",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "94",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "91",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "88",
+              "scope": null,
+              "row": 4
+            }
+          ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Depot Throughput by Quarter"
+        },
+        {
+          "type": "P",
+          "text": "The table below reports containers handled per depot for the four quarters of the review p"
+        },
+        {
+          "type": "P",
+          "text": "Containers handled, by depot and quarter (hundreds)"
+        },
+        {
+          "type": "Table",
+          "text": "Depot Review period Q1 Q2 Q3 Q4 Northern 184 191 203 221 Southern 142 139 145 144 Coastal "
+        },
+        {
+          "type": "P",
+          "text": "Depot"
+        },
+        {
+          "type": "P",
+          "text": "Review period"
+        },
+        {
+          "type": "P",
+          "text": "Q1"
+        },
+        {
+          "type": "P",
+          "text": "Q2"
+        },
+        {
+          "type": "P",
+          "text": "Q3"
+        },
+        {
+          "type": "P",
+          "text": "Q4"
+        },
+        {
+          "type": "P",
+          "text": "Northern"
+        },
+        {
+          "type": "P",
+          "text": "184"
+        },
+        {
+          "type": "P",
+          "text": "191"
+        },
+        {
+          "type": "P",
+          "text": "203"
+        },
+        {
+          "type": "P",
+          "text": "221"
+        },
+        {
+          "type": "P",
+          "text": "Southern"
+        },
+        {
+          "type": "P",
+          "text": "142"
+        },
+        {
+          "type": "P",
+          "text": "139"
+        },
+        {
+          "type": "P",
+          "text": "145"
+        },
+        {
+          "type": "P",
+          "text": "144"
+        },
+        {
+          "type": "P",
+          "text": "Coastal"
+        },
+        {
+          "type": "P",
+          "text": "98"
+        },
+        {
+          "type": "P",
+          "text": "94"
+        },
+        {
+          "type": "P",
+          "text": "91"
+        },
+        {
+          "type": "P",
+          "text": "88"
+        },
+        {
+          "type": "P",
+          "text": "Coastal is the only depot showing sustained decline, which is the subject of a separate re"
+        }
+      ]
+    }
+  },
+  {
+    "document": "04-difficult-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 5,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "table 1: cell \"Notescarriedforwardfromthepreviousreviewcycle\" marked as a header but ground truth lists it as data"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Rigid18t\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Artic44t\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Shunter\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Van3.5t\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 1: 1 ground-truth header(s) still tagged TD"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 75,
+      "textChars": 878,
+      "images": 0,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Fleet Utilisation Detail",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Fleet Utilisation Detail"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 12,
+          "td": 20,
+          "tr": 6,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "Vehicle class",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Northern",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Southern",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Notes carried forward from the previous review cycle",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Units",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Util. %",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Units",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Util. %",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Rigid 18t",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "12",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "81",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "9",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "77",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "Replacement cycle brought forward; three units are beyond their scheduled retirement date and are being run on extended inspection.",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Artic 44t",
+              "scope": "Column",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "7",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "88",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "6",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "84",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "No action.",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "Shunter",
+              "scope": "Column",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "34",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "Not operated at Southern. Both northern units are diesel and are listed for retirement under the actions carried forward.",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TH",
+              "text": "Van 3.5t",
+              "scope": "Column",
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "14",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "62",
+              "scope": null,
+              "row": 5
+            },
+            {
+              "type": "TD",
+              "text": "Southern only. Utilisation is low because the class is held for overflow rather than scheduled work.",
+              "scope": null,
+              "row": 5
+            }
+          ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Fleet Utilisation Detail"
+        },
+        {
+          "type": "P",
+          "text": "Utilisation is reported by vehicle class and by depot. Blank cells indicate that the class"
+        },
+        {
+          "type": "Table",
+          "text": "Vehicle class Northern Southern Notes carried forward from the previous review cycle Units"
+        },
+        {
+          "type": "P",
+          "text": "Vehicle class"
+        },
+        {
+          "type": "P",
+          "text": "Northern"
+        },
+        {
+          "type": "P",
+          "text": "Southern"
+        },
+        {
+          "type": "P",
+          "text": "Notes carried forward from the previous review cycle"
+        },
+        {
+          "type": "P",
+          "text": "Units"
+        },
+        {
+          "type": "P",
+          "text": "Util. %"
+        },
+        {
+          "type": "P",
+          "text": "Units"
+        },
+        {
+          "type": "P",
+          "text": "Util. %"
+        },
+        {
+          "type": "P",
+          "text": "Rigid 18t"
+        },
+        {
+          "type": "P",
+          "text": "12"
+        },
+        {
+          "type": "P",
+          "text": "81"
+        },
+        {
+          "type": "P",
+          "text": "9"
+        },
+        {
+          "type": "P",
+          "text": "77"
+        },
+        {
+          "type": "P",
+          "text": "Replacement cycle brought forward; three units are beyond their scheduled retirement date "
+        },
+        {
+          "type": "P",
+          "text": "Artic 44t"
+        },
+        {
+          "type": "P",
+          "text": "7"
+        },
+        {
+          "type": "P",
+          "text": "88"
+        },
+        {
+          "type": "P",
+          "text": "6"
+        },
+        {
+          "type": "P",
+          "text": "84"
+        },
+        {
+          "type": "P",
+          "text": "No action."
+        },
+        {
+          "type": "P",
+          "text": "Shunter"
+        },
+        {
+          "type": "P",
+          "text": "2"
+        },
+        {
+          "type": "P",
+          "text": "34"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": "Not operated at Southern. Both northern units are diesel and are listed for retirement und"
+        },
+        {
+          "type": "P",
+          "text": "Van 3.5t"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": "14"
+        },
+        {
+          "type": "P",
+          "text": "62"
+        },
+        {
+          "type": "P",
+          "text": "Southern only. Utilisation is low because the class is held for overflow rather than sched"
+        },
+        {
+          "type": "P",
+          "text": "Class-level utilisation is not comparable across depots where the operating pattern differ"
+        }
+      ]
+    }
+  },
+  {
+    "document": "05-images-captioned",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 1: The western quay at low tide, viewed from the depo...\""
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 2: The northern apron, which would be surrendered und...\""
+      },
+      {
+        "kind": "assertion",
+        "msg": "2 Figure elements for 3 expected — 1 missing with 1 image(s) still drawn on the page: meaningful graphics artifacted out of the structure tree and silently removed from the document"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 822,
+      "images": 3,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Coastal Quay Site Report",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Coastal Quay Site Report"
+        },
+        {
+          "level": "H2",
+          "text": "Depot apron"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "Northwind Logistics",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Northwind Logistics",
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "P",
+          "text": "Coastal Quay Site Report · Page 1"
+        },
+        {
+          "type": "Figure",
+          "text": "Northwind Logistics"
+        },
+        {
+          "type": "H1",
+          "text": "Coastal Quay Site Report"
+        },
+        {
+          "type": "P",
+          "text": "Two site visits were made during the review period. The photographs below were taken on th"
+        },
+        {
+          "type": "P",
+          "text": "Figure 1: The western quay at low tide, viewed from the depot apron. The berth allocated t"
+        },
+        {
+          "type": "P",
+          "text": "The quay itself is in good condition. The constraint is allocation rather than infrastruct"
+        },
+        {
+          "type": "P",
+          "text": "Coastal Quay Site Report · Page 2"
+        },
+        {
+          "type": "Figure",
+          "text": "Northwind Logistics"
+        },
+        {
+          "type": "H2",
+          "text": "Depot apron"
+        },
+        {
+          "type": "P",
+          "text": "Figure 2: The northern apron, which would be surrendered under the reduced-footprint optio"
+        },
+        {
+          "type": "P",
+          "text": "The apron in Figure 2 carries almost no scheduled work. It is the part of the site the red"
+        }
+      ]
+    }
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "0 Figure elements for 4 expected — 4 missing with 8 image(s) still drawn on the page: meaningful graphics artifacted out of the structure tree and silently removed from the document"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 303,
+      "images": 8,
+      "pages": 2,
+      "lang": "en-US",
+      "title": "Asset Register Extract",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Asset Register Extract"
+        },
+        {
+          "level": "H2",
+          "text": "Site"
+        },
+        {
+          "level": "H2",
+          "text": "Apron"
+        },
+        {
+          "level": "H2",
+          "text": "Mark"
+        },
+        {
+          "level": "H2",
+          "text": "Layout"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Asset Register Extract"
+        },
+        {
+          "type": "P",
+          "text": "This extract exists to mark the boundary of deterministic remediation. None of the graphic"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "H2",
+          "text": "Site"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "H2",
+          "text": "Apron"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "H2",
+          "text": "Mark"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "H2",
+          "text": "Layout"
+        },
+        {
+          "type": "P",
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "document": "07-complex-chart",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "0 Figure elements for 1 expected — 1 missing, with no image behind them"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 5,
+      "textChars": 525,
+      "images": 0,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Throughput Trend Analysis",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Throughput Trend Analysis"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Throughput Trend Analysis"
+        },
+        {
+          "type": "P",
+          "text": "The chart below plots containers handled per quarter for the three depots across the revie"
+        },
+        {
+          "type": "P",
+          "text": "Containers handled per quarter (hundreds) 0 60 120 180 240 Containers Q1 Q2 Q3 Q4 Quarter "
+        },
+        {
+          "type": "P",
+          "text": "Northern rises steadily across all four quarters. Southern is flat within noise. Coastal d"
+        }
+      ]
+    }
+  },
+  {
+    "document": "08-slide-layout",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 2,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "0 Figure elements for 1 expected — 1 missing with 1 image(s) still drawn on the page: meaningful graphics artifacted out of the structure tree and silently removed from the document"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\"]"
+      },
+      {
+        "kind": "assertion",
+        "msg": "reading order: \"close\" appears out of sequence"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 313,
+      "images": 1,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Coastal Options — Board Slide",
+      "headings": [],
+      "headingTexts": [],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "P",
+          "text": "Coastal: three ways forward"
+        },
+        {
+          "type": "P",
+          "text": "Board discussion · not for circulation"
+        },
+        {
+          "type": "P",
+          "text": "3"
+        },
+        {
+          "type": "P",
+          "text": "Close Considered and set aside for this cycle. Recorded so the decision is on the minutes."
+        },
+        {
+          "type": "P",
+          "text": "1"
+        },
+        {
+          "type": "P",
+          "text": "Renew as-is Accept lower utilisation and the rent that comes with it."
+        },
+        {
+          "type": "P",
+          "text": "2"
+        },
+        {
+          "type": "P",
+          "text": "Reduce footprint Surrender the northern apron. Saves about a fifth of the rent."
+        },
+        {
+          "type": "P",
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "document": "10-metadata-problems",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 1013,
+      "images": 0,
+      "pages": 1,
+      "lang": "en-US",
+      "title": null,
+      "headings": [],
+      "headingTexts": [],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "P",
+          "text": "Notice de conformité — Compliance Notice"
+        },
+        {
+          "type": "P",
+          "text": "This document carries no title metadata and declares no language. Both are deliberate. It "
+        },
+        {
+          "type": "P",
+          "text": "English section"
+        },
+        {
+          "type": "P",
+          "text": "The depot lease and the berth allocation are administered under separate instruments. Rene"
+        },
+        {
+          "type": "P",
+          "text": "Section française"
+        },
+        {
+          "type": "P",
+          "text": "Le bail du dépôt et l'attribution des postes à quai relèvent d'instruments distincts. Le r"
+        },
+        {
+          "type": "P",
+          "text": "Closing"
+        },
+        {
+          "type": "P",
+          "text": "The headings above are styled divs rather than heading elements, so nothing in the source "
+        }
+      ]
+    }
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 2,
+    "defects": [
+      {
+        "kind": "assertion",
+        "msg": "0 Figure elements for 1 expected — 1 missing with 2 image(s) still drawn on the page: meaningful graphics artifacted out of the structure tree and silently removed from the document"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: a layout table tagged as a data table — relationships invented"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H4\",\"H4\",\"H4\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 20,
+      "textChars": 906,
+      "images": 2,
+      "pages": 1,
+      "lang": "en-US",
+      "title": "Eligibility",
+      "headings": [
+        "H4",
+        "H4",
+        "H4"
+      ],
+      "headingTexts": [
+        {
+          "level": "H4",
+          "text": "Eligibility"
+        },
+        {
+          "level": "H4",
+          "text": "Applying"
+        },
+        {
+          "level": "H4",
+          "text": "Contact"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 0,
+          "td": 2,
+          "tr": 1,
+          "cells": [
+            {
+              "type": "TD",
+              "text": "This table has no headers and holds no tabular data. It exists purely to place two blocks of text side by side, which is a layout table and should be treated as presentational.",
+              "scope": null,
+              "row": 0
+            },
+            {
+              "type": "TD",
+              "text": "A remediation that tags this as a data table and invents header relationships has made the document worse, not better.",
+              "scope": null,
+              "row": 0
+            }
+          ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "P",
+          "text": "Terms of Access"
+        },
+        {
+          "type": "H4",
+          "text": "Eligibility"
+        },
+        {
+          "type": "P",
+          "text": "Access is granted to registered hauliers only. The registration process is described on th"
+        },
+        {
+          "type": "Table",
+          "text": "This table has no headers and holds no tabular data. It exists purely to place two blocks "
+        },
+        {
+          "type": "P",
+          "text": "This table has no headers and holds no tabular data. It exists purely to place two blocks "
+        },
+        {
+          "type": "P",
+          "text": "A remediation that tags this as a data table and invents header relationships has made the"
+        },
+        {
+          "type": "H4",
+          "text": "Applying"
+        },
+        {
+          "type": "P",
+          "text": "To begin the process, click here . For the schedule of charges, click here ."
+        },
+        {
+          "type": "P",
+          "text": "This paragraph is set in light grey on white and falls below the contrast threshold. It ca"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": "The line above is an image. Any text within it is unavailable to a screen reader and is no"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "H4",
+          "text": "Contact"
+        },
+        {
+          "type": "P",
+          "text": "Enquiries to the estates office. See the website for current details."
+        }
+      ]
+    }
+  },
+  {
+    "document": "12-kitchen-sink",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 7,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 1: The western quay at low tide. The Northwind berth ...\""
+      },
+      {
+        "kind": "omission",
+        "msg": "caption present but no figure alt reflects it: \"Figure 2: The northern apron, which the reduced-footprint op...\""
+      },
+      {
+        "kind": "assertion",
+        "msg": "5 Figure elements for 4 expected (3 meaningful + 1 distinct repeated) — 1 extra: decorative or repeated graphics described as content rather than marked as artifacts"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Northern\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Southern\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 1: header \"Coastal\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 2: header \"Rigid18t\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 2: header \"Artic44t\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "assertion",
+        "msg": "table 2: header \"Shunter\" has Scope=Column but heads a row"
+      },
+      {
+        "kind": "omission",
+        "msg": "table 2: 1 ground-truth header(s) still tagged TD"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 181,
+      "textChars": 2370,
+      "images": 8,
+      "pages": 2,
+      "lang": "en-US",
+      "title": "Coastal Depot: Annual Review 2026",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H2",
+        "H2",
+        "H3",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Coastal Depot"
+        },
+        {
+          "level": "H2",
+          "text": "Contents"
+        },
+        {
+          "level": "H2",
+          "text": "Summary"
+        },
+        {
+          "level": "H2",
+          "text": "Throughput"
+        },
+        {
+          "level": "H2",
+          "text": "Fleet utilisation"
+        },
+        {
+          "level": "H2",
+          "text": "Site"
+        },
+        {
+          "level": "H3",
+          "text": "Northern apron"
+        },
+        {
+          "level": "H2",
+          "text": "Options and recommendation"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": "Northwind Logistics",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Northwind Logistics",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Northwind Logistics",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Northwind Logistics",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Northwind Logistics",
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 9,
+          "td": 12,
+          "tr": 5,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "Depot",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Review period",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Q1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q3",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q4",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Northern",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "184",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "191",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "203",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "221",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Southern",
+              "scope": "Column",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "142",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "139",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "145",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "144",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "Coastal",
+              "scope": "Column",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "98",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "94",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "91",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "88",
+              "scope": null,
+              "row": 4
+            }
+          ]
+        },
+        {
+          "th": 11,
+          "td": 15,
+          "tr": 5,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "Vehicle class",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Northern",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Coastal",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Units",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Util. %",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Units",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Util. %",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Rigid 18t",
+              "scope": "Column",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "12",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "81",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "5",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "44",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "Three units beyond scheduled retirement, run on extended inspection.",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "Artic 44t",
+              "scope": "Column",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "7",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "88",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "3",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "51",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "No action.",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "Shunter",
+              "scope": "Column",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "2",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "34",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "Not operated at Coastal. Both northern units listed for retirement.",
+              "scope": null,
+              "row": 4
+            }
+          ]
+        }
+      ],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 5
+        },
+        {
+          "depth": 1,
+          "items": 3
+        }
+      ],
+      "order": [
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "Figure",
+          "text": "Northwind Logistics"
+        },
+        {
+          "type": "H1",
+          "text": "Coastal Depot"
+        },
+        {
+          "type": "P",
+          "text": "Annual Review 2026 · prepared for the Board"
+        },
+        {
+          "type": "P",
+          "text": "Northwind Logistics · Estates and Operations"
+        },
+        {
+          "type": "P",
+          "text": "Coastal Depot Annual Review · Page 2"
+        },
+        {
+          "type": "Figure",
+          "text": "Northwind Logistics"
+        },
+        {
+          "type": "H2",
+          "text": "Contents"
+        },
+        {
+          "type": "L",
+          "text": "1. Summary 2. Throughput 3. Fleet utilisation 4. Site 5. Options and recommendation"
+        },
+        {
+          "type": "LI",
+          "text": "1. Summary"
+        },
+        {
+          "type": "P",
+          "text": "Summary"
+        },
+        {
+          "type": "LI",
+          "text": "2. Throughput"
+        },
+        {
+          "type": "P",
+          "text": "Throughput"
+        },
+        {
+          "type": "LI",
+          "text": "3. Fleet utilisation"
+        },
+        {
+          "type": "P",
+          "text": "Fleet utilisation"
+        },
+        {
+          "type": "LI",
+          "text": "4. Site"
+        },
+        {
+          "type": "P",
+          "text": "Site"
+        },
+        {
+          "type": "LI",
+          "text": "5. Options and recommendation"
+        },
+        {
+          "type": "P",
+          "text": "Options and recommendation"
+        },
+        {
+          "type": "P",
+          "text": "Northwind Logistics · Page 2"
+        },
+        {
+          "type": "P",
+          "text": "Coastal Depot Annual Review · Page 3"
+        },
+        {
+          "type": "Figure",
+          "text": "Northwind Logistics"
+        },
+        {
+          "type": "H2",
+          "text": "Summary"
+        },
+        {
+          "type": "P",
+          "text": "Coastal has operated below its designed capacity for six consecutive quarters. The shortfa"
+        },
+        {
+          "type": "P",
+          "text": "Two options are live: renewal on the existing footprint, or renewal on a reduced footprint"
+        },
+        {
+          "type": "P",
+          "text": "The recommendation at the end of this review is the reduced footprint, on the basis of the"
+        },
+        {
+          "type": "H2",
+          "text": "Throughput"
+        },
+        {
+          "type": "P",
+          "text": "Containers handled, by depot and quarter (hundreds)"
+        },
+        {
+          "type": "Table",
+          "text": "Depot Review period Q1 Q2 Q3 Q4 Northern 184 191 203 221 Southern 142 139 145 144 Coastal "
+        },
+        {
+          "type": "P",
+          "text": "Depot"
+        },
+        {
+          "type": "P",
+          "text": "Review period"
+        },
+        {
+          "type": "P",
+          "text": "Q1"
+        },
+        {
+          "type": "P",
+          "text": "Q2"
+        },
+        {
+          "type": "P",
+          "text": "Q3"
+        },
+        {
+          "type": "P",
+          "text": "Q4"
+        },
+        {
+          "type": "P",
+          "text": "Northern"
+        },
+        {
+          "type": "P",
+          "text": "184"
+        },
+        {
+          "type": "P",
+          "text": "191"
+        },
+        {
+          "type": "P",
+          "text": "203"
+        },
+        {
+          "type": "P",
+          "text": "221"
+        },
+        {
+          "type": "P",
+          "text": "Southern"
+        },
+        {
+          "type": "P",
+          "text": "142"
+        },
+        {
+          "type": "P",
+          "text": "139"
+        },
+        {
+          "type": "P",
+          "text": "145"
+        },
+        {
+          "type": "P",
+          "text": "144"
+        },
+        {
+          "type": "P",
+          "text": "Coastal"
+        },
+        {
+          "type": "P",
+          "text": "98"
+        },
+        {
+          "type": "P",
+          "text": "94"
+        },
+        {
+          "type": "P",
+          "text": "91"
+        },
+        {
+          "type": "P",
+          "text": "88"
+        },
+        {
+          "type": "P",
+          "text": "Quarterly trend by depot 0 100 200 Q1 Q2 Q3 Q4 Northern Southern Coastal"
+        },
+        {
+          "type": "P",
+          "text": "Northern rises across all four quarters, Southern is flat, and Coastal declines continuous"
+        },
+        {
+          "type": "P",
+          "text": "Northwind Logistics · Page 3"
+        },
+        {
+          "type": "P",
+          "text": "Coastal Depot Annual Review · Page 4"
+        },
+        {
+          "type": "Figure",
+          "text": "Northwind Logistics"
+        },
+        {
+          "type": "H2",
+          "text": "Fleet utilisation"
+        },
+        {
+          "type": "P",
+          "text": "Blank cells mean the class is not operated at that depot, which differs from zero."
+        },
+        {
+          "type": "Table",
+          "text": "Vehicle class Northern Coastal Units Util. % Units Util. % Rigid 18t 12 81 5 44 Three unit"
+        },
+        {
+          "type": "P",
+          "text": "Vehicle class"
+        },
+        {
+          "type": "P",
+          "text": "Northern"
+        },
+        {
+          "type": "P",
+          "text": "Coastal"
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": "Units"
+        },
+        {
+          "type": "P",
+          "text": "Util. %"
+        },
+        {
+          "type": "P",
+          "text": "Units"
+        },
+        {
+          "type": "P",
+          "text": "Util. %"
+        },
+        {
+          "type": "P",
+          "text": "Rigid 18t"
+        },
+        {
+          "type": "P",
+          "text": "12"
+        },
+        {
+          "type": "P",
+          "text": "81"
+        },
+        {
+          "type": "P",
+          "text": "5"
+        },
+        {
+          "type": "P",
+          "text": "44"
+        },
+        {
+          "type": "P",
+          "text": "Three units beyond scheduled retirement, run on extended inspection."
+        },
+        {
+          "type": "P",
+          "text": "Artic 44t"
+        },
+        {
+          "type": "P",
+          "text": "7"
+        },
+        {
+          "type": "P",
+          "text": "88"
+        },
+        {
+          "type": "P",
+          "text": "3"
+        },
+        {
+          "type": "P",
+          "text": "51"
+        },
+        {
+          "type": "P",
+          "text": "No action."
+        },
+        {
+          "type": "P",
+          "text": "Shunter"
+        },
+        {
+          "type": "P",
+          "text": "2"
+        },
+        {
+          "type": "P",
+          "text": "34"
+        },
+        {
+          "type": "P",
+          "text": "Not operated at Coastal. Both northern units listed for retirement."
+        },
+        {
+          "type": "P",
+          "text": ""
+        },
+        {
+          "type": "H2",
+          "text": "Site"
+        },
+        {
+          "type": "P",
+          "text": "Figure 1: The western quay at low tide. The Northwind berth is second from the left."
+        },
+        {
+          "type": "H3",
+          "text": "Northern apron"
+        },
+        {
+          "type": "P",
+          "text": "Figure 2: The northern apron, which the reduced- footprint option would surrender."
+        },
+        {
+          "type": "P",
+          "text": "Northwind Logistics · Page 4"
+        },
+        {
+          "type": "P",
+          "text": "Coastal Depot Annual Review · Page 5"
+        },
+        {
+          "type": "Figure",
+          "text": "Northwind Logistics"
+        },
+        {
+          "type": "H2",
+          "text": "Options and recommendation"
+        },
+        {
+          "type": "L",
+          "text": "• Renew as-is. Accept lower utilisation and the full rent. • Reduce footprint. Surrender t"
+        },
+        {
+          "type": "LI",
+          "text": "• Renew as-is. Accept lower utilisation and the full rent."
+        },
+        {
+          "type": "P",
+          "text": "Renew as-is. Accept lower utilisation and the full rent."
+        },
+        {
+          "type": "LI",
+          "text": "• Reduce footprint. Surrender the northern apron; saves about a fifth of the rent."
+        },
+        {
+          "type": "P",
+          "text": "Reduce footprint. Surrender the northern apron; saves about a fifth of the rent."
+        },
+        {
+          "type": "LI",
+          "text": "• Close. Considered and set aside for this cycle."
+        },
+        {
+          "type": "P",
+          "text": "Close. Considered and set aside for this cycle."
+        },
+        {
+          "type": "P",
+          "text": "The recommendation is the reduced footprint. Supporting figures are published on the Coast"
+        },
+        {
+          "type": "P",
+          "text": "Northwind Logistics · Page 5 · End of review"
+        }
+      ]
+    }
+  }
+]

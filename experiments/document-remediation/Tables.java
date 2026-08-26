@@ -14,6 +14,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkedContentReference;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDMarkedContent;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -80,8 +81,15 @@ import org.apache.pdfbox.text.TextPosition;
  * An empty cell is NOT bold. This matters more than it looks: document 06
  * carries a spurious 2x5 /Table that OpenDataLoader invented over a grid of
  * photographs, and every one of its cells is empty. Treating "no glyphs" as
- * "not bold" makes R1 and R2 both fail there without needing a rule about
- * spurious tables. Every unknown resolves towards fewer /TH.
+ * "not bold" makes R1 and R2 both fail there. Every unknown resolves towards
+ * fewer /TH.
+ *
+ * That was once the whole answer for document 06, and it was half of one. No
+ * /TH was added, which was right, but the /Table itself survived and announced
+ * two rows and five columns over a grid of photographs. Refusing to describe a
+ * table's headers is not the same as refusing to call it a table. R0 below now
+ * removes it, and runs before promotion because a thing that is not a table has
+ * no headers to look for.
  *
  * WHAT WAS REJECTED, with the evidence:
  *
@@ -134,7 +142,7 @@ public final class Tables {
     private static final java.util.regex.Pattern SUBSET_TAG =
         java.util.regex.Pattern.compile("^[A-Z]{6}\\+");
 
-    private static int tables, skippedNoContrast, colHeaderCells, rowHeaderCells;
+    private static int tables, skippedNoContrast, colHeaderCells, rowHeaderCells, untagged;
 
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
@@ -150,17 +158,60 @@ public final class Tables {
                 Map<String, Object> roleMap = root.getRoleMap();
                 for (PDStructureElement t : StructText.find(root, TABLES, roleMap)) {
                     tables++;
+                    // Before asking which cells are headers, ask whether this is
+                    // a table at all. A table none of whose cells reference any
+                    // content announces rows and columns over nothing.
+                    if (empty(t, roleMap)) { untag(t); untagged++; continue; }
                     promote(t, roleMap, boldByMcid);
                 }
             }
 
             doc.save(args[1]);
             System.out.printf(
-                "{\"tables\":%d,\"skippedNoContrast\":%d,\"colHeaderCells\":%d,"
+                "{\"tables\":%d,\"untagged\":%d,\"skippedNoContrast\":%d,\"colHeaderCells\":%d,"
                 + "\"rowHeaderCells\":%d,\"th\":%d}%n",
-                tables, skippedNoContrast, colHeaderCells, rowHeaderCells,
+                tables, untagged, skippedNoContrast, colHeaderCells, rowHeaderCells,
                 colHeaderCells + rowHeaderCells);
         }
+    }
+
+    /**
+     * R0. True when no cell in the table references anything at all.
+     *
+     * Document 06 carries a 2x5 /Table that the tagger invented over a grid of
+     * photographs. All seven of its cells are empty — not merely textless, but
+     * without a single kid — while every real table in the development corpus
+     * has content in 100% of its cells (21, 21, 9, 42, 116 and 132 of each).
+     *
+     * The test is "references nothing", not "holds no text", and the difference
+     * is deliberate. A cell holding a figure and no glyphs would be textless,
+     * and removing its table would strip that figure out of the structure tree.
+     * Announcing a table that is not there is a false assertion; orphaning
+     * content is a worse one. The narrower test still reaches document 06 and
+     * cannot reach anything that would be damaged by it.
+     */
+    private static boolean empty(PDStructureElement table, Map<String, Object> roleMap) {
+        List<PDStructureElement> cells = new ArrayList<>();
+        for (PDStructureElement tr : StructText.find(table, ROWS, roleMap)) {
+            for (Object kid : tr.getKids()) {
+                if (kid instanceof PDStructureElement c && CELLS.contains(standard(c, roleMap))) {
+                    cells.add(c);
+                }
+            }
+        }
+        if (cells.isEmpty()) return false;  // no cells at all is a shape we have not seen
+        for (PDStructureElement c : cells) if (!c.getKids().isEmpty()) return false;
+        return true;
+    }
+
+    /**
+     * Removes the table outright. Safe only for the case above: with no cell
+     * referencing anything, the whole subtree points at no content and nothing
+     * is orphaned by deleting it.
+     */
+    private static void untag(PDStructureElement table) {
+        PDStructureNode parent = table.getParent();
+        if (parent != null) parent.removeKid(table);
     }
 
     private static void promote(PDStructureElement table, Map<String, Object> roleMap,

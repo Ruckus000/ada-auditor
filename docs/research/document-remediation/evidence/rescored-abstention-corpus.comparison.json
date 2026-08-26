@@ -1,0 +1,1675 @@
+[
+  {
+    "document": "01-simple-text",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "1 list(s) tagged, ground truth records 2"
+      },
+      {
+        "kind": "omission",
+        "msg": "3 list items tagged, ground truth records 6"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 26,
+      "textChars": 1133,
+      "images": 0,
+      "pages": 1,
+      "lang": "en",
+      "title": "Quarterly Operations Summary",
+      "headings": [
+        "H1",
+        "H2",
+        "H3",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Q u a r t e r l y O p e r a t i o n s S u m m a r y"
+        },
+        {
+          "level": "H2",
+          "text": "T h r o u g h p u t"
+        },
+        {
+          "level": "H3",
+          "text": "Regional detail"
+        },
+        {
+          "level": "H2",
+          "text": "A c t i o n s c a r r i e d f o r w a r d"
+        },
+        {
+          "level": "H2",
+          "text": "A p p r o v a l se q u e n c e"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 3
+        }
+      ],
+      "order": [
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · I n t e r n a l · P a g e 1 o f 1"
+        },
+        {
+          "type": "H1",
+          "text": "Q u a r t e r l y O p e r a t i o n s S u m m a r y"
+        },
+        {
+          "type": "P",
+          "text": "T h is d o c u m e n t is t h e c o n t r o l c a s e f o r t h e r e m e d ia t io n c o "
+        },
+        {
+          "type": "H2",
+          "text": "T h r o u g h p u t"
+        },
+        {
+          "type": "P",
+          "text": "D e p o t t h r o u g h p u t r o s e a c r o s s a l l t h r e e r e g io n s d u r in g "
+        },
+        {
+          "type": "H3",
+          "text": "Regional detail"
+        },
+        {
+          "type": "P",
+          "text": "T h e n o r t h e r n d e p o t a b s o r b e d m o s t o f t h e a d d it io n a l v o l "
+        },
+        {
+          "type": "H2",
+          "text": "A c t i o n s c a r r i e d f o r w a r d"
+        },
+        {
+          "type": "P",
+          "text": "R e - t im e t h e e v e n in g d is p a t c h w in d o w a t t h e n o r t h e r n d e p "
+        },
+        {
+          "type": "P",
+          "text": "R e t ir e t h e t w o r e m a in in g d ie s e l s h u n t e r s ."
+        },
+        {
+          "type": "P",
+          "text": "R e v ie w t h e c o a s t a l d e p o t l e a s e b e f o r e r e n e w a l ."
+        },
+        {
+          "type": "H2",
+          "text": "A p p r o v a l se q u e n c e"
+        },
+        {
+          "type": "L",
+          "text": "1 . O p e r a t io n s l e a d r e v ie w s t h e t h r o u g h p u t f ig u r e s . 2 . F"
+        },
+        {
+          "type": "LI",
+          "text": "1 . O p e r a t io n s l e a d r e v ie w s t h e t h r o u g h p u t f ig u r e s ."
+        },
+        {
+          "type": "LI",
+          "text": "2 . F in a n c e c o n f ir m s t h e l e a s e p o s it io n ."
+        },
+        {
+          "type": "LI",
+          "text": "3 . B o a r d n o t e s t h e s u m m a r y a t t h e n e x t s c h e d u l e d m e e t in"
+        },
+        {
+          "type": "P",
+          "text": "S o u r c e d a t a is p u b l is h e d o n t h e q u a r t e r l y o p e r a t io n s p a"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · P r e p a r e d 2 0 2 6 - 0 8 - 2 3 · P a g e 1 o f 1"
+        }
+      ]
+    }
+  },
+  {
+    "document": "02-two-column",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 12,
+      "textChars": 1363,
+      "images": 0,
+      "pages": 2,
+      "lang": "en",
+      "title": "Coastal Depot Review",
+      "headings": [
+        "H1",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a st a l D e p o t R e v i e w"
+        },
+        {
+          "level": "H2",
+          "text": "Fi n a n c i a l p o si t i o n"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "C o a st a l D e p o t R e v i e w"
+        },
+        {
+          "type": "P",
+          "text": "T h e d e p o t l e a s e e x p ir e s w it h in t h e y e a r a n d t h e r e v ie w b e "
+        },
+        {
+          "type": "P",
+          "text": "C o a s t a l h a s o p e r a t e d b e l o w it s d e s ig n e d c a p a c it y f o r s i"
+        },
+        {
+          "type": "P",
+          "text": "S t a f f in g h a s b e e n h e l d f l a t t h r o u g h o u t . N o r e d u n d a n c y"
+        },
+        {
+          "type": "P",
+          "text": "T w o o p t io n s a r e o p e n . T h e f ir s t is r e n e w a l o n t h e e x is t in g"
+        },
+        {
+          "type": "P",
+          "text": "A t h ir d o p t io n , c l o s u r e , is r e c o r d e d h e r e o n l y t o n o t e t h"
+        },
+        {
+          "type": "P",
+          "text": "N o t e . T h is b o x s t r a d d l e s t h e g u t t e r o n p u r p o s e . I t b e l o"
+        },
+        {
+          "type": "H2",
+          "text": "Fi n a n c i a l p o si t i o n"
+        },
+        {
+          "type": "P",
+          "text": "R e n t is t h e d o m in a n t c o s t a n d is f ixe d f o r t h e r e m a in d e r o f "
+        },
+        {
+          "type": "P",
+          "text": "T h e r e d u c e d - f o o t p r in t o p t io n s a v e s r o u g h l y a f if t h o f t"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · C o a s t a l D e p o t R e v ie w · P a g e 1 o f 1"
+        }
+      ]
+    }
+  },
+  {
+    "document": "03-simple-table",
+    "verdict": "DELIVERABLE",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 53,
+      "textChars": 418,
+      "images": 0,
+      "pages": 1,
+      "lang": "en",
+      "title": "Depot Throughput by Quarter",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Depot Throughput by Quarter"
+        }
+      ],
+      "figures": [],
+      "tables": [
+        {
+          "th": 9,
+          "td": 12,
+          "tr": 5,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "D e p o t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R e v i e w p e r i o d",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Q 1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 3",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 4",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h e r n",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 8 4",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 9 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 3",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 2 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "S o u t h e r n",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 2",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 3 9",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 5",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 4",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "C o a st a l",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 8",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 4",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 1",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "8 8",
+              "scope": null,
+              "row": 4
+            }
+          ]
+        }
+      ],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Depot Throughput by Quarter"
+        },
+        {
+          "type": "P",
+          "text": "T h e t a b l e b e l o w r e p o r t s c o n t a in e r s h a n d l e d p e r d e p o t f"
+        },
+        {
+          "type": "P",
+          "text": "C o n t a i n e r s h a n d l e d , b y d e p o t a n d q u a r t e r ( h u n d r e d s)"
+        },
+        {
+          "type": "Table",
+          "text": "D e p o t R e v i e w p e r i o d Q 1 Q 2 Q 3 Q 4 N o r t h e r n 1 8 4 1 9 1 2 0 3 2 2 1 "
+        },
+        {
+          "type": "P",
+          "text": "D e p o t"
+        },
+        {
+          "type": "P",
+          "text": "R e v i e w p e r i o d"
+        },
+        {
+          "type": "P",
+          "text": "Q 1"
+        },
+        {
+          "type": "P",
+          "text": "Q 2"
+        },
+        {
+          "type": "P",
+          "text": "Q 3"
+        },
+        {
+          "type": "P",
+          "text": "Q 4"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h e r n"
+        },
+        {
+          "type": "P",
+          "text": "1 8 4"
+        },
+        {
+          "type": "P",
+          "text": "1 9 1"
+        },
+        {
+          "type": "P",
+          "text": "2 0 3"
+        },
+        {
+          "type": "P",
+          "text": "2 2 1"
+        },
+        {
+          "type": "P",
+          "text": "S o u t h e r n"
+        },
+        {
+          "type": "P",
+          "text": "1 4 2"
+        },
+        {
+          "type": "P",
+          "text": "1 3 9"
+        },
+        {
+          "type": "P",
+          "text": "1 4 5"
+        },
+        {
+          "type": "P",
+          "text": "1 4 4"
+        },
+        {
+          "type": "P",
+          "text": "C o a st a l"
+        },
+        {
+          "type": "P",
+          "text": "9 8"
+        },
+        {
+          "type": "P",
+          "text": "9 4"
+        },
+        {
+          "type": "P",
+          "text": "9 1"
+        },
+        {
+          "type": "P",
+          "text": "8 8"
+        },
+        {
+          "type": "P",
+          "text": "C o a s t a l is t h e o n l y d e p o t s h o w in g s u s t a i n e d d e c l in e , w h"
+        }
+      ]
+    }
+  },
+  {
+    "document": "04-difficult-table",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 868,
+      "images": 0,
+      "pages": 1,
+      "lang": "en",
+      "title": "Fleet Utilisation Detail",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Fl e e t U t i l i sa t i o n De t a i l"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Fl e e t U t i l i sa t i o n De t a i l"
+        },
+        {
+          "type": "P",
+          "text": "Utilisation is reported by vehicle class and by depot. Blank cells indicate that the class"
+        },
+        {
+          "type": "P",
+          "text": "V e h i c l e c l a ss N o r t h e r n S o u t h e r n N o t e s c a r r i e d f o r w a r"
+        },
+        {
+          "type": "P",
+          "text": "f r o m t h e p r e v i o u s r e v i e w U n i t s U t i l . % U n i t s U t i l . % c y "
+        },
+        {
+          "type": "P",
+          "text": "R i g i d 1 8 t 1 2 8 1 9 7 7 R e p l a c e m e n t c y c l e b r o u g h t f o r w a r d "
+        },
+        {
+          "type": "P",
+          "text": "A r t i c 4 4 t 7 8 8 6 8 4 N o a c t io n . S h u n t e r 2 3 4 N o t o p e r a t e d a t"
+        },
+        {
+          "type": "P",
+          "text": "B o t h n o r t h e r n u n it s a r e d ie s e l a n d a r e l is t e d f o r r e t ir e "
+        },
+        {
+          "type": "P",
+          "text": "V a n 3 . 5 t 1 4 6 2 S o u t h e r n o n l y . U t il is a t io n is l o w b e c a u s e "
+        },
+        {
+          "type": "P",
+          "text": "Class-level utilisation is not comparable across depots where the operating pattern differ"
+        }
+      ]
+    }
+  },
+  {
+    "document": "05-images-captioned",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "heading levels disagree at equal count — got [\"H1\",\"H1\"], ground truth [\"H1\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 814,
+      "images": 4,
+      "pages": 2,
+      "lang": "en",
+      "title": "Coastal Quay Site Report",
+      "headings": [
+        "H1",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Coastal Quay Site Report"
+        },
+        {
+          "level": "H1",
+          "text": "D e p o t a p r o n"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1: The western quay at low tide, viewed from the depot apron. The berth allocated to Northwind is the second from the left.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: The northern apron, which would be surrendered under the reduced-footprint option. Two shunters are visible at the far edge.",
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "Figure",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": "C o a s t a l Q u a y S it e R e p o r t · P a g e 1"
+        },
+        {
+          "type": "H1",
+          "text": "Coastal Quay Site Report"
+        },
+        {
+          "type": "P",
+          "text": "T w o s it e v is it s w e r e m a d e d u r in g t h e r e v ie w p e r io d . T h e p h "
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1: The western quay at low tide, viewed from the depot apron. The berth allocated t"
+        },
+        {
+          "type": "P",
+          "text": "F ig u r e 1 : T h e w e s t e r n q u a y a t l o w t id e , v ie w e d f r o m t h e d e"
+        },
+        {
+          "type": "P",
+          "text": "T h e q u a y it s e l f is in g o o d c o n d it io n . T h e c o n s t r a in t is a l l"
+        },
+        {
+          "type": "P",
+          "text": "C o a s t a l Q u a y S it e R e p o r t · P a g e 2"
+        },
+        {
+          "type": "H1",
+          "text": "D e p o t a p r o n"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 2: The northern apron, which would be surrendered under the reduced-footprint optio"
+        },
+        {
+          "type": "P",
+          "text": "F ig u r e 2 : T h e n o r t h e r n a p r o n , w h ic h w o u l d b e s u r r e n d e r "
+        },
+        {
+          "type": "P",
+          "text": "T h e a p r o n in F ig u r e 2 c a r r ie s a l m o s t n o s c h e d u l e d w o r k . I"
+        }
+      ]
+    }
+  },
+  {
+    "document": "06-images-uncaptioned",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "3 Figure elements for 4 expected — 1 missing with 2 image(s) still drawn on the page: meaningful graphics artifacted out of the structure tree and silently removed from the document"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\"]"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 293,
+      "images": 5,
+      "pages": 2,
+      "lang": "en",
+      "title": "Asset Register Extract",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Asset Register Extract"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Asset Register Extract"
+        },
+        {
+          "type": "Caption",
+          "text": "T h is e x t r a c t e x is t s t o m a r k t h e b o u n d a r y o f d e t e r m in is t "
+        },
+        {
+          "type": "P",
+          "text": "S i t e"
+        },
+        {
+          "type": "Figure",
+          "text": "A p r o n"
+        },
+        {
+          "type": "Caption",
+          "text": "A p r o n"
+        },
+        {
+          "type": "Figure",
+          "text": "M a r k"
+        },
+        {
+          "type": "Caption",
+          "text": "M a r k"
+        },
+        {
+          "type": "Figure",
+          "text": "L a y o u t"
+        },
+        {
+          "type": "Caption",
+          "text": "L a y o u t"
+        }
+      ]
+    }
+  },
+  {
+    "document": "07-complex-chart",
+    "verdict": "NEEDS_REVIEW",
+    "ua1": true,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "0 Figure elements for 1 expected — 1 missing, with no image behind them"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 13,
+      "textChars": 524,
+      "images": 0,
+      "pages": 1,
+      "lang": "en",
+      "title": "Throughput Trend Analysis",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "Throughput Trend Analysis"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "Throughput Trend Analysis"
+        },
+        {
+          "type": "P",
+          "text": "T h e c h a r t b e l o w p l o t s c o n t a in e r s h a n d l e d p e r q u a r t e r f"
+        },
+        {
+          "type": "P",
+          "text": "Containers handled per quarter (hundreds)"
+        },
+        {
+          "type": "P",
+          "text": "Containers"
+        },
+        {
+          "type": "P",
+          "text": "240"
+        },
+        {
+          "type": "P",
+          "text": "180"
+        },
+        {
+          "type": "P",
+          "text": "120"
+        },
+        {
+          "type": "P",
+          "text": "60"
+        },
+        {
+          "type": "P",
+          "text": "0"
+        },
+        {
+          "type": "P",
+          "text": "Q1 Q2 Q3 Q4 Quarter"
+        },
+        {
+          "type": "P",
+          "text": "Coastal Northern Southern"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h e r n r is e s s t e a d il y a c r o s s a l l f o u r q u a r t e r s . S o u "
+        }
+      ]
+    }
+  },
+  {
+    "document": "08-slide-layout",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 313,
+      "images": 1,
+      "pages": 1,
+      "lang": "en",
+      "title": "Coastal Options — Board Slide",
+      "headings": [
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a s t a l : t h r e e w a y s f o r w a r d"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "C o a s t a l : t h r e e w a y s f o r w a r d"
+        },
+        {
+          "type": "P",
+          "text": "B o a r d d i s c u s s i o n · n o t f o r c i r c u l a t i o n"
+        },
+        {
+          "type": "P",
+          "text": "1"
+        },
+        {
+          "type": "P",
+          "text": "R e n e w a s - i s A c c e p t l o w e r u t i l i s a t i o n a n d t h e r e n t t h a "
+        },
+        {
+          "type": "Figure",
+          "text": ""
+        },
+        {
+          "type": "P",
+          "text": "2"
+        },
+        {
+          "type": "P",
+          "text": "R e d u c e f o o t p r i n t S u r r e n d e r t h e n o r t h e r n a p r o n . S a v e "
+        },
+        {
+          "type": "P",
+          "text": "3"
+        },
+        {
+          "type": "P",
+          "text": "C l o s e C o n s i d e r e d a n d s e t a s i d e f o r t h i s c y c l e . R e c o r d "
+        }
+      ]
+    }
+  },
+  {
+    "document": "09-scanned",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [], ground truth [\"H1\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "no text layer — OCR did not run"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 2,
+      "textChars": 0,
+      "images": 1,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [],
+      "headingTexts": [],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "Figure",
+          "text": ""
+        }
+      ]
+    }
+  },
+  {
+    "document": "10-metadata-problems",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 10,
+      "textChars": 1006,
+      "images": 0,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "N o t i c e d e c o n f o r m i t é — C o m p l i a n c e N o t i c e"
+        },
+        {
+          "level": "H2",
+          "text": "E n g l i sh se c t i o n"
+        },
+        {
+          "level": "H2",
+          "text": "S e c t i o n f r a n ç a i se"
+        },
+        {
+          "level": "H2",
+          "text": "C l o si n g"
+        }
+      ],
+      "figures": [],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "N o t i c e d e c o n f o r m i t é — C o m p l i a n c e N o t i c e"
+        },
+        {
+          "type": "P",
+          "text": "T h is d o c u m e n t c a r r ie s n o t it l e m e t a d a t a a n d d e c l a r e s n o"
+        },
+        {
+          "type": "H2",
+          "text": "E n g l i sh se c t i o n"
+        },
+        {
+          "type": "P",
+          "text": "T h e d e p o t l e a s e a n d t h e b e r t h a l l o c a t io n a r e a d m in is t e r"
+        },
+        {
+          "type": "H2",
+          "text": "S e c t i o n f r a n ç a i se"
+        },
+        {
+          "type": "P",
+          "text": "L e b a il d u d é p ô t e t l ' a t t r ib u t io n d e s p o s t e s à q u a i r e l è v"
+        },
+        {
+          "type": "P",
+          "text": "L e s d e u x i n s t r u m e n t s s on t i n d é p e n d a n t s . C e t t e p h r a s e"
+        },
+        {
+          "type": "H2",
+          "text": "C l o si n g"
+        },
+        {
+          "type": "P",
+          "text": "T h e h e a d in g s a b o v e a r e s t y l e d d ivs r a t h e r t h a n h e a d in g e "
+        }
+      ]
+    }
+  },
+  {
+    "document": "11-deliberately-inaccessible",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 0,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "omission",
+        "msg": "no document title"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 15,
+      "textChars": 896,
+      "images": 2,
+      "pages": 1,
+      "lang": "en",
+      "title": null,
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "T e r m s o f A c c e s s"
+        },
+        {
+          "level": "H2",
+          "text": "E l i g i b i l i t y"
+        },
+        {
+          "level": "H2",
+          "text": "A p p l y i n g"
+        },
+        {
+          "level": "H2",
+          "text": "C o n t a c t"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        }
+      ],
+      "tables": [],
+      "lists": [],
+      "order": [
+        {
+          "type": "H1",
+          "text": "T e r m s o f A c c e s s"
+        },
+        {
+          "type": "H2",
+          "text": "E l i g i b i l i t y"
+        },
+        {
+          "type": "P",
+          "text": "A c c e s s i s g r a n t e d t o r e g i s t e r e d h a u l i e r s o n l y . T h e r e "
+        },
+        {
+          "type": "P",
+          "text": "T h i s t a b l e h a s n o h e a d e r s a n d h o l d s n o t a b u l a r d a t a . I t "
+        },
+        {
+          "type": "P",
+          "text": "A r e m e d i a t i o n t h a t t a g s t h i s a s a d a t a t a b l e a n d i n v e n t "
+        },
+        {
+          "type": "H2",
+          "text": "A p p l y i n g"
+        },
+        {
+          "type": "P",
+          "text": "T o b e g i n t h e p r o c e s s , c l i c k h e r e . F o r t h e s c h e d u l e o f c "
+        },
+        {
+          "type": "P",
+          "text": "T h i s p a r a g r a p h i s s e t i n l i g h t g r e y o n w h i t e a n d f a l l s b "
+        },
+        {
+          "type": "Figure",
+          "text": "T h e l i n e a b o v e i s a n i m a g e . A n y t e x t w i t h i n i t i s u n a v a i "
+        },
+        {
+          "type": "Caption",
+          "text": "T h e l i n e a b o v e i s a n i m a g e . A n y t e x t w i t h i n i t i s u n a v a i "
+        },
+        {
+          "type": "H2",
+          "text": "C o n t a c t"
+        },
+        {
+          "type": "P",
+          "text": "E n q u i r i e s t o t h e e s t a t e s o f f i c e . S e e t h e w e b s i t e f o r c "
+        }
+      ]
+    }
+  },
+  {
+    "document": "12-kitchen-sink",
+    "verdict": "INCONCLUSIVE",
+    "ua1": false,
+    "assertions": 1,
+    "defects": [
+      {
+        "kind": "omission",
+        "msg": "figure with no Alt and no ActualText"
+      },
+      {
+        "kind": "assertion",
+        "msg": "3 Figure elements for 4 expected — 1 missing with 5 image(s) still drawn on the page: meaningful graphics artifacted out of the structure tree and silently removed from the document"
+      },
+      {
+        "kind": "omission",
+        "msg": "a ground-truth table was not detected"
+      },
+      {
+        "kind": "omission",
+        "msg": "heading under-detection — got [\"H1\",\"H2\",\"H2\",\"H2\",\"H1\",\"H1\",\"H1\"], ground truth [\"H1\",\"H2\",\"H2\",\"H2\",\"H2\",\"H2\",\"H3\",\"H2\"]"
+      },
+      {
+        "kind": "omission",
+        "msg": "1 list(s) tagged, ground truth records 2"
+      },
+      {
+        "kind": "omission",
+        "msg": "5 list items tagged, ground truth records 8"
+      }
+    ],
+    "structure": {
+      "hasStructTree": true,
+      "structureElements": 118,
+      "textChars": 2252,
+      "images": 8,
+      "pages": 6,
+      "lang": "en",
+      "title": "Coastal Depot: Annual Review 2026",
+      "headings": [
+        "H1",
+        "H2",
+        "H2",
+        "H2",
+        "H1",
+        "H1",
+        "H1"
+      ],
+      "headingTexts": [
+        {
+          "level": "H1",
+          "text": "C o a st a l De p o t"
+        },
+        {
+          "level": "H2",
+          "text": "Contents"
+        },
+        {
+          "level": "H2",
+          "text": "Summary"
+        },
+        {
+          "level": "H2",
+          "text": "Throughput"
+        },
+        {
+          "level": "H1",
+          "text": "Fleet utilisation"
+        },
+        {
+          "level": "H1",
+          "text": "Site"
+        },
+        {
+          "level": "H1",
+          "text": "Options and recommendation"
+        }
+      ],
+      "figures": [
+        {
+          "type": "Figure",
+          "alt": null,
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 1: The western quay at low tide. The Northwind berth is second from the left.",
+          "actualText": null
+        },
+        {
+          "type": "Figure",
+          "alt": "Figure 2: The northern apron, which the reduced-footprint option would surrender.",
+          "actualText": null
+        }
+      ],
+      "tables": [
+        {
+          "th": 9,
+          "td": 12,
+          "tr": 5,
+          "cells": [
+            {
+              "type": "TH",
+              "text": "D e p o t",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "R e v i e w p e r i o d",
+              "scope": "Column",
+              "row": 0
+            },
+            {
+              "type": "TH",
+              "text": "Q 1",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 2",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 3",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "Q 4",
+              "scope": "Column",
+              "row": 1
+            },
+            {
+              "type": "TH",
+              "text": "N o r t h e r n",
+              "scope": "Row",
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 8 4",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "1 9 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 0 3",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TD",
+              "text": "2 2 1",
+              "scope": null,
+              "row": 2
+            },
+            {
+              "type": "TH",
+              "text": "S o u t h e r n",
+              "scope": "Row",
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 2",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 3 9",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 5",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TD",
+              "text": "1 4 4",
+              "scope": null,
+              "row": 3
+            },
+            {
+              "type": "TH",
+              "text": "C o a st a l",
+              "scope": "Row",
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 8",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 4",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "9 1",
+              "scope": null,
+              "row": 4
+            },
+            {
+              "type": "TD",
+              "text": "8 8",
+              "scope": null,
+              "row": 4
+            }
+          ]
+        }
+      ],
+      "lists": [
+        {
+          "depth": 1,
+          "items": 5
+        }
+      ],
+      "order": [
+        {
+          "type": "Figure",
+          "text": ""
+        },
+        {
+          "type": "H1",
+          "text": "C o a st a l De p o t"
+        },
+        {
+          "type": "P",
+          "text": "A n n u a l R e v ie w 2 0 2 6 · p r e p a r e d f o r t h e B o a r d"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · E s t a t e s a n d O p e r a t io n s"
+        },
+        {
+          "type": "H2",
+          "text": "Contents"
+        },
+        {
+          "type": "L",
+          "text": "1. Summary 2. Throughput 3. Fleet utilisation 4. Site 5. Options and recommendation"
+        },
+        {
+          "type": "LI",
+          "text": "1. Summary"
+        },
+        {
+          "type": "LI",
+          "text": "2. Throughput"
+        },
+        {
+          "type": "LI",
+          "text": "3. Fleet utilisation"
+        },
+        {
+          "type": "LI",
+          "text": "4. Site"
+        },
+        {
+          "type": "LI",
+          "text": "5. Options and recommendation"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · P a g e 2"
+        },
+        {
+          "type": "H2",
+          "text": "Summary"
+        },
+        {
+          "type": "P",
+          "text": "Coastal has operated below its designed capacity for six consecutive quarters. The shortfa"
+        },
+        {
+          "type": "P",
+          "text": "Two options are live: renewal on the existing footprint, or renewal on a reduced footprint"
+        },
+        {
+          "type": "P",
+          "text": "The recommendation at the end of this review is the reduced footprint, on the basis of the"
+        },
+        {
+          "type": "H2",
+          "text": "Throughput"
+        },
+        {
+          "type": "P",
+          "text": "C o n t a i n e r s h a n d l e d , b y d e p o t a n d q u a r t e r ( h u n d r e d s)"
+        },
+        {
+          "type": "Table",
+          "text": "D e p o t R e v i e w p e r i o d Q 1 Q 2 Q 3 Q 4 N o r t h e r n 1 8 4 1 9 1 2 0 3 2 2 1 "
+        },
+        {
+          "type": "P",
+          "text": "D e p o t"
+        },
+        {
+          "type": "P",
+          "text": "R e v i e w p e r i o d"
+        },
+        {
+          "type": "P",
+          "text": "Q 1"
+        },
+        {
+          "type": "P",
+          "text": "Q 2"
+        },
+        {
+          "type": "P",
+          "text": "Q 3"
+        },
+        {
+          "type": "P",
+          "text": "Q 4"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h e r n"
+        },
+        {
+          "type": "P",
+          "text": "1 8 4"
+        },
+        {
+          "type": "P",
+          "text": "1 9 1"
+        },
+        {
+          "type": "P",
+          "text": "2 0 3"
+        },
+        {
+          "type": "P",
+          "text": "2 2 1"
+        },
+        {
+          "type": "P",
+          "text": "S o u t h e r n"
+        },
+        {
+          "type": "P",
+          "text": "1 4 2"
+        },
+        {
+          "type": "P",
+          "text": "1 3 9"
+        },
+        {
+          "type": "P",
+          "text": "1 4 5"
+        },
+        {
+          "type": "P",
+          "text": "1 4 4"
+        },
+        {
+          "type": "P",
+          "text": "C o a st a l"
+        },
+        {
+          "type": "P",
+          "text": "9 8"
+        },
+        {
+          "type": "P",
+          "text": "9 4"
+        },
+        {
+          "type": "P",
+          "text": "9 1"
+        },
+        {
+          "type": "P",
+          "text": "8 8"
+        },
+        {
+          "type": "P",
+          "text": "Quarterly trend by depot"
+        },
+        {
+          "type": "P",
+          "text": "200"
+        },
+        {
+          "type": "P",
+          "text": "100"
+        },
+        {
+          "type": "P",
+          "text": "0"
+        },
+        {
+          "type": "P",
+          "text": "Q1 Q2 Q3 Q4 Northern Southern Coastal"
+        },
+        {
+          "type": "P",
+          "text": "Northern rises across all four quarters, Southern is flat, and Coastal declines continuous"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · P a g e 3"
+        },
+        {
+          "type": "H1",
+          "text": "Fleet utilisation"
+        },
+        {
+          "type": "P",
+          "text": "Blank cells mean the class is not operated at that depot, which differs from zero."
+        },
+        {
+          "type": "P",
+          "text": "V e h i c l e c l a ss N o r t h e r n C o a st a l N o t e s U n i t s U t i l . % U n i "
+        },
+        {
+          "type": "P",
+          "text": "R i g i d 1 8 t 1 2 8 1 5 4 4 T h r e e u n it s b e y o n d s c h e d u l e d r e t ir e "
+        },
+        {
+          "type": "P",
+          "text": "A r t i c 4 4 t 7 8 8 3 5 1 N o a c t io n . S h u n t e r 2 3 4 N o t o p e r a t e d a t"
+        },
+        {
+          "type": "P",
+          "text": "B o t h n o r t h e r n u n it s l is t e d f o r r e t ir e m e n t ."
+        },
+        {
+          "type": "H1",
+          "text": "Site"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 1: The western quay at low tide. The Northwind berth is second from the left."
+        },
+        {
+          "type": "P",
+          "text": "Figure 1: The western quay at low tide. The Northwind berth is second from the left. North"
+        },
+        {
+          "type": "Figure",
+          "text": "Figure 2: The northern apron, which the reduced-footprint option would surrender."
+        },
+        {
+          "type": "P",
+          "text": "Figure 2: The northern apron, which the reduced-footprint option would surrender."
+        },
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · P a g e 4"
+        },
+        {
+          "type": "P",
+          "text": "C o a s t a l D e p o t A n n u a l R e v ie w · P a g e 5"
+        },
+        {
+          "type": "H1",
+          "text": "Options and recommendation"
+        },
+        {
+          "type": "P",
+          "text": "Renew as-is. Accept lower utilisation and the full rent."
+        },
+        {
+          "type": "P",
+          "text": "Reduce footprint. Surrender the northern apron; saves about a fifth of the rent."
+        },
+        {
+          "type": "P",
+          "text": "Close. Considered and set aside for this cycle."
+        },
+        {
+          "type": "P",
+          "text": "The recommendation is the reduced footprint. Supporting figures are published on the C oas"
+        },
+        {
+          "type": "P",
+          "text": "N o r t h w in d L o g is t ic s · P a g e 5 · E n d o f r e v ie w"
+        }
+      ]
+    }
+  }
+]
