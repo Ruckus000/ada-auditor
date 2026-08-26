@@ -344,7 +344,19 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
     const peerChecks: Array<Promise<void>> = [];
 
     context.on('response', (response) => {
-      const frame = response.frame();
+      // A service worker's response has no frame, and `response.frame()`
+      // THROWS rather than returning null. `[V]` Measured on a live municipal
+      // site whose template registers one: every worker-fetched response threw
+      // synchronously inside this handler, where nothing catches it — each one
+      // an uncaughtException in the server process. A frameless response is by
+      // definition not a main-frame navigation, which is all this listener
+      // judges, so it is skipped, not judged.
+      let frame;
+      try {
+        frame = response.frame();
+      } catch {
+        return;
+      }
       if (frame !== frame.page()?.mainFrame()) return;
       if (!response.request().isNavigationRequest()) return;
 
