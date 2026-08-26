@@ -1,6 +1,7 @@
-import { UNASSIGNED_CLIENT_ID } from '../../domain/platform';
+import { clampEventListLimit, UNASSIGNED_CLIENT_ID } from '../../domain/platform';
 import type {
   ActivityEvent,
+  ListEventsOptions,
   PlatformStore,
   ReportAudience,
   StoredClient,
@@ -592,11 +593,11 @@ export class PostgresPlatformStore implements PlatformStore {
     `;
   }
 
-  async listEvents(
-    options: { clientId?: string; limit?: number } = {},
-  ): Promise<ActivityEvent[]> {
-    const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
+  async listEvents(options: ListEventsOptions = {}): Promise<ActivityEvent[]> {
+    const limit = clampEventListLimit(options.limit);
     const clientId = options.clientId ?? null;
+    const action = options.action ?? null;
+    const since = options.since ?? null;
 
     const rows = await this.sql<{
       id: number;
@@ -610,6 +611,15 @@ export class PostgresPlatformStore implements PlatformStore {
     }>`
       select * from activity_events
       where (${clientId}::text is null or client_id = ${clientId})
+        and (${action}::text is null or action = ${action})
+        -- A range predicate rather than the "is null or" idiom its siblings
+        -- use, and deliberately so: activity_events_created_idx on
+        -- (created_at desc) is the only index on this table, and a coalesced
+        -- lower bound is the one shape it can serve as a start key. Written
+        -- "is null or created_at >= ..." the planner has an or over the whole
+        -- scan and takes the index for ordering alone. Do not tidy this into
+        -- the sibling form.
+        and created_at >= coalesce(${since}::timestamptz, '-infinity')
       order by created_at desc, id desc
       limit ${limit}
     `;

@@ -1,4 +1,10 @@
 import { machinePrincipal } from '../../../../domain/operator';
+import {
+  SCHEDULED_RUN_NOT_STARTED,
+  type ActivityEvent,
+  type ScheduledRunNotStarted,
+  type StoredJourney,
+} from '../../../../domain/platform';
 import { staleAfterMs } from '../../../../domain/run-staleness';
 import { getPlatformStore, getRunStore } from '../../../../integrations/persistence';
 import { logInfo, logWarn } from '../../../../services/logger';
@@ -68,6 +74,43 @@ function selfUrl(): string | null {
  * a schedule is first set up and nobody wants to wait an hour to find out
  * whether it works.
  */
+/**
+ * What a refused dispatch is allowed to say about itself.
+ *
+ * The run route answers `{ error: '<code>' }`, and that code is worth keeping
+ * — it is the difference between a spent budget and a malformed journey. But
+ * the response comes from over the network, and this value goes into a `jsonb`
+ * column and a log line every consumer greps, so nothing from the body is
+ * stored verbatim: it must be JSON, it is read up to a cap, and it must match
+ * the shape a refusal code has.
+ *
+ * The allowlist is the control, not the logger's redaction. That matches on
+ * the *key*, and nothing about `error` looks secret — so a token arriving
+ * there is precisely the case key-based redaction cannot help with. The same
+ * check is what stops a newline-bearing "code" forging a second line into the
+ * log.
+ */
+const REFUSAL_CODE = /^[a-z][a-z0-9_]{0,63}$/;
+
+/** Enough for any refusal envelope; anything longer is not one. */
+const MAX_REFUSAL_BODY = 4096;
+
+async function refusalCode(response: Response): Promise<string> {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.toLowerCase().includes('application/json')) return 'unreadable_response';
+
+  try {
+    // Truncated before parsing rather than after, so an oversized body costs
+    // a failed parse instead of the memory to hold it.
+    const body = (await response.text()).slice(0, MAX_REFUSAL_BODY);
+    const parsed: unknown = JSON.parse(body);
+    const code = (parsed as { error?: unknown } | null)?.error;
+    return typeof code === 'string' && REFUSAL_CODE.test(code) ? code : 'unreadable_response';
+  } catch {
+    return 'unreadable_response';
+  }
+}
+
 function authorized(request: Request): boolean {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
@@ -145,9 +188,50 @@ export async function GET(request: Request) {
     }
   };
 
-  for (const journey of due) {
+  /**
+   * Writes an activity event, best-effort.
+   *
+   * The same stance `releaseClaim` takes, for the same reason: the tick's job
+   * is that journeys get audited, and turning a store hiccup into a 500 would
+   * lose the ones that did start. A failed write is said out loud and the tick
+   * carries on.
+   */
+  const recordEventSafely = async (event: ActivityEvent): Promise<void> => {
     try {
-      const response = await fetch(`${base}/api/audit/run`, {
+      await platform.recordEvent(event);
+    } catch {
+      logWarn('cron_tick_event_write_failed', { requestId, action: event.action });
+    }
+  };
+
+  /**
+   * Records that a due journey did not start.
+   *
+   * This answers the question `services/activity-view.ts:12-15` raises head-on
+   * — "a run is deliberately not an activity event" — and it is not a
+   * contradiction. A run that never started has no row to disagree with, which
+   * is the whole reason the duplicate-record objection does not apply here,
+   * and the tick already writes an event on the other branch.
+   */
+  const notStarted = async (
+    journey: StoredJourney,
+    metadata: ScheduledRunNotStarted,
+  ): Promise<void> => {
+    logWarn('scheduled_run_not_started', { requestId, ...metadata });
+    await recordEventSafely({
+      ...(journey.clientId ? { clientId: journey.clientId } : {}),
+      actor: 'Scheduler',
+      action: SCHEDULED_RUN_NOT_STARTED,
+      subject: journey.name,
+      metadata,
+    });
+  };
+
+  for (const journey of due) {
+    let response: Response;
+
+    try {
+      response = await fetch(`${base}/api/audit/run`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -171,29 +255,46 @@ export async function GET(request: Request) {
           ...(journey.allowedHosts ? { allowedHosts: journey.allowedHosts } : {}),
         }),
       });
-
-      if (!response.ok) {
-        failed.push(journey.id);
-        await releaseClaim(journey.id);
-        continue;
-      }
-
-      const payload = (await response.json().catch(() => null)) as { requestId?: string } | null;
-      started.push(payload?.requestId ?? journey.id);
-
-      // The payoff of named actors: an activity feed can now distinguish
-      // "Alex ran this" from "the schedule ran this".
-      await platform.recordEvent({
-        clientId: journey.clientId,
-        actor: 'Scheduler',
-        action: 'started a scheduled run',
-        subject: journey.name,
-        metadata: { requestId: payload?.requestId, journeyId: journey.id },
-      });
     } catch {
+      // No response arrived, so there is no status to record. `status: null`
+      // would claim one came back and said nothing.
       failed.push(journey.id);
+      await notStarted(journey, { journeyId: journey.id, code: 'dispatch_error' });
       await releaseClaim(journey.id);
+      continue;
     }
+
+    if (!response.ok) {
+      failed.push(journey.id);
+      // Event first, then the release, so a failing release still leaves the
+      // record behind — the record is the only trace a refused run has.
+      await notStarted(journey, {
+        journeyId: journey.id,
+        status: response.status,
+        code: await refusalCode(response),
+      });
+      await releaseClaim(journey.id);
+      continue;
+    }
+
+    const payload = (await response.json().catch(() => null)) as { requestId?: string } | null;
+    started.push(payload?.requestId ?? journey.id);
+
+    // Outside the dispatch's failure handling, and that is the fix rather than
+    // tidying. It used to sit inside a `try` whose `catch` pushed to `failed`
+    // and released the claim, so a store hiccup after a dispatch that landed
+    // recorded a started run as failed *and* handed back the claim on a run
+    // that was in flight — inviting a second tick to dispatch it again.
+    //
+    // The payoff of named actors: an activity feed can distinguish "Alex ran
+    // this" from "the schedule ran this".
+    await recordEventSafely({
+      clientId: journey.clientId,
+      actor: 'Scheduler',
+      action: 'started a scheduled run',
+      subject: journey.name,
+      metadata: { requestId: payload?.requestId, journeyId: journey.id },
+    });
   }
 
   // A tick that claimed its whole allowance probably left work behind. Said

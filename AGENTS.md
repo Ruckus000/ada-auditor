@@ -445,20 +445,49 @@ Read this before claiming something works.
   than per-operator because the bill is shared, enforced inside `startRun` so
   every caller inherits it. It **fails open**: a cost control that becomes an
   outage has made things worse.
-- **A run refused before it is recorded is invisible to everything.** Not just
-  to a screen — to every query there is. `run_budget_exceeded` deliberately
-  leaves no row (`audit-run-handler.ts`: "a refused run must leave no row
-  behind, because it never started... nothing failed, the run was declined"),
-  and when `/api/cron/tick` cannot dispatch — a 429, a 400, a network error —
-  it calls `releaseClaim` and writes nothing either. So a client's scheduled
-  audit can fail to happen with no run record, no activity event, nothing on
-  the journey row, and nothing for `.github/workflows/failed-runs.yml` to find.
-  That workflow covers runs that **executed** and failed, plus runs reconciled
-  to `run_timed_out`, and says so rather than implying more.
-  Recorded here rather than fixed because the fix is a decision, not a patch:
-  a row for a run that never started needs an answer for what it means to
-  regression baselines, to the score, and to the portfolio's newest-run-per-
-  journey read. Do not add one without that answer.
+- **A run refused before it is recorded still leaves no row — and the
+  scheduler now says so anyway.** `run_budget_exceeded` leaves no run record
+  and should not (`audit-run-handler.ts`: "a refused run must leave no row
+  behind, because it never started... nothing failed, the run was declined").
+  That stands, and the reason it stands is the answer the old version of this
+  bullet asked for: `getLatestRun` has no status filter, and four "latest run"
+  reads are deliberately unfiltered (`portfolio.ts`, `client-detail.ts`,
+  `findings-view.ts`, `report-view.ts`), so a synthetic row would become the
+  last run on every screen and the next run's regression baseline, forcing
+  `incomparable` through `walkedTheSamePath`. **A run that never started is not
+  a run.**
+  What was actually being lost was the *scheduler's* knowledge, not a row.
+  `/api/cron/tick` is the only unattended caller — every other one receives the
+  429 and can act on it — and when it could not dispatch it called
+  `releaseClaim` and discarded the outcome. It now writes one activity event,
+  `SCHEDULED_RUN_NOT_STARTED` ("could not start a scheduled run"), attributed
+  to `Scheduler` with the journey name as subject and
+  `{ journeyId, status?, code }` as metadata, beside the event it already wrote
+  on success. One action string rather than one per cause: the feed renders it
+  as a sentence and one unattended reader queries it exactly, so the cause is
+  data. This does not contradict "a run is deliberately not an activity event"
+  (`services/activity-view.ts`) — that rule exists because two records of one
+  run can disagree, and a run that never started has no row to disagree with.
+  **Nothing from the dispatch response reaches a log line or a jsonb column
+  verbatim**: `code` is accepted only as a short snake_case token, so a
+  platform error page, an echoed credential, or a newline forging a second log
+  line cannot get through. The write is best-effort like `releaseClaim` — a
+  record of what happened must not cost the journeys that did start.
+  `GET /api/platform/activity` reads it back (`authorizePrincipal`, zod at the
+  boundary, exact `action`, `since`, clamped `limit`, no tenancy scoping
+  because there is none), and `.github/workflows/failed-runs.yml` asks it a
+  second question every morning. **What that workflow publishes is a count per
+  cause and nothing else** — an activity event carries the client id and the
+  journey's name, and this repository is public; the Activity screen has both.
+  Fixed in passing, because it was found here: the success-path `recordEvent`
+  sat inside the dispatch `try`, so a store hiccup after a dispatch that landed
+  marked a started run as failed *and released the claim on a run that was in
+  flight*.
+  **Still deliberately invisible:** a direct API caller's budget refusal, which
+  leaves no row and no event because the caller was told; and a tick that never
+  authorized at all, which `/api/ready`'s `cron_secret_not_configured` warning
+  covers instead. The workflow still never reports "all is well", only what it
+  actually checked.
 
 ## Agent behavior
 

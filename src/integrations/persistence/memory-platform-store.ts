@@ -1,6 +1,11 @@
-import { journeyRunRefusal, UNASSIGNED_CLIENT_ID } from '../../domain/platform';
+import {
+  clampEventListLimit,
+  journeyRunRefusal,
+  UNASSIGNED_CLIENT_ID,
+} from '../../domain/platform';
 import type {
   ActivityEvent,
+  ListEventsOptions,
   PlatformStore,
   StoredClient,
   StoredJourney,
@@ -317,13 +322,20 @@ export class MemoryPlatformStore implements PlatformStore {
     );
   }
 
-  async listEvents(
-    options: { clientId?: string; limit?: number } = {},
-  ): Promise<ActivityEvent[]> {
-    const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
+  async listEvents(options: ListEventsOptions = {}): Promise<ActivityEvent[]> {
+    const limit = clampEventListLimit(options.limit);
+    // Parsed rather than string-compared. Postgres casts `since` to
+    // `timestamptz` and compares instants, and the caller that matters — the
+    // failed-runs workflow — sends `2026-08-25T11:51:28Z` with no
+    // milliseconds, which sorts *before* the same instant written
+    // `…:28.000Z` as text. A lexical compare here would drop an event the
+    // Postgres store returns.
+    const since = options.since === undefined ? undefined : Date.parse(options.since);
 
     return [...this.events]
       .filter((event) => options.clientId === undefined || event.clientId === options.clientId)
+      .filter((event) => options.action === undefined || event.action === options.action)
+      .filter((event) => since === undefined || Date.parse(event.createdAt ?? '') >= since)
       // Newest first, ties broken by id — the same total order the Postgres
       // index gives, so a test cannot pass against one store and fail the other.
       .sort((a, b) => {

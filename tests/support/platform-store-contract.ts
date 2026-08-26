@@ -447,6 +447,82 @@ export function platformStoreContract(
       expect(
         (await store.listEvents({ clientId: CONTRACT_CLIENT, limit: 100_000 })).length,
       ).toBeLessThanOrEqual(200);
+
+      // The bottom of the clamp, which is the half that reaches the database
+      // as SQL: `limit 0` returns nothing and `limit -1` is a syntax error, so
+      // both have to become 1 before they get there. A fraction is floored for
+      // the same reason.
+      expect(await store.listEvents({ clientId: CONTRACT_CLIENT, limit: 0 })).toHaveLength(1);
+      expect(await store.listEvents({ clientId: CONTRACT_CLIENT, limit: -5 })).toHaveLength(1);
+      expect(await store.listEvents({ clientId: CONTRACT_CLIENT, limit: 1.9 })).toHaveLength(1);
+    });
+
+    /**
+     * The filters `/api/platform/activity` and `failed-runs.yml` need.
+     *
+     * The workflow asks one question — how many events carry this exact action
+     * inside this window — and it must be answered server-side. Counting what
+     * comes back only works if what comes back is already narrowed; filtering
+     * in `jq` over a page of free text would make the alert depend on how
+     * busy the log is.
+     *
+     * The actions carry `PLATFORM_PREFIX`, so an exact-match filter isolates
+     * these rows from whatever else the database holds.
+     */
+    describe('filters', () => {
+      const WANTED = `${PLATFORM_PREFIX}-could-not-start`;
+      const OTHER = `${PLATFORM_PREFIX}-something-else`;
+
+      /**
+       * A window that plainly contains everything this test wrote, and one
+       * that plainly contains nothing.
+       *
+       * Coarse on purpose. Two consecutive writes can land in the same
+       * millisecond in the memory double, so a boundary drawn between them
+       * would be a coin toss rather than an assertion — and the fact under
+       * test is that `since` bounds the window at its start at all.
+       */
+      const anHourAgo = () => new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const anHourAhead = () => new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+      async function seedEvents(store: PlatformStore): Promise<void> {
+        await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+        // Every row carries the client id even where the query below omits it,
+        // so `contract-cleanup.ts` — which deletes activity by `client_id` —
+        // can reach all of them.
+        await store.recordEvent({ clientId: CONTRACT_CLIENT, actor: 'Scheduler', action: WANTED });
+        await store.recordEvent({ clientId: CONTRACT_CLIENT, actor: 'Scheduler', action: OTHER });
+      }
+
+      it('matches an action exactly', async () => {
+        const store = await makeStore();
+        await seedEvents(store);
+
+        const events = await store.listEvents({ action: WANTED });
+
+        expect(events.map((event) => event.action)).toEqual([WANTED]);
+      });
+
+      it('bounds the window at its start', async () => {
+        const store = await makeStore();
+        await seedEvents(store);
+
+        const inside = await store.listEvents({ clientId: CONTRACT_CLIENT, since: anHourAgo() });
+        expect(inside.map((event) => event.action)).toContain(WANTED);
+
+        const after = await store.listEvents({ clientId: CONTRACT_CLIENT, since: anHourAhead() });
+        expect(after).toEqual([]);
+      });
+
+      it('applies the action and the window together', async () => {
+        const store = await makeStore();
+        await seedEvents(store);
+
+        expect(
+          (await store.listEvents({ action: WANTED, since: anHourAgo() })).map((e) => e.action),
+        ).toEqual([WANTED]);
+        expect(await store.listEvents({ action: WANTED, since: anHourAhead() })).toEqual([]);
+      });
     });
 
     // The account behind the name, when there was one. Automation has none,
