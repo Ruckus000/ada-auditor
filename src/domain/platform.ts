@@ -338,9 +338,72 @@ export interface ReportStore {
   listReports(requestIds: string[]): Promise<StoredReport[]>;
 }
 
+/**
+ * What the scheduler records when a due journey did not start.
+ *
+ * A run refused before it was recorded leaves no run row, and that is the
+ * decision rather than an oversight: `getLatestRun` has no status filter and
+ * four screens read "the latest run" unfiltered, so a synthetic row would
+ * become the last run on every one of them and the next run's regression
+ * baseline. An activity event has neither problem — the tick already writes
+ * one on the success path, so this is the same record for the other outcome.
+ *
+ * The action is a constant rather than a literal because three parties have to
+ * agree on it: the tick writes it, `/api/platform/activity` filters on it, and
+ * `.github/workflows/failed-runs.yml` counts it. Free-text `action` is
+ * load-bearing for a machine here, and the exported string plus the workflow's
+ * pinning test is what stops a copy-edit breaking an alert.
+ */
+export const SCHEDULED_RUN_NOT_STARTED = 'could not start a scheduled run';
+
+/**
+ * Why it did not start. One action, cause in metadata.
+ *
+ * `status` is absent when there was no response at all — a thrown `fetch` did
+ * not receive one, and a null would claim otherwise. `code` is the run route's
+ * own refusal code where it could be read, and `dispatch_error` /
+ * `unreadable_response` where it could not.
+ */
+export type ScheduledRunNotStarted = {
+  journeyId: string;
+  status?: number;
+  code: string;
+};
+
+/**
+ * How many activity events one `listEvents` call may return.
+ *
+ * Mirrors `clampRunListLimit` in `domain/persistence.ts`, and exists for the
+ * reason that helper exists: the rule was spelled out twice, in the Postgres
+ * store and the memory double — the two places whose whole purpose is to
+ * behave identically — and the contract's `length <= 200` assertion is
+ * satisfied by any smaller number, so it could never have caught a drift.
+ * It lives here rather than beside `clampRunListLimit` because this is the
+ * activity log's cap and this file is the activity log's vocabulary.
+ *
+ * `Number.isFinite` for the same reason: the bare `Math.min(Math.max(...))`
+ * answers `NaN` for a `NaN` input, which reaches Postgres as `limit NaN`.
+ */
+export const EVENT_LIST_DEFAULT = 50;
+export const EVENT_LIST_MAX = 200;
+
+export function clampEventListLimit(limit?: number): number {
+  if (limit === undefined || !Number.isFinite(limit)) return EVENT_LIST_DEFAULT;
+  return Math.min(Math.max(Math.floor(limit), 1), EVENT_LIST_MAX);
+}
+
+export type ListEventsOptions = {
+  clientId?: string;
+  /** Matched exactly. The workflow pins one value; there is no prefix search. */
+  action?: string;
+  /** An ISO timestamp. Events at or after it, so a window has a start key. */
+  since?: string;
+  limit?: number;
+};
+
 export interface ActivityStore {
   recordEvent(event: ActivityEvent): Promise<void>;
-  listEvents(options?: { clientId?: string; limit?: number }): Promise<ActivityEvent[]>;
+  listEvents(options?: ListEventsOptions): Promise<ActivityEvent[]>;
 }
 
 export type PlatformStore = OperatorStore &
