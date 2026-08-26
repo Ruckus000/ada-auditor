@@ -38,7 +38,18 @@ export type UploadRefusal = {
 };
 
 export type ReadUploadResult =
-  | { ok: true; bytes: Uint8Array; kind: string }
+  | {
+      ok: true;
+      bytes: Uint8Array;
+      kind: string;
+      /**
+       * The upload's own name, verbatim. It is the only handle an upload has,
+       * so the persisting route stores it — but it is caller-controlled, and
+       * the standing rules still apply: it never reaches the filesystem (temp
+       * files are named by request id) and never reaches a log line.
+       */
+      filename: string;
+    }
   | { ok: false; refusal: UploadRefusal };
 
 export type ReadUploadOptions = {
@@ -118,7 +129,7 @@ export async function readDocumentUpload(
     return refuse(415, 'unsupported_document', check.reason);
   }
 
-  return { ok: true, bytes, kind: check.kind };
+  return { ok: true, bytes, kind: check.kind, filename: file.name };
 }
 
 /** The refusal as a response, so a route does not restate the envelope. */

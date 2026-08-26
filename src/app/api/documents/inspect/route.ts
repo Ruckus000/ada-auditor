@@ -1,11 +1,7 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-
-import { isPdf, logSafe, summarise } from '../../../../domain/document-remediation';
-import { inspectDocument } from '../../../../integrations/documents/inspect';
+import { isPdf, logSafe } from '../../../../domain/document-remediation';
 import { resolveJavaRuntime } from '../../../../integrations/documents/java-runtime';
-import { logInfo, logWarn } from '../../../../services/logger';
+import { logInfo } from '../../../../services/logger';
+import { inspectPdfBytes } from '../../_lib/document-inspection';
 import { readDocumentUpload, refusalResponse } from '../../_lib/document-upload';
 import { createRequestId } from '../../_lib/request-id';
 
@@ -15,6 +11,8 @@ import { createRequestId } from '../../_lib/request-id';
  * **This writes nothing.** It reads a document and answers with counts,
  * outcomes and the gaps a human still has to close, each naming its WCAG
  * criterion. Nothing is claimed, nothing is repaired, and no bytes go back.
+ * The client-scoped route (`PUT /api/platform/clients/<id>/documents`) is the
+ * one that persists; this stays the client-unscoped instrument.
  *
  * ## Why this one runs on Vercel when the converter does not
  *
@@ -58,45 +56,18 @@ export async function POST(request: Request) {
 
   // The upload's own filename never reaches the filesystem: it is
   // attacker-controlled, and a request id plus a known extension is all a temp
-  // path needs. Template literals rather than `join` for the dynamic part —
-  // Turbopack compiles an unresolvable `path.join` into a file pattern, which
-  // once made the build walk the entire project. `work` is absolute from
-  // `mkdtemp` and the name has no separators.
-  const work = await mkdtemp(join(tmpdir(), 'ada-inspect-'));
-  const source = `${work}/${requestId}.pdf`;
-
-  try {
-    await writeFile(source, upload.bytes);
-
-    const result = await inspectDocument(source);
-    if (!result.ok) {
-      logWarn('document_inspect_failed', { requestId, failure: result.failure.kind });
-      return Response.json(
-        { error: 'inspect_failed', detail: result.failure.kind, requestId },
-        { status: 422 },
-      );
-    }
-
-    // A reading has no source document to compare against, so the two fields
-    // that describe provenance are answered from the file itself: the title it
-    // carries, and the language it declares. Neither is inferred.
-    const summary = summarise({
-      title:
-        result.value.title === null
-          ? { kind: 'no-heading-to-copy' }
-          : { kind: 'already-titled', title: result.value.title },
-      sourceLanguage: result.value.lang,
-      structure: result.value,
-    });
-
-    // Counts and outcomes only. `DocumentStructure` carries the document's own
-    // words — headings, reading order, every table cell — and these are
-    // municipal records naming real people. `logSafe` drops even the title,
-    // which the response may echo because the caller supplied the file.
-    logInfo('document_inspected', { requestId, ...logSafe(summary) });
-
-    return Response.json({ requestId, ...summary });
-  } finally {
-    await rm(work, { recursive: true, force: true });
+  // path needs. `inspectPdfBytes` is the shared core that keeps that true for
+  // every route that touches document bytes.
+  const outcome = await inspectPdfBytes(upload.bytes, requestId);
+  if (!outcome.ok) {
+    return refusalResponse(outcome.refusal, requestId);
   }
+
+  // Counts and outcomes only. `DocumentStructure` carries the document's own
+  // words — headings, reading order, every table cell — and these are
+  // municipal records naming real people. `logSafe` drops even the title,
+  // which the response may echo because the caller supplied the file.
+  logInfo('document_inspected', { requestId, ...logSafe(outcome.summary) });
+
+  return Response.json({ requestId, ...outcome.summary });
 }

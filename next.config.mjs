@@ -48,6 +48,18 @@ const nextConfig = {
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
     ],
+    // The client-scoped documents route spawns a JVM, not a browser, from a
+    // path `/api/documents/**` cannot see. Scoped to `**/documents/**` and
+    // placed BEFORE the broader clients entry: the deploy test asserts against
+    // the first key that covers a route, and the broader entry would otherwise
+    // answer for this one with browser binaries it does not use. Kept out of
+    // `/api/platform/clients/**` itself so the other client routes do not each
+    // grow a 40MB runtime they never exec.
+    '/api/platform/clients/**/documents/**': [
+      './vendor/jre/**',
+      './vendor/pdfbox-app-3.0.8.jar',
+      './dist/documents/classes/**',
+    ],
     '/api/platform/clients/**': [
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
