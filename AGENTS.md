@@ -346,10 +346,36 @@ Read this before claiming something works.
   same split as `activity_events`.
   Coverage gap: the hydration suite runs on the memory store with no accounts,
   so the zero-violation axe pass never renders this control.
-- **A dismissal is free text, not a taxonomy.** The prototype offered five
-  canned reasons ("handled elsewhere", "accepted risk, signed off"). Nobody has
-  agreed to that vocabulary, and a wrong one becomes the record an auditor
-  defends later, so the note stays free text until somebody has.
+- **A dismissal is free text, and now it says which kind of dismissal.** The
+  prototype offered five canned reasons ("handled elsewhere", "accepted risk,
+  signed off"). That vocabulary is still not adopted and should not be:
+  "handled elsewhere" is a claim about a system nobody audited, and a wrong
+  reason becomes the record an auditor defends later. **The note stays free
+  text, and stays required.** What changed is the *state*. `accepted-risk` had
+  been in `TriageState`, the route's enum, the SQL CHECK and
+  `findingDisplayStatus` since Phase 2C with no control able to produce it — a
+  state reachable everywhere except the product — so three consumers branched
+  two ways over a three-member union and an accepted barrier both rendered and
+  logged as "dismissed". The distinction it records is the one WCAG already
+  forces rather than one invented for a dropdown: conformance is binary per
+  criterion, so *this is not a barrier* (`dismissed`) and *this is a barrier
+  the client accepts* (`accepted-risk`) are different facts, and only the first
+  is a claim about the page. The note asks a different question of each —
+  "Why is this not a barrier?" against an accepted risk produces a note that
+  contradicts the state stored beside it — and that wording lives in
+  `services/presentation/triage.ts`, while the activity feed's wording stays in
+  the route, because an append-only audit record must not be re-worded by a UI
+  copy edit. Every mapping over `TriageState` is now a `Record`, never a
+  ternary, so the next member fails the build instead of quietly reusing
+  "dismissed". An accepted risk is still counted, still shown, still in the
+  shared report, and still cannot move a verdict — `buildSharedReport`'s deps
+  are a `Pick` that excludes the triage store, so that is the compiler's
+  guarantee and not a discipline. No schema change: `accepted-risk` was always
+  inside the CHECK.
+  Still absent, deliberately: **an expiry on an accepted risk.** Reviewing an
+  acceptance annually is good practice, but it needs a column, a scheduler
+  decision, and an answer for what an expired acceptance does to the verdict —
+  a decision, not a patch.
 - **Run evidence can be read back.** `GET /api/audit/runs/<id>/artifacts/
   <position>/<kind>` streams it to an authenticated caller. The URL is read
   from the run record, never from the caller — `addRandomSuffix` means the

@@ -289,6 +289,14 @@ const ROUTES = [
   `/clients/${CLIENT}/journeys`,
 ];
 
+/**
+ * The note left on an accepted risk.
+ *
+ * Module scope because two cases need the same string: the one that writes it,
+ * and the shared-report case that proves it never reaches `/r/<token>`.
+ */
+const ACCEPTED_RISK_NOTE = 'Client accepts this until the redesign ships in Q4.';
+
 describe('platform hydration', () => {
   it('locks every route behind the operator session', async () => {
     // The platform UI was fully public before Phase 2C. It is about to show
@@ -680,9 +688,13 @@ describe('platform hydration', () => {
       await page.goto(`${BASE}/clients/${CLIENT}/findings`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      await page.getByRole('button', { name: /^Dismiss button-name/ }).first().click();
+      await page.getByRole('button', { name: /^Triage button-name/ }).first().click();
+      // The decision first, then the note: the question the note answers is
+      // different for each state, so there is nothing to fill in until one is
+      // chosen.
+      await page.getByLabel('Not a barrier', { exact: true }).check();
       await page.getByLabel('Why is this not a barrier?').fill('Decorative, hidden from the tree.');
-      await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
+      await page.getByRole('button', { name: 'Record decision', exact: true }).click();
 
       await expect
         .poll(() => page.innerText('body'), { timeout: 15_000 })
@@ -693,6 +705,69 @@ describe('platform hydration', () => {
       await page.reload({ waitUntil: 'domcontentloaded' });
       const body = await page.innerText('body');
       expect(body).toContain('Dismissed: Decorative, hidden from the tree.');
+      expect(body).toContain('Reopen this finding');
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
+  it('records an accepted risk as an acceptance, not as a dismissal', async () => {
+    // The point of the whole change. `accepted-risk` was in the type, the zod
+    // enum and the SQL CHECK with no control able to produce it, so the three
+    // consumers that branched two ways over three states filed an accepted
+    // barrier under the opposite word. This is the end-to-end proof that it no
+    // longer does — through the real bundle, on the built app.
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/findings`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      // The case above left this finding dismissed. Undo that rather than
+      // reaching for a second finding, so this case says what it means whether
+      // or not the scenario's finding list changes.
+      const reopen = page.getByRole('button', { name: /^Reopen button-name/ }).first();
+      if ((await reopen.count()) > 0) {
+        await reopen.click();
+        await expect
+          .poll(() => page.innerText('body'), { timeout: 15_000 })
+          .not.toContain('Dismissed: Decorative, hidden from the tree.');
+      }
+
+      await page.getByRole('button', { name: /^Triage button-name/ }).first().click();
+      await page.getByLabel('A barrier the client accepts', { exact: true }).check();
+
+      // Zero violations with the form open in its worst state: a decision
+      // chosen, the note still empty and the submit button disabled, so the
+      // radio group, the reworded note label and the disabled control are all
+      // on the page when axe looks. The route-level sweep only ever sees this
+      // control collapsed to its trigger, so without this the one control the
+      // change adds is the one the auditor never audits.
+      //
+      // Polled, like every other live-DOM read in this file: it sits behind a
+      // client-side click with no navigation in front of it.
+      await expect
+        .poll(() => axeViolations(page), {
+          ...AXE_SETTLE,
+          message: 'the triage control, open with a decision chosen and no note yet',
+        })
+        .toBe('');
+
+      await page.getByLabel('Who accepted this barrier, and on what basis?').fill(
+        ACCEPTED_RISK_NOTE,
+      );
+      await page.getByRole('button', { name: 'Record decision', exact: true }).click();
+
+      await expect
+        .poll(() => page.innerText('body'), { timeout: 15_000 })
+        .toContain(ACCEPTED_RISK_NOTE);
+
+      // Re-read from the server rather than trusting the DOM the click left
+      // behind: the point of the decision is that it survives, in the state it
+      // was made in.
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      const body = await page.innerText('body');
+      expect(body).toContain(`Accepted risk: ${ACCEPTED_RISK_NOTE}`);
+      expect(body).not.toContain(`Dismissed: ${ACCEPTED_RISK_NOTE}`);
       expect(body).toContain('Reopen this finding');
     } finally {
       await page.close();
@@ -736,6 +811,21 @@ describe('platform hydration', () => {
       // The people who open this link are usually the ones who have to act on
       // it, so it carries the fix and not just the failure.
       expect(body).toContain('Fix any one of these');
+      // Triage is deliberately not applied here, and by this point in the file
+      // `button-name` has been accepted as a risk. The finding is still on the
+      // page — hiding it would make the document a client's counsel reads
+      // disagree with the audit it reports — and the note is not, because
+      // publishing it would leak an internal decision to whoever holds the
+      // link.
+      expect(body).not.toContain(ACCEPTED_RISK_NOTE);
+      expect(body).not.toContain('Accepted risk');
+
+      // And the verdict did not move. Accepting a barrier is a decision about
+      // what to do, never a claim that the criterion is met — `buildSharedReport`
+      // is not given the triage store at all, and this is what that guarantee
+      // looks like from outside.
+      expect(body).toContain('Success criteria not met');
+
       // The shared page is the audit and nothing else: no way into the console
       // from it, and no other client's name on it.
       expect(body).not.toContain('Portfolio');

@@ -335,6 +335,57 @@ export function platformStoreContract(
       expect(await store.listTriage(`${PLATFORM_PREFIX}-client-b`)).toEqual([]);
     });
 
+    it('round-trips an accepted risk as its own state', async () => {
+      // Not a dismissal. The CHECK has allowed `accepted-risk` since Phase 2C
+      // and nothing could write one, so this is the first time either store
+      // has been asked to carry it back out again.
+      const store = await seeded();
+      await store.setTriage(
+        triageEntry({ state: 'accepted-risk', note: 'Client accepts, signed off.' }),
+      );
+
+      const [entry] = await store.listTriage(CONTRACT_CLIENT);
+      expect(entry).toMatchObject({
+        state: 'accepted-risk',
+        note: 'Client accepts, signed off.',
+      });
+    });
+
+    it('replaces a dismissal with an accepted risk on the same finding', async () => {
+      // The `on conflict do update` path across two states. An operator who
+      // decides they were wrong about a barrier gets one row that says so, not
+      // two rows that disagree.
+      const store = await seeded();
+      await store.setTriage(triageEntry({ state: 'dismissed', note: 'not a barrier' }));
+      await store.setTriage(
+        triageEntry({ state: 'accepted-risk', note: 'it is, and they accept it' }),
+      );
+
+      const entries = await store.listTriage(CONTRACT_CLIENT);
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        state: 'accepted-risk',
+        note: 'it is, and they accept it',
+      });
+    });
+
+    it('returns triage newest decision first', async () => {
+      // The screens read the most recent decision first, and the Postgres
+      // index is built for that order. A double that returned insertion order
+      // would make the fast suite green about an order production does not
+      // have.
+      const store = await seeded();
+      await store.setTriage(triageEntry({ findingKey: 'deterministic:a::#first' }));
+      await store.setTriage(triageEntry({ findingKey: 'deterministic:a::#second' }));
+      await store.setTriage(triageEntry({ findingKey: 'deterministic:a::#third' }));
+
+      expect((await store.listTriage(CONTRACT_CLIENT)).map((entry) => entry.findingKey)).toEqual([
+        'deterministic:a::#third',
+        'deterministic:a::#second',
+        'deterministic:a::#first',
+      ]);
+    });
+
     it('clears a decision', async () => {
       const store = await seeded();
       const entry = triageEntry();

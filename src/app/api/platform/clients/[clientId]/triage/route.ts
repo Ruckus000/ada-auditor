@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { actorFields } from '../../../../../../domain/operator';
+import { MAX_TRIAGE_NOTE } from '../../../../../../domain/platform';
+import type { TriageState } from '../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { authorizePrincipal } from '../../../../_lib/authorize';
 import { createRequestId } from '../../../../_lib/request-id';
@@ -22,20 +24,43 @@ const triageSchema = z
     findingKey: z.string().min(3).max(2048).regex(KEY, 'findingKey must be source:code:page:selector'),
     // `fixed` is deliberately not in this union — see the note above.
     state: z.enum(['dismissed', 'accepted-risk', 'assigned']),
-    note: z.string().trim().max(2000).optional(),
+    note: z.string().trim().max(MAX_TRIAGE_NOTE).optional(),
     assignee: z.string().trim().max(120).optional(),
     assigneeOperatorId: z.string().trim().max(64).optional(),
     pageUrl: z.string().max(2048).optional(),
     selector: z.string().max(1024).optional(),
   })
+  // Both note-bearing decisions, not just dismissal: an accepted risk with no
+  // basis given is the record an auditor would have to defend, and there would
+  // be nothing in it.
   .refine((value) => value.state === 'assigned' || (value.note?.length ?? 0) > 0, {
-    message: 'a dismissal has to say why',
+    message: 'that decision has to say why',
     path: ['note'],
   })
   .refine((value) => value.state !== 'assigned' || (value.assignee?.length ?? 0) > 0, {
     message: 'an assignment has to name somebody',
     path: ['assignee'],
   });
+
+/**
+ * What the activity feed records for each decision.
+ *
+ * A `Record`, so a fourth `TriageState` cannot inherit a third state's
+ * sentence. The two-way ternary this replaces logged an accepted risk as
+ * "dismissed a finding" — the opposite of what the operator decided, written
+ * into a log that is only ever appended to.
+ *
+ * These words stay in the route rather than moving to
+ * `services/presentation/triage.ts` with the rest of the vocabulary. The
+ * screens' wording is a copy decision and may be edited; an audit record's is
+ * not, and putting it beside the labels would make it editable by a copy pass
+ * that never thought about the log.
+ */
+const EVENT_ACTION: Record<TriageState, string> = {
+  dismissed: 'dismissed a finding',
+  'accepted-risk': 'accepted the risk on a finding',
+  assigned: 'assigned a finding',
+};
 
 export async function POST(
   request: Request,
@@ -91,7 +116,7 @@ export async function POST(
   await platform.recordEvent({
     clientId,
     ...actorFields(principal),
-    action: parsed.state === 'assigned' ? 'assigned a finding' : 'dismissed a finding',
+    action: EVENT_ACTION[parsed.state],
     subject: code,
     metadata: { findingKey: parsed.findingKey, state: parsed.state },
   });
