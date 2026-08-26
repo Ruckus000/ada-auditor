@@ -644,3 +644,85 @@ create table if not exists document_inspections (
 -- first, capped.
 create index if not exists document_inspections_client_idx
   on document_inspections (client_id, inspected_at desc);
+
+-- ------------------------------------------------------- client_documents --
+--
+-- One of a client's documents — the entity, not an action on it. Inspections
+-- and conversions attach to this row; a re-scan refreshes `last_seen_at`
+-- instead of starting from nothing. One row per distinct `url` per client
+-- (the unique index below is what the merge upserts against); first sighting
+-- wins `found_on`, matching discovery's own rule.
+--
+-- `url` is the document's address for a crawl sighting and the operator's
+-- filename for an upload. Same storage stance as `document_inspections`:
+-- fine to store, never to log.
+create table if not exists client_documents (
+  id             text primary key,
+  client_id      text not null references clients (id) on delete cascade,
+  url            text not null,
+  -- 'pdf' | 'docx' | 'doc' — `DocumentLinkKind`, same spelling both
+  -- classifiers use. Text rather than a CHECK, the `truncation_reason`
+  -- stance.
+  kind           text not null,
+  -- 'crawl' | 'upload'.
+  source         text not null,
+  found_on       text,
+  first_seen_at  timestamptz not null default now(),
+  last_seen_at   timestamptz not null default now()
+);
+
+create unique index if not exists client_documents_identity_idx
+  on client_documents (client_id, url);
+
+-- The inventory query: a client's documents, most recently seen first.
+create index if not exists client_documents_client_idx
+  on client_documents (client_id, last_seen_at desc);
+
+-- The document an inspection is a reading of. Nullable in DDL because the
+-- column arrives after rows exist; the backfill below fills it and every
+-- writer since supplies it, so a null here after migration is a defect.
+alter table document_inspections add column if not exists document_id text;
+
+-- Backfill, idempotent: give every already-inspected URL a document row, then
+-- point its inspections at it. `on conflict do nothing` keeps re-runs and
+-- races harmless; the update touches only rows the previous run missed.
+-- `id` reuses the oldest inspection's id — stable across re-runs, no
+-- generator needed in DDL.
+insert into client_documents (id, client_id, url, kind, source, found_on, first_seen_at, last_seen_at)
+select distinct on (client_id, url)
+  'doc-' || id, client_id, url,
+  -- Everything inspected before this table existed was a PDF: the inspect
+  -- routes accept nothing else.
+  'pdf', source, found_on, inspected_at, inspected_at
+from document_inspections
+order by client_id, url, inspected_at asc
+on conflict (client_id, url) do nothing;
+
+update document_inspections di
+set document_id = cd.id
+from client_documents cd
+where di.document_id is null
+  and cd.client_id = di.client_id
+  and cd.url = di.url;
+
+-- ---------------------------------------------------- document_conversions --
+--
+-- One conversion of a client's document — the audit trail. The bytes went to
+-- the operator; what stays is the identity of what went in and what came out
+-- (`sha256` each way) plus the pipeline's own account, verbatim. The hashes
+-- make the record checkable by anyone holding the delivered file, without
+-- this database ever holding document bytes. An artifact pointer column can
+-- join later without reshaping this.
+create table if not exists document_conversions (
+  id             text primary key,
+  client_id      text not null references clients (id) on delete cascade,
+  document_id    text not null references client_documents (id) on delete cascade,
+  summary        jsonb not null,
+  input_sha256   text not null,
+  output_sha256  text not null,
+  converted_at   timestamptz not null default now()
+);
+
+-- The inventory's "latest conversion" lookup and any per-document history.
+create index if not exists document_conversions_document_idx
+  on document_conversions (document_id, converted_at desc);

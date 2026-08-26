@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
 import { isPdf, logSafe } from '../../../../../../domain/document-remediation';
-import type { StoredDocumentInspection } from '../../../../../../domain/platform';
+import { documentLinkKind } from '../../../../../../domain/discovery';
+import type {
+  ClientDocumentRecord,
+  StoredDocumentConversion,
+  StoredDocumentInspection,
+} from '../../../../../../domain/platform';
 import { resolveJavaRuntime } from '../../../../../../integrations/documents/java-runtime';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { hostnameOf } from '../../../../../../services/safe-url';
@@ -15,26 +20,26 @@ import { readDocumentUpload, refusalResponse } from '../../../../_lib/document-u
 import { createRequestId } from '../../../../_lib/request-id';
 
 /**
- * A client's document inspections: read them back, or make one that persists.
+ * A client's documents — the inventory, and the inspect actions that feed it.
  *
- * `/api/documents/inspect-url` and `/api/documents/inspect` stay the
- * client-unscoped instruments — same inspection, nothing stored. These are the
- * variants an operator working a client's Documents screen uses, because an
- * inspection worth a fetch and a JVM run is worth keeping: before this route
- * the result lived exactly as long as the browser tab.
+ * The entity here is `client_documents`: one row per document per client,
+ * with a lifecycle (`firstSeenAt`/`lastSeenAt`) the crawl refreshes and the
+ * latest inspection and conversion attached. Scans merge through the sibling
+ * `documents/discover` route; conversions run through `documents/convert`.
+ * `/api/documents/inspect*` stay the client-unscoped instruments.
  *
- * - **GET** lists the stored inspections, newest first, capped by the store.
- * - **POST** `{ url, foundOn? }` fetches and inspects a document a crawl
- *   found, then persists it with `source: 'crawl'`. The fetch-guard-inspect
- *   core is `_lib/document-inspection.ts`, shared with `inspect-url` so the
- *   SSRF guard cannot fork.
+ * - **GET** lists the inventory: every document with the latest word on it,
+ *   most recently seen first, capped by the store.
+ * - **POST** `{ url, foundOn? }` fetches and inspects a document where it
+ *   lives, then persists the reading against the document's row — creating
+ *   the row if the inventory has never heard of the URL (a pasted address).
  * - **PUT** (multipart, a `file` part) inspects a PDF the operator already
- *   has and persists it with `source: 'upload'`. PUT rather than a second
- *   POST because one path owns a client's documents and the verb is what
- *   distinguishes the byte-carrying variant.
+ *   has, same persistence, `source: 'upload'`.
  *
- * A failed inspection persists nothing: the store holds what the instrument
- * said, and a refusal is the instrument saying nothing.
+ * A failed inspection persists nothing — not even a document row. The store
+ * holds what the instrument said, a refusal is the instrument saying
+ * nothing, and an inventory row minted for a URL that refused to fetch would
+ * be a record of a typo.
  *
  * ## Logs
  *
@@ -75,11 +80,41 @@ const inspectUrlSchema = z
 function inspectionResponse(record: StoredDocumentInspection) {
   return {
     id: record.id,
+    documentId: record.documentId,
     url: record.url,
     ...(record.foundOn === undefined ? {} : { foundOn: record.foundOn }),
     source: record.source,
     summary: record.summary,
     inspectedAt: record.inspectedAt,
+  };
+}
+
+function conversionResponse(record: StoredDocumentConversion) {
+  return {
+    id: record.id,
+    documentId: record.documentId,
+    summary: record.summary,
+    inputSha256: record.inputSha256,
+    outputSha256: record.outputSha256,
+    convertedAt: record.convertedAt,
+  };
+}
+
+function documentResponse(record: ClientDocumentRecord) {
+  return {
+    id: record.id,
+    url: record.url,
+    kind: record.kind,
+    source: record.source,
+    ...(record.foundOn === undefined ? {} : { foundOn: record.foundOn }),
+    firstSeenAt: record.firstSeenAt,
+    lastSeenAt: record.lastSeenAt,
+    ...(record.latestInspection === undefined
+      ? {}
+      : { latestInspection: inspectionResponse(record.latestInspection) }),
+    ...(record.latestConversion === undefined
+      ? {}
+      : { latestConversion: conversionResponse(record.latestConversion) }),
   };
 }
 
@@ -100,13 +135,13 @@ export async function GET(
     return Response.json({ error: 'client_not_found', requestId }, { status: 404 });
   }
 
-  const inspections = await platform.listDocumentInspections(clientId);
+  const documents = await platform.listClientDocuments(clientId);
 
   return Response.json(
     {
       requestId,
-      inspections: inspections.map(inspectionResponse),
-      count: inspections.length,
+      documents: documents.map(documentResponse),
+      count: documents.length,
     },
     { status: 200 },
   );
@@ -154,18 +189,34 @@ export async function POST(
 
   const outcome = await fetchAndInspectDocumentUrl(parsed.data.url, requestId);
   if (!outcome.ok) {
-    // Nothing persisted: a refusal is the instrument saying nothing.
+    // Nothing persisted — not even a document row. See the header.
     return refusalResponse(outcome.refusal, requestId);
   }
+
+  const now = new Date().toISOString();
+  // After the inspection succeeded, so a refusal minted nothing. The bytes
+  // just proved themselves a PDF, whatever the URL's extension claimed —
+  // an extensionless address that served a PDF is still a PDF row.
+  const document = await platform.ensureClientDocument(
+    clientId,
+    {
+      url: parsed.data.url,
+      kind: documentLinkKind(parsed.data.url) ?? 'pdf',
+      source: 'crawl',
+      ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
+    },
+    now,
+  );
 
   const record: StoredDocumentInspection = {
     id: requestId,
     clientId,
+    documentId: document.id,
     url: parsed.data.url,
     ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
     source: 'crawl',
     summary: outcome.summary,
-    inspectedAt: new Date().toISOString(),
+    inspectedAt: now,
   };
   await platform.saveDocumentInspection(record);
 
@@ -221,13 +272,21 @@ export async function PUT(
   // temp file inside `inspectPdfBytes` is named by the request id.
   const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.pdf';
 
+  const now = new Date().toISOString();
+  const document = await platform.ensureClientDocument(
+    clientId,
+    { url: name, kind: 'pdf', source: 'upload' },
+    now,
+  );
+
   const record: StoredDocumentInspection = {
     id: requestId,
     clientId,
+    documentId: document.id,
     url: name,
     source: 'upload',
     summary: outcome.summary,
-    inspectedAt: new Date().toISOString(),
+    inspectedAt: now,
   };
   await platform.saveDocumentInspection(record);
 

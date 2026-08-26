@@ -1626,11 +1626,51 @@ describe('platform hydration', () => {
   it('lists a client’s documents and renders an inspection, with no axe violations', async () => {
     const page = await openAuthenticatedPage();
     try {
-      // Both routes stubbed: the crawl and the JVM are covered by their own
-      // suites, and this test is about the screen — that it hydrates, renders
-      // both sources through one summary component, and passes the same axe
-      // bar as everything else.
-      await page.route('**/api/platform/discover', (route) =>
+      // Every route stubbed: the crawl, the store and the JVM are covered by
+      // their own suites, and this test is about the screen — that it
+      // hydrates, renders every source through one summary component, and
+      // passes the same axe bar as everything else.
+      const inventory = [
+        {
+          id: 'doc-1',
+          url: 'https://discovered.invalid/minutes/agenda.pdf',
+          kind: 'pdf',
+          source: 'crawl',
+          foundOn: 'https://discovered.invalid/meetings',
+          firstSeenAt: '2026-08-26T12:00:00.000Z',
+          lastSeenAt: '2026-08-26T12:00:00.000Z',
+        },
+        {
+          id: 'doc-2',
+          url: 'https://discovered.invalid/fees/schedule.pdf',
+          kind: 'pdf',
+          source: 'crawl',
+          foundOn: 'https://discovered.invalid/',
+          firstSeenAt: '2026-08-26T12:00:00.000Z',
+          lastSeenAt: '2026-08-26T12:00:00.000Z',
+        },
+        {
+          id: 'doc-3',
+          url: 'https://discovered.invalid/forms/permit-application.docx',
+          kind: 'docx',
+          source: 'crawl',
+          foundOn: 'https://discovered.invalid/forms',
+          firstSeenAt: '2026-08-26T12:00:00.000Z',
+          lastSeenAt: '2026-08-26T12:00:00.000Z',
+        },
+        {
+          // The vendor-CDN shape: the document's bytes live on a host that is
+          // not the client's, and the row must say so.
+          id: 'doc-4',
+          url: 'https://cdn.builder.invalid/assets/budget.pdf',
+          kind: 'pdf',
+          source: 'crawl',
+          foundOn: 'https://discovered.invalid/finance',
+          firstSeenAt: '2026-08-26T12:00:00.000Z',
+          lastSeenAt: '2026-08-26T12:00:00.000Z',
+        },
+      ];
+      await page.route('**/api/platform/clients/*/documents/discover', (route) =>
         route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -1638,39 +1678,22 @@ describe('platform hydration', () => {
             requestId: 'stubbed',
             pages: [],
             errors: [],
-            documents: [
-              {
-                url: 'https://discovered.invalid/minutes/agenda.pdf',
-                foundOn: 'https://discovered.invalid/meetings',
-                kind: 'pdf',
-              },
-              {
-                url: 'https://discovered.invalid/fees/schedule.pdf',
-                foundOn: 'https://discovered.invalid/',
-                kind: 'pdf',
-              },
-              {
-                url: 'https://discovered.invalid/forms/permit-application.docx',
-                foundOn: 'https://discovered.invalid/forms',
-                kind: 'docx',
-              },
-              {
-                // The vendor-CDN shape: the document's bytes live on a host
-                // that is not the client's, and the row must say so.
-                url: 'https://cdn.builder.invalid/assets/budget.pdf',
-                foundOn: 'https://discovered.invalid/finance',
-                kind: 'pdf',
-              },
-            ],
+            documents: [],
             documentsOmitted: { pdf: 3 },
+            merge: { added: 4, seenAgain: 0 },
           }),
         }),
       );
-      // The inspect flow posts to the client-scoped persisting route now. Only
-      // the POST is stubbed — the GET on mount falls through to the real
-      // server, whose store is what the persistence sibling below exercises
-      // for real. The JVM and the fetch are covered by their own suites.
       await page.route('**/api/platform/clients/*/documents', (route) => {
+        if (route.request().method() === 'GET') {
+          // The inventory — the screen's single source. The rows exist
+          // whether or not this session scanned, which is the point.
+          return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ requestId: 'stubbed', documents: inventory, count: 4 }),
+          });
+        }
         if (route.request().method() !== 'POST') return route.fallback();
         return route.fulfill({
           status: 201,
@@ -1679,6 +1702,7 @@ describe('platform hydration', () => {
             requestId: 'stubbed',
             inspection: {
               id: 'stubbed-inspection',
+              documentId: 'doc-1',
               url: 'https://discovered.invalid/minutes/agenda.pdf',
               foundOn: 'https://discovered.invalid/meetings',
               source: 'crawl',
@@ -1712,7 +1736,7 @@ describe('platform hydration', () => {
           body: JSON.stringify({ requestId: 'stubbed', available: true }),
         }),
       );
-      await page.route('**/api/documents/remediate-url', (route) =>
+      await page.route('**/api/platform/clients/*/documents/convert', (route) =>
         route.fulfill({
           status: 200,
           contentType: 'application/pdf',
@@ -1748,11 +1772,16 @@ describe('platform hydration', () => {
       const panel = page.getByRole('region', { name: 'Documents' });
       await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('agenda.pdf');
 
+      // The scan's own report: how the merge fell, and what the cap dropped —
+      // per kind, because the caps are.
+      await expect
+        .poll(() => panel.innerText(), { timeout: 15_000 })
+        .toContain('Scan finished: 4 new documents, 0 seen again.');
+
       const text = await panel.innerText();
       // The row carries both halves: the document, and where it was found.
       expect(text).toContain('/minutes/agenda.pdf');
       expect(text).toContain('found on /meetings');
-      // A cap that dropped work says so — and says which kind it dropped.
       expect(text).toContain('Beyond the per-kind cap: 3 more PDF links not listed.');
 
       // A document on the site builder's CDN is labelled with its host — a
@@ -1825,24 +1854,28 @@ describe('platform hydration', () => {
     // the capability fact stated where the button would have been.
     const page = await openAuthenticatedPage();
     try {
-      await page.route('**/api/platform/discover', (route) =>
-        route.fulfill({
+      await page.route('**/api/platform/clients/*/documents', (route) => {
+        if (route.request().method() !== 'GET') return route.fallback();
+        return route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
             requestId: 'stubbed',
-            pages: [],
-            errors: [],
             documents: [
               {
+                id: 'doc-word',
                 url: 'https://discovered.invalid/forms/permit-application.docx',
-                foundOn: 'https://discovered.invalid/forms',
                 kind: 'docx',
+                source: 'crawl',
+                foundOn: 'https://discovered.invalid/forms',
+                firstSeenAt: '2026-08-26T12:00:00.000Z',
+                lastSeenAt: '2026-08-26T12:00:00.000Z',
               },
             ],
+            count: 1,
           }),
-        }),
-      );
+        });
+      });
       await page.route('**/api/documents/remediate', (route) =>
         route.fulfill({
           status: 200,
@@ -1857,9 +1890,6 @@ describe('platform hydration', () => {
 
       await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
-
-      await page.getByLabel('Site to scan').fill('https://discovered.invalid/');
-      await page.getByRole('button', { name: 'Scan the site' }).click();
 
       const panel = page.getByRole('region', { name: 'Documents' });
       await expect
@@ -1928,20 +1958,31 @@ describe('platform hydration', () => {
         await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
 
         // The reload is the assertion. The screen's own state is gone; only
-        // the store can put the summary back.
+        // the store can put the row and its record back.
         await page.reload({ waitUntil: 'domcontentloaded' });
         await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
         await expect
           .poll(() => panel.innerText(), { timeout: 15_000 })
           .toContain('hydration-agenda.pdf');
 
-        const text = await panel.innerText();
-        expect(text).toContain('Previously inspected');
-        expect(text).toContain('uploaded');
-        // The summary itself, not just the row: a Chromium-printed PDF is
-        // untagged, and the gap wording is the server's, verbatim.
-        expect(text).toContain('Not tagged');
-        expect(text).toContain('1.3.1: the output carries no structure tree');
+        const status = await panel.innerText();
+        // The inventory row states the lifecycle: provenance and the latest
+        // reading, with its gap count.
+        expect(status).toContain('uploaded');
+        expect(status).toMatch(/inspected \d{4}-\d{2}-\d{2}/);
+
+        // And the record itself is one click away, rendered from the stored
+        // summary — no re-inspection, no server call. A Chromium-printed PDF
+        // is untagged, and the gap wording is the server's, verbatim.
+        await page
+          .getByRole('listitem')
+          .filter({ hasText: 'hydration-agenda.pdf' })
+          .getByRole('button', { name: 'Details' })
+          .click();
+        await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Not tagged');
+        expect(await panel.innerText()).toContain(
+          '1.3.1: the output carries no structure tree',
+        );
       } finally {
         await page.close();
       }

@@ -1,5 +1,6 @@
 import {
   clampEventListLimit,
+  CLIENT_DOCUMENT_LIST_MAX,
   DOCUMENT_INSPECTION_LIST_MAX,
   journeyRunRefusal,
   UNASSIGNED_CLIENT_ID,
@@ -11,6 +12,10 @@ import type {
   ListEventsOptions,
   PlatformStore,
   StoredClient,
+  StoredClientDocument,
+  ClientDocumentRecord,
+  DocumentSighting,
+  StoredDocumentConversion,
   StoredDocumentInspection,
   StoredJourney,
   StoredOperator,
@@ -45,6 +50,7 @@ type StoredTriage = { entry: TriageEntry; seq: number };
  * statements get distinct transaction timestamps.
  */
 type StoredInspection = { record: StoredDocumentInspection; seq: number };
+type StoredConversion = { record: StoredDocumentConversion; seq: number };
 
 export class MemoryPlatformStore implements PlatformStore {
   private readonly operators = new Map<string, StoredOperatorWithSecret>();
@@ -66,10 +72,15 @@ export class MemoryPlatformStore implements PlatformStore {
   >();
   private readonly reports = new Map<string, StoredReport>();
   private readonly documentInspections = new Map<string, StoredInspection>();
+  /** Keyed like the Postgres unique index: `clientId` + NUL + `url`. */
+  private readonly clientDocuments = new Map<string, StoredClientDocument>();
+  private readonly documentConversions = new Map<string, StoredConversion>();
   private readonly events: ActivityEvent[] = [];
   private nextEventId = 1;
   private nextTriageSeq = 1;
   private nextInspectionSeq = 1;
+  private nextConversionSeq = 1;
+  private nextDocumentId = 1;
 
   private static now(): string {
     return new Date().toISOString();
@@ -280,7 +291,7 @@ export class MemoryPlatformStore implements PlatformStore {
   // -------------------------------------------------------------- triage --
 
   private triageKey(clientId: string, findingKey: string): string {
-    return `${clientId} ${findingKey}`;
+    return `${clientId}\u0000${findingKey}`;
   }
 
   async listTriage(clientId: string): Promise<TriageEntry[]> {
@@ -421,6 +432,7 @@ export class MemoryPlatformStore implements PlatformStore {
     const next: StoredDocumentInspection = {
       id: record.id,
       clientId: record.clientId,
+      documentId: record.documentId,
       url: record.url,
       ...(record.foundOn === undefined ? {} : { foundOn: record.foundOn }),
       source: record.source,
@@ -446,6 +458,134 @@ export class MemoryPlatformStore implements PlatformStore {
       })
       .slice(0, DOCUMENT_INSPECTION_LIST_MAX)
       .map((held) => structuredClone(held.record));
+  }
+
+  // ----------------------------------------------------- client documents --
+
+  /**
+   * The same identity the Postgres unique index enforces: one row per
+   * distinct `url` per client. `\u0000` as an ESCAPE, never a raw byte —
+   * a literal NUL in source makes grep and `file` treat this whole module
+   * as binary, which is how `triageKey`'s separator went unfindable.
+   */
+  private documentKey(clientId: string, url: string): string {
+    return `${clientId}\u0000${url}`;
+  }
+
+  private buildDocument(
+    clientId: string,
+    sighting: DocumentSighting,
+    seenAt: string,
+  ): StoredClientDocument {
+    return {
+      id: `mem-document-${this.nextDocumentId++}`,
+      clientId,
+      url: sighting.url,
+      kind: sighting.kind,
+      source: sighting.source,
+      ...(sighting.foundOn === undefined ? {} : { foundOn: sighting.foundOn }),
+      firstSeenAt: seenAt,
+      lastSeenAt: seenAt,
+    };
+  }
+
+  async recordDocumentSightings(
+    clientId: string,
+    sightings: DocumentSighting[],
+    seenAt: string,
+  ): Promise<{ added: number; seenAgain: number }> {
+    let added = 0;
+    let seenAgain = 0;
+
+    for (const sighting of sightings) {
+      const key = this.documentKey(clientId, sighting.url);
+      const existing = this.clientDocuments.get(key);
+      if (existing) {
+        // Everything else stands: first sighting won `foundOn`, and `kind`
+        // and `source` are facts about that first sighting too.
+        existing.lastSeenAt = seenAt;
+        seenAgain += 1;
+      } else {
+        this.clientDocuments.set(key, structuredClone(this.buildDocument(clientId, sighting, seenAt)));
+        added += 1;
+      }
+    }
+
+    return { added, seenAgain };
+  }
+
+  async ensureClientDocument(
+    clientId: string,
+    sighting: DocumentSighting,
+    seenAt: string,
+  ): Promise<StoredClientDocument> {
+    const key = this.documentKey(clientId, sighting.url);
+    const existing = this.clientDocuments.get(key);
+    if (existing) {
+      existing.lastSeenAt = seenAt;
+      return structuredClone(existing);
+    }
+    const row = this.buildDocument(clientId, sighting, seenAt);
+    this.clientDocuments.set(key, structuredClone(row));
+    return structuredClone(row);
+  }
+
+  async listClientDocuments(clientId: string): Promise<ClientDocumentRecord[]> {
+    const latestBy = <T extends { seq: number }>(
+      held: T[],
+      stampOf: (entry: T) => string,
+    ): T | undefined =>
+      held.reduce<T | undefined>((latest, entry) => {
+        if (!latest) return entry;
+        const a = stampOf(entry);
+        const b = stampOf(latest);
+        if (a !== b) return a > b ? entry : latest;
+        return entry.seq > latest.seq ? entry : latest;
+      }, undefined);
+
+    return [...this.clientDocuments.values()]
+      .filter((doc) => doc.clientId === clientId)
+      // Most recently seen first, ties broken by id — the same total order
+      // the Postgres query spells, so a test cannot pass against one store
+      // and fail the other.
+      .sort((a, b) => {
+        if (a.lastSeenAt !== b.lastSeenAt) return a.lastSeenAt < b.lastSeenAt ? 1 : -1;
+        return a.id < b.id ? 1 : -1;
+      })
+      .slice(0, CLIENT_DOCUMENT_LIST_MAX)
+      .map((doc) => {
+        const latestInspection = latestBy(
+          [...this.documentInspections.values()].filter(
+            (held) => held.record.documentId === doc.id,
+          ),
+          (held) => held.record.inspectedAt,
+        );
+        const latestConversion = latestBy(
+          [...this.documentConversions.values()].filter(
+            (held) => held.record.documentId === doc.id,
+          ),
+          (held) => held.record.convertedAt,
+        );
+        return structuredClone({
+          ...doc,
+          ...(latestInspection === undefined
+            ? {}
+            : { latestInspection: latestInspection.record }),
+          ...(latestConversion === undefined
+            ? {}
+            : { latestConversion: latestConversion.record }),
+        });
+      });
+  }
+
+  async saveDocumentConversion(record: StoredDocumentConversion): Promise<void> {
+    // Immutable evidence, like an inspection: a retried save keeps the first
+    // record. Postgres spells it `on conflict (id) do nothing`.
+    if (this.documentConversions.has(record.id)) return;
+    this.documentConversions.set(record.id, {
+      seq: this.nextConversionSeq++,
+      record: structuredClone(record),
+    });
   }
 
   // ------------------------------------------------------------ activity --

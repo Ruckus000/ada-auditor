@@ -1,4 +1,5 @@
 import type { RemediationSummary } from './document-remediation';
+import type { DocumentLinkKind } from './discovery';
 
 /**
  * The catalog the screens read: clients, journeys, triage, reports, activity,
@@ -494,9 +495,18 @@ export type StoredDocumentInspection = {
   id: string;
   clientId: string;
   /**
+   * The document this is a reading OF. Inspections and conversions both hang
+   * off `StoredClientDocument` — the entity — rather than floating as rows
+   * keyed by URL string, which is how two records of the same document drift
+   * into looking like two documents.
+   */
+  documentId: string;
+  /**
    * The document's address for a crawl record; the operator's own filename
    * for an upload, which is the only handle an upload has. Fine to store,
-   * never to log.
+   * never to log. Kept on the inspection too, deliberately: an inspection is
+   * immutable evidence, and this is the address it was true of at reading
+   * time, even if the document row's own fields evolve.
    */
   url: string;
   /** The page the crawl found the link on. An upload has none. */
@@ -506,6 +516,80 @@ export type StoredDocumentInspection = {
   summary: RemediationSummary;
   inspectedAt: string;
 };
+
+/**
+ * One of a client's documents — the entity itself, with a lifecycle.
+ *
+ * Before this existed the system knew *actions* (an inspection, a conversion)
+ * but not the *thing*: scans were thrown away when the tab closed, a re-crawl
+ * started from nothing, and two readings of one document were related only by
+ * URL-string equality. This row is the identity everything else attaches to.
+ *
+ * `url` is the document's address for a crawl sighting and the operator's own
+ * filename for an upload — one row per distinct `url` per client, first
+ * sighting wins the `foundOn`. `lastSeenAt` is what a merge updates: a
+ * re-scan refreshes it rather than duplicating the row, so "still linked as
+ * of the last scan" is a fact the screen can state.
+ */
+export type StoredClientDocument = {
+  id: string;
+  clientId: string;
+  /** Address (crawl) or the operator's filename (upload). Store, never log. */
+  url: string;
+  kind: DocumentLinkKind;
+  source: DocumentInspectionSource;
+  /** The page the crawl first saw the link on. An upload has none. */
+  foundOn?: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+};
+
+/** One sighting of a document, as a merge consumes it. */
+export type DocumentSighting = {
+  url: string;
+  kind: DocumentLinkKind;
+  source: DocumentInspectionSource;
+  foundOn?: string;
+};
+
+/**
+ * One conversion of a client's document, kept — the audit trail.
+ *
+ * The bytes go to the operator; what stays is the identity of what went in
+ * and what came out (`sha256` each way) plus the pipeline's own account. The
+ * hashes are the record's teeth: "the file we delivered is exactly the file
+ * this row describes" is checkable by anyone holding the file, without the
+ * store ever holding document bytes. An artifact pointer can join this row
+ * later without reshaping it.
+ */
+export type StoredDocumentConversion = {
+  id: string;
+  clientId: string;
+  documentId: string;
+  /** The summary verbatim, as the conversion returned it. */
+  summary: RemediationSummary;
+  inputSha256: string;
+  outputSha256: string;
+  convertedAt: string;
+};
+
+/**
+ * A document with the latest word on it — what the inventory screen renders.
+ * History stays queryable through the per-record listings; this is the
+ * one-row-per-document view an operator scans.
+ */
+export type ClientDocumentRecord = StoredClientDocument & {
+  latestInspection?: StoredDocumentInspection;
+  latestConversion?: StoredDocumentConversion;
+};
+
+/**
+ * How many documents one inventory listing returns. A cap rather than paging,
+ * for the reason `DOCUMENT_INSPECTION_LIST_MAX` gives — and larger than the
+ * per-kind discovery caps combined, so a full scan's merge is never silently
+ * absent from the very screen that asked for it.
+ */
+export const CLIENT_DOCUMENT_LIST_MAX = 200;
 
 /**
  * How many inspections one listing may return.
@@ -530,6 +614,43 @@ export interface DocumentInspectionStore {
   listDocumentInspections(clientId: string): Promise<StoredDocumentInspection[]>;
 }
 
+export interface ClientDocumentStore {
+  /**
+   * Merges one scan's sightings into the client's inventory. A URL not yet on
+   * record gets a row (`firstSeenAt = lastSeenAt = seenAt`); a known URL gets
+   * `lastSeenAt` refreshed and keeps everything else — first sighting wins
+   * `foundOn`, the same rule discovery itself applies. Returns how the merge
+   * fell, because "42 documents" alone cannot tell an operator whether a scan
+   * found anything new.
+   */
+  recordDocumentSightings(
+    clientId: string,
+    sightings: DocumentSighting[],
+    seenAt: string,
+  ): Promise<{ added: number; seenAgain: number }>;
+  /**
+   * The single-document form of the merge, for the inspect and convert paths:
+   * acting on a document the inventory has never heard of (a pasted URL, an
+   * upload) must create its row, not leave the action orphaned. Returns the
+   * row, existing or new.
+   */
+  ensureClientDocument(
+    clientId: string,
+    sighting: DocumentSighting,
+    seenAt: string,
+  ): Promise<StoredClientDocument>;
+  /**
+   * The inventory: every document with the latest word on it, most recently
+   * seen first, capped at `CLIENT_DOCUMENT_LIST_MAX`.
+   */
+  listClientDocuments(clientId: string): Promise<ClientDocumentRecord[]>;
+  /**
+   * Immutable evidence, like an inspection: a second save under the same id
+   * is a retry and the first record stands.
+   */
+  saveDocumentConversion(record: StoredDocumentConversion): Promise<void>;
+}
+
 export type PlatformStore = OperatorStore &
   ClientStore &
   JourneyStore &
@@ -537,4 +658,5 @@ export type PlatformStore = OperatorStore &
   ClientCredentialStore &
   ReportStore &
   ActivityStore &
-  DocumentInspectionStore;
+  DocumentInspectionStore &
+  ClientDocumentStore;

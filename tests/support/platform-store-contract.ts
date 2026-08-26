@@ -1,8 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DOCUMENT_INSPECTION_LIST_MAX, UNASSIGNED_CLIENT_ID } from '../../src/domain/platform';
+import {
+  CLIENT_DOCUMENT_LIST_MAX,
+  DOCUMENT_INSPECTION_LIST_MAX,
+  UNASSIGNED_CLIENT_ID,
+} from '../../src/domain/platform';
 import type {
   PlatformStore,
+  StoredDocumentConversion,
   StoredDocumentInspection,
   TriageEntry,
 } from '../../src/domain/platform';
@@ -105,11 +110,30 @@ export function inspectionRecord(
   return {
     id: `${PLATFORM_PREFIX}-doc-a`,
     clientId: CONTRACT_CLIENT,
+    // A stored string, not an FK — `document_inspections.document_id` is
+    // deliberately unconstrained so the backfill migration stays one
+    // idempotent statement. The linked cases below use real document rows.
+    documentId: `${PLATFORM_PREFIX}-document-a`,
     url: 'https://town.example/minutes/agenda.pdf',
     foundOn: 'https://town.example/meetings',
     source: 'crawl',
     summary: inspectionSummary(),
     inspectedAt: '2026-08-26T12:00:00.000Z',
+    ...overrides,
+  };
+}
+
+export function conversionRecord(
+  overrides: Partial<StoredDocumentConversion> = {},
+): StoredDocumentConversion {
+  return {
+    id: `${PLATFORM_PREFIX}-conv-a`,
+    clientId: CONTRACT_CLIENT,
+    documentId: `${PLATFORM_PREFIX}-document-a`,
+    summary: inspectionSummary({ tagged: true, gaps: [] }),
+    inputSha256: 'a'.repeat(64),
+    outputSha256: 'b'.repeat(64),
+    convertedAt: '2026-08-26T12:00:00.000Z',
     ...overrides,
   };
 }
@@ -721,6 +745,210 @@ export function platformStoreContract(
         expect(listed.map((r) => r.id)).not.toContain(`${PLATFORM_PREFIX}-doc-cap-0`);
       },
       60_000,
+    );
+  });
+
+  describe('client documents', () => {
+    const T0 = '2026-08-26T09:00:00.000Z';
+    const T1 = '2026-08-26T10:00:00.000Z';
+    const DOC_URL = 'https://town.example/minutes/agenda.pdf';
+
+    async function seeded(): Promise<PlatformStore> {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+      return store;
+    }
+
+    it('a merge adds what is new and refreshes what is known', async () => {
+      const store = await seeded();
+
+      const first = await store.recordDocumentSightings(
+        CONTRACT_CLIENT,
+        [
+          { url: DOC_URL, kind: 'pdf', source: 'crawl', foundOn: 'https://town.example/meetings' },
+          { url: 'https://town.example/forms/permit.docx', kind: 'docx', source: 'crawl' },
+        ],
+        T0,
+      );
+      expect(first).toEqual({ added: 2, seenAgain: 0 });
+
+      const second = await store.recordDocumentSightings(
+        CONTRACT_CLIENT,
+        [{ url: DOC_URL, kind: 'pdf', source: 'crawl', foundOn: 'https://town.example/other' }],
+        T1,
+      );
+      expect(second).toEqual({ added: 0, seenAgain: 1 });
+
+      const docs = await store.listClientDocuments(CONTRACT_CLIENT);
+      const pdf = docs.find((doc) => doc.url === DOC_URL);
+      // Refreshed, not duplicated — and the first sighting keeps `foundOn`,
+      // the same rule discovery itself applies.
+      expect(docs.filter((doc) => doc.url === DOC_URL)).toHaveLength(1);
+      expect(pdf?.firstSeenAt).toBe(T0);
+      expect(pdf?.lastSeenAt).toBe(T1);
+      expect(pdf?.foundOn).toBe('https://town.example/meetings');
+      expect(pdf?.kind).toBe('pdf');
+    });
+
+    it('ensureClientDocument returns the same row for a known url', async () => {
+      const store = await seeded();
+
+      const created = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: DOC_URL, kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+      const found = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: DOC_URL, kind: 'pdf', source: 'crawl' },
+        T1,
+      );
+
+      expect(found.id).toBe(created.id);
+      expect(found.firstSeenAt).toBe(T0);
+      expect(found.lastSeenAt).toBe(T1);
+    });
+
+    it('omits foundOn on an upload rather than storing null', async () => {
+      const store = await seeded();
+      await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'agenda.docx', kind: 'docx', source: 'upload', foundOn: undefined },
+        T0,
+      );
+
+      const [doc] = await store.listClientDocuments(CONTRACT_CLIENT);
+      expect(doc).not.toHaveProperty('foundOn');
+      expect(doc.source).toBe('upload');
+    });
+
+    it('the inventory carries the latest word: newest inspection and conversion', async () => {
+      const store = await seeded();
+      const doc = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: DOC_URL, kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+
+      await store.saveDocumentInspection(
+        inspectionRecord({
+          id: `${PLATFORM_PREFIX}-insp-old`,
+          documentId: doc.id,
+          inspectedAt: T0,
+        }),
+      );
+      await store.saveDocumentInspection(
+        inspectionRecord({
+          id: `${PLATFORM_PREFIX}-insp-new`,
+          documentId: doc.id,
+          summary: inspectionSummary({ pages: 9 }),
+          inspectedAt: T1,
+        }),
+      );
+      await store.saveDocumentConversion(
+        conversionRecord({ id: `${PLATFORM_PREFIX}-conv-old`, documentId: doc.id, convertedAt: T0 }),
+      );
+      await store.saveDocumentConversion(
+        conversionRecord({
+          id: `${PLATFORM_PREFIX}-conv-new`,
+          documentId: doc.id,
+          outputSha256: 'c'.repeat(64),
+          convertedAt: T1,
+        }),
+      );
+
+      const [record] = await store.listClientDocuments(CONTRACT_CLIENT);
+      expect(record.latestInspection?.id).toBe(`${PLATFORM_PREFIX}-insp-new`);
+      expect(record.latestInspection?.summary.pages).toBe(9);
+      expect(record.latestConversion?.id).toBe(`${PLATFORM_PREFIX}-conv-new`);
+      // The hashes round-trip verbatim — they are the record's teeth.
+      expect(record.latestConversion?.inputSha256).toBe('a'.repeat(64));
+      expect(record.latestConversion?.outputSha256).toBe('c'.repeat(64));
+    });
+
+    it('keeps the first conversion when the same id is saved again', async () => {
+      const store = await seeded();
+      const doc = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: DOC_URL, kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+
+      await store.saveDocumentConversion(conversionRecord({ documentId: doc.id }));
+      await store.saveDocumentConversion(
+        conversionRecord({ documentId: doc.id, outputSha256: 'f'.repeat(64), convertedAt: T1 }),
+      );
+
+      const [record] = await store.listClientDocuments(CONTRACT_CLIENT);
+      expect(record.latestConversion?.outputSha256).toBe('b'.repeat(64));
+      expect(record.latestConversion?.convertedAt).toBe('2026-08-26T12:00:00.000Z');
+    });
+
+    it('scopes the inventory to its client', async () => {
+      const store = await seeded();
+      const otherClient = `${PLATFORM_PREFIX}-client-b`;
+      await store.upsertClient({ id: otherClient, name: 'Other Client' });
+
+      await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: DOC_URL, kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+      await store.ensureClientDocument(
+        otherClient,
+        { url: 'https://elsewhere.example/budget.pdf', kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+
+      const urls = (await store.listClientDocuments(otherClient)).map((doc) => doc.url);
+      expect(urls).toEqual(['https://elsewhere.example/budget.pdf']);
+    });
+
+    it('lists most recently seen first', async () => {
+      // Distinct stamps this test chose — same-instant tie order is
+      // deliberately NOT part of the contract, because the two stores
+      // generate ids differently and any tie-break on them would diverge.
+      const store = await seeded();
+      await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/old.pdf', kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+      await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/new.pdf', kind: 'pdf', source: 'crawl' },
+        T1,
+      );
+
+      const urls = (await store.listClientDocuments(CONTRACT_CLIENT)).map((doc) => doc.url);
+      expect(urls).toEqual(['https://town.example/new.pdf', 'https://town.example/old.pdf']);
+    });
+
+    it(
+      'caps the inventory, and what survives includes the most recently seen',
+      async () => {
+        const store = await seeded();
+
+        await store.recordDocumentSightings(
+          CONTRACT_CLIENT,
+          Array.from({ length: CLIENT_DOCUMENT_LIST_MAX + 1 }, (_, i) => ({
+            url: `https://town.example/archive/doc-${i}.pdf`,
+            kind: 'pdf' as const,
+            source: 'crawl' as const,
+          })),
+          T0,
+        );
+        await store.recordDocumentSightings(
+          CONTRACT_CLIENT,
+          [{ url: 'https://town.example/latest.pdf', kind: 'pdf', source: 'crawl' }],
+          T1,
+        );
+
+        const listed = await store.listClientDocuments(CONTRACT_CLIENT);
+        expect(listed).toHaveLength(CLIENT_DOCUMENT_LIST_MAX);
+        expect(listed[0].url).toBe('https://town.example/latest.pdf');
+      },
+      120_000,
     );
   });
 
