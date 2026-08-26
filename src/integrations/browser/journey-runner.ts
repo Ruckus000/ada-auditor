@@ -509,6 +509,38 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   const pages: PageAudit[] = [];
   let truncatedPages = 0;
   /**
+   * What the navigation grace actually cost this walk.
+   *
+   * Out here with `pages` for the same reason: a partial run's measurement is
+   * still a measurement, and the catch below reports it.
+   *
+   * Accumulated rather than derived from the wall clock at either end. The
+   * caller cannot subtract browser launch, two axe scans, two screenshots and
+   * the artifact writes back out of a total, so a test or an operator asking
+   * "is the grace still cheap?" off a total is really asking about machine
+   * load. This counts only the waits themselves.
+   */
+  let settleWaitMs = 0;
+
+  /**
+   * Times one wait for a navigation that may never come.
+   *
+   * The clock starts where the *subscription* does, not where it is awaited:
+   * the click branch below subscribes before clicking on purpose, so the
+   * grace's own timer is already running while `click()` resolves, and
+   * measuring from the `await` would under-report by exactly that. Both
+   * outcomes are recorded — a grace that expired is the case this number
+   * exists for.
+   */
+  const timeSettleWait = async <T>(wait: () => Promise<T>): Promise<T> => {
+    const waitedFrom = Date.now();
+    try {
+      return await wait();
+    } finally {
+      settleWaitMs += Date.now() - waitedFrom;
+    }
+  };
+  /**
    * Which bound cut the walk short. First cause wins, hence `??=` at each
    * increment: a walk that reaches its page cap and then its deadline stopped
    * because of the cap, and saying otherwise would send the operator to change
@@ -1014,15 +1046,17 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         // cannot leave this rejecting into nobody's hands: an orphaned
         // navigation promise killing the process is a mistake this file has
         // already made once, in the per-response safety checks.
-        const committed = page
-          .waitForEvent('framenavigated', {
-            predicate: (frame) => frame === page.mainFrame(),
-            timeout: NAVIGATION_SETTLE_MS,
-          })
-          .then(
-            () => true,
-            () => false,
-          );
+        const committed = timeSettleWait(() =>
+          page
+            .waitForEvent('framenavigated', {
+              predicate: (frame) => frame === page.mainFrame(),
+              timeout: NAVIGATION_SETTLE_MS,
+            })
+            .then(
+              () => true,
+              () => false,
+            ),
+        );
 
         await page.click(step.selector, { timeout: stepTimeoutMs });
         await committed;
@@ -1077,19 +1111,21 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     }
 
     if (pages.length === capturedBeforeSettle && !boundReached()) {
-      await page
-        .waitForEvent('framenavigated', {
-          predicate: (frame) => frame === page.mainFrame(),
-          timeout: NAVIGATION_SETTLE_MS,
-        })
-        .then(
-          () => page.waitForLoadState('domcontentloaded').catch(() => undefined),
-          // Nothing arrived, which is the ordinary case: the walk ended where
-          // it already was. Swallowed rather than thrown for the reason the
-          // click wait gives — an orphaned navigation promise has killed this
-          // process before.
-          () => undefined,
-        );
+      await timeSettleWait(() =>
+        page
+          .waitForEvent('framenavigated', {
+            predicate: (frame) => frame === page.mainFrame(),
+            timeout: NAVIGATION_SETTLE_MS,
+          })
+          .then(
+            () => page.waitForLoadState('domcontentloaded').catch(() => undefined),
+            // Nothing arrived, which is the ordinary case: the walk ended
+            // where it already was. Swallowed rather than thrown for the
+            // reason the click wait gives — an orphaned navigation promise has
+            // killed this process before.
+            () => undefined,
+          ),
+      );
 
       // Asked again, because the deadline can pass during a wait of up to
       // `NAVIGATION_SETTLE_MS`. The guard above answered about a clock that has
@@ -1128,7 +1164,12 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
 
     warnIfTruncated();
 
-    return { pages, truncatedPages, ...(truncationReason ? { truncationReason } : {}) };
+    return {
+      pages,
+      truncatedPages,
+      settleWaitMs,
+      ...(truncationReason ? { truncationReason } : {}),
+    };
   } catch (error) {
     // A journey that died at step five of eight still audited four pages, and
     // they were thrown away with the stack: `executeRun` stored `findings: []`
@@ -1163,6 +1204,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     throw new PartialJourneyError(error, {
       pages,
       truncatedPages,
+      settleWaitMs,
       ...(truncationReason ? { truncationReason } : {}),
     });
   } finally {
