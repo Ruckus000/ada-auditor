@@ -41,6 +41,41 @@ What this buys, commercially: not "98% of machine-checkable failures removed",
 which was never 98% of the work. Instead — **every claim in a document we
 deliver was already in the document we received.**
 
+## The caller
+
+`POST /api/documents/remediate` — multipart `file=<agenda.docx>` in, tagged PDF
+out, with `X-Remediation-Summary` carrying counts, outcomes and the **gaps** a
+human still has to close (each naming its WCAG criterion).
+
+```bash
+curl -sS -H "Authorization: Bearer $AUDITOR_RUN_TOKEN" \
+     -F file=@agenda.docx -D headers.txt \
+     http://localhost:3000/api/documents/remediate -o remediated.pdf
+```
+
+Synchronous, because a conversion is ~15s against a 300s ceiling. **No
+persistence** — the bytes go back in the response and the record goes to the
+log. That contract will change when retrieval is needed; it is a decision for
+then rather than a surprise.
+
+`503` when the host has no toolchain, never `500`. On a serverless deployment
+that is the permanent, correct answer.
+
+### Two rules the route exists to enforce
+
+**Input validation is ours.** `[V]` LibreOffice sniffs content, so a text file
+named `.docx` converts successfully — a successful conversion is not evidence
+the input was Word. `isWordDocument` in `domain/document-remediation.ts` checks
+the ZIP magic *and* the OOXML part names, which are readable in the raw bytes
+because ZIP stores filenames uncompressed. It proves the container shape, not
+that the document is well-formed.
+
+**Never log document content.** `DocumentStructure` carries the document's own
+words — headings, reading order, every table cell — and these are municipal
+records naming real people. The log line carries counts and outcome kinds only;
+`logSafe` strips even the title. A response may echo the title, because the
+caller uploaded the file; a log line persists and travels.
+
 ## Why this exists
 
 The document pipeline was built in `experiments/document-remediation/`, which is
