@@ -61,6 +61,28 @@ describe('readDeploymentConfig', () => {
     );
   });
 
+  it('reports the document toolchain without ever counting it as degraded', () => {
+    // Absence is the design of this slice, not a weakness: document stages need
+    // a JVM and a serverless function has none. Marking it degraded would add a
+    // permanent entry to the operator's warning count for a capability that was
+    // never promised on that host — the same reason `/api/ready` reports it and
+    // raises no warning.
+    const find = (available: boolean) =>
+      readDeploymentConfig({}, { documentToolchainAvailable: available }).settings.find(
+        (setting) => setting.key === 'documents',
+      );
+
+    expect(find(true)?.value).toBe('available');
+    expect(find(true)?.degraded).toBe(false);
+    expect(find(false)?.value).toBe('not available here');
+    expect(find(false)?.degraded).toBe(false);
+    // The unanswered case renders as absent rather than throwing or claiming
+    // availability nothing checked.
+    expect(readDeploymentConfig({}).settings.find((s) => s.key === 'documents')?.value).toBe(
+      'not available here',
+    );
+  });
+
   it('counts what is degraded', () => {
     const clean = readDeploymentConfig({
       DATABASE_URL: 'postgres://host/db',

@@ -10,6 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:kernel": "tsc --project tsconfig.kernel.json",
+    "build:documents": "tsx scripts/build-documents.ts",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -23,7 +24,8 @@
     "operator": "tsx scripts/operator.ts",
     "smoke:real": "tsx scripts/smoke-real.ts",
     "test:db": "vitest run --config vitest.db.config.ts",
-    "test:hydration": "vitest run --config vitest.hydration.config.ts"
+    "test:hydration": "vitest run --config vitest.hydration.config.ts",
+    "test:documents": "vitest run --config vitest.documents.config.ts"
   },
   "keywords": [],
   "author": "",

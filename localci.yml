@@ -36,3 +36,9 @@ suite:
   # that a machine without the Neon branch configured is not permanently red.
   # localci reads DATABASE_URL from a git-ignored .env in this directory.
   - if [ -n "$DATABASE_URL" ]; then npm run migrate && npm run test:db; else echo "DATABASE_URL not set - Postgres store contract skipped"; fi
+  # The document stages against a real JVM. Guarded exactly like the Postgres
+  # step above and for the same reason: a machine without a JDK should not be
+  # permanently red over a subsystem it cannot run. The build has to come first
+  # -- `test:documents` skips itself when nothing is compiled, and a suite that
+  # silently skips everything is indistinguishable from one that passed.
+  - if command -v java >/dev/null 2>&1 || [ -x "$JAVA_HOME/bin/java" ]; then npm run build:documents && npm run test:documents; else echo "no JVM - document stages skipped"; fi

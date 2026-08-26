@@ -35,13 +35,33 @@ export type DeploymentConfig = {
 /** Just the shape this module reads, so a test can pass four keys. */
 export type Env = Record<string, string | undefined>;
 
+/**
+ * Facts that are not environment variables.
+ *
+ * Whether a JVM and the compiled document stages exist is a question about the
+ * filesystem, and answering it means calling into `integrations/documents`.
+ * Nothing in `services/` imports an integration — that is the layering, and it
+ * is what keeps this module in the fast unit suite — so the caller resolves it
+ * and passes it down.
+ *
+ * Defaulting to `false` is deliberate: an unanswered question renders as "not
+ * available here", which is the truth on every deployment that has not gone out
+ * of its way to install one.
+ */
+export type DeploymentFacts = {
+  documentToolchainAvailable?: boolean;
+};
+
 /** Reads a positive integer env var, falling back rather than throwing. */
 function intFromEnv(env: Env, name: string, fallback: number): number {
   const raw = Number(env[name]);
   return Number.isInteger(raw) && raw > 0 ? raw : fallback;
 }
 
-export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
+export function readDeploymentConfig(
+  env: Env = process.env,
+  facts: DeploymentFacts = {},
+): DeploymentConfig {
   const budget = runBudgetLimits(env);
   const countersDurable = Boolean(env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL);
 
@@ -107,6 +127,18 @@ export function readDeploymentConfig(env: Env = process.env): DeploymentConfig {
       value: env.ANTHROPIC_API_KEY ? 'on' : 'off',
       detail:
         'Judges what a rule engine cannot — alt text that says nothing, headings used for size. Advisory findings never gate a build, and their absence is never a run failure.',
+      degraded: false,
+    },
+    {
+      key: 'documents',
+      label: 'Document remediation',
+      value: facts.documentToolchainAvailable ? 'available' : 'not available here',
+      detail: facts.documentToolchainAvailable
+        ? 'A Java runtime and the compiled document stages are present, so PDFs can be inspected on this host.'
+        : 'Document stages run on a JVM, and a serverless function has none — so this is expected on a deployed environment rather than a fault, and nothing else is affected by it. Where it is wanted: install a JDK 17+ and run `npm run build:documents`.',
+      // Never degraded. Absence is the design of this slice, not a weakness,
+      // and marking it degraded would put a permanent entry in the operator's
+      // warning count for a feature that was never promised here.
       degraded: false,
     },
     {

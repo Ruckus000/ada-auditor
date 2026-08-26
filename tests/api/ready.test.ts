@@ -22,6 +22,19 @@ vi.mock('../../src/app/api/_lib/redis', async (importOriginal) => ({
   }),
 }));
 
+/**
+ * Whether a JVM and the compiled document stages exist is a question about the
+ * filesystem, so it is stubbed here — otherwise this test would assert one
+ * thing on a machine that has run `npm run build:documents` and another on a
+ * machine that has not.
+ */
+const documents = vi.hoisted(() => ({ available: true }));
+
+vi.mock('../../src/integrations/documents/java-runtime', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/integrations/documents/java-runtime')>()),
+  isDocumentToolchainAvailable: () => documents.available,
+}));
+
 const { GET } = await import('../../src/app/api/ready/route');
 
 describe('GET /api/ready', () => {
@@ -38,6 +51,7 @@ describe('GET /api/ready', () => {
   beforeEach(() => {
     process.env.DATABASE_URL = 'postgres://test/db';
     redis.answers = true;
+    documents.available = true;
   });
 
   afterEach(() => {
@@ -168,6 +182,40 @@ describe('GET /api/ready', () => {
 
     expect(body.checks.advisoryConfigured).toBe(false);
     expect(body.warnings).toEqual([]);
+  });
+
+  it('stays ready with an empty warnings array when no document toolchain exists', async () => {
+    // This is the production state, permanently: document stages need a JVM and
+    // a serverless function has none. So it must be a fact in `checks` and
+    // nothing more — a warning here would never clear, and the deploy checklist
+    // tells an operator to look for `warnings` being empty. The same reasoning
+    // as `advisoryConfigured` above, with a stronger case, because this one
+    // cannot be switched on by setting a variable.
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    process.env.AUDITOR_SESSION_SECRET = 'session-secret-16chars';
+    process.env.CRON_SECRET = 'cron-secret-16chars';
+    process.env.KV_REST_API_URL = 'https://kv.test';
+    process.env.KV_REST_API_TOKEN = 'kv-token';
+    process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
+    delete process.env.ANTHROPIC_API_KEY;
+    documents.available = false;
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('ready');
+    expect(body.checks.documentToolchainAvailable).toBe(false);
+    expect(body.warnings).toEqual([]);
+  });
+
+  it('reports the document toolchain when it is present', async () => {
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    documents.available = true;
+
+    const body = await (await GET()).json();
+
+    expect(body.checks.documentToolchainAvailable).toBe(true);
   });
 
   it('warns when the configured throttle store does not answer', async () => {

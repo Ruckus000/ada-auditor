@@ -5,6 +5,7 @@ import { isDatabaseConfigured } from '../../../integrations/persistence';
 import { sessionSecretIsShared } from '../_lib/principal';
 import { isBlobConfigured } from '../../../integrations/artifacts/blob-store';
 import { isAiAdvisoryConfigured } from '../../../services/ai-advisory';
+import { isDocumentToolchainAvailable } from '../../../integrations/documents/java-runtime';
 
 /**
  * Deploy-time readiness.
@@ -85,6 +86,7 @@ export async function GET() {
     cronSecretConfigured: Boolean(process.env.CRON_SECRET),
     blobConfigured: isBlobConfigured(),
     advisoryConfigured: isAiAdvisoryConfigured(),
+    documentToolchainAvailable: isDocumentToolchainAvailable(),
     chaosEnabled: process.env.CHAOS_ENABLED === 'true',
   };
 
@@ -154,6 +156,14 @@ export async function GET() {
   // people stop reading — which is how the retention sweep failed eleven
   // nights unnoticed. `chaosEnabled` sets the same precedent: a plain check
   // that gates nothing until it is actually wrong.
+  //
+  // `documentToolchainAvailable` follows that rule and is the strongest case
+  // for it. Document stages need a JVM, and a Vercel function has none — so on
+  // every production deployment this is false, permanently and by design. A
+  // warning here would not describe a problem, it would put an entry in the
+  // array that never clears, and the deploy checklist tells an operator to look
+  // for that array being empty. Reported in `checks`, explained in the settings
+  // screen, and silent here.
 
   // The deploy checklist tells an operator to look for an empty warnings
   // array, so anything that makes results untrustworthy has to appear in it.
