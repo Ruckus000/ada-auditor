@@ -30,7 +30,7 @@ import { FONT, T } from '../../lib/tokens';
  * lives. A screen that rephrased them would be a second copy free to drift.
  */
 
-type DiscoveredDocument = { url: string; foundOn: string };
+type DiscoveredDocument = { url: string; foundOn: string; kind: 'pdf' | 'docx' | 'doc' };
 
 type DiscoveryResponse = {
   documents?: DiscoveredDocument[];
@@ -311,9 +311,10 @@ export function ClientDocuments({
         Documents
       </h2>
       <p style={noteStyle}>
-        PDFs linked from the client’s site, found by the same crawl the setup screen runs. The
-        crawl records them without opening them; inspection is per-document because each one costs
-        a fetch and a JVM run. Every inspection is kept against this client.
+        Documents linked from the client’s site — PDF and Word — found by the same crawl the setup
+        screen runs. The crawl records them without opening them; inspection is per-document
+        because each one costs a fetch and a JVM run. Every inspection is kept against this
+        client.
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8 }}>
@@ -348,7 +349,7 @@ export function ClientDocuments({
 
       {documents !== null ? (
         documents.length === 0 ? (
-          <p style={noteStyle}>The crawl saw no PDF links.</p>
+          <p style={noteStyle}>The crawl saw no document links.</p>
         ) : (
           <ul
             style={{
@@ -374,20 +375,22 @@ export function ClientDocuments({
                       {pathOf(doc.url)}
                     </span>
                     <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
-                      found on {pathOf(doc.foundOn)}
+                      {doc.kind === 'pdf' ? 'PDF' : 'Word'} · found on {pathOf(doc.foundOn)}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => inspect(doc)}
-                      disabled={inspection.state === 'running'}
-                      style={{
-                        ...buttonStyle,
-                        marginLeft: 'auto',
-                        ...disabledStyle(inspection.state === 'running'),
-                      }}
-                    >
-                      {inspection.state === 'running' ? 'Inspecting…' : 'Inspect'}
-                    </button>
+                    {doc.kind === 'pdf' ? (
+                      <button
+                        type="button"
+                        onClick={() => inspect(doc)}
+                        disabled={inspection.state === 'running'}
+                        style={{
+                          ...buttonStyle,
+                          marginLeft: 'auto',
+                          ...disabledStyle(inspection.state === 'running'),
+                        }}
+                      >
+                        {inspection.state === 'running' ? 'Inspecting…' : 'Inspect'}
+                      </button>
+                    ) : null}
                   </span>
                   {inspection.state === 'done' ? <SummaryView summary={inspection.summary} /> : null}
                   {inspection.state === 'failed' ? (
@@ -400,6 +403,15 @@ export function ClientDocuments({
             })}
           </ul>
         )
+      ) : null}
+
+      {documents?.some((doc) => doc.kind !== 'pdf') ? (
+        <p style={noteStyle}>
+          {/* Stated rather than implied by a missing button. The absence is a
+              capability fact, not a defect in the row. */}
+          Word documents are recorded without an Inspect button — the inspection instrument reads
+          PDFs. Word’s path is conversion to tagged PDF, which this screen does not run yet.
+        </p>
       ) : null}
 
       {documentsOmitted > 0 ? (

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  isDocumentLink,
   discoveryKey,
+  documentLinkKind,
   discoveryRequestSchema,
   journeyOriginFor,
   MAX_DISCOVERY_URLS,
@@ -222,33 +222,45 @@ describe('journeyOriginFor', () => {
   });
 });
 
-describe('isDocumentLink', () => {
-  it('classifies a .pdf path as a document', () => {
-    expect(isDocumentLink('https://town.example/minutes/agenda.pdf')).toBe(true);
+describe('documentLinkKind', () => {
+  it('classifies a .pdf path as a PDF', () => {
+    expect(documentLinkKind('https://town.example/minutes/agenda.pdf')).toBe('pdf');
+  });
+
+  it('classifies Word paths, old container and new', () => {
+    // The gap this closes was observed on a live municipal site: it publishes
+    // its records as `.docx`, and a PDF-only classifier reported a
+    // document-heavy site as having no documents at all.
+    expect(documentLinkKind('https://town.example/forms/permit.docx')).toBe('docx');
+    expect(documentLinkKind('https://town.example/forms/permit.doc')).toBe('doc');
   });
 
   it('is case-insensitive, because real servers are', () => {
-    expect(isDocumentLink('https://town.example/AGENDA.PDF')).toBe(true);
+    expect(documentLinkKind('https://town.example/AGENDA.PDF')).toBe('pdf');
+    expect(documentLinkKind('https://town.example/PERMIT.DOCX')).toBe('docx');
   });
 
   it('tolerates a query string', () => {
     // `/agenda.pdf?v=2` is a document; the version param does not change that.
-    expect(isDocumentLink('https://town.example/agenda.pdf?v=2')).toBe(true);
+    expect(documentLinkKind('https://town.example/agenda.pdf?v=2')).toBe('pdf');
   });
 
-  it('does not classify a page whose QUERY mentions pdf', () => {
+  it('does not classify a page whose QUERY mentions a document', () => {
     // `/download?file=agenda.pdf` is a page as far as this check can know —
     // the path is what is classified, deliberately, and the miss is recorded
     // in the function's own comment rather than guessed around.
-    expect(isDocumentLink('https://town.example/download?file=agenda.pdf')).toBe(false);
+    expect(documentLinkKind('https://town.example/download?file=agenda.pdf')).toBe(null);
   });
 
   it('leaves ordinary pages alone', () => {
-    expect(isDocumentLink('https://town.example/agenda')).toBe(false);
-    expect(isDocumentLink('https://town.example/pdf-help')).toBe(false);
+    expect(documentLinkKind('https://town.example/agenda')).toBe(null);
+    expect(documentLinkKind('https://town.example/pdf-help')).toBe(null);
+    // `.doc` must not swallow the paths that merely contain it.
+    expect(documentLinkKind('https://town.example/doc')).toBe(null);
+    expect(documentLinkKind('https://town.example/docs/guide.html')).toBe(null);
   });
 
-  it('answers false rather than throwing on an unparseable href', () => {
-    expect(isDocumentLink('not a url')).toBe(false);
+  it('answers null rather than throwing on an unparseable href', () => {
+    expect(documentLinkKind('not a url')).toBe(null);
   });
 });
