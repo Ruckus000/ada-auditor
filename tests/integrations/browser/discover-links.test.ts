@@ -119,6 +119,16 @@ const FIXTURES = join(process.cwd(), 'fixtures/discovery-site');
 let server: Server;
 const requestedHosts: string[] = [];
 
+/**
+ * Every path the server was actually asked for — the only witness that a
+ * navigation was NOT made. The document case depends on it: the PDF below is
+ * genuinely served, so a crawler that wrongly navigates into it *succeeds*,
+ * exactly as `INTERNAL_HOST` is genuinely resolvable. A 404 would let the
+ * classification be deleted and the test still pass, with the navigation
+ * filed as an error.
+ */
+const requestedPaths: string[] = [];
+
 /** Path and query, which together are what this crawl calls one page. */
 function locationOf(rawUrl: string): string {
   const url = new URL(rawUrl);
@@ -141,6 +151,7 @@ beforeAll(async () => {
     // supposed to stop a request being made at all, and the only witness to
     // that is the server it would have reached.
     requestedHosts.push((request.headers.host ?? '').split(':')[0]);
+    requestedPaths.push(new URL(request.url ?? '/', `http://${HOST}`).pathname);
 
     // The whole site under `www`, canonicalising to the apex. Discriminated on
     // the `Host` header rather than the path because the *host* is the point:
@@ -153,6 +164,13 @@ beforeAll(async () => {
     }
 
     const path = new URL(request.url ?? '/', `http://${HOST}`).pathname;
+
+    // A real PDF, really served — see `requestedPaths`.
+    if (path === '/minutes/agenda.pdf') {
+      response.writeHead(200, { 'content-type': 'application/pdf' });
+      response.end('%PDF-1.4 fixture');
+      return;
+    }
 
     // The everyday same-host redirect: a renamed page kept alive by a 301.
     // Trailing slashes and apex-to-www make this shape ordinary, and it is the
@@ -442,6 +460,7 @@ describe('discoverLinks guards', () => {
    */
   it('never dials a named host inside the target that resolves into private space', async () => {
     requestedHosts.length = 0;
+    requestedPaths.length = 0;
 
     const result = await discoverLinks({
       targetUrl: `http://${HOST}/internal-link.html`,
@@ -489,6 +508,31 @@ describe('discoverLinks guards', () => {
     await expect(discoverLinks({ targetUrl: 'file:///etc/passwd' })).rejects.toThrow(
       /http or https/i,
     );
+  });
+
+  it('records a linked PDF as a document and never navigates into it', async () => {
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+
+    // Found, once — the index links it twice (bare and `?v=2` spellings are
+    // two discovery keys, so both appear) and about.html links the bare one
+    // again, which must not duplicate it. `foundOn` is the first sighting.
+    const bare = result.documents.find((doc) => doc.url === `http://${HOST}/minutes/agenda.pdf`);
+    expect(bare).toBeDefined();
+    expect(bare?.foundOn).toBe(`http://${HOST}/`);
+    expect(
+      result.documents.filter((doc) => doc.url.includes('agenda.pdf')).length,
+    ).toBe(2);
+
+    // Not a page. A document row and a page row for the same URL would be the
+    // crawl disagreeing with itself.
+    expect(result.pages.map((page) => page.url)).not.toContainEqual(
+      expect.stringContaining('agenda.pdf'),
+    );
+
+    // And never fetched. The server genuinely serves this path — a crawler
+    // that navigated into it would SUCCEED — so the request log is the only
+    // honest witness that the classification, not luck, kept it out.
+    expect(requestedPaths).not.toContain('/minutes/agenda.pdf');
   });
 
   it('refuses an entry point resolving to a private address', async () => {

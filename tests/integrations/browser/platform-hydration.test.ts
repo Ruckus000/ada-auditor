@@ -1524,6 +1524,106 @@ describe('platform hydration', () => {
     }
   }, 120_000);
 
+  it('lists a client’s documents and renders an inspection, with no axe violations', async () => {
+    const page = await openAuthenticatedPage();
+    try {
+      // Both routes stubbed: the crawl and the JVM are covered by their own
+      // suites, and this test is about the screen — that it hydrates, renders
+      // both sources through one summary component, and passes the same axe
+      // bar as everything else.
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            pages: [],
+            errors: [],
+            documents: [
+              {
+                url: 'https://discovered.invalid/minutes/agenda.pdf',
+                foundOn: 'https://discovered.invalid/meetings',
+              },
+              {
+                url: 'https://discovered.invalid/fees/schedule.pdf',
+                foundOn: 'https://discovered.invalid/',
+              },
+            ],
+            documentsOmitted: 3,
+          }),
+        }),
+      );
+      await page.route('**/api/documents/inspect-url', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            url: 'https://discovered.invalid/minutes/agenda.pdf',
+            title: 'no-heading-to-copy',
+            sourceLanguage: null,
+            tagged: false,
+            pages: 4,
+            headings: 0,
+            tables: 2,
+            lists: 0,
+            figures: 3,
+            gaps: [
+              '2.4.2: the document has no title, and states no heading to copy one from',
+              '1.1.1: 3 figures with no alt text',
+            ],
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site to scan').fill('https://discovered.invalid/');
+      await page.getByRole('button', { name: 'Scan the site' }).click();
+
+      // By role, not by text: the shell's own <section> contains the word
+      // "Documents" in its tab bar, so a text match finds the wrong element.
+      // The panel is the only *named region* called Documents — its
+      // `aria-labelledby` is what gives it the role and the name.
+      const panel = page.getByRole('region', { name: 'Documents' });
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('agenda.pdf');
+
+      const text = await panel.innerText();
+      // The row carries both halves: the document, and where it was found.
+      expect(text).toContain('/minutes/agenda.pdf');
+      expect(text).toContain('found on /meetings');
+      // A cap that dropped work says so.
+      expect(text).toContain('3 more document links beyond the cap');
+
+      // One inspection, rendered inline where its row is.
+      await page
+        .getByRole('listitem')
+        .filter({ hasText: '/minutes/agenda.pdf' })
+        .getByRole('button', { name: 'Inspect' })
+        .click();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Not tagged');
+
+      const inspected = await panel.innerText();
+      // The gaps verbatim — the words were chosen server-side, beside the
+      // counting logic, and the screen must not rephrase them.
+      expect(inspected).toContain('2.4.2: the document has no title');
+      expect(inspected).toContain('1.1.1: 3 figures with no alt text');
+      expect(inspected).toContain('4 pages');
+
+      // With an inspection open — the screen's fullest state — the panel holds
+      // the same bar the product holds a client's site to.
+      await expect
+        .poll(() => axeViolations(page), {
+          ...AXE_SETTLE,
+          message: 'the documents panel with an inspection rendered',
+        })
+        .toBe('');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
   /**
    * The write: ticked pages become a stored journey of `goto` steps.
    *

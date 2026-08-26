@@ -70,6 +70,7 @@ export async function POST(request: Request) {
       {
         requestId,
         pages: result.pages,
+        documents: result.documents,
         errors: result.errors,
         // Passed through rather than summarised. A bound that dropped work has
         // already been recorded twice below this line; dropping the record at
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
         // the one thing `DiscoveryTruncation` exists to prevent.
         ...(result.truncated ? { truncated: result.truncated } : {}),
         ...(result.errorsOmitted ? { errorsOmitted: result.errorsOmitted } : {}),
+        ...(result.documentsOmitted ? { documentsOmitted: result.documentsOmitted } : {}),
       },
       { status: 200 },
     );

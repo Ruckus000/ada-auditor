@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isDocumentLink,
   discoveryKey,
   discoveryRequestSchema,
   journeyOriginFor,
@@ -218,5 +219,36 @@ describe('journeyOriginFor', () => {
   it('reduces a typed address with a path and query to its origin', () => {
     const pages = [{ url: 'https://www.acme.com/docs/', title: 'Docs', depth: 0 }];
     expect(journeyOriginFor(pages, 'https://acme.com/docs/?utm=x')).toBe('https://www.acme.com');
+  });
+});
+
+describe('isDocumentLink', () => {
+  it('classifies a .pdf path as a document', () => {
+    expect(isDocumentLink('https://town.example/minutes/agenda.pdf')).toBe(true);
+  });
+
+  it('is case-insensitive, because real servers are', () => {
+    expect(isDocumentLink('https://town.example/AGENDA.PDF')).toBe(true);
+  });
+
+  it('tolerates a query string', () => {
+    // `/agenda.pdf?v=2` is a document; the version param does not change that.
+    expect(isDocumentLink('https://town.example/agenda.pdf?v=2')).toBe(true);
+  });
+
+  it('does not classify a page whose QUERY mentions pdf', () => {
+    // `/download?file=agenda.pdf` is a page as far as this check can know —
+    // the path is what is classified, deliberately, and the miss is recorded
+    // in the function's own comment rather than guessed around.
+    expect(isDocumentLink('https://town.example/download?file=agenda.pdf')).toBe(false);
+  });
+
+  it('leaves ordinary pages alone', () => {
+    expect(isDocumentLink('https://town.example/agenda')).toBe(false);
+    expect(isDocumentLink('https://town.example/pdf-help')).toBe(false);
+  });
+
+  it('answers false rather than throwing on an unparseable href', () => {
+    expect(isDocumentLink('not a url')).toBe(false);
   });
 });

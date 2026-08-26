@@ -272,11 +272,54 @@ export const DISCOVERY_DELAY_MS = 250;
  */
 export const DISCOVERY_USER_AGENT_PRODUCT = 'ADA-Auditor-Discovery/1.0';
 
+/**
+ * Ceiling on documents a crawl reports, matching the shape of the other caps:
+ * a bound that drops work says so (`documentsOmitted`), never silently.
+ *
+ * Municipal sites are document-heavy — an agenda archive can link hundreds of
+ * PDFs — and each row here is a candidate for a fetch plus a JVM run, chosen
+ * one at a time by an operator. Fifty is a screenful of choices, not a corpus.
+ */
+export const MAX_DISCOVERY_DOCUMENTS = 50;
+
+/**
+ * Is this link a document rather than a page?
+ *
+ * Extension match only, and that limit is deliberate: telling a PDF from a page
+ * without navigating would need a request the crawl is not making, and the
+ * whole point of classifying is to NOT spend a navigation on it. A PDF served
+ * from an extensionless URL is missed in this slice, and this comment is where
+ * that is written down.
+ *
+ * The query string is tolerated (`/agenda.pdf?v=2` is a document); the fragment
+ * never reaches here because the crawl strips fragments before classifying.
+ */
+export function isDocumentLink(href: string): boolean {
+  try {
+    return new URL(href).pathname.toLowerCase().endsWith('.pdf');
+  } catch {
+    return false;
+  }
+}
+
 export type DiscoveredPage = {
   url: string;
   title: string;
   /** 0 is the entry page. */
   depth: number;
+};
+
+/**
+ * A document the crawl saw and deliberately did not open.
+ *
+ * `foundOn` is the page whose markup linked it — the operator's handle on
+ * where a document lives in their client's site, and the page a document
+ * finding would attach to when persistence arrives. First sighting wins:
+ * a document linked from forty agenda pages is one row, not forty.
+ */
+export type DiscoveredDocument = {
+  url: string;
+  foundOn: string;
 };
 
 /**
@@ -335,6 +378,18 @@ export type DiscoveryError = {
 
 export type DiscoveryResult = {
   pages: DiscoveredPage[];
+  /**
+   * Documents linked from the pages the crawl read, never navigated to.
+   *
+   * Two reasons that matters. Navigating Chromium into a PDF spends crawl
+   * budget rendering something the page walk cannot audit — which is what
+   * happened before this field existed, since nothing filtered by extension.
+   * And a document is not a page: it goes to the document pipeline, which has
+   * its own instrument.
+   */
+  documents: DiscoveredDocument[];
+  /** How many documents the cap refused to carry. Absent when it refused none. */
+  documentsOmitted?: number;
   truncated?: DiscoveryTruncation;
   errors: DiscoveryError[];
   /**
