@@ -153,7 +153,7 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     expect(response.headers.get('content-type')).toBe('application/pdf');
     expect(Buffer.from(await response.arrayBuffer()).equals(FAKE_PDF)).toBe(true);
 
-    const [document] = await platform.listClientDocuments('acme');
+    const [document] = (await platform.listClientDocuments('acme')).documents;
     // The row is the entity; the byte check's verdict names the kind.
     expect(document).toMatchObject({
       url: DOC_URL,
@@ -189,7 +189,7 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     const response = await POST(request({ url: DOC_URL }), params('acme'));
 
     expect(response.status).toBe(200);
-    const [document] = await platform.listClientDocuments('acme');
+    const [document] = (await platform.listClientDocuments('acme')).documents;
     // The conversion succeeded and its hashes stand; only the pointer is
     // absent — which is exactly what the download route 404s on.
     expect(document.latestConversion).not.toHaveProperty('artifactUrl');
@@ -201,7 +201,7 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     const response = await POST(request({ url: DOC_URL }), params('acme'));
 
     expect(response.status).toBe(200);
-    const [document] = await platform.listClientDocuments('acme');
+    const [document] = (await platform.listClientDocuments('acme')).documents;
     expect(document.latestConversion).not.toHaveProperty('artifactUrl');
   });
 
@@ -211,7 +211,7 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     expect(response.status).toBe(200);
     expect(fetchSpy).not.toHaveBeenCalled();
 
-    const [document] = await platform.listClientDocuments('acme');
+    const [document] = (await platform.listClientDocuments('acme')).documents;
     expect(document).toMatchObject({ url: 'permit.docx', kind: 'docx', source: 'upload' });
     expect(document).not.toHaveProperty('foundOn');
     expect(document.latestConversion?.inputSha256).toBe(sha256(docxBytes()));
@@ -246,7 +246,7 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
 
     expect(response.status).toBe(400);
     expect((await response.json()).error).toBe('unsafe_url');
-    expect(await platform.listClientDocuments('acme')).toEqual([]);
+    expect((await platform.listClientDocuments('acme')).documents).toEqual([]);
   });
 
   it('a failed conversion persists nothing — not even a document row', async () => {
@@ -258,7 +258,7 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     const response = await POST(request({ url: DOC_URL }), params('acme'));
 
     expect(response.status).toBe(422);
-    expect(await platform.listClientDocuments('acme')).toEqual([]);
+    expect((await platform.listClientDocuments('acme')).documents).toEqual([]);
   });
 
   it('never logs the URL path, the filename, or the title — the store may hold them', async () => {
@@ -281,7 +281,7 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     expect(logged).not.toContain('Planning Committee Agenda');
 
     // And the records carry what the logs refused: that split is the design.
-    const documents = await platform.listClientDocuments('acme');
+    const documents = (await platform.listClientDocuments('acme')).documents;
     expect(documents.map((doc) => doc.url)).toContain('objection-of-jane-doe.docx');
   });
 });

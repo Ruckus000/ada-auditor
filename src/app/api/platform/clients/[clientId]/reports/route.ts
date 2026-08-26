@@ -119,7 +119,9 @@ export async function POST(
   // shows what was true when it was issued, run half and documents half
   // alike. Never logged — document paths routinely name people, and this
   // route's log line carries ids only.
-  const documents = await platform.listClientDocuments(clientId);
+  // First page only — the same 200-document bound the inventory has always
+  // had; the snapshot inherits it and the totals stay honest about it.
+  const { documents } = await platform.listClientDocuments(clientId);
 
   await platform.createReport({
     id,

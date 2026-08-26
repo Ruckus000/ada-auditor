@@ -11,6 +11,7 @@ import type {
   ClientCredentialValues,
   DocumentInspectionSource,
   DocumentSighting,
+  ClientDocumentQuery,
   ClientDocumentRecord,
   DocumentReportSection,
   ListEventsOptions,
@@ -850,14 +851,50 @@ export class PostgresPlatformStore implements PlatformStore {
     return this.mapClientDocument(rows[0]);
   }
 
-  async listClientDocuments(clientId: string): Promise<ClientDocumentRecord[]> {
-    const docRows = await this.sql<ClientDocumentRow>`
-      select * from client_documents
-      where client_id = ${clientId}
-      order by last_seen_at desc, id desc
-      limit ${CLIENT_DOCUMENT_LIST_MAX}
+  async listClientDocuments(
+    clientId: string,
+    query: ClientDocumentQuery = {},
+  ): Promise<{ documents: ClientDocumentRecord[]; hasMore: boolean }> {
+    // Null-guarded predicates rather than composed SQL, so the query stays
+    // one readable statement. `latest_gaps` is the newer of the latest
+    // inspection and latest conversion — a clean conversion after a gappy
+    // inspection reads as clean, because the delivered file speaks; null
+    // means no reading of any kind, which is what `unreviewed` selects.
+    // One row past the page is fetched so `hasMore` is a fact, not a guess.
+    const kind = query.kind ?? null;
+    const hasGaps = query.hasGaps === true;
+    const unreviewed = query.unreviewed === true;
+    const beforeAt = query.before?.lastSeenAt ?? null;
+    const beforeId = query.before?.id ?? null;
+
+    const pageRows = await this.sql<ClientDocumentRow>`
+      select cd.* from client_documents cd
+      left join lateral (
+        select r.gaps from (
+          (select jsonb_array_length(di.summary->'gaps') as gaps, di.inspected_at as at, di.id
+             from document_inspections di
+             where di.document_id = cd.id
+             order by di.inspected_at desc, di.id desc limit 1)
+          union all
+          (select jsonb_array_length(dc.summary->'gaps') as gaps, dc.converted_at as at, dc.id
+             from document_conversions dc
+             where dc.document_id = cd.id
+             order by dc.converted_at desc, dc.id desc limit 1)
+        ) r order by r.at desc, r.id desc limit 1
+      ) latest on true
+      where cd.client_id = ${clientId}
+        and (${kind}::text is null or cd.kind = ${kind})
+        and (${unreviewed}::bool is not true or latest.gaps is null)
+        and (${hasGaps}::bool is not true or coalesce(latest.gaps, 0) > 0)
+        and (${beforeAt}::timestamptz is null
+             or (cd.last_seen_at, cd.id) < (${beforeAt}::timestamptz, ${beforeId}))
+      order by cd.last_seen_at desc, cd.id desc
+      limit ${CLIENT_DOCUMENT_LIST_MAX + 1}
     `;
-    if (docRows.length === 0) return [];
+
+    const hasMore = pageRows.length > CLIENT_DOCUMENT_LIST_MAX;
+    const docRows = pageRows.slice(0, CLIENT_DOCUMENT_LIST_MAX);
+    if (docRows.length === 0) return { documents: [], hasMore: false };
 
     const ids = docRows.map((row) => row.id);
 
@@ -884,15 +921,18 @@ export class PostgresPlatformStore implements PlatformStore {
       conversionRows.map((row) => [row.document_id, this.mapConversion(row)]),
     );
 
-    return docRows.map((row) => {
-      const inspection = inspectionByDoc.get(row.id);
-      const conversion = conversionByDoc.get(row.id);
-      return {
-        ...this.mapClientDocument(row),
-        ...(inspection === undefined ? {} : { latestInspection: inspection }),
-        ...(conversion === undefined ? {} : { latestConversion: conversion }),
-      };
-    });
+    return {
+      documents: docRows.map((row) => {
+        const inspection = inspectionByDoc.get(row.id);
+        const conversion = conversionByDoc.get(row.id);
+        return {
+          ...this.mapClientDocument(row),
+          ...(inspection === undefined ? {} : { latestInspection: inspection }),
+          ...(conversion === undefined ? {} : { latestConversion: conversion }),
+        };
+      }),
+      hasMore,
+    };
   }
 
   async saveDocumentConversion(record: StoredDocumentConversion): Promise<void> {

@@ -13,6 +13,7 @@ import type {
   PlatformStore,
   StoredClient,
   StoredClientDocument,
+  ClientDocumentQuery,
   ClientDocumentRecord,
   DocumentSighting,
   StoredDocumentConversion,
@@ -533,7 +534,10 @@ export class MemoryPlatformStore implements PlatformStore {
     return structuredClone(row);
   }
 
-  async listClientDocuments(clientId: string): Promise<ClientDocumentRecord[]> {
+  async listClientDocuments(
+    clientId: string,
+    query: ClientDocumentQuery = {},
+  ): Promise<{ documents: ClientDocumentRecord[]; hasMore: boolean }> {
     const latestBy = <T extends { seq: number }>(
       held: T[],
       stampOf: (entry: T) => string,
@@ -546,8 +550,44 @@ export class MemoryPlatformStore implements PlatformStore {
         return entry.seq > latest.seq ? entry : latest;
       }, undefined);
 
-    return [...this.clientDocuments.values()]
+    const withLatest = (doc: StoredClientDocument): ClientDocumentRecord => {
+      const latestInspection = latestBy(
+        [...this.documentInspections.values()].filter(
+          (held) => held.record.documentId === doc.id,
+        ),
+        (held) => held.record.inspectedAt,
+      );
+      const latestConversion = latestBy(
+        [...this.documentConversions.values()].filter(
+          (held) => held.record.documentId === doc.id,
+        ),
+        (held) => held.record.convertedAt,
+      );
+      return {
+        ...doc,
+        ...(latestInspection === undefined ? {} : { latestInspection: latestInspection.record }),
+        ...(latestConversion === undefined ? {} : { latestConversion: latestConversion.record }),
+      };
+    };
+
+    /** The latest reading's gaps — a clean conversion AFTER a gappy
+     * inspection reads as clean, because the delivered file speaks. */
+    const latestGaps = (record: ClientDocumentRecord): number | null => {
+      const inspection = record.latestInspection;
+      const conversion = record.latestConversion;
+      if (inspection && conversion) {
+        return conversion.convertedAt > inspection.inspectedAt
+          ? conversion.summary.gaps.length
+          : inspection.summary.gaps.length;
+      }
+      if (conversion) return conversion.summary.gaps.length;
+      if (inspection) return inspection.summary.gaps.length;
+      return null;
+    };
+
+    const filtered = [...this.clientDocuments.values()]
       .filter((doc) => doc.clientId === clientId)
+      .filter((doc) => query.kind === undefined || doc.kind === query.kind)
       // Most recently seen first, ties broken by id — the same total order
       // the Postgres query spells, so a test cannot pass against one store
       // and fail the other.
@@ -555,30 +595,27 @@ export class MemoryPlatformStore implements PlatformStore {
         if (a.lastSeenAt !== b.lastSeenAt) return a.lastSeenAt < b.lastSeenAt ? 1 : -1;
         return a.id < b.id ? 1 : -1;
       })
-      .slice(0, CLIENT_DOCUMENT_LIST_MAX)
-      .map((doc) => {
-        const latestInspection = latestBy(
-          [...this.documentInspections.values()].filter(
-            (held) => held.record.documentId === doc.id,
-          ),
-          (held) => held.record.inspectedAt,
-        );
-        const latestConversion = latestBy(
-          [...this.documentConversions.values()].filter(
-            (held) => held.record.documentId === doc.id,
-          ),
-          (held) => held.record.convertedAt,
-        );
-        return structuredClone({
-          ...doc,
-          ...(latestInspection === undefined
-            ? {}
-            : { latestInspection: latestInspection.record }),
-          ...(latestConversion === undefined
-            ? {}
-            : { latestConversion: latestConversion.record }),
-        });
+      // The keyset: strictly after the cursor position in this same order.
+      .filter(
+        (doc) =>
+          query.before === undefined ||
+          doc.lastSeenAt < query.before.lastSeenAt ||
+          (doc.lastSeenAt === query.before.lastSeenAt && doc.id < query.before.id),
+      )
+      .map(withLatest)
+      .filter((record) => {
+        const gaps = latestGaps(record);
+        if (query.unreviewed && gaps !== null) return false;
+        if (query.hasGaps && (gaps === null || gaps === 0)) return false;
+        return true;
       });
+
+    return {
+      documents: filtered
+        .slice(0, CLIENT_DOCUMENT_LIST_MAX)
+        .map((record) => structuredClone(record)),
+      hasMore: filtered.length > CLIENT_DOCUMENT_LIST_MAX,
+    };
   }
 
   async saveDocumentConversion(record: StoredDocumentConversion): Promise<void> {

@@ -140,7 +140,7 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(inspectDocument).not.toHaveBeenCalled();
     // The refusal persisted nothing.
-    expect(await platform.listClientDocuments('acme')).toEqual([]);
+    expect((await platform.listClientDocuments('acme')).documents).toEqual([]);
   });
 
   it('catalogs a Word URL as an inventory row, no JVM needed, no inspection persisted', async () => {
@@ -166,7 +166,7 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     });
     expect(body).not.toHaveProperty('inspection');
 
-    const documents = await platform.listClientDocuments('acme');
+    const documents = (await platform.listClientDocuments('acme')).documents;
     expect(documents).toHaveLength(1);
     expect(documents[0].kind).toBe('docx');
     // A sighting, not a reading: the store holds only what an instrument said.
@@ -206,7 +206,7 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     // The inspection attached to a document row — the entity the inventory
     // lists — created on the way because the inventory had never heard of
     // this URL.
-    const documents = await platform.listClientDocuments('acme');
+    const documents = (await platform.listClientDocuments('acme')).documents;
     expect(documents).toHaveLength(1);
     expect(documents[0]).toMatchObject({ url: DOC_URL, kind: 'pdf', source: 'crawl' });
     expect(stored[0].documentId).toBe(documents[0].id);
@@ -260,6 +260,51 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect(body.documents[0]).not.toHaveProperty('clientId');
     // One reading is a first reading: nothing to diff, so nothing claimed.
     expect(body.documents[1]).not.toHaveProperty('regression');
+  });
+
+  it('passes filters and the cursor to the store, and refuses half a cursor', async () => {
+    await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/a.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T09:00:00.000Z',
+    );
+    await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/permit.docx', kind: 'docx', source: 'crawl' },
+      '2026-08-26T10:00:00.000Z',
+    );
+
+    const get = (qs: string) =>
+      GET(
+        new Request(`http://localhost/api/platform/clients/acme/documents${qs}`),
+        params('acme'),
+      );
+
+    const filtered = await (await get('?kind=docx')).json();
+    expect(filtered.documents.map((d: { url: string }) => d.url)).toEqual([
+      'https://town.example/permit.docx',
+    ]);
+    expect(filtered.hasMore).toBe(false);
+
+    const unreviewed = await (await get('?unreviewed=true')).json();
+    expect(unreviewed.documents).toHaveLength(2);
+
+    // A bad kind and half a cursor both refuse rather than silently selecting
+    // the wrong page.
+    expect((await get('?kind=xlsx')).status).toBe(400);
+    expect((await get('?beforeLastSeenAt=2026-08-26T09:00:00.000Z')).status).toBe(400);
+
+    // A whole cursor pages past the newest row.
+    const paged = await (
+      await get(
+        `?beforeLastSeenAt=${encodeURIComponent('2026-08-26T10:00:00.000Z')}&beforeId=${encodeURIComponent(
+          unreviewed.documents[0].id,
+        )}`,
+      )
+    ).json();
+    expect(paged.documents.map((d: { url: string }) => d.url)).toEqual([
+      'https://town.example/a.pdf',
+    ]);
   });
 
   it('attaches the document regression once a second reading exists', async () => {
@@ -334,7 +379,7 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     // what the instrument said — no inspection, and no inventory row minted
     // for a URL that refused to fetch.
     expect(await platform.listDocumentInspections('acme')).toEqual([]);
-    expect(await platform.listClientDocuments('acme')).toEqual([]);
+    expect((await platform.listClientDocuments('acme')).documents).toEqual([]);
   });
 
   it('refuses a body that is not a URL as invalid_request_body', async () => {

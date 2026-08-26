@@ -81,7 +81,7 @@ describe('POST /api/platform/clients/[clientId]/documents/discover', () => {
     expect(firstBody.merge).toEqual({ added: 2, seenAgain: 0 });
     expect(firstBody.documents).toHaveLength(2);
 
-    const documents = await platform.listClientDocuments('acme');
+    const documents = (await platform.listClientDocuments('acme')).documents;
     expect(documents.map((doc) => doc.kind).sort()).toEqual(['docx', 'pdf']);
     // The CDN-hosted document merged like any other: linked from the client's
     // page is what makes it the client's.
@@ -93,7 +93,7 @@ describe('POST /api/platform/clients/[clientId]/documents/discover', () => {
     // exists at all.
     const second = await POST(request({ targetUrl: TARGET }), params('acme'));
     expect((await second.json()).merge).toEqual({ added: 0, seenAgain: 2 });
-    expect(await platform.listClientDocuments('acme')).toHaveLength(2);
+    expect((await platform.listClientDocuments('acme')).documents).toHaveLength(2);
   });
 
   it('refuses an unauthenticated caller before crawling', async () => {
@@ -120,6 +120,6 @@ describe('POST /api/platform/clients/[clientId]/documents/discover', () => {
     const response = await POST(request({ targetUrl: TARGET }), params('acme'));
 
     expect(response.status).toBe(400);
-    expect(await platform.listClientDocuments('acme')).toEqual([]);
+    expect((await platform.listClientDocuments('acme')).documents).toEqual([]);
   });
 });
