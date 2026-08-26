@@ -408,22 +408,63 @@ Read this before claiming something works.
   portfolio.** `/console` and `/api/audit/runs` report it. Registering the
   journey against a client first (`POST /api/platform/clients/<id>/journeys`)
   is what puts a run on a client's screens.
-- **A page cap of 20, with one measurement behind it.** Runs record
-  `started_at` and `phase_ms`; every page records `duration_ms` and `scan_ms`;
-  `audit_run_log` carries `pagesAudited`, `slowestPageMs` and `headroomMs`
-  (what was left of the 300s budget). `npm run smoke:real -- --url <site>`
-  against a running `next start` prints all of it and suggests a cap.
-  A four-page run of the W3C BAD demo through the deployed function
+- **Two bounds on a walk: 20 pages and 180 seconds.** A count cap cannot bound
+  a duration, and until recently nothing bounded the duration at all — the walk
+  had no clock, and `MAX_RUN_DURATION_MS` said so itself ("a run is not stopped
+  at this number — the platform stops it, and rather more abruptly"). So a slow
+  real site had its invocation killed mid-flight and was reconciled to
+  `run_timed_out` up to six minutes later by the cron sweep, **with no evidence
+  and no findings**. A truncated run is a real audit of what it saw; a killed
+  run is nothing, and tuning the cap only changed which one you got by luck.
+  The walk now carries a wall clock — `AUDITOR_WALK_BUDGET_MS`, default 180s:
+  the 300s `maxDuration` less a 120s reserve for the advisory call, the
+  evidence upload, persistence and the one page that may still be in flight
+  when the deadline passes. The reserve is the named constant and the budget is
+  derived from it, so raising `maxDuration` does not silently re-plan what
+  happens after the walk. The two bounds stop different things, exactly as they
+  do in link discovery (`DISCOVERY_BUDGET_MS`): the budget stops a slow site,
+  the cap stops a fast one with a long journey, and the cap is asked first when
+  both are spent.
+  Truncation now says which (`truncationReason`, `'page-cap' | 'budget'`,
+  stored on the run; absent means not recorded, never "page cap"). Two log
+  event names, not one with a reason field: `audit_page_cap_reached` already
+  means "raise the cap" to anything watching, and a time truncation reported
+  under it sends an operator to change a number that was not the problem.
+  `audit_time_budget_reached` means the journey needs a container worker.
+  **The walk always audits at least one page**, whatever the clock says — a run
+  that captures nothing is the evidence-free outcome the budget exists to
+  remove, and a cold `@sparticuz/chromium` launch can spend the budget before a
+  page is ever opened. The budget bounds when new work *starts*, not when
+  in-flight work finishes; Playwright's per-step timeouts are deliberately not
+  clamped to it, because a wait that hits the deadline should truncate the walk
+  rather than fail the run naming a selector that was fine. Keep
+  `AUDITOR_WALK_BUDGET_MS` comfortably above `AUDITOR_EXPECT_TIMEOUT_MS`.
+  **None of this changes a verdict.** A truncated run is evidence per page, the
+  run takes the worst, the gate unchanged; it just stops claiming to be the
+  whole journey. `browser_time_budget_truncates` pins that, with the violations
+  page walked first so truncation cannot hide a finding.
+  **The cap is still 20, and still has one measurement behind it.** A four-page
+  run of the W3C BAD demo through the deployed function
   (`d62f13f4-4a33-4f14-b592-4b243c4f3e62`, 2026-08-15) took 23.0s: journey
-  20.5s, upload 1.5s, slowest page 4.0s of which 2.9s was the axe scan. Twenty
-  such pages is about 80s.
-  **That is a floor, not a budget.** Four small static documents with no
-  framework, no login and nothing deferred are the easy case; a real client app
-  renders more and waits longer, and no run against one has happened. Re-decide
-  the cap from `slowestPageMs` on a client run, not from this one. `smoke:real`
-  still cannot be driven from a sandbox with allowlisted egress, and it cannot
-  be pointed at localhost — the SSRF guard correctly refuses loopback and
-  private addresses.
+  20.5s, upload 1.5s, slowest page 4.0s of which 2.9s was the axe scan. That is
+  a floor, not a budget — four small static documents with no framework, no
+  login and nothing deferred are the easy case, and no run against a real
+  client app has happened. Re-decide the cap from `slowestPageMs` on a client
+  run. The budget is what makes it safe to wait for that run rather than guess
+  now, and `smoke-real.yml` now keeps its numbers (a job summary and an
+  uploaded `smoke-real.json`) instead of losing them to log retention, so
+  several client sites can be compared when the time comes. The 120s reserve is
+  one-third measurement and two-thirds judgement — the advisory line especially,
+  where the only observed number is 1.0s from a pass that had nothing to say —
+  and it is falsifiable from `phaseMs.advisory`, which is now recorded on the
+  failure path too. Revisit it with the cap, from the same evidence.
+  `smoke:real` still cannot be driven from a sandbox with allowlisted egress,
+  and still cannot be pointed at localhost — the SSRF guard correctly refuses
+  loopback and private addresses, and nothing here weakens it.
+  `phase_ms` is written on both paths and **read by nothing**. Kept because the
+  dataset gets read by hand when the cap is re-decided, and `run_pages.
+  duration_ms` does not say where the non-page time went. Said out loud rather
+  than left to imply it is live.
 - **The unit suites still do not exercise the app's own bundle — but the
   hydration suite does.** Vitest loads modules unbundled, so a packaging fault
   is invisible to it; that is how `@axe-core/playwright` shipped with its

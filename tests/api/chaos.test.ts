@@ -12,13 +12,14 @@ import {
  * — an assertion that could only hold against a single-regex engine.
  */
 describe('chaos scenarios', () => {
-  it('covers omit / critical / clean / pass-through / cap / hint fixtures', () => {
+  it('covers omit / critical / clean / pass-through / both bounds / hint fixtures', () => {
     expect(CHAOS_SCENARIOS).toEqual([
       'browser_omit_ax_tree',
       'browser_complete_critical',
       'browser_complete_clean',
       'browser_passthrough_violations',
       'browser_page_cap_truncates',
+      'browser_time_budget_truncates',
       'browser_hint_beats_markup',
     ]);
   });
@@ -37,6 +38,27 @@ describe('chaos scenarios', () => {
     // audited, so the pages inside the cap are the ones carrying violations.
     expect(paths.slice(0, 2)).toEqual(['login.html', 'violations.html']);
     expect(expectedCiStatusForScenario('browser_page_cap_truncates')).toBe('fail');
+  });
+
+  it('browser_time_budget_truncates spends its budget before the second page', () => {
+    // A count cap cannot bound a duration, so this is the *other* truncation
+    // and it must be provable without a clock the test can lose a race to.
+    // `budgetMs: 0` plus the rule that a walk always audits at least one page
+    // makes it exact on any machine at any speed — a fixture delay or a
+    // wall-clock threshold here would be a flaky assertion that teaches people
+    // to re-run red.
+    const params = resolveChaosRunParams('browser_time_budget_truncates');
+    const paths = params.steps?.flatMap((step) => (step.type === 'goto' ? [step.path] : [])) ?? [];
+
+    expect(params.budgetMs).toBe(0);
+    expect(paths.length).toBeGreaterThan(1);
+    // Violations **first**, unlike the page-cap scenario: only one page is
+    // audited here, so a finding has to be on it. Truncation must never be a
+    // way for a violation to go unreported.
+    expect(paths[0]).toBe('violations.html');
+    // And truncation is not a verdict modifier. A bound that softened the
+    // verdict would let a slow site buy itself a pass.
+    expect(expectedCiStatusForScenario('browser_time_budget_truncates')).toBe('fail');
   });
 
   it('browser_hint_beats_markup hints against what the markup says', () => {

@@ -68,6 +68,7 @@ const FULL_RECORD = runRecord({
   browserMode: true,
   status: 'complete',
   truncatedPages: 2,
+  truncationReason: 'page-cap',
   score: 87,
   scoreVersion: 1,
   pages: [
@@ -246,6 +247,55 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
 
     const stored = await store.getRun(FULL_RECORD.requestId);
     expect(stored?.gateVersion).toBe(2);
+  });
+
+  it('round-trips which bound cut the walk short', async () => {
+    // `truncatedPages` says a run did not cover its journey; this says what to
+    // do about it. A page cap means raise the cap, a wall clock means get a
+    // container worker, and a run that reported only "truncated" sent the
+    // operator to change the number that was not the problem.
+    const store = await makeStore();
+    await store.saveRun({ ...FULL_RECORD, truncationReason: 'budget' });
+
+    const stored = await store.getRun(FULL_RECORD.requestId);
+    expect(stored?.truncationReason).toBe('budget');
+    expect(stored?.truncatedPages).toBe(2);
+  });
+
+  it('leaves an unrecorded truncation reason absent rather than assuming the cap', async () => {
+    // Absent means *not recorded*, never "the page cap". Every run written
+    // before the walk had a clock is in exactly this state, and there is no
+    // backfill — writing today's answer onto them would put words in their
+    // mouth. The Postgres column is nullable with no default for that reason,
+    // and this is where a `coalesce` on the read would be caught.
+    const store = await makeStore();
+    const uncaused: StoredRunRecord = { ...FULL_RECORD };
+    delete uncaused.truncationReason;
+
+    await store.saveRun(uncaused);
+
+    const stored = await store.getRun(FULL_RECORD.requestId);
+    // `truncatedPages` stays, so this cannot pass against a store that simply
+    // dropped the truncation entirely.
+    expect(stored?.truncatedPages).toBe(2);
+    expect(stored).not.toHaveProperty('truncationReason');
+  });
+
+  it('clears the truncation reason when a later save does not carry one', async () => {
+    // In the upsert's `excluded` list rather than coalesced. A run re-saved
+    // without a reason was not truncated, and a `coalesce` would leave the
+    // stale cause of an earlier write attached to a walk that no longer has
+    // one — the opposite mistake from `intent`, which is deliberately kept.
+    const store = await makeStore();
+    await store.saveRun({ ...FULL_RECORD, truncationReason: 'budget' });
+
+    const cleared: StoredRunRecord = { ...FULL_RECORD };
+    delete cleared.truncatedPages;
+    delete cleared.truncationReason;
+    await store.saveRun(cleared);
+
+    const stored = await store.getRun(FULL_RECORD.requestId);
+    expect(stored).not.toHaveProperty('truncationReason');
   });
 
   it('round-trips the page HTTP status, and leaves absent absent', async () => {

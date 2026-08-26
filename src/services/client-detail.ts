@@ -1,4 +1,5 @@
 import { environmentSchema, type Environment } from '../domain/contracts';
+import { slowestPageMs } from './run-timing';
 import { toStepViews, type JourneyStepView } from '../domain/journey-step';
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
 import {
@@ -136,14 +137,6 @@ export type ClientDetail = {
   hasCompletedRun: boolean;
 };
 
-/** The slowest page's wall clock, or null when no page carries a measurement. */
-function slowestPage(run: StoredRunRecord): number | null {
-  const measured = (run.pages ?? [])
-    .map((page) => page.durationMs)
-    .filter((ms): ms is number => typeof ms === 'number');
-  return measured.length > 0 ? Math.max(...measured) : null;
-}
-
 export function summariseRun(run: StoredRunRecord): RunSummary {
   const deterministic = run.findings.filter((finding) => finding.source === 'deterministic');
 
@@ -157,7 +150,7 @@ export function summariseRun(run: StoredRunRecord): RunSummary {
     pagesAudited: run.pages?.length ?? 0,
     evidenceStatus: run.evidenceStatus,
     durationMs: run.durationMs || null,
-    slowestPageMs: slowestPage(run),
+    slowestPageMs: slowestPageMs(run.pages),
     // Only on a run that actually failed. A reason attached to a finished run
     // would be a leftover from an earlier attempt at the same request id.
     ...(run.status === 'failed' && run.failureReason

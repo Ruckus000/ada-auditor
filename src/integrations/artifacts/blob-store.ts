@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import type { ArtifactRead, ArtifactStore, StoredArtifacts } from '../../domain/artifacts';
 import type { JourneyArtifacts } from '../browser/types';
+import { positiveIntFrom } from '../../domain/run-limits';
 
 /**
  * Uploads run evidence to Vercel Blob and returns fetchable URLs.
@@ -37,11 +38,19 @@ import type { JourneyArtifacts } from '../browser/types';
  * is in the repo where it can be read and reviewed, and cannot be forgotten on
  * the next environment.
  */
-const DEFAULT_RETENTION_DAYS = 90;
+/**
+ * Exported, because a second reader was telling operators the wrong number.
+ * `deployment-config.ts` rendered `ARTIFACT_RETENTION_DAYS` with a fallback of
+ * 30 while this default was 90, on the one screen whose stated purpose is to
+ * show where the truth lives — so an operator read that a client's evidence
+ * expires three times sooner than it does.
+ */
+export const DEFAULT_RETENTION_DAYS = 90;
 
 export function retentionDays(): number {
-  const configured = Number(process.env.ARTIFACT_RETENTION_DAYS);
-  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_RETENTION_DAYS;
+  // Shared with the run bounds, which floors. The local parser here accepted
+  // 1.5 and swept evidence a day and a half old.
+  return positiveIntFrom(process.env.ARTIFACT_RETENTION_DAYS, DEFAULT_RETENTION_DAYS);
 }
 
 export function isBlobConfigured(): boolean {

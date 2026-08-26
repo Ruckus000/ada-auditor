@@ -18,6 +18,7 @@ export type ChaosScenario =
   | 'browser_complete_clean'
   | 'browser_passthrough_violations'
   | 'browser_page_cap_truncates'
+  | 'browser_time_budget_truncates'
   | 'browser_hint_beats_markup';
 
 export const CHAOS_SCENARIOS: ChaosScenario[] = [
@@ -26,6 +27,7 @@ export const CHAOS_SCENARIOS: ChaosScenario[] = [
   'browser_complete_clean',
   'browser_passthrough_violations',
   'browser_page_cap_truncates',
+  'browser_time_budget_truncates',
   'browser_hint_beats_markup',
 ];
 
@@ -42,6 +44,13 @@ export type ChaosRunParams = {
   steps?: JourneyStep[];
   /** Below the journey's page count, for the scenario that forces truncation. */
   maxPages?: number;
+  /**
+   * A walk budget, for the scenario that forces the *other* truncation. Zero is
+   * the value that matters and is why this is `?: number` rather than a
+   * truthiness check anywhere downstream: a budget already spent still audits
+   * the page the walk is on, so `0` is exact rather than flaky.
+   */
+  budgetMs?: number;
   /** Set against conflicting markup, never with it. */
   platformHint?: string;
 };
@@ -120,6 +129,35 @@ export function resolveChaosRunParams(
           { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
         ],
       };
+    case 'browser_time_budget_truncates':
+      // A count cap cannot bound a duration, which is the whole reason the walk
+      // has a clock: a slow real site inside the page cap was killed
+      // mid-invocation by the platform and reconciled to `run_timed_out` six
+      // minutes later, with no evidence and no findings. The claim here is that
+      // a run the *clock* cut short says so, and says it was the clock — an
+      // operator reading `page-cap` raises a number, and raising the page cap
+      // is precisely the wrong move on a run that ran out of time.
+      //
+      // `budgetMs: 0` with the always-audit-at-least-one-page rule, so this is
+      // exact on any machine at any speed. A wall-clock threshold here would be
+      // a flaky assertion that teaches people to re-run red — the same reason
+      // this file asserts timing for presence and consistency and never against
+      // a number.
+      //
+      // `violations.html` **first**, unlike the page-cap scenario where the
+      // violations sit inside the cap: here only one page is audited, so the
+      // findings have to be on it. Truncation must never be a way for a
+      // violation to go unreported, and the expected verdict stays `fail`.
+      return {
+        ...base,
+        stepId: 'timed-out',
+        budgetMs: 0,
+        steps: [
+          { action: 'navigate', type: 'goto', path: 'violations.html' },
+          { action: 'navigate', type: 'goto', path: 'login.html' },
+          { action: 'navigate', type: 'goto', path: 'dashboard-clean.html' },
+        ],
+      };
     case 'browser_hint_beats_markup':
       // `platformHint` wins over rendered-DOM heuristics — a steady-state rule
       // that was unit-tested and never exercised through a real run, so
@@ -151,6 +189,11 @@ export function expectedCiStatusForScenario(
     case 'browser_passthrough_violations':
       return 'fail';
     case 'browser_page_cap_truncates':
+      return 'fail';
+    case 'browser_time_budget_truncates':
+      // Truncation is not a verdict modifier. The page that was audited carries
+      // real violations, so the run fails — a bound that softened a verdict
+      // would let a slow site buy itself a pass.
       return 'fail';
     case 'browser_hint_beats_markup':
       return 'pass';

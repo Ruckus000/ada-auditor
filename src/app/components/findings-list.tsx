@@ -240,7 +240,21 @@ function EvidenceBlock({ result }: { result: AuditResult }) {
 
       {result.truncatedPages != null && result.truncatedPages > 0 && (
         <p className="evidence-truncated" role="status">
-          This run stopped at its page limit and did not audit {result.truncatedPages} further{' '}
+          {/*
+            Three-way, because the cause changes what the reader should do.
+            This sentence said "stopped at its page limit" on every truncated
+            run, and once a walk can also run out of wall clock that is
+            true-sounding and wrong about half of them — sending the reader to
+            raise a number that was not the problem. A run recorded before the
+            walk had a clock names no cause at all, and the honest thing there
+            is to say only what is known rather than to guess the cap.
+          */}
+          {result.truncationReason === 'budget'
+            ? 'This run ran out of time and did not audit '
+            : result.truncationReason === 'page-cap'
+              ? 'This run stopped at its page limit and did not audit '
+              : 'This run was cut short and did not audit '}
+          {result.truncatedPages} further{' '}
           {result.truncatedPages === 1 ? 'page' : 'pages'}. Anything on{' '}
           {result.truncatedPages === 1 ? 'it' : 'them'} is unknown, not clean.
         </p>

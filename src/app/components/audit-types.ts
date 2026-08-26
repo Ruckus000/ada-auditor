@@ -1,4 +1,5 @@
 /** Shapes the console reads back from POST /api/audit/console. */
+import type { JourneyTruncationReason } from '../../domain/run-limits';
 
 export type Verdict = 'pass' | 'fail' | 'inconclusive';
 export type Severity = 'critical' | 'major' | 'minor' | 'advisory';
@@ -76,8 +77,14 @@ export interface AuditResult {
   evidenceStatus?: EvidenceStatus;
   /** Every page the run audited, in visit order. */
   pages?: AuditPage[];
-  /** Pages the run's page cap refused to audit. Non-zero means partial cover. */
+  /** Pages a bound refused to audit. Non-zero means partial cover. */
   truncatedPages?: number;
+  /**
+   * Which bound cut the walk short. Absent means not recorded — a run stored
+   * before the walk had a clock has no cause to name, and the console must not
+   * assume the page cap on its behalf.
+   */
+  truncationReason?: JourneyTruncationReason;
   requestId?: string;
   journeyId?: string;
   environment?: string;
@@ -213,6 +220,10 @@ export function parseAuditResponse(
     findings: parseFindings(raw.findings),
     pages: parsePages(raw.pages),
     truncatedPages: typeof raw.truncatedPages === 'number' ? raw.truncatedPages : undefined,
+    truncationReason:
+      raw.truncationReason === 'page-cap' || raw.truncationReason === 'budget'
+        ? raw.truncationReason
+        : undefined,
     regression: parseRegression(raw.regression),
     simulated,
   };
