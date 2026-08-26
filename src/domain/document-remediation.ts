@@ -151,7 +151,7 @@ export function logSafe(summary: RemediationSummary): Omit<RemediationSummary, '
  * actually happen.
  */
 export type UploadCheck =
-  | { ok: true; kind: 'docx' | 'doc' }
+  | { ok: true; kind: 'docx' | 'doc' | 'pdf' }
   | { ok: false; reason: string };
 
 /** ZIP local file header: the first four bytes of every `.docx`. */
@@ -200,4 +200,28 @@ export function isWordDocument(bytes: Uint8Array): UploadCheck {
   }
 
   return { ok: true, kind: 'docx' };
+}
+
+/**
+ * Is this a PDF?
+ *
+ * Same rule and same honesty as `isWordDocument`: it proves the container, not
+ * that the file is sound. PDFBox rejects anything past the header it cannot
+ * parse, which is the right division of labour — this refuses the
+ * obviously-wrong upload before a JVM is started for it.
+ *
+ * The header is looked for in a window rather than only at offset 0, because
+ * the specification tolerates leading bytes and real writers emit them.
+ */
+export function isPdf(bytes: Uint8Array): UploadCheck {
+  if (bytes.length === 0) {
+    return { ok: false, reason: 'the uploaded file is empty' };
+  }
+
+  const head = Buffer.from(bytes.subarray(0, 1024)).toString('latin1');
+  if (!head.includes('%PDF-')) {
+    return { ok: false, reason: 'not a PDF: no %PDF- header in the first 1024 bytes' };
+  }
+
+  return { ok: true, kind: 'pdf' };
 }

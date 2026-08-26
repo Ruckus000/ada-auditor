@@ -8,11 +8,11 @@ import {
   summarise,
   type RemediationSummary,
 } from '../../../../domain/document-remediation';
+import { readDocumentUpload, refusalResponse } from '../../_lib/document-upload';
 import { convertSourceToPdf } from '../../../../integrations/documents/convert';
 import { resolveLibreOffice } from '../../../../integrations/documents/libreoffice-runtime';
 import { resolveJavaRuntime } from '../../../../integrations/documents/java-runtime';
 import { logInfo, logWarn } from '../../../../services/logger';
-import { authorizePrincipal } from '../../_lib/authorize';
 import { createRequestId } from '../../_lib/request-id';
 
 /**
@@ -40,74 +40,38 @@ import { createRequestId } from '../../_lib/request-id';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-/** 25MB. A municipal agenda is tens of kilobytes; this is a ceiling. */
-const DEFAULT_MAX_BYTES = 25 * 1024 * 1024;
-
-function maxBytes(): number {
-  const raw = Number(process.env.AUDITOR_MAX_DOCUMENT_BYTES);
-  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_MAX_BYTES;
-}
-
-function refuse(status: number, error: string, requestId: string, detail?: string) {
-  return Response.json({ error, detail, requestId }, { status });
-}
-
 export async function POST(request: Request) {
   const requestId = createRequestId();
 
-  // First, and before anything is buffered. An unauthenticated caller must not
-  // be able to make this process hold 25MB of their choosing.
-  const principal = await authorizePrincipal(request);
-  if (!principal) {
-    return refuse(401, 'unauthorized', requestId);
+  // Shared with `/api/documents/inspect`, deliberately. Two upload endpoints
+  // with two validations is how one of them ends up weaker, and the weaker one
+  // is the one that gets found. `readDocumentUpload` owns the order that
+  // matters: authorise before buffering, cheap length check, toolchain, real
+  // size, then container shape.
+  const upload = await readDocumentUpload(request, {
+    accept: isWordDocument,
+    // Both halves named separately, because the fixes differ: install
+    // LibreOffice, or install a JDK.
+    requires: [
+      { error: 'converter_unavailable', check: () => resolveLibreOffice() },
+      { error: 'document_toolchain_unavailable', check: () => resolveJavaRuntime() },
+    ],
+  });
+
+  if (!upload.ok) {
+    return refusalResponse(upload.refusal, requestId);
   }
 
-  const limit = maxBytes();
-
-  // `Content-Length` can lie, so this is the cheap rejection and not the real
-  // one; the actual size is checked again once the body is in hand.
-  const declared = Number(request.headers.get('content-length'));
-  if (Number.isFinite(declared) && declared > limit) {
-    return refuse(413, 'document_too_large', requestId, `limit is ${limit} bytes`);
-  }
-
-  // Asked before reading the upload: there is no point buffering a document
-  // this host cannot convert. Both halves are named separately because the
-  // fixes are different — install a JDK, or install LibreOffice.
   const soffice = resolveLibreOffice();
-  if (!soffice.available) {
-    return refuse(503, 'converter_unavailable', requestId, soffice.reason);
-  }
   const java = resolveJavaRuntime();
-  if (!java.available) {
-    return refuse(503, 'document_toolchain_unavailable', requestId, java.reason);
+  if (!soffice.available || !java.available) {
+    // Unreachable: `requires` above already refused this. Present so the
+    // narrowing below is real rather than asserted.
+    return refusalResponse({ status: 503, error: 'document_toolchain_unavailable' }, requestId);
   }
 
-  let form: FormData;
-  try {
-    form = await request.formData();
-  } catch {
-    return refuse(400, 'expected_multipart_form_data', requestId);
-  }
-
-  const file = form.get('file');
-  if (!(file instanceof File)) {
-    return refuse(400, 'missing_file_field', requestId, 'expected a `file` part');
-  }
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (bytes.byteLength > limit) {
-    return refuse(413, 'document_too_large', requestId, `limit is ${limit} bytes`);
-  }
-
-  // The converter cannot be trusted to reject this: `[V]` LibreOffice sniffs
-  // content rather than trusting the extension, so a text file named `.docx`
-  // converts successfully. A successful conversion is not evidence the input
-  // was a Word document, so the gate is here.
-  const check = isWordDocument(bytes);
-  if (!check.ok) {
-    return refuse(415, 'unsupported_document', requestId, check.reason);
-  }
+  const bytes = upload.bytes;
+  const check = { kind: upload.kind };
 
   // The upload's own filename never reaches the filesystem. It is
   // attacker-controlled, and a request id plus a fixed extension is all a temp
@@ -137,7 +101,10 @@ export async function POST(request: Request) {
 
     if (!result.ok) {
       logWarn('document_remediation_failed', { requestId, failure: result.failure.kind });
-      return refuse(422, 'remediation_failed', requestId, result.failure.kind);
+      return refusalResponse(
+        { status: 422, error: 'remediation_failed', detail: result.failure.kind },
+        requestId,
+      );
     }
 
     const summary: RemediationSummary = summarise(result.provenance);
