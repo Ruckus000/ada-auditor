@@ -45,7 +45,16 @@ deliver was already in the document we received.**
 
 `POST /api/documents/remediate` — multipart `file=<agenda.docx>` in, tagged PDF
 out, with `X-Remediation-Summary` carrying counts, outcomes and the **gaps** a
-human still has to close (each naming its WCAG criterion).
+human still has to close (each naming its WCAG criterion). The header value is
+ASCII-escaped JSON — header values are ByteStrings, and titles have em-dashes.
+
+`POST /api/documents/remediate-url` — `{"url": "https://…/agenda.docx"}` in,
+same response out: the flow discovery's Word rows go through, behind the same
+SSRF guard as `inspect-url`. `GET /api/documents/remediate` answers whether
+this host can convert at all (`{available}`), which is how the operator screen
+decides whether to offer the buttons — asked of this route because on Vercel
+every route is its own function, and only this one's answer is true for the
+instance that would convert.
 
 ```bash
 curl -sS -H "Authorization: Bearer $AUDITOR_RUN_TOKEN" \

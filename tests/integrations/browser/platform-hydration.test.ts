@@ -1597,6 +1597,39 @@ describe('platform hydration', () => {
           }),
         });
       });
+      // Conversion capability and the conversion itself, both stubbed: the
+      // real pipeline is covered by the documents suite, and stubbing the
+      // capability answer is what makes this case deterministic on hosts with
+      // and without LibreOffice alike.
+      await page.route('**/api/documents/remediate', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ requestId: 'stubbed', available: true }),
+        }),
+      );
+      await page.route('**/api/documents/remediate-url', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/pdf',
+          headers: {
+            'x-remediation-summary': JSON.stringify({
+              title: 'transcribed',
+              titleText: 'Permit Application',
+              sourceLanguage: 'en-US',
+              tagged: true,
+              pages: 2,
+              headings: 1,
+              tables: 0,
+              lists: 0,
+              figures: 0,
+              gaps: [],
+            }),
+            'content-disposition': 'attachment; filename="remediated-stubbed.pdf"',
+          },
+          body: Buffer.from('%PDF-1.7 stubbed'),
+        }),
+      );
 
       await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
@@ -1618,11 +1651,10 @@ describe('platform hydration', () => {
       // A cap that dropped work says so.
       expect(text).toContain('3 more document links beyond the cap');
 
-      // A Word document is listed with its kind but offered no Inspect button
-      // — the inspection instrument reads PDFs — and the missing button is
-      // explained in words rather than implied by absence.
+      // A Word document is listed with its kind and offered no Inspect button
+      // — the inspection instrument reads PDFs. Its affordance is conversion,
+      // exercised below.
       expect(text).toContain('/forms/permit-application.docx');
-      expect(text).toContain('Word documents are recorded without an Inspect button');
       expect(
         await page
           .getByRole('listitem')
@@ -1646,14 +1678,93 @@ describe('platform hydration', () => {
       expect(inspected).toContain('1.1.1: 3 figures with no alt text');
       expect(inspected).toContain('4 pages');
 
-      // With an inspection open — the screen's fullest state — the panel holds
-      // the same bar the product holds a client's site to.
+      // The Word row converts. The button exists because the (stubbed)
+      // capability answer said this host can, and the result is both halves
+      // of the response rendered: the pipeline's account, and the file itself
+      // as a named download.
+      await page
+        .getByRole('listitem')
+        .filter({ hasText: '/forms/permit-application.docx' })
+        .getByRole('button', { name: 'Convert to tagged PDF' })
+        .click();
+      await expect
+        .poll(() => panel.innerText(), { timeout: 15_000 })
+        .toContain('Converted to tagged PDF');
+
+      const converted = await panel.innerText();
+      expect(converted).toContain('The title was transcribed from the document’s own first heading.');
+      expect(converted).toContain('Download permit-application-remediated.pdf');
+
+      // With an inspection and a conversion open — the screen's fullest state
+      // — the panel holds the same bar the product holds a client's site to.
       await expect
         .poll(() => axeViolations(page), {
           ...AXE_SETTLE,
-          message: 'the documents panel with an inspection rendered',
+          message: 'the documents panel with an inspection and a conversion rendered',
         })
         .toBe('');
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  it('states, in words, when this deployment cannot convert', async () => {
+    // The production shape: every serverless deployment lacks LibreOffice, so
+    // this is the answer most operators will actually see. A Word row with no
+    // button and no explanation would read as a defect in the row; the note is
+    // the capability fact stated where the button would have been.
+    const page = await openAuthenticatedPage();
+    try {
+      await page.route('**/api/platform/discover', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            pages: [],
+            errors: [],
+            documents: [
+              {
+                url: 'https://discovered.invalid/forms/permit-application.docx',
+                foundOn: 'https://discovered.invalid/forms',
+                kind: 'docx',
+              },
+            ],
+          }),
+        }),
+      );
+      await page.route('**/api/documents/remediate', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            requestId: 'stubbed',
+            available: false,
+            reason: 'LibreOffice not found',
+          }),
+        }),
+      );
+
+      await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      await page.getByLabel('Site to scan').fill('https://discovered.invalid/');
+      await page.getByRole('button', { name: 'Scan the site' }).click();
+
+      const panel = page.getByRole('region', { name: 'Documents' });
+      await expect
+        .poll(() => panel.innerText(), { timeout: 15_000 })
+        .toContain('permit-application.docx');
+      await expect
+        .poll(() => panel.innerText(), { timeout: 15_000 })
+        .toContain('Word documents are recorded without a Convert button');
+
+      expect(
+        await panel.getByRole('button', { name: 'Convert to tagged PDF' }).count(),
+      ).toBe(0);
+      // Nor does the Word upload input render — offering an upload this host
+      // would refuse is the same broken promise as the button.
+      expect(await panel.getByLabel('Or convert a Word document you already have').count()).toBe(0);
     } finally {
       await page.close();
     }

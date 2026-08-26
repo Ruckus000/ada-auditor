@@ -36,7 +36,7 @@ vi.mock('../../src/app/api/_lib/authorize', () => ({
   authorizePrincipal: async () => (authorized.ok ? { kind: 'machine', name: 'CI' } : null),
 }));
 
-const { POST } = await import('../../src/app/api/documents/remediate/route');
+const { GET, POST } = await import('../../src/app/api/documents/remediate/route');
 const { documentStructureSchema } = await import('../../src/domain/document-structure');
 
 /** A byte sequence `isWordDocument` accepts. */
@@ -228,5 +228,79 @@ describe('POST /api/documents/remediate', () => {
     const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
 
     expect(summary.titleText).toBe('Planning Committee Agenda');
+  });
+
+  it('survives a title the header could not carry unescaped', async () => {
+    // Header values are ByteStrings: the `Response` constructor throws on a
+    // code point above U+00FF, so before the summary JSON was ASCII-escaped,
+    // an em-dash in a title turned a *successful* conversion into a crash at
+    // the very last step. Municipal agendas have em-dashes.
+    const title = 'Agenda — Planning Committee';
+    convertSourceToPdf.mockImplementation(async (_source: string, output: string) => {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(output, Buffer.from('%PDF-1.7 fake'));
+      return {
+        ok: true,
+        pdfPath: output,
+        provenance: {
+          title: { kind: 'already-titled', title },
+          sourceLanguage: 'en-GB',
+          structure: documentStructureSchema.parse({
+            structureElements: 4,
+            textChars: 100,
+            images: 0,
+            pages: 1,
+            lang: 'en-GB',
+            title,
+            headings: [],
+            headingTexts: [],
+            figures: [],
+            tables: [],
+            lists: [],
+            order: [],
+          }),
+        },
+      };
+    });
+
+    const response = await POST(upload(docxBytes()));
+    expect(response.status).toBe(200);
+
+    // Escaped in transit, intact after parsing.
+    const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
+    expect(summary.titleText).toBe(title);
+  });
+});
+
+describe('GET /api/documents/remediate', () => {
+  beforeEach(() => {
+    runtimes.soffice = true;
+    runtimes.java = true;
+    authorized.ok = true;
+  });
+
+  it('answers available when both halves are present', async () => {
+    const body = await (await GET(new Request('http://localhost:3000/api/documents/remediate'))).json();
+
+    expect(body.available).toBe(true);
+  });
+
+  it('answers unavailable naming the missing half', async () => {
+    // The production answer on every serverless deployment, and the reason the
+    // screen asks before offering a Convert button.
+    runtimes.soffice = false;
+
+    const body = await (await GET(new Request('http://localhost:3000/api/documents/remediate'))).json();
+
+    expect(body.available).toBe(false);
+    expect(body.reason).toMatch(/LibreOffice not found/);
+  });
+
+  it('refuses an unauthenticated caller', async () => {
+    authorized.ok = false;
+
+    const response = await GET(new Request('http://localhost:3000/api/documents/remediate'));
+
+    expect(response.status).toBe(401);
   });
 });
