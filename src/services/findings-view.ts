@@ -54,7 +54,7 @@ export type FindingView = {
   status: FindingDisplayStatus;
   triage: TriageState | null;
   triageNote?: string;
-  /** Who it is assigned to, by name. Absent unless the state is `assigned`. */
+  /** Who it is assigned to, by name. Absent when the decision named nobody. */
   assignee?: string;
 };
 
@@ -177,10 +177,15 @@ export async function buildFindingsView(
         inLatestRun: true,
         inBaseline: baselineKeys.has(key),
         triage: entry?.state ?? null,
-        ...(entry?.assignee ? { assignee: entry.assignee } : {}),
       }),
       triage: entry?.state ?? null,
       ...(entry?.note === undefined ? {} : { triageNote: entry.note }),
+      // The stored name used to be spread into the argument above, where
+      // `findingDisplayStatus` has no such field — a spread carries no excess
+      // property check, so it typechecked and did nothing, and the field
+      // declared on this view was never written. An assignment with no note
+      // rendered nobody's name.
+      ...(entry?.assignee === undefined ? {} : { assignee: entry.assignee }),
     };
   };
 

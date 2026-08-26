@@ -224,6 +224,90 @@ describe('buildFindingsView', () => {
     });
   });
 
+  it('carries an accepted risk through as an acceptance, not a dismissal', async () => {
+    // Two different decisions. "Dismissed" says there is no barrier here;
+    // "Accepted risk" says there is one and the client is living with it. The
+    // screen reads this field, so collapsing them tells an operator they said
+    // something they did not.
+    await runs.saveRun(run({ requestId: 'r1', findings: [finding()] }));
+    await platform.setTriage({
+      clientId: 'acme',
+      findingKey: 'deterministic:image-alt:https://acme.test/one:img',
+      source: 'deterministic',
+      code: 'image-alt',
+      state: 'accepted-risk',
+      note: 'Client accepts until the redesign ships.',
+      actor: 'Alex Reed',
+    });
+
+    const view = await buildFindingsView('acme', deps());
+
+    expect(view?.pages[0].findings[0]).toMatchObject({
+      status: 'Accepted risk',
+      triage: 'accepted-risk',
+      triageNote: 'Client accepts until the redesign ships.',
+    });
+  });
+
+  it('still counts an accepted risk, because it is still a barrier', async () => {
+    // Dropping it would buy a better number with a note, and would put these
+    // screens at odds with `/r/<token>`, which applies no triage at all.
+    await runs.saveRun(run({ requestId: 'r1', findings: [finding()] }));
+    await platform.setTriage({
+      clientId: 'acme',
+      findingKey: 'deterministic:image-alt:https://acme.test/one:img',
+      source: 'deterministic',
+      code: 'image-alt',
+      state: 'accepted-risk',
+      note: 'Client accepts.',
+      actor: 'Alex Reed',
+    });
+
+    expect((await buildFindingsView('acme', deps()))?.counts.must).toBe(1);
+  });
+
+  it('names who an assigned finding went to', async () => {
+    // `FindingView.assignee` was declared, documented and never written: the
+    // only thing that read the stored name was a spread into an argument that
+    // has no such field, which typechecks and does nothing. An assignment with
+    // no note therefore rendered no name at all.
+    await runs.saveRun(run({ requestId: 'r1', findings: [finding()] }));
+    await platform.setTriage({
+      clientId: 'acme',
+      findingKey: 'deterministic:image-alt:https://acme.test/one:img',
+      source: 'deterministic',
+      code: 'image-alt',
+      state: 'assigned',
+      assignee: 'Alex Reed',
+      actor: 'Alex Reed',
+    });
+
+    expect((await buildFindingsView('acme', deps()))?.pages[0].findings[0]).toMatchObject({
+      status: 'Assigned',
+      triage: 'assigned',
+      assignee: 'Alex Reed',
+    });
+  });
+
+  it('leaves the assignee absent on a decision that named nobody', async () => {
+    // Absent means nobody was named, never "unassigned" — the same stance the
+    // rest of this view takes towards a field it was not given.
+    await runs.saveRun(run({ requestId: 'r1', findings: [finding()] }));
+    await platform.setTriage({
+      clientId: 'acme',
+      findingKey: 'deterministic:image-alt:https://acme.test/one:img',
+      source: 'deterministic',
+      code: 'image-alt',
+      state: 'dismissed',
+      note: 'Decorative.',
+      actor: 'Alex Reed',
+    });
+
+    expect(
+      (await buildFindingsView('acme', deps()))?.pages[0].findings[0],
+    ).not.toHaveProperty('assignee');
+  });
+
   it('does not read another client’s triage', async () => {
     await platform.upsertClient({ id: 'other', name: 'Other' });
     await runs.saveRun(run({ requestId: 'r1', findings: [finding()] }));

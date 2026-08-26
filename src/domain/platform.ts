@@ -47,6 +47,20 @@ export type StoredClient = {
  */
 export const MAX_JOURNEY_NAME = 120;
 
+/**
+ * The longest a triage note may be.
+ *
+ * Here for the same reason `MAX_JOURNEY_NAME` is: the triage route caps this
+ * and answers `invalid_request_body` past it, a code that names no field — so
+ * the textarea that offers the note has to know the number in order to stop an
+ * operator reaching that answer at all. This file has no imports, so a client
+ * component can read it without dragging persistence into the browser bundle.
+ *
+ * The note is required for `dismissed` and `accepted-risk` alike, so both
+ * decisions are capped by this one number rather than by two that can drift.
+ */
+export const MAX_TRIAGE_NOTE = 2000;
+
 export type JourneySchedule = 'off' | 'daily' | 'weekly';
 
 export type StoredJourney = {

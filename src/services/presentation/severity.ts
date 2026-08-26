@@ -47,7 +47,41 @@ export function displaySeverity(severity: string): DisplaySeverity {
  * invites the stored flag and the evidence to disagree, and when they disagree
  * the evidence is right.
  */
-export type FindingDisplayStatus = 'Open' | 'Assigned' | 'Dismissed' | 'Fixed' | 'Retest due';
+export type FindingDisplayStatus =
+  | 'Open'
+  | 'Assigned'
+  | 'Dismissed'
+  | 'Accepted risk'
+  | 'Fixed'
+  | 'Retest due';
+
+/**
+ * What each stored decision looks like on a row, and whether it survives the
+ * evidence changing under it.
+ *
+ * A `Record` rather than the ternaries this used to be. `accepted-risk` sat in
+ * the type, the zod enum and the SQL CHECK for three slices with no control
+ * able to produce it, so a two-way branch over a three-member union read as
+ * correct while quietly filing an accepted barrier as a dismissal. Written
+ * this way the compiler is what notices the next member.
+ *
+ * The words are spelled again here rather than taken from
+ * `presentation/triage.ts`: that module names a *decision* an operator makes,
+ * this one names a *row's status*, and the two vocabularies only happen to
+ * agree on three of their entries.
+ *
+ * `outranksARerun` is the older rule, unchanged: an operator has settled the
+ * finding, and a later run re-reporting it must not undo that. Assignment is
+ * not a settlement — it is a plan, and absence is evidence that beats it.
+ */
+const TRIAGE_DISPLAY: Record<
+  TriageState,
+  { status: FindingDisplayStatus; outranksARerun: boolean }
+> = {
+  dismissed: { status: 'Dismissed', outranksARerun: true },
+  'accepted-risk': { status: 'Accepted risk', outranksARerun: true },
+  assigned: { status: 'Assigned', outranksARerun: false },
+};
 
 export function findingDisplayStatus(input: {
   inLatestRun: boolean;
@@ -66,10 +100,13 @@ export function findingDisplayStatus(input: {
   previouslyFixed?: boolean;
   triage: TriageState | null;
 }): FindingDisplayStatus {
-  // A dismissal outranks everything: an operator has said this is not a
-  // barrier, and a later run re-reporting it must not quietly undo that.
-  if (input.triage === 'dismissed' || input.triage === 'accepted-risk') {
-    return 'Dismissed';
+  const decided = input.triage === null ? null : TRIAGE_DISPLAY[input.triage];
+
+  // A settled finding outranks everything: an operator has said this is not a
+  // barrier, or that it is one the client accepts, and a later run
+  // re-reporting it must not quietly undo either decision.
+  if (decided?.outranksARerun) {
+    return decided.status;
   }
 
   if (!input.inLatestRun) {
@@ -78,8 +115,8 @@ export function findingDisplayStatus(input: {
     return 'Fixed';
   }
 
-  if (input.triage === 'assigned') {
-    return 'Assigned';
+  if (decided) {
+    return decided.status;
   }
 
   // Only a finding known to have been fixed once is a retest — that is a
