@@ -7,12 +7,13 @@ import {
   discoveryKey,
   documentLinkKind,
   MAX_DISCOVERY_DEPTH,
-  MAX_DISCOVERY_DOCUMENTS,
+  MAX_DISCOVERY_DOCUMENTS_PER_KIND,
   MAX_DISCOVERY_ERRORS,
   MAX_DISCOVERY_URLS,
   MAX_HREF_LENGTH,
   MAX_LINKS_PER_PAGE,
   type DiscoveredDocument,
+  type DocumentLinkKind,
   type DiscoveredPage,
   type DiscoveryError,
   type DiscoveryResult,
@@ -291,7 +292,12 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
 
   const pages: DiscoveredPage[] = [];
   const documents: DiscoveredDocument[] = [];
-  let documentsOmitted = 0;
+  // Counted per kind, because the caps are — see
+  // `MAX_DISCOVERY_DOCUMENTS_PER_KIND` for the live-site measurement behind
+  // that. `documentsByKind` avoids an O(n) filter per sighting on a page that
+  // links hundreds of documents.
+  const documentsByKind: Partial<Record<DocumentLinkKind, number>> = {};
+  const documentsOmitted: Partial<Record<DocumentLinkKind, number>> = {};
   const errors: DiscoveryError[] = [];
   const seen = new Set<string>([discoveryKey(input.targetUrl)]);
   const frontier: FrontierEntry[] = [{ url: input.targetUrl, depth: 0 }];
@@ -511,9 +517,10 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
             const documentKind = documentLinkKind(href);
             if (documentKind !== null) {
               seen.add(key);
-              if (documents.length >= MAX_DISCOVERY_DOCUMENTS) {
-                documentsOmitted += 1;
+              if ((documentsByKind[documentKind] ?? 0) >= MAX_DISCOVERY_DOCUMENTS_PER_KIND) {
+                documentsOmitted[documentKind] = (documentsOmitted[documentKind] ?? 0) + 1;
               } else {
+                documentsByKind[documentKind] = (documentsByKind[documentKind] ?? 0) + 1;
                 documents.push({ url: href, foundOn: settled, kind: documentKind });
               }
               continue;
@@ -748,6 +755,6 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
     errors,
     ...(truncated ? { truncated } : {}),
     ...(errorsOmitted > 0 ? { errorsOmitted } : {}),
-    ...(documentsOmitted > 0 ? { documentsOmitted } : {}),
+    ...(Object.keys(documentsOmitted).length > 0 ? { documentsOmitted } : {}),
   };
 }

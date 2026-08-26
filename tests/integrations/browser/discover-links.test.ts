@@ -182,6 +182,27 @@ beforeAll(async () => {
       return;
     }
 
+    // An agenda archive: more PDF links than the per-kind cap admits, with
+    // the Word links sighted LAST. Generated rather than a fixture file
+    // because the shape is the claim — the PDFs must exhaust their own cap
+    // before a single Word link is seen, which is exactly the ordering that
+    // starved Word under the old shared cap on a live municipal site.
+    if (path === '/document-archive.html') {
+      const pdfLinks = Array.from(
+        { length: 55 },
+        (_, i) => `<a href="/archive/agenda-${i}.pdf">Agenda ${i}</a>`,
+      );
+      const wordLinks = Array.from(
+        { length: 3 },
+        (_, i) => `<a href="/archive/minutes-${i}.docx">Minutes ${i}</a>`,
+      );
+      response.writeHead(200, { 'content-type': 'text/html' });
+      response.end(
+        `<!doctype html><html lang="en"><head><meta charset="utf-8" /><title>Archive</title></head><body><main><h1>Archive</h1>${pdfLinks.join('')}${wordLinks.join('')}</main></body></html>`,
+      );
+      return;
+    }
+
     // The service worker `deep.html` registers, and the resource it fetches.
     // The fetch sits at the worker script's top level, not in an event
     // handler, so it fires the moment the script evaluates — which makes the
@@ -638,6 +659,24 @@ describe('discoverLinks guards', () => {
     // page row.
     expect(requestedPaths).not.toContain('/assets/budget.pdf');
     expect(result.pages.every((page) => new URL(page.url).hostname === HOST)).toBe(true);
+  }, 60_000);
+
+  it('caps each document kind separately, so PDFs cannot starve Word out of the list', async () => {
+    // `[V]` The measured failure this prevents: a live municipal site linked
+    // 242 documents, PDFs sighted first, and a single shared 50-slot cap
+    // filled before one Word document — the remediable format — made the
+    // list. The archive fixture reproduces that ordering exactly: 55 PDFs,
+    // then 3 Word links.
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/document-archive.html` });
+
+    const archived = result.documents.filter((doc) => doc.url.includes('/archive/'));
+    expect(archived.filter((doc) => doc.kind === 'pdf')).toHaveLength(50);
+    // Every Word link survives, despite being sighted after the PDF cap
+    // filled — the assertion the shared cap failed.
+    expect(archived.filter((doc) => doc.kind === 'docx')).toHaveLength(3);
+
+    // And the omission report names which kind was cut, not just how much.
+    expect(result.documentsOmitted).toEqual({ pdf: 5 });
   }, 60_000);
 
   it('survives a page that registers a service worker', async () => {

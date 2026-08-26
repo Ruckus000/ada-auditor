@@ -273,14 +273,22 @@ export const DISCOVERY_DELAY_MS = 250;
 export const DISCOVERY_USER_AGENT_PRODUCT = 'ADA-Auditor-Discovery/1.0';
 
 /**
- * Ceiling on documents a crawl reports, matching the shape of the other caps:
- * a bound that drops work says so (`documentsOmitted`), never silently.
+ * Ceiling on documents a crawl reports **per kind**, matching the shape of
+ * the other caps: a bound that drops work says so (`documentsOmitted`), never
+ * silently.
  *
  * Municipal sites are document-heavy — an agenda archive can link hundreds of
  * PDFs — and each row here is a candidate for a fetch plus a JVM run, chosen
  * one at a time by an operator. Fifty is a screenful of choices, not a corpus.
+ *
+ * Per kind, and that is a scar, not a refinement. `[V]` Measured on a live
+ * municipal site: 242 document links, PDFs sighted first, and a single
+ * 50-slot cap filled before one Word document — the format this platform can
+ * fully *remediate* — made the list. A shared cap lets the commonest format
+ * starve the most actionable one; a cap per kind means no format can crowd
+ * out another, and the omission report says which kind was cut.
  */
-export const MAX_DISCOVERY_DOCUMENTS = 50;
+export const MAX_DISCOVERY_DOCUMENTS_PER_KIND = 50;
 
 /**
  * The document formats a crawl can recognise, spelled the way
@@ -415,8 +423,14 @@ export type DiscoveryResult = {
    * its own instrument.
    */
   documents: DiscoveredDocument[];
-  /** How many documents the cap refused to carry. Absent when it refused none. */
-  documentsOmitted?: number;
+  /**
+   * How many documents each kind's cap refused to carry, by kind. Absent when
+   * nothing was refused; a kind that lost nothing has no entry. Per kind
+   * because the caps are: "192 omitted" cannot tell an operator whether the
+   * cut fell on the archive of PDFs or on the Word documents they can
+   * actually remediate.
+   */
+  documentsOmitted?: Partial<Record<DocumentLinkKind, number>>;
   truncated?: DiscoveryTruncation;
   errors: DiscoveryError[];
   /**
