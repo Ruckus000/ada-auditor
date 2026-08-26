@@ -1,10 +1,16 @@
-import { clampEventListLimit, UNASSIGNED_CLIENT_ID } from '../../domain/platform';
+import {
+  clampEventListLimit,
+  DOCUMENT_INSPECTION_LIST_MAX,
+  UNASSIGNED_CLIENT_ID,
+} from '../../domain/platform';
 import type {
   ActivityEvent,
+  DocumentInspectionSource,
   ListEventsOptions,
   PlatformStore,
   ReportAudience,
   StoredClient,
+  StoredDocumentInspection,
   StoredJourney,
   StoredOperator,
   StoredOperatorWithSecret,
@@ -12,6 +18,7 @@ import type {
   TriageEntry,
   TriageState,
 } from '../../domain/platform';
+import type { RemediationSummary } from '../../domain/document-remediation';
 import type { SqlClient } from './postgres-run-store';
 
 /**
@@ -97,6 +104,16 @@ type ReportRow = {
   share_token: string | null;
   revoked_at: Date | string | null;
   created_at: Date | string;
+};
+
+type DocumentInspectionRow = {
+  id: string;
+  client_id: string;
+  url: string;
+  found_on: string | null;
+  source: string;
+  summary: RemediationSummary;
+  inspected_at: Date | string;
 };
 
 export class PostgresPlatformStore implements PlatformStore {
@@ -577,6 +594,43 @@ export class PostgresPlatformStore implements PlatformStore {
       order by created_at desc
     `;
     return rows.map((row) => this.mapReport(row));
+  }
+
+  // ------------------------------------------------- document inspections --
+
+  async saveDocumentInspection(record: StoredDocumentInspection): Promise<void> {
+    // `do nothing`, not `do update`: a record is immutable evidence, so a
+    // retried save keeps the first record rather than rewriting what the
+    // instrument said. `inspected_at` is the caller's stamp, held verbatim —
+    // a store that invents a timestamp is a store that has drifted from the
+    // memory double, which holds what it was handed.
+    await this.sql`
+      insert into document_inspections (id, client_id, url, found_on, source, summary, inspected_at)
+      values (
+        ${record.id}, ${record.clientId}, ${record.url}, ${record.foundOn ?? null},
+        ${record.source}, ${JSON.stringify(record.summary)}::jsonb, ${record.inspectedAt}
+      )
+      on conflict (id) do nothing
+    `;
+  }
+
+  async listDocumentInspections(clientId: string): Promise<StoredDocumentInspection[]> {
+    const rows = await this.sql<DocumentInspectionRow>`
+      select * from document_inspections
+      where client_id = ${clientId}
+      order by inspected_at desc
+      limit ${DOCUMENT_INSPECTION_LIST_MAX}
+    `;
+
+    return rows.map((row) => ({
+      id: row.id,
+      clientId: row.client_id,
+      url: row.url,
+      ...optional('foundOn', row.found_on),
+      source: row.source as DocumentInspectionSource,
+      summary: row.summary,
+      inspectedAt: toIso(row.inspected_at),
+    })) as StoredDocumentInspection[];
   }
 
   // ------------------------------------------------------------ activity --

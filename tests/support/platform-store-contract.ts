@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { UNASSIGNED_CLIENT_ID } from '../../src/domain/platform';
-import type { PlatformStore, TriageEntry } from '../../src/domain/platform';
+import { DOCUMENT_INSPECTION_LIST_MAX, UNASSIGNED_CLIENT_ID } from '../../src/domain/platform';
+import type {
+  PlatformStore,
+  StoredDocumentInspection,
+  TriageEntry,
+} from '../../src/domain/platform';
+import type { RemediationSummary } from '../../src/domain/document-remediation';
 
 /**
  * The behaviour every `PlatformStore` owes its callers.
@@ -67,6 +72,44 @@ export function triageEntry(overrides: Partial<TriageEntry> = {}): TriageEntry {
     state: 'dismissed',
     note: 'Decorative element, accepted.',
     actor: 'Operator',
+    ...overrides,
+  };
+}
+
+export function inspectionSummary(
+  overrides: Partial<RemediationSummary> = {},
+): RemediationSummary {
+  return {
+    title: 'already-titled',
+    // Deliberately present: the store must round-trip the title verbatim. The
+    // rule that strips it (`logSafe`) is about log lines, never storage.
+    titleText: 'Meeting agenda, March',
+    sourceLanguage: 'en-US',
+    tagged: false,
+    pages: 4,
+    headings: 0,
+    tables: 2,
+    lists: 0,
+    figures: 3,
+    gaps: [
+      '1.1.1: 3 figures with no alt text',
+      '1.3.1: the output carries no structure tree',
+    ],
+    ...overrides,
+  };
+}
+
+export function inspectionRecord(
+  overrides: Partial<StoredDocumentInspection> = {},
+): StoredDocumentInspection {
+  return {
+    id: `${PLATFORM_PREFIX}-doc-a`,
+    clientId: CONTRACT_CLIENT,
+    url: 'https://town.example/minutes/agenda.pdf',
+    foundOn: 'https://town.example/meetings',
+    source: 'crawl',
+    summary: inspectionSummary(),
+    inspectedAt: '2026-08-26T12:00:00.000Z',
     ...overrides,
   };
 }
@@ -451,6 +494,136 @@ export function platformStoreContract(
       const store = await makeStore();
       expect(await store.listReports([])).toEqual([]);
     });
+  });
+
+  describe('document inspections', () => {
+    async function seeded(): Promise<PlatformStore> {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+      return store;
+    }
+
+    it('round-trips a crawl inspection, summary verbatim', async () => {
+      const store = await seeded();
+      await store.saveDocumentInspection(inspectionRecord());
+
+      const [record] = await store.listDocumentInspections(CONTRACT_CLIENT);
+      expect(record).toEqual(inspectionRecord());
+      // The load-bearing halves, named: the title survives storage (only logs
+      // strip it), and the gaps come back word for word — a store that
+      // rephrased the instrument would drift from what the operator saw.
+      expect(record.summary.titleText).toBe('Meeting agenda, March');
+      expect(record.summary.gaps).toEqual([
+        '1.1.1: 3 figures with no alt text',
+        '1.3.1: the output carries no structure tree',
+      ]);
+    });
+
+    it('omits foundOn on an upload rather than storing null', async () => {
+      // An upload was found nowhere. Passed explicitly as undefined, which is
+      // exactly the shape a route's optional spread produces — the record must
+      // come back with the key absent, matching what a null column reads as.
+      const store = await seeded();
+      await store.saveDocumentInspection(
+        inspectionRecord({
+          id: `${PLATFORM_PREFIX}-doc-upload`,
+          url: 'agenda.pdf',
+          foundOn: undefined,
+          source: 'upload',
+        }),
+      );
+
+      const [record] = await store.listDocumentInspections(CONTRACT_CLIENT);
+      expect(record).not.toHaveProperty('foundOn');
+      expect(record.source).toBe('upload');
+      expect(record.url).toBe('agenda.pdf');
+    });
+
+    it('returns inspections newest first', async () => {
+      // The caller stamps `inspectedAt`, so the order is asserted against
+      // stamps this test chose rather than against write timing.
+      const store = await seeded();
+      await store.saveDocumentInspection(
+        inspectionRecord({
+          id: `${PLATFORM_PREFIX}-doc-old`,
+          inspectedAt: '2026-08-26T09:00:00.000Z',
+        }),
+      );
+      await store.saveDocumentInspection(
+        inspectionRecord({
+          id: `${PLATFORM_PREFIX}-doc-new`,
+          inspectedAt: '2026-08-26T10:00:00.000Z',
+        }),
+      );
+
+      const ids = (await store.listDocumentInspections(CONTRACT_CLIENT)).map((r) => r.id);
+      expect(ids).toEqual([`${PLATFORM_PREFIX}-doc-new`, `${PLATFORM_PREFIX}-doc-old`]);
+    });
+
+    it('keeps the first record when the same id is saved again', async () => {
+      // A record is immutable evidence: a second save under one id is a
+      // retry, and a retry must not rewrite what the instrument said.
+      const store = await seeded();
+      await store.saveDocumentInspection(inspectionRecord());
+      await store.saveDocumentInspection(
+        inspectionRecord({
+          summary: inspectionSummary({ pages: 99 }),
+          inspectedAt: '2026-08-26T13:00:00.000Z',
+        }),
+      );
+
+      const records = await store.listDocumentInspections(CONTRACT_CLIENT);
+      expect(records).toHaveLength(1);
+      expect(records[0].summary.pages).toBe(4);
+      expect(records[0].inspectedAt).toBe('2026-08-26T12:00:00.000Z');
+    });
+
+    it('scopes the listing to its client', async () => {
+      const store = await seeded();
+      const otherClient = `${PLATFORM_PREFIX}-client-b`;
+      await store.upsertClient({ id: otherClient, name: 'Other Client' });
+
+      await store.saveDocumentInspection(inspectionRecord());
+      await store.saveDocumentInspection(
+        inspectionRecord({ id: `${PLATFORM_PREFIX}-doc-b`, clientId: otherClient }),
+      );
+
+      const ids = (await store.listDocumentInspections(otherClient)).map((r) => r.id);
+      expect(ids).toEqual([`${PLATFORM_PREFIX}-doc-b`]);
+    });
+
+    it(
+      'caps the listing, and what falls off the end is the oldest',
+      async () => {
+        const store = await seeded();
+        const base = Date.parse('2026-08-26T00:00:00.000Z');
+
+        // One more than the cap, stamps strictly increasing. Written in
+        // parallel: against real Postgres this is a hundred round trips, and
+        // serially it is the difference between a test and a timeout.
+        await Promise.all(
+          Array.from({ length: DOCUMENT_INSPECTION_LIST_MAX + 1 }, (_, i) =>
+            store.saveDocumentInspection(
+              inspectionRecord({
+                id: `${PLATFORM_PREFIX}-doc-cap-${i}`,
+                inspectedAt: new Date(base + i * 1000).toISOString(),
+              }),
+            ),
+          ),
+        );
+
+        const listed = await store.listDocumentInspections(CONTRACT_CLIENT);
+        expect(listed).toHaveLength(DOCUMENT_INSPECTION_LIST_MAX);
+        expect(listed[0].id).toBe(
+          `${PLATFORM_PREFIX}-doc-cap-${DOCUMENT_INSPECTION_LIST_MAX}`,
+        );
+        // The one that fell off is the oldest, because the cap keeps the
+        // newest — a cap that trimmed the other end would silently hide the
+        // inspection the operator just made.
+        expect(listed.map((r) => r.id)).not.toContain(`${PLATFORM_PREFIX}-doc-cap-0`);
+      },
+      60_000,
+    );
   });
 
   describe('activity', () => {

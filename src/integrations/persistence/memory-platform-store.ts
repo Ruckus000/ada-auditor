@@ -1,5 +1,6 @@
 import {
   clampEventListLimit,
+  DOCUMENT_INSPECTION_LIST_MAX,
   journeyRunRefusal,
   UNASSIGNED_CLIENT_ID,
 } from '../../domain/platform';
@@ -8,6 +9,7 @@ import type {
   ListEventsOptions,
   PlatformStore,
   StoredClient,
+  StoredDocumentInspection,
   StoredJourney,
   StoredOperator,
   StoredOperatorWithSecret,
@@ -33,6 +35,15 @@ import type {
  */
 type StoredTriage = { entry: TriageEntry; seq: number };
 
+/**
+ * A stored inspection plus the order it arrived in, for the same reason
+ * `StoredTriage` carries one: `now()` here has millisecond resolution, so two
+ * saves in one millisecond stamp the same instant and a sort on `inspectedAt`
+ * alone is free to return either order. Postgres does not need it — separate
+ * statements get distinct transaction timestamps.
+ */
+type StoredInspection = { record: StoredDocumentInspection; seq: number };
+
 export class MemoryPlatformStore implements PlatformStore {
   private readonly operators = new Map<string, StoredOperatorWithSecret>();
   private readonly clients = new Map<string, StoredClient>();
@@ -40,9 +51,11 @@ export class MemoryPlatformStore implements PlatformStore {
   private readonly journeys = new Map<string, StoredJourney>();
   private readonly triage = new Map<string, StoredTriage>();
   private readonly reports = new Map<string, StoredReport>();
+  private readonly documentInspections = new Map<string, StoredInspection>();
   private readonly events: ActivityEvent[] = [];
   private nextEventId = 1;
   private nextTriageSeq = 1;
+  private nextInspectionSeq = 1;
 
   private static now(): string {
     return new Date().toISOString();
@@ -333,6 +346,47 @@ export class MemoryPlatformStore implements PlatformStore {
       .filter((report) => wanted.has(report.requestId))
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
       .map((report) => structuredClone(report));
+  }
+
+  // ------------------------------------------------- document inspections --
+
+  async saveDocumentInspection(record: StoredDocumentInspection): Promise<void> {
+    // A record is immutable evidence: a second save under the same id is a
+    // retry, not a revision, so the first record stands. Postgres spells the
+    // same rule `on conflict (id) do nothing`.
+    if (this.documentInspections.has(record.id)) return;
+
+    // Built field by field rather than cloned whole, so an explicitly-passed
+    // `foundOn: undefined` stores as *absent* — the shape Postgres hands back
+    // for a null column — rather than as a present key holding undefined.
+    const next: StoredDocumentInspection = {
+      id: record.id,
+      clientId: record.clientId,
+      url: record.url,
+      ...(record.foundOn === undefined ? {} : { foundOn: record.foundOn }),
+      source: record.source,
+      summary: record.summary,
+      inspectedAt: record.inspectedAt,
+    };
+
+    this.documentInspections.set(record.id, {
+      seq: this.nextInspectionSeq++,
+      record: structuredClone(next),
+    });
+  }
+
+  async listDocumentInspections(clientId: string): Promise<StoredDocumentInspection[]> {
+    return [...this.documentInspections.values()]
+      .filter((held) => held.record.clientId === clientId)
+      // Newest first, ties broken by arrival order — see `StoredInspection`.
+      .sort((a, b) => {
+        if (a.record.inspectedAt !== b.record.inspectedAt) {
+          return a.record.inspectedAt < b.record.inspectedAt ? 1 : -1;
+        }
+        return b.seq - a.seq;
+      })
+      .slice(0, DOCUMENT_INSPECTION_LIST_MAX)
+      .map((held) => structuredClone(held.record));
   }
 
   // ------------------------------------------------------------ activity --

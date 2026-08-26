@@ -1,5 +1,8 @@
+import type { RemediationSummary } from './document-remediation';
+
 /**
- * The catalog the screens read: clients, journeys, triage, reports, activity.
+ * The catalog the screens read: clients, journeys, triage, reports, activity,
+ * document inspections.
  *
  * Deliberately NOT part of `RunStore`. That interface is the audit engine's
  * persistence dependency — injected into the browser path, chaos, and every
@@ -53,8 +56,9 @@ export const MAX_JOURNEY_NAME = 120;
  * Here for the same reason `MAX_JOURNEY_NAME` is: the triage route caps this
  * and answers `invalid_request_body` past it, a code that names no field — so
  * the textarea that offers the note has to know the number in order to stop an
- * operator reaching that answer at all. This file has no imports, so a client
- * component can read it without dragging persistence into the browser bundle.
+ * operator reaching that answer at all. This file has no runtime imports —
+ * its one import is type-only, erased at compile — so a client component can
+ * read it without dragging persistence into the browser bundle.
  *
  * The note is required for `dismissed` and `accepted-risk` alike, so both
  * decisions are capped by this one number rather than by two that can drift.
@@ -420,9 +424,64 @@ export interface ActivityStore {
   listEvents(options?: ListEventsOptions): Promise<ActivityEvent[]>;
 }
 
+/** How this document reached the instrument. */
+export type DocumentInspectionSource = 'crawl' | 'upload';
+
+/**
+ * What the document instrument said about one document, kept.
+ *
+ * Before this existed, nothing persisted: an operator who inspected thirty
+ * documents and closed the tab had nothing. The record is the
+ * `RemediationSummary` exactly as the instrument returned it — `titleText`
+ * included, because the database already stores client DOM snippets in
+ * `findings` and a title is milder than either. The rule that stays absolute
+ * is about **logs**: a log line carries `logSafe(summary)` and the hostname
+ * only, never the title and never a path, because paths name people.
+ */
+export type StoredDocumentInspection = {
+  id: string;
+  clientId: string;
+  /**
+   * The document's address for a crawl record; the operator's own filename
+   * for an upload, which is the only handle an upload has. Fine to store,
+   * never to log.
+   */
+  url: string;
+  /** The page the crawl found the link on. An upload has none. */
+  foundOn?: string;
+  source: DocumentInspectionSource;
+  /** The summary verbatim. A store that reworded the instrument has drifted. */
+  summary: RemediationSummary;
+  inspectedAt: string;
+};
+
+/**
+ * How many inspections one listing may return.
+ *
+ * A cap rather than paging: the screen renders a client's recent inspections,
+ * and a municipal site with more than a hundred inspected documents is a
+ * paging decision to make deliberately when it happens, not a default to
+ * pre-build. Newest first, so what falls off the end is the oldest.
+ */
+export const DOCUMENT_INSPECTION_LIST_MAX = 100;
+
+export interface DocumentInspectionStore {
+  /**
+   * Saves what the instrument said, as it said it.
+   *
+   * A record is immutable evidence: a second save under the same id is a
+   * retry, not a revision, so both stores keep the first record rather than
+   * rewriting it — the same stance the runs table takes on `created_at`.
+   */
+  saveDocumentInspection(record: StoredDocumentInspection): Promise<void>;
+  /** Newest first, capped at `DOCUMENT_INSPECTION_LIST_MAX`. */
+  listDocumentInspections(clientId: string): Promise<StoredDocumentInspection[]>;
+}
+
 export type PlatformStore = OperatorStore &
   ClientStore &
   JourneyStore &
   TriageStore &
   ReportStore &
-  ActivityStore;
+  ActivityStore &
+  DocumentInspectionStore;
