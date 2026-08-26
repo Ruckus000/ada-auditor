@@ -162,13 +162,27 @@ describe('/api/platform/clients/[clientId]/documents', () => {
       source: 'crawl',
     });
     expect(stored[0].summary).toEqual(body.inspection.summary);
+
+    // The inspection attached to a document row — the entity the inventory
+    // lists — created on the way because the inventory had never heard of
+    // this URL.
+    const documents = await platform.listClientDocuments('acme');
+    expect(documents).toHaveLength(1);
+    expect(documents[0]).toMatchObject({ url: DOC_URL, kind: 'pdf', source: 'crawl' });
+    expect(stored[0].documentId).toBe(documents[0].id);
   });
 
-  it('lists stored inspections newest first, without the clientId echoed', async () => {
+  it('lists the inventory with the latest word, most recently seen first', async () => {
+    const older = await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/a.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T09:00:00.000Z',
+    );
     await platform.saveDocumentInspection({
-      id: 'doc-old',
+      id: 'insp-a',
       clientId: 'acme',
-      url: 'https://town.example/a.pdf',
+      documentId: older.id,
+      url: older.url,
       source: 'crawl',
       summary: {
         title: 'no-heading-to-copy',
@@ -183,34 +197,27 @@ describe('/api/platform/clients/[clientId]/documents', () => {
       },
       inspectedAt: '2026-08-26T09:00:00.000Z',
     });
-    await platform.saveDocumentInspection({
-      id: 'doc-new',
-      clientId: 'acme',
-      url: 'agenda.pdf',
-      source: 'upload',
-      summary: {
-        title: 'already-titled',
-        titleText: 'Agenda',
-        sourceLanguage: 'en-US',
-        tagged: true,
-        pages: 3,
-        headings: 2,
-        tables: 0,
-        lists: 1,
-        figures: 0,
-        gaps: [],
-      },
-      inspectedAt: '2026-08-26T10:00:00.000Z',
-    });
+    await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/permit.docx', kind: 'docx', source: 'crawl' },
+      '2026-08-26T10:00:00.000Z',
+    );
 
     const response = await GET(jsonRequest(), params('acme'));
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.count).toBe(2);
-    expect(body.inspections.map((i: { id: string }) => i.id)).toEqual(['doc-new', 'doc-old']);
-    expect(body.inspections[0]).not.toHaveProperty('clientId');
-    expect(body.inspections[1]).not.toHaveProperty('foundOn');
+    expect(body.documents.map((d: { url: string }) => d.url)).toEqual([
+      'https://town.example/permit.docx',
+      'https://town.example/a.pdf',
+    ]);
+    // The latest word rides on the row; nothing echoes the clientId the
+    // caller just used.
+    expect(body.documents[1].latestInspection.id).toBe('insp-a');
+    expect(body.documents[1].latestInspection.summary.gaps[0]).toContain('2.4.2');
+    expect(body.documents[0]).not.toHaveProperty('latestInspection');
+    expect(body.documents[0]).not.toHaveProperty('clientId');
   });
 
   it('refuses a private address with the real guard, and persists nothing', async () => {
@@ -237,8 +244,10 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect((await response.json()).error).toBe('redirected');
     expect(inspectDocument).not.toHaveBeenCalled();
     // A refusal is the instrument saying nothing, and the store holds only
-    // what the instrument said.
+    // what the instrument said — no inspection, and no inventory row minted
+    // for a URL that refused to fetch.
     expect(await platform.listDocumentInspections('acme')).toEqual([]);
+    expect(await platform.listClientDocuments('acme')).toEqual([]);
   });
 
   it('refuses a body that is not a URL as invalid_request_body', async () => {

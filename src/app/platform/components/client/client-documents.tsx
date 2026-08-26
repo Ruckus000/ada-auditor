@@ -4,47 +4,34 @@ import { useEffect, useId, useState } from 'react';
 import { FONT, T } from '../../lib/tokens';
 
 /**
- * The client's documents: found by a crawl, or handed over by the operator.
+ * The client's document inventory — the entity screen, not a scan screen.
  *
- * Municipal sites are document-heavy, and until this screen existed the
- * auditor walked straight past every PDF — the crawl now records them
- * (`DiscoveryResult.documents`) instead of navigating Chromium into them, and
- * this is where those records become something an operator can act on.
+ * Every row is a `client_documents` record: found by a crawl, or handed over
+ * by the operator, with the latest word on it (inspection, conversion)
+ * attached. A scan MERGES into this inventory server-side
+ * (`documents/discover`), so what an operator inspected last week is still
+ * here today and a re-scan refreshes rather than resets.
  *
- * Two ways in, one rendering out:
+ * Actions are per-document and operator-chosen, not automatic — each is a
+ * fetch plus external processes, and on a 200-document inventory the
+ * operator should choose where to spend that:
  *
- * - **Scan** runs the same crawl as the setup screen and lists the documents
- *   it saw. Inspection is per-document and operator-chosen, not automatic —
- *   each inspection is a server-side fetch plus a JVM run, and on a 50-document
- *   site the operator should choose where to spend that.
- * - **Upload** posts a file the operator already has to the same instrument.
+ * - PDF rows **inspect** (`POST …/documents`), persisting the reading.
+ * - Word rows **convert** to tagged PDF (`POST …/documents/convert`),
+ *   persisting the audit-trail record — hashes and the pipeline's account —
+ *   while the file itself goes to the operator as a download.
+ * - Uploads do the same for documents already in hand.
  *
- * PDF rows are inspected; Word rows are **converted** — to a tagged PDF the
- * operator downloads, with the pipeline's own account of the result rendered
- * beside it. Conversion needs LibreOffice, which only some hosts have, so the
- * screen asks the conversion route up front (`GET /api/documents/remediate`)
- * and offers only what this deployment can do; on a host that cannot convert,
- * the absence is stated in words rather than implied by a missing button.
- *
- * Both flows go through the client-scoped routes
- * (`/api/platform/clients/<id>/documents`), which persist what the instrument
- * said — so an inspection outlives the tab, and the screen loads the stored
- * records back on mount. The client-unscoped tools
- * (`/api/documents/inspect*`) still exist for work outside a client.
+ * Conversion needs LibreOffice, which only some hosts have, so the screen
+ * asks the conversion route up front (`GET /api/documents/remediate` — the
+ * function that would convert is the only surface whose answer is honest)
+ * and offers only what this deployment can do; where it cannot, the absence
+ * is stated in words rather than implied by a missing button.
  *
  * `summary.gaps` is rendered verbatim: each entry already names its WCAG
  * criterion, and the words were chosen server-side where the counting logic
  * lives. A screen that rephrased them would be a second copy free to drift.
  */
-
-type DiscoveredDocument = { url: string; foundOn: string; kind: 'pdf' | 'docx' | 'doc' };
-
-type DiscoveryResponse = {
-  documents?: DiscoveredDocument[];
-  documentsOmitted?: Partial<Record<'pdf' | 'docx' | 'doc', number>>;
-  errors?: Array<{ url: string; message: string }>;
-  error?: string;
-};
 
 type Summary = {
   title: string;
@@ -59,14 +46,23 @@ type Summary = {
   gaps: string[];
 };
 
-/** One stored inspection, as the client-scoped routes return it. */
-type InspectionRecord = {
+/** One inventory row, as the client-scoped GET returns it. */
+type ClientDocument = {
   id: string;
   url: string;
-  foundOn?: string;
+  kind: 'pdf' | 'docx' | 'doc';
   source: 'crawl' | 'upload';
-  summary: Summary;
-  inspectedAt: string;
+  foundOn?: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  latestInspection?: { summary: Summary; inspectedAt: string };
+  latestConversion?: { summary: Summary; convertedAt: string; outputSha256: string };
+};
+
+type ScanReport = {
+  merge: { added: number; seenAgain: number };
+  documentsOmitted: Partial<Record<'pdf' | 'docx' | 'doc', number>>;
+  errors: number;
 };
 
 type InspectionState =
@@ -87,10 +83,9 @@ type ConversionState =
 
 /**
  * Whether this deployment can convert at all, asked of the conversion route
- * itself (`GET /api/documents/remediate`) — the only surface whose answer is
- * true for the function that would do the converting. Until the answer
- * arrives, nothing conversion-shaped renders: a button that appears and then
- * vanishes is worse than one that arrives a moment late.
+ * itself. Until the answer arrives, nothing conversion-shaped renders: a
+ * button that appears and then vanishes is worse than one that arrives a
+ * moment late.
  */
 type ConverterState = { checked: boolean; available: boolean };
 
@@ -106,6 +101,29 @@ function pdfNameFor(sourceName: string): string {
  * The conversion response is the PDF itself, with the summary riding in a
  * header — one request, both halves. A refusal is JSON, same as everywhere.
  */
+/** The inventory fetch, pure of component state so every caller shares it. */
+async function fetchInventory(
+  path: string,
+): Promise<{ ok: true; documents: ClientDocument[] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(path);
+    const payload = (await response.json().catch(() => null)) as {
+      documents?: ClientDocument[];
+      error?: string;
+    } | null;
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        message: `The document inventory did not load (${payload?.error ?? `http ${response.status}`}).`,
+      };
+    }
+    return { ok: true, documents: payload?.documents ?? [] };
+  } catch {
+    return { ok: false, message: 'The document inventory did not load (could not reach the server).' };
+  }
+}
+
 async function conversionOutcome(response: Response, filename: string): Promise<ConversionState> {
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as
@@ -176,16 +194,17 @@ function pathOf(url: string): string {
 }
 
 /**
- * Where a discovered document lives, as an operator should read it: the bare
- * path when it sits on the same host as the page that linked it, host and
- * path when it does not. Website-builder platforms host every document on
- * their own CDN — measured on a real municipal site — so a bare path would
- * routinely hide where the client's documents actually are.
+ * Where a document lives, as an operator should read it: the bare path when
+ * it sits on the same host as the page that linked it, host and path when it
+ * does not. Website-builder platforms host every document on their own CDN —
+ * measured on a real municipal site — so a bare path would routinely hide
+ * where the client's documents actually are.
  */
-function documentLabel(doc: DiscoveredDocument): string {
+function documentLabel(doc: ClientDocument): string {
   try {
     const url = new URL(doc.url);
-    const sameHost = url.hostname === new URL(doc.foundOn).hostname;
+    const sameHost =
+      doc.foundOn === undefined || url.hostname === new URL(doc.foundOn).hostname;
     return sameHost ? `${url.pathname}${url.search}` : `${url.hostname}${url.pathname}${url.search}`;
   } catch {
     return doc.url;
@@ -193,16 +212,34 @@ function documentLabel(doc: DiscoveredDocument): string {
 }
 
 /**
- * One inspection result, shared by the scan rows, the upload, and the stored
- * records.
- *
- * One component rather than three renderings, so a document found by crawl, a
- * document handed over by upload and a record loaded back from the store
- * cannot end up described differently.
+ * What the row says about a document's lifecycle before any action this
+ * session: kind, provenance, and the latest word on record. Dates as the
+ * date half of the ISO stamp — stable across locales, so the server-rendered
+ * and hydrated trees agree.
  */
+function statusLine(doc: ClientDocument): string {
+  const parts = [
+    doc.kind === 'pdf' ? 'PDF' : 'Word',
+    doc.source === 'upload' ? 'uploaded' : `found on ${pathOf(doc.foundOn ?? '')}`.trim(),
+    `seen ${doc.lastSeenAt.slice(0, 10)}`,
+  ];
+  if (doc.latestInspection) {
+    const gaps = doc.latestInspection.summary.gaps.length;
+    parts.push(
+      `inspected ${doc.latestInspection.inspectedAt.slice(0, 10)} — ${
+        gaps === 0 ? 'no machine-detectable gaps' : `${gaps} gap${gaps === 1 ? '' : 's'}`
+      }`,
+    );
+  }
+  if (doc.latestConversion) {
+    parts.push(`converted ${doc.latestConversion.convertedAt.slice(0, 10)}`);
+  }
+  return parts.join(' · ');
+}
+
 /**
- * One conversion result, shared by the scan rows and the Word upload — the
- * same single-rendering rule `SummaryView` follows, one level up. The summary
+ * One conversion result, shared by the rows and the Word upload — the same
+ * single-rendering rule `SummaryView` follows, one level up. The summary
  * below it describes the **converted** file, so its remaining gaps are the
  * honest residue: conversion closes tagging and carries title and language
  * through, and what it cannot close stays red.
@@ -224,6 +261,11 @@ function ConversionView({ conversion }: { conversion: ConversionState & { state:
   );
 }
 
+/**
+ * One inspection result, shared by every source of one — an action this
+ * session, an upload — so a document cannot end up described differently
+ * depending on how its summary arrived.
+ */
 function SummaryView({ summary }: { summary: Summary }) {
   return (
     <div
@@ -269,45 +311,51 @@ export function ClientDocuments({
   const [targetUrl, setTargetUrl] = useState(initialTargetUrl);
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<DiscoveredDocument[] | null>(null);
-  const [documentsOmitted, setDocumentsOmitted] = useState<Partial<Record<'pdf' | 'docx' | 'doc', number>>>({});
+  const [scanReport, setScanReport] = useState<ScanReport | null>(null);
+  const [documents, setDocuments] = useState<ClientDocument[] | null>(null);
+  const [inventoryError, setInventoryError] = useState<string | null>(null);
   const [inspections, setInspections] = useState<Record<string, InspectionState>>({});
-  const [uploadState, setUploadState] = useState<InspectionState>({ state: 'idle' });
-  const [stored, setStored] = useState<InspectionRecord[] | null>(null);
-  const [storedError, setStoredError] = useState<string | null>(null);
-  const [converter, setConverter] = useState<ConverterState>({ checked: false, available: false });
   const [conversions, setConversions] = useState<Record<string, ConversionState>>({});
+  const [uploadState, setUploadState] = useState<InspectionState>({ state: 'idle' });
   const [wordUploadState, setWordUploadState] = useState<ConversionState>({ state: 'idle' });
+  const [converter, setConverter] = useState<ConverterState>({ checked: false, available: false });
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const headingId = `${fieldPrefix}-heading`;
   const urlId = `${fieldPrefix}-url`;
   const uploadId = `${fieldPrefix}-upload`;
   const wordUploadId = `${fieldPrefix}-word-upload`;
-  const storedHeadingId = `${fieldPrefix}-stored`;
 
   const documentsPath = `/api/platform/clients/${encodeURIComponent(clientId)}/documents`;
 
+  function applyInventory(
+    result: Awaited<ReturnType<typeof fetchInventory>>,
+  ): void {
+    if (result.ok) {
+      setInventoryError(null);
+      setDocuments(result.documents);
+    } else {
+      setInventoryError(result.message);
+    }
+  }
+
+  async function loadInventory(): Promise<void> {
+    applyInventory(await fetchInventory(documentsPath));
+  }
+
   useEffect(() => {
-    // The reason this screen exists in its persisted form: what was inspected
-    // yesterday is still here today.
+    // The inventory is the screen: what was inspected or converted last week
+    // is still here today.
     let cancelled = false;
 
     (async () => {
-      try {
-        const response = await fetch(documentsPath);
-        const payload = (await response.json().catch(() => null)) as {
-          inspections?: InspectionRecord[];
-          error?: string;
-        } | null;
-        if (cancelled) return;
-
-        if (!response.ok) {
-          setStoredError(`Stored inspections did not load (${payload?.error ?? `http ${response.status}`}).`);
-          return;
-        }
-        setStored(payload?.inspections ?? []);
-      } catch {
-        if (!cancelled) setStoredError('Stored inspections did not load (could not reach the server).');
+      const result = await fetchInventory(documentsPath);
+      if (cancelled) return;
+      if (result.ok) {
+        setInventoryError(null);
+        setDocuments(result.documents);
+      } else {
+        setInventoryError(result.message);
       }
     })();
 
@@ -342,30 +390,34 @@ export function ClientDocuments({
     };
   }, []);
 
-  /** Newest first, replacing any earlier record of the same inspection. */
-  function remember(record: InspectionRecord) {
-    setStored((current) => [record, ...(current ?? []).filter((r) => r.id !== record.id)]);
-  }
-
   async function scan() {
     setScanning(true);
     setScanError(null);
     try {
-      const response = await fetch('/api/platform/discover', {
+      const response = await fetch(`${documentsPath}/discover`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ targetUrl: targetUrl.trim() }),
       });
-      const payload = (await response.json().catch(() => null)) as DiscoveryResponse | null;
+      const payload = (await response.json().catch(() => null)) as {
+        merge?: { added: number; seenAgain: number };
+        documentsOmitted?: Partial<Record<'pdf' | 'docx' | 'doc', number>>;
+        errors?: unknown[];
+        error?: string;
+      } | null;
 
       if (!response.ok) {
         setScanError(`The scan failed (${payload?.error ?? `http ${response.status}`}).`);
         return;
       }
 
-      setDocuments(payload?.documents ?? []);
-      setDocumentsOmitted(payload?.documentsOmitted ?? {});
-      setInspections({});
+      setScanReport({
+        merge: payload?.merge ?? { added: 0, seenAgain: 0 },
+        documentsOmitted: payload?.documentsOmitted ?? {},
+        errors: payload?.errors?.length ?? 0,
+      });
+      // The server merged; the inventory is the truth to render.
+      await loadInventory();
     } catch {
       setScanError('Could not reach the server.');
     } finally {
@@ -375,32 +427,6 @@ export function ClientDocuments({
 
   function setInspection(url: string, state: InspectionState) {
     setInspections((current) => ({ ...current, [url]: state }));
-  }
-
-  async function inspect(doc: DiscoveredDocument) {
-    setInspection(doc.url, { state: 'running' });
-    try {
-      const response = await fetch(documentsPath, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url: doc.url, foundOn: doc.foundOn }),
-      });
-      const payload = (await response.json().catch(() => null)) as
-        | { inspection?: InspectionRecord; error?: string; detail?: string }
-        | null;
-
-      if (!response.ok || !payload?.inspection) {
-        setInspection(doc.url, {
-          state: 'failed',
-          message: payload?.detail ?? payload?.error ?? `http ${response.status}`,
-        });
-        return;
-      }
-      setInspection(doc.url, { state: 'done', summary: payload.inspection.summary });
-      remember(payload.inspection);
-    } catch {
-      setInspection(doc.url, { state: 'failed', message: 'could not reach the server' });
-    }
   }
 
   function setConversion(url: string, state: ConversionState) {
@@ -413,29 +439,50 @@ export function ClientDocuments({
     });
   }
 
-  async function convert(doc: DiscoveredDocument) {
-    setConversion(doc.url, { state: 'running' });
+  async function inspect(doc: ClientDocument) {
+    setInspection(doc.url, { state: 'running' });
     try {
-      const response = await fetch('/api/documents/remediate-url', {
+      const response = await fetch(documentsPath, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url: doc.url }),
+        body: JSON.stringify({
+          url: doc.url,
+          ...(doc.foundOn === undefined ? {} : { foundOn: doc.foundOn }),
+        }),
       });
-      setConversion(doc.url, await conversionOutcome(response, pdfNameFor(pathOf(doc.url))));
+      const payload = (await response.json().catch(() => null)) as
+        | { inspection?: { summary: Summary }; error?: string; detail?: string }
+        | null;
+
+      if (!response.ok || !payload?.inspection) {
+        setInspection(doc.url, {
+          state: 'failed',
+          message: payload?.detail ?? payload?.error ?? `http ${response.status}`,
+        });
+        return;
+      }
+      setInspection(doc.url, { state: 'done', summary: payload.inspection.summary });
+      void loadInventory();
     } catch {
-      setConversion(doc.url, { state: 'failed', message: 'could not reach the server' });
+      setInspection(doc.url, { state: 'failed', message: 'could not reach the server' });
     }
   }
 
-  async function convertUpload(file: File) {
-    setWordUploadState({ state: 'running' });
+  async function convert(doc: ClientDocument) {
+    setConversion(doc.url, { state: 'running' });
     try {
-      const form = new FormData();
-      form.set('file', file);
-      const response = await fetch('/api/documents/remediate', { method: 'POST', body: form });
-      setWordUploadState(await conversionOutcome(response, pdfNameFor(file.name)));
+      const response = await fetch(`${documentsPath}/convert`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          url: doc.url,
+          ...(doc.foundOn === undefined ? {} : { foundOn: doc.foundOn }),
+        }),
+      });
+      setConversion(doc.url, await conversionOutcome(response, pdfNameFor(pathOf(doc.url))));
+      void loadInventory();
     } catch {
-      setWordUploadState({ state: 'failed', message: 'could not reach the server' });
+      setConversion(doc.url, { state: 'failed', message: 'could not reach the server' });
     }
   }
 
@@ -446,7 +493,7 @@ export function ClientDocuments({
       form.set('file', file);
       const response = await fetch(documentsPath, { method: 'PUT', body: form });
       const payload = (await response.json().catch(() => null)) as
-        | { inspection?: InspectionRecord; error?: string; detail?: string }
+        | { inspection?: { summary: Summary }; error?: string; detail?: string }
         | null;
 
       if (!response.ok || !payload?.inspection) {
@@ -457,11 +504,34 @@ export function ClientDocuments({
         return;
       }
       setUploadState({ state: 'done', summary: payload.inspection.summary });
-      remember(payload.inspection);
+      void loadInventory();
     } catch {
       setUploadState({ state: 'failed', message: 'could not reach the server' });
     }
   }
+
+  async function convertUpload(file: File) {
+    setWordUploadState({ state: 'running' });
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      const response = await fetch(`${documentsPath}/convert`, { method: 'PUT', body: form });
+      setWordUploadState(await conversionOutcome(response, pdfNameFor(file.name)));
+      void loadInventory();
+    } catch {
+      setWordUploadState({ state: 'failed', message: 'could not reach the server' });
+    }
+  }
+
+  const omittedEntries = scanReport
+    ? (
+        [
+          ['pdf', 'PDF'],
+          ['docx', 'Word (.docx)'],
+          ['doc', 'Word (.doc)'],
+        ] as const
+      ).filter(([kind]) => (scanReport.documentsOmitted[kind] ?? 0) > 0)
+    : [];
 
   return (
     <section
@@ -478,10 +548,9 @@ export function ClientDocuments({
         Documents
       </h2>
       <p style={noteStyle}>
-        Documents linked from the client’s site — PDF and Word — found by the same crawl the setup
-        screen runs. The crawl records them without opening them; inspection is per-document
-        because each one costs a fetch and a JVM run. Every inspection is kept against this
-        client.
+        Every document on record for this client — PDF and Word, found by scans or handed over —
+        with the latest inspection and conversion beside it. A scan merges into this inventory;
+        it never resets it.
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8 }}>
@@ -514,9 +583,36 @@ export function ClientDocuments({
         </p>
       ) : null}
 
+      {scanReport ? (
+        <p style={noteStyle}>
+          Scan finished: {scanReport.merge.added} new document
+          {scanReport.merge.added === 1 ? '' : 's'}, {scanReport.merge.seenAgain} seen again
+          {scanReport.errors > 0
+            ? `, ${scanReport.errors} page${scanReport.errors === 1 ? '' : 's'} unreadable`
+            : ''}
+          .
+          {omittedEntries.length > 0
+            ? ` Beyond the per-kind cap: ${omittedEntries
+                .map(
+                  ([kind, label]) =>
+                    `${scanReport.documentsOmitted[kind]} more ${label} link${
+                      scanReport.documentsOmitted[kind] === 1 ? '' : 's'
+                    }`,
+                )
+                .join(', ')} not listed.`
+            : ''}
+        </p>
+      ) : null}
+
+      {inventoryError ? (
+        <p role="alert" style={{ ...noteStyle, color: T.fail }}>
+          {inventoryError}
+        </p>
+      ) : null}
+
       {documents !== null ? (
         documents.length === 0 ? (
-          <p style={noteStyle}>The crawl saw no document links.</p>
+          <p style={noteStyle}>No documents on record yet — scan the site, or upload one.</p>
         ) : (
           <ul
             style={{
@@ -531,11 +627,10 @@ export function ClientDocuments({
             {documents.map((doc) => {
               const inspection = inspections[doc.url] ?? { state: 'idle' };
               const conversion = conversions[doc.url] ?? { state: 'idle' };
+              const hasRecord =
+                doc.latestInspection !== undefined || doc.latestConversion !== undefined;
               return (
-                <li
-                  key={doc.url}
-                  style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
-                >
+                <li key={doc.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span
                     style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}
                   >
@@ -543,8 +638,19 @@ export function ClientDocuments({
                       {documentLabel(doc)}
                     </span>
                     <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
-                      {doc.kind === 'pdf' ? 'PDF' : 'Word'} · found on {pathOf(doc.foundOn)}
+                      {statusLine(doc)}
                     </span>
+                    {hasRecord ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpanded((current) => ({ ...current, [doc.id]: !current[doc.id] }))
+                        }
+                        style={buttonStyle}
+                      >
+                        {expanded[doc.id] ? 'Hide details' : 'Details'}
+                      </button>
+                    ) : null}
                     {doc.kind === 'pdf' ? (
                       <button
                         type="button"
@@ -573,6 +679,15 @@ export function ClientDocuments({
                       </button>
                     ) : null}
                   </span>
+                  {/* The stored record, rendered from the inventory itself —
+                      no server call, and the same SummaryView every other
+                      source renders through. */}
+                  {expanded[doc.id] && doc.latestInspection ? (
+                    <SummaryView summary={doc.latestInspection.summary} />
+                  ) : null}
+                  {expanded[doc.id] && doc.latestConversion ? (
+                    <SummaryView summary={doc.latestConversion.summary} />
+                  ) : null}
                   {inspection.state === 'done' ? <SummaryView summary={inspection.summary} /> : null}
                   {inspection.state === 'failed' ? (
                     <p role="alert" style={{ ...noteStyle, color: T.fail }}>
@@ -592,31 +707,14 @@ export function ClientDocuments({
         )
       ) : null}
 
-      {converter.checked && !converter.available && documents?.some((doc) => doc.kind !== 'pdf') ? (
+      {converter.checked &&
+      !converter.available &&
+      documents?.some((doc) => doc.kind !== 'pdf') ? (
         <p style={noteStyle}>
           {/* Stated rather than implied by a missing button. The absence is a
               capability fact about this deployment, not a defect in the row. */}
           Word documents are recorded without a Convert button — conversion runs where LibreOffice
           is installed, and this deployment does not have it. Inspection reads PDFs.
-        </p>
-      ) : null}
-
-      {Object.keys(documentsOmitted).length > 0 ? (
-        <p style={noteStyle}>
-          {/* Per kind, because the caps are: the operator deciding where to
-              spend inspections needs to know WHICH format the cut fell on. */}
-          Beyond the per-kind cap:{' '}
-          {(
-            [
-              ['pdf', 'PDF'],
-              ['docx', 'Word (.docx)'],
-              ['doc', 'Word (.doc)'],
-            ] as const
-          )
-            .filter(([kind]) => (documentsOmitted[kind] ?? 0) > 0)
-            .map(([kind, label]) => `${documentsOmitted[kind]} more ${label} link${documentsOmitted[kind] === 1 ? '' : 's'}`)
-            .join(', ')}{' '}
-          not listed.
         </p>
       ) : null}
 
@@ -670,57 +768,6 @@ export function ClientDocuments({
               Conversion failed: {wordUploadState.message}.
             </p>
           ) : null}
-        </div>
-      ) : null}
-
-      {storedError ? (
-        <p role="alert" style={{ ...noteStyle, color: T.fail }}>
-          {storedError}
-        </p>
-      ) : null}
-
-      {stored !== null && stored.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <h3
-            id={storedHeadingId}
-            style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.ink }}
-          >
-            Previously inspected
-          </h3>
-          <ul
-            aria-labelledby={storedHeadingId}
-            style={{
-              listStyle: 'none',
-              margin: 0,
-              padding: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}
-          >
-            {stored.map((record) => (
-              <li key={record.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: FONT.mono, fontSize: 12, color: T.ink }}>
-                    {pathOf(record.url)}
-                  </span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
-                    {record.source === 'upload'
-                      ? 'uploaded'
-                      : record.foundOn
-                        ? `found on ${pathOf(record.foundOn)}`
-                        : 'found by crawl'}
-                  </span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
-                    {/* The date half of the ISO stamp: stable across locales,
-                        so the server-rendered and hydrated trees agree. */}
-                    {record.inspectedAt.slice(0, 10)}
-                  </span>
-                </span>
-                <SummaryView summary={record.summary} />
-              </li>
-            ))}
-          </ul>
         </div>
       ) : null}
     </section>

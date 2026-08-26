@@ -62,10 +62,14 @@ curl -sS -H "Authorization: Bearer $AUDITOR_RUN_TOKEN" \
      http://localhost:3000/api/documents/remediate -o remediated.pdf
 ```
 
-Synchronous, because a conversion is ~15s against a 300s ceiling. **No
-persistence** — the bytes go back in the response and the record goes to the
-log. That contract will change when retrieval is needed; it is a decision for
-then rather than a surprise.
+Synchronous, because a conversion is ~15s against a 300s ceiling. These
+client-unscoped tools persist nothing — the bytes go back in the response and
+the record goes to the log. The **client-scoped** siblings
+(`/api/platform/clients/<id>/documents/convert`, POST by URL / PUT upload) run
+the same pipeline and additionally keep the audit trail: a
+`document_conversions` row with the pipeline's account and the SHA-256 of the
+bytes in and out, attached to the client's `client_documents` inventory row.
+The bytes themselves still go only to the operator.
 
 `503` when the host has no toolchain, never `500`. On a serverless deployment
 that is the permanent, correct answer.

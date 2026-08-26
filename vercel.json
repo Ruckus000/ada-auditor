@@ -15,6 +15,9 @@
     "src/app/api/platform/discover/route.ts": {
       "memory": 3009
     },
+    "src/app/api/platform/clients/**/documents/discover/route.ts": {
+      "memory": 3009
+    },
     "src/app/api/audit/runs/**/report.pdf/route.ts": {
       "memory": 2048
     },

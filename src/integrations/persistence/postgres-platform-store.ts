@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import {
   clampEventListLimit,
+  CLIENT_DOCUMENT_LIST_MAX,
   DOCUMENT_INSPECTION_LIST_MAX,
   UNASSIGNED_CLIENT_ID,
 } from '../../domain/platform';
@@ -8,10 +10,14 @@ import type {
   ClientCredentialPresence,
   ClientCredentialValues,
   DocumentInspectionSource,
+  DocumentSighting,
+  ClientDocumentRecord,
   ListEventsOptions,
   PlatformStore,
   ReportAudience,
   StoredClient,
+  StoredClientDocument,
+  StoredDocumentConversion,
   StoredDocumentInspection,
   StoredJourney,
   StoredOperator,
@@ -112,11 +118,33 @@ type ReportRow = {
 type DocumentInspectionRow = {
   id: string;
   client_id: string;
+  document_id: string;
   url: string;
   found_on: string | null;
   source: string;
   summary: RemediationSummary;
   inspected_at: Date | string;
+};
+
+type ClientDocumentRow = {
+  id: string;
+  client_id: string;
+  url: string;
+  kind: string;
+  source: string;
+  found_on: string | null;
+  first_seen_at: Date | string;
+  last_seen_at: Date | string;
+};
+
+type DocumentConversionRow = {
+  id: string;
+  client_id: string;
+  document_id: string;
+  summary: RemediationSummary;
+  input_sha256: string;
+  output_sha256: string;
+  converted_at: Date | string;
 };
 
 export class PostgresPlatformStore implements PlatformStore {
@@ -693,9 +721,11 @@ export class PostgresPlatformStore implements PlatformStore {
     // a store that invents a timestamp is a store that has drifted from the
     // memory double, which holds what it was handed.
     await this.sql`
-      insert into document_inspections (id, client_id, url, found_on, source, summary, inspected_at)
+      insert into document_inspections
+        (id, client_id, document_id, url, found_on, source, summary, inspected_at)
       values (
-        ${record.id}, ${record.clientId}, ${record.url}, ${record.foundOn ?? null},
+        ${record.id}, ${record.clientId}, ${record.documentId}, ${record.url},
+        ${record.foundOn ?? null},
         ${record.source}, ${JSON.stringify(record.summary)}::jsonb, ${record.inspectedAt}
       )
       on conflict (id) do nothing
@@ -710,15 +740,160 @@ export class PostgresPlatformStore implements PlatformStore {
       limit ${DOCUMENT_INSPECTION_LIST_MAX}
     `;
 
-    return rows.map((row) => ({
+    return rows.map((row) => this.mapInspection(row));
+  }
+
+  private mapInspection(row: DocumentInspectionRow): StoredDocumentInspection {
+    return {
       id: row.id,
       clientId: row.client_id,
+      documentId: row.document_id,
       url: row.url,
       ...optional('foundOn', row.found_on),
       source: row.source as DocumentInspectionSource,
       summary: row.summary,
       inspectedAt: toIso(row.inspected_at),
-    })) as StoredDocumentInspection[];
+    } as StoredDocumentInspection;
+  }
+
+  // ----------------------------------------------------- client documents --
+
+  private mapClientDocument(row: ClientDocumentRow): StoredClientDocument {
+    return {
+      id: row.id,
+      clientId: row.client_id,
+      url: row.url,
+      kind: row.kind as StoredClientDocument['kind'],
+      source: row.source as DocumentInspectionSource,
+      ...optional('foundOn', row.found_on),
+      firstSeenAt: toIso(row.first_seen_at),
+      lastSeenAt: toIso(row.last_seen_at),
+    } as StoredClientDocument;
+  }
+
+  private mapConversion(row: DocumentConversionRow): StoredDocumentConversion {
+    return {
+      id: row.id,
+      clientId: row.client_id,
+      documentId: row.document_id,
+      summary: row.summary,
+      inputSha256: row.input_sha256,
+      outputSha256: row.output_sha256,
+      convertedAt: toIso(row.converted_at),
+    };
+  }
+
+  async recordDocumentSightings(
+    clientId: string,
+    sightings: DocumentSighting[],
+    seenAt: string,
+  ): Promise<{ added: number; seenAgain: number }> {
+    // One upsert per sighting rather than a batch statement, so the conflict
+    // rule — first sighting wins everything but `last_seen_at` — stays in one
+    // visible place; in parallel, because a scan's sightings are distinct
+    // URLs (discovery deduped them) and serially this is a couple hundred
+    // network round trips. `xmax = 0` is the standard witness for "this row
+    // was inserted, not updated" on an upsert.
+    const outcomes = await Promise.all(
+      sightings.map(async (sighting) => {
+        const rows = await this.sql<{ inserted: boolean }>`
+          insert into client_documents
+            (id, client_id, url, kind, source, found_on, first_seen_at, last_seen_at)
+          values (
+            ${`doc-${clientId}-${randomUUID()}`}, ${clientId}, ${sighting.url},
+            ${sighting.kind}, ${sighting.source}, ${sighting.foundOn ?? null},
+            ${seenAt}, ${seenAt}
+          )
+          on conflict (client_id, url) do update set last_seen_at = ${seenAt}
+          returning (xmax = 0) as inserted
+        `;
+        return rows[0]?.inserted === true;
+      }),
+    );
+
+    return {
+      added: outcomes.filter(Boolean).length,
+      seenAgain: outcomes.filter((inserted) => !inserted).length,
+    };
+  }
+
+  async ensureClientDocument(
+    clientId: string,
+    sighting: DocumentSighting,
+    seenAt: string,
+  ): Promise<StoredClientDocument> {
+    const rows = await this.sql<ClientDocumentRow>`
+      insert into client_documents
+        (id, client_id, url, kind, source, found_on, first_seen_at, last_seen_at)
+      values (
+        ${`doc-${clientId}-${randomUUID()}`}, ${clientId}, ${sighting.url},
+        ${sighting.kind}, ${sighting.source}, ${sighting.foundOn ?? null},
+        ${seenAt}, ${seenAt}
+      )
+      on conflict (client_id, url) do update set last_seen_at = ${seenAt}
+      returning *
+    `;
+    return this.mapClientDocument(rows[0]);
+  }
+
+  async listClientDocuments(clientId: string): Promise<ClientDocumentRecord[]> {
+    const docRows = await this.sql<ClientDocumentRow>`
+      select * from client_documents
+      where client_id = ${clientId}
+      order by last_seen_at desc, id desc
+      limit ${CLIENT_DOCUMENT_LIST_MAX}
+    `;
+    if (docRows.length === 0) return [];
+
+    const ids = docRows.map((row) => row.id);
+
+    // `distinct on` with a total order (`id desc` breaks same-instant ties),
+    // matching the memory double's tie-break so no test can pass against one
+    // store and fail the other.
+    const inspectionRows = await this.sql<DocumentInspectionRow>`
+      select distinct on (document_id) *
+      from document_inspections
+      where document_id = any(${ids})
+      order by document_id, inspected_at desc, id desc
+    `;
+    const conversionRows = await this.sql<DocumentConversionRow>`
+      select distinct on (document_id) *
+      from document_conversions
+      where document_id = any(${ids})
+      order by document_id, converted_at desc, id desc
+    `;
+
+    const inspectionByDoc = new Map(
+      inspectionRows.map((row) => [row.document_id, this.mapInspection(row)]),
+    );
+    const conversionByDoc = new Map(
+      conversionRows.map((row) => [row.document_id, this.mapConversion(row)]),
+    );
+
+    return docRows.map((row) => {
+      const inspection = inspectionByDoc.get(row.id);
+      const conversion = conversionByDoc.get(row.id);
+      return {
+        ...this.mapClientDocument(row),
+        ...(inspection === undefined ? {} : { latestInspection: inspection }),
+        ...(conversion === undefined ? {} : { latestConversion: conversion }),
+      };
+    });
+  }
+
+  async saveDocumentConversion(record: StoredDocumentConversion): Promise<void> {
+    // Immutable evidence, like an inspection: a retried save keeps the first
+    // record.
+    await this.sql`
+      insert into document_conversions
+        (id, client_id, document_id, summary, input_sha256, output_sha256, converted_at)
+      values (
+        ${record.id}, ${record.clientId}, ${record.documentId},
+        ${JSON.stringify(record.summary)}::jsonb,
+        ${record.inputSha256}, ${record.outputSha256}, ${record.convertedAt}
+      )
+      on conflict (id) do nothing
+    `;
   }
 
   // ------------------------------------------------------------ activity --

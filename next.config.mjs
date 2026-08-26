@@ -55,6 +55,16 @@ const nextConfig = {
     // answer for this one with browser binaries it does not use. Kept out of
     // `/api/platform/clients/**` itself so the other client routes do not each
     // grow a 40MB runtime they never exec.
+    // The one documents route that launches a BROWSER, not a JVM: the
+    // client-scoped crawl-and-merge. Placed before the JVM entry below for
+    // the same first-covering-key reason that entry sits before the broad
+    // clients one — the JVM entry would otherwise answer for this route with
+    // a runtime it never execs, while the browser it does exec goes
+    // unpackaged and dies on its first production request.
+    '/api/platform/clients/**/documents/discover/**': [
+      './node_modules/playwright-core/**',
+      './node_modules/@sparticuz/chromium/**',
+    ],
     '/api/platform/clients/**/documents/**': [
       './vendor/jre/**',
       './vendor/pdfbox-app-3.0.8.jar',
