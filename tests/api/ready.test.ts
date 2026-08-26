@@ -53,6 +53,7 @@ describe('GET /api/ready', () => {
   const originalBlobToken = process.env.BLOB_READ_WRITE_TOKEN;
   const originalGatewayKey = process.env.AI_GATEWAY_API_KEY;
   const originalOidcToken = process.env.VERCEL_OIDC_TOKEN;
+  const originalCredentialKey = process.env.AUDITOR_CREDENTIAL_KEY;
 
   beforeEach(() => {
     process.env.DATABASE_URL = 'postgres://test/db';
@@ -82,6 +83,8 @@ describe('GET /api/ready', () => {
     else process.env.AI_GATEWAY_API_KEY = originalGatewayKey;
     if (originalOidcToken === undefined) delete process.env.VERCEL_OIDC_TOKEN;
     else process.env.VERCEL_OIDC_TOKEN = originalOidcToken;
+    if (originalCredentialKey === undefined) delete process.env.AUDITOR_CREDENTIAL_KEY;
+    else process.env.AUDITOR_CREDENTIAL_KEY = originalCredentialKey;
   });
 
   it('is ready when AUDITOR_RUN_TOKEN meets MIN_TOKEN_LENGTH', async () => {
@@ -192,6 +195,35 @@ describe('GET /api/ready', () => {
 
     expect(body.checks.advisoryConfigured).toBe(false);
     expect(body.warnings).toEqual([]);
+  });
+
+  it('reports whether the credential store is configured without warning about it', async () => {
+    // Same stance as `advisoryConfigured`, for the same reason: env-var
+    // credentials are a supported configuration, not a degraded one, so a
+    // deployment that never sets the key must not carry a permanent warning.
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+    process.env.AUDITOR_SESSION_SECRET = 'session-secret-16chars';
+    process.env.CRON_SECRET = 'cron-secret-16chars';
+    process.env.KV_REST_API_URL = 'https://kv.test';
+    process.env.KV_REST_API_TOKEN = 'kv-token';
+    process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
+    delete process.env.AUDITOR_CREDENTIAL_KEY;
+
+    const without = await (await GET()).json();
+    expect(without.checks.credentialStoreConfigured).toBe(false);
+    expect(without.status).toBe('ready');
+    expect(without.warnings).toEqual([]);
+
+    // 64 hex chars — the shape, not just presence: a mis-pasted key would
+    // make every write 503, and reporting it configured would send the
+    // operator to debug the wrong thing.
+    process.env.AUDITOR_CREDENTIAL_KEY = 'ef'.repeat(32);
+    const withKey = await (await GET()).json();
+    expect(withKey.checks.credentialStoreConfigured).toBe(true);
+
+    process.env.AUDITOR_CREDENTIAL_KEY = 'too-short';
+    const malformed = await (await GET()).json();
+    expect(malformed.checks.credentialStoreConfigured).toBe(false);
   });
 
   it('stays ready with an empty warnings array when no document toolchain exists', async () => {

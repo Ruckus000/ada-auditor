@@ -2,6 +2,7 @@ import { MIN_TOKEN_LENGTH } from '../_lib/console-session';
 import { createRedisClient } from '../_lib/redis';
 import { isThrottleKvConfigured, KvThrottleStore } from '../_lib/unlock-throttle';
 import { isDatabaseConfigured } from '../../../integrations/persistence';
+import { isCredentialStoreConfigured } from '../../../integrations/persistence/credential-cipher';
 import { sessionSecretIsShared } from '../_lib/principal';
 import { isBlobConfigured } from '../../../integrations/artifacts/blob-store';
 import { isAiAdvisoryConfigured } from '../../../services/ai-advisory';
@@ -87,6 +88,12 @@ export async function GET() {
     cronSecretConfigured: Boolean(process.env.CRON_SECRET),
     blobConfigured: isBlobConfigured(),
     advisoryConfigured: isAiAdvisoryConfigured(),
+    // Reported, never gating, and — like `advisoryConfigured` below —
+    // deliberately never warned about: env-var credentials are a supported
+    // configuration, not a degraded one, so an unset AUDITOR_CREDENTIAL_KEY
+    // would be a permanent warnings entry on a healthy deployment, and a
+    // warnings array with a permanent entry is one people stop reading.
+    credentialStoreConfigured: isCredentialStoreConfigured(),
     documentToolchainAvailable: isDocumentToolchainAvailable(),
     documentConverterAvailable: isDocumentConverterAvailable(),
     chaosEnabled: process.env.CHAOS_ENABLED === 'true',

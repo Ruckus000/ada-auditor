@@ -187,6 +187,76 @@ describe('runJourney, logging in with a stored credential', () => {
     }
   }, 60_000);
 
+  /**
+   * The credential-store seam, driven through the same fixture login.
+   *
+   * `resolveCredentialFrom`'s ordering has unit tests; this is the half only a
+   * browser can carry — that a value handed to the run in `credentials` is the
+   * one typed into the box, ahead of an environment variable that disagrees.
+   * The env vars are set to values the fixture rejects, so reaching the
+   * dashboard is proof the map won: resolve from env instead and the run stays
+   * on `login.html`.
+   */
+  it('types the stored credential ahead of the environment fallback', async () => {
+    process.env[USER_KEY] = 'env-wrong-user';
+    process.env[PASS_KEY] = 'env-wrong-pass';
+
+    const result = await runJourney({
+      environment: 'test',
+      journeyId: 'fixture-login',
+      stepId: 'credential-store-first',
+      fixtureDir: FIXTURE_DIR,
+      artifactsDir,
+      steps: loginSteps(),
+      credentials: { [REF]: { user: USER, pass: SECRET } },
+    });
+
+    expect(result.pages.map((page) => page.page.route)).toContain('/dashboard.html');
+  }, 60_000);
+
+  /**
+   * A store-resolved value is a secret exactly like an env-resolved one.
+   *
+   * The redaction rides on `resolvedSecrets`, which is pushed at the moment of
+   * resolution — before typing — whichever source answered. This is the case
+   * that fails if the store path ever routes around that push. Same anchor
+   * trick, same reasoning, as the env-fallback redaction case above; the
+   * AX-tree assertion is the one with teeth there and it is the one with teeth
+   * here.
+   */
+  it('keeps store-resolved credentials out of captured evidence', async () => {
+    delete process.env[USER_KEY];
+    delete process.env[PASS_KEY];
+
+    const result = await runJourney({
+      environment: 'test',
+      journeyId: 'fixture-login',
+      stepId: 'credential-store-artifacts',
+      fixtureDir: FIXTURE_DIR,
+      artifactsDir,
+      steps: [
+        { action: 'navigate', type: 'goto', path: 'login-anchor.html' },
+        { action: 'login', type: 'fill', selector: '#username', credentialRef: REF, field: 'user' },
+        { action: 'login', type: 'fill', selector: '#password', credentialRef: REF, field: 'pass' },
+        { action: 'navigate', type: 'click', selector: '#jump' },
+      ],
+      credentials: { [REF]: { user: USER_SENTINEL, pass: SENTINEL } },
+    });
+
+    expect(result.pages.length).toBe(2);
+    for (const page of result.pages) {
+      const dom = await readFile(page.artifacts.domSnapshotPath as string, 'utf8');
+      const axTree = await readFile(page.artifacts.axTreePath as string, 'utf8');
+
+      for (const secret of [SENTINEL, USER_SENTINEL]) {
+        expect(dom).not.toContain(secret);
+        expect(axTree).not.toContain(secret);
+        expect(page.html).not.toContain(secret);
+        expect(JSON.stringify(page.axTree)).not.toContain(secret);
+      }
+    }
+  }, 60_000);
+
   it('refuses a run whose credential is not configured, naming neither a value nor a guess', async () => {
     const run = runJourney({
       environment: 'test',

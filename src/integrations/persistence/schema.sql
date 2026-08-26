@@ -557,6 +557,37 @@ alter table runs add column if not exists gate_version smallint;
 alter table runs alter column gate_version drop not null;
 alter table runs alter column gate_version drop default;
 
+-- ----------------------------------------------- client credentials (2026-08) --
+
+-- The values behind a journey's `credentialRef`s, per client, encrypted.
+--
+-- The reference stays in the journey and the steady-state rule stands:
+-- credentials are referenced, never inlined. What this table moves is the
+-- *value* — from `AUDIT_CREDENTIAL_<REF>_<FIELD>` deployment variables, which
+-- take a redeploy and a hand on the environment, to a row an operator writes
+-- once through a write-only API. Resolution at run time is store first, env
+-- fallback second, so every existing journey keeps working.
+--
+-- `*_ciphertext` is AES-256-GCM under `AUDITOR_CREDENTIAL_KEY`, written and
+-- read only by `PostgresPlatformStore` via `credential-cipher.ts`, as
+-- `v1:<hex nonce>:<hex tag>:<hex ct>` with a fresh nonce per write. Both
+-- columns are `not null` because a login is a pair, and half of one is a run
+-- that fails its `expect` step by design. Losing the key means re-entering
+-- credentials — the designed recovery; there is no export.
+--
+-- Cascade on the client: a client's credentials have no meaning past the
+-- client, and an orphaned password row is exactly the kind of furniture this
+-- schema refuses to keep.
+create table if not exists client_credentials (
+  client_id       text not null references clients (id) on delete cascade,
+  ref             text not null,
+  user_ciphertext text not null,
+  pass_ciphertext text not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  primary key (client_id, ref)
+);
+
 -- Which bound cut the walk short: 'page-cap' or 'budget'.
 --
 -- `truncated_pages` says a run did not cover its journey; this says what to do

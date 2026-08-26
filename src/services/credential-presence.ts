@@ -54,11 +54,13 @@ function isSet(env: EnvLike, ref: string, field: CredentialField): boolean {
  *
  * Deduplicated and in first-use order — a login uses one reference for both
  * fields, and listing it twice would read as two credentials.
+ *
+ * Exported on its own because the run and preview handlers need the refs
+ * without the env answer — they ask the per-client store instead — and a
+ * second copy of this walk is a second place for the two surfaces to disagree
+ * about what counts as a reference.
  */
-export function credentialsForSteps(
-  steps: unknown,
-  env: EnvLike = process.env,
-): CredentialPresence[] {
+export function credentialRefsInSteps(steps: unknown): string[] {
   if (!Array.isArray(steps)) return [];
 
   const refs: string[] = [];
@@ -68,8 +70,14 @@ export function credentialsForSteps(
     if (typeof ref !== 'string' || !CREDENTIAL_REF_PATTERN.test(ref)) continue;
     if (!refs.includes(ref)) refs.push(ref);
   }
+  return refs;
+}
 
-  return refs.map((ref) => ({
+export function credentialsForSteps(
+  steps: unknown,
+  env: EnvLike = process.env,
+): CredentialPresence[] {
+  return credentialRefsInSteps(steps).map((ref) => ({
     ref,
     user: isSet(env, ref, 'user'),
     pass: isSet(env, ref, 'pass'),

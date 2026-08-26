@@ -2,6 +2,7 @@ import type { Environment } from '../../domain/contracts';
 import type { JourneyTruncationReason } from '../../domain/run-limits';
 import type { AxNodeSummary } from '../../services/ax-tree';
 import type { AxeScanResult } from '../../services/deterministic-audit';
+import type { RunCredentials } from './credentials';
 
 /**
  * A `fill` step either types a literal value or resolves a stored credential.
@@ -89,6 +90,15 @@ export type JourneyRunnerInput = {
   targetUrl?: string;
   /** Hosts this run may navigate to. Defaults to the target's own host. */
   allowedHosts?: string[];
+  /**
+   * Credential values resolved for this run's `credentialRef`s, from the
+   * per-client store. Consulted before the `AUDIT_CREDENTIAL_<REF>_<FIELD>`
+   * env fallback — see `resolveCredentialFrom`. Absent means the run resolves
+   * everything from the environment, exactly as it did before the store
+   * existed. **This map must never reach a log line, a stored `intent`, or
+   * any artifact** — it exists only long enough to be typed and redacted.
+   */
+  credentials?: RunCredentials;
   /**
    * Most pages this run will audit. Defaults to `AUDITOR_MAX_PAGES_PER_RUN`, or
    * 20. Every page costs an axe scan, a full-page screenshot and an AX tree

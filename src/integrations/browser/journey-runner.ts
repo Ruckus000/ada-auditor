@@ -14,7 +14,7 @@ import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/a
 import { logInfo, logWarn } from '../../services/logger';
 import { hostnameOf, settledLocation, withUrlsReduced } from '../../services/safe-url';
 import { scanPageWithAxe } from './axe-scan';
-import { resolveCredential } from './credentials';
+import { resolveCredentialFrom } from './credentials';
 import { launchChromium } from './launch';
 import { PartialJourneyError } from './partial-run';
 import {
@@ -850,7 +850,10 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       if (step.type === 'fill') {
         let value: string;
         if ('credentialRef' in step) {
-          value = resolveCredential(step.credentialRef, step.field);
+          // Store first, env fallback second — the ordering lives in
+          // `resolveCredentialFrom`, and a ref missing from both fails with
+          // the same CredentialError it always has.
+          value = resolveCredentialFrom(input.credentials, step.credentialRef, step.field);
           // Recorded before it is typed, so a capture triggered by this very
           // step cannot beat the redaction to the disk.
           resolvedSecrets.push(value);

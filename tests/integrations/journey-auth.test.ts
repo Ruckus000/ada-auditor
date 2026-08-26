@@ -6,6 +6,7 @@ import {
 import {
   CredentialError,
   resolveCredential,
+  resolveCredentialFrom,
 } from '../../src/integrations/browser/credentials';
 
 /**
@@ -59,6 +60,64 @@ describe('resolveCredential', () => {
       expect(() => resolveCredential(ref, 'user')).toThrow(CredentialError);
     },
   );
+});
+
+/**
+ * The resolution order the credential store introduced: what the run was
+ * handed wins, the environment carries everything else, and a ref neither can
+ * answer fails exactly as it always has. This is the one place that order is
+ * written down, which is why it gets its own cases rather than riding on the
+ * browser suite's login walk.
+ */
+describe('resolveCredentialFrom', () => {
+  const KEYS = ['AUDIT_CREDENTIAL_ACME_USER', 'AUDIT_CREDENTIAL_ACME_PASS'];
+
+  afterEach(() => {
+    for (const key of KEYS) {
+      delete process.env[key];
+    }
+  });
+
+  it('prefers the stored value over the environment', () => {
+    process.env.AUDIT_CREDENTIAL_ACME_PASS = 'env-value';
+
+    expect(
+      resolveCredentialFrom({ acme: { user: 'stored-user', pass: 'stored-pass' } }, 'acme', 'pass'),
+    ).toBe('stored-pass');
+  });
+
+  it('falls back to the environment for a ref the map does not carry', () => {
+    process.env.AUDIT_CREDENTIAL_ACME_USER = 'env-user';
+
+    expect(resolveCredentialFrom({ other: { user: 'x' } }, 'acme', 'user')).toBe('env-user');
+    expect(resolveCredentialFrom(undefined, 'acme', 'user')).toBe('env-user');
+  });
+
+  it('falls back per field, not per ref', () => {
+    // The seam's fields are optional — what a caller resolved is what it
+    // resolved — so a map that answers `user` must not swallow `pass`.
+    process.env.AUDIT_CREDENTIAL_ACME_PASS = 'env-pass';
+
+    expect(resolveCredentialFrom({ acme: { user: 'stored-user' } }, 'acme', 'pass')).toBe(
+      'env-pass',
+    );
+  });
+
+  it('treats an empty stored value as absent, matching the env rule', () => {
+    process.env.AUDIT_CREDENTIAL_ACME_USER = 'env-user';
+
+    expect(resolveCredentialFrom({ acme: { user: '' } }, 'acme', 'user')).toBe('env-user');
+  });
+
+  it('fails a ref missing from both with the sentence the screens explain', () => {
+    // The exact text, not just the error class: the editor's copy and the
+    // run-failure mapping both talk about this sentence, and the store must
+    // not have changed it.
+    expect(() => resolveCredentialFrom({}, 'acme', 'pass')).toThrow(
+      'Credential "acme" has no pass configured.',
+    );
+    expect(() => resolveCredentialFrom({}, 'acme', 'pass')).toThrow(CredentialError);
+  });
 });
 
 describe('buildDefaultDemoJourneySteps', () => {

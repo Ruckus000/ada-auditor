@@ -628,6 +628,20 @@ Read this before claiming something works.
   covers instead. The workflow still never reports "all is well", only what it
   actually checked.
 
+- **Client credentials can now be stored per client, encrypted, write-only.**
+  `client_credentials` holds AES-256-GCM ciphertext under
+  `AUDITOR_CREDENTIAL_KEY` (`credential-cipher.ts`; the cipher lives inside
+  `PostgresPlatformStore`, so the shared contract sees plaintext-in/out and the
+  memory double needs no key). The journey editor's credential mode writes it
+  (`PUT /api/platform/clients/<id>/credentials/<ref>`) and reads back
+  *presence only* — no endpoint ever returns a value, and activity events
+  carry the ref alone. Runs resolve store-first with the
+  `AUDIT_CREDENTIAL_<REF>_<FIELD>` env vars as the untouched fallback
+  (`resolveCredentialFrom`), so every pre-store journey and deployment keeps
+  working; without the key the write API answers 503 and the fallback carries
+  everything. Losing the key means re-entering credentials — designed
+  recovery, no export.
+
 ## Agent behavior
 
 - Do not invent Netflix process that isn’t grounded in these rules

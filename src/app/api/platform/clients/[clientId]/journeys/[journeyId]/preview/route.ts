@@ -14,6 +14,7 @@ import { logInfo, logWarn } from '../../../../../../../../services/logger';
 import { withUrlsReduced } from '../../../../../../../../services/safe-url';
 import { consumePreviewBudget } from '../../../../../../../../services/run-budget';
 import { authorizePrincipal } from '../../../../../../_lib/authorize';
+import { storedCredentialsForClient } from '../../../../../../_lib/run-credentials';
 import { createRequestId } from '../../../../../../_lib/request-id';
 import { getRunCounter } from '../../../../../../_lib/run-counter';
 import { classifyRunFailure } from '../../../../../../_lib/run-failure';
@@ -207,6 +208,13 @@ export async function POST(
   const artifactsDir = join(tmpdir(), 'preview-artifacts', requestId);
   const startedAt = Date.now();
 
+  // The same store-first resolution a real run gets, because the preview
+  // exists to answer "will this walk work" — verifying against the env
+  // fallback while the run would use the stored value would make the preview
+  // vouch for a login the audit never types. This route already knows the
+  // journey's client, so it skips the run handler's journey lookup.
+  const credentials = await storedCredentialsForClient(platform, clientId, validated.data);
+
   try {
     const result = await runJourney({
       journeyId: journey.id,
@@ -217,6 +225,7 @@ export async function POST(
       steps: validated.data,
       targetUrl,
       allowedHosts,
+      ...(credentials ? { credentials } : {}),
       omitAxTree: true,
       skipScan: true,
     });

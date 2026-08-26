@@ -304,6 +304,52 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/preview', (
     expect(existsSync(artifactsDir)).toBe(false);
   });
 
+  it('verifies with the same stored credentials a real run would type', async () => {
+    // The preview exists to answer "will this walk work". Resolving from the
+    // env fallback while the run resolves from the store would let the
+    // preview vouch for a login the audit never types, so the route builds
+    // the same map the run handler does — and, being a response full of
+    // operator-facing detail, must never echo a value out of it.
+    const USER_SENTINEL = 'preview-user-sentinel@example.com';
+    const PASS_SENTINEL = 'hunter2-sentinel-preview';
+
+    await platform.upsertJourney({
+      id: 'login-journey',
+      clientId: 'acme',
+      name: 'Login',
+      targetUrl: 'https://acme.test/',
+      steps: [
+        { action: 'navigate', type: 'goto', path: '/login' },
+        { action: 'login', type: 'fill', selector: '#u', credentialRef: 'portal', field: 'user' },
+        { action: 'login', type: 'fill', selector: '#p', credentialRef: 'portal', field: 'pass' },
+      ],
+    });
+    await platform.setClientCredential('acme', 'portal', {
+      user: USER_SENTINEL,
+      pass: PASS_SENTINEL,
+    });
+
+    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0 });
+
+    const response = await POST(request('acme', 'login-journey'), params('acme', 'login-journey'));
+
+    expect(response.status).toBe(200);
+    expect(vi.mocked(runJourney).mock.calls[0][0].credentials).toEqual({
+      portal: { user: USER_SENTINEL, pass: PASS_SENTINEL },
+    });
+    const serialised = JSON.stringify(await response.json());
+    expect(serialised).not.toContain(USER_SENTINEL);
+    expect(serialised).not.toContain(PASS_SENTINEL);
+  });
+
+  it('leaves the credentials map off a journey that names no refs', async () => {
+    runJourney.mockResolvedValue({ pages: [], truncatedPages: 0 });
+
+    await POST(request(), params('acme', 'onboarding'));
+
+    expect(vi.mocked(runJourney).mock.calls[0][0]).not.toHaveProperty('credentials');
+  });
+
   it('a failed walk answers the classified code and the step sentence', async () => {
     const cause = new Error('Step 2 ("login") could not click "#go": locator timed out.');
     runJourney.mockRejectedValue(new PartialJourneyError(cause, { pages: [], truncatedPages: 0 }));

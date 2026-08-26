@@ -6,6 +6,8 @@ import {
 } from '../../domain/platform';
 import type {
   ActivityEvent,
+  ClientCredentialPresence,
+  ClientCredentialValues,
   ListEventsOptions,
   PlatformStore,
   StoredClient,
@@ -50,6 +52,18 @@ export class MemoryPlatformStore implements PlatformStore {
   private readonly configs = new Map<string, Record<string, unknown>>();
   private readonly journeys = new Map<string, StoredJourney>();
   private readonly triage = new Map<string, StoredTriage>();
+  /**
+   * Plaintext, and that is correct *here*: this is a test double, not a secret
+   * store. Encryption is the Postgres store's behaviour, exercised by the db
+   * suite with a real key; a double that encrypted would need
+   * `AUDITOR_CREDENTIAL_KEY` in the fast suite and would be testing the
+   * cipher, which has its own tests. Nothing this class holds outlives the
+   * process, and nothing real is ever put in it.
+   */
+  private readonly credentials = new Map<
+    string,
+    { values: ClientCredentialValues; updatedAt: string }
+  >();
   private readonly reports = new Map<string, StoredReport>();
   private readonly documentInspections = new Map<string, StoredInspection>();
   private readonly events: ActivityEvent[] = [];
@@ -306,6 +320,51 @@ export class MemoryPlatformStore implements PlatformStore {
 
   async clearTriage(clientId: string, findingKey: string): Promise<void> {
     this.triage.delete(this.triageKey(clientId, findingKey));
+  }
+
+  // -------------------------------------------------- client credentials --
+
+  private credentialKey(clientId: string, ref: string): string {
+    return `${clientId} ${ref}`;
+  }
+
+  async setClientCredential(
+    clientId: string,
+    ref: string,
+    values: ClientCredentialValues,
+  ): Promise<void> {
+    this.credentials.set(this.credentialKey(clientId, ref), {
+      values: structuredClone(values),
+      updatedAt: MemoryPlatformStore.now(),
+    });
+  }
+
+  async listClientCredentialRefs(clientId: string): Promise<ClientCredentialPresence[]> {
+    const prefix = `${clientId} `;
+    return [...this.credentials.entries()]
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([key, held]) => ({
+        ref: key.slice(prefix.length),
+        // Computed from what is held rather than hardcoded `true`, matching
+        // how Postgres reads it off the ciphertext columns: the booleans are a
+        // statement about the row, not about the schema.
+        user: held.values.user.length > 0,
+        pass: held.values.pass.length > 0,
+        updatedAt: held.updatedAt,
+      }))
+      .sort((a, b) => a.ref.localeCompare(b.ref));
+  }
+
+  async deleteClientCredential(clientId: string, ref: string): Promise<void> {
+    this.credentials.delete(this.credentialKey(clientId, ref));
+  }
+
+  async getClientCredentialValues(
+    clientId: string,
+    ref: string,
+  ): Promise<ClientCredentialValues | null> {
+    const held = this.credentials.get(this.credentialKey(clientId, ref));
+    return held ? structuredClone(held.values) : null;
   }
 
   // ------------------------------------------------------------- reports --
