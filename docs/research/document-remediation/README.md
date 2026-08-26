@@ -11,6 +11,7 @@ have the whole picture.**
 | **[legal-standard.md](legal-standard.md)** | What the law actually requires, what it does not, the deadlines, the market rate, and the definition of good remediation. **The authoritative statement of what we are aiming at.** |
 | **[working-agreement.md](working-agreement.md)** | How the project spent two experiments measuring the wrong thing, and the mechanisms that stop it recurring. |
 | **[position-2026-08-25.md](position-2026-08-25.md)** | **The current position.** Zero of nine real documents reachable without a human, the options that leaves, and the recommendation. Supersedes `decision-2026-08-24.md`. |
+| **[build-status-2026-08-26.md](build-status-2026-08-26.md)** | **Where the product is**, as opposed to what the pipeline can reach: which stages have graduated into `src/`, which of the seven legal criteria they cover, and what to build next. The first status about shipping code rather than measurements. |
 | [decision-2026-08-24.md](decision-2026-08-24.md) | Superseded. Predates the zero-human constraint and both briefs. Carries a banner. |
 
 ## The current constraint
