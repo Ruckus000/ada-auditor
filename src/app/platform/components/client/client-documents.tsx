@@ -41,7 +41,7 @@ type DiscoveredDocument = { url: string; foundOn: string; kind: 'pdf' | 'docx' |
 
 type DiscoveryResponse = {
   documents?: DiscoveredDocument[];
-  documentsOmitted?: number;
+  documentsOmitted?: Partial<Record<'pdf' | 'docx' | 'doc', number>>;
   errors?: Array<{ url: string; message: string }>;
   error?: string;
 };
@@ -270,7 +270,7 @@ export function ClientDocuments({
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [documents, setDocuments] = useState<DiscoveredDocument[] | null>(null);
-  const [documentsOmitted, setDocumentsOmitted] = useState(0);
+  const [documentsOmitted, setDocumentsOmitted] = useState<Partial<Record<'pdf' | 'docx' | 'doc', number>>>({});
   const [inspections, setInspections] = useState<Record<string, InspectionState>>({});
   const [uploadState, setUploadState] = useState<InspectionState>({ state: 'idle' });
   const [stored, setStored] = useState<InspectionRecord[] | null>(null);
@@ -364,7 +364,7 @@ export function ClientDocuments({
       }
 
       setDocuments(payload?.documents ?? []);
-      setDocumentsOmitted(payload?.documentsOmitted ?? 0);
+      setDocumentsOmitted(payload?.documentsOmitted ?? {});
       setInspections({});
     } catch {
       setScanError('Could not reach the server.');
@@ -601,10 +601,22 @@ export function ClientDocuments({
         </p>
       ) : null}
 
-      {documentsOmitted > 0 ? (
+      {Object.keys(documentsOmitted).length > 0 ? (
         <p style={noteStyle}>
-          {documentsOmitted} more document link{documentsOmitted === 1 ? '' : 's'} beyond the cap
-          were not listed.
+          {/* Per kind, because the caps are: the operator deciding where to
+              spend inspections needs to know WHICH format the cut fell on. */}
+          Beyond the per-kind cap:{' '}
+          {(
+            [
+              ['pdf', 'PDF'],
+              ['docx', 'Word (.docx)'],
+              ['doc', 'Word (.doc)'],
+            ] as const
+          )
+            .filter(([kind]) => (documentsOmitted[kind] ?? 0) > 0)
+            .map(([kind, label]) => `${documentsOmitted[kind]} more ${label} link${documentsOmitted[kind] === 1 ? '' : 's'}`)
+            .join(', ')}{' '}
+          not listed.
         </p>
       ) : null}
 

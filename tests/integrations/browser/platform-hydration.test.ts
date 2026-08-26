@@ -1662,7 +1662,7 @@ describe('platform hydration', () => {
                 kind: 'pdf',
               },
             ],
-            documentsOmitted: 3,
+            documentsOmitted: { pdf: 3 },
           }),
         }),
       );
@@ -1752,8 +1752,8 @@ describe('platform hydration', () => {
       // The row carries both halves: the document, and where it was found.
       expect(text).toContain('/minutes/agenda.pdf');
       expect(text).toContain('found on /meetings');
-      // A cap that dropped work says so.
-      expect(text).toContain('3 more document links beyond the cap');
+      // A cap that dropped work says so — and says which kind it dropped.
+      expect(text).toContain('Beyond the per-kind cap: 3 more PDF links not listed.');
 
       // A document on the site builder's CDN is labelled with its host — a
       // bare path would hide that the client's documents live off their own
