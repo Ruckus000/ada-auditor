@@ -90,10 +90,17 @@ async function main(): Promise<void> {
   const outDir = join(ROOT, DOCUMENT_CLASSES_DIR);
   await mkdir(outDir, { recursive: true });
 
+  // `-encoding UTF-8` is not optional, and a deploy proved it. `javac` falls
+  // back to the platform default encoding, which is UTF-8 on macOS and
+  // **US-ASCII** on the Vercel build container — so every em-dash in a comment
+  // became `error: unmappable character`, 42 of them, and the build died
+  // somewhere no local run could reproduce. Source encoding should never be a
+  // property of the machine that happens to be compiling.
+  //
   // `-Xlint:all` on purpose. These sources were written in a spike where
   // nothing checked them; compiling them into production without turning the
   // compiler's own opinion on would carry that forward.
-  const args = ['-cp', jar, '-d', outDir, '-Xlint:all', ...sources];
+  const args = ['-cp', jar, '-d', outDir, '-encoding', 'UTF-8', '-Xlint:all', ...sources];
 
   try {
     const { stderr } = await execFileAsync(javacBinary(), args);
