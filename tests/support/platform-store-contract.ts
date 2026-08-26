@@ -439,6 +439,104 @@ export function platformStoreContract(
     });
   });
 
+  describe('client credentials', () => {
+    /**
+     * Plaintext in, plaintext out — for BOTH stores.
+     *
+     * Encryption is the Postgres store's private business (see the comment on
+     * its credential section), so the contract sees the same shape either way
+     * and the memory double never needs `AUDITOR_CREDENTIAL_KEY`. That is not
+     * a weakening: the Postgres harness sets a fixed test key, and asserts
+     * separately that what actually lands in the column is ciphertext.
+     *
+     * The value is an obvious sentinel because the presence cases grep
+     * serialised output for it, and a plausible string would make that grep
+     * prove nothing.
+     */
+    const VALUES = {
+      user: 'contract-user-sentinel@example.com',
+      pass: 'contract-pass-sentinel-hunter2',
+    };
+
+    async function seeded(): Promise<PlatformStore> {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+      return store;
+    }
+
+    it('round-trips a credential for the run path', async () => {
+      const store = await seeded();
+      await store.setClientCredential(CONTRACT_CLIENT, 'portal', VALUES);
+
+      expect(await store.getClientCredentialValues(CONTRACT_CLIENT, 'portal')).toEqual(VALUES);
+    });
+
+    it('lists presence and never a value', async () => {
+      const store = await seeded();
+      await store.setClientCredential(CONTRACT_CLIENT, 'portal', VALUES);
+
+      const listed = await store.listClientCredentialRefs(CONTRACT_CLIENT);
+      expect(listed).toHaveLength(1);
+      expect(listed[0]).toMatchObject({ ref: 'portal', user: true, pass: true });
+      expect(typeof listed[0]!.updatedAt).toBe('string');
+      // The whole serialised listing, not chosen fields: a value smuggled out
+      // under any key is the leak, and this is the shape screens receive.
+      const serialised = JSON.stringify(listed);
+      expect(serialised).not.toContain(VALUES.user);
+      expect(serialised).not.toContain(VALUES.pass);
+    });
+
+    it('overwrites in place rather than stacking a second row', async () => {
+      const store = await seeded();
+      await store.setClientCredential(CONTRACT_CLIENT, 'portal', VALUES);
+      await store.setClientCredential(CONTRACT_CLIENT, 'portal', {
+        user: 'contract-user-two@example.com',
+        pass: 'contract-pass-two',
+      });
+
+      expect(
+        (await store.listClientCredentialRefs(CONTRACT_CLIENT)).filter(
+          (entry) => entry.ref === 'portal',
+        ),
+      ).toHaveLength(1);
+      expect(await store.getClientCredentialValues(CONTRACT_CLIENT, 'portal')).toEqual({
+        user: 'contract-user-two@example.com',
+        pass: 'contract-pass-two',
+      });
+    });
+
+    it("scopes a credential to its client", async () => {
+      // Two clients naming one ref is the normal case — every client's login
+      // journey plausibly calls its credential `login` — so a read scoped
+      // wrong types one client's password into another client's site.
+      const store = await seeded();
+      await store.upsertClient({ id: `${PLATFORM_PREFIX}-client-b`, name: 'Other' });
+      await store.setClientCredential(CONTRACT_CLIENT, 'login', VALUES);
+
+      expect(await store.getClientCredentialValues(`${PLATFORM_PREFIX}-client-b`, 'login')).toBeNull();
+      expect(await store.listClientCredentialRefs(`${PLATFORM_PREFIX}-client-b`)).toEqual([]);
+    });
+
+    it('deletes a credential', async () => {
+      const store = await seeded();
+      await store.setClientCredential(CONTRACT_CLIENT, 'portal', VALUES);
+      await store.deleteClientCredential(CONTRACT_CLIENT, 'portal');
+
+      expect(await store.getClientCredentialValues(CONTRACT_CLIENT, 'portal')).toBeNull();
+      expect(await store.listClientCredentialRefs(CONTRACT_CLIENT)).toEqual([]);
+      // Idempotent, like `clearTriage`: the second delete has nothing to do
+      // and must not turn that into an error.
+      await expect(store.deleteClientCredential(CONTRACT_CLIENT, 'portal')).resolves.toBeUndefined();
+    });
+
+    it('reports an absent credential as absent rather than throwing', async () => {
+      const store = await seeded();
+
+      expect(await store.getClientCredentialValues(CONTRACT_CLIENT, 'never-stored')).toBeNull();
+      expect(await store.listClientCredentialRefs(CONTRACT_CLIENT)).toEqual([]);
+    });
+  });
+
   describe('reports', () => {
     beforeEach(async () => {
       await options.seedRuns?.();

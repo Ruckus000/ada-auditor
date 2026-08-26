@@ -20,6 +20,7 @@ import {
   type ChaosScenario,
 } from './chaos';
 import { createRequestId } from './request-id';
+import { storedCredentialsForJourney } from './run-credentials';
 import { classifyRunFailure } from './run-failure';
 import { getRunCounter } from './run-counter';
 import { consumeRunBudget } from '../../../services/run-budget';
@@ -195,6 +196,24 @@ async function executeRun(
 
   const store = getRunStore();
 
+  /**
+   * What the walk will actually type, so the credential lookup asks about the
+   * steps that run rather than the ones the request carried — on the chaos
+   * path they differ, and chaos steps name no credentials anyway.
+   */
+  const steps = chaosParams?.steps ?? parsedBody.steps;
+
+  /**
+   * The per-client credential store's answer for this journey's refs, resolved
+   * here — where the journey's client is knowable — and handed to the runner,
+   * which types it and redacts it. Undefined whenever there is nothing to say
+   * (no refs, an unregistered journey, an unreachable catalog), and the env
+   * fallback carries those exactly as before the store existed. This map goes
+   * into `runBrowserAudit` and NOWHERE else: not the log below, not `intent`,
+   * not the response.
+   */
+  const credentials = await storedCredentialsForJourney(parsedBody.journeyId, steps);
+
   try {
     const report = await runBrowserAudit({
       journeyId: parsedBody.journeyId,
@@ -203,7 +222,8 @@ async function executeRun(
       fixtureDir: DEFAULT_FIXTURE_DIR,
       artifactsDir: join(artifactsRoot(), requestId),
       omitAxTree: chaosParams?.omitAxTree ?? parsedBody.omitAxTree,
-      steps: chaosParams?.steps ?? parsedBody.steps,
+      steps,
+      ...(credentials ? { credentials } : {}),
       /**
        * What is left of the walk's budget, not a fresh copy of it.
        *

@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { afterAll, beforeAll, beforeEach, describe } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PostgresPlatformStore } from '../../../src/integrations/persistence/postgres-platform-store';
 import type { SqlClient } from '../../../src/integrations/persistence/postgres-run-store';
 import {
@@ -65,10 +65,54 @@ async function seedRuns(): Promise<void> {
   }
 }
 
+/**
+ * A fixed, obviously-fake key for the credential cases. Not a secret — it is
+ * committed — and set HERE rather than in any suite config on purpose: the
+ * shared contract must pass against the memory double with no key at all, so
+ * the key is a property of this harness, exactly like `DATABASE_URL` is.
+ */
+const TEST_CREDENTIAL_KEY = 'ab'.repeat(32);
+const originalKey = process.env.AUDITOR_CREDENTIAL_KEY;
+
 describe('PostgresPlatformStore', () => {
-  beforeAll(sweepAbandonedRows);
+  beforeAll(() => {
+    process.env.AUDITOR_CREDENTIAL_KEY = TEST_CREDENTIAL_KEY;
+    return sweepAbandonedRows();
+  });
   beforeEach(clearOwnRows);
-  afterAll(clearOwnRows);
+  afterAll(async () => {
+    if (originalKey === undefined) delete process.env.AUDITOR_CREDENTIAL_KEY;
+    else process.env.AUDITOR_CREDENTIAL_KEY = originalKey;
+    await clearOwnRows();
+  });
 
   platformStoreContract(() => new PostgresPlatformStore(sql), { seedRuns });
+
+  /**
+   * Outside the shared contract because only this store makes the claim: what
+   * lands in the column is ciphertext. The contract sees plaintext-in/
+   * plaintext-out by design (the cipher lives inside this store), so without
+   * this case an implementation that wrote plaintext into `user_ciphertext`
+   * would pass everything.
+   */
+  it('holds only ciphertext at rest', async () => {
+    const store = new PostgresPlatformStore(sql);
+    await store.upsertClient({ id: `${PLATFORM_PREFIX}-client-a`, name: 'Contract Client' });
+    await store.setClientCredential(`${PLATFORM_PREFIX}-client-a`, 'portal', {
+      user: 'at-rest-user-sentinel@example.com',
+      pass: 'at-rest-pass-sentinel-hunter2',
+    });
+
+    const rows = await sql<{ user_ciphertext: string; pass_ciphertext: string }>`
+      select user_ciphertext, pass_ciphertext from client_credentials
+      where client_id = ${`${PLATFORM_PREFIX}-client-a`} and ref = 'portal'
+    `;
+
+    expect(rows).toHaveLength(1);
+    const raw = JSON.stringify(rows[0]);
+    expect(raw).not.toContain('at-rest-user-sentinel');
+    expect(raw).not.toContain('at-rest-pass-sentinel');
+    expect(rows[0]!.user_ciphertext).toMatch(/^v1:[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/);
+    expect(rows[0]!.pass_ciphertext).toMatch(/^v1:[0-9a-f]{24}:[0-9a-f]{32}:[0-9a-f]+$/);
+  });
 });

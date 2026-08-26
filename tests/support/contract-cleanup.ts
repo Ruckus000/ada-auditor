@@ -80,6 +80,7 @@ export async function sweepRunContractRows(
 export async function clearPlatformContractRows(sql: SqlClient, prefix: string): Promise<void> {
   const own = `${prefix}-%`;
   await sql`delete from finding_triage where client_id like ${own}`;
+  await sql`delete from client_credentials where client_id like ${own}`;
   await sql`delete from activity_events where client_id like ${own}`;
   await sql`delete from document_inspections where client_id like ${own}`;
   await sql`delete from reports where id like ${own}`;
@@ -101,6 +102,7 @@ export async function sweepPlatformContractRows(
   pattern = 'pc-%',
 ): Promise<void> {
   await sql`delete from finding_triage where client_id like ${pattern} and created_at < ${cutoffIso}`;
+  await sql`delete from client_credentials where client_id like ${pattern} and created_at < ${cutoffIso}`;
   await sql`delete from activity_events where client_id like ${pattern} and created_at < ${cutoffIso}`;
   // Bounded by its own timestamp: `inspected_at` is the row's only one.
   await sql`delete from document_inspections where client_id like ${pattern} and inspected_at < ${cutoffIso}`;

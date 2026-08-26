@@ -5,6 +5,8 @@ import {
 } from '../../domain/platform';
 import type {
   ActivityEvent,
+  ClientCredentialPresence,
+  ClientCredentialValues,
   DocumentInspectionSource,
   ListEventsOptions,
   PlatformStore,
@@ -19,6 +21,7 @@ import type {
   TriageState,
 } from '../../domain/platform';
 import type { RemediationSummary } from '../../domain/document-remediation';
+import { decryptCredential, encryptCredential } from './credential-cipher';
 import type { SqlClient } from './postgres-run-store';
 
 /**
@@ -534,6 +537,91 @@ export class PostgresPlatformStore implements PlatformStore {
       delete from finding_triage
       where client_id = ${clientId} and finding_key = ${findingKey}
     `;
+  }
+
+  // -------------------------------------------------- client credentials --
+  //
+  // The cipher lives HERE, not in the routes or the run handler, and the
+  // placement is a decision rather than an accident. Encryption-at-rest is a
+  // property of the durable store: put it in the route layer and every future
+  // caller of `setClientCredential` — a seed script, a migration, the next
+  // route — has to remember to encrypt first, and forgetting writes plaintext
+  // into a column named `_ciphertext`. Inside the store, the shared contract
+  // sees plaintext-in/plaintext-out against both implementations, the memory
+  // double stays a trivial map with no key, and there is exactly one place
+  // that can decrypt — which is what makes "run path only" checkable.
+  //
+  // `encryptCredential` throws without a valid `AUDITOR_CREDENTIAL_KEY`. The
+  // routes answer 503 before reaching here, so this throw is the backstop for
+  // a caller that skipped them, not a path a request normally takes.
+
+  async setClientCredential(
+    clientId: string,
+    ref: string,
+    values: ClientCredentialValues,
+  ): Promise<void> {
+    await this.sql`
+      insert into client_credentials (client_id, ref, user_ciphertext, pass_ciphertext, updated_at)
+      values (
+        ${clientId}, ${ref},
+        ${encryptCredential(values.user)}, ${encryptCredential(values.pass)}, now()
+      )
+      on conflict (client_id, ref) do update set
+        user_ciphertext = excluded.user_ciphertext,
+        pass_ciphertext = excluded.pass_ciphertext,
+        updated_at = now()
+    `;
+  }
+
+  async listClientCredentialRefs(clientId: string): Promise<ClientCredentialPresence[]> {
+    // Presence is decided in SQL, so no ciphertext — let alone a value — ever
+    // crosses into this process for a listing. Needs no key, deliberately: an
+    // operator whose deployment lost the key can still see what is stored
+    // while they re-enter it.
+    const rows = await this.sql<{
+      ref: string;
+      user_set: boolean;
+      pass_set: boolean;
+      updated_at: Date | string;
+    }>`
+      select ref,
+             user_ciphertext <> '' as user_set,
+             pass_ciphertext <> '' as pass_set,
+             updated_at
+      from client_credentials
+      where client_id = ${clientId}
+      order by ref asc
+    `;
+
+    return rows.map((row) => ({
+      ref: row.ref,
+      user: row.user_set,
+      pass: row.pass_set,
+      updatedAt: toIso(row.updated_at),
+    }));
+  }
+
+  async deleteClientCredential(clientId: string, ref: string): Promise<void> {
+    await this.sql`
+      delete from client_credentials where client_id = ${clientId} and ref = ${ref}
+    `;
+  }
+
+  async getClientCredentialValues(
+    clientId: string,
+    ref: string,
+  ): Promise<ClientCredentialValues | null> {
+    const rows = await this.sql<{ user_ciphertext: string; pass_ciphertext: string }>`
+      select user_ciphertext, pass_ciphertext
+      from client_credentials
+      where client_id = ${clientId} and ref = ${ref}
+    `;
+    if (rows.length === 0) return null;
+
+    return {
+      user: decryptCredential(rows[0].user_ciphertext),
+      pass: decryptCredential(rows[0].pass_ciphertext),
+    };
   }
 
   // ------------------------------------------------------------- reports --

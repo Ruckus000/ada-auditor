@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Environment } from '../../../../domain/contracts';
+import { CREDENTIAL_REF_PATTERN } from '../../../../domain/credential-ref';
 import type { JourneyStepView } from '../../../../domain/journey-step';
 import {
   actionsFor,
@@ -59,6 +60,23 @@ const MESSAGES: Record<string, string> = {
   journey_not_found: 'That journey is no longer on this client.',
   unauthorized: 'Your session expired. Reload and sign in again.',
 };
+
+/**
+ * What the credential surface can answer, in words. Split from `MESSAGES`
+ * because the save these explain goes to a different route with failure modes
+ * the step editor's own save cannot produce.
+ */
+const CREDENTIAL_MESSAGES: Record<string, string> = {
+  credential_store_not_configured:
+    'This deployment has no credential key, so values cannot be stored here. Set AUDITOR_CREDENTIAL_KEY, or keep using environment variables.',
+  invalid_credential_ref:
+    'That credential name cannot be stored. Letters, numbers, hyphens and underscores only.',
+  invalid_request_body: 'Both a username and a password are needed, up to 512 characters each.',
+  unauthorized: 'Your session expired. Reload and sign in again.',
+};
+
+/** What the presence listing answers per ref. Booleans, never values. */
+type StoredCredentialPresence = { ref: string; user: boolean; pass: boolean; updatedAt: string };
 
 const TYPES: Array<{ value: DraftType; label: string }> = [
   { value: 'goto', label: 'Go to a page' },
@@ -126,6 +144,28 @@ export function JourneyStepsEditor({
   const [drafts, setDrafts] = useState<StepDraft[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Which credentials the store holds for this client, keyed by ref. Null
+  // until the listing answers — presence is a badge, never a gate, so the
+  // editor edits whether or not this ever loads.
+  const [storedCredentials, setStoredCredentials] = useState<Record<
+    string,
+    StoredCredentialPresence
+  > | null>(null);
+
+  async function loadStoredCredentials() {
+    try {
+      const response = await fetch(`/api/platform/clients/${clientId}/credentials`);
+      if (!response.ok) return;
+      const parsed = (await response.json()) as { credentials?: StoredCredentialPresence[] };
+      setStoredCredentials(
+        Object.fromEntries((parsed.credentials ?? []).map((entry) => [entry.ref, entry])),
+      );
+    } catch {
+      // The badge degrades to silence. Saying "could not load" on every row
+      // would put an error in front of an operator who only came to reorder
+      // steps.
+    }
+  }
   // Rows added in this session need keys that cannot collide with `stored-N`
   // or with each other. A counter, not `Math.random`, so two renders of the
   // same edit produce the same markup.
@@ -183,6 +223,9 @@ export function JourneyStepsEditor({
     setDrafts(draftsFromViews(steps));
     setError(null);
     setOpen(true);
+    // Fire-and-forget: the badges fill in when the listing answers, and the
+    // form does not wait on them.
+    void loadStoredCredentials();
   }
 
   function update(key: string, patch: Partial<StepDraft>) {
@@ -435,6 +478,24 @@ export function JourneyStepsEditor({
                             <option value="pass">Password</option>
                           </select>
                         </Field>
+                        {/*
+                          Only for a name that could resolve: the pattern is
+                          the same one the route holds the ref to, so this
+                          never offers to store under a name a step could not
+                          use.
+                        */}
+                        {CREDENTIAL_REF_PATTERN.test(draft.credentialRef) ? (
+                          <CredentialValues
+                            clientId={clientId}
+                            credentialRef={draft.credentialRef}
+                            presence={
+                              storedCredentials === null
+                                ? undefined
+                                : (storedCredentials[draft.credentialRef] ?? null)
+                            }
+                            onSaved={loadStoredCredentials}
+                          />
+                        ) : null}
                       </>
                     ) : (
                       <Field id={id('value')} label="Value">
@@ -614,6 +675,167 @@ export function JourneyStepsEditor({
         ) : null}
       </span>
     </div>
+  );
+}
+
+/**
+ * The values behind one credential name: a presence badge and a write-only
+ * "Set values" disclosure.
+ *
+ * Write-only is the whole design. The inputs are never pre-filled — the GET
+ * behind the badge answers presence and cannot answer a value — and a
+ * successful save clears them, because this surface holds a secret for
+ * exactly as long as the write takes. What persists on screen afterwards is
+ * the badge saying the store has it, which is everything an operator needs to
+ * know and everything this component is allowed to know.
+ *
+ * `presence` is three-valued on purpose: `undefined` while the listing has
+ * not answered (say nothing), `null` when it answered and this ref is not in
+ * it (say "nothing stored"), an entry when it is. Collapsing the first two
+ * would tell an operator "nothing stored" on a listing that merely had not
+ * arrived yet.
+ */
+function CredentialValues({
+  clientId,
+  credentialRef,
+  presence,
+  onSaved,
+}: {
+  clientId: string;
+  credentialRef: string;
+  presence: StoredCredentialPresence | null | undefined;
+  onSaved: () => void;
+}) {
+  const idPrefix = useId();
+  const [open, setOpen] = useState(false);
+  const [user, setUser] = useState('');
+  const [pass, setPass] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function toggle() {
+    // Closing clears: a typed value must not linger behind a collapsed
+    // disclosure on a screen somebody walks away from.
+    setUser('');
+    setPass('');
+    setError(null);
+    setOpen((current) => !current);
+  }
+
+  async function save() {
+    if (busy || !user || !pass) return;
+    setBusy(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `/api/platform/clients/${clientId}/credentials/${credentialRef}`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ user, pass }),
+        },
+      );
+
+      if (!response.ok) {
+        const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
+        setError(
+          (parsed?.error && CREDENTIAL_MESSAGES[parsed.error]) ??
+            `That did not save (${response.status}).`,
+        );
+        return;
+      }
+
+      // Cleared on success — see the component comment. The badge refresh is
+      // what confirms the write, and it confirms it from the server rather
+      // than from this component's optimism.
+      setUser('');
+      setPass('');
+      setOpen(false);
+      onSaved();
+    } catch {
+      setError('Could not reach the server.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <span style={{ flexBasis: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
+          {presence === undefined
+            ? `credential ${credentialRef}`
+            : presence === null
+              ? `credential ${credentialRef} — nothing stored for this client`
+              : `credential ${credentialRef} — stored for this client · updated ${presence.updatedAt.slice(0, 10)}`}
+        </span>
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-label={`${open ? 'Close values' : 'Set values'} for ${credentialRef}`}
+          style={smallButtonStyle}
+        >
+          {open ? 'Close values' : 'Set values'}
+        </button>
+      </span>
+
+      {open ? (
+        <span style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <Field id={`${idPrefix}-user`} label="Username">
+            <input
+              id={`${idPrefix}-user`}
+              type="text"
+              autoComplete="off"
+              value={user}
+              onChange={(event) => setUser(event.target.value)}
+              style={{ ...inputStyle, flex: '1 1 160px' }}
+            />
+          </Field>
+          <Field id={`${idPrefix}-pass`} label="Password">
+            {/*
+              `type="password"` is correct HERE, and that does not contradict
+              the literal-value box above being `type="text"`. That box holds
+              ordinary content — search terms, postcodes — and masking it
+              would suggest it is a safe place for a secret, which it is not.
+              This box exists for exactly one secret, headed for an encrypted
+              write-only store, and masking it is the point.
+            */}
+            <input
+              id={`${idPrefix}-pass`}
+              type="password"
+              autoComplete="off"
+              value={pass}
+              onChange={(event) => setPass(event.target.value)}
+              style={{ ...inputStyle, flex: '1 1 160px' }}
+            />
+          </Field>
+          <button
+            type="button"
+            {...inertWhen(busy || !user || !pass, save)}
+            aria-describedby={!user || !pass ? `${idPrefix}-needs-both` : undefined}
+            style={busy || !user || !pass ? inertSmallButtonStyle : smallButtonStyle}
+          >
+            {busy ? 'Saving…' : 'Save values'}
+          </button>
+          {!user || !pass ? (
+            <span
+              id={`${idPrefix}-needs-both`}
+              style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}
+            >
+              A login is both halves — enter a username and a password.
+            </span>
+          ) : null}
+        </span>
+      ) : null}
+
+      {error ? (
+        <p role="alert" style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12.5, color: T.fail }}>
+          {error}
+        </p>
+      ) : null}
+    </span>
   );
 }
 

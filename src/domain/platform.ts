@@ -348,6 +348,58 @@ export interface TriageStore {
   clearTriage(clientId: string, findingKey: string): Promise<void>;
 }
 
+/**
+ * A stored login for one client, named by the same `credentialRef` a journey
+ * step uses.
+ *
+ * Both halves together, because a login is a pair: the schema's two ciphertext
+ * columns are `not null`, and a store that accepted half a credential would
+ * hand the runner a login guaranteed to fail its `expect` step.
+ */
+export type ClientCredentialValues = { user: string; pass: string };
+
+/**
+ * What a screen may know about a stored credential: that it exists, which
+ * fields it carries, and when it last changed. Deliberately value-free — the
+ * write-only API is built on this shape, and a value here would be one spread
+ * away from a response body.
+ */
+export type ClientCredentialPresence = {
+  ref: string;
+  user: boolean;
+  pass: boolean;
+  updatedAt: string;
+};
+
+/**
+ * Where a client's login values live, encrypted, once an operator pastes them.
+ *
+ * The *reference* stays in the journey — "credentials are referenced, never
+ * inlined" is unchanged. What this moves is the value: from a deployment
+ * environment variable somebody sets by hand and redeploys for, to a row
+ * written once through the UI. Resolution at run time is store first, env
+ * fallback second, so every journey that predates this keeps working.
+ *
+ * `getClientCredentialValues` is the run path's read and the only member that
+ * returns a value. Routes never call it: no HTTP response carries a credential
+ * out, which is what makes the store write-only from the outside.
+ */
+export interface ClientCredentialStore {
+  setClientCredential(
+    clientId: string,
+    ref: string,
+    values: ClientCredentialValues,
+  ): Promise<void>;
+  /** Presence only, ordered by ref. Never a value. */
+  listClientCredentialRefs(clientId: string): Promise<ClientCredentialPresence[]>;
+  deleteClientCredential(clientId: string, ref: string): Promise<void>;
+  /** Decrypts. Run path only — never behind an HTTP response. */
+  getClientCredentialValues(
+    clientId: string,
+    ref: string,
+  ): Promise<ClientCredentialValues | null>;
+}
+
 export interface ReportStore {
   createReport(input: Omit<StoredReport, 'createdAt'>): Promise<void>;
   getReport(id: string): Promise<StoredReport | null>;
@@ -482,6 +534,7 @@ export type PlatformStore = OperatorStore &
   ClientStore &
   JourneyStore &
   TriageStore &
+  ClientCredentialStore &
   ReportStore &
   ActivityStore &
   DocumentInspectionStore;

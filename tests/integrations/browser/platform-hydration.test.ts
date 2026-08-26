@@ -225,6 +225,10 @@ beforeAll(async () => {
       // The chaos scenario is how it gets deterministic findings without a
       // site to point at.
       CHAOS_ENABLED: 'true',
+      // The credential editor below writes through the real PUT, which answers
+      // 503 without a key. A fixed, committed test key — the values it guards
+      // live in the ephemeral store and die with this server.
+      AUDITOR_CREDENTIAL_KEY: 'ab'.repeat(32),
     },
     // Own process group, so teardown can kill `next start` and not just the
     // `npx` wrapper in front of it — an orphan keeps the port and makes the
@@ -1133,6 +1137,99 @@ describe('platform hydration', () => {
             recognised: true,
           },
         ]);
+    } finally {
+      await page.close();
+    }
+  }, 120_000);
+
+  /**
+   * The write-only credential surface, driven end to end against the memory
+   * store: set values, save, reload, and the presence badge still says so.
+   *
+   * The badge after reload is the assertion that matters. Before it, a
+   * component could fake the whole flow by flipping local state on a 200 it
+   * never got; surviving a reload means the PUT reached the store and the GET
+   * read it back. The values themselves are never asserted anywhere — there
+   * is deliberately no endpoint that could answer — so "the badge shows" is
+   * the strongest true statement this surface allows, and the presence API is
+   * additionally grepped to prove the sentinel never travels back.
+   */
+  it('stores a credential from the steps editor and shows its presence after a reload', async () => {
+    const created = await fetch(`${BASE}/api/platform/clients/${CLIENT}/journeys`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        name: 'Credential Journey',
+        targetUrl: 'https://credential.invalid/',
+        steps: [
+          { action: 'navigate', type: 'goto', path: '/login' },
+          { action: 'login', type: 'fill', selector: '#u', credentialRef: 'portal', field: 'user' },
+        ],
+      }),
+    });
+    expect(created.status, await created.clone().text()).toBe(201);
+
+    const page = await openAuthenticatedPage();
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+      const row = page.locator('li', { hasText: 'Credential Journey' }).first();
+      await row.getByRole('button', { name: 'Edit steps for Credential Journey' }).click();
+
+      // The listing answered and this ref is not in it — which is a different
+      // fact from "the listing has not answered", and the one worth waiting
+      // for before trusting the flow below.
+      await expect
+        .poll(() => row.innerText(), { timeout: 15_000 })
+        .toContain('nothing stored for this client');
+
+      await row.getByRole('button', { name: 'Set values for portal' }).click();
+
+      // Zero violations with the disclosure open: the password input, its
+      // labels and the inert save button are the newest controls in the
+      // product, and the route-level sweep only ever sees the editor closed.
+      await expect
+        .poll(() => axeViolations(page), {
+          ...AXE_SETTLE,
+          message: 'the credential disclosure, open with empty inputs',
+        })
+        .toBe('');
+
+      await row.getByLabel('Username').fill('hydration-user-sentinel');
+      await row.getByLabel('Password').fill('hydration-pass-sentinel');
+      await row.getByRole('button', { name: 'Save values' }).click();
+
+      // The badge refresh comes from the server's own presence listing, so
+      // this is the PUT landing, not the component being optimistic.
+      await expect
+        .poll(() => row.innerText(), { timeout: 15_000 })
+        .toContain('stored for this client');
+
+      // Inputs cleared and closed on success: a write-only surface holds a
+      // value for exactly as long as the write takes.
+      await expect.poll(() => row.getByLabel('Password').count()).toBe(0);
+
+      // Server truth, and the write-only guarantee in one read: the presence
+      // API names the ref and never a value.
+      const listing = await fetch(`${BASE}/api/platform/clients/${CLIENT}/credentials`, {
+        headers: { authorization: `Bearer ${TOKEN}` },
+      });
+      const listingText = await listing.text();
+      expect(listing.status).toBe(200);
+      expect(listingText).toContain('portal');
+      expect(listingText).not.toContain('hydration-user-sentinel');
+      expect(listingText).not.toContain('hydration-pass-sentinel');
+
+      // Reload: the badge has to come back from the store, not from state the
+      // component was holding.
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+      const rowAfter = page.locator('li', { hasText: 'Credential Journey' }).first();
+      await rowAfter.getByRole('button', { name: 'Edit steps for Credential Journey' }).click();
+      await expect
+        .poll(() => rowAfter.innerText(), { timeout: 15_000 })
+        .toContain('stored for this client');
     } finally {
       await page.close();
     }
