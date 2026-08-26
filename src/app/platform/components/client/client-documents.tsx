@@ -96,7 +96,9 @@ type ConverterState = { checked: boolean; available: boolean };
 
 /** `agenda.docx` → `agenda-remediated.pdf`, purely for the download's name. */
 function pdfNameFor(sourceName: string): string {
-  const base = sourceName.split('/').pop() ?? '';
+  // CDN-hosted documents routinely carry a query (`/blob.docx?ver=2`); the
+  // download's name wants neither it nor a fragment.
+  const base = sourceName.split(/[?#]/)[0].split('/').pop() ?? '';
   return `${(base.replace(/\.docx?$/i, '') || 'document')}-remediated.pdf`;
 }
 
@@ -170,6 +172,23 @@ function pathOf(url: string): string {
   } catch {
     // An upload's `url` is a filename, not a URL, and reads fine as itself.
     return url;
+  }
+}
+
+/**
+ * Where a discovered document lives, as an operator should read it: the bare
+ * path when it sits on the same host as the page that linked it, host and
+ * path when it does not. Website-builder platforms host every document on
+ * their own CDN — measured on a real municipal site — so a bare path would
+ * routinely hide where the client's documents actually are.
+ */
+function documentLabel(doc: DiscoveredDocument): string {
+  try {
+    const url = new URL(doc.url);
+    const sameHost = url.hostname === new URL(doc.foundOn).hostname;
+    return sameHost ? `${url.pathname}${url.search}` : `${url.hostname}${url.pathname}${url.search}`;
+  } catch {
+    return doc.url;
   }
 }
 
@@ -521,7 +540,7 @@ export function ClientDocuments({
                     style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}
                   >
                     <span style={{ fontFamily: FONT.mono, fontSize: 12, color: T.ink }}>
-                      {pathOf(doc.url)}
+                      {documentLabel(doc)}
                     </span>
                     <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
                       {doc.kind === 'pdf' ? 'PDF' : 'Word'} · found on {pathOf(doc.foundOn)}

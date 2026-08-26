@@ -1654,6 +1654,13 @@ describe('platform hydration', () => {
                 foundOn: 'https://discovered.invalid/forms',
                 kind: 'docx',
               },
+              {
+                // The vendor-CDN shape: the document's bytes live on a host
+                // that is not the client's, and the row must say so.
+                url: 'https://cdn.builder.invalid/assets/budget.pdf',
+                foundOn: 'https://discovered.invalid/finance',
+                kind: 'pdf',
+              },
             ],
             documentsOmitted: 3,
           }),
@@ -1747,6 +1754,12 @@ describe('platform hydration', () => {
       expect(text).toContain('found on /meetings');
       // A cap that dropped work says so.
       expect(text).toContain('3 more document links beyond the cap');
+
+      // A document on the site builder's CDN is labelled with its host — a
+      // bare path would hide that the client's documents live off their own
+      // hostname, which is the commonest shape on builder platforms.
+      expect(text).toContain('cdn.builder.invalid/assets/budget.pdf');
+      expect(text).toContain('found on /finance');
 
       // A Word document is listed with its kind and offered no Inspect button
       // — the inspection instrument reads PDFs. Its affordance is conversion,

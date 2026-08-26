@@ -198,6 +198,16 @@ beforeAll(async () => {
       return;
     }
 
+    // The CDN-hosted document, really served under the foreign host name —
+    // `elsewhere.test` is mapped to this server — so a crawler that wrongly
+    // navigated into it would succeed, and only the request log can prove the
+    // classification kept it out.
+    if (path === '/assets/budget.pdf') {
+      response.writeHead(200, { 'content-type': 'application/pdf' });
+      response.end('%PDF-1.4 cdn fixture');
+      return;
+    }
+
     // A real Word document, really served, for the same reason. In a live
     // browser this content type starts a download Chromium then aborts, so a
     // crawler that navigated into it would burn the navigation on an error —
@@ -600,6 +610,35 @@ describe('discoverLinks guards', () => {
     );
     expect(requestedPaths).not.toContain('/forms/permit-application.docx');
   });
+
+  it('records a document on a foreign host, and still never navigates off-scope', async () => {
+    // `[V]` The shape a real municipal site taught us: a town on a
+    // website-builder platform linked every document it publishes — 134 on
+    // one page — from the builder's asset CDN, a host that is not the town's.
+    // Classifying documents after the scope check dropped all of them, and a
+    // document-heavy site read as having none. A document linked from the
+    // client's own page is recorded wherever its bytes live; `foundOn` is the
+    // operator's evidence for whose it is to fix.
+    requestedPaths.length = 0;
+
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+
+    const cdn = result.documents.find(
+      (doc) => doc.url === 'http://elsewhere.test/assets/budget.pdf?ver=3',
+    );
+    expect(cdn).toBeDefined();
+    expect(cdn?.kind).toBe('pdf');
+    expect(cdn?.foundOn).toBe(`http://${HOST}/`);
+
+    // Recording a foreign document must not loosen the crawl itself: the
+    // server genuinely serves that path under the foreign name, so a crawler
+    // that navigated into it would succeed — the request log is the witness
+    // that it did not. And the foreign host's PAGES stay off-scope exactly as
+    // before: the off-site page link in this same fixture still yields no
+    // page row.
+    expect(requestedPaths).not.toContain('/assets/budget.pdf');
+    expect(result.pages.every((page) => new URL(page.url).hostname === HOST)).toBe(true);
+  }, 60_000);
 
   it('survives a page that registers a service worker', async () => {
     // `[V]` Found on a live municipal site, not invented: its template
