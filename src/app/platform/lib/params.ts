@@ -19,7 +19,7 @@ export type Scope = 'ws' | 'client';
 
 export type WorkspaceScreen = 'portfolio' | 'reports' | 'activity' | 'settings';
 
-export type ClientTab = 'overview' | 'findings' | 'journeys';
+export type ClientTab = 'overview' | 'findings' | 'journeys' | 'documents';
 
 export type PlatformRoute = {
   scope: Scope;
@@ -37,6 +37,7 @@ const WORKSPACE_SCREENS: Record<string, WorkspaceScreen> = {
 const CLIENT_TABS: Record<string, ClientTab> = {
   findings: 'findings',
   journeys: 'journeys',
+  documents: 'documents',
 };
 
 /**

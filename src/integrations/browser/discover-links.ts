@@ -1,15 +1,18 @@
 import { isIP } from 'node:net';
 import type { Browser, Page } from 'playwright-core';
 import {
-  discoveryKey,
   DISCOVERY_BUDGET_MS,
   DISCOVERY_DELAY_MS,
   DISCOVERY_USER_AGENT_PRODUCT,
+  discoveryKey,
+  isDocumentLink,
   MAX_DISCOVERY_DEPTH,
+  MAX_DISCOVERY_DOCUMENTS,
   MAX_DISCOVERY_ERRORS,
   MAX_DISCOVERY_URLS,
   MAX_HREF_LENGTH,
   MAX_LINKS_PER_PAGE,
+  type DiscoveredDocument,
   type DiscoveredPage,
   type DiscoveryError,
   type DiscoveryResult,
@@ -287,6 +290,8 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
   };
 
   const pages: DiscoveredPage[] = [];
+  const documents: DiscoveredDocument[] = [];
+  let documentsOmitted = 0;
   const errors: DiscoveryError[] = [];
   const seen = new Set<string>([discoveryKey(input.targetUrl)]);
   const frontier: FrontierEntry[] = [{ url: input.targetUrl, depth: 0 }];
@@ -514,6 +519,27 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
              * here would trade a request we should not make for a diagnosis we
              * used to give.
              */
+            // A document, not a page. Recorded and NEVER navigated to —
+            // before this branch existed nothing filtered by extension, so the
+            // crawl drove Chromium into PDFs it cannot audit and paid the
+            // navigation plus the politeness delay for each one. Placed after
+            // the scope check on purpose (a PDF on a third-party host is not
+            // the client's document to fix) and before host resolution (no DNS
+            // spent on a link the crawl will not visit).
+            //
+            // `seen` gets the key so an agenda archive linking the same PDF
+            // from forty pages records it once, and so a later sighting does
+            // not re-enter this branch.
+            if (isDocumentLink(href)) {
+              seen.add(key);
+              if (documents.length >= MAX_DISCOVERY_DOCUMENTS) {
+                documentsOmitted += 1;
+              } else {
+                documents.push({ url: href, foundOn: settled });
+              }
+              continue;
+            }
+
             try {
               await assertHostResolves(href);
             } catch (error) {
@@ -685,12 +711,15 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
     durationMs: Date.now() - startedAt,
     ...(errorsOmitted > 0 ? { errorsOmitted } : {}),
     ...(truncated ? { truncatedReason: truncated.reason, seen: truncated.seen } : {}),
+    documents: documents.length,
   });
 
   return {
     pages,
+    documents,
     errors,
     ...(truncated ? { truncated } : {}),
     ...(errorsOmitted > 0 ? { errorsOmitted } : {}),
+    ...(documentsOmitted > 0 ? { documentsOmitted } : {}),
   };
 }

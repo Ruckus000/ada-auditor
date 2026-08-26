@@ -35,6 +35,7 @@ export function ClientShell({
     ['Overview', clientHref(detail.id)],
     ['Findings', clientHref(detail.id, 'findings')],
     ['Journeys', clientHref(detail.id, 'journeys')],
+    ['Documents', clientHref(detail.id, 'documents')],
   ];
 
   const badge = VERDICT_CHIP[detail.lastRun?.verdict ?? 'scan'];
