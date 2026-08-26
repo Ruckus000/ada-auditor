@@ -1545,10 +1545,17 @@ describe('platform hydration', () => {
               {
                 url: 'https://discovered.invalid/minutes/agenda.pdf',
                 foundOn: 'https://discovered.invalid/meetings',
+                kind: 'pdf',
               },
               {
                 url: 'https://discovered.invalid/fees/schedule.pdf',
                 foundOn: 'https://discovered.invalid/',
+                kind: 'pdf',
+              },
+              {
+                url: 'https://discovered.invalid/forms/permit-application.docx',
+                foundOn: 'https://discovered.invalid/forms',
+                kind: 'docx',
               },
             ],
             documentsOmitted: 3,
@@ -1610,6 +1617,19 @@ describe('platform hydration', () => {
       expect(text).toContain('found on /meetings');
       // A cap that dropped work says so.
       expect(text).toContain('3 more document links beyond the cap');
+
+      // A Word document is listed with its kind but offered no Inspect button
+      // — the inspection instrument reads PDFs — and the missing button is
+      // explained in words rather than implied by absence.
+      expect(text).toContain('/forms/permit-application.docx');
+      expect(text).toContain('Word documents are recorded without an Inspect button');
+      expect(
+        await page
+          .getByRole('listitem')
+          .filter({ hasText: '/forms/permit-application.docx' })
+          .getByRole('button', { name: 'Inspect' })
+          .count(),
+      ).toBe(0);
 
       // One inspection, rendered inline where its row is.
       await page

@@ -172,6 +172,19 @@ beforeAll(async () => {
       return;
     }
 
+    // A real Word document, really served, for the same reason. In a live
+    // browser this content type starts a download Chromium then aborts, so a
+    // crawler that navigated into it would burn the navigation on an error —
+    // but the request would still land here, and that landing is what the
+    // test can see.
+    if (path === '/forms/permit-application.docx') {
+      response.writeHead(200, {
+        'content-type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+      response.end('PK fixture');
+      return;
+    }
+
     // The everyday same-host redirect: a renamed page kept alive by a 301.
     // Trailing slashes and apex-to-www make this shape ordinary, and it is the
     // one that costs real budget, because without deduping on where a page
@@ -519,6 +532,7 @@ describe('discoverLinks guards', () => {
     const bare = result.documents.find((doc) => doc.url === `http://${HOST}/minutes/agenda.pdf`);
     expect(bare).toBeDefined();
     expect(bare?.foundOn).toBe(`http://${HOST}/`);
+    expect(bare?.kind).toBe('pdf');
     expect(
       result.documents.filter((doc) => doc.url.includes('agenda.pdf')).length,
     ).toBe(2);
@@ -533,6 +547,32 @@ describe('discoverLinks guards', () => {
     // that navigated into it would SUCCEED — so the request log is the only
     // honest witness that the classification, not luck, kept it out.
     expect(requestedPaths).not.toContain('/minutes/agenda.pdf');
+  });
+
+  it('records a linked Word document with its kind, and never navigates into it', async () => {
+    // The gap a live crawl exposed: a municipality that publishes its records
+    // as `.docx` read as "no documents" while the classifier was PDF-only —
+    // and every Word link the crawl did follow bought a `Download is
+    // starting` error instead of a record.
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/` });
+
+    const docx = result.documents.find(
+      (doc) => doc.url === `http://${HOST}/forms/permit-application.docx`,
+    );
+    expect(docx).toBeDefined();
+    expect(docx?.kind).toBe('docx');
+    expect(docx?.foundOn).toBe(`http://${HOST}/`);
+
+    // Not a page, not an error row, and never fetched — the server really
+    // serves this path, so only classification explains its absence from the
+    // request log.
+    expect(result.pages.map((page) => page.url)).not.toContainEqual(
+      expect.stringContaining('permit-application'),
+    );
+    expect(result.errors.map((error) => error.url)).not.toContainEqual(
+      expect.stringContaining('permit-application'),
+    );
+    expect(requestedPaths).not.toContain('/forms/permit-application.docx');
   });
 
   it('refuses an entry point resolving to a private address', async () => {

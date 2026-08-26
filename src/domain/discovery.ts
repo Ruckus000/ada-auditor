@@ -283,23 +283,44 @@ export const DISCOVERY_USER_AGENT_PRODUCT = 'ADA-Auditor-Discovery/1.0';
 export const MAX_DISCOVERY_DOCUMENTS = 50;
 
 /**
- * Is this link a document rather than a page?
- *
- * Extension match only, and that limit is deliberate: telling a PDF from a page
- * without navigating would need a request the crawl is not making, and the
- * whole point of classifying is to NOT spend a navigation on it. A PDF served
- * from an extensionless URL is missed in this slice, and this comment is where
- * that is written down.
- *
- * The query string is tolerated (`/agenda.pdf?v=2` is a document); the fragment
- * never reaches here because the crawl strips fragments before classifying.
+ * The document formats a crawl can recognise, spelled the way
+ * `UploadCheck` in `domain/document-remediation.ts` spells them — the two
+ * classifiers name the same three containers, one from an extension and one
+ * from bytes, and a third spelling would be a translation table waiting to
+ * happen.
  */
-export function isDocumentLink(href: string): boolean {
+export type DocumentLinkKind = 'pdf' | 'docx' | 'doc';
+
+/**
+ * Which document format this link names — or `null` when it reads as a page.
+ *
+ * Extension match only, and that limit is deliberate: telling a document from
+ * a page without navigating would need a request the crawl is not making, and
+ * the whole point of classifying is to NOT spend a navigation on it. A
+ * document served from an extensionless URL is missed in this slice, and this
+ * comment is where that is written down.
+ *
+ * Word documents are classified alongside PDFs because both failure modes are
+ * real: a `.docx` link the crawl navigates into is a navigation spent on a
+ * download Chromium aborts (`Download is starting`, seen on a live municipal
+ * crawl), and a site that publishes its records as Word — they exist — read
+ * as "no documents" while the classifier was PDF-only.
+ *
+ * The query string is tolerated (`/agenda.pdf?v=2` is a document); the
+ * fragment never reaches here because the crawl strips fragments before
+ * classifying.
+ */
+export function documentLinkKind(href: string): DocumentLinkKind | null {
+  let pathname: string;
   try {
-    return new URL(href).pathname.toLowerCase().endsWith('.pdf');
+    pathname = new URL(href).pathname.toLowerCase();
   } catch {
-    return false;
+    return null;
   }
+  if (pathname.endsWith('.pdf')) return 'pdf';
+  if (pathname.endsWith('.docx')) return 'docx';
+  if (pathname.endsWith('.doc')) return 'doc';
+  return null;
 }
 
 export type DiscoveredPage = {
@@ -316,10 +337,16 @@ export type DiscoveredPage = {
  * where a document lives in their client's site, and the page a document
  * finding would attach to when persistence arrives. First sighting wins:
  * a document linked from forty agenda pages is one row, not forty.
+ *
+ * `kind` is what the link's extension claims, nothing more — the bytes have
+ * not been fetched. It is carried so a screen can offer each row what the
+ * platform can actually do with that format, instead of one button that is
+ * wrong for half the rows.
  */
 export type DiscoveredDocument = {
   url: string;
   foundOn: string;
+  kind: DocumentLinkKind;
 };
 
 /**

@@ -5,7 +5,7 @@ import {
   DISCOVERY_DELAY_MS,
   DISCOVERY_USER_AGENT_PRODUCT,
   discoveryKey,
-  isDocumentLink,
+  documentLinkKind,
   MAX_DISCOVERY_DEPTH,
   MAX_DISCOVERY_DOCUMENTS,
   MAX_DISCOVERY_ERRORS,
@@ -522,20 +522,24 @@ export async function discoverLinks(input: DiscoverLinksInput): Promise<Discover
             // A document, not a page. Recorded and NEVER navigated to —
             // before this branch existed nothing filtered by extension, so the
             // crawl drove Chromium into PDFs it cannot audit and paid the
-            // navigation plus the politeness delay for each one. Placed after
-            // the scope check on purpose (a PDF on a third-party host is not
-            // the client's document to fix) and before host resolution (no DNS
-            // spent on a link the crawl will not visit).
+            // navigation plus the politeness delay for each one. A Word link
+            // was worse: Chromium answers it with a download it then aborts
+            // (`Download is starting`), so the navigation bought an error row
+            // instead of a record. Placed after the scope check on purpose (a
+            // document on a third-party host is not the client's to fix) and
+            // before host resolution (no DNS spent on a link the crawl will
+            // not visit).
             //
             // `seen` gets the key so an agenda archive linking the same PDF
             // from forty pages records it once, and so a later sighting does
             // not re-enter this branch.
-            if (isDocumentLink(href)) {
+            const documentKind = documentLinkKind(href);
+            if (documentKind !== null) {
               seen.add(key);
               if (documents.length >= MAX_DISCOVERY_DOCUMENTS) {
                 documentsOmitted += 1;
               } else {
-                documents.push({ url: href, foundOn: settled });
+                documents.push({ url: href, foundOn: settled, kind: documentKind });
               }
               continue;
             }
