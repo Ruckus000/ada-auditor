@@ -141,7 +141,29 @@ export async function GET(
     return Response.json({ error: 'client_not_found', requestId }, { status: 404 });
   }
 
-  const documents = await platform.listClientDocuments(clientId);
+  // Filters and the cursor arrive as query params, applied SERVER-SIDE by
+  // the store — a filter that only sifted the first page would hide exactly
+  // the rows past the cap an operator is filtering to find.
+  const search = new URL(request.url).searchParams;
+  const kindParam = search.get('kind');
+  if (kindParam !== null && !['pdf', 'docx', 'doc'].includes(kindParam)) {
+    return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
+  }
+  const beforeAt = search.get('beforeLastSeenAt');
+  const beforeId = search.get('beforeId');
+  if ((beforeAt === null) !== (beforeId === null)) {
+    // Half a cursor selects the wrong page silently; refuse instead.
+    return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
+  }
+
+  const { documents, hasMore } = await platform.listClientDocuments(clientId, {
+    ...(kindParam === null ? {} : { kind: kindParam as 'pdf' | 'docx' | 'doc' }),
+    ...(search.get('hasGaps') === 'true' ? { hasGaps: true as const } : {}),
+    ...(search.get('unreviewed') === 'true' ? { unreviewed: true as const } : {}),
+    ...(beforeAt === null || beforeId === null
+      ? {}
+      : { before: { lastSeenAt: beforeAt, id: beforeId } }),
+  });
 
   // The document pipeline's own regression — latest two readings per
   // document, diffed by criterion. Computed here rather than stored: it is a
@@ -153,6 +175,7 @@ export async function GET(
   return Response.json(
     {
       requestId,
+      hasMore,
       documents: documents.map((record) => {
         const diff = diffByDocument.get(record.id);
         return {

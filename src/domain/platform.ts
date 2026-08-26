@@ -608,6 +608,17 @@ export type StoredClientDocument = {
   lastSeenAt: string;
 };
 
+/** What an inventory listing may be narrowed to. See `listClientDocuments`. */
+export type ClientDocumentQuery = {
+  kind?: DocumentLinkKind;
+  /** Only documents whose LATEST reading still names gaps. */
+  hasGaps?: true;
+  /** Only documents with no reading of any kind. Excludes `hasGaps`. */
+  unreviewed?: true;
+  /** Keyset cursor: the last row of the previous page, in listing order. */
+  before?: { lastSeenAt: string; id: string };
+};
+
 /** One sighting of a document, as a merge consumes it. */
 export type DocumentSighting = {
   url: string;
@@ -717,10 +728,25 @@ export interface ClientDocumentStore {
     seenAt: string,
   ): Promise<StoredClientDocument>;
   /**
-   * The inventory: every document with the latest word on it, most recently
-   * seen first, capped at `CLIENT_DOCUMENT_LIST_MAX`.
+   * The inventory: documents with the latest word on each, most recently seen
+   * first, one page of `CLIENT_DOCUMENT_LIST_MAX` at a time.
+   *
+   * Filters are applied SERVER-SIDE, deliberately — a filter that only sifted
+   * the first page would hide exactly the rows past the cap that an operator
+   * is filtering to find. `hasGaps` judges the LATEST reading (a clean
+   * conversion after a gappy inspection reads as clean — the delivered file
+   * speaks). `unreviewed` means no reading of any kind. `before` is the
+   * keyset cursor: rows strictly after that position in the listing's own
+   * order `(lastSeenAt desc, id desc)`, so pages never skip or repeat even as
+   * new sightings land above.
+   *
+   * `hasMore` says a further page exists under the SAME query — the honest
+   * counterpart of the caps' omission counts.
    */
-  listClientDocuments(clientId: string): Promise<ClientDocumentRecord[]>;
+  listClientDocuments(
+    clientId: string,
+    query?: ClientDocumentQuery,
+  ): Promise<{ documents: ClientDocumentRecord[]; hasMore: boolean }>;
   /**
    * Immutable evidence, like an inspection: a second save under the same id
    * is a retry and the first record stands.

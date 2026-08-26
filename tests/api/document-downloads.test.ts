@@ -137,7 +137,7 @@ describe('document downloads', () => {
     const request = new Request('http://localhost/x');
 
     async function issueReportWithSnapshot(): Promise<void> {
-      const documents = await platform.listClientDocuments('acme');
+      const documents = (await platform.listClientDocuments('acme')).documents;
       await platform.createReport({
         id: 'report-1',
         requestId: 'run-1',

@@ -128,14 +128,44 @@ function pdfNameFor(sourceName: string): string {
  * The conversion response is the PDF itself, with the summary riding in a
  * header — one request, both halves. A refusal is JSON, same as everywhere.
  */
+/** What the operator has narrowed the inventory to. Server-side filters —
+ * a filter that only sifted the loaded page would hide exactly the rows past
+ * the cap it exists to find. */
+type InventoryFilters = {
+  kind?: 'pdf' | 'docx' | 'doc';
+  hasGaps?: true;
+  unreviewed?: true;
+};
+
+function inventoryQuery(
+  filters: InventoryFilters,
+  before?: { lastSeenAt: string; id: string },
+): string {
+  const params = new URLSearchParams();
+  if (filters.kind) params.set('kind', filters.kind);
+  if (filters.hasGaps) params.set('hasGaps', 'true');
+  if (filters.unreviewed) params.set('unreviewed', 'true');
+  if (before) {
+    params.set('beforeLastSeenAt', before.lastSeenAt);
+    params.set('beforeId', before.id);
+  }
+  const qs = params.toString();
+  return qs === '' ? '' : `?${qs}`;
+}
+
 /** The inventory fetch, pure of component state so every caller shares it. */
 async function fetchInventory(
   path: string,
-): Promise<{ ok: true; documents: ClientDocument[] } | { ok: false; message: string }> {
+  query = '',
+): Promise<
+  | { ok: true; documents: ClientDocument[]; hasMore: boolean }
+  | { ok: false; message: string }
+> {
   try {
-    const response = await fetch(path);
+    const response = await fetch(`${path}${query}`);
     const payload = (await response.json().catch(() => null)) as {
       documents?: ClientDocument[];
+      hasMore?: boolean;
       error?: string;
     } | null;
 
@@ -145,7 +175,7 @@ async function fetchInventory(
         message: `The document inventory did not load (${payload?.error ?? `http ${response.status}`}).`,
       };
     }
-    return { ok: true, documents: payload?.documents ?? [] };
+    return { ok: true, documents: payload?.documents ?? [], hasMore: payload?.hasMore === true };
   } catch {
     return { ok: false, message: 'The document inventory did not load (could not reach the server).' };
   }
@@ -349,6 +379,9 @@ export function ClientDocuments({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [addUrl, setAddUrl] = useState('');
   const [addState, setAddState] = useState<AddByUrlState>({ state: 'idle' });
+  const [filters, setFilters] = useState<InventoryFilters>({});
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const headingId = `${fieldPrefix}-heading`;
   const urlId = `${fieldPrefix}-url`;
@@ -364,26 +397,53 @@ export function ClientDocuments({
     if (result.ok) {
       setInventoryError(null);
       setDocuments(result.documents);
+      setHasMore(result.hasMore);
     } else {
       setInventoryError(result.message);
     }
   }
 
+  /** Reload under the current filters, back to page one — the refresh every
+   * mutating action calls. Paging state resets deliberately: a stale cursor
+   * after a merge would page past rows the merge just refreshed upward. */
   async function loadInventory(): Promise<void> {
-    applyInventory(await fetchInventory(documentsPath));
+    applyInventory(await fetchInventory(documentsPath, inventoryQuery(filters)));
+  }
+
+  async function loadMore(): Promise<void> {
+    const last = documents?.[documents.length - 1];
+    if (!last) return;
+    setLoadingMore(true);
+    try {
+      const result = await fetchInventory(
+        documentsPath,
+        inventoryQuery(filters, { lastSeenAt: last.lastSeenAt, id: last.id }),
+      );
+      if (result.ok) {
+        setInventoryError(null);
+        setDocuments((current) => [...(current ?? []), ...result.documents]);
+        setHasMore(result.hasMore);
+      } else {
+        setInventoryError(result.message);
+      }
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   useEffect(() => {
     // The inventory is the screen: what was inspected or converted last week
-    // is still here today.
+    // is still here today. Re-runs when the filters change — the narrowing is
+    // server-side, so a change is a new first page, not a sift of this one.
     let cancelled = false;
 
     (async () => {
-      const result = await fetchInventory(documentsPath);
+      const result = await fetchInventory(documentsPath, inventoryQuery(filters));
       if (cancelled) return;
       if (result.ok) {
         setInventoryError(null);
         setDocuments(result.documents);
+        setHasMore(result.hasMore);
       } else {
         setInventoryError(result.message);
       }
@@ -392,7 +452,7 @@ export function ClientDocuments({
     return () => {
       cancelled = true;
     };
-  }, [documentsPath]);
+  }, [documentsPath, filters]);
 
   useEffect(() => {
     // Ask the conversion route itself whether this host can convert. Any
@@ -676,9 +736,90 @@ export function ClientDocuments({
         </p>
       ) : null}
 
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label
+            htmlFor={`${fieldPrefix}-kind`}
+            style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}
+          >
+            Kind
+          </label>
+          <select
+            id={`${fieldPrefix}-kind`}
+            value={filters.kind ?? ''}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                ...(event.target.value === ''
+                  ? { kind: undefined }
+                  : { kind: event.target.value as 'pdf' | 'docx' | 'doc' }),
+              }))
+            }
+            style={{ ...inputStyle, fontFamily: FONT.sans }}
+          >
+            <option value="">All kinds</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">Word (.docx)</option>
+            <option value="doc">Word (.doc)</option>
+          </select>
+        </span>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            fontFamily: FONT.sans,
+            fontSize: 12,
+            color: T.ink,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={filters.hasGaps === true}
+            onChange={(event) =>
+              // Mutually exclusive with never-reviewed: a document with gaps
+              // has, by definition, been reviewed.
+              setFilters((current) => ({
+                ...current,
+                hasGaps: event.target.checked ? true : undefined,
+                ...(event.target.checked ? { unreviewed: undefined } : {}),
+              }))
+            }
+          />
+          With open gaps
+        </label>
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            fontFamily: FONT.sans,
+            fontSize: 12,
+            color: T.ink,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={filters.unreviewed === true}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                unreviewed: event.target.checked ? true : undefined,
+                ...(event.target.checked ? { hasGaps: undefined } : {}),
+              }))
+            }
+          />
+          Never reviewed
+        </label>
+      </div>
+
       {documents !== null ? (
         documents.length === 0 ? (
-          <p style={noteStyle}>No documents on record yet — scan the site, or upload one.</p>
+          <p style={noteStyle}>
+            {filters.kind || filters.hasGaps || filters.unreviewed
+              ? 'Nothing on record matches these filters.'
+              : 'No documents on record yet — scan the site, or upload one.'}
+          </p>
         ) : (
           <ul
             style={{
@@ -812,6 +953,17 @@ export function ClientDocuments({
             })}
           </ul>
         )
+      ) : null}
+
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={() => void loadMore()}
+          disabled={loadingMore}
+          style={{ ...buttonStyle, alignSelf: 'flex-start', ...disabledStyle(loadingMore) }}
+        >
+          {loadingMore ? 'Loading…' : 'Load more'}
+        </button>
       ) : null}
 
       {converter.checked &&

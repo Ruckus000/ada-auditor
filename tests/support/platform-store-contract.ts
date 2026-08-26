@@ -827,7 +827,7 @@ export function platformStoreContract(
       );
       expect(second).toEqual({ added: 0, seenAgain: 1 });
 
-      const docs = await store.listClientDocuments(CONTRACT_CLIENT);
+      const docs = (await store.listClientDocuments(CONTRACT_CLIENT)).documents;
       const pdf = docs.find((doc) => doc.url === DOC_URL);
       // Refreshed, not duplicated — and the first sighting keeps `foundOn`,
       // the same rule discovery itself applies.
@@ -865,7 +865,7 @@ export function platformStoreContract(
         T0,
       );
 
-      const [doc] = await store.listClientDocuments(CONTRACT_CLIENT);
+      const [doc] = (await store.listClientDocuments(CONTRACT_CLIENT)).documents;
       expect(doc).not.toHaveProperty('foundOn');
       expect(doc.source).toBe('upload');
     });
@@ -905,7 +905,7 @@ export function platformStoreContract(
         }),
       );
 
-      const [record] = await store.listClientDocuments(CONTRACT_CLIENT);
+      const [record] = (await store.listClientDocuments(CONTRACT_CLIENT)).documents;
       expect(record.latestInspection?.id).toBe(`${PLATFORM_PREFIX}-insp-new`);
       expect(record.latestInspection?.summary.pages).toBe(9);
       expect(record.latestConversion?.id).toBe(`${PLATFORM_PREFIX}-conv-new`);
@@ -967,7 +967,7 @@ export function platformStoreContract(
         conversionRecord({ documentId: doc.id, outputSha256: 'f'.repeat(64), convertedAt: T1 }),
       );
 
-      const [record] = await store.listClientDocuments(CONTRACT_CLIENT);
+      const [record] = (await store.listClientDocuments(CONTRACT_CLIENT)).documents;
       expect(record.latestConversion?.outputSha256).toBe('b'.repeat(64));
       expect(record.latestConversion?.convertedAt).toBe('2026-08-26T12:00:00.000Z');
     });
@@ -988,7 +988,7 @@ export function platformStoreContract(
         T0,
       );
 
-      const urls = (await store.listClientDocuments(otherClient)).map((doc) => doc.url);
+      const urls = ((await store.listClientDocuments(otherClient)).documents).map((doc) => doc.url);
       expect(urls).toEqual(['https://elsewhere.example/budget.pdf']);
     });
 
@@ -1008,8 +1008,76 @@ export function platformStoreContract(
         T1,
       );
 
-      const urls = (await store.listClientDocuments(CONTRACT_CLIENT)).map((doc) => doc.url);
+      const urls = ((await store.listClientDocuments(CONTRACT_CLIENT)).documents).map((doc) => doc.url);
       expect(urls).toEqual(['https://town.example/new.pdf', 'https://town.example/old.pdf']);
+    });
+
+    it('filters server-side: kind, gaps on the LATEST reading, and never-reviewed', async () => {
+      const store = await seeded();
+
+      // gappy.pdf: inspected with a gap.
+      const gappy = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/gappy.pdf', kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+      await store.saveDocumentInspection(
+        inspectionRecord({ id: `${PLATFORM_PREFIX}-fi-a`, documentId: gappy.id, inspectedAt: T0 }),
+      );
+      // healed.docx: gappy inspection, then a CLEAN conversion — the latest
+      // reading speaks, so this must not match hasGaps.
+      const healed = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/healed.docx', kind: 'docx', source: 'crawl' },
+        T0,
+      );
+      await store.saveDocumentInspection(
+        inspectionRecord({ id: `${PLATFORM_PREFIX}-fi-b`, documentId: healed.id, inspectedAt: T0 }),
+      );
+      await store.saveDocumentConversion(
+        conversionRecord({ id: `${PLATFORM_PREFIX}-fc-b`, documentId: healed.id, convertedAt: T1 }),
+      );
+      // fresh.docx: never read.
+      await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/fresh.docx', kind: 'docx', source: 'crawl' },
+        T0,
+      );
+
+      const urls = async (query: Parameters<typeof store.listClientDocuments>[1]) =>
+        (await store.listClientDocuments(CONTRACT_CLIENT, query)).documents.map((d) => d.url);
+
+      expect(await urls({ kind: 'docx' })).toEqual(
+        expect.arrayContaining(['https://town.example/healed.docx', 'https://town.example/fresh.docx']),
+      );
+      expect(await urls({ kind: 'docx' })).not.toContain('https://town.example/gappy.pdf');
+
+      expect(await urls({ hasGaps: true })).toEqual(['https://town.example/gappy.pdf']);
+      expect(await urls({ unreviewed: true })).toEqual(['https://town.example/fresh.docx']);
+    });
+
+    it('pages by keyset without skips or repeats, and hasMore is a fact', async () => {
+      const store = await seeded();
+      // Three distinct instants so the order is the test's, not the clock's.
+      const stamps = ['2026-08-26T09:00:00.000Z', '2026-08-26T09:30:00.000Z', T1];
+      for (const [i, stamp] of stamps.entries()) {
+        await store.ensureClientDocument(
+          CONTRACT_CLIENT,
+          { url: `https://town.example/page-${i}.pdf`, kind: 'pdf', source: 'crawl' },
+          stamp,
+        );
+      }
+
+      const all = await store.listClientDocuments(CONTRACT_CLIENT);
+      expect(all.hasMore).toBe(false);
+      const [first, second, third] = all.documents;
+
+      // Cursor after the first row: exactly the rest, in the same order.
+      const rest = await store.listClientDocuments(CONTRACT_CLIENT, {
+        before: { lastSeenAt: first.lastSeenAt, id: first.id },
+      });
+      expect(rest.documents.map((d) => d.id)).toEqual([second.id, third.id]);
+      expect(rest.hasMore).toBe(false);
     });
 
     it(
@@ -1032,7 +1100,7 @@ export function platformStoreContract(
           T1,
         );
 
-        const listed = await store.listClientDocuments(CONTRACT_CLIENT);
+        const listed = (await store.listClientDocuments(CONTRACT_CLIENT)).documents;
         expect(listed).toHaveLength(CLIENT_DOCUMENT_LIST_MAX);
         expect(listed[0].url).toBe('https://town.example/latest.pdf');
       },
