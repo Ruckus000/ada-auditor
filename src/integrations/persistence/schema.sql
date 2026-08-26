@@ -556,3 +556,19 @@ alter table journeys add column if not exists allowed_hosts text[];
 alter table runs add column if not exists gate_version smallint;
 alter table runs alter column gate_version drop not null;
 alter table runs alter column gate_version drop default;
+
+-- Which bound cut the walk short: 'page-cap' or 'budget'.
+--
+-- `truncated_pages` says a run did not cover its journey; this says what to do
+-- about it. A page cap means raise the cap; a wall-clock budget means get a
+-- container worker. The console rendered "this run stopped at its page limit"
+-- for every truncated run, which the moment a second bound exists is
+-- true-sounding and wrong about the cause.
+--
+-- Nullable, no default, and **no backfill**. A run from before the walk had a
+-- clock had no reason, and writing one onto it would put words in its mouth —
+-- the same stance `title` and `intent.ruleset` take. Text rather than a CHECK
+-- or an enum: the values live in `domain/run-limits.ts`, and inventing this
+-- repository's first CHECK-altering migration for a field only our own writer
+-- populates is risk without a reader.
+alter table runs add column if not exists truncation_reason text;

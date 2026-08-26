@@ -3,6 +3,11 @@ import { dirname, join, resolve, sep } from 'node:path';
 import type { Page, Response } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { normalizePathname } from '../../domain/discovery';
+import {
+  resolveMaxPages,
+  resolveWalkBudgetMs,
+  type JourneyTruncationReason,
+} from '../../domain/run-limits';
 import { boundTitle } from '../../domain/evidence';
 import { isActionAllowed } from '../../domain/policy';
 import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/ax-tree';
@@ -113,25 +118,20 @@ export function routeFromPageUrl(url: string): string {
 }
 
 /**
- * Ceiling on pages per run.
+ * The two bounds on a walk live in `domain/run-limits`.
  *
- * Every page costs an axe scan, a full-page screenshot and an AX tree against
- * the same 300s `maxDuration`. Twenty was a starting point rather than a law
- * of nature, and there is now one real datapoint behind it: a four-page run
- * of the W3C BAD demo on a production function
- * (`d62f13f4-4a33-4f14-b592-4b243c4f3e62`, 2026-08-15) took 23.0s — 20.5s of
- * journey plus 1.5s of upload — with the slowest page at 4.0s, of which 2.9s
- * was the axe scan. Twenty of that page is about 80s, comfortably inside the
- * ceiling.
- *
- * Read that as a floor, not a budget. It is one run, against four small static
- * documents with no framework, no login and nothing deferred; a real client
- * app renders more, waits on more, and will cost more per page. The number to
- * re-decide this from is `slowestPageMs` on an actual client run, not this
- * one. If real journeys exceed the cap, that is still the signal for a
- * container worker rather than a bigger number here.
+ * They moved out because the resolvers had to: this module imports Playwright
+ * and axe, so a unit test reaching for `resolveMaxPages` would have pulled a
+ * browser into the fast suite — which is why the environment branch of that
+ * function shipped documented and never exercised. Re-exported because four
+ * call sites already import them from here.
  */
-const DEFAULT_MAX_PAGES = 20;
+export {
+  resolveMaxPages,
+  resolveWalkBudgetMs,
+  DEFAULT_MAX_PAGES_PER_RUN,
+  DEFAULT_WALK_BUDGET_MS,
+} from '../../domain/run-limits';
 
 /**
  * How long one interaction may wait for its element.
@@ -248,16 +248,6 @@ export function resolveStepTimeoutMs(explicit?: number): number {
     : DEFAULT_STEP_TIMEOUT_MS;
 }
 
-export function resolveMaxPages(explicit?: number): number {
-  if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
-    return Math.floor(explicit);
-  }
-  const configured = Number(process.env.AUDITOR_MAX_PAGES_PER_RUN);
-  return Number.isFinite(configured) && configured > 0
-    ? Math.floor(configured)
-    : DEFAULT_MAX_PAGES;
-}
-
 /**
  * A filesystem- and URL-safe id for one page's artifact set.
  *
@@ -294,6 +284,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // stepId costs nothing and leaves nothing behind.
   resolveArtifactPrefix(input.artifactsDir, input.stepId);
   const maxPages = resolveMaxPages(input.maxPages);
+  const budgetMs = resolveWalkBudgetMs(input.budgetMs);
   const stepTimeoutMs = resolveStepTimeoutMs(input.stepTimeoutMs);
   const expectTimeoutMs = resolveExpectTimeoutMs(input.expectTimeoutMs);
 
@@ -325,6 +316,17 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   }
 
   await mkdir(input.artifactsDir, { recursive: true });
+
+  /**
+   * The clock starts before the browser does, and that is the point.
+   *
+   * A cold `@sparticuz/chromium` launch on a serverless function is real
+   * seconds of the invocation this budget is carving up. Starting the clock
+   * after the launch would hand the walk a budget the run had already partly
+   * spent, which is the same lie as having no clock at all — just smaller.
+   */
+  const walkStartedAt = Date.now();
+  const deadlineAt = walkStartedAt + budgetMs;
 
   const browser = await launchChromium({ headless: input.headless });
   // axe is injected into every frame at scan time. A target site with a strict
@@ -465,19 +467,43 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   });
 
   /**
-   * A silent cap reads as "we audited everything" when we did not, and this is
-   * the only record that the walk was cut short — so both the success and the
-   * failure path call it, rather than one of them forgetting.
+   * A silent truncation reads as "we audited everything" when we did not, and
+   * this is the only record that the walk was cut short — so both the success
+   * and the failure path call it, rather than one of them forgetting.
+   *
+   * **Two event names, not one with a reason field.**
+   * `audit_page_cap_reached` already means one actionable thing in the
+   * pipelines that consume it — raise the cap — and a run that ran out of wall
+   * clock does not mean that; it means get a container worker. Silently
+   * widening an existing alert to cover a second cause is precisely the failure
+   * the log-shape rule was written about, and it is worse than a second name
+   * because nothing announces it. This deliberately inverts the shape
+   * `DiscoveryTruncation.reason` uses, and the reason is that discovery's
+   * events had no consumers to mislead.
    */
-  const warnIfCapped = () => {
+  const warnIfTruncated = () => {
     if (truncatedPages === 0) return;
-    logWarn('audit_page_cap_reached', {
+    const walk = {
       journeyId: input.journeyId,
       stepId: input.stepId,
-      maxPages,
       pagesAudited: pages.length,
       pagesSkipped: truncatedPages,
-    });
+    };
+
+    if (truncationReason === 'budget') {
+      logWarn('audit_time_budget_reached', {
+        ...walk,
+        budgetMs,
+        // How far past the deadline the walk actually got. The budget bounds
+        // when new work starts, never when work in flight finishes, so this is
+        // routinely non-zero and is the number that says whether the reserve is
+        // big enough.
+        overrunMs: Math.max(0, Date.now() - deadlineAt),
+      });
+      return;
+    }
+
+    logWarn('audit_page_cap_reached', { ...walk, maxPages });
   };
 
   // Declared out here, not inside the `try`, so the catch below can still see
@@ -485,6 +511,36 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
   // partial run lost its work.
   const pages: PageAudit[] = [];
   let truncatedPages = 0;
+  /**
+   * Which bound cut the walk short. First cause wins, hence `??=` at each
+   * increment: a walk that reaches its page cap and then its deadline stopped
+   * because of the cap, and saying otherwise would send the operator to change
+   * the wrong number.
+   */
+  let truncationReason: JourneyTruncationReason | undefined;
+
+  /**
+   * Has a bound been reached — and if so, which one?
+   *
+   * One predicate, three call sites, because the settle block at the end of the
+   * walk has to ask exactly the question `capturePage` asks. It already had two
+   * hand-written `< maxPages` guards for that reason: `capturePage` counts a
+   * capture it refuses into `truncatedPages`, and re-asking where we already
+   * are is not a page a bound skipped, so without the guards those calls
+   * inflated a skip of one into three. A second bound written as a second
+   * hand-rolled comparison would recreate that bug exactly.
+   *
+   * The cap answers first, so a walk that is out of both says `page-cap`.
+   */
+  const boundReached = (): JourneyTruncationReason | null => {
+    if (pages.length >= maxPages) return 'page-cap';
+    // Never before the first page. A budget already spent at entry — a cold
+    // browser launch eats real seconds — would otherwise produce a zero-page
+    // run, which is the evidence-free outcome this bound exists to remove. So
+    // the budget refuses the second page onward.
+    if (pages.length > 0 && Date.now() >= deadlineAt) return 'budget';
+    return null;
+  };
 
   /**
    * Which pages have already been captured, by the pair that identifies one:
@@ -618,8 +674,10 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         return;
       }
 
-      if (pages.length >= maxPages) {
+      const bound = boundReached();
+      if (bound) {
         truncatedPages += 1;
+        truncationReason ??= bound;
         return;
       }
 
@@ -756,6 +814,27 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     };
 
     for (const [index, step] of steps.entries()) {
+      /**
+       * Asked before the step runs, because navigating costs exactly the clock
+       * we have just run out of.
+       *
+       * Everything still to come is counted in one go rather than one refused
+       * capture at a time, and the count is of `goto` and `click` steps — the
+       * two that can reach a page. It slightly overstates: a `click` that would
+       * not have navigated is counted as a page skipped. The exact alternative
+       * is to walk the rest of the journey and find out, which spends the wall
+       * clock this bound has just declared gone. Erring upward on "what you did
+       * not get" is the safe direction, and this is not claimed to be exact.
+       */
+      const bound = boundReached();
+      if (bound) {
+        truncatedPages += steps
+          .slice(index)
+          .filter((remaining) => remaining.type === 'goto' || remaining.type === 'click').length;
+        truncationReason ??= bound;
+        break;
+      }
+
       if (!isActionAllowed(input.environment, step.action)) {
         throw new Error(`Action "${step.action}" is not allowed in ${input.environment}.`);
       }
@@ -983,18 +1062,21 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     // This also subsumes the old `if (pages.length === 0)` fallback: a journey
     // whose steps never navigated still landed somewhere, and this captures
     // that somewhere for the same reason it captures a late arrival.
-    // Skipped once the cap is reached, and that is not an optimisation.
-    // `capturePage` counts a capture it refuses for the cap into
-    // `truncatedPages`, which means "the walk was cut short" — a number that
-    // reaches the operator. Re-asking where we already are is not a page the
-    // cap skipped, and without this guard these calls inflated it from 1 to 3
-    // on the cap test.
+    // Skipped once a bound is reached, and that is not an optimisation.
+    // `capturePage` counts a capture it refuses into `truncatedPages`, which
+    // means "the walk was cut short" — a number that reaches the operator.
+    // Re-asking where we already are is not a page a bound skipped, and without
+    // this guard these calls inflated it from 1 to 3 on the cap test.
+    //
+    // `boundReached()` rather than a second hand-written comparison, so the
+    // budget inherits the property the cap already had instead of recreating
+    // the bug the cap's guards were added for.
     const capturedBeforeSettle = pages.length;
-    if (capturedBeforeSettle < maxPages) {
+    if (!boundReached()) {
       await capturePage();
     }
 
-    if (pages.length === capturedBeforeSettle && capturedBeforeSettle < maxPages) {
+    if (pages.length === capturedBeforeSettle && !boundReached()) {
       await page
         .waitForEvent('framenavigated', {
           predicate: (frame) => frame === page.mainFrame(),
@@ -1009,7 +1091,12 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
           () => undefined,
         );
 
-      await capturePage();
+      // Asked again, because the deadline can pass during a wait of up to
+      // `NAVIGATION_SETTLE_MS`. The guard above answered about a clock that has
+      // since moved.
+      if (!boundReached()) {
+        await capturePage();
+      }
     }
 
     // Once more, after the loop.
@@ -1039,9 +1126,9 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       assertSettledOnTarget(page.url(), targetHost);
     }
 
-    warnIfCapped();
+    warnIfTruncated();
 
-    return { pages, truncatedPages };
+    return { pages, truncatedPages, ...(truncationReason ? { truncationReason } : {}) };
   } catch (error) {
     // A journey that died at step five of eight still audited four pages, and
     // they were thrown away with the stack: `executeRun` stored `findings: []`
@@ -1071,9 +1158,13 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
     if (pages.length === 0) throw error;
 
     // Both paths, because a run can be truncated and then die.
-    warnIfCapped();
+    warnIfTruncated();
 
-    throw new PartialJourneyError(error, { pages, truncatedPages });
+    throw new PartialJourneyError(error, {
+      pages,
+      truncatedPages,
+      ...(truncationReason ? { truncationReason } : {}),
+    });
   } finally {
     await browser.close();
   }

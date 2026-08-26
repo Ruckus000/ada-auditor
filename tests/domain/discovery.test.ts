@@ -7,6 +7,7 @@ import {
   normalizePathname,
   stepPathFor,
 } from '../../src/domain/discovery';
+import { DEFAULT_MAX_PAGES_PER_RUN } from '../../src/domain/run-limits';
 
 describe('normalizePathname', () => {
   it('collapses directory, index.html and bare forms to one path', () => {
@@ -112,14 +113,13 @@ describe('discoveryRequestSchema', () => {
     );
   });
 
-  // MAX_DISCOVERY_URLS is intentionally set well above the run's page cap
-  // (20 by default, `AUDITOR_MAX_PAGES_PER_RUN` in
-  // `src/services/deployment-config.ts`) so an operator can select any
-  // in-cap subset from what discovery proposes. Nothing enforces that
-  // relationship at runtime, and no shared named constant exists to import
-  // here, so this only pins discovery's own cap, not the pair.
+  // MAX_DISCOVERY_URLS is intentionally set well above the run's page cap so an
+  // operator can select any in-cap subset from what discovery proposes.
+  // Nothing enforces that relationship at runtime, so this assertion is the
+  // enforcement — and it now pins the *pair*, because both numbers are named
+  // constants rather than a literal and a comment about a literal.
   it('caps discovery well above the default run page cap', () => {
-    expect(MAX_DISCOVERY_URLS).toBeGreaterThan(20);
+    expect(MAX_DISCOVERY_URLS).toBeGreaterThan(DEFAULT_MAX_PAGES_PER_RUN);
   });
 });
 

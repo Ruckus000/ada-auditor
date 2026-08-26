@@ -24,16 +24,10 @@ import { classifyRunFailure } from './run-failure';
 import { getRunCounter } from './run-counter';
 import { consumeRunBudget } from '../../../services/run-budget';
 import { logWarn } from '../../../services/logger';
+import { MAX_RUN_DURATION_MS, resolveWalkBudgetMs } from '../../../domain/run-limits';
+import { headroomMs, slowestPageMs } from '../../../services/run-timing';
 
 const DEFAULT_FIXTURE_DIR = join(process.cwd(), 'fixtures/journey-app');
-
-/**
- * The ceiling a run has to fit inside, mirroring `maxDuration` on the routes.
- *
- * Only used to report headroom. A run is not stopped at this number — the
- * platform stops it, and rather more abruptly.
- */
-const MAX_RUN_DURATION_MS = 300_000;
 
 /**
  * The step contract, which used to live here.
@@ -104,14 +98,23 @@ export const auditRunBodySchema = z.object({
    * forever — the tick claims it, POSTs, takes a 400, releases, repeats.
    */
   steps: z.array(journeyStepSchema).min(1).max(MAX_STEPS_PER_JOURNEY).optional(),
-  chaosScenario: z
-    .enum([
-      'browser_omit_ax_tree',
-      'browser_complete_critical',
-      'browser_complete_clean',
-      'browser_passthrough_violations',
-    ])
-    .optional(),
+  /**
+   * Derived from `CHAOS_SCENARIOS`, not spelled again.
+   *
+   * This was a hand-written list of four while the module defined seven, so the
+   * three the schema forgot — both truncation scenarios and the platform hint —
+   * were refused at this boundary with `invalid_request_body` and could only
+   * ever be exercised by calling the runner directly from `scripts/chaos.ts`.
+   * That is why the page cap had never been proven through the handler: not
+   * because the cap was not passed through (it was not), but because the run
+   * asking for it could not get in.
+   *
+   * Widening this is safe for exactly the reason chaos is gated at all: nothing
+   * here is reachable without `CHAOS_ENABLED`, and a production deployment that
+   * accepts scripted audit results is already on the settings screen's warning
+   * list.
+   */
+  chaosScenario: z.enum(CHAOS_SCENARIOS as [ChaosScenario, ...ChaosScenario[]]).optional(),
   // stepId names the artifact files for this run. It is concatenated onto the
   // artifacts directory, so it must be a bare filename segment -- no
   // separators and no dots, which rules out `..` traversal. runJourney
@@ -201,6 +204,23 @@ async function executeRun(
       artifactsDir: join(artifactsRoot(), requestId),
       omitAxTree: chaosParams?.omitAxTree ?? parsedBody.omitAxTree,
       steps: chaosParams?.steps ?? parsedBody.steps,
+      /**
+       * What is left of the walk's budget, not a fresh copy of it.
+       *
+       * `startedAt` is when the request arrived, and everything between then
+       * and here — parsing, the budget check, the placeholder write — is
+       * invocation time the walk cannot also have. Handing it the full budget
+       * would let the two bounds add up to more than the function has, which is
+       * the arithmetic the reserve exists to make honest.
+       */
+      budgetMs: chaosParams?.budgetMs ?? Math.max(0, resolveWalkBudgetMs() - (Date.now() - startedAt)),
+      /**
+       * The page cap a chaos scenario asked for. **The handler never passed
+       * this**, so `browser_page_cap_truncates` had only ever been proven on
+       * the direct `scripts/chaos.ts` path — the scenario went through the
+       * handler with no cap at all and truncated nothing.
+       */
+      ...(chaosParams?.maxPages !== undefined ? { maxPages: chaosParams.maxPages } : {}),
       targetUrl: chaosParams ? undefined : parsedBody.targetUrl,
       ...(parsedBody.allowedHosts ? { allowedHosts: parsedBody.allowedHosts } : {}),
       platformHint: parsedBody.platformHint,
@@ -218,10 +238,7 @@ async function executeRun(
     const baseline = await store.getLatestRun(report.journeyId, report.environment, requestId);
 
     const phaseMs = { ...(report.phaseMs ?? {}), upload: uploadMs };
-    const slowestPageMs = pages.reduce(
-      (slowest, page) => Math.max(slowest, page.durationMs ?? 0),
-      0,
-    );
+    const slowest = slowestPageMs(pages);
 
     const storedRun = toStoredRunRecord({
       requestId,
@@ -249,6 +266,7 @@ async function executeRun(
       browserMode: true,
       pages,
       truncatedPages: report.truncatedPages,
+      truncationReason: report.truncationReason,
       score: report.score,
       scoreVersion: report.scoreVersion,
       gateVersion: report.gateVersion,
@@ -274,8 +292,11 @@ async function executeRun(
         phaseMs,
         pagesAudited: pages.length,
         truncatedPages: report.truncatedPages,
-        slowestPageMs,
-        headroomMs: MAX_RUN_DURATION_MS - durationMs,
+        // Absent means not measured, which is what every other timing field
+        // here means. The reduce this replaces answered 0, so a run whose pages
+        // carried no duration logged "the slowest page took no time".
+        ...(slowest !== null ? { slowestPageMs: slowest } : {}),
+        headroomMs: headroomMs(MAX_RUN_DURATION_MS, durationMs),
       }),
     );
 
@@ -303,6 +324,7 @@ async function executeRun(
         checksFailed: report.checksFailed,
         checksNeedingReview: report.checksNeedingReview,
         ...(report.truncatedPages > 0 ? { truncatedPages: report.truncatedPages } : {}),
+        ...(report.truncationReason ? { truncationReason: report.truncationReason } : {}),
         ...(regression ? { regression } : {}),
       },
     };
@@ -328,6 +350,7 @@ async function executeRun(
      * the upload itself fails there is nothing useful left to do about it: the
      * run is already failing, and losing the pages is what happened before.
      */
+    const uploadStartedAt = Date.now();
     const partial =
       error instanceof PartialAuditError
         ? await uploadPages(requestId, error.auditedPages).catch((uploadError: unknown) => {
@@ -347,6 +370,27 @@ async function executeRun(
       ? (error as PartialAuditError).auditedPages.flatMap((one) => one.findings)
       : [];
 
+    /**
+     * The timing this path did not record, and the reason it matters most here.
+     *
+     * A run that outran its function ends up on the failure path, not the
+     * success path — so the numbers the page cap and the walk budget are
+     * supposed to be re-decided from were absent from exactly the runs worth
+     * reading. `headroomMs` in particular: a negative one is a run the platform
+     * was about to kill, and it is the single most interesting number this
+     * product can produce.
+     *
+     * `phaseMs` names only the phases something actually measured — the walk,
+     * carried out on the error, and the partial upload timed here. There is no
+     * advisory phase because the run died before it, and inventing a zero would
+     * make an unmeasured phase indistinguishable from an instant one.
+     */
+    const partialPhaseMs = {
+      ...(error instanceof PartialAuditError ? (error.phaseMs ?? {}) : {}),
+      ...(error instanceof PartialAuditError ? { upload: Date.now() - uploadStartedAt } : {}),
+    };
+    const slowest = slowestPageMs(partial);
+
     emitAuditRunLog(
       createAuditRunLog({
         journey: parsedBody.journeyId,
@@ -358,6 +402,13 @@ async function executeRun(
         failureReason,
         requestId,
         browserMode: true,
+        ...(Object.keys(partialPhaseMs).length > 0 ? { phaseMs: partialPhaseMs } : {}),
+        pagesAudited: partial.length,
+        ...(error instanceof PartialAuditError && error.truncatedPages > 0
+          ? { truncatedPages: error.truncatedPages }
+          : {}),
+        ...(slowest !== null ? { slowestPageMs: slowest } : {}),
+        headroomMs: headroomMs(MAX_RUN_DURATION_MS, durationMs),
       }),
     );
 
@@ -400,7 +451,23 @@ async function executeRun(
           ...(error instanceof PartialAuditError && error.truncatedPages > 0
             ? { truncatedPages: error.truncatedPages }
             : {}),
+          // And which bound did it. A failed truncated run that names no cause
+          // reads on the console as "stopped at its page limit", which is the
+          // wrong advice half the time.
+          ...(error instanceof PartialAuditError && error.truncationReason
+            ? { truncationReason: error.truncationReason }
+            : {}),
           durationMs,
+          // Stored, not merely logged. A log line does not survive the
+          // invocation, and a run that ran out of wall clock is precisely the
+          // row somebody reads back by hand when the cap is re-decided.
+          //
+          // Safe to add to a failed record, which is the next reader's
+          // question: `walkedTheSamePath` reads `intent` and nothing else, so
+          // no amount of timing or truncation detail here can make this run
+          // comparable. The omission below is what keeps it `incomparable`.
+          startedAt: new Date(startedAt).toISOString(),
+          ...(Object.keys(partialPhaseMs).length > 0 ? { phaseMs: partialPhaseMs } : {}),
           browserMode: true,
           status: 'failed',
           failureReason: code,

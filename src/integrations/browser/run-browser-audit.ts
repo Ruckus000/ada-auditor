@@ -131,6 +131,13 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
         error,
         auditPages(error.captured.pages),
         error.captured.truncatedPages,
+        {
+          truncationReason: error.captured.truncationReason,
+          // The one phase that was running when this threw, and the only one
+          // this layer can honestly name. The handler adds the upload it goes
+          // on to do.
+          phaseMs: { journey: Date.now() - journeyStartedAt },
+        },
       );
     }
     throw error;
@@ -235,6 +242,10 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
       timing: pageAudit.timing,
     })),
     truncatedPages: journeyResult.truncatedPages,
+    // Which bound did it. Absent means the walk covered its journey.
+    ...(journeyResult.truncationReason
+      ? { truncationReason: journeyResult.truncationReason }
+      : {}),
     // Where the run went. The browser work and the advisory call are the two
     // things that can plausibly grow past the function limit, so they are
     // timed apart rather than rolled into one number.

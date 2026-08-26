@@ -99,7 +99,61 @@ jobs:
           # built bundle against a real site, and re-running it until it passes
           # is how a suite stops catching the thing it exists for.
           AUDITOR_STEP_TIMEOUT_MS: '20000'
-        run: npm run smoke:real -- --url "$SMOKE_URL" --steps "$SMOKE_STEPS"
+        run: |
+          npm run smoke:real -- --url "$SMOKE_URL" --steps "$SMOKE_STEPS" \
+            --json "$RUNNER_TEMP/smoke-real.json"
+
+      # The measurement, where somebody will actually look for it.
+      #
+      # The numbers this job exists to produce were only ever a line in a log
+      # that scrolls past a Playwright install — so the run that finally
+      # measured a real client app would be as hard to read as every run
+      # before it. The table is the summary; the artifact is the copy you can
+      # compare against next quarter's.
+      #
+      # `if: always()`, because a run that failed *because* it ran out of wall
+      # clock is the most informative outcome this job has, and it is the one
+      # where the step above exits non-zero.
+      - name: Summarise the measurement
+        if: always()
+        run: |
+          json="$RUNNER_TEMP/smoke-real.json"
+          if [ ! -f "$json" ]; then
+            echo "No measurement was written — the run did not get far enough." \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "### Real-site smoke measurement"
+            echo
+            echo "| Measure | Value |"
+            echo "| --- | --- |"
+            # Keys are pinned here, one per row, and nothing else is printed.
+            # The target URL is deliberately not among them: it is
+            # workflow input, and a value interpolated into a Markdown table can
+            # carry a link or an image out of this page. Every value below is a
+            # number, a status word or `n/a`, and each is fenced anyway.
+            for key in pagesAudited truncatedPages truncationReason walkBudgetMs \
+                       runDurationMs slowestPageMs medianPageMs headroomMs \
+                       suggestedPageCap ciStatus evidenceStatus score; do
+              value="$(jq -r --arg k "$key" '.[$k] // "n/a"' "$json")"
+              printf '| `%s` | `%s` |\n' "$key" "$value"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Ninety days, matching `ARTIFACT_RETENTION_DAYS`: this is the dataset the
+      # page cap and the walk budget get re-decided from, and a remediation
+      # cycle is a quarter. It holds no client data — the target is a public
+      # site named in the workflow input, and the object carries timings and
+      # counts, never page content.
+      - name: Upload the measurement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-real-measurement
+          path: ${{ runner.temp }}/smoke-real.json
+          retention-days: 90
+          if-no-files-found: ignore
 
       # The interesting failures — a mangled axe bundle, a Chromium that will
       # not launch, a page cap hit — are logged by the server, not by the

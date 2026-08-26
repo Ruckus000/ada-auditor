@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { auditReport, criticalFinding } from '../helpers/audit-report';
+import { DEFAULT_WALK_BUDGET_MS } from '../../src/domain/run-limits';
 
 const { runBrowserAudit } = vi.hoisted(() => ({ runBrowserAudit: vi.fn() }));
 vi.mock('../../src/integrations/browser/run-browser-audit', () => ({ runBrowserAudit }));
@@ -123,6 +124,79 @@ describe('handleAuditRun', () => {
     expect(runBrowserAudit.mock.calls[0][0].omitAxTree).toBe(true);
     expect(runBrowserAudit.mock.calls[0][0].steps?.length).toBeGreaterThan(0);
     expect(result.body.ciStatus).toBe('inconclusive');
+  });
+
+  it('passes a chaos scenario its page cap', async () => {
+    // **The handler never passed this.** `browser_page_cap_truncates` names a
+    // cap of 2 against a three-page journey, and every run of it through this
+    // route went out with no cap at all and truncated nothing — so the one
+    // steady-state scenario about the cap had only ever been proven by calling
+    // the runner directly. The route's own scenario enum also listed four of
+    // the seven, so this request used to be refused as an invalid body before
+    // it could find out.
+    process.env.CHAOS_ENABLED = 'true';
+
+    await handleAuditRun(
+      runRequest({
+        journeyId: 'demo-login',
+        environment: 'staging',
+        chaosScenario: 'browser_page_cap_truncates',
+      }),
+      'req-chaos-cap',
+    );
+
+    expect(runBrowserAudit.mock.calls[0][0].maxPages).toBe(2);
+  });
+
+  it('passes a chaos scenario its walk budget, spent and all', async () => {
+    // Zero has to survive the trip. A `??` or a truthiness check anywhere on
+    // this path would read a spent budget as "no budget given" and hand the
+    // walk the full default — turning the one scenario that proves the clock
+    // exists into a scenario that proves nothing.
+    process.env.CHAOS_ENABLED = 'true';
+
+    await handleAuditRun(
+      runRequest({
+        journeyId: 'demo-login',
+        environment: 'staging',
+        chaosScenario: 'browser_time_budget_truncates',
+      }),
+      'req-chaos-budget',
+    );
+
+    expect(runBrowserAudit.mock.calls[0][0].budgetMs).toBe(0);
+  });
+
+  it('hands the walk what is left of the budget, not a fresh copy of it', async () => {
+    // `startedAt` is when the request arrived, and everything between then and
+    // the launch is invocation time the walk cannot also have. A fresh copy
+    // would let the two bounds add up to more than the function has, which is
+    // the arithmetic the reserve exists to make honest.
+    const startedAt = Date.now() - 30_000;
+
+    await startRun(
+      { journeyId: 'demo-login', environment: 'staging', wait: true },
+      'req-budget-elapsed',
+      startedAt,
+    );
+
+    const passed = runBrowserAudit.mock.calls[0][0].budgetMs;
+    expect(passed).toBeLessThanOrEqual(DEFAULT_WALK_BUDGET_MS - 30_000);
+    expect(passed).toBeGreaterThan(0);
+  });
+
+  it('never hands the walk a negative budget', async () => {
+    // A run that has already outlived its own budget before the browser opens
+    // still audits the page it lands on — that is the always-one-page rule —
+    // and a negative number here would be a deadline in the past expressed as
+    // arithmetic nobody checked.
+    await startRun(
+      { journeyId: 'demo-login', environment: 'staging', wait: true },
+      'req-budget-spent',
+      Date.now() - DEFAULT_WALK_BUDGET_MS * 2,
+    );
+
+    expect(runBrowserAudit.mock.calls[0][0].budgetMs).toBe(0);
   });
 
   it('rejects a chaos scenario when CHAOS_ENABLED is false', async () => {

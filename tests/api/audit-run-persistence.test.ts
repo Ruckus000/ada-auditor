@@ -204,6 +204,27 @@ describe('handleAuditRun async mode', () => {
     expect(JSON.stringify(failed)).not.toContain('.secrets');
   });
 
+  it('records which bound cut a completed walk short', async () => {
+    // Persisted, not merely logged. The log line does not survive the
+    // invocation, and the console's sentence about *why* a run is partial is
+    // read off the stored row months later — "stopped at its page limit" on a
+    // run that ran out of time sends the reader to raise the wrong number.
+    const store = new MemoryRunStore();
+    setRunStore(store);
+    // Spread rather than a helper override: `auditReport` builds a complete
+    // walk, and the two truncation fields are the ones under test here.
+    runBrowserAudit.mockResolvedValue({
+      ...auditReport(),
+      truncatedPages: 2,
+      truncationReason: 'budget',
+    });
+
+    const result = await handleAuditRun(runRequest(), 'req-truncated');
+
+    expect(result.body.truncationReason).toBe('budget');
+    expect((await store.getRun('req-truncated'))?.truncationReason).toBe('budget');
+  });
+
   /**
    * A run that died partway still audited pages, and they are the point.
    *
@@ -235,6 +256,7 @@ describe('handleAuditRun async mode', () => {
         new Error('Step 2 ("login") could not fill "#gone": the selector never matched anything.'),
         [captured] as never,
         2,
+        { truncationReason: 'budget', phaseMs: { journey: 240_000 } },
       ),
     );
 
@@ -262,6 +284,28 @@ describe('handleAuditRun async mode', () => {
     // Truncated *and* failed. Reported as 0 this reads as "we audited
     // everything" about a walk that was cut short twice over.
     expect(failed?.truncatedPages).toBe(2);
+
+    // And which bound did it. A failed truncated run naming no cause renders
+    // on the console as "stopped at its page limit", which is the wrong advice
+    // for a run that ran out of wall clock — and a run that ran out of wall
+    // clock is precisely the kind that ends up on this path.
+    expect(failed?.truncationReason).toBe('budget');
+
+    // The timing this path recorded nothing of. A run that outran its function
+    // fails rather than succeeds, so the numbers the page cap and the walk
+    // budget get re-decided from were absent from exactly the runs worth
+    // reading.
+    expect(failed?.startedAt).toBeTypeOf('string');
+    expect(failed?.phaseMs?.journey).toBe(240_000);
+    expect(failed?.phaseMs?.upload).toBeTypeOf('number');
+
+    // `intent` stays omitted, and that is not an oversight. `getLatestRun` does
+    // not filter on status, so this record is eligible as the next run's
+    // baseline — and `walkedTheSamePath` reads `intent` and nothing else, so
+    // its absence is the only thing keeping a partial walk `incomparable`. A
+    // baseline that stopped at page two would otherwise report pages three and
+    // four's findings as resolved.
+    expect(failed).not.toHaveProperty('intent');
 
     // And the counts behind a score travel with the page. These persisted as
     // null on every partial run, because only the success path computed them.

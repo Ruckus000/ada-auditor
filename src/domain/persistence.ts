@@ -1,4 +1,5 @@
 import type { Environment } from './contracts';
+import type { JourneyTruncationReason } from './run-limits';
 import type { StoredArtifacts } from './artifacts';
 
 /**
@@ -199,11 +200,25 @@ export type StoredRunRecord = {
    */
   intent?: RunIntent;
   /**
-   * Pages the run's page cap refused to audit. Non-zero means this run did not
-   * cover the whole journey — persisted because a partial audit must never
-   * read as a complete one once the log line that recorded it is gone.
+   * Pages a bound refused to audit. Non-zero means this run did not cover the
+   * whole journey — persisted because a partial audit must never read as a
+   * complete one once the log line that recorded it is gone.
    */
   truncatedPages?: number;
+  /**
+   * Which bound cut the walk short: the page cap, or the wall clock.
+   *
+   * Stored rather than derived, because it earns a column. The console told an
+   * operator "this run stopped at its **page limit**" on every truncated run,
+   * and once a second bound exists that sentence is true-sounding and wrong
+   * about the cause — so the reader raises a number that was not the problem.
+   *
+   * Absent means *not recorded*, never "the page cap". A run written before the
+   * walk had a clock had no reason to give, and there is no backfill: writing
+   * today's answer onto it would put words in its mouth, the same stance
+   * `title` and `intent.ruleset` take.
+   */
+  truncationReason?: JourneyTruncationReason;
   /**
    * Conformance rate over the checks evaluated, or absent when the run could
    * not be scored — incomplete evidence has no denominator.

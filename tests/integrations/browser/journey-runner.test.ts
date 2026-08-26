@@ -44,6 +44,9 @@ describe('runJourney', () => {
       ]);
       expect(result.pages[1].html).toContain('<img src="hero.png"');
       expect(result.truncatedPages).toBe(0);
+      // Absent, not `'page-cap'` with a count of zero: a walk that covered its
+      // journey has no cause to name.
+      expect(result.truncationReason).toBeUndefined();
 
       for (const audited of result.pages) {
         expect(audited.artifacts.screenshotPath).toBeTruthy();
@@ -331,6 +334,11 @@ describe('runJourney', () => {
 
       expect(result.pages).toHaveLength(2);
       expect(result.truncatedPages).toBe(1);
+      // Which bound did it, not just that one did. `findings-list.tsx` tells an
+      // operator "this run stopped at its page limit", and once a second bound
+      // exists that sentence is true-sounding and wrong half the time — so the
+      // reader raises a number that was not the problem.
+      expect(result.truncationReason).toBe('page-cap');
     } finally {
       await rm(artifactsDir, { recursive: true, force: true });
     }
