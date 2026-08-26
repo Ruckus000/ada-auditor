@@ -583,6 +583,54 @@ export function platformStoreContract(
       });
     });
 
+    it('round-trips a documents snapshot whole, and absence stays absent', async () => {
+      const store = await makeStore();
+      const section = {
+        capturedAt: '2026-08-26T12:00:00.000Z',
+        totals: {
+          documents: 2,
+          byKind: { pdf: 1, docx: 1 },
+          read: 1,
+          withGaps: 1,
+          unread: 1,
+        },
+        entries: [
+          {
+            url: 'https://town.example/minutes/agenda.pdf',
+            kind: 'pdf' as const,
+            source: 'crawl' as const,
+            foundOn: 'https://town.example/meetings',
+            readAt: '2026-08-26T09:00:00.000Z',
+            readBy: 'inspection' as const,
+            tagged: false,
+            pages: 4,
+            gaps: ['1.1.1: 3 figures with no alt text'],
+          },
+        ],
+      };
+
+      await store.createReport({
+        id: `${PLATFORM_PREFIX}-report-docs`,
+        requestId: `${PLATFORM_PREFIX}-run-a`,
+        shareToken: `${PLATFORM_PREFIX}-token-docs`,
+        documents: section,
+      });
+      // The snapshot verbatim: a store that reworded or trimmed it would make
+      // the shared page disagree with what was issued.
+      expect((await store.getReport(`${PLATFORM_PREFIX}-report-docs`))?.documents).toEqual(
+        section,
+      );
+
+      await store.createReport({
+        id: `${PLATFORM_PREFIX}-report-plain`,
+        requestId: `${PLATFORM_PREFIX}-run-b`,
+        shareToken: `${PLATFORM_PREFIX}-token-plain`,
+      });
+      expect(await store.getReport(`${PLATFORM_PREFIX}-report-plain`)).not.toHaveProperty(
+        'documents',
+      );
+    });
+
     it('makes a revoked token unusable', async () => {
       // Revocation is the real control on a public link — the rate limiter is
       // a speed bump. A revoked token must stop resolving immediately.

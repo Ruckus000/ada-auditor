@@ -57,6 +57,14 @@ type ClientDocument = {
   lastSeenAt: string;
   latestInspection?: { summary: Summary; inspectedAt: string };
   latestConversion?: { summary: Summary; convertedAt: string; outputSha256: string };
+  /** The server's diff of the latest two readings. Absent on a first reading. */
+  regression?: {
+    status: 'unchanged' | 'improved' | 'regressed' | 'mixed';
+    newGaps: string[];
+    resolvedGaps: string[];
+    unchangedCount: number;
+    baselineAt?: string;
+  };
 };
 
 type ScanReport = {
@@ -88,6 +96,18 @@ type ConversionState =
  * moment late.
  */
 type ConverterState = { checked: boolean; available: boolean };
+
+/**
+ * Adding a pasted address: the server fetches it, the BYTES decide what it
+ * is (a municipal download endpoint rarely carries an extension), and the
+ * answer is either an inspected PDF or a cataloged Word document.
+ */
+type AddByUrlState =
+  | { state: 'idle' }
+  | { state: 'running' }
+  | { state: 'inspected'; summary: Summary }
+  | { state: 'added-word' }
+  | { state: 'failed'; message: string };
 
 /** `agenda.docx` → `agenda-remediated.pdf`, purely for the download's name. */
 function pdfNameFor(sourceName: string): string {
@@ -320,9 +340,12 @@ export function ClientDocuments({
   const [wordUploadState, setWordUploadState] = useState<ConversionState>({ state: 'idle' });
   const [converter, setConverter] = useState<ConverterState>({ checked: false, available: false });
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [addUrl, setAddUrl] = useState('');
+  const [addState, setAddState] = useState<AddByUrlState>({ state: 'idle' });
 
   const headingId = `${fieldPrefix}-heading`;
   const urlId = `${fieldPrefix}-url`;
+  const addUrlId = `${fieldPrefix}-add-url`;
   const uploadId = `${fieldPrefix}-upload`;
   const wordUploadId = `${fieldPrefix}-word-upload`;
 
@@ -486,6 +509,42 @@ export function ClientDocuments({
     }
   }
 
+  async function addByUrl() {
+    setAddState({ state: 'running' });
+    try {
+      const response = await fetch(documentsPath, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url: addUrl.trim() }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            inspection?: { summary: Summary };
+            document?: { id: string };
+            error?: string;
+            detail?: string;
+          }
+        | null;
+
+      if (!response.ok || (!payload?.inspection && !payload?.document)) {
+        setAddState({
+          state: 'failed',
+          message: payload?.detail ?? payload?.error ?? `http ${response.status}`,
+        });
+        return;
+      }
+      setAddState(
+        payload.inspection
+          ? { state: 'inspected', summary: payload.inspection.summary }
+          : { state: 'added-word' },
+      );
+      setAddUrl('');
+      void loadInventory();
+    } catch {
+      setAddState({ state: 'failed', message: 'could not reach the server' });
+    }
+  }
+
   async function inspectUpload(file: File) {
     setUploadState({ state: 'running' });
     try {
@@ -640,6 +699,23 @@ export function ClientDocuments({
                     <span style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>
                       {statusLine(doc)}
                     </span>
+                    {doc.regression ? (
+                      <span
+                        style={{
+                          fontFamily: FONT.sans,
+                          fontSize: 11,
+                          // Regressions demand attention; everything else is calm.
+                          color:
+                            doc.regression.status === 'regressed' ||
+                            doc.regression.status === 'mixed'
+                              ? T.fail
+                              : T.inkMuted,
+                        }}
+                      >
+                        since last inspection: {doc.regression.newGaps.length} new,{' '}
+                        {doc.regression.resolvedGaps.length} resolved
+                      </span>
+                    ) : null}
                     {hasRecord ? (
                       <button
                         type="button"
@@ -682,6 +758,18 @@ export function ClientDocuments({
                   {/* The stored record, rendered from the inventory itself —
                       no server call, and the same SummaryView every other
                       source renders through. */}
+                  {expanded[doc.id] && doc.regression && doc.regression.newGaps.length > 0 ? (
+                    <p style={{ ...noteStyle, color: T.fail }}>
+                      New since last inspection: {doc.regression.newGaps.join(' · ')}
+                    </p>
+                  ) : null}
+                  {expanded[doc.id] &&
+                  doc.regression &&
+                  doc.regression.resolvedGaps.length > 0 ? (
+                    <p style={noteStyle}>
+                      Resolved since last inspection: {doc.regression.resolvedGaps.join(' · ')}
+                    </p>
+                  ) : null}
                   {expanded[doc.id] && doc.latestInspection ? (
                     <SummaryView summary={doc.latestInspection.summary} />
                   ) : null}
@@ -717,6 +805,51 @@ export function ClientDocuments({
           is installed, and this deployment does not have it. Inspection reads PDFs.
         </p>
       ) : null}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <label
+          htmlFor={addUrlId}
+          style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}
+        >
+          Add a document by URL
+        </label>
+        <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <input
+            id={addUrlId}
+            type="url"
+            value={addUrl}
+            onChange={(event) => setAddUrl(event.target.value)}
+            placeholder="https://client.example.gov/download?id=123"
+            style={{ ...inputStyle, flex: '1 1 260px' }}
+          />
+          <button
+            type="button"
+            onClick={addByUrl}
+            disabled={addState.state === 'running' || addUrl.trim() === ''}
+            style={{
+              ...buttonStyle,
+              ...disabledStyle(addState.state === 'running' || addUrl.trim() === ''),
+            }}
+          >
+            {addState.state === 'running' ? 'Fetching…' : 'Add'}
+          </button>
+        </span>
+        <p style={noteStyle}>
+          The server fetches it and the bytes decide what it is — a download link with no file
+          extension works fine.
+        </p>
+        {addState.state === 'inspected' ? <SummaryView summary={addState.summary} /> : null}
+        {addState.state === 'added-word' ? (
+          <p style={noteStyle}>
+            Added to the inventory as a Word document — convert it from its row above.
+          </p>
+        ) : null}
+        {addState.state === 'failed' ? (
+          <p role="alert" style={{ ...noteStyle, color: T.fail }}>
+            Could not add it: {addState.message}.
+          </p>
+        ) : null}
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <label htmlFor={uploadId} style={{ fontFamily: FONT.sans, fontSize: 11, color: T.inkMuted }}>

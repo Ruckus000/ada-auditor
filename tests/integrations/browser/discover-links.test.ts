@@ -203,6 +203,30 @@ beforeAll(async () => {
       return;
     }
 
+    // A page whose one link is an EXTENSIONLESS download endpoint — the shape
+    // a live municipal site serves every document from. Standalone (linked
+    // from nothing in the main fixture graph) so the capture case owns its
+    // crawl and the exact-list assertions elsewhere cannot inherit a race.
+    if (path === '/downloads.html') {
+      response.writeHead(200, { 'content-type': 'text/html' });
+      response.end(
+        '<!doctype html><html lang="en"><head><meta charset="utf-8" /><title>Downloads</title></head><body><main><h1>Downloads</h1><a href="/reports/download?id=7">This year’s budget</a></main></body></html>',
+      );
+      return;
+    }
+
+    // The extensionless endpoint itself: a real PDF, served as an attachment,
+    // which is what makes Chromium abort the navigation and start a download.
+    // Nothing in the URL says document — only the response does.
+    if (path === '/reports/download') {
+      response.writeHead(200, {
+        'content-type': 'application/pdf',
+        'content-disposition': 'attachment; filename="budget.pdf"',
+      });
+      response.end('%PDF-1.4 download fixture');
+      return;
+    }
+
     // The service worker `deep.html` registers, and the resource it fetches.
     // The fetch sits at the worker script's top level, not in an event
     // handler, so it fires the moment the script evaluates — which makes the
@@ -677,6 +701,38 @@ describe('discoverLinks guards', () => {
 
     // And the omission report names which kind was cut, not just how much.
     expect(result.documentsOmitted).toEqual({ pdf: 5 });
+  }, 60_000);
+
+  it('captures a navigation that became a download as a document, not an error', async () => {
+    // `[V]` The live-site shape this closes: municipal documents served from
+    // extensionless download endpoints enter the frontier as pages, and the
+    // aborted navigation used to buy an error row each. The capture is judged
+    // by Playwright's download EVENT, never Chromium's message text.
+    requestedPaths.length = 0;
+
+    const result = await discoverLinks({ targetUrl: `http://${HOST}/downloads.html` });
+
+    const captured = result.documents.find(
+      (doc) => doc.url === `http://${HOST}/reports/download?id=7`,
+    );
+    expect(captured).toBeDefined();
+    // The kind comes from the server's own Content-Disposition filename
+    // (`budget.pdf`) — the URL carries no extension at all.
+    expect(captured?.kind).toBe('pdf');
+    expect(captured?.foundOn).toBe(`http://${HOST}/downloads.html`);
+
+    // Navigated exactly once — the inverse witness of the extension case:
+    // an extension-classified link is never navigated, an extensionless one
+    // costs the navigation it was always going to cost, and no more.
+    expect(requestedPaths.filter((path) => path === '/reports/download')).toHaveLength(1);
+
+    // A document sighting, not a page and not a diagnosis.
+    expect(result.pages.map((page) => page.url)).not.toContainEqual(
+      expect.stringContaining('/reports/download'),
+    );
+    expect(result.errors.map((error) => error.url)).not.toContainEqual(
+      expect.stringContaining('/reports/download'),
+    );
   }, 60_000);
 
   it('survives a page that registers a service worker', async () => {

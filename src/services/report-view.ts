@@ -1,5 +1,11 @@
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
-import type { ClientStore, JourneyStore, ReportStore, StoredReport } from '../domain/platform';
+import type {
+  ClientStore,
+  DocumentReportSection,
+  JourneyStore,
+  ReportStore,
+  StoredReport,
+} from '../domain/platform';
 import { summariseRun, type RunSummary } from './client-detail';
 
 /**
@@ -27,6 +33,12 @@ export type ReportRow = {
   clientId?: string;
   clientName?: string;
   run: RunSummary | null;
+  /**
+   * Totals only, for the listing — the full snapshot (entries, URLs) stays on
+   * the row and the shared page; a listing of every report does not need
+   * every report's document URLs riding along.
+   */
+  documents?: { documents: number; withGaps: number };
 };
 
 export type ReportDeps = {
@@ -88,6 +100,14 @@ function toRow(
       ? {}
       : { clientId: context.clientId, clientName: context.clientName }),
     run: context ? summariseRun(context.run) : null,
+    ...(report.documents === undefined
+      ? {}
+      : {
+          documents: {
+            documents: report.documents.totals.documents,
+            withGaps: report.documents.totals.withGaps,
+          },
+        }),
   };
 }
 
@@ -98,6 +118,12 @@ export type SharedReport = {
   issuedBy?: string;
   createdAt: string;
   run: RunSummary;
+  /**
+   * The document snapshot, verbatim from the stored report — captured at
+   * issue time by the issuing route and NEVER recomputed here, so the shared
+   * page stays pinned. Absent on reports issued before the section existed.
+   */
+  documents?: DocumentReportSection;
   /**
    * Findings, grouped by page, as they were in the pinned run.
    *
@@ -177,6 +203,7 @@ export async function buildSharedReport(
     ...(report.issuedBy === undefined ? {} : { issuedBy: report.issuedBy }),
     createdAt: report.createdAt,
     run: summariseRun(run),
+    ...(report.documents === undefined ? {} : { documents: report.documents }),
     pages: (run.pages ?? []).map((page) => ({
       url: page.url,
       route: page.route,

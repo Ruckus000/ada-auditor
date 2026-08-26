@@ -221,4 +221,90 @@ describe('/api/platform/clients/[clientId]/reports', () => {
   it('answers null for a token that never existed', async () => {
     expect(await buildSharedReport('not-a-token', deps())).toBeNull();
   });
+
+  it('snapshots the document inventory at issue time, titleText excluded', async () => {
+    const doc = await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://acme.test/minutes/agenda.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T09:00:00.000Z',
+    );
+    await platform.saveDocumentInspection({
+      id: 'insp-1',
+      clientId: 'acme',
+      documentId: doc.id,
+      url: doc.url,
+      source: 'crawl',
+      summary: {
+        title: 'already-titled',
+        titleText: 'Objection of Jane Doe',
+        sourceLanguage: 'en-US',
+        tagged: false,
+        pages: 4,
+        headings: 0,
+        tables: 0,
+        lists: 0,
+        figures: 3,
+        gaps: ['1.1.1: 3 figures with no alt text'],
+      },
+      inspectedAt: '2026-08-26T09:00:00.000Z',
+    });
+    // On record but never read: counted, no gap lines.
+    await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://acme.test/forms/permit.docx', kind: 'docx', source: 'crawl' },
+      '2026-08-26T09:30:00.000Z',
+    );
+
+    const { report } = await (
+      await POST(fromBrowser({ requestId: 'r1' }), params('acme'))
+    ).json();
+    const shared = await buildSharedReport(report.shareToken, deps());
+
+    expect(shared?.documents?.totals).toEqual({
+      documents: 2,
+      byKind: { pdf: 1, docx: 1 },
+      read: 1,
+      withGaps: 1,
+      unread: 1,
+    });
+    expect(shared?.documents?.entries).toHaveLength(1);
+    expect(shared?.documents?.entries[0].gaps).toEqual(['1.1.1: 3 figures with no alt text']);
+    // The snapshot is public-by-token; a document's stated title is document
+    // content and stays off it.
+    expect(JSON.stringify(shared?.documents)).not.toContain('Jane Doe');
+
+    // PINNED: the inventory changing after issue changes nothing on the page.
+    await platform.saveDocumentInspection({
+      id: 'insp-2',
+      clientId: 'acme',
+      documentId: doc.id,
+      url: doc.url,
+      source: 'crawl',
+      summary: {
+        title: 'no-heading-to-copy',
+        sourceLanguage: null,
+        tagged: true,
+        pages: 4,
+        headings: 2,
+        tables: 0,
+        lists: 0,
+        figures: 0,
+        gaps: [],
+      },
+      inspectedAt: '2026-08-26T11:00:00.000Z',
+    });
+    const reread = await buildSharedReport(report.shareToken, deps());
+    expect(reread?.documents?.totals.withGaps).toBe(1);
+    expect(reread?.documents?.entries[0].gaps).toEqual(['1.1.1: 3 figures with no alt text']);
+  });
+
+  it('issues no documents section for a client with no documents on record', async () => {
+    const { report } = await (
+      await POST(fromBrowser({ requestId: 'r1' }), params('acme'))
+    ).json();
+    const shared = await buildSharedReport(report.shareToken, deps());
+
+    expect(shared).not.toBeNull();
+    expect(shared).not.toHaveProperty('documents');
+  });
 });

@@ -354,6 +354,11 @@ alter table reports add column if not exists audience text
 alter table reports add column if not exists title text;
 alter table reports add column if not exists issued_by text;
 alter table reports add column if not exists revoked_at timestamptz;
+-- The client's document inventory as it stood at issue time — a snapshot,
+-- written once by the issuing route and never recomputed, so the pinning
+-- guarantee above covers the whole document. Read and written whole, never
+-- queried into — the same jsonb stance as document_inspections.summary.
+alter table reports add column if not exists documents jsonb;
 
 -- --- Operators -------------------------------------------------------------
 --

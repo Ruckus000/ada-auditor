@@ -12,6 +12,7 @@ import type {
   DocumentInspectionSource,
   DocumentSighting,
   ClientDocumentRecord,
+  DocumentReportSection,
   ListEventsOptions,
   PlatformStore,
   ReportAudience,
@@ -110,6 +111,7 @@ type ReportRow = {
   audience: string | null;
   title: string | null;
   issued_by: string | null;
+  documents: DocumentReportSection | null;
   share_token: string | null;
   revoked_at: Date | string | null;
   created_at: Date | string;
@@ -661,6 +663,7 @@ export class PostgresPlatformStore implements PlatformStore {
       ...optional('audience', row.audience as ReportAudience | null),
       ...optional('title', row.title),
       ...optional('issuedBy', row.issued_by),
+      ...optional('documents', row.documents),
       ...optional('shareToken', row.share_token),
       ...optional('revokedAt', row.revoked_at ? toIso(row.revoked_at) : null),
       createdAt: toIso(row.created_at),
@@ -669,15 +672,18 @@ export class PostgresPlatformStore implements PlatformStore {
 
   async createReport(input: Omit<StoredReport, 'createdAt'>): Promise<void> {
     await this.sql`
-      insert into reports (id, request_id, audience, title, issued_by, share_token)
+      insert into reports (id, request_id, audience, title, issued_by, documents, share_token)
       values (
         ${input.id}, ${input.requestId}, ${input.audience ?? null},
-        ${input.title ?? null}, ${input.issuedBy ?? null}, ${input.shareToken ?? null}
+        ${input.title ?? null}, ${input.issuedBy ?? null},
+        ${input.documents === undefined ? null : JSON.stringify(input.documents)}::jsonb,
+        ${input.shareToken ?? null}
       )
       on conflict (id) do update set
         audience = excluded.audience,
         title = excluded.title,
         issued_by = excluded.issued_by,
+        documents = excluded.documents,
         share_token = excluded.share_token
     `;
   }

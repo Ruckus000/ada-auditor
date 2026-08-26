@@ -195,6 +195,49 @@ export type TriageState = 'dismissed' | 'accepted-risk' | 'assigned';
 
 export type ReportAudience = 'legal' | 'dev' | 'exec';
 
+/**
+ * One document as an issued report describes it. The shape a report SNAPSHOT
+ * stores — plain data, in domain for the same reason `RemediationSummary` is:
+ * the store and the services both speak it, and domain imports from neither.
+ *
+ * Field by field from the inventory record, never a spread of a summary:
+ * `RemediationSummary` carries `titleText`, the shared report page is
+ * public-by-token, and document content stays off the public surface.
+ */
+export type DocumentReportEntry = {
+  /** The document's address, or the operator's filename for an upload. */
+  url: string;
+  kind: DocumentLinkKind;
+  source: DocumentInspectionSource;
+  foundOn?: string;
+  /** When the latest reading was taken, and by which instrument pass. */
+  readAt: string;
+  readBy: 'inspection' | 'conversion';
+  tagged: boolean;
+  pages: number;
+  /** Verbatim gap strings — rephrasing them would be a copy free to drift. */
+  gaps: string[];
+};
+
+export type DocumentReportSection = {
+  capturedAt: string;
+  totals: {
+    documents: number;
+    byKind: Partial<Record<DocumentLinkKind, number>>;
+    /** Documents with at least one instrument reading. */
+    read: number;
+    /** Read documents whose latest reading still names gaps. */
+    withGaps: number;
+    /**
+     * On record, never read. Counted but contributing no gap lines — a gap
+     * list comes from an instrument reading, not from absence.
+     */
+    unread: number;
+  };
+  /** Only documents WITH a reading; the totals account for the rest. */
+  entries: DocumentReportEntry[];
+};
+
 export type StoredReport = {
   id: string;
   /**
@@ -205,6 +248,14 @@ export type StoredReport = {
   audience?: ReportAudience;
   title?: string;
   issuedBy?: string;
+  /**
+   * The client's document inventory as it stood when this report was issued —
+   * a SNAPSHOT, captured once by the issuing route and never recomputed, so
+   * the pinning guarantee above covers the whole document. Absent on reports
+   * issued before the section existed, and on clients with no documents;
+   * absent renders as nothing.
+   */
+  documents?: DocumentReportSection;
   /** Null means revoked; the token is cleared rather than the row deleted. */
   shareToken?: string;
   revokedAt?: string;

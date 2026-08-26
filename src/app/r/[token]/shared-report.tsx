@@ -1,6 +1,7 @@
 import type { SharedReport } from '../../../services/report-view';
 import { describePageEvidence } from '../../../services/presentation/page-evidence';
 import { describeCriterion, summariseCriteria } from '../../../services/wcag-reference';
+import { documentGapKey } from '../../../services/document-regression';
 import { FONT, T } from '../../platform/lib/tokens';
 
 /**
@@ -177,6 +178,8 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
         </section>
       ))}
 
+      {report.documents ? <DocumentsSection section={report.documents} /> : null}
+
       <footer
         style={{
           marginTop: 34,
@@ -191,6 +194,94 @@ export function SharedReportPage({ report }: { report: SharedReport }) {
         link to it still means what it meant when it was sent.
       </footer>
     </main>
+  );
+}
+
+/**
+ * The documents half of the report: the client's document inventory as it
+ * stood when this report was ISSUED — a snapshot the issuing route captured,
+ * rendered verbatim, never recomputed. The same pinning the footer promises
+ * for the audit covers this section.
+ *
+ * The boundary is stated in words because the page above it carries a
+ * verdict: nothing here changes that verdict. Documents are reviewed
+ * separately, on their own lifecycle, and their gaps are listed as evidence
+ * of what remains — not as findings of the audit run.
+ */
+function DocumentsSection({
+  section,
+}: {
+  section: NonNullable<SharedReport['documents']>;
+}) {
+  const failed = summariseCriteria(
+    section.entries.flatMap((entry) => entry.gaps.map(documentGapKey)),
+  );
+
+  return (
+    <section style={{ marginTop: 30 }}>
+      <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>Documents</h2>
+      <p style={{ margin: '0 0 12px', fontSize: 13, color: T.inkMuted, lineHeight: 1.55 }}>
+        Documents linked from the site — PDF and Word — reviewed separately from the page audit
+        above. Nothing in this section changes the audit&rsquo;s outcome. Captured{' '}
+        <time dateTime={section.capturedAt}>{section.capturedAt.slice(0, 10)}</time>, when this
+        report was issued.
+      </p>
+
+      <dl
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))',
+          gap: 12,
+          margin: '0 0 12px',
+        }}
+      >
+        <Stat label="On record" value={String(section.totals.documents)} />
+        <Stat label="Reviewed" value={String(section.totals.read)} />
+        <Stat label="With gaps" value={String(section.totals.withGaps)} />
+        <Stat label="Not yet reviewed" value={String(section.totals.unread)} />
+      </dl>
+
+      {failed.length > 0 ? (
+        <p style={{ margin: '0 0 10px', fontSize: 13, color: T.inkMuted, lineHeight: 1.55 }}>
+          Criteria found failing in reviewed documents:{' '}
+          {failed.map((criterion) => `${criterion.number} ${criterion.name}`).join(' · ')}.
+        </p>
+      ) : null}
+
+      {section.entries.length === 0 ? (
+        <p style={{ margin: 0, fontSize: 13, color: T.inkMuted }}>
+          No document had been reviewed when this report was issued.
+        </p>
+      ) : (
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {section.entries.map((entry) => (
+            <li key={entry.url} style={{ fontSize: 13.5 }}>
+              <span style={{ fontFamily: FONT.mono, fontSize: 12 }}>{entry.url}</span>{' '}
+              <span style={{ color: T.inkMuted }}>
+                · {entry.kind === 'pdf' ? 'PDF' : 'Word'} ·{' '}
+                {entry.readBy === 'conversion' ? 'converted' : 'reviewed'}{' '}
+                <time dateTime={entry.readAt}>{entry.readAt.slice(0, 10)}</time> ·{' '}
+                {entry.tagged ? 'tagged' : 'not tagged'} · {entry.pages}{' '}
+                {entry.pages === 1 ? 'page' : 'pages'}
+              </span>
+              {entry.gaps.length === 0 ? (
+                <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
+                  No machine-detectable gaps.
+                </p>
+              ) : (
+                <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>
+                  {entry.gaps.map((gap) => (
+                    <li key={gap} style={{ fontSize: 12.5, color: T.inkSoft, lineHeight: 1.5 }}>
+                      {gap}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
