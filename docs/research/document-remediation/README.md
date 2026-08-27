@@ -62,6 +62,7 @@ something no fixture had.
 |---|---|
 | [live-loop-verification.md](live-loop-verification.md) | Discovery → inspection, first contact. A correct zero (`.docx` invisible to a `.pdf`-only classifier), the crawl budget doing its job, and the extensionless-document miss caught live. |
 | [live-conversion-verification.md](live-conversion-verification.md) | **The first real Word document converted end to end — 3s, tagged, zero gaps, no human input.** Also two production blockers: a service worker that crashed the server, and every document on the builder's CDN. |
+| **[conversion-on-production-2026-08-27.md](conversion-on-production-2026-08-27.md)** | **Conversion reaches production.** Six builds, four runtime gaps — NSS, the oosplash chain, fontconfig, and a dlopen no ELF walk can see — closed by a runtime-faithful local container. A real Word document to a tagged PDF through the deployed function in 8s, zero gaps. |
 | **[production-verification-2026-08-26.md](production-verification-2026-08-26.md)** | **The deployed system, reached from the open internet.** The client's share link had never been deliverable — a hosting-configuration fault no suite can see. Plus what production measures: 242 links seen, 67 recorded, inspections 1.1–7.9s, and conversion honestly unavailable there. |
 
 ## Known open questions, so they are not rediscovered a fourth time

@@ -160,10 +160,12 @@ recorded here because it cannot be re-derived without re-running.
 
 ## What this run leaves open
 
-1. **Conversion in production.** LibreOffice's weight keeps it host-local. A
-   deployed converter needs a different packaging decision — a container, a
-   separate service, or a smaller converter — and that decision has not been
-   made.
+1. ~~**Conversion in production.**~~ **Closed, 2026-08-27** — the packaging
+   decision was made (ship it beside the function under large-functions) and
+   proven: a real municipal Word document converted through the deployed
+   function to a tagged PDF with zero gaps, in 8 seconds. Six builds and four
+   runtime gaps on the way, all recorded in
+   [`conversion-on-production-2026-08-27.md`](conversion-on-production-2026-08-27.md).
 2. **Extensionless document capture is untested against reality.** The
    `page.on('download')` path (#118) is covered by unit and browser tests and
    was **not exercised here**: every one of this site's 67 documents carried a
