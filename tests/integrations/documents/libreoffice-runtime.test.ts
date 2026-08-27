@@ -43,8 +43,23 @@ async function install(modules: string[]): Promise<string> {
   return join(program, 'soffice');
 }
 
+/**
+ * A macOS bundle that cannot exist.
+ *
+ * Passed everywhere, because `MACOS_BUNDLE` is the one place the resolver looks
+ * that no `env` can reach: on a Mac with LibreOffice installed the fallback
+ * answers `available: true` for the machine, and a test asking what happens
+ * when there is no install anywhere gets the honest answer to a different
+ * question. The same move `stage.test.ts` makes with
+ * `resolveJavaRuntime({ root: '/definitely/not/a/repo' })`.
+ */
+const NO_BUNDLE = join(tmpdir(), 'ada-lo-no-such-bundle', 'soffice');
+
 /** Nothing else on the machine may answer for the install under test. */
-const only = (sofficeBin: string) => ({ env: { SOFFICE_PATH: sofficeBin, PATH: '' } });
+const only = (sofficeBin: string) => ({
+  env: { SOFFICE_PATH: sofficeBin, PATH: '' },
+  macosBundle: NO_BUNDLE,
+});
 
 describe('resolveLibreOffice', () => {
   it('accepts an install that carries the Writer module', async () => {
@@ -122,6 +137,7 @@ describe('resolveLibreOffice', () => {
 
     const runtime = resolveLibreOffice({
       env: { PATH: [broken, working].map((bin) => bin.replace(/\/soffice$/, '')).join(':') },
+      macosBundle: NO_BUNDLE,
     });
 
     expect(runtime).toEqual({ available: true, sofficeBin: working });
@@ -130,7 +146,10 @@ describe('resolveLibreOffice', () => {
   it('reports the core-only reason when PATH holds nothing better', async () => {
     const broken = await install(['libmergedlo.so']);
 
-    const runtime = resolveLibreOffice({ env: { PATH: broken.replace(/\/soffice$/, '') } });
+    const runtime = resolveLibreOffice({
+      env: { PATH: broken.replace(/\/soffice$/, '') },
+      macosBundle: NO_BUNDLE,
+    });
 
     expect(runtime.available).toBe(false);
     if (runtime.available) return;
@@ -151,6 +170,7 @@ describe('resolveLibreOffice', () => {
         SOFFICE_PATH: configured,
         PATH: working.replace(/\/soffice$/, ''),
       },
+      macosBundle: NO_BUNDLE,
     });
 
     expect(runtime.available).toBe(false);
@@ -164,6 +184,7 @@ describe('resolveLibreOffice', () => {
         SOFFICE_PATH: join(tmpdir(), 'ada-lo-does-not-exist', 'soffice'),
         PATH: working.replace(/\/soffice$/, ''),
       },
+      macosBundle: NO_BUNDLE,
     });
 
     expect(runtime).toEqual({ available: true, sofficeBin: working });
@@ -200,7 +221,10 @@ describe('resolveLibreOffice', () => {
   });
 
   it('says LibreOffice is missing when there is no install anywhere', () => {
-    const runtime = resolveLibreOffice({ env: { PATH: join(tmpdir(), 'ada-lo-empty') } });
+    const runtime = resolveLibreOffice({
+      env: { PATH: join(tmpdir(), 'ada-lo-empty') },
+      macosBundle: NO_BUNDLE,
+    });
 
     expect(runtime.available).toBe(false);
     if (runtime.available) return;

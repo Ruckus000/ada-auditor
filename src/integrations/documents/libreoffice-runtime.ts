@@ -145,10 +145,22 @@ export type LibreOfficeRuntime =
   | { available: true; sofficeBin: string }
   | { available: false; reason: string };
 
+/**
+ * What both entry points take, named once so the two cannot drift.
+ *
+ * `macosBundle` is injectable for the same reason `resolveJavaRuntime` takes a
+ * `root`: a resolver that falls back to a fixed machine-wide path answers for
+ * the machine rather than for the install under test, and a test cannot say
+ * "there is no LibreOffice here" while `/Applications` disagrees. Production
+ * never passes it.
+ */
+type ResolveOptions = { env?: Env; macosBundle?: string };
+
 export function resolveLibreOffice(
-  options: { env?: Env } = {},
+  options: ResolveOptions = {},
 ): LibreOfficeRuntime {
   const env = options.env ?? process.env;
+  const macosBundle = options.macosBundle ?? MACOS_BUNDLE;
 
   // An explicit path wins, for the same reason `JAVA_HOME` does: a machine with
   // more than one install needs a way to say which.
@@ -188,8 +200,8 @@ export function resolveLibreOffice(
     }
   }
 
-  if (existsSync(MACOS_BUNDLE)) {
-    const found = remember(withWriter(MACOS_BUNDLE));
+  if (existsSync(macosBundle)) {
+    const found = remember(withWriter(macosBundle));
     if (found) return found;
   }
 
@@ -205,6 +217,6 @@ export function resolveLibreOffice(
 }
 
 /** Whether source-document conversion can run here. Read by `/api/ready`. */
-export function isDocumentConverterAvailable(options: { env?: Env } = {}): boolean {
+export function isDocumentConverterAvailable(options: ResolveOptions = {}): boolean {
   return resolveLibreOffice(options).available;
 }
