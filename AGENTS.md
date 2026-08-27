@@ -304,21 +304,27 @@ Chromium launches on a Vercel function:
   a truncated run says so.
 - Tests: Vitest unit + browser suites green; `npm run chaos` green
 
-### Phase 2C — where it stopped
+### Phase 2C — complete
 
-Slices 0, 1 and 3 are merged. Slice 2 onward is blocked on one product
-decision nobody has made:
+**Every screen in the 2C table is merged against real data, and the phase's
+own definition of done — `data.ts` deleted wholesale — is met** (the known-gaps
+entry below records what that deletion cost). The onboarding wizard
+(`docs/superpowers/plans/2026-08-19-onboarding-wizard.md`) closed the last
+slices, and the hydration suite walks the whole chain through screens against
+the built app: empty portfolio → add the first client → setup wizard →
+discovery → journey from ticked pages → first run → findings and triage →
+issue a shareable report → read it anonymously → revoke it.
 
-**How does a real client get into the system?** The database had one
-`client-unassigned` row and whatever journeys runs had materialised, and the
-screens read eight invented clients from `data.ts`.
+The product decision that unblocked it, kept for the record: **the portfolio
+starts empty and an operator adds clients.** The alternative — seeding the
+eight fixture clients as real rows — was a faster demo that put invented
+client names in a real database, the exact thing this phase existed to remove.
+Starting empty also made the first-run state the normal state rather than a
+screen nobody sees until the first real customer.
 
-**Answered:** the portfolio starts **empty** and an operator adds clients. The
-alternative — seeding the eight fixture clients as real rows — is a faster demo
-that puts invented client names in a real database, which is the exact thing
-this phase exists to remove. Starting empty also makes the first-run state the
-normal state rather than a screen nobody sees until the first real customer.
-Slices 2 and 4-6 follow from that.
+Not yet done anywhere: the same walk on **production** by a signed-in
+operator. The suites prove the screens against `next start`; a production
+click-through requires the operator credential and is a person's action.
 
 ### Known gaps
 
