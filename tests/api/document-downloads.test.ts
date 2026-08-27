@@ -185,5 +185,34 @@ describe('document downloads', () => {
 
       expect((await sharedGet(request, params('no-such-token', 'conv-1'))).status).toBe(404);
     });
+
+    /**
+     * The page above this route says `noindex` through Next `metadata`, which
+     * emits a `<meta>` tag. A PDF cannot carry one, so without the header the
+     * one response in this subtree that IS the client's document was the only
+     * crawlable thing behind the token.
+     *
+     * `schema.sql` claimed this header already existed. It did not, which is
+     * why the claim is asserted here rather than written down again.
+     */
+    it('tells crawlers to stay out, which a PDF cannot say for itself', async () => {
+      await seedConversion();
+      await issueReportWithSnapshot();
+
+      const response = await sharedGet(request, params('the-token', 'conv-1'));
+
+      expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
+    });
+
+    // Same stance as `report.pdf` and the artifacts route: a client's document
+    // is fetched with a credential and must not sit in a shared cache.
+    it('keeps the document out of every cache in between', async () => {
+      await seedConversion();
+      await issueReportWithSnapshot();
+
+      const response = await sharedGet(request, params('the-token', 'conv-1'));
+
+      expect(response.headers.get('cache-control')).toBe('private, no-store');
+    });
   });
 });
