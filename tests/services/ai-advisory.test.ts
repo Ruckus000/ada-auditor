@@ -1,4 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+/**
+ * The gateway call, mocked at the `ai` package.
+ *
+ * The injected-call seam covers every path in `requestAiAdvisory`, but the
+ * two events inside `callGateway` — no tool call, invalid shape — fire only on
+ * a real gateway answer. Mocking `generateText` exercises the real
+ * `callGateway` with no network. `tool()` passes through: it is a shape the
+ * call hands to the SDK, and these tests read nothing from it.
+ */
+const gateway = vi.hoisted(() => ({
+  result: { toolCalls: [] as Array<{ toolName: string; input: unknown }> },
+}));
+vi.mock('ai', () => ({
+  generateText: vi.fn(async () => gateway.result),
+  tool: (definition: unknown) => definition,
+}));
 import {
   advisoryModel,
   createAiAdvisoryFinding,
@@ -319,5 +336,111 @@ describe('createAiAdvisoryFinding', () => {
       message: 'x',
       confidence: 0.8,
     });
+  });
+});
+
+/**
+ * The outcome events.
+ *
+ * Written because the first live run returned one `advisory 0` and there was
+ * no way to tell which of six silent paths produced it — "nothing to report"
+ * and "the advisory silently failed" were identical in the database.
+ */
+describe('advisory outcome events', () => {
+  /** Model output is a client's page content; it must never reach a log. */
+  const PLANTED = 'the heading names ratepayer Jane Doe of 14 Mill Lane';
+
+  const logged = () => {
+    const lines: string[] = [];
+    for (const method of ['log', 'warn', 'error'] as const) {
+      vi.spyOn(console, method).mockImplementation((line: unknown) => {
+        lines.push(String(line));
+      });
+    }
+    return lines;
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete process.env.AI_GATEWAY_API_KEY;
+  });
+
+  it('logs completed with reported and kept, so a threshold-eaten answer is visible', async () => {
+    const lines = logged();
+    const { call } = stubCall([
+      { issue: 'link text says "click here"', confidence: 0.9 },
+      { issue: 'alt text says "image1"', confidence: 0.4 },
+    ]);
+
+    await requestAiAdvisory({ pages: [advisoryPage()], minConfidence: 0.7, call });
+
+    const event = lines.map((l) => JSON.parse(l)).find((e) => e.type === 'ai_advisory_completed');
+    expect(event).toMatchObject({ reported: 2, kept: 1 });
+    // Counts only — the finding text stays out of the logs.
+    expect(lines.join('\n')).not.toContain('click here');
+  });
+
+  it('logs reported: 0 for a model that genuinely answers nothing', async () => {
+    // The Fairview signature. `advisory 0` with this event is a model answer;
+    // without it, a failure — that distinction is the reason these events exist.
+    const lines = logged();
+    const { call } = stubCall([]);
+
+    await requestAiAdvisory({ pages: [advisoryPage()], minConfidence: 0.7, call });
+
+    const event = lines.map((l) => JSON.parse(l)).find((e) => e.type === 'ai_advisory_completed');
+    expect(event).toMatchObject({ reported: 0, kept: 0 });
+  });
+
+  it('logs the error first line when the call throws, never the evidence', async () => {
+    const lines = logged();
+    const call = vi.fn().mockRejectedValue(new Error('gateway answered 401\nsecond line'));
+
+    const findings = await requestAiAdvisory({
+      pages: [advisoryPage()],
+      minConfidence: 0.7,
+      call,
+    });
+
+    expect(findings).toEqual([]);
+    const event = lines.map((l) => JSON.parse(l)).find((e) => e.type === 'ai_advisory_error');
+    expect(event?.detail).toBe('gateway answered 401');
+    expect(lines.join('\n')).not.toContain('second line');
+  });
+
+  it('logs no_tool_call when the model answers in prose despite toolChoice', async () => {
+    const lines = logged();
+    process.env.AI_GATEWAY_API_KEY = 'test-key';
+    gateway.result = { toolCalls: [] };
+
+    const findings = await requestAiAdvisory({ pages: [advisoryPage()], minConfidence: 0.7 });
+
+    expect(findings).toEqual([]);
+    const event = lines.map((l) => JSON.parse(l)).find((e) => e.type === 'ai_advisory_no_tool_call');
+    expect(event?.model).toBe(advisoryModel());
+  });
+
+  it('logs issue codes for an invalid shape, and never the model value', async () => {
+    const lines = logged();
+    process.env.AI_GATEWAY_API_KEY = 'test-key';
+    // A malformed answer whose wrongness IS client page content: zod embeds the
+    // received value in some issue messages, which is exactly why the event is
+    // built from `code` and `path` alone.
+    gateway.result = {
+      toolCalls: [
+        {
+          toolName: 'report_findings',
+          input: { findings: [{ issue: PLANTED, confidence: PLANTED }] },
+        },
+      ],
+    };
+
+    const findings = await requestAiAdvisory({ pages: [advisoryPage()], minConfidence: 0.7 });
+
+    expect(findings).toEqual([]);
+    const event = lines.map((l) => JSON.parse(l)).find((e) => e.type === 'ai_advisory_invalid_shape');
+    expect(event?.detail).toContain('invalid_type at findings.0.confidence');
+    expect(lines.join('\n')).not.toContain('Jane Doe');
+    expect(lines.join('\n')).not.toContain('Mill Lane');
   });
 });
