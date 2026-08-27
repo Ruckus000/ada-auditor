@@ -52,6 +52,18 @@ about human time do not.
   real documents showed the synthetic corpus unrepresentative in kind rather
   than degree.
 
+## Live runs — the shipping system against real sites
+
+Measurements above come from the pipeline in `experiments/`. These three record
+the **product** meeting real municipal sites, in order, and each one found
+something no fixture had.
+
+| | |
+|---|---|
+| [live-loop-verification.md](live-loop-verification.md) | Discovery → inspection, first contact. A correct zero (`.docx` invisible to a `.pdf`-only classifier), the crawl budget doing its job, and the extensionless-document miss caught live. |
+| [live-conversion-verification.md](live-conversion-verification.md) | **The first real Word document converted end to end — 3s, tagged, zero gaps, no human input.** Also two production blockers: a service worker that crashed the server, and every document on the builder's CDN. |
+| **[production-verification-2026-08-26.md](production-verification-2026-08-26.md)** | **The deployed system, reached from the open internet.** The client's share link had never been deliverable — a hosting-configuration fault no suite can see. Plus what production measures: 242 links seen, 67 recorded, inspections 1.1–7.9s, and conversion honestly unavailable there. |
+
 ## Known open questions, so they are not rediscovered a fourth time
 
 1. **Table header inversion.** `Tables.java` R1 treats the leading all-bold row
