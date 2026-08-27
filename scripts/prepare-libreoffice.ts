@@ -41,6 +41,22 @@
  * one they published. It detects corruption and substitution exactly as the
  * JDK's does; it is not an assertion that TDF told us this number.
  *
+ * ## Two things measured the hard way
+ *
+ * `[V]` **LibreOffice needs the system's NSS and ships none of its own.**
+ * `libmergedlo.so` transitively needs `libssl3.so`; no RPM in the TDF tarball
+ * carries it, and neither does Vercel's build image — `soffice --version`
+ * died at exit 127 on exactly that. So NSS is installed below before the
+ * library collection runs, and the collector refuses to finish while `ldd`
+ * reports anything `not found`. The first collector silently skipped those
+ * lines and reported "collected 52 system libraries" over a broken install.
+ *
+ * `[V]` **The archive host's speed varies by an order of magnitude** — the
+ * same 250MB fetch took 2.4 minutes on one build and 17.5 on another. A known
+ * cost, recorded rather than engineered around: the build fits the platform
+ * ceiling either way, and a second download source is complexity this does
+ * not need yet.
+ *
  * ## What the verification at the end does and does not prove
  *
  * `soffice --version` must succeed here or the build fails loudly, the same
@@ -218,6 +234,31 @@ async function extractRpm(rpm: string, dest: string): Promise<void> {
  * Returns the count. On macOS there is no `ldd` and nothing to collect, which
  * is correct: a developer machine runs its own LibreOffice.
  */
+/**
+ * The system packages LibreOffice links but neither ships nor finds here.
+ *
+ * Installed with the image's own package manager so the right builds land in
+ * the right places for `ldd` to resolve and the collector to copy. A failure
+ * here is logged and not fatal — the collector's not-found check below is the
+ * gate, and it produces the better error: the list of what is actually
+ * missing, not the name of the tool that failed to install it.
+ */
+async function installBuildImagePackages(): Promise<void> {
+  for (const manager of ['dnf', 'microdnf']) {
+    try {
+      await execFileAsync(manager, ['install', '-y', 'nss'], {
+        maxBuffer: 8 * 1024 * 1024,
+        timeout: 180_000,
+      });
+      console.log(`installed nss via ${manager}`);
+      return;
+    } catch {
+      // Try the next one; the collector's gate reports what is missing.
+    }
+  }
+  console.log('could not install nss — the library check below will say what is missing');
+}
+
 async function collectSystemLibraries(install: string): Promise<number> {
   const target = join(install, SYSTEM_LIBRARY_DIR);
   let stdout: string;
@@ -228,6 +269,20 @@ async function collectSystemLibraries(install: string): Promise<number> {
   } catch {
     console.log('no ldd on this platform — skipping system library collection');
     return 0;
+  }
+
+  // The gate. `ldd` prints `libssl3.so => not found` for anything the image
+  // cannot resolve, and a build that ships anyway produces a LibreOffice that
+  // dies at exit 127 on its first exec. The first version of this loop
+  // matched only lines with a path, so it skipped every one of these silently
+  // — "collected 52 system libraries" over an install missing its crypto.
+  const missing = [...stdout.matchAll(/^\s*(\S+)\s+=>\s+not found/gm)].map((m) => m[1]);
+  if (missing.length > 0) {
+    throw new Error(
+      `the build image cannot resolve ${missing.length} of LibreOffice's libraries — ` +
+        `nothing shippable can come out of this build.\n  ${missing.join('\n  ')}\n` +
+        `Install the packages that provide them in installBuildImagePackages().`,
+    );
   }
 
   await mkdir(target, { recursive: true });
@@ -328,6 +383,7 @@ async function main(): Promise<void> {
     await mkdir(dirname(install), { recursive: true });
     await rename(payload, install);
 
+    await installBuildImagePackages();
     const libraries = await collectSystemLibraries(install);
     if (libraries > 0) {
       console.log(`collected ${libraries} system libraries`);
