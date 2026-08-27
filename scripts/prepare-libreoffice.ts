@@ -292,6 +292,43 @@ const BUILD_IMAGE_PACKAGES = [
   'libICE',
   'cups-libs',
   'dbus-libs',
+  // `[V]` Enumerated in one pass on a bare amazonlinux:2023 container — the
+  // runtime-faithful sim — instead of one library per deploy: the loader
+  // named each of these in turn until the conversion chain ran end to end.
+  // The collector copies whatever of them the ELF walk resolves.
+  'cairo',
+  'fontconfig',
+  'freetype',
+  'libpng',
+  'libxcb',
+  'pixman',
+  'harfbuzz',
+  'libbrotli',
+  'libX11-xcb',
+  'graphite2',
+];
+
+/**
+ * Loaded by `dlopen`, so invisible to the ELF walk below — no `DT_NEEDED`
+ * names these anywhere in the bundle.
+ *
+ * `[V]` The PDF export initialises NSS (for its signing infrastructure, even
+ * on an unsigned export), and NSS pulls its software token in by dlopen. On a
+ * runtime without it the export dies as `0xc10 Error Area:Io Class:Write
+ * Code:16` — a generic write error three layers up from the real cause, which
+ * cost a production deploy to observe and a container bisection to explain:
+ * the same bundle exported fine wherever the system had NSS installed. The
+ * `.chk` files are the modules' integrity checksums; NSS only verifies them
+ * in FIPS mode, and they are bytes against a future mode flip.
+ */
+const DLOPEN_LIBRARIES = [
+  'libsoftokn3.so',
+  'libsoftokn3.chk',
+  'libfreebl3.so',
+  'libfreebl3.chk',
+  'libfreeblpriv3.so',
+  'libfreeblpriv3.chk',
+  'libnssckbi.so',
 ];
 
 async function installBuildImagePackages(): Promise<void> {
@@ -404,6 +441,21 @@ async function collectSystemLibraries(install: string): Promise<number> {
       // A library that cannot be read is one the runtime will have to supply.
       // Not fatal here; the preview deployment is what finds out.
     }
+  }
+
+  // The dlopen set, by name from the build image's own library directory.
+  // Absent is loud: a rename in the nss package must not silently recreate
+  // the production failure this list exists to prevent.
+  for (const name of DLOPEN_LIBRARIES) {
+    const source = `/usr/lib64/${name}`;
+    if (!existsSync(source)) {
+      throw new Error(
+        `${name} is not at ${source} — the NSS dlopen set moved, and shipping without it ` +
+          'breaks every PDF export at runtime. See DLOPEN_LIBRARIES.',
+      );
+    }
+    await copyFile(source, join(target, name));
+    copied += 1;
   }
 
   console.log(`scanned ${scanned} binaries`);
