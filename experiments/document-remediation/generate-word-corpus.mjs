@@ -49,6 +49,10 @@ const listItem = (numId, text) =>
 
 const pageBreak = () => '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
 
+/** A paragraph containing an external hyperlink (needs rIdLink1 in rels). */
+const linkPara = (text, label) =>
+  `<w:p><w:r><w:t xml:space="preserve">${esc(text)} </w:t></w:r><w:hyperlink r:id="rIdLink1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:r><w:rPr><w:u w:val="single"/><w:color w:val="0000EE"/></w:rPr><w:t>${esc(label)}</w:t></w:r></w:hyperlink></w:p>`;
+
 const cell = (text) => `<w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/></w:tcPr>${para(text)}</w:tc>`;
 
 const table = (rows) =>
@@ -89,8 +93,8 @@ function contentTypes(hasImage) {
 
 const ROOT_RELS = `${XML_DECL}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
 
-function docRels(hasImage) {
-  return `${XML_DECL}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdSty" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdNum" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>${hasImage ? '<Relationship Id="rIdImg1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>' : ''}</Relationships>`;
+function docRels(hasImage, hasLink) {
+  return `${XML_DECL}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdSty" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdNum" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>${hasImage ? '<Relationship Id="rIdImg1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>' : ''}${hasLink ? '<Relationship Id="rIdLink1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://example.org/agendas" TargetMode="External"/>' : ''}</Relationships>`;
 }
 
 const documentXml = (body) =>
@@ -260,6 +264,18 @@ add('a28-long-paragraph', 'A single 10,000-character paragraph — buffer and re
   expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 1, tables: 0, lists: 0, figures: 0, gaps: [] },
 });
 
+add('a31-empty-headings', 'Two speaking headings and three blank heading-styled lines — the measured real-world shape behind every heading "lost" in conversion. The empties are defects (a heading announcing nothing) and the pipeline deletes them; truth counts what a reader can hear.', {
+  title: 'Highway Report', lang: 'en-US',
+  body: [heading(1, 'Highway Report'), heading(2, ''), para(LOREM), heading(2, 'Culverts'), heading(3, ''), heading(2, '')],
+  expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 2, tables: 0, lists: 0, figures: 0, gaps: [] },
+});
+
+add('a32-hyperlink', 'An external hyperlink. `[V]` Two real municipal documents were UA-1-blocked solely because their links carried no alternate description; Finish now transcribes the destination into /Contents, and this stratum is that fix\'s permanent witness.', {
+  title: 'Public Notices', lang: 'en-US', link: true,
+  body: [heading(1, 'Public Notices'), linkPara('Full agendas are posted at', 'the town website')],
+  expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 1, tables: 0, lists: 0, figures: 0, gaps: [] },
+});
+
 // -- adversarial containers (runner-level refusals) ----------------------
 add('a29-zip-not-docx', 'A valid ZIP holding a text file: soffice cannot load it, and the refusal must name the first conversion step.', {
   special: 'zip-not-docx',
@@ -280,7 +296,7 @@ function writeDocx(dir, stratum) {
     'word/document.xml': documentXml(stratum.body.join('')),
     'word/styles.xml': stylesXml(stratum.lang),
     'word/numbering.xml': NUMBERING,
-    'word/_rels/document.xml.rels': docRels(Boolean(stratum.image)),
+    'word/_rels/document.xml.rels': docRels(Boolean(stratum.image), Boolean(stratum.link)),
   };
 
   rmSync(dir, { recursive: true, force: true });
@@ -345,7 +361,7 @@ for (const stratum of STRATA) {
 }
 
 console.log(`wrote ${written} documents and keys to ${OUT}/`);
-if (written !== 30) {
-  console.error(`expected 30 strata, have ${written}`);
+if (written !== 32) {
+  console.error(`expected 32 strata, have ${written}`);
   process.exit(1);
 }

@@ -4,7 +4,12 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkInfo;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
@@ -79,8 +84,40 @@ public final class Finish {
             byte[] xmp = buildXmp(lang, title).getBytes(StandardCharsets.UTF_8);
             catalog.setMetadata(new PDMetadata(doc, new ByteArrayInputStream(xmp)));
 
+            // 7.18.5-2 / 7.18.1-2 — a Link annotation shall carry an
+            // alternate description in Contents, and 7.18.3-1 — a page with
+            // annotations shall declare a tab order. `[V]` Two real municipal
+            // documents were blocked by exactly this: hyperlinks the author
+            // wrote, exported without Contents. The description TRANSCRIBES —
+            // the link's own URI is the author's stated destination — and
+            // never invents; a link with no URI keeps its silence.
+            for (PDPage page : doc.getPages()) {
+                boolean hasAnnotation = false;
+                for (PDAnnotation annotation : page.getAnnotations()) {
+                    hasAnnotation = true;
+                    if (annotation instanceof PDAnnotationLink link
+                            && (link.getContents() == null || link.getContents().isEmpty())) {
+                        String destination = linkUri(link);
+                        if (destination != null && !destination.isEmpty()) {
+                            link.setContents(destination);
+                        }
+                    }
+                }
+                if (hasAnnotation && page.getCOSObject().getItem(COSName.getPDFName("Tabs")) == null) {
+                    page.getCOSObject().setName(COSName.getPDFName("Tabs"), "S");
+                }
+            }
+
             doc.save(out);
         }
+    }
+
+    /** The URI a link action points at, or null for every other action kind. */
+    private static String linkUri(PDAnnotationLink link) {
+        if (link.getAction() instanceof PDActionURI uri) {
+            return uri.getURI();
+        }
+        return null;
     }
 
     private static String buildXmp(String lang, String title) {
