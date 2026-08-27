@@ -220,6 +220,67 @@ describe('resolveLibreOffice', () => {
     expect(resolveLibreOffice(only(link)).available).toBe(false);
   });
 
+  /**
+   * The Homebrew cask shape, and the one this check was blind to. `soffice` on
+   * PATH is a symlink to a two-line shell script in the Caskroom version
+   * directory, which execs the application bundle. A script resolves to
+   * itself, so the modules were looked for beside a wrapper, found nothing,
+   * and answered `unknown` — reporting every such Mac available by failing
+   * open rather than by evidence, including a core-only one.
+   */
+  it('follows a wrapper script to the launcher it hands off to', async () => {
+    const real = await install(['libmergedlo.so', 'libswlo.so']);
+    const wrapperRoot = await mkdtemp(join(tmpdir(), 'ada-lo-cask-'));
+    dirs.push(wrapperRoot);
+
+    const wrapper = join(wrapperRoot, 'soffice');
+    await writeFile(wrapper, `#!/bin/sh\n'${real}' "$@"\n`, 'utf8');
+
+    expect(resolveLibreOffice(only(wrapper))).toEqual({ available: true, sofficeBin: wrapper });
+  });
+
+  it('refuses through a wrapper script when the target is core-only', async () => {
+    const real = await install(['libmergedlo.so']);
+    const wrapperRoot = await mkdtemp(join(tmpdir(), 'ada-lo-cask-'));
+    dirs.push(wrapperRoot);
+
+    const wrapper = join(wrapperRoot, 'soffice');
+    await writeFile(wrapper, `#!/bin/sh\n'${real}' "$@"\n`, 'utf8');
+
+    const runtime = resolveLibreOffice(only(wrapper));
+
+    // Before the wrapper was followed this answered `available: true`, because
+    // the Caskroom directory holds no modules and absence of evidence was read
+    // as absence of a problem.
+    expect(runtime.available).toBe(false);
+    if (runtime.available) return;
+    expect(runtime.reason).toContain('Writer module');
+  });
+
+  /**
+   * A launcher that is a script but hands off to nothing we can find — the
+   * distribution shape, where `program/soffice` execs `"$sd_prog/soffice.bin"`
+   * by a path built at run time. There is nothing to follow, and nothing needs
+   * following: the script already sits in the program directory.
+   */
+  it('reads modules beside a script that names no absolute handoff', async () => {
+    const sofficeBin = await install(['libmergedlo.so', 'libswlo.so']);
+
+    expect(resolveLibreOffice(only(sofficeBin))).toEqual({ available: true, sofficeBin });
+  });
+
+  it('falls back to its own directory when the handoff does not exist', async () => {
+    const wrapperRoot = await mkdtemp(join(tmpdir(), 'ada-lo-cask-'));
+    dirs.push(wrapperRoot);
+
+    const wrapper = join(wrapperRoot, 'soffice');
+    await writeFile(wrapper, `#!/bin/sh\n'${join(wrapperRoot, 'gone', 'soffice')}' "$@"\n`, 'utf8');
+
+    // No modules anywhere it can see, so the layout is unrecognised rather
+    // than broken, and an unrecognised layout is reported available.
+    expect(resolveLibreOffice(only(wrapper))).toEqual({ available: true, sofficeBin: wrapper });
+  });
+
   it('says LibreOffice is missing when there is no install anywhere', () => {
     const runtime = resolveLibreOffice({
       env: { PATH: join(tmpdir(), 'ada-lo-empty') },
