@@ -1,0 +1,6 @@
+{
+  "site": "ridgeline-dental",
+  "label": "Ridgeline Dental",
+  "profile": "Small-business template site: a dentist's four-page brochure, hand-edited over a decade.",
+  "pages": ["index.html", "services.html", "appointment.html", "contact.html"]
+}

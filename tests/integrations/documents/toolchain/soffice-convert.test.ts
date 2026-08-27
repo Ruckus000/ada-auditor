@@ -36,6 +36,18 @@ const soffice = resolveLibreOffice();
 const java = resolveJavaRuntime();
 const skip = !soffice.available || !java.available;
 
+// Named rather than silently skipped, the way `java-inspect.test.ts` does it.
+// A suite that skips everything without saying so is indistinguishable from
+// one that passed — and now that a core-only LibreOffice reports unavailable
+// rather than failing four tests, this is the only thing that says why the
+// chain did not run.
+if (!soffice.available) {
+  console.warn(`document conversion skipped — ${soffice.reason}`);
+}
+if (!java.available) {
+  console.warn(`document conversion skipped — ${java.reason}`);
+}
+
 const SEED = `<?xml version="1.0" encoding="UTF-8"?>
 <office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">
 <office:meta><dc:title>Planning Committee Agenda</dc:title></office:meta>

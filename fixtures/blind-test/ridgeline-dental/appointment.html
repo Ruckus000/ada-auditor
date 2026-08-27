@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Book an appointment — Ridgeline Dental</title>
+    <style>
+      body { font-family: Georgia, serif; margin: 0; color: #222; background: #fff; }
+      header { padding: 24px 32px; border-bottom: 1px solid #e4e4e4; }
+      nav a { margin-right: 16px; color: #1d5e86; }
+      main { padding: 32px; max-width: 720px; }
+      label, input, select { display: block; font-size: 16px; }
+      input, select { margin-bottom: 18px; padding: 8px; width: 320px; }
+      .req { color: #c0392b; }
+      .err { color: #c0392b; font-size: 15px; }
+      .go { font-size: 20px; padding: 6px 14px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="assets/logo.png" alt="Ridgeline Dental" width="160" height="40" />
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="services.html">Services</a>
+        <a href="appointment.html">Book an appointment</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Book an appointment</h1>
+
+      <p>Fields marked <span class="req">*</span> are required.</p>
+
+      <p id="appt-error" class="err">Error: invalid input.</p>
+
+      <form action="#" method="post">
+        <label for="appt-name">Your name <span class="req">*</span></label>
+        <input id="appt-name" name="name" type="text" />
+
+        <input id="appt-date" name="date" type="text" placeholder="Preferred date" />
+
+        <label for="appt-reason">Reason for visit</label>
+        <select id="appt-reason" name="reason">
+          <option>Cleaning</option>
+          <option>Toothache</option>
+          <option>Something else</option>
+        </select>
+
+        <button id="submit-icon" class="go" type="submit"><span aria-hidden="true">&#10148;</span></button>
+      </form>
+
+      <h2>Cancellations</h2>
+      <p>Call before 9am the day before and there is no fee.</p>
+    </main>
+  </body>
+</html>

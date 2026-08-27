@@ -1,0 +1,6 @@
+{
+  "site": "kestrel-cloud",
+  "label": "Kestrel Cloud",
+  "profile": "SaaS marketing and signup: dark theme, hand-rolled widgets, ARIA applied from memory."
+  ,"pages": ["index.html", "pricing.html", "docs.html", "signup.html"]
+}

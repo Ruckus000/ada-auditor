@@ -1,0 +1,167 @@
+{
+  "site": "kestrel-cloud",
+  "expectations": [
+    {
+      "id": "C1",
+      "page": "index.html",
+      "selector": "#menu-toggle",
+      "what": "Menu control is a div with an onclick handler: no role, no tabindex, no keyboard path.",
+      "criterion": "2.1.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "menu",
+      "weight": "core"
+    },
+    {
+      "id": "C2",
+      "page": "index.html",
+      "selector": "#stat-uptime-note",
+      "what": "Caption text is #6f6f6f on the #1b1b1b card — 3.4:1, under the 4.5:1 floor.",
+      "criterion": "1.4.3",
+      "level": "AA",
+      "expect": "deterministic",
+      "axeRule": "color-contrast",
+      "weight": "core"
+    },
+    {
+      "id": "C3",
+      "page": "index.html",
+      "selector": "#stat-uptime",
+      "what": "Statistics are h3 elements because 40px looked right; h2 never appears above them.",
+      "criterion": "1.3.1",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "heading-order",
+      "weight": "probe"
+    },
+    {
+      "id": "C4",
+      "page": "index.html",
+      "selector": "#hero-cta",
+      "what": "Real button element, white on #1f6feb, with visible text.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "clean",
+      "weight": "core"
+    },
+    {
+      "id": "C5",
+      "page": "pricing.html",
+      "selector": "#tab-storage",
+      "what": "role=\"tab\" divs with no aria-selected, no tabindex, no aria-controls.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "aria-required-attr",
+      "weight": "core"
+    },
+    {
+      "id": "C6",
+      "page": "pricing.html",
+      "selector": "#toggle-annual",
+      "what": "Annual-billing switch is an empty button with role=switch and no accessible name.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "aria-toggle-field-name",
+      "weight": "core"
+    },
+    {
+      "id": "C7",
+      "page": "pricing.html",
+      "selector": "#compare-table",
+      "what": "Plan comparison is a real data table carrying role=\"presentation\", which strips its structure.",
+      "criterion": "1.3.1",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "compare-table",
+      "weight": "core"
+    },
+    {
+      "id": "C8",
+      "page": "docs.html",
+      "selector": "#anchor-empty",
+      "what": "Section anchor wraps an inline SVG and has no accessible name.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "link-name",
+      "weight": "core"
+    },
+    {
+      "id": "C9",
+      "page": "docs.html",
+      "selector": "#quote-de",
+      "what": "German customer quote sits inside an English page with no lang attribute.",
+      "criterion": "3.1.2",
+      "level": "AA",
+      "expect": "judgement",
+      "cue": "german",
+      "weight": "core"
+    },
+    {
+      "id": "C10",
+      "page": "docs.html",
+      "selector": "#quote-fr",
+      "what": "French quote, correctly marked lang=\"fr\".",
+      "criterion": "3.1.2",
+      "level": "AA",
+      "expect": "clean",
+      "weight": "core"
+    },
+    {
+      "id": "C11",
+      "page": "signup.html",
+      "selector": "#signup-email",
+      "what": "Email field carries autocomplete=\"nope\", which is not a valid token.",
+      "criterion": "1.3.5",
+      "level": "AA",
+      "expect": "deterministic",
+      "axeRule": "autocomplete-valid",
+      "weight": "core"
+    },
+    {
+      "id": "C12",
+      "page": "signup.html",
+      "selector": "#pwd-error",
+      "what": "Signup error reads \"Error: invalid input.\" above a three-field form.",
+      "criterion": "3.3.3",
+      "level": "AA",
+      "expect": "judgement",
+      "cue": "invalid input",
+      "weight": "core"
+    },
+    {
+      "id": "C13",
+      "page": "signup.html",
+      "selector": "#signup-password",
+      "what": "Password rules live only in the placeholder, so they vanish as soon as typing starts.",
+      "criterion": "3.3.2",
+      "level": "A",
+      "expect": "judgement",
+      "cue": "placeholder",
+      "weight": "core"
+    },
+    {
+      "id": "C14",
+      "page": "signup.html",
+      "selector": "#trial-dialog",
+      "what": "role=\"dialog\" with no accessible name.",
+      "criterion": "4.1.2",
+      "level": "A",
+      "expect": "deterministic",
+      "axeRule": "aria-dialog-name",
+      "weight": "probe"
+    },
+    {
+      "id": "C15",
+      "page": "signup.html",
+      "selector": "#signup-org",
+      "what": "Organisation field, labelled and given a valid autocomplete token.",
+      "criterion": "1.3.5",
+      "level": "AA",
+      "expect": "clean",
+      "weight": "core"
+    }
+  ]
+}

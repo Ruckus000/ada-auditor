@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Services and prices — Ridgeline Dental</title>
+    <style>
+      body { font-family: Georgia, serif; margin: 0; color: #222; background: #fff; }
+      header { padding: 24px 32px; border-bottom: 1px solid #e4e4e4; }
+      nav a { margin-right: 16px; color: #1d5e86; }
+      main { padding: 32px; max-width: 860px; }
+      table { border-collapse: collapse; width: 100%; }
+      td { border: 1px solid #d8d8d8; padding: 8px 10px; }
+      .rowhead { font-weight: bold; background: #f3f3f3; }
+      .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+      .open { background: #1f8a3b; }
+      .closed { background: #c0392b; }
+      /* Text sits on a photograph, so the effective background cannot be
+         resolved from CSS alone. */
+      .on-photo {
+        background-image: url('assets/chair.jpg');
+        background-size: cover;
+        color: #ffffff;
+        padding: 40px 24px;
+        font-size: 17px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="assets/logo.png" alt="Ridgeline Dental" width="160" height="40" />
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="services.html">Services</a>
+        <a href="appointment.html">Book an appointment</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Services and prices</h1>
+
+      <div id="contrast-on-photo" class="on-photo">
+        <p>Same-day emergency slots are held open every morning until 10am.</p>
+      </div>
+
+      <h2>Standard fees</h2>
+      <table id="price-table">
+        <tr>
+          <td class="rowhead">Service</td>
+          <td class="rowhead">Without insurance</td>
+          <td class="rowhead">With most plans</td>
+        </tr>
+        <tr>
+          <td>Cleaning and exam</td>
+          <td>$140</td>
+          <td>$0 to $35</td>
+        </tr>
+        <tr>
+          <td>Filling, single surface</td>
+          <td>$210</td>
+          <td>$40 to $90</td>
+        </tr>
+        <tr>
+          <td>Crown</td>
+          <td>$1,250</td>
+          <td>$400 to $700</td>
+        </tr>
+      </table>
+
+      <h2>Taking new patients this month</h2>
+      <p><span id="status-cleaning" class="dot open"></span> Cleanings and exams</p>
+      <p><span id="status-ortho" class="dot closed"></span> Orthodontic consults</p>
+      <p><span id="status-implants" class="dot open"></span> Implant planning</p>
+
+      <h2>What to bring</h2>
+      <p>Insurance card, a list of medications, and the name of your previous dentist.</p>
+    </main>
+  </body>
+</html>
