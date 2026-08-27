@@ -1,8 +1,8 @@
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, delimiter, extname, join } from 'node:path';
+import { basename, delimiter, dirname, extname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 
@@ -132,6 +132,7 @@ async function runSoffice(
   options: ConvertOptions,
   runtime: LibreOfficeRuntime & { available: true },
   home: string,
+  fontconfigFile: string | undefined,
 ): Promise<{ ok: true } | { ok: false; failure: ConversionFailure }> {
   // The cast is the `Env`/`ProcessEnv` seam described on `defaultExecutor` in
   // `stage.ts`; same direction, same reason.
@@ -168,6 +169,7 @@ async function runSoffice(
                 LD_LIBRARY_PATH: [base.LD_LIBRARY_PATH, runtime.libraryPath]
                   .filter(Boolean)
                   .join(delimiter),
+                ...(fontconfigFile === undefined ? {} : { FONTCONFIG_FILE: fontconfigFile }),
               },
       },
     );
@@ -209,6 +211,35 @@ export async function convertSourceToPdf(
   const profile = join(work, 'profile');
   const stem = basename(sourcePath, extname(sourcePath));
 
+  // Fontconfig, for the bundled install only. `[V]` The deployed runtime has
+  // no /etc/fonts at all, and the PDF export step — not the first conversion,
+  // which needs no font metrics — died on "Cannot load default config file".
+  // So the config is ours, written per run: the bundle's own fonts (the
+  // Liberation set shipped for metric compatibility), a cache in the same
+  // temp directory everything else uses, and FONTCONFIG_FILE pointing at it.
+  // Written at conversion time rather than build time because the config
+  // needs absolute paths and the build machine's differ from the runtime's.
+  let fontconfigFile: string | undefined;
+  if (runtime.libraryPath !== undefined) {
+    const fontsDir = join(dirname(dirname(runtime.sofficeBin)), 'share', 'fonts');
+    const cacheDir = join(work, 'fc-cache');
+    await mkdir(cacheDir, { recursive: true });
+    fontconfigFile = join(work, 'fonts.conf');
+    await writeFile(
+      fontconfigFile,
+      [
+        '<?xml version="1.0"?>',
+        '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">',
+        '<fontconfig>',
+        `  <dir>${fontsDir}</dir>`,
+        `  <cachedir>${cacheDir}</cachedir>`,
+        '</fontconfig>',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+  }
+
   try {
     // 1. Source to flat ODF, so the document can be corrected before export.
     const fodt = join(work, `${stem}.fodt`);
@@ -221,6 +252,7 @@ export async function convertSourceToPdf(
       options,
       runtime,
       work,
+      fontconfigFile,
     );
     if (!toFodt.ok) return toFodt;
 
@@ -246,6 +278,7 @@ export async function convertSourceToPdf(
       options,
       runtime,
       work,
+      fontconfigFile,
     );
     if (!toPdf.ok) return toPdf;
 
