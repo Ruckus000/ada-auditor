@@ -48,9 +48,12 @@ By what was planted:
 
 **Note the score.** Every site scored 97–98 while failing. That is the
 documented shape — the score is a rate over the checks axe evaluated and the
-verdict is not — but on a site where a quarter of the planted barriers were
-never detected, a 98 next to `fail` is the number a client will quote back. It
-is right by its own definition and misleading in a sentence.
+verdict is not — but 17 of the 37 planted barriers were never reported at
+all, between 42% and 50% of them on each site, and a 98 next to `fail` is
+still the number a client will quote back. Thirteen of those seventeen are the
+advisory's half, dark on this run; the other four are barriers a rule could
+have reached.
+It is right by its own definition and misleading in a sentence.
 
 ## What it missed, and why each one matters
 
