@@ -239,7 +239,19 @@ export function ControlPlane() {
             </section>
           )}
 
-          {authState === 'locked' && <UnlockCard onUnlocked={() => setAuthState('unlocked')} />}
+          {authState === 'locked' && (
+            <UnlockCard
+              onUnlocked={() => {
+                setAuthState('unlocked');
+                // `/api/ready` withholds the degraded checks and the warnings
+                // from a caller it cannot identify, and the status in hand was
+                // fetched while this browser was one. Re-asking now is what
+                // turns the banner back into the full readout rather than
+                // leaving it thin until the 30s poll comes round.
+                checkStatus();
+              }}
+            />
+          )}
 
           {authState === 'unlocked' && (
             <section className="console-card" aria-labelledby="run-heading">

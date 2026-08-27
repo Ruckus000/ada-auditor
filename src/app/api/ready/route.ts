@@ -1,4 +1,5 @@
 import { MIN_TOKEN_LENGTH } from '../_lib/console-session';
+import { authorizePrincipal } from '../_lib/authorize';
 import { createRedisClient } from '../_lib/redis';
 import { isThrottleKvConfigured, KvThrottleStore } from '../_lib/unlock-throttle';
 import { isDatabaseConfigured } from '../../../integrations/persistence';
@@ -76,7 +77,32 @@ async function throttleAnswers(): Promise<boolean> {
   return Promise.race([probe, timeout]);
 }
 
-export async function GET() {
+/**
+ * Whether this caller may see the whole picture.
+ *
+ * The detail below is a map of what is weak here — whether sign-in attempts are
+ * counted durably, whether the session secret is its own, whether scripted
+ * audit outcomes can be requested. Answering that to anyone is telling a
+ * stranger which door to try.
+ *
+ * **The `try` is the load-bearing part.** `authorizePrincipal` resolves an
+ * operator cookie through the platform store, which throws when the database is
+ * unreachable — and that is exactly the deployment someone is hitting this
+ * endpoint to diagnose. Without the catch, adding authorization here would take
+ * readiness down at the moment it is read, which is the failure
+ * `credential-cipher.ts` names: readiness must not go down over a value it only
+ * reports. A throw is treated as anonymous, so the endpoint keeps answering and
+ * errs toward saying less.
+ */
+async function maySeeDetail(request: Request): Promise<boolean> {
+  try {
+    return Boolean(await authorizePrincipal(request));
+  } catch {
+    return false;
+  }
+}
+
+export async function GET(request: Request) {
   const token = process.env.AUDITOR_RUN_TOKEN;
 
   const checks = {
@@ -196,11 +222,33 @@ export async function GET() {
     );
   }
 
+  /**
+   * One computation, two projections.
+   *
+   * Everything above runs for every caller — the probe is the same question
+   * whoever asks it, and branching earlier would grow a second code path where
+   * the point is that there is one. Only what leaves is narrowed.
+   *
+   * An anonymous caller gets the verdict and the two checks that *produce* it,
+   * which is what a deploy probe and the console's locked screen need: the
+   * banner's `ok` / `needs-token` / `needs-store` states read nothing else.
+   *
+   * `warnings` is omitted rather than emptied. An empty array is a claim that
+   * nothing is wrong, and this caller was not told either way — the same
+   * distinction the store contract draws between `[]` and absent.
+   */
+  const detail = await maySeeDetail(request);
+
   return Response.json(
     {
       status: ready ? 'ready' : 'not_ready',
-      checks,
-      warnings,
+      checks: detail
+        ? checks
+        : {
+            auditorRunTokenConfigured: checks.auditorRunTokenConfigured,
+            runStoreConfigured: checks.runStoreConfigured,
+          },
+      ...(detail ? { warnings } : {}),
       timestamp: new Date().toISOString(),
     },
     { status: ready ? 200 : 503 },

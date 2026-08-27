@@ -112,4 +112,78 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.failure.kind).toBe('failed');
   });
+
+  /**
+   * A structure tree is a tree by convention and a graph by format.
+   *
+   * Nothing in the PDF specification stops a structure element being its own
+   * descendant, and `Inspect.walk` recursed whatever it was handed — so this
+   * document used to recurse until the JVM's stack gave out. That arrived as a
+   * crash rather than as a reading, on a file an operator uploaded.
+   *
+   * Hand-assembled rather than rendered: `renderPdf` produces well-formed
+   * documents, which is the whole reason it cannot produce this one. The bytes
+   * are built here and nothing is committed — this repository tracks zero
+   * binaries, and that rule is why the fixture above is generated too.
+   *
+   * The assertion is the *bound*, never a duration. A wall-clock threshold on a
+   * recursion bug is a flaky test that teaches people to re-run red, which is
+   * the same reason `scripts/chaos.ts` asserts shape and never speed.
+   */
+  it('returns a bounded reading of a structure tree that contains itself', async () => {
+    const cyclic = join(dir, 'cyclic.pdf');
+    await writeFile(cyclic, selfReferencingStructureTree());
+
+    const result = await inspectDocument(cyclic);
+
+    if (!result.ok) {
+      expect.unreachable(`Inspect failed: ${JSON.stringify(result.failure)}`);
+      return;
+    }
+
+    expect(documentStructureSchema.safeParse(result.value).success).toBe(true);
+    // The cycle is one element. Walked once it is counted once; walked as the
+    // format allows, this never returns at all. `hasStructTree` is deliberately
+    // not asserted — the domain schema does not carry it, and `isTagged` is
+    // derived from this same count.
+    expect(result.value.structureElements).toBe(1);
+    // The block-level record is bounded by the same guard, so the one `/P`
+    // appears once rather than being appended on every revisit.
+    expect(result.value.order).toHaveLength(1);
+  });
 });
+
+/**
+ * A minimal PDF whose one structure element lists itself among its kids.
+ *
+ * Offsets are computed rather than hard-coded: PDFBox will rebuild a broken
+ * cross-reference table, and a fixture that leaned on that repair path would be
+ * testing the repair rather than the cycle.
+ */
+function selfReferencingStructureTree(): string {
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 4 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>',
+    '<< /Type /StructTreeRoot /K [5 0 R] >>',
+    // `/K [5 0 R]` inside object 5: the element is its own kid.
+    '<< /Type /StructElem /S /P /P 4 0 R /K [5 0 R] >>',
+  ];
+
+  let pdf = '%PDF-1.7\n';
+  const offsets: number[] = [];
+  objects.forEach((body, i) => {
+    offsets.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${body}\nendobj\n`;
+  });
+
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\n`;
+  pdf += `startxref\n${xref}\n%%EOF\n`;
+
+  return pdf;
+}
