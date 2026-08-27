@@ -352,23 +352,32 @@ Read this before claiming something works.
   scorecard. Every site also scored 97-98 while failing: correct by the
   score's own definition, and still the number a client quotes back.
 
-- **The AI advisory has still never run against a real site.** It was pinned to
-  one vendor's SDK and a key (`ANTHROPIC_API_KEY`) that was set in no Vercel
-  environment and no local file, so **every audit this product has ever
-  produced has been deterministic-only** and `phaseMs.advisory` reads `0` on
-  every run in the database. It now goes through the AI Gateway instead, which
-  removes the reason it was dark: a Vercel deployment authenticates with its
-  own OIDC token, so production needs no key.
-  What is still unproven is the pass itself. No run in the database has
-  exercised it end to end, which means: the walk-budget reserve's advisory line
-  (60s of 120s) remains a guess with no measurement behind it; the default
-  model has never been asked to honour the findings tool, and a model that
-  ignores it degrades to no advisory rather than announcing itself; and the
-  half of the product that catches alt text saying nothing has never been shown
-  to catch anything. The twelve-page dsrfund baseline left 88 checks the rules
-  could not decide, which is exactly the queue this pass exists to work — so
-  the first real advisory run should be over that same fixed page set, where
-  there is something specific to compare against.
+- **The AI advisory has run — once, locally, and it is a sample rather than a
+  measurement.** First execution 2026-08-27, over the three blind-test sites
+  (`docs/research/blind-test/2026-08-27-advisory-first-run.md`): barriers seen
+  went 19→24 of 37, the judgement class went 1→6 of 14, **zero false positives
+  across all seven `clean` rows held under a live model**, verdicts and scores
+  were unchanged because advisory findings cannot gate, and the walk-budget
+  advisory reserve got its first measurement — 6.6–8.8s per four-page site
+  against the 60s line. The default model honoured the findings tool on every
+  call that was made.
+  Read before quoting any advisory number: **the free model is high-variance**
+  — 9, 0 and 5 findings reported on three runs over identical evidence — so a
+  single run's advisory count is a sample with wide error bars, and the
+  scorer's cue-based matcher under-credits prose that describes an element by
+  its labels rather than its id. What it catches is text quality (useless alt,
+  purposeless links, unhelpful errors, undeclared language); what it misses is
+  structure (`<div onclick>`, table headers, placeholder-only labels), so the
+  remaining blind-test misses are rule-shaped and a stronger model is not the
+  answer to them.
+  Still unproven: the pass on a **deployed** function — no run in the
+  production database has exercised it, `phaseMs.advisory` is still `0` on
+  every stored run — and the free model carries no data-retention guarantee,
+  so `AUDITOR_ADVISORY_MODEL` must be repointed or set `off` before any
+  authenticated journey runs it. The twelve-page dsrfund baseline left 88
+  checks the rules could not decide, which is exactly the queue this pass
+  exists to work — the first production advisory run should be over that same
+  fixed page set, where there is something specific to compare against.
 - **The unlock throttle and the run budget can both be memory-only.** Redis used to be required on
   Vercel because the run store needed it. The run store is Postgres now, so
   nothing forces Upstash to exist, and without it the throttle counts attempts
