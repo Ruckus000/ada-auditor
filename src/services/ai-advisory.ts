@@ -2,6 +2,7 @@ import { generateText, tool } from 'ai';
 import { z } from 'zod';
 import type { AxNodeSummary } from './ax-tree';
 import type { AxeScanResult } from './deterministic-audit';
+import { logInfo, logWarn } from './logger';
 
 /**
  * The advisory pass: judgements a rule engine structurally cannot make.
@@ -220,6 +221,11 @@ const callGateway: AdvisoryCall = async (evidence) => {
 
   const reported = result.toolCalls.find((c) => c.toolName === FINDINGS_TOOL_NAME);
   if (!reported) {
+    // The model answered in prose, or not at all, despite `toolChoice`. The
+    // degradation is by design; the event is what makes it distinguishable
+    // from "nothing to report" — the first live run returned one `advisory 0`
+    // and there was no way to tell which of six silent paths produced it.
+    logWarn('ai_advisory_no_tool_call', { model: advisoryModel() });
     return null;
   }
 
@@ -227,7 +233,20 @@ const callGateway: AdvisoryCall = async (evidence) => {
   // enforce a tool schema, so this is where a wrong shape becomes "no
   // advisory" instead of a malformed finding on a client's report.
   const parsed = findingsSchema.safeParse(reported.input);
-  return parsed.success ? parsed.data.findings : null;
+  if (!parsed.success) {
+    // Issue codes and paths ONLY, never `message`: zod embeds the received
+    // *value* in some issue messages, and the received value here is model
+    // output describing a client's pages. Logs carry counts and shapes.
+    logWarn('ai_advisory_invalid_shape', {
+      model: advisoryModel(),
+      detail: parsed.error.issues
+        .slice(0, 5)
+        .map((issue) => `${issue.code} at ${issue.path.join('.') || '(root)'}`)
+        .join('; '),
+    });
+    return null;
+  }
+  return parsed.data.findings;
 };
 
 /**
@@ -272,19 +291,31 @@ export async function requestAiAdvisory(input: {
     // `null` is the honest answer for a refusal, a malformed tool call, or a
     // model that answered in prose. The advisory is additive: if it is
     // unavailable the deterministic run still stands on its own, so none of
-    // this may surface as a run failure.
+    // this may surface as a run failure. The null paths log for themselves,
+    // where the reason is known.
     if (reported === null) {
       return [];
     }
     findings = reported;
-  } catch {
+  } catch (error) {
+    // The error's own first line — gateway and HTTP shaped — never the
+    // evidence, which is a client's page content.
+    logWarn('ai_advisory_error', {
+      detail: (error instanceof Error ? error.message : String(error)).split('\n')[0] ?? '',
+    });
     return [];
   }
 
-  return findings
+  const kept = findings.filter((finding) => finding.confidence >= input.minConfidence);
+
+  // `reported` before the confidence filter and `kept` after, so a
+  // threshold-eaten answer reads `reported: 3, kept: 0` rather than looking
+  // identical to a model that reported nothing.
+  logInfo('ai_advisory_completed', { reported: findings.length, kept: kept.length });
+
+  return kept
     // The run contract's reporting threshold, finally applied to a number that
     // varies. It used to compare two constants.
-    .filter((finding) => finding.confidence >= input.minConfidence)
     .map((finding) =>
       createAiAdvisoryFinding({
         message: finding.issue,
