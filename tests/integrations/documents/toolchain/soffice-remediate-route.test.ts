@@ -34,6 +34,18 @@ const soffice = resolveLibreOffice();
 const java = resolveJavaRuntime();
 const skip = !soffice.available || !java.available;
 
+// Named rather than silently skipped, the way `java-inspect.test.ts` does it.
+// A suite that skips everything without saying so is indistinguishable from
+// one that passed — and now that a core-only LibreOffice reports unavailable
+// rather than failing four tests, this is the only thing that says why the
+// chain did not run.
+if (!soffice.available) {
+  console.warn(`document conversion skipped — ${soffice.reason}`);
+}
+if (!java.available) {
+  console.warn(`document conversion skipped — ${java.reason}`);
+}
+
 /**
  * Seeded from flat ODF, not HTML.
  *
