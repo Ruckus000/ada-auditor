@@ -1649,6 +1649,8 @@ describe('platform hydration', () => {
           lastSeenAt: '2026-08-26T12:00:00.000Z',
         },
         {
+          // Paired: the server found a Word document sharing this PDF's stem,
+          // and the row must say the remediation is converting that source.
           id: 'doc-2',
           url: 'https://discovered.invalid/fees/schedule.pdf',
           kind: 'pdf',
@@ -1656,6 +1658,11 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          sourceAvailable: {
+            id: 'doc-5',
+            kind: 'docx',
+            url: 'https://discovered.invalid/fees/schedule.docx',
+          },
         },
         {
           id: 'doc-3',
@@ -1663,6 +1670,15 @@ describe('platform hydration', () => {
           kind: 'docx',
           source: 'crawl',
           foundOn: 'https://discovered.invalid/forms',
+          firstSeenAt: '2026-08-26T12:00:00.000Z',
+          lastSeenAt: '2026-08-26T12:00:00.000Z',
+        },
+        {
+          id: 'doc-5',
+          url: 'https://discovered.invalid/fees/schedule.docx',
+          kind: 'docx',
+          source: 'crawl',
+          foundOn: 'https://discovered.invalid/',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
         },
@@ -1699,7 +1715,7 @@ describe('platform hydration', () => {
           return route.fulfill({
             status: 200,
             contentType: 'application/json',
-            body: JSON.stringify({ requestId: 'stubbed', documents: inventory, count: 4 }),
+            body: JSON.stringify({ requestId: 'stubbed', documents: inventory, count: 5 }),
           });
         }
         if (route.request().method() !== 'POST') return route.fallback();
@@ -1816,6 +1832,23 @@ describe('platform hydration', () => {
           .getByRole('button', { name: 'Inspect' })
           .count(),
       ).toBe(0);
+
+      // A paired PDF says where its remediation actually lives, and offers
+      // the source's conversion — not a repair of the PDF — as the action.
+      const paired = page
+        .getByRole('listitem')
+        .filter({ hasText: '/fees/schedule.pdf' })
+        .first();
+      expect(await paired.innerText()).toContain(
+        'Word source on record — converting the source is this PDF',
+      );
+      expect(await paired.getByRole('button', { name: 'Convert the Word source' }).count()).toBe(
+        1,
+      );
+      // Unpaired PDFs carry no such claim.
+      expect(await page.getByRole('listitem').filter({ hasText: '/minutes/agenda.pdf' }).innerText()).not.toContain(
+        'Word source on record',
+      );
 
       // One inspection, rendered inline where its row is.
       await page

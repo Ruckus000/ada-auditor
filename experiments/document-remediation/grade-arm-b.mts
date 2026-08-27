@@ -31,17 +31,40 @@ if (!pdfDir || !outDir || !existsSync(VERAPDF)) {
 }
 mkdirSync(outDir, { recursive: true });
 
+/** veraPDF UA-1 via the JSON report — the text format names no clauses. */
 function verapdfUa1(pdf: string): { pass: boolean; failedRules: string[] } {
+  // The launcher shells out to `java` from its environment, and on this
+  // machine that intermittently resolved to the macOS stub that only prints
+  // an install prompt. Pinned to the same JDK the build scripts use.
   const env = { ...process.env, JAVA_HOME, PATH: `${JAVA_HOME}/bin:${process.env.PATH}` };
-  let stdout = '';
+  // JSON, not text: the text format carries no per-clause detail, so the old
+  // regex over it captured nothing — a grader that names no clause names no
+  // work. The JSON report's ruleSummaries is where the clauses live
+  // (validate.mjs proved this shape).
+  let raw = '';
   try {
-    stdout = execFileSync(VERAPDF, ['-f', 'ua1', '--format', 'text', pdf], { maxBuffer: 32 * 1024 * 1024, env }).toString('utf8');
+    raw = execFileSync(VERAPDF, ['-f', 'ua1', '--format', 'json', pdf], {
+      maxBuffer: 64 * 1024 * 1024,
+      env,
+    }).toString('utf8');
   } catch (error) {
-    stdout = (error as { stdout?: Buffer }).stdout?.toString('utf8') ?? '';
+    // Exit 1 is "non-compliant", which is an answer; anything else is not.
+    const e = error as { status?: number; stdout?: Buffer };
+    if (e.status !== 1 || !e.stdout?.length) throw error;
+    raw = e.stdout.toString('utf8');
   }
+  const result = JSON.parse(raw).report.jobs[0]?.validationResult?.[0];
+  const summaries = (result?.details?.ruleSummaries ?? []) as Array<{
+    clause: string;
+    testNumber: number;
+    failedChecks: number;
+  }>;
   return {
-    pass: /^PASS /m.test(stdout),
-    failedRules: [...stdout.matchAll(/^\s+FAIL\s+\S*?((?:\d+\.)+\d+(?:-\d+)?)/gm)].map((m) => m[1]).filter((v, i, a) => a.indexOf(v) === i),
+    pass: result?.compliant === true,
+    failedRules: summaries
+      .filter((r) => r.failedChecks > 0)
+      .map((r) => `${r.clause}-${r.testNumber}`)
+      .filter((v, i, a) => a.indexOf(v) === i),
   };
 }
 

@@ -262,6 +262,56 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect(body.documents[1]).not.toHaveProperty('regression');
   });
 
+  it('pairs a PDF with the Word document sharing its stem, across any filter', async () => {
+    await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/files/permit.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T09:00:00.000Z',
+    );
+    const word = await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/files/permit.docx?ver=3', kind: 'docx', source: 'crawl' },
+      '2026-08-26T10:00:00.000Z',
+    );
+    await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/files/loner.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T11:00:00.000Z',
+    );
+
+    const body = await (await GET(jsonRequest(), params('acme'))).json();
+    const byUrl = new Map(
+      body.documents.map((d: { url: string }) => [d.url, d] as const),
+    );
+    expect(byUrl.get('https://town.example/files/permit.pdf')).toMatchObject({
+      sourceAvailable: {
+        id: word.id,
+        kind: 'docx',
+        url: 'https://town.example/files/permit.docx?ver=3',
+      },
+    });
+    // Only the PDF side carries the annotation, and only when a sibling exists.
+    expect(byUrl.get('https://town.example/files/permit.docx?ver=3')).not.toHaveProperty(
+      'sourceAvailable',
+    );
+    expect(byUrl.get('https://town.example/files/loner.pdf')).not.toHaveProperty(
+      'sourceAvailable',
+    );
+
+    // A kind filter narrows the page, not the pairing universe: the docx is
+    // filtered out of the listing yet still found as the PDF's source.
+    const filtered = await (
+      await GET(
+        new Request('http://localhost/api/platform/clients/acme/documents?kind=pdf'),
+        params('acme'),
+      )
+    ).json();
+    const pdfRow = filtered.documents.find(
+      (d: { url: string }) => d.url === 'https://town.example/files/permit.pdf',
+    );
+    expect(pdfRow.sourceAvailable.id).toBe(word.id);
+  });
+
   it('passes filters and the cursor to the store, and refuses half a cursor', async () => {
     await platform.ensureClientDocument(
       'acme',

@@ -141,6 +141,32 @@ describe('buildDocumentReport', () => {
     expect(bare.entries[0]).not.toHaveProperty('conversionId');
   });
 
+  it('marks a read PDF whose Word source is in the same inventory', () => {
+    const section = buildDocumentReport(
+      [
+        doc({
+          id: 'doc-pdf',
+          url: 'https://town.example/files/permit.pdf',
+          latestInspection: { ...inspection('2026-08-26T09:00:00.000Z') },
+        }),
+        doc({ id: 'doc-word', url: 'https://town.example/files/permit.docx', kind: 'docx' }),
+        doc({
+          id: 'doc-alone',
+          url: 'https://town.example/files/loner.pdf',
+          latestInspection: { ...inspection('2026-08-26T09:00:00.000Z') },
+        }),
+      ],
+      AT,
+    );
+
+    const byUrl = new Map(section.entries.map((entry) => [entry.url, entry]));
+    expect(byUrl.get('https://town.example/files/permit.pdf')?.sourceAvailable).toBe(true);
+    // Absent, not false: an entry without a source says nothing about one.
+    expect(byUrl.get('https://town.example/files/loner.pdf')).not.toHaveProperty(
+      'sourceAvailable',
+    );
+  });
+
   it('never carries titleText — the shared page is public-by-token', () => {
     const section = buildDocumentReport(
       [doc({ latestInspection: inspection('2026-08-26T09:00:00.000Z') })],
