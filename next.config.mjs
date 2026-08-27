@@ -65,6 +65,19 @@ const nextConfig = {
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
     ],
+    // The one client-scoped documents route that converts, which needs
+    // LibreOffice on top of the JVM — a conversion is two `soffice` runs and
+    // two Java stages. Before the JVM entry below for the same
+    // first-covering-key reason the browser entry sits before both: that entry
+    // would otherwise answer for this route with a toolchain missing the half
+    // that does the converting, and the route would deploy clean and refuse
+    // every request with `converter_unavailable`.
+    '/api/platform/clients/**/documents/convert/**': [
+      './vendor/jre/**',
+      './vendor/pdfbox-app-3.0.8.jar',
+      './dist/documents/classes/**',
+      './vendor/libreoffice/**',
+    ],
     '/api/platform/clients/**/documents/**': [
       './vendor/jre/**',
       './vendor/pdfbox-app-3.0.8.jar',
@@ -90,6 +103,21 @@ const nextConfig = {
     // `vendor/jre` is assembled during `npm run vercel-build`, so this also
     // depends on the tracer running after the build rather than before it.
     // `scripts/prepare-jvm.ts` explains what it produces and why it is 40MB.
+    // The two standalone routes that convert rather than only read. Kept out
+    // of `/api/documents/**` itself so `inspect` and `inspect-url` do not each
+    // grow a 440MB LibreOffice they never exec.
+    '/api/documents/remediate/**': [
+      './vendor/jre/**',
+      './vendor/pdfbox-app-3.0.8.jar',
+      './dist/documents/classes/**',
+      './vendor/libreoffice/**',
+    ],
+    '/api/documents/remediate-url/**': [
+      './vendor/jre/**',
+      './vendor/pdfbox-app-3.0.8.jar',
+      './dist/documents/classes/**',
+      './vendor/libreoffice/**',
+    ],
     '/api/documents/**': [
       './vendor/jre/**',
       './vendor/pdfbox-app-3.0.8.jar',

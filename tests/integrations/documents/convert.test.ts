@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { convertSourceToPdf } from '../../../src/integrations/documents/convert';
-import { resolveLibreOffice } from '../../../src/integrations/documents/libreoffice-runtime';
 import type { StageExecutor } from '../../../src/integrations/documents/stage';
+import { credentialEnvKey } from '../../../src/domain/credential-ref';
 
 /**
  * The conversion chain's failure handling, without LibreOffice.
@@ -96,30 +96,79 @@ describe('convertSourceToPdf', () => {
       expect.unreachable('expected a converter failure');
     }
   });
-});
 
-describe('resolveLibreOffice', () => {
-  it('is unavailable with no SOFFICE_PATH and an empty PATH', () => {
-    const runtime = resolveLibreOffice({ env: { PATH: '' } });
+  it('gives a bundled LibreOffice a writable HOME and appends its library path', async () => {
+    // `/var/task` is read-only on a deployed function, and LibreOffice writes a
+    // fontconfig cache wherever its profile lives. Both of these are invisible
+    // on a developer machine, where HOME is real and the loader finds
+    // everything — which is exactly why they are asserted here rather than
+    // discovered on a preview.
+    let seen: Record<string, string | undefined> | undefined;
+    await convertSourceToPdf('in.docx', 'out.pdf', {
+      runtime: {
+        available: true,
+        sofficeBin: '/nonexistent/soffice',
+        libraryPath: '/bundle/.syslibs',
+      },
+      env: { LD_LIBRARY_PATH: '/already/here' },
+      executor: async (_bin, _args, options) => {
+        seen = options.env;
+        return { stdout: '', stderr: '' };
+      },
+    });
 
-    // The macOS application bundle is checked last and may genuinely exist on
-    // this machine, so this asserts the shape rather than the answer.
-    if (!runtime.available) {
-      expect(runtime.reason).toMatch(/LibreOffice not found/);
-    } else {
-      expect(runtime.sofficeBin).toMatch(/LibreOffice\.app/);
-    }
+    // Appended, not replaced: a runtime carrying its own copy of a library
+    // should keep using it.
+    expect(seen?.LD_LIBRARY_PATH).toBe('/already/here:/bundle/.syslibs');
+    expect(seen?.HOME).toMatch(/ada-convert-/);
   });
 
-  it('falls through to PATH when SOFFICE_PATH is set but wrong', () => {
-    // A stale export is the common case; refusing to look further would turn a
-    // working machine into a broken one. Same rule as `JAVA_HOME`.
-    const runtime = resolveLibreOffice({ env: { SOFFICE_PATH: '/nope/nowhere', PATH: '' } });
+  it('leaves the loader alone for a host install', async () => {
+    let seen: Record<string, string | undefined> | undefined;
+    await convertSourceToPdf('in.docx', 'out.pdf', {
+      runtime: { available: true, sofficeBin: '/usr/bin/soffice' },
+      env: { LD_LIBRARY_PATH: '/already/here' },
+      executor: async (_bin, _args, options) => {
+        seen = options.env;
+        return { stdout: '', stderr: '' };
+      },
+    });
 
-    if (!runtime.available) {
-      expect(runtime.reason).toMatch(/LibreOffice not found/);
-    } else {
-      expect(runtime.sofficeBin).not.toBe('/nope/nowhere');
-    }
+    expect(seen?.LD_LIBRARY_PATH).toBe('/already/here');
+    // And HOME is left alone: on a host it is already writable, and its
+    // fontconfig cache is worth keeping shared rather than rebuilt per
+    // conversion.
+    expect(seen).not.toHaveProperty('HOME');
+  });
+
+  it('hands LibreOffice no database URL, blob token or client credential', async () => {
+    // LibreOffice parses a document fetched from a third-party server: the
+    // caller is authenticated, the bytes are not. Asserted on the bundled
+    // branch because that is the deployed one, where these variables are real.
+    let seen: Record<string, string | undefined> | undefined;
+    await convertSourceToPdf('in.docx', 'out.pdf', {
+      runtime: {
+        available: true,
+        sofficeBin: '/nonexistent/soffice',
+        libraryPath: '/bundle/.syslibs',
+      },
+      env: {
+        PATH: '/usr/bin',
+        DATABASE_URL: 'postgres://user:hunter2@db.example/main',
+        BLOB_READ_WRITE_TOKEN: 'vercel_blob_rw_XXXX',
+        [credentialEnvKey('acme', 'pass')]: 'the-client-website-password',
+      },
+      executor: async (_bin, _args, options) => {
+        seen = options.env;
+        return { stdout: '', stderr: '' };
+      },
+    });
+
+    expect(seen).not.toHaveProperty('DATABASE_URL');
+    expect(seen).not.toHaveProperty('BLOB_READ_WRITE_TOKEN');
+    expect(seen).not.toHaveProperty(credentialEnvKey('acme', 'pass'));
+    expect(JSON.stringify(seen)).not.toContain('hunter2');
+    // …while what it needs survives.
+    expect(seen?.PATH).toBe('/usr/bin');
   });
 });

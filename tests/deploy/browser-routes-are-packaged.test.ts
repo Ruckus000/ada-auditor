@@ -253,6 +253,26 @@ const JVM_SPAWN = join(SRC_ROOT, 'integrations', 'documents', 'stage.ts');
 const jvmRoutes = routeFiles(API_DIR).filter((file) => reachesFrom(file, JVM_SPAWN, SRC_ROOT));
 
 /**
+ * The third binary, and the one whose absence is quietest.
+ *
+ * A route that converts spawns `soffice` as well as a JVM, and the two are
+ * packaged by different keys. A converting route covered only by a JVM entry
+ * deploys clean, passes every suite, and then refuses every request with
+ * `converter_unavailable` — which reads as a *host* that cannot convert rather
+ * than a deployment that forgot something, so it would be believed.
+ *
+ * Anchored on `convert.ts`, where `soffice` is actually spawned, for the same
+ * reason the JVM rule anchors on `stage.ts`: `libreoffice-runtime.ts` would be
+ * the wrong anchor, because `/api/ready` imports it to stat a path and spawns
+ * nothing.
+ */
+const SOFFICE_SPAWN = join(SRC_ROOT, 'integrations', 'documents', 'convert.ts');
+
+const convertingRoutes = routeFiles(API_DIR).filter((file) =>
+  reachesFrom(file, SOFFICE_SPAWN, SRC_ROOT),
+);
+
+/**
  * The walk itself, against a tree written for the purpose.
  *
  * Everything below this block asserts about the walk's *output on today's
@@ -459,5 +479,41 @@ describe('routes that spawn a JVM', () => {
     expect(included, 'the jlink-assembled runtime').toContain('vendor/jre');
     expect(included, 'PDFBox').toContain('pdfbox-app');
     expect(included, 'the compiled stages').toContain('dist/documents/classes');
+  });
+});
+
+describe('routes that convert with LibreOffice', () => {
+  it('are actually found by the import walk', () => {
+    expect(convertingRoutes.length, 'no route reaches convert.ts').toBeGreaterThan(0);
+  });
+
+  it.each(convertingRoutes)('%s has LibreOffice packaged beside it', (file) => {
+    const page = routePath(file);
+    const key = Object.keys(tracingIncludes).find((pattern) => nextCovers(pattern, page));
+
+    expect(key, `no next.config.mjs outputFileTracingIncludes key covers ${page}`).toBeDefined();
+
+    const included = (tracingIncludes[key as string] ?? []).join('\n');
+    expect(included, 'the bundled LibreOffice').toContain('vendor/libreoffice');
+    // A conversion is two `soffice` runs AND two Java stages — `Finish` writes
+    // the XMP packet, `Inspect` is what catches a silently untagged export. A
+    // key carrying one binary and not the other fails at a different step but
+    // fails just as completely.
+    expect(included, 'the jlink-assembled runtime').toContain('vendor/jre');
+  });
+
+  it('never carries LibreOffice on a route that only reads', () => {
+    // The inverse witness, and the reason the keys are ordered rather than
+    // merged: `inspect` and `inspect-url` spawn a JVM and no converter, so a
+    // 440MB payload beside them is 440MB of cold start bought for nothing.
+    const readOnly = jvmRoutes.filter((file) => !convertingRoutes.includes(file));
+    expect(readOnly.length, 'no read-only JVM route to check').toBeGreaterThan(0);
+
+    for (const file of readOnly) {
+      const page = routePath(file);
+      const key = Object.keys(tracingIncludes).find((pattern) => nextCovers(pattern, page));
+      const included = (tracingIncludes[key as string] ?? []).join('\n');
+      expect(included, `${page} should not carry LibreOffice`).not.toContain('vendor/libreoffice');
+    }
   });
 });

@@ -55,11 +55,37 @@ async function install(modules: string[]): Promise<string> {
  */
 const NO_BUNDLE = join(tmpdir(), 'ada-lo-no-such-bundle', 'soffice');
 
+/**
+ * A repo root carrying no bundled install, for the same reason `NO_BUNDLE`
+ * exists: `vendor/libreoffice` is searched before everything else and defaults
+ * to `process.cwd()`, so once anyone runs `npm run vercel-build` the working
+ * tree answers for every case below.
+ */
+const NO_ROOT = join(tmpdir(), 'ada-lo-no-such-root');
+
 /** Nothing else on the machine may answer for the install under test. */
 const only = (sofficeBin: string) => ({
   env: { SOFFICE_PATH: sofficeBin, PATH: '' },
   macosBundle: NO_BUNDLE,
+  root: NO_ROOT,
 });
+
+/**
+ * A bundled install as `scripts/prepare-libreoffice.ts` leaves it: under
+ * `vendor/libreoffice` inside the repo root, not on PATH and not named by any
+ * variable.
+ */
+async function bundle(modules: string[]): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), 'ada-lo-root-'));
+  dirs.push(root);
+
+  const program = join(root, 'vendor', 'libreoffice', 'program');
+  await mkdir(program, { recursive: true });
+  await writeFile(join(program, 'soffice'), '#!/bin/sh\n', 'utf8');
+  await Promise.all(modules.map((name) => writeFile(join(program, name), '', 'utf8')));
+
+  return root;
+}
 
 describe('resolveLibreOffice', () => {
   it('accepts an install that carries the Writer module', async () => {
@@ -285,10 +311,65 @@ describe('resolveLibreOffice', () => {
     const runtime = resolveLibreOffice({
       env: { PATH: join(tmpdir(), 'ada-lo-empty') },
       macosBundle: NO_BUNDLE,
+      root: NO_ROOT,
     });
 
     expect(runtime.available).toBe(false);
     if (runtime.available) return;
     expect(runtime.reason).toContain('LibreOffice not found');
+  });
+
+  it('prefers the bundled install over a working SOFFICE_PATH', async () => {
+    // Same rule as `findJavaBinary`: if a bundled runtime is present somebody
+    // put it there on purpose — a build assembled it for this deployment, and
+    // it is the one whose package selection was verified against these stages.
+    const root = await bundle(['libmergedlo.so', 'libswlo.so']);
+    const host = await install(['libmergedlo.so', 'libswlo.so']);
+
+    const runtime = resolveLibreOffice({
+      env: { SOFFICE_PATH: host, PATH: '' },
+      macosBundle: NO_BUNDLE,
+      root,
+    });
+
+    expect(runtime.available && runtime.sofficeBin).toBe(
+      join(root, 'vendor', 'libreoffice', 'program', 'soffice'),
+    );
+    // The loader hint rides with it, so a bundled install cannot be reported
+    // available without the libraries collected beside it.
+    expect(runtime.available && runtime.libraryPath).toBe(
+      join(root, 'vendor', 'libreoffice', '.syslibs'),
+    );
+  });
+
+  it('refuses a bundled install with no Writer, rather than falling through', async () => {
+    // What makes the RPM selection in `prepare-libreoffice.ts` self-verifying.
+    // Falling through would trade "the bundle has no Writer module" for
+    // "LibreOffice not found", which names neither the cause nor the fix — and
+    // on a function there is nothing to fall through to anyway.
+    const root = await bundle(['libmergedlo.so']);
+    const host = await install(['libmergedlo.so', 'libswlo.so']);
+
+    const runtime = resolveLibreOffice({
+      env: { SOFFICE_PATH: host, PATH: '' },
+      macosBundle: NO_BUNDLE,
+      root,
+    });
+
+    expect(runtime.available).toBe(false);
+    if (!runtime.available) {
+      expect(runtime.reason).toMatch(/no Writer module/);
+      expect(runtime.reason).toContain('vendor');
+    }
+  });
+
+  it('carries no library path for a host install', async () => {
+    // A host LibreOffice was put there by a package manager that already
+    // resolved its libraries; telling the dynamic loader otherwise could only
+    // break it.
+    const sofficeBin = await install(['libmergedlo.so', 'libswlo.so']);
+    const runtime = resolveLibreOffice(only(sofficeBin));
+
+    expect(runtime.available && 'libraryPath' in runtime).toBe(false);
   });
 });

@@ -75,10 +75,69 @@ export type StageOutcome = { ok: true } | { ok: false; failure: StageFailure };
 export type StageExecutor = (
   bin: string,
   args: string[],
-  options: { timeout: number; maxBuffer: number },
+  /**
+   * Always the filtered environment — see `childEnv`. Optional only because a
+   * test may inject an executor that ignores it; nothing in `src` spawns a
+   * document tool with the environment it was handed.
+   */
+  options: { timeout: number; maxBuffer: number; env?: Env },
 ) => Promise<{ stdout: string; stderr: string }>;
 
-const defaultExecutor: StageExecutor = (bin, args, options) => execFileAsync(bin, args, options);
+/**
+ * `Env` is deliberately looser than Node's `ProcessEnv`, which its own comment
+ * in `java-runtime.ts` explains: Next's types make `NODE_ENV` required, so a
+ * two-key object cannot be constructed in a test. The cast is where the two
+ * meet, and it is safe in this direction — every value is a string or absent,
+ * which is all `execFile` reads.
+ */
+const defaultExecutor: StageExecutor = (bin, args, options) =>
+  execFileAsync(bin, args, { ...options, env: options.env as NodeJS.ProcessEnv | undefined });
+
+/**
+ * What a spawned document tool is allowed to see of our environment.
+ *
+ * `execFile` with no `env` hands the child the whole of `process.env`, which on
+ * this deployment is `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, and every
+ * `AUDIT_CREDENTIAL_<REF>_USER`/`_PASS` — real client website logins. Both
+ * children parse bytes we do not control: the by-URL routes fetch documents
+ * from third-party servers found by crawling a client's site, so the caller is
+ * authenticated and the document is not. A parser bug should not reach a
+ * client's password.
+ *
+ * Deny by default, so a variable added later is private until someone decides
+ * otherwise. Each name below is here for a reason:
+ *
+ * - `PATH` — the `soffice` launcher is a shell script and calls `basename`,
+ *   `dirname`, `sed`. Without this nothing runs at all.
+ * - `HOME` — LibreOffice's profile and fontconfig cache; `java.util.prefs`.
+ * - `LD_LIBRARY_PATH` — the libraries collected beside a bundled install.
+ * - `TMPDIR` — both children write temp files, and dropping it would move them
+ *   somewhere the caller did not choose.
+ * - `LANG`, `LC_ALL`, `LC_CTYPE` — **load-bearing, not housekeeping.** On Java
+ *   17 `file.encoding` still follows the platform locale, so dropping these can
+ *   flip the JVM's default charset to ASCII and silently mangle non-ASCII text
+ *   extracted from a PDF — which is exactly the document titles this pipeline
+ *   transcribes. Silent corruption is a worse outcome than the exposure this
+ *   function exists to prevent.
+ *
+ * Notably absent: `JAVA_TOOL_OPTIONS` and `_JAVA_OPTIONS`, which inject JVM
+ * flags into any child that reads them.
+ *
+ * Resolution is unaffected and deliberately so — `resolveJavaRuntime` and
+ * `resolveLibreOffice` still read the whole environment, because they need
+ * `JAVA_HOME`, `SOFFICE_PATH` and `PATH` to find a toolchain at all. Only what
+ * the child *receives* is filtered.
+ */
+const INHERITED = ['PATH', 'HOME', 'LD_LIBRARY_PATH', 'TMPDIR', 'LANG', 'LC_ALL', 'LC_CTYPE'];
+
+export function childEnv(base: Env): Env {
+  const env: Env = {};
+  for (const name of INHERITED) {
+    const value = base[name];
+    if (value !== undefined) env[name] = value;
+  }
+  return env;
+}
 
 /** The first line of stderr, which is the part that names the cause. */
 function firstLine(text: string): string {
@@ -129,6 +188,7 @@ async function spawnStage(
       {
         timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
         maxBuffer: options.maxBuffer ?? DEFAULT_MAX_BUFFER,
+        env: childEnv(options.env ?? process.env),
       },
     );
     return { ok: true, stdout: result.stdout };

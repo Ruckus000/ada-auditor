@@ -122,11 +122,25 @@ production, not a fault — the same distinction `ArtifactRead` makes between
 `/api/ready` reports both capabilities in `checks` and deliberately adds **no
 warning** — a warnings array with a permanent entry is one people stop reading.
 
-**The JVM half is no longer absent in production.** `scripts/prepare-jvm.ts`
+**Neither half is absent in production any more.** `scripts/prepare-jvm.ts`
 assembles a 40MB `jlink` runtime during a Vercel build and `/api/documents/**`
 ships it, so `POST /api/documents/inspect` works on a deployment. `[V]` Proven
 on a preview: it execs from `/var/task/vendor/jre` and runs `Inspect` in ~730ms
-warm. LibreOffice — 794MB — still does not fit, so conversion stays host-local.
+warm.
+
+`scripts/prepare-libreoffice.ts` does the same for the converting half. The
+794MB figure that kept it out was the macOS `.app` bundle, and the real
+obstacle was Vercel's 250MB function limit; large functions raise that to 5GB,
+and `[V]` a headless Linux install pruned to Writer measures **440MB**. Only
+the three routes that actually convert carry it — `documents/remediate`,
+`documents/remediate-url`, and the client-scoped `documents/convert` — so
+`inspect` does not grow a converter it never execs.
+
+The bundled install **wins resolution**, ahead of `SOFFICE_PATH` and `PATH`,
+for the reason `findJavaBinary` gives: a build assembled it for this
+deployment. `prepare-libreoffice.ts` therefore refuses to run anywhere but
+Linux, so a developer who runs `vercel-build` on a Mac does not end up with an
+unexecutable binary outranking their working one.
 
 Caveat: `/api/ready` is its own function and does not carry the runtime, so it
 will read `documentToolchainAvailable: false` while the documents route works.
