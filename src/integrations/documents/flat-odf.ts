@@ -130,40 +130,52 @@ export type TitleRepair = {
  * handle; it is the correct answer, and the outcome is reported so the gap can
  * be surfaced rather than silently tolerated.
  */
-export function repairTitle(xml: string): TitleRepair {
+export function repairTitle(xml: string, filenameTitle?: string | null): TitleRepair {
   const existing = readTitle(xml);
   if (existing !== null) {
     return { xml, outcome: { kind: 'already-titled', title: existing } };
   }
 
+  // Transcription order is a policy: the document's own first heading first,
+  // the author's filename second (`[V]` nine real documents had only the
+  // second), the honest gap last.
   const heading = firstHeading(xml);
-  if (heading === null) {
+  const source: TitleOutcome | null =
+    heading !== null
+      ? { kind: 'transcribed', title: heading }
+      : filenameTitle
+        ? { kind: 'filename-derived', title: filenameTitle }
+        : null;
+  if (source === null) {
     return { xml, outcome: { kind: 'no-heading-to-copy' } };
   }
 
-  const element = `<dc:title>${encodeEntities(heading)}</dc:title>`;
+  const written = writeTitle(xml, source.title);
+  if (written === null) {
+    // No metadata block to write into. Reported as "nothing to copy into"
+    // rather than pretending the repair happened.
+    return { xml, outcome: { kind: 'no-heading-to-copy' } };
+  }
+  return { xml: written, outcome: source };
+}
 
-  // An empty `<dc:title/>` is replaced in place; otherwise the element is added
-  // to the document's metadata block. Writing it anywhere else would produce a
-  // file that opens and carries no title.
+/**
+ * Writes a title into the metadata block, or returns null when there is none.
+ *
+ * An empty `<dc:title/>` is replaced in place; otherwise the element is added
+ * to the document's metadata block. Writing it anywhere else would produce a
+ * file that opens and carries no title.
+ */
+function writeTitle(xml: string, title: string): string | null {
+  const element = `<dc:title>${encodeEntities(title)}</dc:title>`;
   const empty = /<dc:title\s*\/>|<dc:title>\s*<\/dc:title>/;
   if (empty.test(xml)) {
-    return {
-      xml: xml.replace(empty, element),
-      outcome: { kind: 'transcribed', title: heading },
-    };
+    return xml.replace(empty, element);
   }
-
   if (xml.includes('<office:meta>')) {
-    return {
-      xml: xml.replace('<office:meta>', `<office:meta>${element}`),
-      outcome: { kind: 'transcribed', title: heading },
-    };
+    return xml.replace('<office:meta>', `<office:meta>${element}`);
   }
-
-  // No metadata block to write into. Reported as "nothing to copy into" rather
-  // than pretending the repair happened.
-  return { xml, outcome: { kind: 'no-heading-to-copy' } };
+  return null;
 }
 
 /**

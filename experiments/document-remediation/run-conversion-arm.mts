@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
 import { convertSourceToPdf } from '../../src/integrations/documents/convert';
-import { summarise } from '../../src/domain/document-remediation';
+import { summarise, titleFromFilename } from '../../src/domain/document-remediation';
 
 // cwd-independent: the JVM stages resolve their classpath from `root`, and
 // the first full run refused all 30 documents because the runner's cwd was
@@ -48,6 +48,19 @@ if (!docxDir || !outDir) {
 }
 const keysDir = opt('keys');
 const truthDir = opt('truth');
+// Client-facing names for filename-derived titles: real documents live on
+// disk as rNN.* while their authored names are in the harvest map; generated
+// documents' file names ARE their authored names.
+const namesFile = opt('names');
+const nameOf = new Map<string, string>();
+if (namesFile) {
+  for (const line of readFileSync(namesFile, 'utf8').split('\n')) {
+    const [local, url] = line.trim().split(/\s+/, 2);
+    if (local && url) {
+      nameOf.set(local.replace(/\.docx?$/, ''), decodeURIComponent(url.split('?')[0].split('/').pop() ?? ''));
+    }
+  }
+}
 
 const pdfDir = join(outDir, 'pdf');
 const evidenceDir = join(outDir, 'evidence');
@@ -99,7 +112,10 @@ for (const file of files) {
   const output = join(pdfDir, `${id}.pdf`);
 
   const t0 = Date.now();
-  const result = await convertSourceToPdf(source, output, { root: REPO_ROOT });
+  const result = await convertSourceToPdf(source, output, {
+    root: REPO_ROOT,
+    sourceName: nameOf.get(id) ?? basename(file),
+  });
   const wallMs = Date.now() - t0;
 
   const evidence: Record<string, unknown> = {
@@ -151,7 +167,18 @@ for (const file of files) {
     }
     const srcTitle = key ? (key.planted?.title?.trim() || null) : truth ? truth.title : undefined;
     if (srcTitle !== undefined) {
-      const expectProvenance = srcTitle !== null ? 'already-titled' : (key?.expected.title ?? (truth && truth.headingLevels?.[0] === 1 ? 'transcribed' : 'no-heading-to-copy'));
+      // The POLICY chain, not a private guess: title, else first heading,
+      // else a derivable filename, else the honest gap — the same order the
+      // pipeline implements, computed from the same domain function.
+      const expectProvenance =
+        key?.expected.title ??
+        (srcTitle !== null
+          ? 'already-titled'
+          : truth && truth.headings > 0
+            ? 'transcribed'
+            : titleFromFilename(nameOf.get(id) ?? basename(file))
+              ? 'filename-derived'
+              : 'no-heading-to-copy');
       if (summary.title !== expectProvenance) {
         violations.push(`title provenance: expected ${expectProvenance}, got ${summary.title}`);
         if (summary.title === 'already-titled' && srcTitle === null) inventedClaims += 1;

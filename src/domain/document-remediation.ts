@@ -23,6 +23,15 @@ import type { DocumentStructure } from './document-structure';
 export type TitleOutcome =
   | { kind: 'already-titled'; title: string }
   | { kind: 'transcribed'; title: string }
+  /**
+   * Derived from the source's FILENAME — authored text too: a clerk who
+   * saves "Conflict_of_Interest_Law_for_Municipal_Employees.docx" named the
+   * document, just not in the metadata field. `[V]` Nine of thirty-one real
+   * municipal documents were blocked by 2.4.2 alone, every one carrying a
+   * richly descriptive filename. The provenance label keeps the derivation
+   * visible to every reviewer.
+   */
+  | { kind: 'filename-derived'; title: string }
   | { kind: 'no-heading-to-copy' };
 
 export type ConversionProvenance = {
@@ -90,7 +99,9 @@ function gapsIn(provenance: ConversionProvenance): string[] {
   const gaps: string[] = [];
 
   if (title.kind === 'no-heading-to-copy') {
-    gaps.push('2.4.2: the document has no title, and states no heading to copy one from');
+    gaps.push(
+      '2.4.2: the document has no title, no heading to copy one from, and no usable filename to derive one',
+    );
   }
 
   if (sourceLanguage === null) {
@@ -239,4 +250,34 @@ export function isPdf(bytes: Uint8Array): UploadCheck {
   }
 
   return { ok: true, kind: 'pdf' };
+}
+
+/**
+ * A displayable title out of a filename, or null when the name says nothing.
+ *
+ * Junk refusal is the whole safety of the feature: "doc1", "untitled",
+ * "final_v2", scanner names and bare ids produce no title at all — the
+ * honest 2.4.2 gap survives — because a bad derived title is worse than a
+ * reported absence. The refusal table is also the injection backstop for a
+ * caller-supplied upload name: what passes is words, capped and stripped of
+ * control characters.
+ */
+const JUNK_FILENAMES =
+  /^(doc(ument)?s?[ ]?\d*|untitled|new|final([ ]?v?\d+)?|scan(ned)?[ ]?\d*|img[ ]?\d*|image[ ]?\d*|file[ ]?\d*|copy([ ]of)?.*|temp|draft|[a-z]{0,3}[\d .]*)$/i;
+
+export function titleFromFilename(name: string): string | null {
+  const stem = name
+    .replace(/\.[a-z0-9]{1,5}$/i, '')
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200)
+    .trim();
+
+  if (stem.length < 3 || JUNK_FILENAMES.test(stem)) {
+    return null;
+  }
+  return stem;
 }

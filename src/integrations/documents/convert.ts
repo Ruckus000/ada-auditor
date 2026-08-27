@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 
 import { logWarn } from '../../services/logger';
-import type { ConversionProvenance } from '../../domain/document-remediation';
+import { titleFromFilename, type ConversionProvenance } from '../../domain/document-remediation';
 import { finishDocument } from './finish';
 import { inspectDocument } from './inspect';
 import { readLanguage, removeEmptyHeadings, repairTitle } from './flat-odf';
@@ -114,6 +114,13 @@ export type ConvertOptions = {
   /** Passed through to the Java stages. */
   javaRuntime?: JavaRuntime;
   root?: string;
+  /**
+   * The document's client-facing name — an upload's filename or a URL's last
+   * segment. NOT the path on disk, which in production is a requestId that
+   * would defeat filename-derived titles by construction. Absent means no
+   * derivation is attempted.
+   */
+  sourceName?: string;
 };
 
 /**
@@ -274,7 +281,10 @@ export async function convertSourceToPdf(
     // Empty headings go first, so a blank heading-styled line can never be
     // the "first heading" a title gets transcribed from.
     const cleaned = removeEmptyHeadings(original);
-    const repaired = repairTitle(cleaned.xml);
+    const repaired = repairTitle(
+      cleaned.xml,
+      options.sourceName === undefined ? null : titleFromFilename(options.sourceName),
+    );
 
     // Written back over the same file: the flat ODF exists only inside this
     // temporary directory, so there is no earlier version worth keeping.

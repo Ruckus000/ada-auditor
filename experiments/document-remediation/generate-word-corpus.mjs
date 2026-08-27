@@ -149,10 +149,10 @@ add('a06-figure-no-alt', 'One image with NO alt: the delivered file must carry t
 });
 
 // -- truth traps ---------------------------------------------------------
-add('a07-untitled-no-h1', 'No title, no heading to copy one from.', {
+add('a07-untitled-no-h1', 'No title, no heading — the filename is the last transcription source. POLICY 2026-08-27b: filename-derived titles (user-approved); before it this stratum expected the honest gap.', {
   title: null, lang: 'en-US',
   body: [para(LOREM), para(LOREM)],
-  expected: { outcome: 'delivered', title: 'no-heading-to-copy', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: ['2.4.2'] },
+  expected: { outcome: 'delivered', title: 'filename-derived', titleText: 'a07 untitled no h1', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: [] },
 });
 add('a08-untitled-with-h1', 'No title, but an H1 to transcribe: provenance must read transcribed, and the text must equal the H1.', {
   title: null, lang: 'en-US',
@@ -198,10 +198,10 @@ add('a15-empty', 'A structurally valid docx with an empty body: nothing to tag, 
   body: [para('')],
   expected: { outcome: 'refused', refusal: 'not-tagged' },
 });
-add('a16-single-char', 'One character of content.', {
+add('a16-single-char', 'One character of content; the filename still names it. POLICY 2026-08-27b.', {
   title: null, lang: 'en-US',
   body: [para('x')],
-  expected: { outcome: 'delivered', title: 'no-heading-to-copy', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: ['2.4.2'] },
+  expected: { outcome: 'delivered', title: 'filename-derived', titleText: 'a16 single char', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: [] },
 });
 add('a17-long-document', '~110 pages via explicit breaks: the performance row against the 60s-per-call ceiling.', {
   title: 'Comprehensive Plan', lang: 'en-US',
@@ -238,10 +238,10 @@ add('a23-mixed-everything', 'Headings, table, both lists, figure with alt, in on
   body: [heading(1, 'Annual Report'), para(LOREM), heading(2, 'Financials'), table([[ 'Line', 'Amount' ], [ 'Roads', '$300k' ]]), heading(2, 'Priorities'), listItem(1, 'Drainage'), listItem(1, 'Sidewalks'), listItem(2, 'Phase one'), figure('Photograph of the resurfaced portion of Main Street')],
   expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 3, tables: 1, lists: 2, figures: 1, gaps: [] },
 });
-add('a24-whitespace-title', 'A dc:title that is only whitespace must not count as a title.', {
+add('a24-whitespace-title', 'A whitespace dc:title is no title; the filename derives instead. POLICY 2026-08-27b.', {
   title: '   ', lang: 'en-US',
   body: [para(LOREM)],
-  expected: { outcome: 'delivered', title: 'no-heading-to-copy', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: ['2.4.2'] },
+  expected: { outcome: 'delivered', title: 'filename-derived', titleText: 'a24 whitespace title', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: [] },
 });
 add('a25-heading-special-chars', 'Ampersands, angle brackets and quotes in a transcribed title: escaping must survive two conversions.', {
   title: null, lang: 'en-US',
@@ -276,6 +276,12 @@ add('a32-hyperlink', 'An external hyperlink. `[V]` Two real municipal documents 
   expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 1, tables: 0, lists: 0, figures: 0, gaps: [] },
 });
 
+add('a33-junk-filename', 'Untitled, heading-less, and saved as "Document1.docx": the junk-refusal table keeps the honest 2.4.2 gap, because a bad derived title is worse than a reported absence.', {
+  title: null, lang: 'en-US', outName: 'Document1',
+  body: [para(LOREM)],
+  expected: { outcome: 'delivered', title: 'no-heading-to-copy', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: ['2.4.2'] },
+});
+
 // -- adversarial containers (runner-level refusals) ----------------------
 add('a29-zip-not-docx', 'A valid ZIP holding a text file: soffice cannot load it, and the refusal must name the first conversion step.', {
   special: 'zip-not-docx',
@@ -288,7 +294,7 @@ add('a30-truncated-docx', 'a01 cut off mid-archive: a corrupt container refused 
 
 // ---- packaging ---------------------------------------------------------
 
-function writeDocx(dir, stratum) {
+function writeDocx(dir, stratum, outName) {
   const parts = {
     '[Content_Types].xml': contentTypes(Boolean(stratum.image)),
     '_rels/.rels': ROOT_RELS,
@@ -312,11 +318,11 @@ function writeDocx(dir, stratum) {
     writeFileSync(join(dir, 'word/media/image1.png'), PNG_1PX);
   }
 
-  const docx = `${dir}.docx`;
+  const docx = join(OUT, `${outName}.docx`);
   rmSync(docx, { force: true });
   // -X strips extra attrs for determinism; [Content_Types].xml need not be
   // first for LibreOffice, and `zip` stores directory-order which is ours.
-  execFileSync('zip', ['-X', '-q', '-r', join('..', `${stratum.id}.docx`), '.'], { cwd: dir });
+  execFileSync('zip', ['-X', '-q', '-r', join('..', `${outName}.docx`), '.'], { cwd: dir });
   rmSync(dir, { recursive: true, force: true });
   return docx;
 }
@@ -342,7 +348,7 @@ for (const stratum of STRATA) {
     const whole = read(join(OUT, 'a01-baseline.docx'));
     writeFileSync(join(OUT, `${stratum.id}.docx`), whole.subarray(0, Math.floor(whole.length / 2)));
   } else {
-    writeDocx(join(OUT, `${stratum.id}.tmp`), stratum);
+    writeDocx(join(OUT, `${stratum.id}.tmp`), stratum, stratum.outName ?? stratum.id);
   }
 
   // Planted-structure record rides in the key for the fidelity check — only
@@ -356,12 +362,15 @@ for (const stratum of STRATA) {
     };
   }
 
-  writeFileSync(join(KEYS, `${stratum.id}.key.json`), JSON.stringify(key, null, 2) + '\n', 'utf8');
+  // Keyed by the FILE's name, which for one stratum differs from the id on
+  // purpose (a33 ships as Document1.docx): the runner maps evidence to keys
+  // by basename, and a key nothing can find guards nothing.
+  writeFileSync(join(KEYS, `${stratum.outName ?? stratum.id}.key.json`), JSON.stringify(key, null, 2) + '\n', 'utf8');
   written += 1;
 }
 
 console.log(`wrote ${written} documents and keys to ${OUT}/`);
-if (written !== 32) {
-  console.error(`expected 32 strata, have ${written}`);
+if (written !== 33) {
+  console.error(`expected 33 strata, have ${written}`);
   process.exit(1);
 }

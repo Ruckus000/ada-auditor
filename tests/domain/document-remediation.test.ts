@@ -4,6 +4,7 @@ import {
   isWordDocument,
   logSafe,
   summarise,
+  titleFromFilename,
   type ConversionProvenance,
 } from '../../src/domain/document-remediation';
 import { documentStructureSchema } from '../../src/domain/document-structure';
@@ -192,5 +193,35 @@ describe('isWordDocument', () => {
     far.set(Buffer.from('[Content_Types].xml word/document.xml', 'latin1'), 15_000);
 
     expect(isWordDocument(far).ok).toBe(false);
+  });
+});
+
+describe('titleFromFilename', () => {
+  it('turns a descriptive municipal filename into its own title', () => {
+    // `[V]` The shape of all nine real 2.4.2-blocked documents.
+    expect(titleFromFilename('Conflict_of_Interest_Law_for_Municipal_Employees.docx')).toBe(
+      'Conflict of Interest Law for Municipal Employees',
+    );
+    expect(titleFromFilename('Open_Space_Comm_2026-1-26_approved_minutes.docx')).toBe(
+      'Open Space Comm 2026 1 26 approved minutes',
+    );
+    expect(titleFromFilename('BoardOfHealthAgenda.docx')).toBe('Board Of Health Agenda');
+  });
+
+  it('refuses junk names, keeping the honest gap', () => {
+    // A bad derived title is worse than a reported absence.
+    for (const junk of [
+      'doc1.docx', 'Document.docx', 'untitled.docx', 'final_v2.doc', 'scan0001.docx',
+      'IMG_4302.docx', 'copy of copy.docx', 'temp.docx', 'draft.doc', '20260827.docx',
+      'r03.docx', 'a.docx',
+    ]) {
+      expect(titleFromFilename(junk), junk).toBeNull();
+    }
+  });
+
+  it('caps length and strips control characters — the upload name is caller input', () => {
+    const derived = titleFromFilename('Fee\u0007Schedule_' + 'x'.repeat(400) + '.docx');
+    expect(derived).not.toContain('\u0007');
+    expect(derived!.length).toBeLessThanOrEqual(200);
   });
 });
