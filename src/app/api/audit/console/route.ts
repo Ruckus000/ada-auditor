@@ -1,21 +1,27 @@
 import { z } from 'zod';
 import { auditRunBodySchema, startRun } from '../../_lib/audit-run-handler';
 import { createRequestId } from '../../_lib/request-id';
-import { hasConsoleSession } from '../../_lib/console-session';
-import { isSameOriginConsoleRequest } from '../../_lib/same-origin';
+import { authorizePrincipal } from '../../_lib/authorize';
 
 /**
  * Operator paved road: the console runs audits without pasting a token per run.
  *
- * Two independent gates, because neither is sufficient alone:
+ * Authorization is `authorizePrincipal`, the same function every other route
+ * uses. It was not, and that mattered: this route gated on
+ * `hasConsoleSession(request, AUDITOR_RUN_TOKEN)`, which validates only the
+ * **v1** cookie shape. A v2 operator cookie starts `v2.`, so `isValidSessionValue`
+ * read `Number('v2')` as NaN and refused it — meaning anyone who signed in with
+ * an email and a password could not use this console at all, while the token
+ * holder could.
  *
- *  - An operator session cookie proves the caller knows AUDITOR_RUN_TOKEN. This
- *    is the authentication. Header checks cannot do this job: `sec-fetch-site`
- *    and `Origin` are trustworthy coming from a browser but are freely forged
- *    by any other client, so gating on them alone let anyone run audits with
- *    the server's token.
- *  - The same-origin check remains as CSRF defence, so another site cannot ride
- *    an operator's cookie.
+ * That is the second copy of an authorization rule `authorize.ts` exists to
+ * hold; its own comment records the same rule having been copy-pasted into four
+ * route files before. This was the fifth, and the one that drifted.
+ *
+ * The shared function keeps both gates this route hand-rolled — bearer token OR
+ * (same-origin AND a valid session cookie) — and adds the operator cookie. The
+ * same-origin check still never stands alone: `sec-fetch-site` and `Origin` are
+ * trustworthy from a browser and forged freely by anything else.
  *
  * External integrations still call POST /api/audit/run with Bearer auth.
  */
@@ -31,23 +37,29 @@ export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const requestId = createRequestId();
-  const configuredToken = process.env.AUDITOR_RUN_TOKEN;
 
-  if (!configuredToken) {
+  /**
+   * Unchanged, and deliberately ahead of the auth check.
+   *
+   * `startRun` does not read this token — it is reached in-process — so this is
+   * not a precondition of running an audit. It is a statement about the
+   * deployment: `/api/ready` gates on `auditorRunTokenConfigured`, so a
+   * deployment without it is one nothing should be driving yet, and 503 says
+   * that where 401 would send an operator to re-enter a credential that was
+   * never going to work.
+   *
+   * The honest edge: with `AUDITOR_SESSION_SECRET` set and this unset, an
+   * operator cookie would in fact authenticate, and this still answers 503.
+   * That combination is a deployment `/api/ready` already calls not-ready.
+   */
+  if (!process.env.AUDITOR_RUN_TOKEN) {
     return Response.json(
       { error: 'auditor_run_token_not_configured', requestId },
       { status: 503 },
     );
   }
 
-  if (!isSameOriginConsoleRequest(request)) {
-    return Response.json(
-      { error: 'console_same_origin_required', requestId },
-      { status: 403 },
-    );
-  }
-
-  if (!hasConsoleSession(request, configuredToken)) {
+  if (!(await authorizePrincipal(request))) {
     return Response.json({ error: 'console_session_required', requestId }, { status: 401 });
   }
 

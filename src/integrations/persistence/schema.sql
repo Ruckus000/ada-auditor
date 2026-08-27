@@ -157,9 +157,18 @@ create index if not exists findings_identity_idx
 
 -- ---------------------------------------------------------------- reports --
 
--- `share_token` backs `/r/[token]`, which is unauthenticated by design: a
--- high-entropy, revocable token, `X-Robots-Tag: noindex`, and rate limiting.
--- Revocation is setting it to null, which is why it is nullable.
+-- `share_token` backs `/r/[token]`, which is unauthenticated by design. The
+-- token IS the access control: 32 random bytes from `randomBytes(32)`, and
+-- revocation is setting it to null, which is why it is nullable.
+--
+-- This used to claim `X-Robots-Tag: noindex` and rate limiting as well. The
+-- header was not sent by anything until the delivery route started sending it;
+-- the page had only Next `metadata.robots`, a `<meta>` tag a PDF cannot carry.
+-- There is no rate limiting here and never was — `getThrottleStore` has three
+-- callers and all three are the console sign-in path. At 256 bits the token is
+-- not enumerable, so a limiter was never what stood between a stranger and a
+-- report, and a comment claiming one is worse than the absence: it is what the
+-- next reader checks instead of the code.
 create table if not exists reports (
   id           text primary key,
   request_id   text not null references runs (request_id) on delete cascade,

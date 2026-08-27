@@ -60,10 +60,30 @@ export function sessionSecretIsShared(): boolean {
  *    the price of revocation actually meaning something.
  *  - v1 proves the holder knows the run token. That is a machine credential,
  *    so it resolves to the machine principal rather than to a person.
+ *
+ * ## The store arrives as a factory, and that is load-bearing
+ *
+ * Only the v2 branch reads it. This used to take the store itself, so both
+ * callers evaluated `getPlatformStore()` to build the argument — and that
+ * constructor throws without `DATABASE_URL`, before anything had looked at the
+ * cookie. The work was done to build a value the v1 and no-cookie paths never
+ * read.
+ *
+ * On a deployment missing that variable, the cost was that *being unauthenticated
+ * stopped being answerable*: a same-origin request got 500 instead of 401, and
+ * `guard.tsx` rendered Next's generic error page instead of the unlock card.
+ * Not a leak — the body is empty and the message reaches only the server log —
+ * but an operator saw a black crash screen where the product had something to
+ * say. What the deployment is actually missing is named by `/api/ready` and by
+ * the console's own readiness banner.
+ *
+ * A no-cookie, v1-cookie or bearer request now touches no store at all. Signing
+ * in still needs the database, and the screens behind the gate still fail
+ * without it — correctly, because they read from it.
  */
 export async function resolvePrincipal(
   cookieValue: string | null | undefined,
-  store: Pick<OperatorStore, 'getOperator'>,
+  operatorStore: () => Pick<OperatorStore, 'getOperator'>,
   now = Date.now(),
 ): Promise<Principal | null> {
   const secret = sessionSecret();
@@ -74,7 +94,8 @@ export async function resolvePrincipal(
 
   const claims = readOperatorSessionClaims(cookieValue, secret, now);
   if (claims) {
-    const operator = await store.getOperator(claims.operatorId);
+    // Constructed here, and only here — see the note above.
+    const operator = await operatorStore().getOperator(claims.operatorId);
     if (!operator || operator.disabledAt) return null;
     // A stale epoch is a cookie minted before a revocation. Same answer as a
     // forged one: no.
@@ -93,7 +114,7 @@ export async function resolvePrincipal(
 
 /** For route handlers, which hold a `Request`. */
 export async function principalFromRequest(request: Request): Promise<Principal | null> {
-  return resolvePrincipal(readCookie(request, CONSOLE_COOKIE), getPlatformStore());
+  return resolvePrincipal(readCookie(request, CONSOLE_COOKIE), getPlatformStore);
 }
 
 /**
@@ -109,5 +130,5 @@ export async function principalFromRequest(request: Request): Promise<Principal 
  */
 export const currentPrincipal = cache(async (): Promise<Principal | null> => {
   const store = await cookies();
-  return resolvePrincipal(store.get(CONSOLE_COOKIE)?.value, getPlatformStore());
+  return resolvePrincipal(store.get(CONSOLE_COOKIE)?.value, getPlatformStore);
 });

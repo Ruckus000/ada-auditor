@@ -58,6 +58,17 @@ export async function GET(
       'content-type': 'application/pdf',
       'content-disposition': `attachment; filename="remediated-${conversionId}.pdf"`,
       'x-request-id': requestId,
+      /**
+       * The page above this route says `noindex` through Next's `metadata`,
+       * which emits a `<meta>` tag. A PDF cannot carry one, so the only way to
+       * say it here is the header — and without it the one response in this
+       * subtree that IS a client's document was the one crawlable thing behind
+       * the token. `schema.sql` claimed this header already existed; it did not.
+       */
+      'x-robots-tag': 'noindex, nofollow',
+      // Same as `report.pdf` and the artifacts route: a client's document is
+      // fetched with a credential and must not be retained by anything between.
+      'cache-control': 'private, no-store',
     },
   });
 }
