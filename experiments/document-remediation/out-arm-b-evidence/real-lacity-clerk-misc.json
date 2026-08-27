@@ -1,0 +1,22 @@
+{
+  "document": "real-lacity-clerk-misc",
+  "population": "real",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "S14KONICA_C24093009010",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 5,
+    "headings": 13,
+    "tables": 0,
+    "lists": 0,
+    "figures": 5,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": false,
+    "failedRules": []
+  },
+  "deliverable": false
+}

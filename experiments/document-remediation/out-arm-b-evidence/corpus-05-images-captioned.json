@@ -1,0 +1,22 @@
+{
+  "document": "corpus-05-images-captioned",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Coastal Quay Site Report",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 2,
+    "headings": 5,
+    "tables": 0,
+    "lists": 0,
+    "figures": 4,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

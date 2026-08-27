@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h05-logo-moves",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Quarterly Circular",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 3,
+    "headings": 4,
+    "tables": 0,
+    "lists": 0,
+    "figures": 4,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

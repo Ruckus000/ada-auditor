@@ -1,0 +1,23 @@
+{
+  "document": "real-orono-fee-schedule",
+  "population": "real",
+  "outcome": "graded",
+  "summary": {
+    "title": "no-heading-to-copy",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 18,
+    "headings": 45,
+    "tables": 4,
+    "lists": 11,
+    "figures": 1,
+    "gaps": [
+      "2.4.2: the document has no title, and states no heading to copy one from"
+    ]
+  },
+  "verapdf": {
+    "pass": false,
+    "failedRules": []
+  },
+  "deliverable": false
+}

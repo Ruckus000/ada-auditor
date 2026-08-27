@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h04-one-caption-many-images",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Apron Survey Panels",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 2,
+    "tables": 0,
+    "lists": 0,
+    "figures": 4,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

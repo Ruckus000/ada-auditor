@@ -1,0 +1,22 @@
+{
+  "document": "real-sturgis-agenda",
+  "population": "real",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "City Council - Aug 24 2026 - Agenda - Pdf",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 90,
+    "headings": 100,
+    "tables": 28,
+    "lists": 91,
+    "figures": 32,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": false,
+    "failedRules": []
+  },
+  "deliverable": false
+}

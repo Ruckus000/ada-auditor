@@ -1,0 +1,22 @@
+{
+  "document": "corpus-08-slide-layout",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Coastal Options — Board Slide",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 4,
+    "tables": 0,
+    "lists": 0,
+    "figures": 1,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

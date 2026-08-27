@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h15-decorative-vs-meaningful",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Signage Standard",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 3,
+    "tables": 0,
+    "lists": 0,
+    "figures": 3,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h09-three-column",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Port Bulletin",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 5,
+    "tables": 0,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

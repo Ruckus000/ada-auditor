@@ -1,0 +1,23 @@
+{
+  "document": "real-pdf-p18",
+  "population": "real",
+  "outcome": "graded",
+  "summary": {
+    "title": "no-heading-to-copy",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 0,
+    "tables": 0,
+    "lists": 0,
+    "figures": 1,
+    "gaps": [
+      "2.4.2: the document has no title, and states no heading to copy one from"
+    ]
+  },
+  "verapdf": {
+    "pass": false,
+    "failedRules": []
+  },
+  "deliverable": false
+}
