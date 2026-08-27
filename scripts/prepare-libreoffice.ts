@@ -53,7 +53,6 @@ import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { copyFile, mkdir, mkdtemp, readdir, rename, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -275,7 +274,16 @@ async function main(): Promise<void> {
     return;
   }
 
-  const work = await mkdtemp(join(tmpdir(), 'ada-libreoffice-'));
+  // Staged **inside** the repo rather than under `tmpdir()`, because the last
+  // step of this script moves 440MB into place and `/tmp` is a different
+  // filesystem from the build workspace: `[V]` the first build that got this
+  // far died on `EXDEV: cross-device link not permitted`. `prepare-jvm.ts`
+  // never meets this because `jlink` writes straight to its output directory.
+  //
+  // Copying instead would work anywhere and cost an extra 440MB of I/O on
+  // every build; staging on the right device costs nothing.
+  await mkdir(dirname(install), { recursive: true });
+  const work = await mkdtemp(join(dirname(install), '.libreoffice-build-'));
   try {
     const tarball = join(work, 'libreoffice.tar.gz');
     await download(LIBREOFFICE.url, tarball, LIBREOFFICE.sha256);
@@ -283,6 +291,9 @@ async function main(): Promise<void> {
     const unpacked = join(work, 'tarball');
     await mkdir(unpacked, { recursive: true });
     await execFileAsync('tar', ['-xzf', tarball, '-C', unpacked, '--strip-components=1']);
+    // 250MB that nothing reads again. Peak disk here is otherwise the tarball,
+    // the RPMs and the installed tree all at once.
+    await rm(tarball, { force: true });
 
     const rpmDir = join(unpacked, 'RPMS');
     const available = await readdir(rpmDir);
