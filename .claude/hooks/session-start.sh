@@ -10,6 +10,23 @@
 # Local machines are left alone (`CLAUDE_CODE_REMOTE`): a developer's browser
 # registry is theirs, and a hook that reaches into it would be repairing
 # something that is not broken.
+#
+# ## When this runs
+#
+# `startup` and `resume` only — the matcher is in `settings.json`, which is
+# JSON and cannot say why, so it is said here.
+#
+# Both of those can land in a container that has nothing, which is the whole
+# reason this exists; a resumed session especially, because the session
+# outlives the container it started in. `clear` and `compact` cannot: they
+# happen inside a container that `startup` or `resume` already provisioned, so
+# there is nothing to install and nothing to link.
+#
+# Firing there is not merely wasted work. Compaction happens *mid-task*, so an
+# `npm install` — or, if the expected build is missing, a 180-second
+# `playwright install` — would run against the same `node_modules` as whatever
+# command is in flight. `tests/deploy/session-start-hook-scope.test.ts` pins
+# the matcher, because nothing else reads that file.
 set -euo pipefail
 
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
