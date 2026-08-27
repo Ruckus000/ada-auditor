@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Permits and licences — Township of Fairview</title>
+    <style>
+      body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #1a1a1a; background: #fff; }
+      .masthead { background: #14345c; color: #fff; padding: 18px 28px; }
+      main { padding: 28px; max-width: 820px; }
+      input, select { padding: 7px; font-size: 15px; width: 300px; }
+      .field { margin-bottom: 18px; }
+      .choices { margin: 12px 0 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="masthead"><h1>Permits and licences</h1></div>
+
+    <main>
+      <h2>Find a permit</h2>
+      <div class="field">
+        <input id="permit-search" type="text" title="Search permits" />
+        <button type="button">Search</button>
+      </div>
+
+      <h2>Apply</h2>
+      <form action="#" method="post">
+        <p>What are you applying for?</p>
+        <div id="permit-choices" class="choices">
+          <input type="radio" id="permit-build" name="permit" value="build" />
+          <label for="permit-build">Building permit</label><br />
+          <input type="radio" id="permit-fence" name="permit" value="fence" />
+          <label for="permit-fence">Fence or deck</label><br />
+          <input type="radio" id="permit-sign" name="permit" value="sign" />
+          <label for="permit-sign">Business sign</label>
+        </div>
+
+        <div class="field">
+          <label for="applicant-email">Email address</label><br />
+          <input id="applicant-email" name="email" type="email" aria-label="Contact" />
+        </div>
+
+        <div class="field">
+          <label for="applicant-address">Property address</label><br />
+          <input id="applicant-address" name="address" type="text" />
+        </div>
+
+        <button type="submit">Send application</button>
+      </form>
+
+      <h2>Fees</h2>
+      <p>
+        Building permits are charged at $12 per $1,000 of construction value, with a
+        $150 minimum. Fence and deck permits are a flat $85.
+      </p>
+    </main>
+  </body>
+</html>

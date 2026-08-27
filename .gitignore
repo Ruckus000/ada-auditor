@@ -6,7 +6,15 @@ coverage/
 .env
 .env*.local
 .cursor/
-.claude/
+# `.claude/` is where agent worktrees land — full checkouts, each with its own
+# `.next`, and none of them belongs in git. The two exceptions are the session
+# hook and the settings that register it: a hook nobody can clone is a hook
+# that repairs one container and no others. Anchored with `*` rather than the
+# bare directory, because git will not reconsider a negation inside a
+# directory it has already excluded.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 .serena/
 tsconfig.tsbuildinfo
 # Run output only. Anchored to the repo root on purpose: a bare `artifacts/`
@@ -26,3 +34,7 @@ tsconfig.tsbuildinfo
 # nothing in src/, tests/ or CI reads them.
 .agents/
 skills-lock.json
+
+# Blind-test output. The fixture sites and their answer keys are checked in;
+# what one run of the auditor made of them is a measurement, not a source.
+/.blind-test/

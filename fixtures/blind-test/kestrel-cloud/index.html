@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kestrel Cloud — object storage that bills by the second</title>
+    <style>
+      body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #111417; color: #e8eaed; }
+      .bar { display: flex; align-items: center; gap: 18px; padding: 16px 28px; border-bottom: 1px solid #23282d; }
+      .bar a { color: #9fd0ff; text-decoration: none; }
+      .fauxbtn { background: #1f2429; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+      main { padding: 36px 28px; max-width: 900px; }
+      .card { background: #1b1b1b; padding: 22px; border-radius: 8px; margin: 18px 0; }
+      .muted { color: #6f6f6f; font-size: 15px; }
+      .stat { font-size: 40px; margin: 0; }
+      .cta { background: #1f6feb; color: #ffffff; border: 0; padding: 12px 20px; font-size: 16px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <strong>Kestrel Cloud</strong>
+      <div id="menu-toggle" class="fauxbtn" onclick="document.getElementById('drawer').hidden = !document.getElementById('drawer').hidden">Menu</div>
+      <a href="pricing.html">Pricing</a>
+      <a href="docs.html">Docs</a>
+      <a href="signup.html">Start free</a>
+    </div>
+
+    <div id="drawer" hidden>
+      <a href="pricing.html">Pricing</a>
+      <a href="docs.html">Docs</a>
+    </div>
+
+    <main>
+      <h1>Object storage that bills by the second</h1>
+
+      <p>
+        Kestrel keeps your buckets in three regions and charges for the bytes you
+        actually hold, measured every second rather than averaged over a month.
+      </p>
+
+      <button id="hero-cta" class="cta" type="button">Create a free bucket</button>
+
+      <div class="card">
+        <h3 id="stat-uptime" class="stat">99.97%</h3>
+        <p class="muted" id="stat-uptime-note">Measured uptime across all regions, last twelve months.</p>
+      </div>
+
+      <div class="card">
+        <h3 id="stat-latency" class="stat">41 ms</h3>
+        <p class="muted" id="stat-latency-note">Median first-byte latency from the nearest region.</p>
+      </div>
+
+      <h2>How teams use it</h2>
+      <p>
+        Nightly database snapshots, build artifacts that expire after a week, and
+        user uploads that need a signed URL and nothing else.
+      </p>
+    </main>
+  </body>
+</html>

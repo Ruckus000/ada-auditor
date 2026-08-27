@@ -65,6 +65,7 @@ socket-free, so do not add either back into it.
 npm run migrate                          # apply src/integrations/persistence/schema.sql
 npm run operator -- add                  # create the first operator account
 npm run smoke:real -- --url <site>       # one real audit through a running `next start`
+npm run blind:test                       # audit three planted fixture sites, score against their answer keys
 npm run prune:artifacts                  # delete evidence past its retention window
 ```
 

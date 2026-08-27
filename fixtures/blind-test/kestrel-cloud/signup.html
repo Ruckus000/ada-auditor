@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Start free — Kestrel Cloud</title>
+    <style>
+      body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background: #111417; color: #e8eaed; }
+      .bar { display: flex; gap: 18px; padding: 16px 28px; border-bottom: 1px solid #23282d; }
+      .bar a { color: #9fd0ff; text-decoration: none; }
+      main { padding: 36px 28px; max-width: 640px; }
+      input { display: block; width: 320px; padding: 9px; margin-bottom: 16px; background: #0d1013; color: #e8eaed; border: 1px solid #2f3843; }
+      label { display: block; margin-bottom: 6px; }
+      .err { color: #ff6b6b; }
+      .dialog { background: #191d21; border: 1px solid #2f3843; border-radius: 8px; padding: 20px; margin-top: 28px; }
+      .cta { background: #1f6feb; color: #fff; border: 0; padding: 12px 20px; font-size: 16px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <a href="index.html">Home</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="docs.html">Docs</a>
+      <a href="signup.html">Start free</a>
+    </div>
+
+    <main>
+      <h1>Start free</h1>
+
+      <p id="pwd-error" class="err">Error: invalid input.</p>
+
+      <form action="#" method="post">
+        <label for="signup-email">Work email</label>
+        <input id="signup-email" name="email" type="email" autocomplete="nope" />
+
+        <label for="signup-password">Password</label>
+        <input
+          id="signup-password"
+          name="password"
+          type="password"
+          placeholder="12+ characters, one number, one symbol"
+        />
+
+        <label for="signup-org">Organisation</label>
+        <input id="signup-org" name="org" type="text" autocomplete="organization" />
+
+        <button class="cta" type="submit">Create account</button>
+      </form>
+
+      <div id="trial-dialog" class="dialog" role="dialog">
+        <p>Your trial includes 50 GB of storage and 100 GB of transfer for thirty days.</p>
+        <button type="button">Got it</button>
+      </div>
+    </main>
+  </body>
+</html>

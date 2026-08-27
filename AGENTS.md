@@ -324,6 +324,34 @@ Slices 2 and 4-6 follow from that.
 
 Read this before claiming something works.
 
+- **Three planted sites now say what the audit misses, in numbers.**
+  `npm run blind:test` walks `fixtures/blind-test/` — a dentist's brochure, a
+  township, a SaaS signup, four pages each — carrying 44 barriers and correct
+  implementations recorded in an answer key written *before* the first run,
+  from the WCAG criterion rather than from axe's rule list. The 2026-08-26 run
+  (`docs/research/blind-test/2026-08-26-three-fixture-sites.md`): all three
+  sites `fail`, 16 of 19 predicted violations reported and 14 of those by the
+  predicted rule, both planted undecided cases in the human-review queue, two
+  real barriers nobody planted, and **zero false positives across seven correct
+  implementations** — that last is the number the seven `clean` rows exist to
+  produce, and the guard on any future decision to enable a noisier rule.
+  What it missed is the part to read: a field labelled only by its placeholder
+  counts as a pass (axe accepts placeholder as an accessible name, while
+  `label-title-only` catches the tooltip case — the product inherits that
+  asymmetry silently); `<div onclick>` navigation is invisible on both sites
+  that use it, because `focus-order-semantics` ships disabled; a broken skip
+  link surfaced only as `region`, so the report names content outside landmarks
+  and not the broken bypass; 2.5.3 is unchecked for inputs, whose label is
+  external to them; and a video with no captions is `incomplete`, so a Level A
+  1.2.2 barrier cannot gate — correct under the undecided-never-fails rule, and
+  worth saying out loud for a client publishing recordings.
+  **Fourteen of the 44 need reading comprehension**, which is the advisory's
+  half, and the advisory did not run — no gateway credential and no egress on
+  the machine that ran it — so those are unanswered, not answered wrongly. The
+  sites exist so that one run with a credential produces a comparable
+  scorecard. Every site also scored 97-98 while failing: correct by the
+  score's own definition, and still the number a client quotes back.
+
 - **The AI advisory has still never run against a real site.** It was pinned to
   one vendor's SDK and a key (`ANTHROPIC_API_KEY`) that was set in no Vercel
   environment and no local file, so **every audit this product has ever
