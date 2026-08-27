@@ -342,9 +342,26 @@ Read this before claiming something works.
   the generated half 23/28 "green" collapses to 2/28 semantically true, with
   62 false assertions across 20 documents. The STOP stands, strengthened:
   conformance and truth are different properties, and only the second is
-  remediation. Open from the test: three real documents lost 3–4 headings in
-  conversion (mechanism unprobed), and list-count semantics differ between
-  the instruments.
+  remediation.
+
+- **The remediation-gaps campaign re-scored the same corpora** (dated
+  follow-up in the same results doc, predictions re-registered first):
+  real corpus 13 → **23/31 green on both instruments**, zero invented
+  claims, heading fidelity 31/31 — the original heading-loss and list-count
+  opens are closed (empty headings were the whole loss; lists are compared
+  as items). The eight non-green documents are the product working, not
+  failing: five need a heading-level decision and three need a
+  human-written figure description, and every one carries its punch-list
+  item (`needs` on the summary, INSTRUMENT_VERSION 3). The campaign's
+  registered ≥ 26/31 bar was **missed** — those eight cannot go green
+  without inventing content — and the promise (conformant on both
+  instruments, or a per-item human punch list; never a silent gap, never an
+  invented claim) holds 31/31 real. PDFs whose Word source shares a stem in
+  the same inventory are paired at read time (#149): the offered remediation
+  is converting the source, never repairing the PDF. Known instrument
+  vocabulary gap, deliberately unchased: UA-1 7.21.7 glyph-to-Unicode
+  (emoji embedding) fails one *generated* stratum silently; zero real
+  documents hit it.
 
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run
