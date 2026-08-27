@@ -287,6 +287,12 @@ add('a33-junk-filename', 'Untitled, heading-less, and saved as "Document1.docx":
   expected: { outcome: 'delivered', title: 'no-heading-to-copy', language: 'en-US', headings: 0, tables: 0, lists: 0, figures: 0, gaps: ['2.4.2'] },
 });
 
+add('a35-starts-deep', 'Every heading is H2 or deeper — r13\'s shape. Not a skip *between* headings, so the version-2 punch list delivered it silently while veraPDF failed 7.4.2; version 3 names the deep start as the same authorship decision.', {
+  title: 'Cemetery Rules', lang: 'en-US',
+  body: [heading(2, 'Plot assignments'), para(LOREM), heading(3, 'Fees'), para(LOREM)],
+  expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 2, tables: 0, lists: 0, figures: 0, gaps: [] },
+});
+
 // -- adversarial containers (runner-level refusals) ----------------------
 add('a29-zip-not-docx', 'A valid ZIP holding a text file: soffice cannot load it, and the refusal must name the first conversion step.', {
   special: 'zip-not-docx',
@@ -375,7 +381,7 @@ for (const stratum of STRATA) {
 }
 
 console.log(`wrote ${written} documents and keys to ${OUT}/`);
-if (written !== 34) {
-  console.error(`expected 34 strata, have ${written}`);
+if (written !== 35) {
+  console.error(`expected 35 strata, have ${written}`);
   process.exit(1);
 }

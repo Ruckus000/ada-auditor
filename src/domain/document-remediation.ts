@@ -104,8 +104,13 @@ export type RemediationSummary = {
  * title provenance (POLICY 2026-08-27b/c). Readings across the boundary are
  * `incomparable`, never diffed: our vocabulary change must not read as the
  * client's document changing.
+ *
+ * 3 — the punch list gained the starts-too-deep heading item. The re-run
+ * found a real document failing UA-1 7.4.2 with an empty punch list: its
+ * headings begin at H2+, which is not a *skip between* consecutive headings
+ * and so slipped the version-2 check. Same decision family, new vocabulary.
  */
-export const INSTRUMENT_VERSION = 2;
+export const INSTRUMENT_VERSION = 3;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -184,7 +189,15 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
   for (const heading of structure.headings) {
     const level = Number(/^H(\d)/.exec(heading)?.[1] ?? NaN);
     if (Number.isFinite(level)) {
-      if (previous > 0 && level > previous + 1) {
+      if (previous === 0 && level > 1) {
+        // The first heading is already deep. Not a skip *between* headings,
+        // but the same authorship decision — starting at H1 is theirs to
+        // make, not ours to renumber.
+        needs.push({
+          criterion: '2.4.10',
+          item: `Heading levels start at H${level} — decide whether the document should begin at an H1`,
+        });
+      } else if (previous > 0 && level > previous + 1) {
         needs.push({
           criterion: '2.4.10',
           item: `Heading levels skip from H${previous} to H${level} — decide whether the author meant an H${previous + 1}`,
