@@ -330,9 +330,9 @@ Read this before claiming something works.
   implementations recorded in an answer key written *before* the first run,
   from the WCAG criterion rather than from axe's rule list. The 2026-08-26 run
   (`docs/research/blind-test/2026-08-26-three-fixture-sites.md`): all three
-  sites `fail`, 16 of 19 predicted violations reported by the predicted rule,
-  both planted undecided cases in the human-review queue, two real barriers
-  nobody planted, and **zero false positives across seven correct
+  sites `fail`, 16 of 19 predicted violations reported and 14 of those by the
+  predicted rule, both planted undecided cases in the human-review queue, two
+  real barriers nobody planted, and **zero false positives across seven correct
   implementations** — that last is the number the seven `clean` rows exist to
   produce, and the guard on any future decision to enable a noisier rule.
   What it missed is the part to read: a field labelled only by its placeholder

@@ -41,7 +41,7 @@ By what was planted:
 
 | Planted as | Count | Seen | Notes |
 |---|---|---|---|
-| `deterministic` | 19 | 16 | 1 downgraded to needs-review, 2 missed |
+| `deterministic` | 19 | 16 | 14 by the predicted rule, 2 by another (§4); 1 downgraded to needs-review, 2 missed |
 | `needs-review` | 4 | 2 | 2 missed |
 | `judgement` | 14 | 1 | advisory dark; the one hit was caught by a rule |
 | `clean` | 7 | 7 quiet | **zero false positives** |
@@ -87,13 +87,21 @@ This is the largest single gap the test found, because it is both severe (2.1.1
 Level A) and common in exactly the hand-rolled-widget sites this product is
 sold against.
 
-### 4. A broken skip link is noticed for the wrong reason (B1)
+### 4. Noticed, but for a different reason (B1, C6)
 
 The skip link targets `#main-content`, which does not exist. `skip-link` did
 not fire; `region` did, because the link sits outside a landmark. An operator
 reading that report is told the page has content outside landmarks, not that
 the bypass mechanism is broken. The scorer records this as
 `predictedRuleFired: false` for exactly this reason.
+
+C6 is the same shape and almost none of the cost. The annual-billing switch
+has no accessible name; `aria-toggle-field-name` did not fire and
+`button-name` did — a more general rule naming the *same* defect, and at
+critical rather than `region`'s minor. Reported for a different reason is not
+the same as reported uselessly, and the difference between these two is why
+the scorer records the substitution rather than scoring it: 16 of the 19 were
+reported, 14 by the rule predicted for them.
 
 ### 5. Label-in-name is unchecked for inputs (B9)
 
@@ -132,8 +140,9 @@ advisory can reach**, and one of them was caught by accident.
   decorative image with `alt=""`, a properly labelled field, a valid
   `autocomplete` token, and a `lang`-tagged foreign-language quote. Nothing was
   invented.
-- 16 of 19 predicted violations, by the predicted rule, with the right
-  criterion and level on each.
+- 16 of 19 predicted violations reported, **14 of them by the predicted rule**,
+  with the right criterion and level on each. The other two fired a different
+  rule (§4) — which cost nothing in one case and everything in the other.
 - Both planted needs-review cases — white text over a photograph and over a
   gradient — landed in the human-review queue rather than being guessed at.
 - Two barriers nobody planted: `empty-table-header` on the township's meetings
@@ -153,7 +162,9 @@ advisory can reach**, and one of them was caught by accident.
    disabled upstream for false-positive reasons. Turning it on has a cost this
    test can now measure — the seven `clean` rows are the guard against it.
 4. **Consider surfacing "reported, but not for this reason".** The skip-link
-   case is the shape of a report that reads as coverage and is not.
+   case is the shape of a report that reads as coverage and is not — and C6 is
+   the shape that reads the same way and *is*, so the distinction has to be
+   made per finding rather than by counting.
 
 ## Reproducing
 
