@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  cleanRate,
   coreHitRate,
   scoreSite,
   type Expectation,
@@ -229,5 +230,50 @@ describe('blind-test scorer', () => {
     });
 
     expect(coreHitRate(score)).toEqual({ hits: 1, total: 2 });
+  });
+
+  /**
+   * A `clean` row is a correctly built element that must produce no finding.
+   * Leaving one alone is not a barrier the auditor saw, and counting it as one
+   * flatters the tool that sees least: with these three expectations an auditor
+   * that reported nothing at all would score 1/3 on the old arithmetic, because
+   * the clean row passes by doing nothing. Worse, the seven `clean` rows exist
+   * as the guard against enabling a noisier rule — so under the old sum,
+   * strengthening that guard raised the hit rate.
+   */
+  it('keeps clean rows out of the barrier rate and reports them separately', () => {
+    const score = scoreSite({
+      site: 'demo',
+      expectations: [
+        expectation({ id: 'X1', selector: '#hero' }),
+        expectation({ id: 'X2', selector: '#missed', axeRule: 'label' }),
+        expectation({ id: 'X3', selector: '#tidy', expect: 'clean', axeRule: undefined }),
+      ],
+      findings: [finding()],
+      advisory: [],
+    });
+
+    expect(score.results.map((result) => result.outcome)).toEqual([
+      'hit',
+      'miss',
+      'clean-pass',
+    ]);
+    // One barrier of two, not two of three.
+    expect(coreHitRate(score)).toEqual({ hits: 1, total: 2 });
+    expect(cleanRate(score)).toEqual({ quiet: 1, total: 1 });
+  });
+
+  it('counts a clean row reported against as noisy rather than as a miss', () => {
+    const score = scoreSite({
+      site: 'demo',
+      expectations: [expectation({ expect: 'clean', axeRule: undefined })],
+      findings: [finding()],
+      advisory: [],
+    });
+
+    expect(score.results[0].outcome).toBe('false-positive');
+    expect(cleanRate(score)).toEqual({ quiet: 0, total: 1 });
+    // No barriers were planted, so there is no rate to report.
+    expect(coreHitRate(score)).toEqual({ hits: 0, total: 0 });
   });
 });

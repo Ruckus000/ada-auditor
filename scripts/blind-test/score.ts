@@ -255,11 +255,43 @@ export function scoreSite(input: {
   };
 }
 
-/** Core expectations seen by the mechanism that was supposed to see them. */
+/**
+ * Core barriers seen by the mechanism that was supposed to see them.
+ *
+ * `clean` rows are excluded from both halves of the fraction, because a
+ * correctly built element correctly left alone is not a barrier anything
+ * noticed. Counting them here flattered every site and flattered a bad tool
+ * most: with three of Ridgeline's fifteen core rows `clean`, an auditor that
+ * detected nothing whatsoever still scored 3/15 rather than zero, and adding
+ * more `clean` rows — which the false-positive guard wants — would have raised
+ * the number without improving detection.
+ *
+ * `probe` rows stay out for the reason they always did: they are open
+ * questions, not behaviour the product claims.
+ */
 export function coreHitRate(score: SiteScore): { hits: number; total: number } {
-  const core = score.results.filter((result) => result.expectation.weight === 'core');
-  const seen = core.filter((result) =>
-    ['hit', 'upgraded', 'caught-by-rules', 'clean-pass'].includes(result.outcome),
+  const barriers = score.results.filter(
+    (result) => result.expectation.weight === 'core' && result.expectation.expect !== 'clean',
   );
-  return { hits: seen.length, total: core.length };
+  const seen = barriers.filter((result) =>
+    ['hit', 'upgraded', 'caught-by-rules'].includes(result.outcome),
+  );
+  return { hits: seen.length, total: barriers.length };
+}
+
+/**
+ * Clean rows left alone, over clean rows planted — the other measurement, kept
+ * apart from the first rather than folded into it.
+ *
+ * Every `clean` row counts regardless of weight: whether the tool invents
+ * findings is not a question about which behaviours the product claims, so the
+ * `core`/`probe` split does not apply to it.
+ */
+export function cleanRate(score: SiteScore): { quiet: number; total: number } {
+  const clean = score.results.filter((result) => result.expectation.expect === 'clean');
+
+  return {
+    quiet: clean.filter((result) => result.outcome === 'clean-pass').length,
+    total: clean.length,
+  };
 }

@@ -30,7 +30,13 @@ import { mkdtemp } from 'node:fs/promises';
 import { runBrowserAudit } from '../../src/integrations/browser/run-browser-audit';
 import { advisoryModel } from '../../src/services/ai-advisory';
 import type { DeterministicFinding } from '../../src/services/deterministic-audit';
-import { coreHitRate, scoreSite, type Expectation, type ScoredFinding } from './score';
+import {
+  cleanRate,
+  coreHitRate,
+  scoreSite,
+  type Expectation,
+  type ScoredFinding,
+} from './score';
 
 const SITES_ROOT = join(process.cwd(), 'fixtures/blind-test');
 const DEFAULT_SITES = ['ridgeline-dental', 'fairview-township', 'kestrel-cloud'];
@@ -174,10 +180,15 @@ async function main() {
       for (const sentence of advisory) console.log(`    - ${sentence}`);
     }
 
+    // Two numbers rather than one: barriers found is what the auditor is for,
+    // and clean rows left alone is the guard on it. Merged, a site could raise
+    // its rate by planting more correct markup.
     const core = coreHitRate(score);
+    const clean = cleanRate(score);
     const line =
-      `${manifest.label}: ${core.hits}/${core.total} core expectations seen · ` +
-      `${score.counts.miss} missed · ${score.counts['false-positive']} false positives · ` +
+      `${manifest.label}: ${core.hits}/${core.total} core barriers seen · ` +
+      `${score.counts.miss} missed · ${clean.quiet}/${clean.total} clean rows quiet · ` +
+      `${score.counts['false-positive']} false positives · ` +
       `verdict ${report.ciStatus} · ${deterministic.length} deterministic findings`;
     summaries.push(line);
     console.log(`\n  ${line}`);
