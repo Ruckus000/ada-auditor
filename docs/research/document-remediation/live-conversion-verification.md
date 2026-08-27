@@ -89,8 +89,14 @@ audits everything else — in three seconds.
 
 ## What this run leaves open
 
-- The cap-crowding question above.
+- ~~The cap-crowding question above.~~ **Answered** by the per-kind cap:
+  17 Word documents recorded on the same site where the global cap recorded
+  zero — see
+  [production-verification-2026-08-26.md](production-verification-2026-08-26.md).
 - Extensionless document URLs remain a recorded miss (unchanged).
-- Conversion still leaves no persistent record — the bytes go to the
+- ~~Conversion still leaves no persistent record — the bytes go to the
   operator, the log gets `logSafe` counts. The audit-trail schema is the
-  next deliberate decision.
+  next deliberate decision.~~ **Built** (#117, #120): `client_documents` /
+  `document_inspections` / `document_conversions`, each conversion recording
+  the SHA-256 of the bytes in and the bytes out, with the delivered PDF stored
+  for re-download.
