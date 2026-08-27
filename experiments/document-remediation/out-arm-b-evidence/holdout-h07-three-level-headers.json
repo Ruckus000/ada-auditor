@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h07-three-level-headers",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Consolidated Movements",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 1,
+    "tables": 1,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

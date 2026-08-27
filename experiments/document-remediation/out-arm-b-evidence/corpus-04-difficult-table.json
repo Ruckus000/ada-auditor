@@ -1,0 +1,22 @@
+{
+  "document": "corpus-04-difficult-table",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Fleet Utilisation Detail",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 1,
+    "tables": 0,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

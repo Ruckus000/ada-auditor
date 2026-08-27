@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h11-chart-labels-as-headings",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Utilisation Dashboard",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 4,
+    "tables": 0,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

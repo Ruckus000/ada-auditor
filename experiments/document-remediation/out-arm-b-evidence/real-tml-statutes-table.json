@@ -1,0 +1,23 @@
+{
+  "document": "real-tml-statutes-table",
+  "population": "real",
+  "outcome": "graded",
+  "summary": {
+    "title": "no-heading-to-copy",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 15,
+    "headings": 1,
+    "tables": 15,
+    "lists": 43,
+    "figures": 0,
+    "gaps": [
+      "2.4.2: the document has no title, and states no heading to copy one from"
+    ]
+  },
+  "verapdf": {
+    "pass": false,
+    "failedRules": []
+  },
+  "deliverable": false
+}

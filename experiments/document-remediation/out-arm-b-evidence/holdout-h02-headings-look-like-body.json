@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h02-headings-look-like-body",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Berth Allocation Procedure",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 0,
+    "tables": 0,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

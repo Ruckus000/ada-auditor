@@ -1,0 +1,22 @@
+{
+  "document": "corpus-06-images-uncaptioned",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Asset Register Extract",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 2,
+    "headings": 1,
+    "tables": 1,
+    "lists": 0,
+    "figures": 5,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

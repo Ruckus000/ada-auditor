@@ -1,0 +1,22 @@
+{
+  "document": "real-pdf-p16",
+  "population": "real",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "MANCHESTER TOWN BOARD - REGULAR MEETING (CONT.)",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 8,
+    "headings": 14,
+    "tables": 0,
+    "lists": 21,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": false,
+    "failedRules": []
+  },
+  "deliverable": false
+}

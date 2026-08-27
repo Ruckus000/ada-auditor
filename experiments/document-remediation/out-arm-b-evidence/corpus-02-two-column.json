@@ -1,0 +1,22 @@
+{
+  "document": "corpus-02-two-column",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Coastal Depot Review",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 2,
+    "headings": 3,
+    "tables": 0,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

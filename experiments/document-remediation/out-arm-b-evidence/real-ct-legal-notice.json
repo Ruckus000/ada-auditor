@@ -1,0 +1,22 @@
+{
+  "document": "real-ct-legal-notice",
+  "population": "real",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "MUNICIPAL LEGAL NOTICE REQUIREMENTS",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 11,
+    "headings": 10,
+    "tables": 9,
+    "lists": 2,
+    "figures": 3,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": false,
+    "failedRules": []
+  },
+  "deliverable": false
+}

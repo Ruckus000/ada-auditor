@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h14-mixed-scan",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Lease File Bundle",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 3,
+    "headings": 3,
+    "tables": 0,
+    "lists": 0,
+    "figures": 1,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

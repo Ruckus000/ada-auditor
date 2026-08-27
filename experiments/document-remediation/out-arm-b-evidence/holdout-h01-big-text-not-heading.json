@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h01-big-text-not-heading",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Tariff Schedule 2026",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 6,
+    "tables": 0,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

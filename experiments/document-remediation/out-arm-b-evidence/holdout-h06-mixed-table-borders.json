@@ -1,0 +1,22 @@
+{
+  "document": "holdout-h06-mixed-table-borders",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Depot Cost Comparison",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 1,
+    "headings": 2,
+    "tables": 1,
+    "lists": 0,
+    "figures": 0,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}

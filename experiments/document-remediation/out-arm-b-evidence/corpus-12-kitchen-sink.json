@@ -1,0 +1,22 @@
+{
+  "document": "corpus-12-kitchen-sink",
+  "population": "generated",
+  "outcome": "graded",
+  "summary": {
+    "title": "already-titled",
+    "titleText": "Coastal Depot: Annual Review 2026",
+    "sourceLanguage": "en",
+    "tagged": true,
+    "pages": 6,
+    "headings": 11,
+    "tables": 1,
+    "lists": 6,
+    "figures": 4,
+    "gaps": []
+  },
+  "verapdf": {
+    "pass": true,
+    "failedRules": []
+  },
+  "deliverable": true
+}
