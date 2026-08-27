@@ -90,3 +90,37 @@ export function runVerdict(input: VerdictInput): VerdictKind {
 
   return unresolved ? 'risk' : 'pass';
 }
+
+/**
+ * How a score is said, everywhere one is said.
+ *
+ * `[V]` The blind test measured the defect this exists to fix: every planted
+ * site scored 97–98 while failing, and a bare "98" beside `fail` is the
+ * number a client quotes back. The score is a rate over the automated checks
+ * axe evaluated — undecided checks excluded, advisory findings excluded — and
+ * `services/score.ts` documents why that is the defensible construction. What
+ * was missing was the label saying so at the point of reading.
+ *
+ * One label, one formatter, one explainer, exported from the same seam as the
+ * verdict so no surface hand-builds its own phrasing — the steady-state rule
+ * that exists because keying report copy off a locally-invented rendering
+ * once made the client's document disagree with every operator screen.
+ */
+export const SCORE_STAT_LABEL = 'Checks passed';
+
+/** `98` → `98%`; null → an em dash, because an unscored run did not score badly. */
+export function scoreStatValue(score: number | null | undefined): string {
+  return score === null || score === undefined ? '—' : `${score}%`;
+}
+
+/** The inline form, for status lines: `98% checks passed` / `not scored`. */
+export function scoreLine(score: number | null | undefined): string {
+  return score === null || score === undefined ? 'not scored' : `${score}% checks passed`;
+}
+
+/**
+ * The denominator in words. Rendered wherever there is room for a sentence,
+ * and always subordinate to the verdict.
+ */
+export const SCORE_EXPLAINER =
+  'The percentage is the share of evaluated automated checks that passed — checks needing human review are excluded. The verdict above is decided by blocking findings, not by this rate.';

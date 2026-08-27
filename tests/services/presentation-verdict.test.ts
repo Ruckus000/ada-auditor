@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  SCORE_EXPLAINER,
+  SCORE_STAT_LABEL,
+  scoreLine,
+  scoreStatValue,
   runVerdict,
   type VerdictFinding,
 } from '../../src/services/presentation/verdict';
@@ -101,5 +105,26 @@ describe('runVerdict', () => {
   it('does not require a status', () => {
     // Records written before `status` existed still have to render.
     expect(runVerdict({ ciStatus: 'pass', findings: [] })).toBe('pass');
+  });
+});
+
+describe('score copy', () => {
+  it('always says what the number is a rate of', () => {
+    expect(SCORE_STAT_LABEL).toBe('Checks passed');
+    expect(scoreStatValue(98)).toBe('98%');
+    expect(scoreLine(98)).toBe('98% checks passed');
+  });
+
+  it('an unscored run is an em dash, never a zero or a percentage', () => {
+    expect(scoreStatValue(null)).toBe('—');
+    expect(scoreStatValue(undefined)).toBe('—');
+    expect(scoreLine(null)).toBe('not scored');
+  });
+
+  it('the explainer subordinates the rate to the verdict', () => {
+    // The defect this copy exists to fix: 97-98 beside `fail` on every
+    // planted blind-test site, correct by definition and quoted as a grade.
+    expect(SCORE_EXPLAINER).toContain('automated checks');
+    expect(SCORE_EXPLAINER).toContain('blocking findings');
   });
 });

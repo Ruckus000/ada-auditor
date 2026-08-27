@@ -1,5 +1,10 @@
 import type { SharedReport } from '../../../services/report-view';
 import { describePageEvidence } from '../../../services/presentation/page-evidence';
+import {
+  SCORE_EXPLAINER,
+  SCORE_STAT_LABEL,
+  scoreStatValue,
+} from '../../../services/presentation/verdict';
 import { describeCriterion, summariseCriteria } from '../../../services/wcag-reference';
 import { documentGapKey } from '../../../services/document-regression';
 import { FONT, T } from '../../platform/lib/tokens';
@@ -83,11 +88,15 @@ export function SharedReportPage({
             margin: 0,
           }}
         >
-          <Stat label="Score" value={report.run.score === null ? '—' : String(report.run.score)} />
+          <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(report.run.score)} />
           <Stat label="Must fix" value={String(report.run.mustFix)} />
           <Stat label="Should fix" value={String(report.run.shouldFix)} />
           <Stat label="Pages audited" value={String(report.run.pagesAudited)} />
         </dl>
+
+        <p style={{ margin: 0, fontSize: 12.5, color: T.inkMuted, lineHeight: 1.5 }}>
+          {SCORE_EXPLAINER}
+        </p>
 
         <p style={{ margin: 0, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.55 }}>
           {total === 0

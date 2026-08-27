@@ -809,6 +809,14 @@ describe('platform hydration', () => {
       const body = await anonymous.innerText('body');
       expect(body).toContain('Harness Client');
       expect(body).toContain('button-name');
+      // The score says what it is a rate of, and never stands as a bare grade
+      // beside the verdict: the blind test measured 97-98 next to `fail` on
+      // every planted site, and a bare number is the one a client quotes.
+      // Case-insensitive: the stat label is uppercased by CSS and innerText
+      // reflects the rendered form.
+      expect(body).toMatch(/checks passed/i);
+      expect(body).toContain('decided by blocking findings');
+      expect(body).not.toMatch(/\bScore\b/);
       // The criterion by name, not just its number: this is the page read by
       // people who do not know what 4.1.2 is.
       expect(body).toContain('Name, Role, Value');

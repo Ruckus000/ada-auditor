@@ -6,6 +6,7 @@ import { VERDICT_CHIP, verdictWords } from '../lib/verdict-chip';
 import { T } from '../lib/tokens';
 import { FONT } from '../lib/tokens';
 import { Avatar, ChevronRight, Pill, ScreenHeading, TableHead, TableShell } from './ui';
+import { scoreStatValue } from '../../../services/presentation/verdict';
 
 const COLUMNS =
   'minmax(160px,2.4fr) minmax(96px,1fr) minmax(64px,0.7fr) minmax(56px,0.7fr) minmax(70px,0.8fr) minmax(90px,1.1fr) minmax(56px,0.8fr) 44px';
@@ -53,7 +54,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                 'CLIENT',
                 'VERDICT',
                 'MUST FIX',
-                'SCORE',
+                'CHECKS PASSED',
                 'PAGES',
                 'LAST RUN',
                 'OWNER',
@@ -124,7 +125,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                   {/* An em dash, not a zero: a run we could not score is not a
                       run that scored badly. */}
                   <span style={{ fontSize: 14, fontWeight: 650, color: T.inkSoft }}>
-                    {client.lastRun?.score ?? '—'}
+                    {scoreStatValue(client.lastRun?.score)}
                   </span>
 
                   <span style={{ fontSize: 12.5, color: T.inkMuted }}>
