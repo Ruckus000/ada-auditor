@@ -276,6 +276,11 @@ add('a32-hyperlink', 'An external hyperlink. `[V]` Two real municipal documents 
   expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 1, tables: 0, lists: 0, figures: 0, gaps: [] },
 });
 
+add('a34-captioned-figure', 'A figure with no alt but a real caption ("Photo: ...") in the next paragraph: the author already described the image, and the pipeline transcribes that description into /Alt. POLICY 2026-08-27c (user-approved).', {
+  title: 'Culvert Report', lang: 'en-US', image: true,
+  body: [heading(1, 'Culvert Report'), figure(null), para('Photo: the culvert inlet before clearing, facing north')],
+  expected: { outcome: 'delivered', title: 'already-titled', language: 'en-US', headings: 1, tables: 0, lists: 0, figures: 1, gaps: [] },
+});
 add('a33-junk-filename', 'Untitled, heading-less, and saved as "Document1.docx": the junk-refusal table keeps the honest 2.4.2 gap, because a bad derived title is worse than a reported absence.', {
   title: null, lang: 'en-US', outName: 'Document1',
   body: [para(LOREM)],
@@ -370,7 +375,7 @@ for (const stratum of STRATA) {
 }
 
 console.log(`wrote ${written} documents and keys to ${OUT}/`);
-if (written !== 33) {
-  console.error(`expected 33 strata, have ${written}`);
+if (written !== 34) {
+  console.error(`expected 34 strata, have ${written}`);
   process.exit(1);
 }

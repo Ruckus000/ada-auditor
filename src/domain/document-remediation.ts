@@ -69,6 +69,13 @@ export type RemediationSummary = {
   figures: number;
   /** What is still wrong, each naming its WCAG success criterion. */
   gaps: string[];
+  /**
+   * The punch list: each item is one thing a HUMAN still has to do, precise
+   * enough to act on without opening this codebase. The remediation promise
+   * is that a document comes back either fully conformant or with this list —
+   * never a silent gap. Absent (never empty) when nothing needs a person.
+   */
+  needs?: Array<{ criterion: string; item: string }>;
 };
 
 /**
@@ -92,7 +99,13 @@ export type RemediationSummary = {
  * gap string changing is NOT a version bump — the comparator already keys on
  * the criterion, not the count.
  */
-export const INSTRUMENT_VERSION = 1;
+/**
+ * 2 — the summary gained the `needs` punch list and the `filename-derived`
+ * title provenance (POLICY 2026-08-27b/c). Readings across the boundary are
+ * `incomparable`, never diffed: our vocabulary change must not read as the
+ * client's document changing.
+ */
+export const INSTRUMENT_VERSION = 2;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -141,7 +154,47 @@ export function summarise(provenance: ConversionProvenance): RemediationSummary 
     lists: structure.lists.length,
     figures: structure.figures.length,
     gaps: gapsIn(provenance),
+    ...needsIn(provenance),
   };
+}
+
+/**
+ * The punch list, from the same structure the gaps read.
+ *
+ * Two shapes today, both places automation has honestly run out: a figure
+ * with no description (and no caption to transcribe one from — captioned
+ * figures never reach this), and a heading hierarchy whose LEVELS skip —
+ * renumbering an author's structure would be invention, so the skip is
+ * reported where a person can decide what the author meant.
+ */
+function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'needs'> {
+  const { structure } = provenance;
+  const needs: Array<{ criterion: string; item: string }> = [];
+
+  structure.figures.forEach((figure, index) => {
+    if (figure.alt === null) {
+      needs.push({
+        criterion: '1.1.1',
+        item: `Figure ${index + 1} needs a human-written description — no alt text, and no caption to transcribe one from`,
+      });
+    }
+  });
+
+  let previous = 0;
+  for (const heading of structure.headings) {
+    const level = Number(/^H(\d)/.exec(heading)?.[1] ?? NaN);
+    if (Number.isFinite(level)) {
+      if (previous > 0 && level > previous + 1) {
+        needs.push({
+          criterion: '2.4.10',
+          item: `Heading levels skip from H${previous} to H${level} — decide whether the author meant an H${previous + 1}`,
+        });
+      }
+      previous = level;
+    }
+  }
+
+  return needs.length > 0 ? { needs } : {};
 }
 
 /**

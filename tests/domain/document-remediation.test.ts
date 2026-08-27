@@ -225,3 +225,43 @@ describe('titleFromFilename', () => {
     expect(derived!.length).toBeLessThanOrEqual(200);
   });
 });
+
+describe('the punch list', () => {
+  const structure = (over: object) =>
+    documentStructureSchema.parse({
+      structureElements: 10, textChars: 100, images: 0, pages: 1, lang: 'en',
+      title: 'T', headings: [], headingTexts: [], figures: [], tables: [], lists: [], order: [],
+      ...over,
+    });
+  const provenance = (over: object) => ({
+    title: { kind: 'already-titled' as const, title: 'T' },
+    sourceLanguage: 'en',
+    structure: structure(over),
+  });
+
+  it('names each undescribed figure as one actionable item', () => {
+    const s = summarise(provenance({
+      figures: [
+        { type: 'Figure', alt: null, actualText: null },
+        { type: 'Figure', alt: 'described', actualText: null },
+        { type: 'Figure', alt: null, actualText: null },
+      ],
+      images: 3,
+    }));
+    expect(s.needs?.map((n) => n.criterion)).toEqual(['1.1.1', '1.1.1']);
+    expect(s.needs?.[0].item).toContain('Figure 1');
+    expect(s.needs?.[1].item).toContain('Figure 3');
+  });
+
+  it('names a heading-level skip as a decision, not a fix', () => {
+    const s = summarise(provenance({ headings: ['H1', 'H3'] }));
+    expect(s.needs).toEqual([
+      { criterion: '2.4.10', item: 'Heading levels skip from H1 to H3 — decide whether the author meant an H2' },
+    ]);
+  });
+
+  it('is absent, never empty, when nothing needs a person', () => {
+    const s = summarise(provenance({ headings: ['H1', 'H2'] }));
+    expect('needs' in s).toBe(false);
+  });
+});

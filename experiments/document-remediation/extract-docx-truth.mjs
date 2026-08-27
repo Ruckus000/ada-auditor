@@ -66,11 +66,17 @@ export function extractTruth(docx) {
     if (level !== null) headingLevels.push(level);
   }
 
-  // Figures and their alt: every inline/anchored drawing has a docPr; alt is
-  // its descr attribute, present or not.
+  // Figures and their alt, in BOTH image dialects: DrawingML (wp:docPr,
+  // descr= carries the alt) and VML (`[V]` one real municipal document held
+  // its two images as OLE-embedded v:shape/v:imagedata WMFs — invisible to a
+  // docPr-only count, which mis-read the pipeline's honest 1.1.1 gap as an
+  // import invention). VML alt lives on the shape's alt= attribute.
   const docPr = [...doc.matchAll(/<wp:docPr [^>]*>/g)].map((m) => m[0]);
-  const figures = docPr.length;
-  const figuresWithAlt = docPr.filter((tag) => /descr="[^"]/.test(tag)).length;
+  const vmlWithImage = [...doc.matchAll(/<v:shape\b[^>]*>(?:(?!<\/v:shape>)[\s\S])*?<v:imagedata/g)].map((m) => m[0]);
+  const figures = docPr.length + vmlWithImage.length;
+  const figuresWithAlt =
+    docPr.filter((tag) => /descr="[^"]/.test(tag)).length +
+    vmlWithImage.filter((block) => /<v:shape\b[^>]*\balt="[^"]/.test(block)).length;
 
   // Language: the docDefaults run language — absent means the document
   // declares none, which is itself the claim under test in one stratum.

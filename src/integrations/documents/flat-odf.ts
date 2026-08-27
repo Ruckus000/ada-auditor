@@ -209,3 +209,45 @@ export function removeEmptyHeadings(xml: string): { xml: string; removed: number
     });
   return { xml: cleaned, removed };
 }
+
+/**
+ * Caption shapes an author actually writes. Conservative on purpose: a
+ * paragraph that merely FOLLOWS an image is not a description of it, but one
+ * beginning "Figure 3:" or "Photo —" exists for no other reason.
+ */
+const CAPTION_SHAPE =
+  /^\s*(?:figure|fig\.?|photo(?:graph)?|image|map|chart|illustration|exhibit)\b[\s\S]{0,300}$/i;
+
+/**
+ * Transcribes an adjacent caption into an image's alternative description.
+ *
+ * The same move as title-from-heading: the author already described the
+ * image — in a caption a sighted reader sees beside it — and transcribing
+ * that description into `svg:desc` (which the tagged-PDF export carries into
+ * `/Alt` — `[V]` verified empirically, and only when the element sits before
+ * the frame's close tag) moves it where assistive technology can reach.
+ * Images with no caption are left alone: their absence of a description is a
+ * fact for the punch list, not something to paper over. The VLM ban stands —
+ * nothing here generates a description.
+ */
+export function deriveAltFromCaptions(xml: string): { xml: string; derived: number } {
+  let derived = 0;
+  const out = xml.replace(
+    /(<draw:frame\b[^>]*>)([\s\S]*?)(<\/draw:frame>)(\s*(?:<\/text:p>)?\s*<text:p[^>]*>)([\s\S]*?)(<\/text:p>)/g,
+    (whole, open: string, inner: string, close: string, between: string, para: string, paraClose: string) => {
+      if (/<svg:(?:desc|title)>/.test(inner)) {
+        return whole;
+      }
+      const caption = para.replace(/<[^>]+>/g, '').trim();
+      if (caption === '' || !CAPTION_SHAPE.test(caption)) {
+        return whole;
+      }
+      derived += 1;
+      // No re-encoding: `caption` was cut FROM this XML with only tags
+      // stripped, so its entities (&amp; and friends) are already in valid
+      // XML form — encoding again would deliver "&amp;amp;" to a reader.
+      return `${open}${inner}<svg:desc>${caption}</svg:desc>${close}${between}${para}${paraClose}`;
+    },
+  );
+  return { xml: out, derived };
+}
