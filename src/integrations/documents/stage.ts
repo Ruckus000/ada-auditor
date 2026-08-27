@@ -75,10 +75,24 @@ export type StageOutcome = { ok: true } | { ok: false; failure: StageFailure };
 export type StageExecutor = (
   bin: string,
   args: string[],
-  options: { timeout: number; maxBuffer: number },
+  /**
+   * `env` is optional and absent for the Java stages, which inherit the
+   * process environment. `convert.ts` sets it, because a bundled LibreOffice
+   * needs `LD_LIBRARY_PATH` and a writable `HOME` that the deployed process
+   * does not otherwise have.
+   */
+  options: { timeout: number; maxBuffer: number; env?: Env },
 ) => Promise<{ stdout: string; stderr: string }>;
 
-const defaultExecutor: StageExecutor = (bin, args, options) => execFileAsync(bin, args, options);
+/**
+ * `Env` is deliberately looser than Node's `ProcessEnv`, which its own comment
+ * in `java-runtime.ts` explains: Next's types make `NODE_ENV` required, so a
+ * two-key object cannot be constructed in a test. The cast is where the two
+ * meet, and it is safe in this direction — every value is a string or absent,
+ * which is all `execFile` reads.
+ */
+const defaultExecutor: StageExecutor = (bin, args, options) =>
+  execFileAsync(bin, args, { ...options, env: options.env as NodeJS.ProcessEnv | undefined });
 
 /** The first line of stderr, which is the part that names the cause. */
 function firstLine(text: string): string {

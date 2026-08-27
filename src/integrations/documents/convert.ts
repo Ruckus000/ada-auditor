@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, extname, join } from 'node:path';
+import { basename, delimiter, extname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { pathToFileURL } from 'node:url';
 
@@ -130,14 +130,46 @@ async function runSoffice(
   step: string,
   expectedOutput: string,
   options: ConvertOptions,
+  runtime: LibreOfficeRuntime & { available: true },
+  home: string,
 ): Promise<{ ok: true } | { ok: false; failure: ConversionFailure }> {
-  const execute = options.executor ?? ((bin, a, o) => execFileAsync(bin, a, o));
+  // The cast is the `Env`/`ProcessEnv` seam described on `defaultExecutor` in
+  // `stage.ts`; same direction, same reason.
+  const execute =
+    options.executor ??
+    ((bin, a, o) => execFileAsync(bin, a, { ...o, env: o.env as NodeJS.ProcessEnv | undefined }));
+  const base = options.env ?? process.env;
 
   try {
     await execute(
       soffice,
       ['--headless', `-env:UserInstallation=${pathToFileURL(profileDir).href}`, ...args],
-      { timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS, maxBuffer: 16 * 1024 * 1024 },
+      {
+        timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+        maxBuffer: 16 * 1024 * 1024,
+        // `libraryPath` is set only for the bundled install — see
+        // `LibreOfficeRuntime` — so it is also the signal for "this is the
+        // deployed function, not somebody's laptop". Both additions below are
+        // deployment fixes and neither is an improvement on a host: HOME is
+        // already writable there, and its fontconfig cache is worth keeping
+        // *shared* rather than rebuilt per conversion.
+        env:
+          runtime.libraryPath === undefined
+            ? base
+            : {
+                ...base,
+                // `/var/task` is read-only, and LibreOffice writes a
+                // fontconfig cache regardless of where its profile lives.
+                // Pointed at the per-run temp directory, which is removed with
+                // everything else on the way out.
+                HOME: home,
+                // Appended, never prepended: a runtime that carries its own
+                // copy of a library should use it, and ours only fill gaps.
+                LD_LIBRARY_PATH: [base.LD_LIBRARY_PATH, runtime.libraryPath]
+                  .filter(Boolean)
+                  .join(delimiter),
+              },
+      },
     );
   } catch (error) {
     const e = error as { stderr?: string; message?: string };
@@ -167,7 +199,8 @@ export async function convertSourceToPdf(
   outputPath: string,
   options: ConvertOptions = {},
 ): Promise<ConversionResult> {
-  const runtime = options.runtime ?? resolveLibreOffice({ env: options.env });
+  const runtime =
+    options.runtime ?? resolveLibreOffice({ env: options.env, root: options.root });
   if (!runtime.available) {
     return { ok: false, failure: { kind: 'unavailable', reason: runtime.reason } };
   }
@@ -186,6 +219,8 @@ export async function convertSourceToPdf(
       'source-to-fodt',
       fodt,
       options,
+      runtime,
+      work,
     );
     if (!toFodt.ok) return toFodt;
 
@@ -209,6 +244,8 @@ export async function convertSourceToPdf(
       'fodt-to-pdf',
       exported,
       options,
+      runtime,
+      work,
     );
     if (!toPdf.ok) return toPdf;
 
