@@ -203,9 +203,22 @@ for (const file of files) {
     // survive, not merely something plausible.
     if (truth?.readable) {
       const fidelity: Record<string, unknown> = {};
-      for (const k of ['headings', 'tables', 'lists', 'figures'] as const) {
+      for (const k of ['headings', 'tables', 'figures'] as const) {
         fidelity[k] = { source: truth[k], delivered: summary[k], preserved: truth[k] === summary[k] };
       }
+      // Lists compare ITEMS, not groups: the export splits one numbering
+      // group into several L structures at interruptions, so group counts
+      // disagree between honest instruments while item counts do not.
+      const deliveredItems = result.provenance.structure.lists.reduce(
+        (total, list) => total + list.items,
+        0,
+      );
+      fidelity.lists = {
+        source: truth.listItems ?? truth.lists,
+        delivered: deliveredItems,
+        preserved: (truth.listItems ?? truth.lists) === deliveredItems,
+        unit: 'items',
+      };
       evidence.fidelity = fidelity;
     }
   }

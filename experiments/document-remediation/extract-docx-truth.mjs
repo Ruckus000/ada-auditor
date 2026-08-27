@@ -11,8 +11,52 @@
 //
 // Usage: node extract-docx-truth.mjs <file.docx|dir> [outDir]
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
+import { readLanguage } from '../../src/integrations/documents/flat-odf.ts';
+
+const SOFFICE = process.env.SOFFICE_PATH ?? '/Applications/LibreOffice.app/Contents/MacOS/soffice';
+
+function extractDocTruthViaFodt(docPath) {
+  const work = mkdtempSync(join(tmpdir(), 'doc-truth-'));
+  try {
+    execFileSync(SOFFICE, [
+      '--headless', `-env:UserInstallation=file://${work}/p`,
+      '--convert-to', 'fodt', '--outdir', work, docPath,
+    ], { stdio: 'ignore', timeout: 120_000 });
+    const fodt = readdirSync(work).find((f) => f.endsWith('.fodt'));
+    if (!fodt) return null;
+    const xml = readFileSync(join(work, fodt), 'utf8');
+    const headingLevels = [...xml.matchAll(/<text:h\b[^>]*text:outline-level="(\d+)"[^>]*>([\s\S]*?)<\/text:h>/g)]
+      .filter((m) => m[2].replace(/<[^>]+>/g, '').trim() !== '')
+      .map((m) => Number(m[1]));
+    const frames = [...xml.matchAll(/<draw:frame\b[\s\S]*?<\/draw:frame>/g)].map((m) => m[0])
+      .filter((f) => f.includes('<draw:image'));
+    return {
+      file: basename(docPath),
+      readable: true,
+      oracle: 'engine-derived',
+      title: /<dc:title>([\s\S]*?)<\/dc:title>/.exec(xml)?.[1]?.trim() || null,
+      // The PIPELINE's own composition (language + country), imported, not
+      // reimplemented: `[V]` a second parser over the same fodt read "en"
+      // where readLanguage composes "en-US", and the grader reported seven
+      // inventions that were two parsers disagreeing about one file.
+      language: readLanguage(xml),
+      headings: headingLevels.length,
+      headingLevels,
+      tables: [...xml.matchAll(/<table:table\b/g)].length,
+      lists: [...xml.matchAll(/<text:list\b/g)].length,
+      listItems: [...xml.matchAll(/<text:list-item\b/g)].length,
+      figures: frames.length,
+      figuresWithAlt: frames.filter((f) => /<svg:(?:desc|title)>/.test(f)).length,
+    };
+  } catch {
+    return null;
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
+}
 
 function part(docx, name) {
   try {
@@ -26,7 +70,16 @@ const count = (text, re) => (text.match(re) ?? []).length;
 
 export function extractTruth(docx) {
   const doc = part(docx, 'word/document.xml');
-  if (doc === null) return { file: basename(docx), readable: false };
+  if (doc === null) {
+    // Legacy OLE .doc has no XML to read. The fallback oracle converts to
+    // flat ODF with LibreOffice and reads THAT — engine-derived truth,
+    // labeled as such: it grades fidelity of the export half only, because
+    // the importer produced the reference. Weaker than source truth, far
+    // better than ungraded.
+    const viaFodt = extractDocTruthViaFodt(docx);
+    if (viaFodt !== null) return viaFodt;
+    return { file: basename(docx), readable: false };
+  }
 
   const core = part(docx, 'docProps/core.xml') ?? '';
   const styles = part(docx, 'word/styles.xml') ?? '';
@@ -95,6 +148,12 @@ export function extractTruth(docx) {
     tables: count(doc, /<w:tbl>/g),
     // Distinct numbering ids in use, matching how Inspect counts a list once.
     lists: new Set([...doc.matchAll(/w:numId w:val="(\d+)"/g)].map((m) => m[1])).size,
+    // ITEMS, which is what fidelity compares: `[V]` the export splits one
+    // Word numbering group into several PDF `L` structures at interruptions
+    // (1 source group became 12 delivered lists on one real document), so
+    // group counts disagree between honest instruments while the item count
+    // is the same list content on both sides.
+    listItems: [...doc.matchAll(/<w:numPr>/g)].length,
     figures,
     figuresWithAlt,
   };
@@ -103,13 +162,13 @@ export function extractTruth(docx) {
 const [target, outDir] = process.argv.slice(2);
 if (target) {
   const files = statSync(target).isDirectory()
-    ? readdirSync(target).filter((f) => f.endsWith('.docx')).map((f) => join(target, f))
+    ? readdirSync(target).filter((f) => /\.docx?$/.test(f)).map((f) => join(target, f))
     : [target];
   if (outDir) mkdirSync(outDir, { recursive: true });
   for (const file of files) {
     const truth = extractTruth(file);
     if (outDir) {
-      writeFileSync(join(outDir, `${basename(file, '.docx')}.truth.json`), JSON.stringify(truth, null, 2) + '\n');
+      writeFileSync(join(outDir, `${basename(file).replace(/\.docx?$/, '')}.truth.json`), JSON.stringify(truth, null, 2) + '\n');
     } else {
       console.log(JSON.stringify(truth));
     }
