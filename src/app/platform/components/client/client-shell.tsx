@@ -7,6 +7,7 @@ import { clientHref } from '../../lib/params';
 import { FONT, T } from '../../lib/tokens';
 import { VERDICT_CHIP } from '../../lib/verdict-chip';
 import { Pill } from '../ui';
+import { scoreStatValue } from '../../../../services/presentation/verdict';
 
 /**
  * The bar and tabs above every client screen.
@@ -109,9 +110,9 @@ export function ClientShell({
                     color: T.inkMuted,
                   }}
                 >
-                  score
+                  checks passed
                   <span style={{ fontSize: 14, fontWeight: 700, color: T.ink }}>
-                    {detail.lastRun.score ?? '—'}
+                    {scoreStatValue(detail.lastRun.score)}
                   </span>
                 </span>
               </>

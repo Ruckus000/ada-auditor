@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ClientDetail } from '../../../../services/client-detail';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
+import { SCORE_STAT_LABEL, scoreStatValue } from '../../../../services/presentation/verdict';
 
 /**
  * What we know about one client.
@@ -31,7 +32,7 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
               margin: 0,
             }}
           >
-            <Stat label="Score" value={lastRun.score === null ? '—' : String(lastRun.score)} />
+            <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(lastRun.score)} />
             <Stat label="Must fix" value={String(lastRun.mustFix)} tone={lastRun.mustFix > 0} />
             <Stat label="Should fix" value={String(lastRun.shouldFix)} />
             <Stat label="Pages audited" value={String(lastRun.pagesAudited)} />
