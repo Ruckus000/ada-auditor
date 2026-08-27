@@ -32,7 +32,7 @@ import { advisoryModel } from '../../src/services/ai-advisory';
 import type { DeterministicFinding } from '../../src/services/deterministic-audit';
 import {
   cleanRate,
-  coreHitRate,
+  coreBarrierOutcomes,
   scoreSite,
   type Expectation,
   type ScoredFinding,
@@ -180,14 +180,20 @@ async function main() {
       for (const sentence of advisory) console.log(`    - ${sentence}`);
     }
 
-    // Two numbers rather than one: barriers found is what the auditor is for,
-    // and clean rows left alone is the guard on it. Merged, a site could raise
-    // its rate by planting more correct markup.
-    const core = coreHitRate(score);
+    // Two measurements, never added: barriers found is what the auditor is
+    // for, and clean rows left alone is the guard on it. Merged, a site could
+    // raise its rate by planting more correct markup.
+    //
+    // Within the first, every count is over the same core barriers, so the
+    // three add up to the total. Pairing that fraction with `counts.miss` did
+    // not add up — it spans every row, `probe` included, and skips a barrier
+    // downgraded rather than missed.
+    const core = coreBarrierOutcomes(score);
     const clean = cleanRate(score);
     const line =
-      `${manifest.label}: ${core.hits}/${core.total} core barriers seen · ` +
-      `${score.counts.miss} missed · ${clean.quiet}/${clean.total} clean rows quiet · ` +
+      `${manifest.label}: ${core.seen}/${core.total} core barriers seen · ` +
+      `${core.missed} missed · ${core.downgraded} downgraded · ` +
+      `${clean.quiet}/${clean.total} clean rows quiet · ` +
       `${score.counts['false-positive']} false positives · ` +
       `verdict ${report.ciStatus} · ${deterministic.length} deterministic findings`;
     summaries.push(line);

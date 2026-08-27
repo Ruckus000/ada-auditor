@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   cleanRate,
-  coreHitRate,
+  coreBarrierOutcomes,
   scoreSite,
   type Expectation,
   type ScoredFinding,
@@ -229,7 +229,7 @@ describe('blind-test scorer', () => {
       advisory: [],
     });
 
-    expect(coreHitRate(score)).toEqual({ hits: 1, total: 2 });
+    expect(coreBarrierOutcomes(score)).toMatchObject({ seen: 1, total: 2 });
   });
 
   /**
@@ -259,7 +259,12 @@ describe('blind-test scorer', () => {
       'clean-pass',
     ]);
     // One barrier of two, not two of three.
-    expect(coreHitRate(score)).toEqual({ hits: 1, total: 2 });
+    expect(coreBarrierOutcomes(score)).toEqual({
+      seen: 1,
+      total: 2,
+      missed: 1,
+      downgraded: 0,
+    });
     expect(cleanRate(score)).toEqual({ quiet: 1, total: 1 });
   });
 
@@ -274,6 +279,48 @@ describe('blind-test scorer', () => {
     expect(score.results[0].outcome).toBe('false-positive');
     expect(cleanRate(score)).toEqual({ quiet: 0, total: 1 });
     // No barriers were planted, so there is no rate to report.
-    expect(coreHitRate(score)).toEqual({ hits: 0, total: 0 });
+    expect(coreBarrierOutcomes(score)).toEqual({
+      seen: 0,
+      total: 0,
+      missed: 0,
+      downgraded: 0,
+    });
+  });
+
+  /**
+   * The property that makes the summary line readable: a reader adds the three
+   * and gets the total. It holds because a barrier can only be seen, missed or
+   * downgraded — `clean-pass` and `false-positive` belong to `clean` rows,
+   * which are not in this population.
+   *
+   * The line used to pair this fraction with a miss count taken over every
+   * row, so Fairview printed `4/8 seen · 5 missed`: the 5 counted two `probe`
+   * misses and skipped a core barrier that was downgraded rather than missed,
+   * and the subtraction a reader would do came out wrong.
+   */
+  it('accounts for every core barrier, so seen + missed + downgraded is the total', () => {
+    const score = scoreSite({
+      site: 'demo',
+      expectations: [
+        expectation({ id: 'X1', selector: '#seen' }),
+        expectation({ id: 'X2', selector: '#gone' }),
+        expectation({ id: 'X3', selector: '#undecided' }),
+        // Neither of these may reach the barrier arithmetic.
+        expectation({ id: 'X4', selector: '#probe', weight: 'probe' }),
+        expectation({ id: 'X5', selector: '#tidy', expect: 'clean', axeRule: undefined }),
+      ],
+      findings: [
+        finding({ selector: '#seen' }),
+        finding({ selector: '#undecided', severity: 'needs-review' }),
+        finding({ selector: '#probe' }),
+      ],
+      advisory: [],
+    });
+
+    const core = coreBarrierOutcomes(score);
+
+    expect(core).toEqual({ seen: 1, total: 3, missed: 1, downgraded: 1 });
+    expect(core.seen + core.missed + core.downgraded).toBe(core.total);
+    expect(cleanRate(score)).toEqual({ quiet: 1, total: 1 });
   });
 });

@@ -256,27 +256,46 @@ export function scoreSite(input: {
 }
 
 /**
- * Core barriers seen by the mechanism that was supposed to see them.
+ * What became of the core barriers — the rows the product claims behaviour for.
  *
- * `clean` rows are excluded from both halves of the fraction, because a
- * correctly built element correctly left alone is not a barrier anything
- * noticed. Counting them here flattered every site and flattered a bad tool
- * most: with three of Ridgeline's fifteen core rows `clean`, an auditor that
- * detected nothing whatsoever still scored 3/15 rather than zero, and adding
- * more `clean` rows — which the false-positive guard wants — would have raised
- * the number without improving detection.
- *
+ * `clean` rows are excluded, because a correctly built element correctly left
+ * alone is not a barrier anything noticed. Counting them flattered every site
+ * and flattered a bad tool most: with three of Ridgeline's fifteen core rows
+ * `clean`, an auditor that detected nothing whatsoever still scored 3/15
+ * rather than zero, and adding more `clean` rows — which the false-positive
+ * guard wants — would have raised the number without improving detection.
  * `probe` rows stay out for the reason they always did: they are open
  * questions, not behaviour the product claims.
+ *
+ * All four counts come from here rather than two functions over one
+ * population, so `seen + missed + downgraded === total` holds by construction
+ * and a reader can add the parts and get the whole. The summary line used to
+ * pair this fraction with a miss count taken over *every* row, so Fairview
+ * printed `4/8 seen · 5 missed` — a subtraction that does not work, because
+ * that 5 counted two `probe` rows and skipped a core barrier that was
+ * downgraded rather than missed.
+ *
+ * A barrier can only be seen, missed or downgraded: `clean-pass` and
+ * `false-positive` are outcomes of `clean` rows, which are not here.
  */
-export function coreHitRate(score: SiteScore): { hits: number; total: number } {
+export function coreBarrierOutcomes(score: SiteScore): {
+  seen: number;
+  total: number;
+  missed: number;
+  downgraded: number;
+} {
   const barriers = score.results.filter(
     (result) => result.expectation.weight === 'core' && result.expectation.expect !== 'clean',
   );
-  const seen = barriers.filter((result) =>
-    ['hit', 'upgraded', 'caught-by-rules'].includes(result.outcome),
-  );
-  return { hits: seen.length, total: barriers.length };
+  const count = (outcomes: Outcome[]) =>
+    barriers.filter((result) => outcomes.includes(result.outcome)).length;
+
+  return {
+    seen: count(['hit', 'upgraded', 'caught-by-rules']),
+    total: barriers.length,
+    missed: count(['miss']),
+    downgraded: count(['downgraded']),
+  };
 }
 
 /**
