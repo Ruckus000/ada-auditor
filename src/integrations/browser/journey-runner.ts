@@ -14,6 +14,8 @@ import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/a
 import { logInfo, logWarn } from '../../services/logger';
 import { hostnameOf, settledLocation, withUrlsReduced } from '../../services/safe-url';
 import { scanPageWithAxe } from './axe-scan';
+import { collectPageFacts } from './page-facts';
+import type { PageFacts } from '../../services/page-checks';
 import { resolveCredentialFrom } from './credentials';
 import { launchChromium } from './launch';
 import { PartialJourneyError } from './partial-run';
@@ -735,6 +737,18 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       const axe = input.skipScan
         ? { violations: [], incomplete: [] }
         : await scanPageWithAxe(page);
+      // Collected under the same skip as the axe scan — the two feed the same
+      // findings path, and a page whose collection fails contributes empty
+      // facts rather than an error: absence of evidence is not a finding.
+      let facts: PageFacts = { clickTargets: [], labelledControls: [] };
+      if (!input.skipScan) {
+        try {
+          facts = await collectPageFacts(page);
+        } catch {
+          // The page navigated mid-read, or a CSP broke evaluation. The axe
+          // half of this page still stands on its own.
+        }
+      }
       const scanMs = input.skipScan ? undefined : Date.now() - scanStartedAt;
 
       const html = await page.content();
@@ -802,6 +816,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         page: { url, route, title, statusCode: mainFrameNavigation.get(page)?.status },
         html,
         axe,
+        facts,
         axTree,
         artifacts,
         pageKey,
