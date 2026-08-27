@@ -66,10 +66,23 @@ import {
 const execFileAsync = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** LibreOffice 26.2.5, official Document Foundation build, linux x86-64. */
+/**
+ * LibreOffice 26.2.5, official Document Foundation build, linux x86-64.
+ *
+ * Fetched from the **archive** host rather than `download.documentfoundation.org`,
+ * and that is a deliberate correction rather than a workaround. `[V]` The
+ * download host answers 302 to a randomly chosen third-party mirror —
+ * `southfront.mm.fcix.net` on the attempt that produced this comment — which
+ * is both unreachable from Vercel's build machine (the first build died on it
+ * in 500ms) and the wrong provenance for an artifact this file pins by hash.
+ * The archive serves the same bytes from TDF itself: `[V]` byte-identical
+ * sha256, verified against a mirror copy before switching.
+ *
+ * Note the four-part version in the archive's own paths.
+ */
 const LIBREOFFICE = {
   release: '26.2.5',
-  url: 'https://download.documentfoundation.org/libreoffice/stable/26.2.5/rpm/x86_64/LibreOffice_26.2.5_Linux_x86-64_rpm.tar.gz',
+  url: 'https://downloadarchive.documentfoundation.org/libreoffice/old/26.2.5.2/rpm/x86_64/LibreOffice_26.2.5.2_Linux_x86-64_rpm.tar.gz',
   sha256: 'f62611c441ff1faa5cadb499abdbab119f5a9013eb6c0e32fc9aa65f6ff8b53d',
   /** The directory the RPMs unpack into, under `opt/`. */
   installDir: 'libreoffice26.2',
@@ -129,7 +142,19 @@ const NEVER_COPY = /^(ld-linux|libc|libm|libdl|libpthread|librt|libresolv|libnsl
 
 async function download(url: string, to: string, expected: string): Promise<void> {
   console.log(`fetching LibreOffice ${LIBREOFFICE.release} (linux/x86-64)`);
-  const response = await fetch(url);
+
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    // `fetch` reports every network-level failure as the same three words and
+    // hides the actual reason — DNS, TLS, refused connection — on `cause`. The
+    // first build failure here read only "fetch failed", which named neither
+    // the host nor the problem.
+    const cause = error instanceof Error && error.cause ? `: ${String(error.cause)}` : '';
+    throw new Error(`LibreOffice download could not reach ${new URL(url).host}${cause}`);
+  }
+
   if (!response.ok) {
     throw new Error(`LibreOffice download failed: ${response.status} ${response.statusText}`);
   }
