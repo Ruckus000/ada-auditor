@@ -155,10 +155,11 @@ advisory can reach**, and one of them was caught by accident.
 
 ## Suggested work, in the order the evidence supports it
 
-1. **Run the advisory once.** It is a third of what this test could not
-   measure, and the sites now exist to measure it against. `npm run blind:test`
-   in any environment with `AI_GATEWAY_API_KEY` or a Vercel OIDC token produces
-   a directly comparable scorecard.
+1. ~~**Run the advisory once.**~~ **Done, 2026-08-27** — barriers seen went
+   19→24 of 37, judgement 1→6 of 14, zero false positives held, and the one
+   `advisory 0` took new instrumentation to explain: a genuine empty answer
+   from a model that reports 0–9 findings on identical input. See
+   [`2026-08-27-advisory-first-run.md`](2026-08-27-advisory-first-run.md).
 2. **Decide on the placeholder-as-label case.** Either enable a check for it or
    record it as a known blind spot; today it silently counts as a pass.
 3. **Decide on keyboard operability.** `focus-order-semantics` exists and is
