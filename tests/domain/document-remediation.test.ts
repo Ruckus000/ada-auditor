@@ -260,6 +260,28 @@ describe('the punch list', () => {
     ]);
   });
 
+  it('names a document that starts below H1 as the same decision family', () => {
+    // r13's shape: nine headings, none of them H1. Not a skip between
+    // consecutive headings, so version 2 delivered it with an empty punch
+    // list while veraPDF failed it on 7.4.2 — a silent gap, the exact thing
+    // the promise forbids.
+    const s = summarise(provenance({ headings: ['H2', 'H3', 'H2'] }));
+    expect(s.needs).toEqual([
+      {
+        criterion: '2.4.10',
+        item: 'Heading levels start at H2 — decide whether the document should begin at an H1',
+      },
+    ]);
+  });
+
+  it('names both the deep start and a later skip, once each', () => {
+    const s = summarise(provenance({ headings: ['H3', 'H3', 'H5'] }));
+    expect(s.needs?.map((n) => n.item)).toEqual([
+      'Heading levels start at H3 — decide whether the document should begin at an H1',
+      'Heading levels skip from H3 to H5 — decide whether the author meant an H4',
+    ]);
+  });
+
   it('is absent, never empty, when nothing needs a person', () => {
     const s = summarise(provenance({ headings: ['H1', 'H2'] }));
     expect('needs' in s).toBe(false);

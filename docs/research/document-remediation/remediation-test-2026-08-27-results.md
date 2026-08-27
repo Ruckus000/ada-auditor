@@ -119,3 +119,128 @@ Recorded because the next corpus effort will hit every one:
    as the author's miss.
 4. Arm B's UA-1-only failures (15 documents, zero Inspect gaps): name the
    dominant clauses — the gap vocabulary may deserve one or two additions.
+
+---
+
+## Follow-up, 2026-08-27 evening: re-scored after the remediation-gaps campaign
+
+The original numbers above are the record of the first run and stay as
+written. This section re-scores the same corpora after the seven-phase
+campaign that the first run's shortfalls demanded (empty-heading deletion,
+UA-1 clauses named via the JSON report, filename-derived titles, caption-
+derived alt plus the punch list, instrument alignment, PDF source-pairing).
+
+### Predictions, registered before the re-run
+
+Committed before the runner started, same discipline as the original test.
+
+1. **Generated (now 34 strata — four added by the campaign):** ≥ 30 of 34
+   both-instruments green. Named exceptions expected: `a15-empty` delivers
+   (the adjudicated frozen-key miss — an empty paragraph is structure) and
+   `a33-junk-filename` delivers with the honest 2.4.2 gap, because its
+   authored name (`Document1.docx`) is exactly what the junk-refusal exists
+   to refuse.
+2. **Real (31):** 23–24 both-green — the conversion pipeline is unchanged
+   since the last measured 23, so a materially different number means the
+   instruments moved, not the documents. The five author-skip documents stay
+   UA-1 red on clause 7.4.2 and carry their 2.4.10 heading-skip punch items;
+   renumbering an author's levels would be invention.
+3. **The promise, checked per document:** every non-green delivery carries at
+   least one named gap or punch-list item. Zero silent gaps, zero invented
+   claims (`title`/alt provenance labels asserted throughout).
+4. **Clause naming:** with both graders now reading veraPDF's JSON report,
+   `failedRules` is non-empty for every UA-1 red — the first run's blank
+   column cannot recur.
+5. **Fidelity (real):** headings 31/31, tables 29/31, lists 27/31,
+   figures 30/31 — unchanged from the Phase-5 measurement, same reasoning
+   as (2).
+6. **Production parity subset (10):** identical summaries local vs deployed,
+   including the filename-derived titles this campaign added.
+
+### Scoring against the campaign's own bar
+
+The campaign's definition of done set **≥ 26/31 real both-green**. The
+prediction above says 23–24: the numeric bar will likely be missed, because
+five documents *cannot* go green without inventing heading levels their
+authors skipped — the punch list is the designed outcome for them. The
+result below reports both readings: the number as registered, and the
+promise (green or itemized work, never silence) checked per document.
+
+### Results
+
+Two runs happened, and the space between them is the finding. The first
+re-run's promise check — every non-green delivery must carry a named gap or
+punch item — surfaced exactly one silent real document: r13, UA-1 red on
+7.4.2 with an empty punch list. Its nine headings all sit at H2 or deeper,
+which is not a skip *between* consecutive headings and so slipped the
+version-2 check. The deep start is the same authorship decision as a
+mid-document skip, so it became the same kind of 2.4.10 item,
+`INSTRUMENT_VERSION` moved to 3 (a new item on an unchanged document must
+read as our vocabulary growing, not the client's document changing), and
+`a35-starts-deep` joined the corpus as the shape's permanent witness. The
+numbers below are the version-3 run.
+
+| | delivered | both instruments green | matches its frozen key |
+|---|---:|---:|---:|
+| generated (35 strata) | 33 (+2 designed refusals) | 26/33 | 32/33 — the one deviation is `a15-empty`, the adjudicated delivery |
+| real (31) | 31/31 | **23/31** | — (truth-graded) |
+
+Invented claims: **0 across all 64 delivered documents.** Real-corpus
+fidelity: headings **31/31**, tables 29/31, lists 27/31, figures 30/31 (the
+table/list drifts are all inside the labeled `.doc` engine-derived-oracle
+caveat from the alignment phase).
+
+Every real shortfall, itemized — this is the punch list working:
+
+| documents | UA-1 clause | the item a person gets |
+|---|---|---|
+| r16 · r21 · r24 · r26 | 7.4.2 | "Heading levels skip from HX to HY — decide whether the author meant an HX+1" |
+| r13 · r09 | 7.4.2 | "Heading levels start at H2 — decide whether the document should begin at an H1" |
+| r01 (×2) · r07 · r09 | 7.3 | "Figure N needs a human-written description — no alt text, and no caption to transcribe one from" |
+
+### The predictions, scored
+
+1. **Falsified.** Generated both-green was 26/33 against a registered ≥ 30.
+   A prediction-authoring error, not a regression: five strata (`a06`, `a09`,
+   `a20`, `a22`, `a26`) exist to exercise gaps and punch items and cannot be
+   green by construction, and the registered number failed to subtract them.
+   The named exceptions both held — `a15-empty` was the sole key deviation,
+   and `Document1` refused its junk filename.
+2. **Held, with the disclosure above.** Real 23/31, inside the 23–24 band.
+   The five predicted 7.4.2 documents are exactly the five — but r13's punch
+   item only exists because the promise check caught its absence mid-campaign.
+   The prediction said the items would be there; on the version-2 instrument,
+   one was not.
+3. **Held for the real corpus (31/31 green-or-itemized), one generated
+   exception, named.** `a20-emoji` delivers with no gap and no item while
+   UA-1 fails it on 7.21.7-1 (glyph-to-Unicode mapping) — a converter font
+   artifact, not an authorship decision, in vocabulary neither instrument
+   surfaces as work. Zero real documents hit it; it is recorded as a known
+   gap rather than chased.
+4. **Held.** With both graders on veraPDF's JSON report, no UA-1-red document
+   anywhere has an empty `failedRules`.
+5. **Held exactly** — all four fidelity numbers as registered.
+6. **Could not run — and the reason is its own finding.** Production's
+   `AUDITOR_RUN_TOKEN` was rotated ~21 hours before this run (Vercel env
+   metadata; the value is sensitive-typed and readable by no one), and the
+   new value matches no local secret. Every request with the token that
+   authenticated all of this session's earlier production work now answers
+   the app's own 401 — which means **every machine caller of production is
+   locked out**, not just this harness. The parity subset (r01–r10, authored
+   filenames, summaries diffed against the local version-3 evidence) is
+   scripted and waits only on a working token; the number lands here as a
+   dated addendum once access is restored.
+
+### Scoring the campaign's own bar
+
+**The registered number is missed: 23/31 both-green against ≥ 26.** The
+eight documents that keep it there split 5 heading-decision + 3
+human-description — every one carrying its item, none fixable without
+inventing content the author didn't write. The campaign's promise —
+*fully conformant on both instruments, or a per-item human punch list;
+never a silent gap, never an invented claim* — measures **31/31 real,
+64/64 delivered minus the one named generated exception (`a20-emoji`)**,
+and 13 → 23 both-green is what the campaign actually moved. The number
+registered was the wrong proxy for the promise; the promise itself is the
+product, and it now holds on every real document.
+
