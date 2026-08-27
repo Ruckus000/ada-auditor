@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';
 
 import type { Env } from './java-runtime';
@@ -74,19 +74,94 @@ const ANY_MODULE = /^(?:lib)?[a-z0-9_]+lo\.(?:so|dylib|dll)$/;
  * `Contents/Frameworks`. The launcher is resolved through its symlinks first —
  * `/usr/bin/soffice` is a link into `/usr/lib/libreoffice/program`, and the
  * modules are next to the target, not next to the link.
+ *
+ * A symlink is not the only indirection. Homebrew's cask points `soffice` at a
+ * wrapper *script* that execs the application bundle, and a script resolves to
+ * itself — so `wrapperTarget` reads where it hands off to and both locations
+ * are searched. More places to look can only turn `unknown` into an answer:
+ * `writerModule` returns `present` on the first directory that has the module,
+ * and `absent` only when it saw a program directory and none of them did.
  */
 function moduleDirs(sofficeBin: string): string[] {
-  let resolved: string;
+  const resolved = realpath(sofficeBin);
+  if (resolved === null) return [];
+
+  // A wrapper hands off to the launcher that actually sits with the modules,
+  // so both are searched. Its own directory stays first and stays searched: a
+  // launcher that is not a wrapper, or one whose target cannot be read, has to
+  // behave exactly as it did before.
+  const handoff = wrapperTarget(resolved);
+  const launchers = handoff === null ? [resolved] : [resolved, realpath(handoff) ?? handoff];
+
+  return launchers.flatMap((launcher) => {
+    const beside = dirname(launcher);
+    return [beside, join(dirname(beside), 'Frameworks')];
+  });
+}
+
+/**
+ * Resolved through its symlinks, or `null` if it cannot be.
+ *
+ * Raced with an uninstall, or a permission we do not have. Either way this is
+ * not the place to throw — `unknown` is the honest answer.
+ */
+function realpath(path: string): string | null {
   try {
-    resolved = realpathSync(sofficeBin);
+    return realpathSync(path);
   } catch {
-    // Raced with an uninstall, or a permission we do not have. Either way this
-    // is not the place to throw — `unknown` is the honest answer.
-    return [];
+    return null;
+  }
+}
+
+/** A wrapper is two lines; anything this size is the launcher itself. */
+const WRAPPER_MAX_BYTES = 4096;
+
+/**
+ * Every absolute path naming a `soffice` that a script hands off to.
+ *
+ * Quoted or bare, so `'/Applications/…/soffice' "$@"` and `exec
+ * /opt/…/soffice.bin` both match, and stopping at whitespace or a quote is
+ * what keeps the match to one argument.
+ */
+const HANDOFF = /\/(?:[^\s'"]+\/)*soffice[^\s'"]*/g;
+
+/**
+ * The launcher a wrapper script defers to, if that is what this is.
+ *
+ * `[V]` Homebrew's cask installs `soffice` as a symlink to a two-line shell
+ * script — `#!/bin/sh` and `'/Applications/LibreOffice.app/Contents/MacOS/soffice' "$@"` —
+ * sitting in the Caskroom version directory beside a `LICENSEs` folder and
+ * nothing else. `realpathSync` follows the symlink to the script and stops
+ * there, so the modules were looked for next to a wrapper and the answer was
+ * `unknown`: on the most common macOS install this check reported available by
+ * failing open, never by evidence, and a core-only install would have been
+ * reported available too.
+ *
+ * Read, never run. A wrapper is data here, and executing a file to find out
+ * where it points would be a far larger promise than this needs.
+ *
+ * Distribution launchers are unaffected: Debian's `program/soffice` is also a
+ * shell script, but it execs `"$sd_prog/soffice.bin"` — no absolute path, so
+ * there is nothing to follow, and its own directory is the program directory
+ * anyway.
+ */
+function wrapperTarget(launcher: string): string | null {
+  try {
+    if (statSync(launcher).size > WRAPPER_MAX_BYTES) return null;
+
+    const script = readFileSync(launcher, 'utf8');
+    if (!script.startsWith('#!')) return null;
+
+    for (const [handoff] of script.matchAll(HANDOFF)) {
+      // Not itself, or a wrapper that names its own path would recurse into
+      // the same directory and prove nothing.
+      if (handoff !== launcher && existsSync(handoff)) return handoff;
+    }
+  } catch {
+    // Unreadable, or not text at all. Same answer as everything else here.
   }
 
-  const beside = dirname(resolved);
-  return [beside, join(dirname(beside), 'Frameworks')];
+  return null;
 }
 
 /**
