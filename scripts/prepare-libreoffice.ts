@@ -51,6 +51,15 @@
  * reports anything `not found`. The first collector silently skipped those
  * lines and reported "collected 52 system libraries" over a broken install.
  *
+ * `[V]` **The launcher is a chain, and every link has its own libraries.**
+ * `soffice` (script) execs `oosplash`, which execs `soffice.bin` — and the
+ * first production conversion died with `oosplash: error while loading shared
+ * libraries: libXinerama.so.1` after a collector that read only
+ * `soffice.bin`'s dependencies had reported success. Build-image verification
+ * cannot catch this class: the build image HAS the X11 libraries system-wide,
+ * so the chain runs there resolved from paths the runtime does not have. The
+ * collector therefore walks EVERY ELF in the bundle and unions their needs.
+ *
  * `[V]` **The archive host's speed varies by an order of magnitude** — the
  * same 250MB fetch took 2.4 minutes on one build and 17.5 on another. A known
  * cost, recorded rather than engineered around: the build fits the platform
@@ -68,7 +77,7 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { copyFile, mkdir, mkdtemp, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, open, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -243,62 +252,133 @@ async function extractRpm(rpm: string, dest: string): Promise<void> {
  * gate, and it produces the better error: the list of what is actually
  * missing, not the name of the tool that failed to install it.
  */
+/**
+ * What LibreOffice links that Amazon Linux's build image does not carry.
+ *
+ * `nss` was found by the collector's gate; the X11 set by the first
+ * production conversion (`oosplash` links them even for a `--headless` run —
+ * see the header). Installed one at a time so a package that stops existing
+ * skips rather than failing the whole transaction; the collector's not-found
+ * gate is the arbiter of whether anything is actually missing afterwards.
+ */
+const BUILD_IMAGE_PACKAGES = [
+  'nss',
+  'libX11',
+  'libXext',
+  'libXinerama',
+  'libXrender',
+  'libXrandr',
+  'libXi',
+  'libXtst',
+  'libSM',
+  'libICE',
+  'cups-libs',
+  'dbus-libs',
+];
+
 async function installBuildImagePackages(): Promise<void> {
   for (const manager of ['dnf', 'microdnf']) {
     try {
-      await execFileAsync(manager, ['install', '-y', 'nss'], {
-        maxBuffer: 8 * 1024 * 1024,
-        timeout: 180_000,
-      });
-      console.log(`installed nss via ${manager}`);
+      await execFileAsync(manager, ['--version'], { timeout: 30_000 });
+      let installed = 0;
+      for (const pkg of BUILD_IMAGE_PACKAGES) {
+        try {
+          await execFileAsync(manager, ['install', '-y', pkg], {
+            maxBuffer: 8 * 1024 * 1024,
+            timeout: 180_000,
+          });
+          installed += 1;
+        } catch {
+          // Absent from the repo, or already present under another name. The
+          // collector's gate is what decides whether that matters.
+        }
+      }
+      console.log(`installed ${installed}/${BUILD_IMAGE_PACKAGES.length} packages via ${manager}`);
       return;
     } catch {
-      // Try the next one; the collector's gate reports what is missing.
+      // No such package manager here; try the next.
     }
   }
-  console.log('could not install nss — the library check below will say what is missing');
+  console.log('no package manager found — the library check below will say what is missing');
 }
 
 async function collectSystemLibraries(install: string): Promise<number> {
   const target = join(install, SYSTEM_LIBRARY_DIR);
-  let stdout: string;
-  try {
-    ({ stdout } = await execFileAsync('ldd', [join(install, 'program', 'soffice.bin')], {
-      maxBuffer: 8 * 1024 * 1024,
-    }));
-  } catch {
+  const program = join(install, 'program');
+
+  // Every ELF in the launch chain and beyond: `soffice` execs `oosplash`
+  // execs `soffice.bin`, the UNO libraries dlopen each other, and each link
+  // has its own DT_NEEDED. Reading one binary's dependencies is how the first
+  // production conversion died on a library nothing had copied. ELF is
+  // detected by magic bytes, not by name — `oosplash` has no extension.
+  const candidates: string[] = [];
+  for (const entry of await readdir(program)) {
+    const path = join(program, entry);
+    try {
+      const header = Buffer.alloc(4);
+      const file = await open(path, 'r');
+      await file.read(header, 0, 4, 0);
+      await file.close();
+      if (header.equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46]))) candidates.push(path);
+    } catch {
+      // Directories and unreadables are not candidates.
+    }
+  }
+
+  // Names the bundle can already answer for. `ldd` on a lone library reports
+  // its bundled siblings as `not found` — it does not know about the
+  // LD_LIBRARY_PATH the runtime will set — so the gate must not count them.
+  const bundled = new Set<string>();
+  for (const dir of [program, target]) {
+    try {
+      for (const entry of await readdir(dir)) bundled.add(entry);
+    } catch {
+      // `target` may not exist yet.
+    }
+  }
+
+  const resolved = new Map<string, string>();
+  const missing = new Set<string>();
+  let scanned = 0;
+  for (const candidate of candidates) {
+    let stdout: string;
+    try {
+      ({ stdout } = await execFileAsync('ldd', [candidate], { maxBuffer: 8 * 1024 * 1024 }));
+    } catch {
+      continue; // Static, an arch mismatch, or no ldd at all; nothing to read.
+    }
+    scanned += 1;
+
+    for (const [, soname, path] of stdout.matchAll(/^\s*(\S+)\s+=>\s+(\/\S+)/gm)) {
+      if (!soname || !path) continue;
+      if (NEVER_COPY.test(soname)) continue;
+      if (path.startsWith(install)) continue;
+      resolved.set(soname, path);
+    }
+    for (const [, soname] of stdout.matchAll(/^\s*(\S+)\s+=>\s+not found/gm)) {
+      if (soname && !bundled.has(soname)) missing.add(soname);
+    }
+  }
+
+  if (scanned === 0) {
     console.log('no ldd on this platform — skipping system library collection');
     return 0;
   }
 
-  // The gate. `ldd` prints `libssl3.so => not found` for anything the image
-  // cannot resolve, and a build that ships anyway produces a LibreOffice that
-  // dies at exit 127 on its first exec. The first version of this loop
-  // matched only lines with a path, so it skipped every one of these silently
-  // — "collected 52 system libraries" over an install missing its crypto.
-  const missing = [...stdout.matchAll(/^\s*(\S+)\s+=>\s+not found/gm)].map((m) => m[1]);
-  if (missing.length > 0) {
+  // The gate. A build that ships with any of these produces a LibreOffice
+  // that dies at exec on its first request — and the failure names a library,
+  // not a package, so the fix is a BUILD_IMAGE_PACKAGES entry.
+  if (missing.size > 0) {
     throw new Error(
-      `the build image cannot resolve ${missing.length} of LibreOffice's libraries — ` +
-        `nothing shippable can come out of this build.\n  ${missing.join('\n  ')}\n` +
-        `Install the packages that provide them in installBuildImagePackages().`,
+      `the build image cannot resolve ${missing.size} of LibreOffice's libraries — ` +
+        `nothing shippable can come out of this build.\n  ${[...missing].sort().join('\n  ')}\n` +
+        `Install the packages that provide them in BUILD_IMAGE_PACKAGES.`,
     );
   }
 
   await mkdir(target, { recursive: true });
   let copied = 0;
-  for (const line of stdout.split('\n')) {
-    // `libfoo.so.1 => /usr/lib64/libfoo.so.1 (0x00007f…)`. Anything without a
-    // `=>` is the vdso or the loader itself.
-    const match = /^\s*(\S+)\s+=>\s+(\/\S+)/.exec(line);
-    if (!match) continue;
-
-    const [, soname, path] = match;
-    if (!soname || !path) continue;
-    if (NEVER_COPY.test(soname)) continue;
-    // Already ours: `program/` is where LibreOffice keeps its own.
-    if (path.startsWith(install)) continue;
-
+  for (const [soname, path] of resolved) {
     try {
       await copyFile(path, join(target, soname));
       copied += 1;
@@ -308,6 +388,7 @@ async function collectSystemLibraries(install: string): Promise<number> {
     }
   }
 
+  console.log(`scanned ${scanned} binaries`);
   return copied;
 }
 
