@@ -165,3 +165,35 @@ export function repairTitle(xml: string): TitleRepair {
   // than pretending the repair happened.
   return { xml, outcome: { kind: 'no-heading-to-copy' } };
 }
+
+/**
+ * Removes headings with no text from the flat ODF, before export.
+ *
+ * `[V]` Measured on three real municipal documents: every heading "lost" in
+ * conversion was an EMPTY one — a blank line an author left heading-styled,
+ * which Word keeps, the importer partially collapses, and the PDF export
+ * drops inconsistently. An empty heading is itself an accessibility defect
+ * (a screen reader announces a heading and then nothing), so deleting one is
+ * not loss and not invention: it removes a structure element that carried no
+ * content, and it makes "headings in" equal "headings out" for every heading
+ * that says something.
+ *
+ * Self-closing and empty-paired forms both; whitespace-only content counts
+ * as empty (a heading of three spaces announces exactly as much as none).
+ */
+export function removeEmptyHeadings(xml: string): { xml: string; removed: number } {
+  let removed = 0;
+  const cleaned = xml
+    .replace(/<text:h\b[^>]*\/>/g, () => {
+      removed += 1;
+      return '';
+    })
+    .replace(/<text:h\b[^>]*>([\s\S]*?)<\/text:h>/g, (whole, inner: string) => {
+      if (inner.replace(/<[^>]+>/g, '').trim() === '') {
+        removed += 1;
+        return '';
+      }
+      return whole;
+    });
+  return { xml: cleaned, removed };
+}

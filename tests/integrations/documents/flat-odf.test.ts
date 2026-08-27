@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  firstHeading,
-  readLanguage,
-  readTitle,
-  repairTitle,
-} from '../../../src/integrations/documents/flat-odf';
+import { firstHeading, readLanguage, readTitle, removeEmptyHeadings, repairTitle } from '../../../src/integrations/documents/flat-odf';
 
 /**
  * The transcription rules, without LibreOffice.
@@ -132,5 +127,26 @@ describe('repairTitle', () => {
 
     expect(result.xml).toContain('<dc:title>Planning &amp; Zoning</dc:title>');
     expect(readTitle(result.xml)).toBe('Planning & Zoning');
+  });
+});
+
+describe('removeEmptyHeadings', () => {
+  it('removes self-closing, empty-paired, and whitespace-only headings, counting each', () => {
+    // The measured shape: every heading "lost" in conversion was an empty
+    // one — a blank line an author left heading-styled.
+    const { xml, removed } = removeEmptyHeadings(
+      '<text:h text:outline-level="1"/>' +
+        '<text:h text:outline-level="2"></text:h>' +
+        '<text:h text:outline-level="2">   <text:s/>  </text:h>' +
+        '<text:h text:outline-level="1">Budget</text:h>',
+    );
+
+    expect(removed).toBe(3);
+    expect(xml).toBe('<text:h text:outline-level="1">Budget</text:h>');
+  });
+
+  it('touches nothing when every heading speaks', () => {
+    const input = '<text:h text:outline-level="1">A</text:h><text:p/>';
+    expect(removeEmptyHeadings(input)).toEqual({ xml: input, removed: 0 });
   });
 });

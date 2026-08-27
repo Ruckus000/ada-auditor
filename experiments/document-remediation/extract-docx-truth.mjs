@@ -46,12 +46,25 @@ export function extractTruth(docx) {
     const level = /<w:outlineLvl w:val="([0-8])"\/>/.exec(block[0]);
     if (level) styleLevel.set(block[1], Number(level[1]) + 1);
   }
-  const headingLevels = [
-    ...[...doc.matchAll(/w:pStyle w:val="([^"]+)"/g)]
-      .map((m) => styleLevel.get(m[1]) ?? (/^Heading([1-9])$/.exec(m[1]) ? Number(/^Heading([1-9])$/.exec(m[1])[1]) : null))
-      .filter((level) => level !== null),
-    ...[...doc.matchAll(/<w:outlineLvl w:val="([0-8])"\/>/g)].map((m) => Number(m[1]) + 1),
-  ];
+  // Per PARAGRAPH, and only paragraphs that carry text: `[V]` every heading
+  // "lost" in conversion was an empty one — a blank heading-styled line —
+  // and the pipeline now deletes those as the defects they are, so truth
+  // counts what a reader can hear: headings that say something.
+  const headingLevels = [];
+  for (const m of doc.matchAll(/<w:p[ >][\s\S]*?<\/w:p>/g)) {
+    const para = m[0];
+    // Content, not tag presence: a generator (or Word itself, pasting) can
+    // leave an empty <w:t></w:t>, and a tag that says nothing is as silent
+    // as no tag. One definition of "empty" across generator, pipeline and
+    // truth, or the three drift — measured, twice, today.
+    const text = [...para.matchAll(/<w:t(?: [^>]*)?>([\s\S]*?)<\/w:t>/g)].map((t) => t[1]).join('');
+    if (text.trim() === '') continue;
+    const style = /w:pStyle w:val="([^"]+)"/.exec(para)?.[1];
+    const fromStyle = style ? styleLevel.get(style) ?? (/^Heading([1-9])$/.exec(style) ? Number(style.slice(7)) : null) : null;
+    const direct = /<w:outlineLvl w:val="([0-8])"\/>/.exec(para);
+    const level = fromStyle ?? (direct ? Number(direct[1]) + 1 : null);
+    if (level !== null) headingLevels.push(level);
+  }
 
   // Figures and their alt: every inline/anchored drawing has a docPr; alt is
   // its descr attribute, present or not.
