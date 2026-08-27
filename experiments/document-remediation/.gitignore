@@ -19,3 +19,5 @@ word-corpus/*
 !word-corpus/keys
 real-word/
 out-arm-a/
+real-word-truth/
+out-arm-a-real/

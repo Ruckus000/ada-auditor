@@ -31,9 +31,27 @@ export function extractTruth(docx) {
   const core = part(docx, 'docProps/core.xml') ?? '';
   const styles = part(docx, 'word/styles.xml') ?? '';
 
-  // Headings: paragraphs whose style is HeadingN. Style ids are matched, not
-  // display names, because ids are what document.xml references.
-  const headingLevels = [...doc.matchAll(/w:pStyle w:val="Heading([1-9])"/g)].map((m) => Number(m[1]));
+  // Headings: any paragraph whose STYLE DEFINITION carries an outline level
+  // (covers HeadingN and every custom style — `[V]` one municipal document
+  // used a style literally named "Heading", no digit), plus paragraphs with a
+  // direct-formatting `w:outlineLvl` (`[V]` four documents declared all their
+  // structure that way, zero pStyle in the body). The pStyle-name-only first
+  // version under-read both shapes and mis-graded legitimate transcription as
+  // invention — the extractor-bug case the predictions pre-registered.
+  // Two passes on purpose: an optional group inside a lazy match is simply
+  // skipped, so the one-regex version never captured a level. Find each style
+  // block first, then look inside it.
+  const styleLevel = new Map();
+  for (const block of styles.matchAll(/<w:style [^>]*w:styleId="([^"]+)"[\s\S]*?<\/w:style>/g)) {
+    const level = /<w:outlineLvl w:val="([0-8])"\/>/.exec(block[0]);
+    if (level) styleLevel.set(block[1], Number(level[1]) + 1);
+  }
+  const headingLevels = [
+    ...[...doc.matchAll(/w:pStyle w:val="([^"]+)"/g)]
+      .map((m) => styleLevel.get(m[1]) ?? (/^Heading([1-9])$/.exec(m[1]) ? Number(/^Heading([1-9])$/.exec(m[1])[1]) : null))
+      .filter((level) => level !== null),
+    ...[...doc.matchAll(/<w:outlineLvl w:val="([0-8])"\/>/g)].map((m) => Number(m[1]) + 1),
+  ];
 
   // Figures and their alt: every inline/anchored drawing has a docPr; alt is
   // its descr attribute, present or not.
