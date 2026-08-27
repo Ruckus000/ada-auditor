@@ -2,6 +2,7 @@ import type { Environment } from '../../domain/contracts';
 import type { JourneyTruncationReason } from '../../domain/run-limits';
 import type { AxNodeSummary } from '../../services/ax-tree';
 import type { AxeScanResult } from '../../services/deterministic-audit';
+import type { PageFacts } from '../../services/page-checks';
 import type { RunCredentials } from './credentials';
 
 /**
@@ -160,6 +161,12 @@ export type PageAudit = {
   html: string;
   /** Rule results from the live page — the only source of findings. */
   axe: AxeScanResult;
+  /**
+   * Plain-data DOM facts for `services/page-checks` — the checks axe
+   * structurally cannot make. Empty facts on a page where collection failed:
+   * absence of evidence stays absence, never a finding.
+   */
+  facts: PageFacts;
   /** Pruned accessibility tree, for the advisory pass. Empty when omitted. */
   axTree: AxNodeSummary[];
   artifacts: JourneyArtifacts;
