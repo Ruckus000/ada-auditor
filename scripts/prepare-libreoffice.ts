@@ -142,7 +142,18 @@ const PACKAGES = [
   'libobasis26.2-en-US',
 ];
 
-/** Survives package selection, cannot matter to a headless conversion. */
+/**
+ * Survives package selection, cannot matter to a headless conversion.
+ *
+ * The `program/` entries are optional runtime plugins whose dependencies the
+ * runtime image will never have and should never grow: `[V]` the widened
+ * collector gate listed 13 unresolvable libraries — Qt6, GTK4, GStreamer,
+ * JAWT — and every one traced to exactly these five ELFs, none of which a
+ * `--headless` conversion loads. `[V]` The headless (svp) backend is compiled
+ * into `libmergedlo.so` in TDF builds — there is no separate svp plugin to
+ * keep — and the X11 generic plugin stays, its dependencies being the X11
+ * client set the build installs anyway.
+ */
 const PRUNE = [
   'help',
   'readmes',
@@ -152,6 +163,13 @@ const PRUNE = [
   'LICENSE',
   'LICENSE.html',
   'NOTICE',
+  // Media playback backends — audio and video, in a PDF converter.
+  'program/libavmediagst.so',
+  'program/libavmediagtk.so',
+  'program/libavmediaqt6.so',
+  // The Java applet bean (JAWT) and the GTK embedding widget.
+  'program/libofficebean.so',
+  'program/liblibreofficekitgtk.so',
 ];
 
 /**
