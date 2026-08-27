@@ -1,0 +1,82 @@
+name: Dependency audit
+
+# Nothing in this repository runs `npm audit`.
+#
+# The gate that blocks a push is `lint && typecheck`, and `localci.yml` states
+# why a dependency check does not belong there: "Lockfile integrity is a real
+# concern and this does not cover it; that belongs in a check that runs on a
+# schedule, not on every push." This is that check.
+#
+# Weekly rather than nightly. An advisory lands when it lands, and a job that
+# runs seven times to report the same three findings is one people stop reading
+# — the failure `smoke-real.yml` names as training people to ignore red.
+on:
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Fail on a critical advisory in the production tree
+    runs-on: ubuntu-latest
+    # Same reasoning as `prune-artifacts.yml`: the failure step files an issue,
+    # this repository's default workflow token is read-only, and naming any
+    # permission drops the rest to none.
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      # `--omit=dev`, and `critical` rather than `high`. Both narrowings are
+      # measured, not cautious:
+      #
+      # Every advisory this tree carries today is either dev-only or
+      # unreachable. `brace-expansion` and `js-yaml` are dev dependencies and
+      # never ship. `nanoid` is reached only through `next -> postcss` at build
+      # time and needs a custom generator called with `size: 0`, which nothing
+      # here does. So `--audit-level=high` would be red on the day this file
+      # lands, and a check that arrives red never becomes a check — it becomes
+      # a badge people learn to skip. `AGENTS.md` records where that ends: the
+      # artifact sweep "failed eleven nights unnoticed" behind exactly that
+      # kind of standing warning.
+      #
+      # The highs are not hidden. `npm audit` prints the full report into this
+      # job's log whatever the threshold, so the detail is one click away; only
+      # the *exit code* is narrowed to what is worth waking someone for.
+      - name: npm audit
+        run: npm audit --omit=dev --audit-level=critical
+
+      # A scheduled job that fails into an empty room depends on somebody
+      # remembering to look, which is the thing scheduling was supposed to
+      # remove. Verbatim the shape `prune-artifacts.yml` uses, including
+      # reopening a closed issue so a recurrence lands on the original thread
+      # with its history rather than starting a parallel one.
+      - name: File an issue if a critical advisory is outstanding
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TITLE='Critical dependency advisory in the production tree'
+          BODY=$(printf '%s\n' \
+            'A scheduled `npm audit --omit=dev --audit-level=critical` failed, so a critical advisory affects a package that ships.' \
+            '' \
+            "Failed run: ${RUN_URL}" \
+            '' \
+            'The run log carries the full report, including the high-severity findings this gate deliberately does not fail on. Check reachability before upgrading: this tree has carried unreachable advisories for some time, and the question is whether the vulnerable path is one this application actually calls.')
+          EXISTING=$(gh issue list --state all --limit 100 --json number,title \
+            --jq "first(.[] | select(.title == \"${TITLE}\") | .number) // empty")
+          if [ -n "${EXISTING}" ]; then
+            gh issue reopen "${EXISTING}" 2>/dev/null || true
+            gh issue comment "${EXISTING}" --body "${BODY}"
+            echo "updated issue #${EXISTING}"
+          else
+            gh issue create --title "${TITLE}" --body "${BODY}"
+          fi
