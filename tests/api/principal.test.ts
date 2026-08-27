@@ -135,7 +135,7 @@ describe('resolvePrincipal', () => {
   it('resolves an operator cookie to that operator', async () => {
     const { store, operator } = await storeWithOperator();
 
-    expect(await resolvePrincipal(createOperatorSessionValue(SECRET, operator), store)).toEqual({
+    expect(await resolvePrincipal(createOperatorSessionValue(SECRET, operator), () => store)).toEqual({
       kind: 'operator',
       id: 'op-alex',
       name: 'Alex Reed',
@@ -149,7 +149,7 @@ describe('resolvePrincipal', () => {
   it('resolves a run-token cookie to the machine principal', async () => {
     const { store } = await storeWithOperator();
 
-    const principal = await resolvePrincipal(createSessionValue(TOKEN), store);
+    const principal = await resolvePrincipal(createSessionValue(TOKEN), () => store);
     expect(principal?.kind).toBe('machine');
     expect(principal?.id).toBeUndefined();
   });
@@ -162,7 +162,7 @@ describe('resolvePrincipal', () => {
 
     await store.setOperatorDisabled('op-alex', true);
 
-    expect(await resolvePrincipal(cookie, store)).toBeNull();
+    expect(await resolvePrincipal(cookie, () => store)).toBeNull();
   });
 
   // Per-operator revocation, with no server-side session table.
@@ -172,14 +172,14 @@ describe('resolvePrincipal', () => {
 
     await store.bumpSessionEpoch('op-alex');
 
-    expect(await resolvePrincipal(cookie, store)).toBeNull();
+    expect(await resolvePrincipal(cookie, () => store)).toBeNull();
   });
 
   it('refuses a cookie for an operator who no longer exists', async () => {
     const { operator } = await storeWithOperator();
     const cookie = createOperatorSessionValue(SECRET, operator);
 
-    expect(await resolvePrincipal(cookie, new MemoryPlatformStore())).toBeNull();
+    expect(await resolvePrincipal(cookie, () => new MemoryPlatformStore())).toBeNull();
   });
 
   it('refuses everything when no secret is configured', async () => {
@@ -188,12 +188,53 @@ describe('resolvePrincipal', () => {
     delete process.env.AUDITOR_RUN_TOKEN;
     delete process.env.AUDITOR_SESSION_SECRET;
 
-    expect(await resolvePrincipal(cookie, store)).toBeNull();
+    expect(await resolvePrincipal(cookie, () => store)).toBeNull();
   });
 
   it('refuses an absent cookie', async () => {
     const { store } = await storeWithOperator();
-    expect(await resolvePrincipal(null, store)).toBeNull();
-    expect(await resolvePrincipal('', store)).toBeNull();
+    expect(await resolvePrincipal(null, () => store)).toBeNull();
+    expect(await resolvePrincipal('', () => store)).toBeNull();
+  });
+
+  /**
+   * The reason the store arrives as a factory rather than as a store.
+   *
+   * `getPlatformStore()` throws without `DATABASE_URL`. Evaluating it to build
+   * an argument the v1 and no-cookie paths never read turned a 401 into a 500
+   * on any same-origin request, and rendered Next's generic error page where
+   * `guard.tsx` should have shown the unlock card — hiding `/console`'s own
+   * banner, which names the missing variable and the four steps that fix it.
+   *
+   * A factory that throws is the honest double here: it stands in for exactly
+   * what a deployment without a database does.
+   */
+  it('never reaches for the store unless the cookie is a v2 one', async () => {
+    const absent = () => {
+      throw new Error('DATABASE_URL is not set.');
+    };
+
+    expect(await resolvePrincipal(null, absent)).toBeNull();
+    expect(await resolvePrincipal('', absent)).toBeNull();
+    expect(await resolvePrincipal('not-a-cookie-at-all', absent)).toBeNull();
+    expect(await resolvePrincipal('v2.op-alex.1.9999999999.badsignature', absent)).toBeNull();
+
+    // The machine path is the one that has to keep working without a database:
+    // it is how CI and the hydration harness get in.
+    expect((await resolvePrincipal(createSessionValue(TOKEN), absent))?.kind).toBe('machine');
+  });
+
+  // ...and the v2 path still does, because revocation depends on it.
+  it('does reach for the store when the cookie names an operator', async () => {
+    const { store, operator } = await storeWithOperator();
+    let calls = 0;
+
+    const counted = () => {
+      calls += 1;
+      return store;
+    };
+
+    await resolvePrincipal(createOperatorSessionValue(SECRET, operator), counted);
+    expect(calls).toBe(1);
   });
 });
