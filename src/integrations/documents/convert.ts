@@ -13,7 +13,7 @@ import { inspectDocument } from './inspect';
 import { readLanguage, repairTitle } from './flat-odf';
 import { resolveLibreOffice, type LibreOfficeRuntime } from './libreoffice-runtime';
 import type { Env, JavaRuntime } from './java-runtime';
-import type { StageExecutor } from './stage';
+import { childEnv, type StageExecutor } from './stage';
 
 /**
  * A Word source to a tagged PDF, carrying through what the author wrote.
@@ -155,9 +155,9 @@ async function runSoffice(
         // *shared* rather than rebuilt per conversion.
         env:
           runtime.libraryPath === undefined
-            ? base
+            ? childEnv(base)
             : {
-                ...base,
+                ...childEnv(base),
                 // `/var/task` is read-only, and LibreOffice writes a
                 // fontconfig cache regardless of where its profile lives.
                 // Pointed at the per-run temp directory, which is removed with

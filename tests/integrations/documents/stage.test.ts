@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { runStage, type StageExecutor } from '../../../src/integrations/documents/stage';
+import { credentialEnvKey } from '../../../src/domain/credential-ref';
 import { finishDocument } from '../../../src/integrations/documents/finish';
 import { resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
 import type { JavaRuntime } from '../../../src/integrations/documents/java-runtime';
@@ -240,5 +241,61 @@ describe('finishDocument', () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.failure.kind).toBe('unavailable');
+  });
+});
+
+/**
+ * What the JVM is allowed to see.
+ *
+ * `execFile` with no `env` hands a child the whole of `process.env`, and this
+ * one parses client PDFs fetched from third-party servers. The names below are
+ * the real shapes: `credentialEnvKey` rather than a hand-spelled string, so a
+ * change to that scheme cannot leave this test asserting a variable nothing
+ * produces.
+ */
+const SECRETS = {
+  PATH: '/usr/bin',
+  HOME: '/home/app',
+  LANG: 'en_US.UTF-8',
+  DATABASE_URL: 'postgres://user:hunter2@db.example/main',
+  BLOB_READ_WRITE_TOKEN: 'vercel_blob_rw_XXXX',
+  [credentialEnvKey('acme', 'pass')]: 'the-client-website-password',
+};
+
+describe('the environment a stage is spawned with', () => {
+  it('carries no database URL, blob token or client credential', async () => {
+    let seen: Record<string, string | undefined> | undefined;
+    await runStage('Inspect', ['a.pdf'], z.object({}).passthrough(), {
+      runtime: RUNTIME,
+      env: SECRETS,
+      executor: async (_bin, _args, options) => {
+        seen = options.env;
+        return { stdout: '{}', stderr: '' };
+      },
+    });
+
+    expect(seen).toBeDefined();
+    expect(seen).not.toHaveProperty('DATABASE_URL');
+    expect(seen).not.toHaveProperty('BLOB_READ_WRITE_TOKEN');
+    expect(seen).not.toHaveProperty(credentialEnvKey('acme', 'pass'));
+    expect(JSON.stringify(seen)).not.toContain('hunter2');
+  });
+
+  it('still carries what the toolchain needs to run', async () => {
+    // The other half. A filter that returned nothing would pass every
+    // assertion above and break every conversion — and `LANG` in particular is
+    // load-bearing: on Java 17 `file.encoding` follows it, so dropping it can
+    // silently downgrade extracted text to ASCII.
+    let seen: Record<string, string | undefined> | undefined;
+    await runStage('Inspect', ['a.pdf'], z.object({}).passthrough(), {
+      runtime: RUNTIME,
+      env: SECRETS,
+      executor: async (_bin, _args, options) => {
+        seen = options.env;
+        return { stdout: '{}', stderr: '' };
+      },
+    });
+
+    expect(seen).toMatchObject({ PATH: '/usr/bin', HOME: '/home/app', LANG: 'en_US.UTF-8' });
   });
 });

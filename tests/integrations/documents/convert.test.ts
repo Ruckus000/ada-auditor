@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { convertSourceToPdf } from '../../../src/integrations/documents/convert';
 import type { StageExecutor } from '../../../src/integrations/documents/stage';
+import { credentialEnvKey } from '../../../src/domain/credential-ref';
 
 /**
  * The conversion chain's failure handling, without LibreOffice.
@@ -138,5 +139,36 @@ describe('convertSourceToPdf', () => {
     // fontconfig cache is worth keeping shared rather than rebuilt per
     // conversion.
     expect(seen).not.toHaveProperty('HOME');
+  });
+
+  it('hands LibreOffice no database URL, blob token or client credential', async () => {
+    // LibreOffice parses a document fetched from a third-party server: the
+    // caller is authenticated, the bytes are not. Asserted on the bundled
+    // branch because that is the deployed one, where these variables are real.
+    let seen: Record<string, string | undefined> | undefined;
+    await convertSourceToPdf('in.docx', 'out.pdf', {
+      runtime: {
+        available: true,
+        sofficeBin: '/nonexistent/soffice',
+        libraryPath: '/bundle/.syslibs',
+      },
+      env: {
+        PATH: '/usr/bin',
+        DATABASE_URL: 'postgres://user:hunter2@db.example/main',
+        BLOB_READ_WRITE_TOKEN: 'vercel_blob_rw_XXXX',
+        [credentialEnvKey('acme', 'pass')]: 'the-client-website-password',
+      },
+      executor: async (_bin, _args, options) => {
+        seen = options.env;
+        return { stdout: '', stderr: '' };
+      },
+    });
+
+    expect(seen).not.toHaveProperty('DATABASE_URL');
+    expect(seen).not.toHaveProperty('BLOB_READ_WRITE_TOKEN');
+    expect(seen).not.toHaveProperty(credentialEnvKey('acme', 'pass'));
+    expect(JSON.stringify(seen)).not.toContain('hunter2');
+    // …while what it needs survives.
+    expect(seen?.PATH).toBe('/usr/bin');
   });
 });
