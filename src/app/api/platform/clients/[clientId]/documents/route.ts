@@ -9,6 +9,7 @@ import type {
 import { resolveJavaRuntime } from '../../../../../../integrations/documents/java-runtime';
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { compareDocumentInspections } from '../../../../../../services/document-regression';
+import { pairDocuments } from '../../../../../../services/document-pairing';
 import { hostnameOf } from '../../../../../../services/safe-url';
 import { logInfo } from '../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../_lib/authorize';
@@ -172,14 +173,24 @@ export async function GET(
   const diffs = compareDocumentInspections(await platform.listDocumentInspections(clientId));
   const diffByDocument = new Map(diffs.map((diff) => [diff.documentId, diff]));
 
+  // Pairing reads the UNFILTERED inventory: a filtered page would miss the
+  // sibling that fell outside it. One page of 200 covers every crawlable
+  // inventory (the per-kind caps top out at 150); an inventory beyond that
+  // pairs within its first page, a bound worth widening only when a real
+  // client exceeds it.
+  const universe = await platform.listClientDocuments(clientId);
+  const pairs = pairDocuments(universe.documents);
+
   return Response.json(
     {
       requestId,
       hasMore,
       documents: documents.map((record) => {
         const diff = diffByDocument.get(record.id);
+        const source = pairs.get(record.id);
         return {
           ...documentResponse(record),
+          ...(source === undefined ? {} : { sourceAvailable: source }),
           ...(diff === undefined || diff.status === 'first-reading'
             ? {}
             : {

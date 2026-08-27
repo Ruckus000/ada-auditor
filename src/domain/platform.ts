@@ -226,6 +226,11 @@ export type DocumentReportEntry = {
   gaps: string[];
   /** The punch list for this document — work a person still has to do. */
   needs?: Array<{ criterion: string; item: string }>;
+  /**
+   * A Word source for this PDF exists in the same inventory: its remediation
+   * is "convert the source", not the punch list.
+   */
+  sourceAvailable?: true;
 };
 
 export type DocumentReportSection = {

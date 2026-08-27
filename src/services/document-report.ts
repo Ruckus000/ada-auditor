@@ -5,6 +5,7 @@ import type {
   DocumentReportSection,
 } from '../domain/platform';
 import type { RemediationSummary } from '../domain/document-remediation';
+import { pairDocuments } from './document-pairing';
 
 /**
  * The documents section of an issued client report, built once and pinned.
@@ -69,6 +70,7 @@ export function buildDocumentReport(
   documents: ClientDocumentRecord[],
   capturedAt: string,
 ): DocumentReportSection {
+  const pairs = pairDocuments(documents);
   const byKind: Partial<Record<DocumentLinkKind, number>> = {};
   const entries: DocumentReportEntry[] = [];
   let unread = 0;
@@ -104,6 +106,7 @@ export function buildDocumentReport(
       // human-written description") — no document content, so they pass the
       // same no-titleText review this construction exists for.
       ...(reading.summary.needs === undefined ? {} : { needs: reading.summary.needs.map((n) => ({ ...n })) }),
+      ...(pairs.has(record.id) ? { sourceAvailable: true as const } : {}),
     });
   }
 

@@ -65,6 +65,11 @@ type ClientDocument = {
     /** Whether the delivered file itself is retrievable from the server. */
     stored: boolean;
   };
+  /**
+   * A Word document in the same inventory shares this PDF's stem — its
+   * conversion, not this file's punch list, is the remediation.
+   */
+  sourceAvailable?: { id: string; kind: 'docx' | 'doc'; url: string };
   /** The server's diff of the latest two readings. Absent on a first reading. */
   regression?: {
     status: 'unchanged' | 'improved' | 'regressed' | 'mixed';
@@ -571,7 +576,7 @@ export function ClientDocuments({
     }
   }
 
-  async function convert(doc: ClientDocument) {
+  async function convert(doc: Pick<ClientDocument, 'url' | 'foundOn'>) {
     setConversion(doc.url, { state: 'running' });
     try {
       const response = await fetch(`${documentsPath}/convert`, {
@@ -847,6 +852,12 @@ export function ClientDocuments({
             {documents.map((doc) => {
               const inspection = inspections[doc.url] ?? { state: 'idle' };
               const conversion = conversions[doc.url] ?? { state: 'idle' };
+              // Conversion progress keys on the URL actually converted, so a
+              // paired PDF reads the state of its Word source.
+              const sourceConversion =
+                doc.sourceAvailable === undefined
+                  ? ({ state: 'idle' } as const)
+                  : (conversions[doc.sourceAvailable.url] ?? { state: 'idle' });
               const hasRecord =
                 doc.latestInspection !== undefined || doc.latestConversion !== undefined;
               return (
@@ -889,18 +900,32 @@ export function ClientDocuments({
                       </button>
                     ) : null}
                     {doc.kind === 'pdf' ? (
-                      <button
-                        type="button"
-                        onClick={() => inspect(doc)}
-                        disabled={inspection.state === 'running'}
-                        style={{
-                          ...buttonStyle,
-                          marginLeft: 'auto',
-                          ...disabledStyle(inspection.state === 'running'),
-                        }}
-                      >
-                        {inspection.state === 'running' ? 'Inspecting…' : 'Inspect'}
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => inspect(doc)}
+                          disabled={inspection.state === 'running'}
+                          style={{
+                            ...buttonStyle,
+                            marginLeft: 'auto',
+                            ...disabledStyle(inspection.state === 'running'),
+                          }}
+                        >
+                          {inspection.state === 'running' ? 'Inspecting…' : 'Inspect'}
+                        </button>
+                        {doc.sourceAvailable && converter.available ? (
+                          <button
+                            type="button"
+                            onClick={() => convert(doc.sourceAvailable!)}
+                            disabled={sourceConversion.state === 'running'}
+                            style={{ ...buttonStyle, ...disabledStyle(sourceConversion.state === 'running') }}
+                          >
+                            {sourceConversion.state === 'running'
+                              ? 'Converting source…'
+                              : 'Convert the Word source'}
+                          </button>
+                        ) : null}
+                      </>
                     ) : converter.available ? (
                       <button
                         type="button"
@@ -916,6 +941,12 @@ export function ClientDocuments({
                       </button>
                     ) : null}
                   </span>
+                  {doc.sourceAvailable ? (
+                    <p style={noteStyle}>
+                      Word source on record — converting the source is this PDF&apos;s
+                      remediation, not repairing the PDF itself.
+                    </p>
+                  ) : null}
                   {/* The stored record, rendered from the inventory itself —
                       no server call, and the same SummaryView every other
                       source renders through. */}
