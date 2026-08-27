@@ -330,6 +330,22 @@ click-through requires the operator credential and is a person's action.
 
 Read this before claiming something works.
 
+- **The 120-document remediation test is run and scored**
+  (`docs/research/document-remediation/remediation-test-2026-08-27-results.md`,
+  predictions pre-registered). The sentence that matters: **conversion
+  delivers and its claims survive audit; repair produces conformance whose
+  claims do not.** Arm A: 31/31 real municipal Word documents delivered
+  (legacy .doc included), 13/31 green on both instruments, gap order exactly
+  as predicted, zero invented claims after the import-language fix the test
+  itself caught (#140). Arm B (the PDF-repair STOP, deliberately reopened):
+  real 2/31 conformance-deliverable — inside the registered 0–2 band — and on
+  the generated half 23/28 "green" collapses to 2/28 semantically true, with
+  62 false assertions across 20 documents. The STOP stands, strengthened:
+  conformance and truth are different properties, and only the second is
+  remediation. Open from the test: three real documents lost 3–4 headings in
+  conversion (mechanism unprobed), and list-count semantics differ between
+  the instruments.
+
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run
   (`docs/research/blind-test/2026-08-27-rule-gaps-closed.md`): barriers seen
