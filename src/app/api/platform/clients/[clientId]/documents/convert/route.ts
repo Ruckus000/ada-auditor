@@ -158,7 +158,9 @@ export async function POST(
     return refusalResponse(fetched.refusal, requestId);
   }
 
-  const outcome = await remediateWordBytes(fetched.bytes, fetched.kind, requestId);
+  const outcome = await remediateWordBytes(fetched.bytes, fetched.kind, requestId, {
+    sourceName: decodeURIComponent(new URL(url).pathname.split('/').pop() ?? ''),
+  });
   if (!outcome.ok) {
     return refusalResponse(outcome.refusal, requestId);
   }
@@ -230,7 +232,9 @@ export async function PUT(
     return refusalResponse(upload.refusal, requestId);
   }
 
-  const outcome = await remediateWordBytes(upload.bytes, upload.kind, requestId);
+  const outcome = await remediateWordBytes(upload.bytes, upload.kind, requestId, {
+    sourceName: upload.filename,
+  });
   if (!outcome.ok) {
     return refusalResponse(outcome.refusal, requestId);
   }

@@ -105,6 +105,8 @@ export async function POST(request: Request) {
   }
 
   const outcome = await remediateWordBytes(fetched.bytes, fetched.kind, requestId, {
+    // The URL's last segment is the author-published name of this document.
+    sourceName: decodeURIComponent(new URL(url).pathname.split('/').pop() ?? ''),
     javaRuntime: java,
     runtime: soffice,
   });

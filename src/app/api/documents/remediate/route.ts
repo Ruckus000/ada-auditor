@@ -99,6 +99,9 @@ export async function POST(request: Request) {
   // The upload's own filename never reaches the filesystem — the shared core
   // names the temp files by request id, which is all a temp path needs.
   const outcome = await remediateWordBytes(upload.bytes, upload.kind, requestId, {
+    // The client-facing name, for filename-derived titles; the temp path the
+    // converter sees is a requestId and says nothing.
+    sourceName: upload.filename,
     javaRuntime: java,
     runtime: soffice,
   });
