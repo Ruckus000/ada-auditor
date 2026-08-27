@@ -121,6 +121,10 @@ describe('convertSourceToPdf', () => {
     // should keep using it.
     expect(seen?.LD_LIBRARY_PATH).toBe('/already/here:/bundle/.syslibs');
     expect(seen?.HOME).toMatch(/ada-convert-/);
+    // And its own fontconfig: the deployed runtime has no /etc/fonts, and the
+    // PDF export dies without one. Written per run because the config needs
+    // absolute paths and the build machine's differ from the runtime's.
+    expect(seen?.FONTCONFIG_FILE).toMatch(/ada-convert-.*fonts\.conf$/);
   });
 
   it('leaves the loader alone for a host install', async () => {
@@ -137,8 +141,11 @@ describe('convertSourceToPdf', () => {
     expect(seen?.LD_LIBRARY_PATH).toBe('/already/here');
     // And HOME is left alone: on a host it is already writable, and its
     // fontconfig cache is worth keeping shared rather than rebuilt per
-    // conversion.
+    // conversion. Same for fontconfig itself — a host install has a real
+    // /etc/fonts, and overriding it would swap the machine's fonts for our
+    // three faces.
     expect(seen).not.toHaveProperty('HOME');
+    expect(seen).not.toHaveProperty('FONTCONFIG_FILE');
   });
 
   it('hands LibreOffice no database URL, blob token or client credential', async () => {
