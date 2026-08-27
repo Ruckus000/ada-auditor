@@ -21,3 +21,9 @@ real-word/
 out-arm-a/
 real-word-truth/
 out-arm-a-real/
+# The rule that just failed: EVERY real-bytes directory is named here BEFORE
+# its first fetch. real-pdf/ was not, and `git add -A` on a results branch
+# swept 23 real municipal PDFs onto public master (removed in the same PR as
+# this line; history purge is a separate, user-authorized operation).
+real-pdf/
+out-arm-b-evidence/
