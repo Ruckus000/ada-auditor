@@ -57,7 +57,38 @@ describe('runStage', () => {
     const { executor, calls } = fakeExecutor('{"count": 0}');
     await runStage('Inspect', [nasty], schema, { runtime: RUNTIME, executor });
 
-    expect(calls[0]).toEqual(['/nonexistent/java', '-cp', '/nonexistent/cp', 'Inspect', nasty]);
+    expect(calls[0]).toEqual([
+      '/nonexistent/java',
+      '-Xmx512m',
+      '-cp',
+      '/nonexistent/cp',
+      'Inspect',
+      nasty,
+    ]);
+  });
+
+  /**
+   * The heap ceiling is on the command line, not left to the JVM's default.
+   *
+   * A JVM with no `-Xmx` sizes its heap from the memory it can see, which on
+   * the document functions is the whole 2048MB `vercel.json` grants them — the
+   * budget for Node, metaspace, thread stacks and native buffers too. A
+   * document that expands past that takes the container with it and reports
+   * nothing, where a bounded heap reports a stage failure naming the document.
+   *
+   * The 25MB upload cap does not cover this: it bounds the *compressed* file,
+   * and `PDFTextStripper.getText` materialises the whole text at once.
+   *
+   * Asserted before the classpath because order is what `execFile` passes to
+   * the JVM, and a flag after `-cp` is an argument to the class, not to java.
+   */
+  it('caps the heap, and does it before the classpath so the JVM reads it', async () => {
+    const { executor, calls } = fakeExecutor('{"count": 0}');
+    await runStage('Inspect', ['a.pdf'], schema, { runtime: RUNTIME, executor });
+
+    const args = calls[0]!.slice(1);
+    expect(args[0]).toBe('-Xmx512m');
+    expect(args.indexOf('-Xmx512m')).toBeLessThan(args.indexOf('-cp'));
   });
 
   it('parses the whole of stdout, which is what Inspect prints', async () => {
@@ -215,7 +246,8 @@ describe('finishDocument', () => {
 
     expect(result.ok).toBe(true);
     expect(calls[0]).toEqual([
-      '/nonexistent/java', '-cp', '/nonexistent/cp', 'Finish', 'in.pdf', 'out.pdf', 'cy-GB',
+      '/nonexistent/java', '-Xmx512m', '-cp', '/nonexistent/cp',
+      'Finish', 'in.pdf', 'out.pdf', 'cy-GB',
     ]);
   });
 

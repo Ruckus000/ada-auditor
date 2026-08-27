@@ -50,6 +50,34 @@ const DEFAULT_MAX_BUFFER = 64 * 1024 * 1024;
  */
 const DEFAULT_TIMEOUT_MS = 60_000;
 
+/**
+ * The most heap the JVM may take, as an explicit flag rather than a default.
+ *
+ * Without `-Xmx` a JVM sizes its heap from the memory it can see, which on the
+ * document functions is the whole 2048MB `vercel.json` grants them. That is the
+ * budget for the Node process, the JVM's own metaspace, thread stacks and
+ * native buffers as well — so a heap allowed to grow into all of it can push
+ * the container into a platform OOM kill, which takes the request with it and
+ * leaves nothing to report.
+ *
+ * The input is bounded at 25MB, but that bounds the *compressed* document.
+ * `Inspect` calls `PDFTextStripper.getText`, which materialises the whole text
+ * at once, so a document well inside the upload cap can expand far past it.
+ *
+ * Capped here instead, so that document dies as an `OutOfMemoryError` — a
+ * non-zero exit the handler below already reports as a stage failure, naming
+ * the document rather than the deployment.
+ *
+ * Not a `StageOptions` field: no caller wants a different heap, and a knob
+ * nobody turns is a knob that drifts from the memory the function is actually
+ * given. The pairing with `vercel.json` is the thing to keep true.
+ *
+ * `childEnv` is what makes this stick — it withholds `JAVA_TOOL_OPTIONS` and
+ * `_JAVA_OPTIONS`, so nothing in the environment can raise the ceiling set on
+ * the command line.
+ */
+const MAX_HEAP = '-Xmx512m';
+
 export type StageFailure =
   /** No toolchain here. Expected in production; never an error. */
   | { kind: 'unavailable'; reason: string }
@@ -184,7 +212,7 @@ async function spawnStage(
   try {
     const result = await execute(
       runtime.javaBin,
-      ['-cp', runtime.classpath, stage, ...args],
+      [MAX_HEAP, '-cp', runtime.classpath, stage, ...args],
       {
         timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
         maxBuffer: options.maxBuffer ?? DEFAULT_MAX_BUFFER,

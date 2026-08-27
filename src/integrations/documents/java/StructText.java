@@ -1,8 +1,11 @@
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -73,20 +76,41 @@ public final class StructText {
         if (el.getActualText() != null) return el.getActualText().trim();
         if (el.getAlternateDescription() != null) return el.getAlternateDescription().trim();
         StringBuilder b = new StringBuilder();
-        collect(el, b);
+        collect(el, b, seen());
         return b.toString().replaceAll("\\s+", " ").trim();
     }
 
     /** Union extent of everything the element references, or null if nothing is locatable. */
     public Box boxOf(PDStructureElement el) {
-        return box(el, null);
+        return box(el, null, seen());
     }
 
-    private Box box(PDStructureElement el, Box acc) {
+    /**
+     * A fresh visited set, per traversal.
+     *
+     * Both walks below recurse `getKids()`, and a structure tree is a tree by
+     * convention and a graph by format: an element may be its own descendant,
+     * which recursed until the JVM's stack gave out. `Inspect` guards its own
+     * walk; this one is reached from there and needed the same thing, which a
+     * hand-assembled cyclic document is what proved.
+     *
+     * Identity rather than equality, because two distinct elements can carry
+     * equal dictionaries and collapsing those would drop real content.
+     *
+     * Per call rather than per document: one subtree may legitimately hang
+     * under two parents, and each of those elements' text genuinely includes
+     * it. Only revisiting a node *within one traversal* is the cycle.
+     */
+    private static Set<Object> seen() {
+        return Collections.newSetFromMap(new IdentityHashMap<>());
+    }
+
+    private Box box(PDStructureElement el, Box acc, Set<Object> seen) {
+        if (!seen.add(el.getCOSObject())) return acc;
         Integer page = el.getPage() != null ? pageIndex.get(el.getPage()) : null;
         for (Object kid : el.getKids()) {
             if (kid instanceof PDStructureElement child) {
-                acc = box(child, acc);
+                acc = box(child, acc, seen);
             } else if (kid instanceof Integer mcid) {
                 acc = merge(page, mcid, acc);
             } else if (kid instanceof PDMarkedContentReference ref) {
@@ -105,10 +129,11 @@ public final class StructText {
         return b == null ? acc : b.union(acc);
     }
 
-    private void collect(PDStructureElement el, StringBuilder b) {
+    private void collect(PDStructureElement el, StringBuilder b, Set<Object> seen) {
+        if (!seen.add(el.getCOSObject())) return;
         Integer page = el.getPage() != null ? pageIndex.get(el.getPage()) : null;
         for (Object kid : el.getKids()) {
-            if (kid instanceof PDStructureElement child) collect(child, b);
+            if (kid instanceof PDStructureElement child) collect(child, b, seen);
             else if (kid instanceof Integer mcid) append(page, mcid, b);
             else if (kid instanceof PDMarkedContentReference ref) {
                 Integer p = ref.getPage() != null ? pageIndex.get(ref.getPage()) : page;

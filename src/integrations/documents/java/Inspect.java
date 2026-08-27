@@ -1,7 +1,9 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -66,6 +68,30 @@ public final class Inspect {
         "H1", "H2", "H3", "H4", "H5", "H6", "P", "Figure", "Table", "L", "LI", "Caption", "Formula");
     private Map<String, Object> roleMap;
     private int elements = 0;
+
+    /**
+     * Structure elements already walked, so a hostile tree cannot be walked
+     * forever.
+     *
+     * A structure tree is a tree by convention and a graph by format: nothing
+     * in a PDF stops an element being its own descendant, or two parents
+     * sharing one subtree. The first recurses until the JVM's stack gives out;
+     * the second is exponential in the sharing depth, and both arrive as a
+     * document somebody uploaded. `imageCount` above already declines to
+     * recurse XObjects for exactly this reason — the tree walk simply never
+     * got the same guard.
+     *
+     * Identity, not equality: two distinct elements can carry equal
+     * dictionaries, and collapsing those would silently drop real content.
+     * This asks the narrower question, "have I walked *this* object", which is
+     * the one that bounds the walk.
+     *
+     * Skipping a repeat loses nothing. A second visit would re-report a node
+     * already in `order`, `headings` or `tables`, so this removes duplicates
+     * rather than truncating — which is why nothing in the output announces it.
+     */
+    private final Set<Object> visited =
+        java.util.Collections.newSetFromMap(new IdentityHashMap<>());
     /** Shared with Headings, so the tool that measures and the tool that acts
         cannot disagree about what a heading says. */
     private StructText text;
@@ -231,6 +257,9 @@ public final class Inspect {
     private void walk(PDStructureNode node, Tbl enclosingTable, Lst enclosingList, int listDepth) {
         for (Object kid : node.getKids()) {
             if (!(kid instanceof PDStructureElement el)) continue;
+            // Before `elements++`, so the count stays a count of distinct
+            // elements rather than of visits.
+            if (!visited.add(el.getCOSObject())) continue;
             elements++;
 
             String type = standard(el.getStructureType());
