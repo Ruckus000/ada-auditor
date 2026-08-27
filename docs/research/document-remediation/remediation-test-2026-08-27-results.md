@@ -119,3 +119,51 @@ Recorded because the next corpus effort will hit every one:
    as the author's miss.
 4. Arm B's UA-1-only failures (15 documents, zero Inspect gaps): name the
    dominant clauses — the gap vocabulary may deserve one or two additions.
+
+---
+
+## Follow-up, 2026-08-27 evening: re-scored after the remediation-gaps campaign
+
+The original numbers above are the record of the first run and stay as
+written. This section re-scores the same corpora after the seven-phase
+campaign that the first run's shortfalls demanded (empty-heading deletion,
+UA-1 clauses named via the JSON report, filename-derived titles, caption-
+derived alt plus the punch list, instrument alignment, PDF source-pairing).
+
+### Predictions, registered before the re-run
+
+Committed before the runner started, same discipline as the original test.
+
+1. **Generated (now 34 strata — four added by the campaign):** ≥ 30 of 34
+   both-instruments green. Named exceptions expected: `a15-empty` delivers
+   (the adjudicated frozen-key miss — an empty paragraph is structure) and
+   `a33-junk-filename` delivers with the honest 2.4.2 gap, because its
+   authored name (`Document1.docx`) is exactly what the junk-refusal exists
+   to refuse.
+2. **Real (31):** 23–24 both-green — the conversion pipeline is unchanged
+   since the last measured 23, so a materially different number means the
+   instruments moved, not the documents. The five author-skip documents stay
+   UA-1 red on clause 7.4.2 and carry their 2.4.10 heading-skip punch items;
+   renumbering an author's levels would be invention.
+3. **The promise, checked per document:** every non-green delivery carries at
+   least one named gap or punch-list item. Zero silent gaps, zero invented
+   claims (`title`/alt provenance labels asserted throughout).
+4. **Clause naming:** with both graders now reading veraPDF's JSON report,
+   `failedRules` is non-empty for every UA-1 red — the first run's blank
+   column cannot recur.
+5. **Fidelity (real):** headings 31/31, tables 29/31, lists 27/31,
+   figures 30/31 — unchanged from the Phase-5 measurement, same reasoning
+   as (2).
+6. **Production parity subset (10):** identical summaries local vs deployed,
+   including the filename-derived titles this campaign added.
+
+### Scoring against the campaign's own bar
+
+The campaign's definition of done set **≥ 26/31 real both-green**. The
+prediction above says 23–24: the numeric bar will likely be missed, because
+five documents *cannot* go green without inventing heading levels their
+authors skipped — the punch list is the designed outcome for them. The
+result below reports both readings: the number as registered, and the
+promise (green or itemized work, never silence) checked per document.
+
+_Results follow the run._
