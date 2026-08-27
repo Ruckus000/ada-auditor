@@ -25,8 +25,18 @@ export type Expectation = {
   /**
    * CSS selector for the offending element.
    *
-   * An `#id` selector is matched as a substring of axe's selector, because axe
-   * reports a path (`.card > #stat-uptime`) whenever the bare id is ambiguous.
+   * An `#id` selector matches when axe names that id anywhere in its selector
+   * path, because axe reports a path whenever the bare id is not the whole
+   * story: `#contrast-on-photo > p` is a finding inside that element and
+   * counts for it.
+   *
+   * As a whole id, though, never as a substring of a longer one. `#stat-uptime`
+   * and `#stat-uptime-note` are different elements sitting in the same card,
+   * and Kestrel's answer key predicts a different rule for each; a substring
+   * test credited the heading expectation with the caption's contrast failure.
+   * An expectation that can be satisfied by the element next to it is not
+   * measuring anything.
+   *
    * Anything else is matched exactly — `html` must not match `html > body > p`.
    */
   selector: string;
@@ -117,11 +127,21 @@ export type SiteScore = {
 
 const pageOf = (pageUrl: string): string => pageUrl.split('/').pop() ?? pageUrl;
 
+/**
+ * Every id axe named in a selector path, as whole ids.
+ *
+ * `#contrast-on-photo > p` → `['#contrast-on-photo']`, and
+ * `#stat-uptime-note` → `['#stat-uptime-note']` rather than also answering to
+ * `#stat-uptime`. An id runs to the first character CSS will not accept in
+ * one, which is what makes the boundary a boundary.
+ */
+const idsIn = (selector: string): string[] => selector.match(/#[\w-]+/g) ?? [];
+
 function matches(expectation: Expectation, finding: ScoredFinding): boolean {
   if (pageOf(finding.pageUrl) !== expectation.page) return false;
 
   if (expectation.selector.startsWith('#')) {
-    return finding.selector.includes(expectation.selector);
+    return idsIn(finding.selector).includes(expectation.selector);
   }
 
   // A non-id selector is matched exactly, or by rule when we named one —

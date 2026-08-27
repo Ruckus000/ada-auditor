@@ -156,8 +156,9 @@ describe('blind-test scorer', () => {
   /**
    * `html` must not match `html > body > p`, or every page-level rule would
    * claim every finding on the page. Id selectors are the opposite case: axe
-   * reports a path whenever the bare id is ambiguous, so `#hero` has to match
-   * `.card > #hero`.
+   * reports a path whenever the bare id is not the whole story, so `#hero` has
+   * to match both `.card > #hero` and `#hero > span` — the second is the real
+   * shape, `#contrast-on-photo > p` on the dentist's services page.
    */
   it('matches id selectors by path and everything else exactly', () => {
     const scoped = scoreSite({
@@ -168,6 +169,14 @@ describe('blind-test scorer', () => {
     });
     expect(scoped.results[0].outcome).toBe('hit');
 
+    const inside = scoreSite({
+      site: 'demo',
+      expectations: [expectation()],
+      findings: [finding({ selector: '#hero > span' })],
+      advisory: [],
+    });
+    expect(inside.results[0].outcome).toBe('hit');
+
     const documentLevel = scoreSite({
       site: 'demo',
       expectations: [expectation({ selector: 'html', axeRule: 'html-has-lang' })],
@@ -175,6 +184,36 @@ describe('blind-test scorer', () => {
       advisory: [],
     });
     expect(documentLevel.results[0].outcome).toBe('miss');
+  });
+
+  /**
+   * The case that made the substring test wrong, and it is not hypothetical:
+   * Kestrel's index carries `#stat-uptime` and `#stat-uptime-note` in the same
+   * card, predicting `heading-order` and `color-contrast` respectively. Under a
+   * substring test the caption's contrast failure also scored the heading
+   * expectation, which survived as an honest hit only because `heading-order`
+   * happened to fire too. Disable that rule — exactly the regression this
+   * scorecard exists to catch — and the expectation would still have read SEEN,
+   * scored entirely off the element next to it.
+   */
+  it('does not credit an id with a longer id that merely starts the same way', () => {
+    const score = scoreSite({
+      site: 'demo',
+      expectations: [
+        expectation({ id: 'C3', selector: '#stat-uptime', axeRule: 'heading-order' }),
+        expectation({ id: 'C2', selector: '#stat-uptime-note', axeRule: 'color-contrast' }),
+      ],
+      findings: [
+        finding({ code: 'color-contrast', severity: 'major', selector: '#stat-uptime-note' }),
+      ],
+      advisory: [],
+    });
+
+    const [heading, caption] = score.results;
+    expect(heading.outcome).toBe('miss');
+    expect(heading.matchedRules).toEqual([]);
+    expect(caption.outcome).toBe('hit');
+    expect(caption.matchedRules).toEqual(['color-contrast']);
   });
 
   it('scores the core hit rate over core expectations only', () => {
