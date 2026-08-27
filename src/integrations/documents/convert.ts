@@ -11,6 +11,7 @@ import type { ConversionProvenance } from '../../domain/document-remediation';
 import { finishDocument } from './finish';
 import { inspectDocument } from './inspect';
 import { readLanguage, repairTitle } from './flat-odf';
+import { docxDeclaredLanguage } from '../../domain/docx-language';
 import { resolveLibreOffice, type LibreOfficeRuntime } from './libreoffice-runtime';
 import type { Env, JavaRuntime } from './java-runtime';
 import { childEnv, type StageExecutor } from './stage';
@@ -258,8 +259,18 @@ export async function convertSourceToPdf(
 
     // 2. Read what the source states, and transcribe a title if it has one to
     //    give. Both are reads of the author's own words.
+    //
+    //    The language comes from the .docx's OWN bytes wherever they are
+    //    readable, because `[V]` the import that produced this fodt inflates:
+    //    Arm A of the remediation test measured declared-nothing arriving as
+    //    en-US, bare en widened to en-US, es to es-ES, ar to ar-SA — upstream
+    //    of the export-time invention `Finish` already corrects. A readable
+    //    docx that declares nothing declared nothing; only an unreadable
+    //    container (legacy .doc) falls back to the fodt reading, which for
+    //    that format is the only reading there is — inflation caveat and all.
     const original = await readFile(fodt, 'utf8');
-    const sourceLanguage = readLanguage(original);
+    const declared = docxDeclaredLanguage(await readFile(sourcePath));
+    const sourceLanguage = declared.readable ? declared.language : readLanguage(original);
     const repaired = repairTitle(original);
 
     // Written back over the same file: the flat ODF exists only inside this
