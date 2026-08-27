@@ -27,3 +27,7 @@ out-arm-a-real/
 # this line; history purge is a separate, user-authorized operation).
 real-pdf/
 out-arm-b-evidence/
+# The rescore runs write versioned evidence dirs; the suffix must never
+# outrun the ignore. Anything shaped like an arm output is ignored, present
+# or future.
+out-arm-*/
