@@ -349,7 +349,17 @@ async function main(): Promise<void> {
       });
       version = stdout.trim().split('\n')[0] ?? '';
     } catch (error) {
-      throw new Error(`the installed LibreOffice does not run: ${String(error).split('\n')[0]}`);
+      // `stderr`, not the first line of the error. `execFile` puts "Command
+      // failed: <the command>" in the message and the *reason* — the dynamic
+      // loader naming the library it could not find — in `stderr`. The first
+      // version of this handler discarded it and cost a deploy cycle that
+      // reported only that something had failed, which was already obvious.
+      // The same mistake this file's `fetch` handler was fixed for.
+      const e = error as { stderr?: string; code?: number | string };
+      const reason = (e.stderr ?? '').trim() || String(error).split('\n')[0];
+      throw new Error(
+        `the installed LibreOffice does not run (exit ${e.code ?? '?'}):\n${reason}`,
+      );
     }
 
     console.log(`bundled LibreOffice ready at ${BUNDLED_SOFFICE_DIR} — ${version}`);
