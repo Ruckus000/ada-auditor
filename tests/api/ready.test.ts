@@ -41,6 +41,32 @@ vi.mock('../../src/integrations/documents/libreoffice-runtime', async (importOri
 }));
 
 const { GET } = await import('../../src/app/api/ready/route');
+const { CONSOLE_COOKIE, createOperatorSessionValue } = await import(
+  '../../src/app/api/_lib/console-session'
+);
+
+/**
+ * The probe, asked by somebody entitled to the whole answer.
+ *
+ * The endpoint narrows what it returns to a stranger, and nearly every test
+ * below is about what the readiness *computation* produces rather than about
+ * that narrowing — so they ask as an authorized caller and keep asserting on
+ * the full body.
+ *
+ * The bearer path deliberately: it is the one branch of `authorizePrincipal`
+ * that needs no cookie and no platform store, which is what keeps this file in
+ * the fast suite. The token is read at call time because each test sets its own.
+ */
+function probe(): Request {
+  return new Request('http://localhost:3000/api/ready', {
+    headers: { authorization: `Bearer ${process.env.AUDITOR_RUN_TOKEN ?? ''}` },
+  });
+}
+
+/** The same probe with nothing to say who it is. */
+function anonymous(): Request {
+  return new Request('http://localhost:3000/api/ready');
+}
 
 describe('GET /api/ready', () => {
   const originalToken = process.env.AUDITOR_RUN_TOKEN;
@@ -90,7 +116,7 @@ describe('GET /api/ready', () => {
   it('is ready when AUDITOR_RUN_TOKEN meets MIN_TOKEN_LENGTH', async () => {
     process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
 
-    const response = await GET();
+    const response = await GET(probe());
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.status).toBe('ready');
@@ -104,7 +130,7 @@ describe('GET /api/ready', () => {
     process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
     delete process.env.DATABASE_URL;
 
-    const response = await GET();
+    const response = await GET(probe());
     expect(response.status).toBe(503);
     const body = await response.json();
     expect(body.status).toBe('not_ready');
@@ -124,7 +150,7 @@ describe('GET /api/ready', () => {
     delete process.env.KV_REST_API_URL;
     delete process.env.KV_REST_API_TOKEN;
 
-    const response = await GET();
+    const response = await GET(probe());
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.status).toBe('ready');
@@ -140,7 +166,7 @@ describe('GET /api/ready', () => {
     process.env.KV_REST_API_TOKEN = 'kv-token';
     process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
 
-    const body = await (await GET()).json();
+    const body = await (await GET(probe())).json();
     expect(body.checks.unlockThrottleDurable).toBe(true);
     expect(body.checks.unlockThrottleReachable).toBe(true);
     expect(body.checks.sessionSecretDedicated).toBe(true);
@@ -166,7 +192,7 @@ describe('GET /api/ready', () => {
     process.env.KV_REST_API_TOKEN = 'kv-token';
     delete process.env.BLOB_READ_WRITE_TOKEN;
 
-    const response = await GET();
+    const response = await GET(probe());
     const body = await response.json();
 
     // Reported, never gating: a deployment auditing to local disk is a working
@@ -191,7 +217,7 @@ describe('GET /api/ready', () => {
     delete process.env.AI_GATEWAY_API_KEY;
     delete process.env.VERCEL_OIDC_TOKEN;
 
-    const body = await (await GET()).json();
+    const body = await (await GET(probe())).json();
 
     expect(body.checks.advisoryConfigured).toBe(false);
     expect(body.warnings).toEqual([]);
@@ -209,7 +235,7 @@ describe('GET /api/ready', () => {
     process.env.BLOB_READ_WRITE_TOKEN = 'blob-token';
     delete process.env.AUDITOR_CREDENTIAL_KEY;
 
-    const without = await (await GET()).json();
+    const without = await (await GET(probe())).json();
     expect(without.checks.credentialStoreConfigured).toBe(false);
     expect(without.status).toBe('ready');
     expect(without.warnings).toEqual([]);
@@ -218,11 +244,11 @@ describe('GET /api/ready', () => {
     // make every write 503, and reporting it configured would send the
     // operator to debug the wrong thing.
     process.env.AUDITOR_CREDENTIAL_KEY = 'ef'.repeat(32);
-    const withKey = await (await GET()).json();
+    const withKey = await (await GET(probe())).json();
     expect(withKey.checks.credentialStoreConfigured).toBe(true);
 
     process.env.AUDITOR_CREDENTIAL_KEY = 'too-short';
-    const malformed = await (await GET()).json();
+    const malformed = await (await GET(probe())).json();
     expect(malformed.checks.credentialStoreConfigured).toBe(false);
   });
 
@@ -244,7 +270,7 @@ describe('GET /api/ready', () => {
     documents.available = false;
     documents.converter = false;
 
-    const response = await GET();
+    const response = await GET(probe());
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -258,7 +284,7 @@ describe('GET /api/ready', () => {
     process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
     documents.available = true;
 
-    const body = await (await GET()).json();
+    const body = await (await GET(probe())).json();
 
     expect(body.checks.documentToolchainAvailable).toBe(true);
   });
@@ -274,7 +300,7 @@ describe('GET /api/ready', () => {
     process.env.KV_REST_API_TOKEN = 'kv-token';
     redis.answers = false;
 
-    const body = await (await GET()).json();
+    const body = await (await GET(probe())).json();
 
     expect(body.checks.unlockThrottleDurable).toBe(true);
     expect(body.checks.unlockThrottleReachable).toBe(false);
@@ -290,7 +316,7 @@ describe('GET /api/ready', () => {
     process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
     delete process.env.AUDITOR_SESSION_SECRET;
 
-    const response = await GET();
+    const response = await GET(probe());
     const body = await response.json();
 
     expect(body.checks.sessionSecretDedicated).toBe(false);
@@ -301,7 +327,7 @@ describe('GET /api/ready', () => {
   it('is not ready when the configured token is too short for auth', async () => {
     process.env.AUDITOR_RUN_TOKEN = 'short';
 
-    const response = await GET();
+    const response = await GET(probe());
     expect(response.status).toBe(503);
     const body = await response.json();
     expect(body.status).toBe('not_ready');
@@ -311,7 +337,7 @@ describe('GET /api/ready', () => {
   it('is not ready when the token is missing', async () => {
     delete process.env.AUDITOR_RUN_TOKEN;
 
-    const response = await GET();
+    const response = await GET(probe());
     expect(response.status).toBe(503);
     const body = await response.json();
     expect(body.status).toBe('not_ready');
@@ -324,11 +350,113 @@ describe('GET /api/ready', () => {
     // shared `afterEach` restores CHAOS_ENABLED, so this does not clean up
     // after itself and stay dirty when an expectation throws.
     process.env.CHAOS_ENABLED = 'true';
+    // Needed for `probe()` to authorize, and honest besides: a deployment
+    // serving scripted outcomes is one that has a token configured.
+    process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
 
-    const body = await (await GET()).json();
+    const body = await (await GET(probe())).json();
 
     expect(body.checks.chaosEnabled).toBe(true);
     expect(body.warnings.join(' ')).toContain('chaos_enabled');
+  });
+
+  /**
+   * What a stranger is told, and what they are not.
+   *
+   * The detail here is a map of what is weak on this deployment — whether
+   * sign-in attempts are counted durably, whether the session secret is its
+   * own, whether scripted audit outcomes can be requested. Publishing that
+   * unauthenticated tells somebody which door is worth trying.
+   */
+  describe('to an unauthenticated caller', () => {
+    it('answers the verdict and the two checks that produce it', async () => {
+      process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+
+      const response = await GET(anonymous());
+      const body = await response.json();
+
+      // A deploy probe still works, and so do the locked console's three
+      // states — they read nothing beyond these.
+      expect(response.status).toBe(200);
+      expect(body.status).toBe('ready');
+      expect(body.checks.auditorRunTokenConfigured).toBe(true);
+      expect(body.checks.runStoreConfigured).toBe(true);
+    });
+
+    it('withholds every check that describes a weakness', async () => {
+      process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+      delete process.env.KV_REST_API_URL;
+      delete process.env.KV_REST_API_TOKEN;
+
+      const body = await (await GET(anonymous())).json();
+
+      // The throttle being per-instance is precisely what an attacker wants to
+      // know before deciding whether guessing is worth the time.
+      expect(body.checks.unlockThrottleDurable).toBeUndefined();
+      expect(body.checks.sessionSecretDedicated).toBeUndefined();
+      expect(body.checks.chaosEnabled).toBeUndefined();
+    });
+
+    it('omits warnings rather than sending an empty list', async () => {
+      process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+      delete process.env.KV_REST_API_URL;
+
+      const body = await (await GET(anonymous())).json();
+
+      // `[]` would be a claim that nothing is wrong. This caller was not told
+      // either way, and absent says that — the same distinction the store
+      // contract draws between an empty list and a missing one.
+      expect(body.warnings).toBeUndefined();
+    });
+
+    it('still names a broken deployment, which is what the probe is for', async () => {
+      process.env.AUDITOR_RUN_TOKEN = 'test-token-16chars';
+      delete process.env.DATABASE_URL;
+
+      const response = await GET(anonymous());
+      const body = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(body.checks.runStoreConfigured).toBe(false);
+    });
+  });
+
+  /**
+   * The regression that matters most on this endpoint.
+   *
+   * `authorizePrincipal` resolves an operator cookie through the platform
+   * store, and that store throws when the database is unreachable — which is
+   * exactly the deployment somebody is hitting this endpoint to diagnose.
+   * Without the catch around it, adding authorization here would take readiness
+   * down at the moment it is read.
+   */
+  it('answers even when resolving the caller throws', async () => {
+    const token = 'test-token-16chars';
+    process.env.AUDITOR_RUN_TOKEN = token;
+    // Absent DATABASE_URL makes `getPlatformStore()` throw at construction,
+    // synchronously and deterministically — the same failure a deployment with
+    // a broken database has, which is when this endpoint is read.
+    delete process.env.DATABASE_URL;
+
+    // The signature has to be REAL. A junk one is refused by
+    // `readOperatorSessionClaims` before the store is ever consulted, so the
+    // test would pass without exercising the throw at all — which is exactly
+    // what a first draft of it did.
+    const cookie = createOperatorSessionValue(token, { id: 'op-alex', sessionEpoch: 1 });
+    const request = new Request('http://localhost:3000/api/ready', {
+      headers: { 'sec-fetch-site': 'same-origin', cookie: `${CONSOLE_COOKIE}=${cookie}` },
+    });
+
+    const response = await GET(request);
+
+    // 503 because the database really is missing — that is the endpoint doing
+    // its job. What matters is that it answered at all rather than throwing.
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.status).toBe('not_ready');
+    expect(body.checks.runStoreConfigured).toBe(false);
+    // Degraded toward saying less, never toward saying more.
+    expect(body.warnings).toBeUndefined();
   });
 
 });
