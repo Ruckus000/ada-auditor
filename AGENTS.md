@@ -324,6 +324,20 @@ Slices 2 and 4-6 follow from that.
 
 Read this before claiming something works.
 
+- **Rule-shaped audit gaps: measured, then closed, then re-measured.**
+  The 2026-08-27 milestone run
+  (`docs/research/blind-test/2026-08-27-rule-gaps-closed.md`): barriers seen
+  went 19→26 of 37 across the three planted sites, the deterministic core
+  14→18 of 30, with all seven `clean` rows still quiet and zero false
+  positives. Three custom checks did it (`services/page-checks.ts`, facts
+  collected in `integrations/browser/page-facts.ts` across the same
+  plain-data seam axe crosses) — after measuring that enabling axe's nearest
+  experimental rules produced zero output on their exact target defects.
+  Every surface now renders the score as **Checks passed** with its
+  denominator in words, subordinated to the verdict
+  (`services/presentation/verdict.ts`; `tests/app/score-copy.test.ts` keeps
+  it so). Still open there: C5 (ARIA widget state), and the judgement half
+  floats with the advisory's measured variance.
 - **Three planted sites now say what the audit misses, in numbers.**
   `npm run blind:test` walks `fixtures/blind-test/` — a dentist's brochure, a
   township, a SaaS signup, four pages each — carrying 44 barriers and correct
