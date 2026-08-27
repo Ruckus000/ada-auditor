@@ -44,6 +44,7 @@ type Summary = {
   lists: number;
   figures: number;
   gaps: string[];
+  needs?: Array<{ criterion: string; item: string }>;
 };
 
 /** One inventory row, as the client-scoped GET returns it. */
@@ -353,6 +354,18 @@ function SummaryView({ summary }: { summary: Summary }) {
           ))}
         </ul>
       )}
+      {summary.needs && summary.needs.length > 0 ? (
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* The punch list: each line is one thing a person still has to do.
+              Rendered apart from the gaps because a gap states a failure and
+              a need states the work. */}
+          {summary.needs.map((need) => (
+            <li key={need.item} style={noteStyle}>
+              {need.criterion}: {need.item}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

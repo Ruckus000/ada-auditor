@@ -10,7 +10,7 @@ import { logWarn } from '../../services/logger';
 import { titleFromFilename, type ConversionProvenance } from '../../domain/document-remediation';
 import { finishDocument } from './finish';
 import { inspectDocument } from './inspect';
-import { readLanguage, removeEmptyHeadings, repairTitle } from './flat-odf';
+import { deriveAltFromCaptions, readLanguage, removeEmptyHeadings, repairTitle } from './flat-odf';
 import { docxDeclaredLanguage } from '../../domain/docx-language';
 import { resolveLibreOffice, type LibreOfficeRuntime } from './libreoffice-runtime';
 import type { Env, JavaRuntime } from './java-runtime';
@@ -281,8 +281,12 @@ export async function convertSourceToPdf(
     // Empty headings go first, so a blank heading-styled line can never be
     // the "first heading" a title gets transcribed from.
     const cleaned = removeEmptyHeadings(original);
+    // Captions next: an author's own description of an image, moved to where
+    // assistive technology can reach it. Uncaptioned images stay bare and
+    // surface on the punch list.
+    const captioned = deriveAltFromCaptions(cleaned.xml);
     const repaired = repairTitle(
-      cleaned.xml,
+      captioned.xml,
       options.sourceName === undefined ? null : titleFromFilename(options.sourceName),
     );
 

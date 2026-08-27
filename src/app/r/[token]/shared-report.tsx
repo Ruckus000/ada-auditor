@@ -304,6 +304,15 @@ function DocumentsSection({
                   ))}
                 </ul>
               )}
+              {entry.needs && entry.needs.length > 0 ? (
+                <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>
+                  {entry.needs.map((need) => (
+                    <li key={need.item} style={{ fontSize: 12.5, color: T.inkSoft, lineHeight: 1.5 }}>
+                      To do: {need.item}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
         </ul>

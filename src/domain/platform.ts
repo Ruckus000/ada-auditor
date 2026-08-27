@@ -224,6 +224,8 @@ export type DocumentReportEntry = {
   pages: number;
   /** Verbatim gap strings — rephrasing them would be a copy free to drift. */
   gaps: string[];
+  /** The punch list for this document — work a person still has to do. */
+  needs?: Array<{ criterion: string; item: string }>;
 };
 
 export type DocumentReportSection = {

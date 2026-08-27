@@ -100,6 +100,10 @@ export function buildDocumentReport(
       tagged: reading.summary.tagged,
       pages: reading.summary.pages,
       gaps: [...reading.summary.gaps],
+      // Punch items are counts-and-work statements ("Figure 1 needs a
+      // human-written description") — no document content, so they pass the
+      // same no-titleText review this construction exists for.
+      ...(reading.summary.needs === undefined ? {} : { needs: reading.summary.needs.map((n) => ({ ...n })) }),
     });
   }
 

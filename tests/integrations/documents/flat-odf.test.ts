@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { firstHeading, readLanguage, readTitle, removeEmptyHeadings, repairTitle } from '../../../src/integrations/documents/flat-odf';
+import { deriveAltFromCaptions, firstHeading, readLanguage, readTitle, removeEmptyHeadings, repairTitle } from '../../../src/integrations/documents/flat-odf';
 
 /**
  * The transcription rules, without LibreOffice.
@@ -148,5 +148,37 @@ describe('removeEmptyHeadings', () => {
   it('touches nothing when every heading speaks', () => {
     const input = '<text:h text:outline-level="1">A</text:h><text:p/>';
     expect(removeEmptyHeadings(input)).toEqual({ xml: input, removed: 0 });
+  });
+});
+
+describe('deriveAltFromCaptions', () => {
+  const frame = (inner = '<draw:image/>') =>
+    `<draw:frame draw:name="Figure 1">${inner}</draw:frame>`;
+
+  it('transcribes an adjacent caption into svg:desc, before the frame closes', () => {
+    // `[V]` The placement is load-bearing: injected before draw:image the
+    // exporter drops it; before </draw:frame> it reaches /Alt.
+    const { xml, derived } = deriveAltFromCaptions(
+      `<text:p>${frame()}</text:p><text:p>Photo: the culvert inlet before clearing</text:p>`,
+    );
+    expect(derived).toBe(1);
+    expect(xml).toContain('<svg:desc>Photo: the culvert inlet before clearing</svg:desc></draw:frame>');
+  });
+
+  it('leaves an uncaptioned image alone — its absence belongs on the punch list', () => {
+    const input = `<text:p>${frame()}</text:p><text:p>The council met on Tuesday.</text:p>`;
+    expect(deriveAltFromCaptions(input)).toEqual({ xml: input, derived: 0 });
+  });
+
+  it('never overwrites a description the document already has', () => {
+    const input = `<text:p>${frame('<draw:image/><svg:desc>existing</svg:desc>')}</text:p><text:p>Figure 1: new</text:p>`;
+    expect(deriveAltFromCaptions(input).derived).toBe(0);
+  });
+
+  it('escapes caption entities on the way in', () => {
+    const { xml } = deriveAltFromCaptions(
+      `<text:p>${frame()}</text:p><text:p>Figure 2: Roads &amp; Bridges</text:p>`,
+    );
+    expect(xml).toContain('<svg:desc>Figure 2: Roads &amp; Bridges</svg:desc>');
   });
 });
