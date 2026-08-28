@@ -125,6 +125,33 @@ describe('resolveLibreOffice', () => {
     expect(resolveLibreOffice(only(sofficeBin))).toEqual({ available: true, sofficeBin });
   });
 
+  /**
+   * A library whose *word* ends in "lo" is not a LibreOffice module, and a
+   * directory holding one is not a program directory. `hello.so` used to
+   * satisfy the check, so a `soffice` sitting beside it was refused for a
+   * missing Writer module — a definite answer about an install nothing had
+   * recognised, which is the opposite of what this file promises.
+   *
+   * Unix names its libraries `lib…`; only Windows omits it, which is why the
+   * prefix is optional for `.dll` alone.
+   */
+  it('does not read a directory as a program directory on a name that merely ends in lo', async () => {
+    const sofficeBin = await install(['hello.so', 'solo.dylib']);
+
+    expect(resolveLibreOffice(only(sofficeBin))).toEqual({ available: true, sofficeBin });
+  });
+
+  it('still recognises a Windows program directory, where modules carry no lib prefix', async () => {
+    const sofficeBin = await install(['mergedlo.dll']);
+
+    const runtime = resolveLibreOffice(only(sofficeBin));
+
+    // A program directory with no Writer in it — refused, as on every platform.
+    expect(runtime.available).toBe(false);
+    if (runtime.available) return;
+    expect(runtime.reason).toContain('Writer module');
+  });
+
   it('finds Writer in a macOS bundle, where modules sit beside MacOS rather than in it', async () => {
     const root = await mkdtemp(join(tmpdir(), 'ada-lo-app-'));
     dirs.push(root);
