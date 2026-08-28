@@ -1,6 +1,8 @@
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,7 +28,15 @@ import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferenc
  * becomes necessary, the spike's kill criterion has fired and the answer is
  * STOP rather than a bigger version of this file.
  *
- * Usage: Finish <in.pdf> <out.pdf> [lang]
+ * Usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]
+ *
+ * The title arrives in a FILE rather than on the command line, because it is
+ * document content: a municipal record's title names the matter and sometimes
+ * a person, and a process argument list is readable by anything else on the
+ * machine. The path costs three lines and keeps the rule this project applies
+ * everywhere else — titles may live in the database and in the delivered
+ * file, and nowhere a bystander can read them. Absent, the title is copied
+ * from DocInfo exactly as before.
  *
  * The language is an argument rather than something detected. Writing /Lang is
  * deterministic; deciding what it should say is inference, which is category B
@@ -44,13 +54,28 @@ import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferenc
 public final class Finish {
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || args.length > 3) {
-            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang]");
+        if (args.length < 2) {
+            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]");
             System.exit(2);
         }
         String in = args[0], out = args[1];
         // Absent means "remove the claim", not "leave whatever is there".
-        String lang = args.length == 3 ? args[2] : null;
+        String lang = null;
+        String givenTitle = null;
+        int i = 2;
+        // Positional language first, so every existing caller keeps working.
+        if (i < args.length && !args[i].startsWith("--")) {
+            lang = args[i];
+            i++;
+        }
+        for (; i < args.length; i++) {
+            if ("--title-file".equals(args[i]) && i + 1 < args.length) {
+                givenTitle = Files.readString(Path.of(args[++i]), StandardCharsets.UTF_8);
+            } else {
+                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]");
+                System.exit(2);
+            }
+        }
 
         try (PDDocument doc = Loader.loadPDF(new File(in))) {
             PDDocumentCatalog catalog = doc.getDocumentCatalog();
@@ -102,7 +127,19 @@ public final class Finish {
             // 7.1-8 — catalog shall contain a Metadata key. The title is
             // copied from DocInfo where one exists and omitted where it does
             // not: inventing one from visible content is category B.
+            //
+            // A caller may supply one instead, and only ever a TRANSCRIBED
+            // one — the document's own first heading, or the name its author
+            // saved it under. The decision of which lives in
+            // `services/document-repair.ts`, where it is testable; this end
+            // writes what it is told. DocInfo and XMP are both set, because
+            // 7.1-11 checks that the two agree and a title in one alone
+            // trades a missing-title failure for a mismatch.
             String title = doc.getDocumentInformation().getTitle();
+            if (givenTitle != null && !givenTitle.isEmpty()) {
+                title = givenTitle;
+                doc.getDocumentInformation().setTitle(title);
+            }
             byte[] xmp = buildXmp(lang, title).getBytes(StandardCharsets.UTF_8);
             catalog.setMetadata(new PDMetadata(doc, new ByteArrayInputStream(xmp)));
 

@@ -15,6 +15,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const { convertSourceToPdf } = vi.hoisted(() => ({ convertSourceToPdf: vi.fn() }));
 vi.mock('../../src/integrations/documents/convert', () => ({ convertSourceToPdf }));
 
+const { inspectDocument, finishDocument } = vi.hoisted(() => ({
+  inspectDocument: vi.fn(),
+  finishDocument: vi.fn(),
+}));
+vi.mock('../../src/integrations/documents/inspect', () => ({ inspectDocument }));
+vi.mock('../../src/integrations/documents/finish', () => ({ finishDocument }));
+
 const runtimes = vi.hoisted(() => ({ soffice: true, java: true }));
 
 vi.mock('../../src/integrations/documents/libreoffice-runtime', () => ({
@@ -87,6 +94,41 @@ function conversionSucceeds() {
   });
 }
 
+/** A byte sequence `isPdf` accepts. */
+function pdfBytes(): Uint8Array {
+  return new Uint8Array(Buffer.from('%PDF-1.7\nreal enough for the container check\n', 'latin1'));
+}
+
+/**
+ * The repair path's two stages, stubbed: read the document, write it back.
+ * `over` shapes the reading, which is what every rule under test turns on.
+ */
+function repairReads(over: Record<string, unknown> = {}) {
+  const reading = documentStructureSchema.parse({
+    marked: true,
+    structureElements: 40,
+    textChars: 900,
+    images: 0,
+    pages: 2,
+    lang: 'en-GB',
+    title: null,
+    headings: [],
+    headingTexts: [],
+    figures: [],
+    tables: [],
+    lists: [],
+    order: [],
+    ...over,
+  });
+  inspectDocument.mockResolvedValue({ ok: true, value: reading });
+  finishDocument.mockImplementation(async (request: { outputPath: string }) => {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(request.outputPath, Buffer.from('%PDF-1.7 repaired'));
+    return { ok: true };
+  });
+  return reading;
+}
+
 describe('POST /api/documents/remediate', () => {
   beforeEach(() => {
     convertSourceToPdf.mockReset();
@@ -94,6 +136,8 @@ describe('POST /api/documents/remediate', () => {
     runtimes.java = true;
     authorized.ok = true;
     delete process.env.AUDITOR_MAX_DOCUMENT_BYTES;
+    inspectDocument.mockReset();
+    finishDocument.mockReset();
     conversionSucceeds();
   });
 
@@ -134,6 +178,80 @@ describe('POST /api/documents/remediate', () => {
     expect(response.status).toBe(503);
     expect(body.error).toBe('converter_unavailable');
     expect(body.detail).toMatch(/LibreOffice not found/);
+  });
+
+  it('repairs a PDF, deriving its title from the filename it was saved under', async () => {
+    repairReads({ title: null });
+
+    const response = await POST(upload(pdfBytes(), '2026-Mid-Year-Fee-Schedule.pdf'));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('application/pdf');
+    // The transcribed title reaches the stage that writes it — and it travels
+    // in a file, never on the command line.
+    expect(finishDocument).toHaveBeenCalledWith(
+      expect.objectContaining({ title: '2026 Mid Year Fee Schedule', language: 'en-GB' }),
+      expect.anything(),
+    );
+    const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
+    expect(summary.title).toBe('filename-derived');
+    // Conversion was never involved: this document was already a PDF.
+    expect(convertSourceToPdf).not.toHaveBeenCalled();
+  });
+
+  it('refuses to repair an untagged PDF, and says what would help', async () => {
+    repairReads({ structureElements: 0, marked: false });
+
+    const response = await POST(upload(pdfBytes(), 'notice.pdf'));
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.error).toBe('repair_refused');
+    expect(body.detail).toBe('not-tagged');
+    // The operator gets an action, not just a kind.
+    expect(body.message).toContain('Word source');
+    expect(finishDocument).not.toHaveBeenCalled();
+  });
+
+  it('discards a repair that moved any content, rather than delivering it', async () => {
+    // `Finish` claims to change no structure. If a reading back ever says
+    // otherwise, the original is better than a file we cannot vouch for.
+    const before = repairReads({ title: 'Fee Schedule', headings: ['H1'] });
+    inspectDocument
+      .mockResolvedValueOnce({ ok: true, value: before })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { ...before, headings: [] },
+      });
+
+    const response = await POST(upload(pdfBytes(), 'schedule.pdf'));
+    const body = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(body.error).toBe('repair_failed');
+    expect(body.detail).toBe('content-changed');
+  });
+
+  it('repairs a PDF on a host with no LibreOffice — repair needs only the JVM', async () => {
+    runtimes.soffice = false;
+    repairReads({ title: 'Zoning Ordinance' });
+
+    const response = await POST(upload(pdfBytes(), 'zoning.pdf'));
+
+    expect(response.status).toBe(200);
+  });
+
+  it('never logs the repaired document’s title', async () => {
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, 'log').mockImplementation((line: unknown) => {
+      lines.push(String(line));
+    });
+    repairReads({ title: SECRET_HEADING });
+
+    await POST(upload(pdfBytes(), 'agenda.pdf'));
+    spy.mockRestore();
+
+    expect(lines.join('\n')).not.toContain(SECRET_HEADING);
   });
 
   it('names the JVM separately from the converter', async () => {

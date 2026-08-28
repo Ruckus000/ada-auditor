@@ -1,6 +1,10 @@
-import { isWordDocument, logSafe } from '../../../../domain/document-remediation';
+import { isPdf, isWordDocument, logSafe } from '../../../../domain/document-remediation';
 import { readDocumentUpload, refusalResponse } from '../../_lib/document-upload';
-import { remediateWordBytes, remediationResponse } from '../../_lib/document-conversion';
+import {
+  remediateWordBytes,
+  remediationResponse,
+  repairPdfBytes,
+} from '../../_lib/document-conversion';
 import { resolveLibreOffice } from '../../../../integrations/documents/libreoffice-runtime';
 import { resolveJavaRuntime } from '../../../../integrations/documents/java-runtime';
 import { authorizePrincipal } from '../../_lib/authorize';
@@ -66,6 +70,27 @@ export async function GET(request: Request) {
   return Response.json({ requestId, available: false, reason: reasons.join('; ') });
 }
 
+/**
+ * Word or PDF, and the answer says which.
+ *
+ * One door rather than two routes: the upload validation that matters —
+ * authorise, length, toolchain, real size, container shape — is easy to get
+ * subtly weaker on a second copy, and the weaker one is the one that gets
+ * found.
+ */
+function isWordOrPdf(bytes: Uint8Array) {
+  const word = isWordDocument(bytes);
+  if (word.ok) return word;
+
+  const pdf = isPdf(bytes);
+  if (pdf.ok) return pdf;
+
+  // The Word reason, not the PDF one: a caller who reached this endpoint with
+  // something unreadable is likelier to have meant a document than a PDF, and
+  // the Word check's reasons name the container problem precisely.
+  return word;
+}
+
 export async function POST(request: Request) {
   const requestId = createRequestId();
 
@@ -75,25 +100,52 @@ export async function POST(request: Request) {
   // matters: authorise before buffering, cheap length check, toolchain, real
   // size, then container shape.
   const upload = await readDocumentUpload(request, {
-    accept: isWordDocument,
-    // Both halves named separately, because the fixes differ: install
-    // LibreOffice, or install a JDK.
-    requires: [
-      { error: 'converter_unavailable', check: () => resolveLibreOffice() },
-      { error: 'document_toolchain_unavailable', check: () => resolveJavaRuntime() },
-    ],
+    accept: isWordOrPdf,
+    // Only the JVM is required of every caller: a PDF repair reads and writes
+    // with the Java stages alone. LibreOffice is checked below, once the
+    // container shape says the work is a conversion — requiring it at the
+    // door would refuse a repair this host can perfectly well do.
+    requires: [{ error: 'document_toolchain_unavailable', check: () => resolveJavaRuntime() }],
   });
 
   if (!upload.ok) {
     return refusalResponse(upload.refusal, requestId);
   }
 
-  const soffice = resolveLibreOffice();
   const java = resolveJavaRuntime();
-  if (!soffice.available || !java.available) {
+  if (!java.available) {
     // Unreachable: `requires` above already refused this. Present so the
     // narrowing below is real rather than asserted.
     return refusalResponse({ status: 503, error: 'document_toolchain_unavailable' }, requestId);
+  }
+
+  if (upload.kind === 'pdf') {
+    // Repair, not conversion: the document is already a PDF, and what it gets
+    // back is the facts it already stated, written where PDF/UA looks for
+    // them. An untagged PDF is refused here rather than tagged by inference —
+    // see `services/document-repair.ts` for why that line is where it is.
+    const repaired = await repairPdfBytes(upload.bytes, requestId, {
+      sourceName: upload.filename,
+      javaRuntime: java,
+    });
+
+    if (!repaired.ok) {
+      return refusalResponse(repaired.refusal, requestId);
+    }
+
+    logInfo('document_repaired', { requestId, ...logSafe(repaired.summary) });
+    return remediationResponse({ pdf: repaired.pdf, summary: repaired.summary, requestId });
+  }
+
+  const soffice = resolveLibreOffice();
+  if (!soffice.available) {
+    // Absence is a state, not an error, and the two halves are named
+    // separately because the fixes differ: install LibreOffice, or install a
+    // JDK.
+    return refusalResponse(
+      { status: 503, error: 'converter_unavailable', detail: soffice.reason },
+      requestId,
+    );
   }
 
   // The upload's own filename never reaches the filesystem — the shared core

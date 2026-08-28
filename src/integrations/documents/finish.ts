@@ -1,3 +1,5 @@
+import { rm, writeFile } from 'node:fs/promises';
+
 import { languageTagSchema } from '../../domain/document-structure';
 import { runWritingStage, type StageOptions, type StageOutcome } from './stage';
 
@@ -48,6 +50,17 @@ export type FinishRequest = {
   inputPath: string;
   outputPath: string;
   /**
+   * A title to write, when the caller has a TRANSCRIBED one the document does
+   * not carry in DocInfo — its own first heading, or the name its author
+   * saved it under. Omitted, the stage copies DocInfo and invents nothing,
+   * which is what conversion has always wanted.
+   *
+   * The policy that chooses this lives in `services/document-repair.ts`. This
+   * type deliberately cannot express "make one up": the caller supplies text
+   * that already exists somewhere, or supplies nothing.
+   */
+  title?: string;
+  /**
    * BCP-47 as the source declares it, or `null` when the source declares none.
    *
    * Never inferred and never defaulted. `null` removes any language claim in
@@ -66,15 +79,40 @@ export async function finishDocument(
   request: FinishRequest,
   options: StageOptions = {},
 ): Promise<FinishOutcome> {
+  // The title travels in a file, never on the command line: it is document
+  // content, and a process argument list is readable by anything else on the
+  // machine. Written beside the document it describes, in a directory the
+  // caller already cleans up.
+  let titleArgs: string[] = [];
+  let titleFile: string | null = null;
+  if (request.title !== undefined && request.title !== '') {
+    titleFile = `${request.outputPath}.title`;
+    await writeFile(titleFile, request.title, 'utf8');
+    titleArgs = ['--title-file', titleFile];
+  }
+
+  const cleanup = async () => {
+    if (titleFile !== null) await rm(titleFile, { force: true });
+  };
+
   // Omitting the argument is what tells the stage to remove the claim; three
   // arguments set one. There is no sentinel string, because a sentinel is a
   // value somebody eventually passes by accident.
   if (request.language === null) {
-    return runWritingStage('Finish', [request.inputPath, request.outputPath], options);
+    try {
+      return await runWritingStage(
+        'Finish',
+        [request.inputPath, request.outputPath, ...titleArgs],
+        options,
+      );
+    } finally {
+      await cleanup();
+    }
   }
 
   const language = languageTagSchema.safeParse(request.language);
   if (!language.success) {
+    await cleanup();
     // Refused before the JVM starts. A bad tag is a caller bug, and the cost of
     // letting it through is a delivered document that states the wrong natural
     // language while passing every machine check there is.
@@ -87,9 +125,13 @@ export async function finishDocument(
     };
   }
 
-  return runWritingStage(
-    'Finish',
-    [request.inputPath, request.outputPath, language.data],
-    options,
-  );
+  try {
+    return await runWritingStage(
+      'Finish',
+      [request.inputPath, request.outputPath, language.data, ...titleArgs],
+      options,
+    );
+  } finally {
+    await cleanup();
+  }
 }

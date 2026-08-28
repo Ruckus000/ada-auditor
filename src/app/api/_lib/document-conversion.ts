@@ -3,9 +3,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { summarise, type RemediationSummary } from '../../../domain/document-remediation';
+import { contentChanges } from '../../../domain/document-structure';
 import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/documents/convert';
+import { finishDocument } from '../../../integrations/documents/finish';
+import { inspectDocument } from '../../../integrations/documents/inspect';
 import { logWarn } from '../../../services/logger';
+import { planRepair } from '../../../services/document-repair';
 import type { UploadRefusal } from './document-upload';
+
+/** What `repairPdfBytes` needs: the stage plumbing, plus the client-facing name. */
+export type RepairOptions = Pick<ConvertOptions, 'javaRuntime' | 'root' | 'env' | 'timeoutMs' | 'sourceName'>;
 
 /**
  * The conversion core two routes share.
@@ -59,6 +66,124 @@ export async function remediateWordBytes(
   } finally {
     // Every path, including a throw inside the conversion. `convertSourceToPdf`
     // cleans its own working directory; this is ours.
+    await rm(work, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Repair a PDF in place: write back what it already states, and nothing else.
+ *
+ * The sibling of `remediateWordBytes`, deliberately in the same file and the
+ * same shape, because the routes offer them side by side and two files would
+ * drift on the parts that must not differ — the temp-path rule, the refusal
+ * shape, the cleanup.
+ *
+ * Four steps, and the fourth is the one that makes it safe to deliver:
+ *
+ * 1. read the document;
+ * 2. decide what may be written (`planRepair` — untagged refuses here);
+ * 3. write it (`Finish`, whose every key is a transcription);
+ * 4. **read the result back and prove no content changed.** `contentChanges`
+ *    compares headings, tables, lists, figures and reading order before and
+ *    after. Repair adds catalog facts; if any of those moved, something
+ *    inferred rather than transcribed, and the repair is discarded rather
+ *    than delivered.
+ */
+export async function repairPdfBytes(
+  bytes: Uint8Array,
+  requestId: string,
+  options: RepairOptions = {},
+): Promise<ConversionOutcome> {
+  const work = await mkdtemp(join(tmpdir(), 'ada-repair-'));
+  const source = `${work}/${requestId}.pdf`;
+  const output = `${work}/${requestId}-repaired.pdf`;
+  const stageOptions = {
+    ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
+    ...(options.root === undefined ? {} : { root: options.root }),
+    ...(options.env === undefined ? {} : { env: options.env }),
+    ...(options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs }),
+  };
+
+  try {
+    await writeFile(source, bytes);
+
+    const before = await inspectDocument(source, stageOptions);
+    if (!before.ok) {
+      logWarn('document_repair_failed', { requestId, step: 'read', failure: before.failure.kind });
+      return {
+        ok: false,
+        refusal: { status: 422, error: 'repair_failed', detail: before.failure.kind },
+      };
+    }
+
+    const decision = planRepair(before.value, options.sourceName);
+    if (!decision.repairable) {
+      // Not an error: a true answer about this document. The operator screen
+      // renders the reason, and the punch list is still delivered by the
+      // inspection that produced it.
+      logWarn('document_repair_refused', { requestId, reason: decision.refusal.kind });
+      return {
+        ok: false,
+        refusal: {
+          status: 422,
+          error: 'repair_refused',
+          detail: decision.refusal.kind,
+          message: decision.refusal.reason,
+        },
+      };
+    }
+
+    const finished = await finishDocument(
+      {
+        inputPath: source,
+        outputPath: output,
+        language: decision.plan.language,
+        ...(decision.plan.title.kind === 'no-heading-to-copy'
+          ? {}
+          : { title: decision.plan.title.title }),
+      },
+      stageOptions,
+    );
+    if (!finished.ok) {
+      logWarn('document_repair_failed', { requestId, step: 'finish', failure: finished.failure.kind });
+      return {
+        ok: false,
+        refusal: { status: 422, error: 'repair_failed', detail: finished.failure.kind },
+      };
+    }
+
+    const after = await inspectDocument(output, stageOptions);
+    if (!after.ok) {
+      logWarn('document_repair_failed', { requestId, step: 'verify', failure: after.failure.kind });
+      return {
+        ok: false,
+        refusal: { status: 422, error: 'repair_failed', detail: after.failure.kind },
+      };
+    }
+
+    const changed = contentChanges(before.value, after.value);
+    if (changed.length > 0) {
+      // The claim this stage makes about itself, checked rather than trusted.
+      // A metadata pass that moved content is not a repair, and the original
+      // is better than a file we cannot vouch for.
+      logWarn('document_repair_altered_content', { requestId, fields: changed });
+      return {
+        ok: false,
+        refusal: { status: 422, error: 'repair_failed', detail: 'content-changed' },
+      };
+    }
+
+    const pdf = await readFile(output);
+    return {
+      ok: true,
+      pdf,
+      summary: summarise({
+        title: decision.plan.title,
+        sourceLanguage: decision.plan.language,
+        structure: after.value,
+      }),
+    };
+  } finally {
     await rm(work, { recursive: true, force: true });
   }
 }
