@@ -29,6 +29,7 @@ import { promisify } from 'node:util';
 
 import {
   DOCUMENT_CLASSES_DIR,
+  DOCUMENT_JAVA_DIR,
   PDFBOX_JAR,
   PDFBOX_VERSION,
 } from '../src/integrations/documents/java-runtime';
@@ -36,7 +37,7 @@ import {
 const execFileAsync = promisify(execFile);
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const JAVA_SRC = join(ROOT, 'src', 'integrations', 'documents', 'java');
+const JAVA_SRC = join(ROOT, DOCUMENT_JAVA_DIR);
 
 const PDFBOX_URL = `https://repo1.maven.org/maven2/org/apache/pdfbox/pdfbox-app/${PDFBOX_VERSION}/pdfbox-app-${PDFBOX_VERSION}.jar`;
 

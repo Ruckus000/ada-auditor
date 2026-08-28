@@ -173,6 +173,15 @@ The real-JVM tests skip themselves, naming the missing piece, when no toolchain
 is present. Their PDF fixture is generated at test time by `renderPdf()` rather
 than committed.
 
+They do **not** skip when the compiled stages are older than
+`java/*.java` — the suite refuses to start, naming the source and telling you to
+build. `dist/documents/classes` is gitignored and nothing rebuilds it on its
+own, so the suite could otherwise report on class files compiled from a
+different revision of the Java. It has: two `StackOverflowError` failures were
+chased as a live cycle bug in `Inspect` when the guard had landed the day before
+and only the classes were old. The same gap passes a suite against a stage that
+was never compiled at all, which is the direction that matters more.
+
 ## Four measured things about LibreOffice
 
 **Filter options replace the defaults, so one wrong key silently disables
