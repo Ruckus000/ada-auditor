@@ -6,7 +6,11 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { PDFBOX_JAR, resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
+import {
+  DOCUMENT_JAVA_DIR,
+  PDFBOX_JAR,
+  resolveJavaRuntime,
+} from '../../../../src/integrations/documents/java-runtime';
 
 const execFileAsync = promisify(execFile);
 
@@ -31,7 +35,7 @@ const execFileAsync = promisify(execFile);
 
 const runtime = resolveJavaRuntime();
 const SPIKE = join(process.cwd(), 'experiments', 'document-remediation');
-const JAVA_SRC = join(process.cwd(), 'src', 'integrations', 'documents', 'java');
+const JAVA_SRC = join(process.cwd(), DOCUMENT_JAVA_DIR);
 
 /**
  * `javac`, which is not implied by `java` — a JRE-only host has one and not the

@@ -88,11 +88,12 @@ public final class StructText {
     /**
      * A fresh visited set, per traversal.
      *
-     * Both walks below recurse `getKids()`, and a structure tree is a tree by
-     * convention and a graph by format: an element may be its own descendant,
-     * which recursed until the JVM's stack gave out. `Inspect` guards its own
-     * walk; this one is reached from there and needed the same thing, which a
-     * hand-assembled cyclic document is what proved.
+     * All three walks below recurse `getKids()`, and a structure tree is a tree
+     * by convention and a graph by format: an element may be its own
+     * descendant, which recursed until the JVM's stack gave out. `Inspect`
+     * guards its own walk; these are reached from there and from the stages
+     * that act, and needed the same thing — which a hand-assembled cyclic
+     * document is what proved.
      *
      * Identity rather than equality, because two distinct elements can carry
      * equal dictionaries and collapsing those would drop real content.
@@ -174,24 +175,33 @@ public final class StructText {
         }
     }
 
-    /** Depth-first structure elements of the given types, in document order. */
+    /**
+     * Depth-first structure elements of the given types, in document order.
+     *
+     * Bounded by the same `seen()` set as `collect` and `box`, and for a second
+     * reason besides the cycle: callers *act* on what this returns — `Headings`
+     * promotes them — and acting twice on one element is a bug whether the
+     * repeat came from a loop or from a subtree legitimately hung under two
+     * parents.
+     */
     public static List<PDStructureElement> find(
             org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode node,
             java.util.Set<String> types, Map<String, Object> roleMap) {
         List<PDStructureElement> out = new ArrayList<>();
-        walk(node, types, roleMap, out);
+        walk(node, types, roleMap, out, seen());
         return out;
     }
 
     private static void walk(org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode node,
                              java.util.Set<String> types, Map<String, Object> roleMap,
-                             List<PDStructureElement> out) {
+                             List<PDStructureElement> out, Set<Object> seen) {
         for (Object kid : node.getKids()) {
             if (!(kid instanceof PDStructureElement el)) continue;
+            if (!seen.add(el.getCOSObject())) continue;
             String type = el.getStructureType();
             if (roleMap != null && type != null && roleMap.get(type) != null) type = roleMap.get(type).toString();
             if (types.contains(type)) out.add(el);
-            walk(el, types, roleMap, out);
+            walk(el, types, roleMap, out, seen);
         }
     }
 }

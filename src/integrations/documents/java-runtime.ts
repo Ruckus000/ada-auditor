@@ -29,6 +29,17 @@ import { delimiter, join } from 'node:path';
 /** Pinned to match `experiments/document-remediation/fetch-tools.sh`. */
 export const PDFBOX_VERSION = '3.0.8';
 
+/**
+ * The Java sources `npm run build:documents` compiles.
+ *
+ * Exported beside the output path because three places need to name it — the
+ * build script, the test that keeps the spike compiling against these sources,
+ * and the staleness check that refuses to run the document suite against
+ * classes older than them. Three copies of a path is how one of them ends up
+ * pointing somewhere else after a move.
+ */
+export const DOCUMENT_JAVA_DIR = join('src', 'integrations', 'documents', 'java');
+
 /** Where `npm run build:documents` writes, under the already-ignored `dist/`. */
 export const DOCUMENT_CLASSES_DIR = join('dist', 'documents', 'classes');
 
