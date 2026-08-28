@@ -204,6 +204,32 @@ Chromium launches on a Vercel function:
   otherwise run on every production audit with whatever the default model is.
   `off` wins over everything, including the injected test seam: it is a
   statement about where evidence may go, and a test double is still a place.
+- **Documents: Word converted, PDFs repaired by transcription.** The half of
+  the product that hands back a fixed file rather than a report. A `.docx`,
+  `.doc` or PDF reaches it from an upload, a URL, or the client's inventory
+  screen; LibreOffice and a JVM ship beside the function
+  (`scripts/prepare-libreoffice.ts`, `prepare-jvm.ts`), so this runs on
+  production and not only on a laptop.
+  - **Conversion** (`integrations/documents/convert.ts`) produces a tagged
+    PDF, correcting the exporter's language claim and deriving a title the
+    source already carries — its metadata, its first heading, or the filename
+    its author saved it under.
+  - **Repair** (`services/document-repair.ts`) writes back what a PDF already
+    states — title, declared language, its links' own destinations — and
+    **refuses an untagged PDF** rather than inferring structure. Delivery is
+    gated on reading the result back: `contentChanges` must be empty or the
+    repair is discarded.
+  - **Neither invents.** Every provenance kind is a transcription, VLM alt
+    text is banned, `/Lang` has no default, and what cannot be transcribed
+    becomes a **punch-list item** on the summary — the per-document work a
+    person still has to do, rendered on the operator screen and the client's
+    shared report alike.
+  - A PDF whose Word source sits in the same inventory is **paired** at read
+    time (`services/document-pairing.ts`): converting that source is offered
+    ahead of repairing the PDF, because it reaches structure repair never can.
+  - What this does and does not achieve is measured, not asserted — see the
+    known-gaps entry and `docs/research/document-remediation/`.
+
 - **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
   target is checked four ways: scheme and host; every resolved address; the URL
   the page settled on after each navigation; and the address the browser
