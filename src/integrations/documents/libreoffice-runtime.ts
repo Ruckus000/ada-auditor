@@ -97,8 +97,32 @@ const WRITER_MODULE = /^(?:lib)?sw[a-z]*lo\.(?:so|dylib|dll)$/;
  * sit. `libmergedlo.so` is core's, and is present on a Writer-less install —
  * so this matches while `WRITER_MODULE` does not, which is the whole
  * distinction.
+ *
+ * The `lib` prefix is required where the platform requires it and not where it
+ * does not: unix names a library `libswlo.so`, Windows names the same module
+ * `swlo.dll`. Written `(?:lib)?` across all three extensions, the name part
+ * could swallow letters until the *word* ended in "lo" — `hello.so`,
+ * `solo.dylib`, `cello.dylib` — and a directory holding one of those beside a
+ * `soffice` was read as a program directory with no Writer in it, which is the
+ * opposite of what the file promises two comments up. `[V]` Across 1,779
+ * distinct library filenames under `/opt/homebrew/Cellar`, `/opt/homebrew/lib`
+ * and `/Applications`, the loose form matched 57 and every one of them was
+ * LibreOffice's own; this is a pattern that overclaimed rather than one that
+ * had been caught doing damage.
+ *
+ * It still cannot separate "module name plus `lo`" from a word that happens to
+ * end that way, so `libhalo.so` would match and nothing here can tell. That is
+ * why the default is `unknown` rather than `absent`: the pattern only ever
+ * decides whether to *look* for Writer, and being wrong costs a fail-open
+ * answer rather than a refused host.
+ *
+ * `WRITER_MODULE` above is deliberately left loose. These two fail in opposite
+ * directions — narrowing this one means fewer directories called a program
+ * directory, so fewer false `absent`; narrowing that one means fewer files
+ * recognised as Writer, so *more* false `absent`, and a working install
+ * refused. Only one of them is safe to tighten.
  */
-const ANY_MODULE = /^(?:lib)?[a-z0-9_]+lo\.(?:so|dylib|dll)$/;
+const ANY_MODULE = /^(?:lib[a-z0-9_]+lo\.(?:so|dylib)|[a-z0-9_]+lo\.dll)$/;
 
 /**
  * Where a LibreOffice install keeps its modules, relative to the launcher.
