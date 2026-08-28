@@ -106,3 +106,15 @@ ba37bb36994126b6d7003d723425df3968603d28f93464120a2ee8ef4f4dc2c4  nj-budget-cap-
 fb84b884e707dfba0a117eb58e8ac8a5256541ef59d6e4a4fd2dcc4ec22818e2  ks-city-budget.xlsx
 b7d75cb63a717744f103e80d61a372b405e235b906eb048cb8d5d2c9a050c59b  ks-township-budget.xlsx
 ```
+
+## 2026-08-28 re-harvest and Phase 0 measurement
+
+Re-fetched for the PDF repair work, plus eleven documents from the Ford City
+inventory our own crawl discovered (that municipality publishes **twelve
+documents, none of them Word** — the measurement behind "pairing does not
+absorb the font problem"). Twenty documents total, all readable.
+
+`pdf-harvest.txt` is the local-name → URL map the measurement runs from, and
+is regenerable from this file plus the crawl output. Results and the scoring
+of the registered predictions:
+`docs/research/document-remediation/pdf-repair-2026-08-28-phase0.md`.

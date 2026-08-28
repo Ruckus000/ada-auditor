@@ -31,3 +31,7 @@ out-arm-b-evidence/
 # outrun the ignore. Anything shaped like an arm output is ignored, present
 # or future.
 out-arm-*/
+# Derived measurement output. Regenerable from the manifests by
+# measure-pdf-population.mts; the numbers that survive are written up under
+# docs/research/document-remediation/ instead.
+out-pdf-*.json
