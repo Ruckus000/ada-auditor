@@ -1,7 +1,12 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
-import { INSTRUMENT_VERSION, isWordDocument, logSafe } from '../../../../../../../domain/document-remediation';
+import {
+  INSTRUMENT_VERSION,
+  isPdf,
+  isWordDocument,
+  logSafe,
+} from '../../../../../../../domain/document-remediation';
 import type { StoredDocumentConversion } from '../../../../../../../domain/platform';
 import { resolveLibreOffice } from '../../../../../../../integrations/documents/libreoffice-runtime';
 import { resolveJavaRuntime } from '../../../../../../../integrations/documents/java-runtime';
@@ -14,6 +19,7 @@ import { fetchDocumentBytes } from '../../../../../_lib/document-fetch';
 import {
   remediateWordBytes,
   remediationResponse,
+  repairPdfBytes,
 } from '../../../../../_lib/document-conversion';
 import { readDocumentUpload, refusalResponse } from '../../../../../_lib/document-upload';
 import { createRequestId } from '../../../../../_lib/request-id';
@@ -62,8 +68,27 @@ const convertUrlSchema = z
   })
   .strict();
 
-const WORD_ACCEPT_HEADER =
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,*/*';
+const WORD_OR_PDF_ACCEPT_HEADER =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/pdf,*/*';
+
+/**
+ * Word or PDF, and the answer says which — a conversion or a repair.
+ *
+ * Identical to the acceptor on `/api/documents/remediate`, and deliberately
+ * not shared: that one guards an upload and this one guards a fetch, and the
+ * two have drifted apart before. What must not differ is the ORDER — Word
+ * first, so a container that is both (there is no such thing, but a check
+ * that assumed so would be the bug) resolves the same way on both doors.
+ */
+function isWordOrPdf(bytes: Uint8Array) {
+  const word = isWordDocument(bytes);
+  if (word.ok) return word;
+
+  const pdf = isPdf(bytes);
+  if (pdf.ok) return pdf;
+
+  return word;
+}
 
 function sha256(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
@@ -151,16 +176,21 @@ export async function POST(
   const url = parsed.data.url;
 
   const fetched = await fetchDocumentBytes(url, requestId, {
-    accept: isWordDocument,
-    acceptHeader: WORD_ACCEPT_HEADER,
+    accept: isWordOrPdf,
+    acceptHeader: WORD_OR_PDF_ACCEPT_HEADER,
   });
   if (!fetched.ok) {
     return refusalResponse(fetched.refusal, requestId);
   }
 
-  const outcome = await remediateWordBytes(fetched.bytes, fetched.kind, requestId, {
-    sourceName: decodeURIComponent(new URL(url).pathname.split('/').pop() ?? ''),
-  });
+  // The client-facing name, for a filename-derived title. The temp path the
+  // stages see is a request id and says nothing.
+  const sourceName = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '');
+  const repairing = fetched.kind === 'pdf';
+
+  const outcome = repairing
+    ? await repairPdfBytes(fetched.bytes, requestId, { sourceName })
+    : await remediateWordBytes(fetched.bytes, fetched.kind, requestId, { sourceName });
   if (!outcome.ok) {
     return refusalResponse(outcome.refusal, requestId);
   }
@@ -171,8 +201,8 @@ export async function POST(
     {
       url,
       // The byte check's verdict, not the extension's — the bytes are in
-      // hand, and `isWordDocument` admits exactly these two containers.
-      kind: fetched.kind === 'doc' ? 'doc' : 'docx',
+      // hand, and the acceptor admits exactly these three containers.
+      kind: repairing ? 'pdf' : fetched.kind === 'doc' ? 'doc' : 'docx',
       source: 'crawl',
       ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
     },
@@ -186,13 +216,14 @@ export async function POST(
     summary: outcome.summary,
     inputSha256: sha256(fetched.bytes),
     outputSha256: sha256(outcome.pdf),
+    ...(repairing ? { kind: 'repair' as const } : {}),
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
     convertedAt: now,
   };
   await platform.saveDocumentConversion(record);
 
-  logInfo('document_converted', {
+  logInfo(repairing ? 'document_repaired' : 'document_converted', {
     requestId,
     clientId,
     host: hostnameOf(url),
@@ -221,15 +252,27 @@ export async function PUT(
   }
 
   const upload = await readDocumentUpload(request, {
-    accept: isWordDocument,
-    requires: [
-      { error: 'converter_unavailable', check: () => resolveLibreOffice() },
-      { error: 'document_toolchain_unavailable', check: () => resolveJavaRuntime() },
-    ],
+    accept: isWordOrPdf,
+    // Only the JVM of every caller: a repair needs no LibreOffice, and
+    // demanding it here would refuse work this host can do. The converter is
+    // checked below, once the container shape says the work is a conversion.
+    requires: [{ error: 'document_toolchain_unavailable', check: () => resolveJavaRuntime() }],
   });
 
   if (!upload.ok) {
     return refusalResponse(upload.refusal, requestId);
+  }
+
+  if (upload.kind === 'pdf') {
+    return repairUploadedPdf(upload, clientId, requestId, platform);
+  }
+
+  const soffice = resolveLibreOffice();
+  if (!soffice.available) {
+    return refusalResponse(
+      { status: 503, error: 'converter_unavailable', detail: soffice.reason },
+      requestId,
+    );
   }
 
   const outcome = await remediateWordBytes(upload.bytes, upload.kind, requestId, {
@@ -264,6 +307,58 @@ export async function PUT(
   // No host and no name: an upload has no URL, and the filename is as much a
   // path as a path is.
   logInfo('document_converted', {
+    requestId,
+    clientId,
+    stored: record.artifactUrl !== undefined,
+    ...logSafe(outcome.summary),
+  });
+
+  return remediationResponse({ pdf: outcome.pdf, summary: outcome.summary, requestId });
+}
+
+/**
+ * An uploaded PDF, repaired rather than converted.
+ *
+ * The same record, the same blob store, the same audit trail as a conversion
+ * — and `kind: 'repair'`, because every surface says "Converted to tagged
+ * PDF" and nobody converted this one.
+ */
+async function repairUploadedPdf(
+  upload: { bytes: Uint8Array; filename: string },
+  clientId: string,
+  requestId: string,
+  platform: ReturnType<typeof getPlatformStore>,
+): Promise<Response> {
+  const outcome = await repairPdfBytes(upload.bytes, requestId, {
+    sourceName: upload.filename,
+  });
+  if (!outcome.ok) {
+    return refusalResponse(outcome.refusal, requestId);
+  }
+
+  const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.pdf';
+  const now = new Date().toISOString();
+  const document = await platform.ensureClientDocument(
+    clientId,
+    { url: name, kind: 'pdf', source: 'upload' },
+    now,
+  );
+
+  const record: StoredDocumentConversion = {
+    id: requestId,
+    clientId,
+    documentId: document.id,
+    summary: outcome.summary,
+    inputSha256: sha256(upload.bytes),
+    outputSha256: sha256(outcome.pdf),
+    kind: 'repair',
+    instrumentVersion: INSTRUMENT_VERSION,
+    ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
+    convertedAt: now,
+  };
+  await platform.saveDocumentConversion(record);
+
+  logInfo('document_repaired', {
     requestId,
     clientId,
     stored: record.artifactUrl !== undefined,

@@ -274,6 +274,12 @@ alter table findings add column if not exists title text;
 alter table findings add column if not exists remediation_any text[];
 alter table findings add column if not exists remediation_all text[];
 
+-- Repair joined conversion in this table rather than beside it: same hashes,
+-- same summary, same audit trail, and one row per delivered file however it
+-- was produced. Null reads as 'conversion', which is what every row written
+-- before repair existed actually was.
+alter table document_conversions add column if not exists kind text;
+
 -- The columns `finding_triage` replaces. Never written, never read. Leaving
 -- them is the furniture AGENTS.md warns about — and leaving them beside a
 -- table that means the same thing is worse, because the next reader has to

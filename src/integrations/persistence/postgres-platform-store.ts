@@ -148,6 +148,7 @@ type DocumentConversionRow = {
   summary: RemediationSummary;
   input_sha256: string;
   output_sha256: string;
+  kind: string | null;
   instrument_version: number | null;
   artifact_url: string | null;
   converted_at: Date | string;
@@ -792,6 +793,7 @@ export class PostgresPlatformStore implements PlatformStore {
       summary: row.summary,
       inputSha256: row.input_sha256,
       outputSha256: row.output_sha256,
+      ...optional('kind', row.kind),
       ...optional('instrumentVersion', row.instrument_version),
       ...optional('artifactUrl', row.artifact_url),
       convertedAt: toIso(row.converted_at),
@@ -941,11 +943,12 @@ export class PostgresPlatformStore implements PlatformStore {
     await this.sql`
       insert into document_conversions
         (id, client_id, document_id, summary, input_sha256, output_sha256,
-         instrument_version, artifact_url, converted_at)
+         kind, instrument_version, artifact_url, converted_at)
       values (
         ${record.id}, ${record.clientId}, ${record.documentId},
         ${JSON.stringify(record.summary)}::jsonb,
         ${record.inputSha256}, ${record.outputSha256},
+        ${record.kind ?? null},
         ${record.instrumentVersion ?? null}, ${record.artifactUrl ?? null},
         ${record.convertedAt}
       )
