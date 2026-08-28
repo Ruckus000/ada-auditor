@@ -42,7 +42,13 @@ describe('axe engine against a real page', () => {
 
   it('reports many distinct findings, each located by selector', async () => {
     const report = await auditViolationsPage();
-    const deterministic = report.findings.filter((f) => f.source === 'deterministic');
+    // The axe engine's findings, which is what this file pins. HTMLCS shares
+    // the source but not the property: its collapsed notice findings are
+    // selector-less by design (see `services/htmlcs-audit.ts`), and
+    // `htmlcs-engine.test.ts` pins that separately.
+    const deterministic = report.findings
+      .filter((f) => f.source === 'deterministic')
+      .filter((f) => !f.code.startsWith('htmlcs:'));
 
     expect(deterministic.length).toBeGreaterThanOrEqual(5);
 

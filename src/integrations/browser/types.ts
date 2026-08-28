@@ -2,6 +2,7 @@ import type { Environment } from '../../domain/contracts';
 import type { JourneyTruncationReason } from '../../domain/run-limits';
 import type { AxNodeSummary } from '../../services/ax-tree';
 import type { AxeScanResult } from '../../services/deterministic-audit';
+import type { HtmlcsScanResult } from '../../services/htmlcs-audit';
 import type { PageFacts } from '../../services/page-checks';
 import type { RunCredentials } from './credentials';
 
@@ -161,6 +162,12 @@ export type PageAudit = {
   html: string;
   /** Rule results from the live page — the only source of findings. */
   axe: AxeScanResult;
+  /**
+   * HTML_CodeSniffer's second opinion over the same page state. Never gates
+   * — everything it produces is needs-review — so `unavailable` degrades to
+   * a run with no second opinion, not to degraded evidence.
+   */
+  htmlcs: HtmlcsScanResult;
   /**
    * Plain-data DOM facts for `services/page-checks` — the checks axe
    * structurally cannot make. Empty facts on a page where collection failed:

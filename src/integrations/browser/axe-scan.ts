@@ -2,6 +2,7 @@ import { AxeBuilder } from '@axe-core/playwright';
 import axe from 'axe-core';
 import type { Page } from 'playwright-core';
 import { PAGE_CHECK_IDS } from '../../services/page-checks';
+import { HTMLCS_ENGINE } from './htmlcs-scan';
 import type {
   AxeCheckResult,
   AxeNodeResult,
@@ -118,7 +119,7 @@ export const ENABLED_BY_US = ['target-size'] as const;
  * the rule set — the engine's version and the rules we override — are both
  * facts available here.
  */
-export const RUN_RULESET = `axe-core@${axe.version}+${[...ENABLED_BY_US].sort().join(',')}+checks:${[...PAGE_CHECK_IDS].sort().join(',')}`;
+export const RUN_RULESET = `axe-core@${axe.version}+${[...ENABLED_BY_US].sort().join(',')}+checks:${[...PAGE_CHECK_IDS].sort().join(',')}+${HTMLCS_ENGINE}`;
 
 export async function scanPageWithAxe(page: Page): Promise<AxeScanResult> {
   const results = await new AxeBuilder({ page })

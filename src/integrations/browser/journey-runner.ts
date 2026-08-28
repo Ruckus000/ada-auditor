@@ -14,7 +14,9 @@ import { pruneAxTree, redactSecrets, type AxNodeSummary } from '../../services/a
 import { logInfo, logWarn } from '../../services/logger';
 import { hostnameOf, settledLocation, withUrlsReduced } from '../../services/safe-url';
 import { scanPageWithAxe } from './axe-scan';
+import { axeCoverage, scanPageWithHtmlcs } from './htmlcs-scan';
 import { collectPageFacts } from './page-facts';
+import type { HtmlcsScanResult } from '../../services/htmlcs-audit';
 import type { PageFacts } from '../../services/page-checks';
 import { resolveCredentialFrom } from './credentials';
 import { launchChromium } from './launch';
@@ -737,6 +739,14 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
       const axe = input.skipScan
         ? { violations: [], incomplete: [] }
         : await scanPageWithAxe(page);
+      // The second opinion, over the same page state and under the same skip.
+      // Runs after axe and is handed what axe reported, so the page can mark
+      // which HTMLCS messages echo an element axe already covered.
+      // `scanPageWithHtmlcs` degrades to `unavailable` internally rather than
+      // throwing — a missing second opinion is not missing evidence.
+      const htmlcs: HtmlcsScanResult = input.skipScan
+        ? { status: 'unavailable' }
+        : await scanPageWithHtmlcs(page, axeCoverage(axe));
       // Collected under the same skip as the axe scan — the two feed the same
       // findings path, and a page whose collection fails contributes empty
       // facts rather than an error: absence of evidence is not a finding.
@@ -816,6 +826,7 @@ export async function runJourney(input: JourneyRunnerInput): Promise<JourneyRunn
         page: { url, route, title, statusCode: mainFrameNavigation.get(page)?.status },
         html,
         axe,
+        htmlcs,
         facts,
         axTree,
         artifacts,
