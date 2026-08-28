@@ -109,8 +109,13 @@ export type RemediationSummary = {
  * found a real document failing UA-1 7.4.2 with an empty punch list: its
  * headings begin at H2+, which is not a *skip between* consecutive headings
  * and so slipped the version-2 check. Same decision family, new vocabulary.
+ *
+ * 4 — the punch list gained the undeclared-language item. A document that
+ * declares no language was already reported as a 3.1.1 gap; it is now also
+ * work somebody can do, which is a different sentence and a new one in the
+ * vocabulary.
  */
-export const INSTRUMENT_VERSION = 3;
+export const INSTRUMENT_VERSION = 4;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -175,6 +180,22 @@ export function summarise(provenance: ConversionProvenance): RemediationSummary 
 function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'needs'> {
   const { structure } = provenance;
   const needs: Array<{ criterion: string; item: string }> = [];
+
+  // First, because it is one fact about the whole document and the cheapest
+  // thing on the list to supply.
+  //
+  // `[V]` It is also worth more than it looks. On a real municipal PDF this
+  // single missing declaration failed three UA-1 clauses at once — text in
+  // page content (7.2-34), the metadata title (7.2-33), and, once repair
+  // transcribed a link's destination into its Contents entry, that
+  // annotation too (7.2-24). The gap string beside this states the fact; the
+  // item asks for the work, because nobody can act on "so none is claimed".
+  if (provenance.sourceLanguage === null) {
+    needs.push({
+      criterion: '3.1.1',
+      item: 'The document declares no language — name the one it is written in, because a language is never guessed',
+    });
+  }
 
   structure.figures.forEach((figure, index) => {
     if (figure.alt === null) {
