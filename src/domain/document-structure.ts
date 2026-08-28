@@ -74,6 +74,16 @@ export const figureSchema = z.object({
 export const documentStructureSchema = z.object({
   /** Total elements in the structure tree. Zero means the PDF is untagged. */
   structureElements: z.number().int(),
+  /**
+   * What the catalog's MarkInfo CLAIMS — not what the tree contains.
+   *
+   * Read `marked === true && structureElements === 0` as the document
+   * asserting an accessibility property it does not have. Producers write it,
+   * and until this field existed the product could not see it: `isTagged()`
+   * answers what is true, this answers what was claimed, and the gap between
+   * them is exactly the thing this project refuses to produce itself.
+   */
+  marked: z.boolean(),
   /** Extracted text length. Distinguishes an untagged PDF from a scanned image. */
   textChars: z.number().int(),
   /**

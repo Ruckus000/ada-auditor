@@ -1683,6 +1683,58 @@ describe('platform hydration', () => {
           lastSeenAt: '2026-08-26T12:00:00.000Z',
         },
         {
+          // Tagged and unpaired: a repair can transcribe what its tree already
+          // says, so the row offers one.
+          id: 'doc-6',
+          url: 'https://discovered.invalid/minutes/tagged-notice.pdf',
+          kind: 'pdf',
+          source: 'crawl',
+          foundOn: 'https://discovered.invalid/meetings',
+          firstSeenAt: '2026-08-26T12:00:00.000Z',
+          lastSeenAt: '2026-08-26T12:00:00.000Z',
+          latestInspection: {
+            id: 'insp-tagged',
+            summary: {
+              title: 'already-titled',
+              sourceLanguage: 'en-US',
+              tagged: true,
+              pages: 2,
+              headings: 3,
+              tables: 0,
+              lists: 0,
+              figures: 0,
+              gaps: [],
+            },
+            inspectedAt: '2026-08-26T12:00:00.000Z',
+          },
+        },
+        {
+          // Untagged: there is nothing to transcribe, and the row has to say
+          // so rather than offer a button that would invent structure.
+          id: 'doc-7',
+          url: 'https://discovered.invalid/scans/untagged-scan.pdf',
+          kind: 'pdf',
+          source: 'crawl',
+          foundOn: 'https://discovered.invalid/meetings',
+          firstSeenAt: '2026-08-26T12:00:00.000Z',
+          lastSeenAt: '2026-08-26T12:00:00.000Z',
+          latestInspection: {
+            id: 'insp-untagged',
+            summary: {
+              title: 'no-heading-to-copy',
+              sourceLanguage: null,
+              tagged: false,
+              pages: 1,
+              headings: 0,
+              tables: 0,
+              lists: 0,
+              figures: 0,
+              gaps: ['2.4.2: the document has no title'],
+            },
+            inspectedAt: '2026-08-26T12:00:00.000Z',
+          },
+        },
+        {
           // The vendor-CDN shape: the document's bytes live on a host that is
           // not the client's, and the row must say so.
           id: 'doc-4',
@@ -1715,7 +1767,7 @@ describe('platform hydration', () => {
           return route.fulfill({
             status: 200,
             contentType: 'application/json',
-            body: JSON.stringify({ requestId: 'stubbed', documents: inventory, count: 5 }),
+            body: JSON.stringify({ requestId: 'stubbed', documents: inventory, count: 7 }),
           });
         }
         if (route.request().method() !== 'POST') return route.fallback();
@@ -1849,6 +1901,22 @@ describe('platform hydration', () => {
       expect(await page.getByRole('listitem').filter({ hasText: '/minutes/agenda.pdf' }).innerText()).not.toContain(
         'Word source on record',
       );
+
+      // A tagged, unpaired PDF offers a repair — the transcription path.
+      const tagged = page
+        .getByRole('listitem')
+        .filter({ hasText: '/minutes/tagged-notice.pdf' })
+        .first();
+      expect(await tagged.getByRole('button', { name: 'Repair this PDF' }).count()).toBe(1);
+
+      // An untagged one offers no repair, and says why rather than going
+      // quiet: a button here would mean inventing the document's structure.
+      const untagged = page
+        .getByRole('listitem')
+        .filter({ hasText: '/scans/untagged-scan.pdf' })
+        .first();
+      expect(await untagged.getByRole('button', { name: 'Repair this PDF' }).count()).toBe(0);
+      expect(await untagged.innerText()).toContain('No structure tree');
 
       // One inspection, rendered inline where its row is.
       await page

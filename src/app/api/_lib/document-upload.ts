@@ -34,7 +34,15 @@ export function maxDocumentBytes(env: NodeJS.ProcessEnv = process.env): number {
 export type UploadRefusal = {
   status: number;
   error: string;
+  /** The machine-readable kind. Stable; screens and tests key on it. */
   detail?: string;
+  /**
+   * Prose for the operator, when the refusal is a true answer about the
+   * document rather than a failure — "this PDF has no structure tree, so
+   * there is nothing to transcribe". A kind alone tells somebody that
+   * nothing happened; this tells them what to do instead.
+   */
+  message?: string;
 };
 
 export type ReadUploadResult =
@@ -135,7 +143,12 @@ export async function readDocumentUpload(
 /** The refusal as a response, so a route does not restate the envelope. */
 export function refusalResponse(refusal: UploadRefusal, requestId: string): Response {
   return Response.json(
-    { error: refusal.error, detail: refusal.detail, requestId },
+    {
+      error: refusal.error,
+      detail: refusal.detail,
+      ...(refusal.message === undefined ? {} : { message: refusal.message }),
+      requestId,
+    },
     { status: refusal.status },
   );
 }

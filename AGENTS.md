@@ -363,6 +363,22 @@ Read this before claiming something works.
   (emoji embedding) fails one *generated* stratum silently; zero real
   documents hit it.
 
+- **PDFs are repaired by transcription, or refused — never tagged by
+  inference.** `services/document-repair.ts` decides; `Finish` writes; the
+  result is read back and `contentChanges` must be empty or the repair is
+  discarded. `[V]` Twenty real municipal PDFs through the shipping path
+  (`pdf-repair-2026-08-28-results.md`): 11 repaired, 9 refused as untagged,
+  32 failing UA-1 clauses removed, **1 fully green**. Read that last number
+  before claiming anything — repair removes about three clauses per document
+  and names the rest; it does not make municipal PDFs conformant. What
+  remains is human work (figure descriptions), the producer's (fonts never
+  embedded), or structural (untagged page content — inferring it is what the
+  Arm B STOP forbids). One document gained a clause because fixing its links
+  surfaced a latent language failure; it is recorded rather than hidden, and
+  its root cause is already the document's reported 3.1.1 gap.
+  Open follow-up: "declare the document's language" is a gap string but not
+  yet a punch-list item, and one missing language blocked three clauses.
+
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run
   (`docs/research/blind-test/2026-08-27-rule-gaps-closed.md`): barriers seen

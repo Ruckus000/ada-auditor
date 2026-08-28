@@ -914,6 +914,44 @@ export function platformStoreContract(
       expect(record.latestConversion?.outputSha256).toBe('c'.repeat(64));
     });
 
+    it('distinguishes a repair from a conversion, and absence still reads as conversion', async () => {
+      // Both are one row per delivered file — same hashes, same summary, same
+      // audit trail — but only one of them converted anything. Every surface
+      // says "Converted to tagged PDF", so a repair stored without this
+      // discriminator would put a false sentence on the client's own report.
+      const store = await seeded();
+      const doc = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: DOC_URL, kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+
+      await store.saveDocumentConversion(
+        conversionRecord({
+          id: `${PLATFORM_PREFIX}-conv-repair`,
+          documentId: doc.id,
+          kind: 'repair',
+        }),
+      );
+      await store.saveDocumentConversion(
+        conversionRecord({
+          id: `${PLATFORM_PREFIX}-conv-legacy`,
+          documentId: doc.id,
+          convertedAt: T1,
+        }),
+      );
+
+      expect(await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-repair`)).toMatchObject({
+        kind: 'repair',
+      });
+      // Absent, not defaulted to a string: every row written before repair
+      // existed was a conversion, and reading it as one is the caller's job,
+      // not a value invented at the storage layer.
+      const legacy = await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-legacy`);
+      expect(legacy).not.toBeNull();
+      expect(legacy && 'kind' in legacy).toBe(false);
+    });
+
     it('round-trips the conversion stamp and artifact pointer, absence staying absent', async () => {
       const store = await seeded();
       const doc = await store.ensureClientDocument(

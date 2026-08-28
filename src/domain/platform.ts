@@ -650,6 +650,18 @@ export type StoredDocumentConversion = {
   documentId: string;
   /** The summary verbatim, as the conversion returned it. */
   summary: RemediationSummary;
+  /**
+   * How the output was produced. Absent reads as `'conversion'`, which is
+   * what every row written before repair existed actually was.
+   *
+   * A repair takes a PDF and writes back facts it already stated; a
+   * conversion takes a Word document and produces a new PDF. Both belong in
+   * this record — same hashes, same summary, same audit trail — but every
+   * surface says "Converted to tagged PDF", and saying that about a document
+   * nobody converted is the `ciStatus` mistake again: copy keyed on the wrong
+   * fact until the client's report disagreed with the operator's screen.
+   */
+  kind?: 'conversion' | 'repair';
   inputSha256: string;
   outputSha256: string;
   /** See `StoredDocumentInspection.instrumentVersion` — same stamp, same rule. */

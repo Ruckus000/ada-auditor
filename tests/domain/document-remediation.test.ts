@@ -11,6 +11,7 @@ import { documentStructureSchema } from '../../src/domain/document-structure';
 
 const structure = (over = {}) =>
   documentStructureSchema.parse({
+    marked: true,
     structureElements: 40,
     textChars: 1200,
     images: 0,
@@ -229,6 +230,7 @@ describe('titleFromFilename', () => {
 describe('the punch list', () => {
   const structure = (over: object) =>
     documentStructureSchema.parse({
+      marked: true,
       structureElements: 10, textChars: 100, images: 0, pages: 1, lang: 'en',
       title: 'T', headings: [], headingTexts: [], figures: [], tables: [], lists: [], order: [],
       ...over,

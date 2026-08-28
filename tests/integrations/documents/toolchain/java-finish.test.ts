@@ -162,6 +162,79 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     }
   });
 
+  /**
+   * The guard that lets this stage be pointed at a client's own PDF.
+   *
+   * `Marked true` says "this document is tagged". Written onto a document with
+   * no structure tree it is an assertion we manufactured — invisible to a
+   * reader, and enough to make a machine checker report success. The stage now
+   * only makes the claim a document has earned.
+   */
+  describe('on a document with no structure tree', () => {
+    let untagged: string;
+
+    beforeAll(async () => {
+      untagged = join(dir, 'untagged-source.pdf');
+      await writeFile(
+        untagged,
+        await renderPdf('<title>Fee Schedule</title><h1>Fee Schedule</h1><p>Body.</p>', {
+          tagged: false,
+        }),
+      );
+    });
+
+    it('is genuinely untagged, or the assertions below prove nothing', async () => {
+      const read = await inspectDocument(untagged);
+      if (!read.ok) expect.unreachable('could not read the untagged fixture');
+      else expect(read.value.structureElements).toBe(0);
+    });
+
+    it('does not claim the document is tagged', async () => {
+      const out = join(dir, 'untagged-finished.pdf');
+      const result = await finishDocument({
+        inputPath: untagged,
+        outputPath: out,
+        language: 'en-GB',
+      });
+      expect(result.ok).toBe(true);
+
+      const after = await inspectDocument(out);
+      if (!after.ok) expect.unreachable('could not read the output');
+      else {
+        // The claim, read back from MarkInfo. A byte search cannot see this:
+        // PDFBox writes the catalog into a compressed object stream, so
+        // `/Marked true` never appears as text — an earlier version of this
+        // test looked for it, passed against the unguarded stage, and proved
+        // nothing.
+        expect(after.value.marked).toBe(false);
+        // And the honest facts are still written — the guard narrows one
+        // claim, it does not turn the stage off.
+        expect(after.value.lang).toBe('en-GB');
+        expect(after.value.structureElements).toBe(0);
+      }
+    });
+
+    it('agrees with Inspect about what tagged means, on both fixtures', async () => {
+      // Two implementations of one definition — `Finish`'s local check and
+      // `Inspect`'s element count — so the drift between them is what gets
+      // tested. If either changes its mind about an empty tree, this fails.
+      const taggedOut = join(dir, 'agree-tagged.pdf');
+      const untaggedOut = join(dir, 'agree-untagged.pdf');
+      await finishDocument({ inputPath: source, outputPath: taggedOut, language: 'en' });
+      await finishDocument({ inputPath: untagged, outputPath: untaggedOut, language: 'en' });
+
+      const taggedRead = await inspectDocument(taggedOut);
+      const untaggedRead = await inspectDocument(untaggedOut);
+
+      if (!taggedRead.ok || !untaggedRead.ok) {
+        expect.unreachable('could not read one of the outputs');
+        return;
+      }
+      expect(taggedRead.value.marked).toBe(taggedRead.value.structureElements > 0);
+      expect(untaggedRead.value.marked).toBe(untaggedRead.value.structureElements > 0);
+    });
+  });
+
   it('fails cleanly on a file that is not a PDF, writing nothing', async () => {
     const notPdf = join(dir, 'not-a.pdf');
     await writeFile(notPdf, 'this is not a PDF');

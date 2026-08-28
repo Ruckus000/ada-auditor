@@ -858,6 +858,14 @@ export function ClientDocuments({
                 doc.sourceAvailable === undefined
                   ? ({ state: 'idle' } as const)
                   : (conversions[doc.sourceAvailable.url] ?? { state: 'idle' });
+              // A repair transcribes what the structure tree already says, so
+              // an untagged PDF has nothing to repair FROM. Offered only once
+              // a reading proves there is a tree — before that the honest
+              // answer is "inspect it and find out", which is the button
+              // already there.
+              const latestReading = doc.latestConversion?.summary ?? doc.latestInspection?.summary;
+              const repairable =
+                doc.kind === 'pdf' && latestReading !== undefined && latestReading.tagged;
               const hasRecord =
                 doc.latestInspection !== undefined || doc.latestConversion !== undefined;
               return (
@@ -925,6 +933,23 @@ export function ClientDocuments({
                               : 'Convert the Word source'}
                           </button>
                         ) : null}
+                        {/* Repair writes back what the PDF already states.
+                            Offered second where a Word source exists, because
+                            converting the source is the better answer: it
+                            reaches structure a repair never can. */}
+                        {repairable ? (
+                          <button
+                            type="button"
+                            onClick={() => convert(doc)}
+                            disabled={conversion.state === 'running'}
+                            style={{
+                              ...buttonStyle,
+                              ...disabledStyle(conversion.state === 'running'),
+                            }}
+                          >
+                            {conversion.state === 'running' ? 'Repairing…' : 'Repair this PDF'}
+                          </button>
+                        ) : null}
                       </>
                     ) : converter.available ? (
                       <button
@@ -945,6 +970,16 @@ export function ClientDocuments({
                     <p style={noteStyle}>
                       Word source on record — converting the source is this PDF&apos;s
                       remediation, not repairing the PDF itself.
+                    </p>
+                  ) : null}
+                  {doc.kind === 'pdf' &&
+                  latestReading !== undefined &&
+                  !latestReading.tagged &&
+                  doc.sourceAvailable === undefined ? (
+                    <p style={noteStyle}>
+                      No structure tree, so there is nothing to transcribe — this one needs the
+                      Word source it came from, or a person to tag it. Repairing it here would
+                      mean inventing its headings and reading order.
                     </p>
                   ) : null}
                   {/* The stored record, rendered from the inventory itself —

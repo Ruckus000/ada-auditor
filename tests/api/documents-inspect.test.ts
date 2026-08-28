@@ -49,6 +49,7 @@ function inspected(over = {}) {
   return {
     ok: true,
     value: documentStructureSchema.parse({
+      marked: true,
       structureElements: 40,
       textChars: 900,
       images: 2,
