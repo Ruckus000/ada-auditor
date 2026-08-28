@@ -16,6 +16,7 @@ import {
 
 /** A real `Inspect` result, trimmed to one of each thing it reports. */
 const REAL_OUTPUT = {
+  marked: true,
   structureElements: 42,
   textChars: 1500,
   images: 2,
@@ -105,10 +106,25 @@ describe('isTagged', () => {
   it('is false for an untagged PDF that still has text', () => {
     const untagged = documentStructureSchema.parse({
       ...REAL_OUTPUT,
+      marked: false,
       structureElements: 0,
     }) satisfies DocumentStructure;
     expect(isTagged(untagged)).toBe(false);
     expect(untagged.textChars).toBeGreaterThan(0);
+  });
+
+  it('answers what is true, never what the document claims', () => {
+    // A producer writing MarkInfo/Marked true onto a document with no
+    // structure tree is the exact false statement this product refuses to
+    // make itself, and a real shape: `marked` is what was claimed,
+    // `isTagged` is what is so, and nothing may read one for the other.
+    const lying = documentStructureSchema.parse({
+      ...REAL_OUTPUT,
+      marked: true,
+      structureElements: 0,
+    }) satisfies DocumentStructure;
+    expect(lying.marked).toBe(true);
+    expect(isTagged(lying)).toBe(false);
   });
 
   it('is true once the tree has elements', () => {
@@ -187,6 +203,7 @@ describe('contentChanges', () => {
   it('reports every changed field, not just the first', () => {
     const after = documentStructureSchema.parse({
       ...REAL_OUTPUT,
+      marked: true,
       structureElements: 1,
       images: 0,
       figures: [],

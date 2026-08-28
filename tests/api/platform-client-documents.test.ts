@@ -74,6 +74,7 @@ function pdfResponse(bytes: Uint8Array): Response {
 
 function structure(over = {}) {
   return documentStructureSchema.parse({
+    marked: true,
     structureElements: 12,
     textChars: 400,
     images: 0,

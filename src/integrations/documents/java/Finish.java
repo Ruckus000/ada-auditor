@@ -12,10 +12,13 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkInfo;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 
 /**
- * Category-A finishing pass. Four document-catalog writes and nothing else.
+ * Category-A finishing pass. Four document-catalog writes and nothing else,
+ * each one conditioned on the document actually earning the claim it makes.
  *
  * Each one closes a specific veraPDF ua1 failure that survived OpenDataLoader,
  * listed in docs/research/document-remediation/failure-classification.md. No
@@ -52,13 +55,32 @@ public final class Finish {
         try (PDDocument doc = Loader.loadPDF(new File(in))) {
             PDDocumentCatalog catalog = doc.getDocumentCatalog();
 
-            // 6.2-1 — catalog shall include MarkInfo with Marked true.
+            // 6.2-1 — catalog shall include MarkInfo with Marked true, but
+            // ONLY for a document that has structure to be marked about.
+            //
+            // This used to be unconditional, which was safe while the only
+            // caller was the conversion pipeline: LibreOffice always emits a
+            // structure tree. Pointed at a client's own PDF it would write
+            // "this document is tagged" onto one that is not — an assertion,
+            // in this project's terms, and produced by us rather than merely
+            // carried forward. The reader cannot see it; every machine check
+            // for it now passes; and the file is worse than before we touched
+            // it.
             PDMarkInfo markInfo = catalog.getMarkInfo();
-            if (markInfo == null) {
-                markInfo = new PDMarkInfo();
+            if (hasStructureElements(catalog)) {
+                if (markInfo == null) {
+                    markInfo = new PDMarkInfo();
+                }
+                markInfo.setMarked(true);
+                catalog.setMarkInfo(markInfo);
+            } else if (markInfo != null && markInfo.isMarked()) {
+                // The producer already claimed tagged on a document with no
+                // structure elements. We are writing these bytes, so we own
+                // every claim in them: correct it rather than carry it
+                // forward, exactly as /Lang below clears an exporter's guess.
+                markInfo.setMarked(false);
+                catalog.setMarkInfo(markInfo);
             }
-            markInfo.setMarked(true);
-            catalog.setMarkInfo(markInfo);
 
             // 7.2-34 / 7.2-22 / 7.2-24 — natural language shall be determined.
             // One catalog entry; content, Alt attributes and annotation
@@ -110,6 +132,40 @@ public final class Finish {
 
             doc.save(out);
         }
+    }
+
+    /**
+     * Whether the document has at least one structure element.
+     *
+     * The same question `isTagged()` asks in `domain/document-structure.ts`
+     * (`structureElements > 0`), and the equivalence is exact: `Inspect`
+     * counts elements reachable from the tree root, skipping any kid that is
+     * not a `PDStructureElement` without descending into it — so a root whose
+     * kids are all non-elements counts zero, which is what this returns.
+     *
+     * Deliberately not shared code with `Inspect`. Its count is produced by a
+     * walk that simultaneously builds reading order, tables and lists, and
+     * extracting it would mean restructuring a working stage to serve a
+     * one-line question. Two implementations of one definition is a drift
+     * risk, so the drift is what gets tested: `java-finish.test.ts` asserts
+     * this agrees with `Inspect`'s own count on both a tagged and an untagged
+     * document, and fails if they ever diverge.
+     */
+    private static boolean hasStructureElements(PDDocumentCatalog catalog) {
+        PDStructureTreeRoot root = catalog.getStructureTreeRoot();
+        if (root == null) {
+            return false;
+        }
+        java.util.List<Object> kids = root.getKids();
+        if (kids == null) {
+            return false;
+        }
+        for (Object kid : kids) {
+            if (kid instanceof PDStructureElement) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The URI a link action points at, or null for every other action kind. */

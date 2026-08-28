@@ -158,6 +158,15 @@ public final class Inspect {
 
             StringBuilder json = new StringBuilder("{\n");
             json.append("  \"hasStructTree\": ").append(root != null).append(",\n");
+            // What the document CLAIMS about itself, as distinct from what it
+            // has. A file asserting Marked true with no structure elements is
+            // making a false statement about its own accessibility, and that
+            // is a finding rather than a detail — reporting it is the whole
+            // difference between "we left a gap" and "somebody asserted".
+            json.append("  \"marked\": ")
+                .append(doc.getDocumentCatalog().getMarkInfo() != null
+                    && doc.getDocumentCatalog().getMarkInfo().isMarked())
+                .append(",\n");
 
             text = new StructText(doc);
 

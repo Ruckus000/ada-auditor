@@ -67,6 +67,7 @@ function conversionSucceeds() {
         title: { kind: 'already-titled', title: 'Planning Committee Agenda' },
         sourceLanguage: 'en-GB',
         structure: documentStructureSchema.parse({
+          marked: true,
           structureElements: 40,
           textChars: 900,
           images: 0,
@@ -246,6 +247,7 @@ describe('POST /api/documents/remediate', () => {
           title: { kind: 'already-titled', title },
           sourceLanguage: 'en-GB',
           structure: documentStructureSchema.parse({
+            marked: true,
             structureElements: 4,
             textChars: 100,
             images: 0,

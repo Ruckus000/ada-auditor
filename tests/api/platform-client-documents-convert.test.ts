@@ -100,6 +100,7 @@ function conversionSucceeds() {
         title: { kind: 'transcribed', title: 'Planning Committee Agenda' },
         sourceLanguage: 'en-GB',
         structure: documentStructureSchema.parse({
+          marked: true,
           structureElements: 40,
           textChars: 900,
           images: 0,
