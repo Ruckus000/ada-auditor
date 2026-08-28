@@ -31,7 +31,9 @@ out-arm-b-evidence/
 # outrun the ignore. Anything shaped like an arm output is ignored, present
 # or future.
 out-arm-*/
-# Derived measurement output. Regenerable from the manifests by
-# measure-pdf-population.mts; the numbers that survive are written up under
-# docs/research/document-remediation/ instead.
-out-pdf-*.json
+# Derived measurement output AND repaired bytes. `out-pdf-*.json` alone was
+# not enough: the repair arm writes out-pdf-repair/, a directory of PDFs
+# derived from real municipal documents, which the .json suffix missed by one
+# character. Match the prefix, not a shape — the same lesson real-pdf/ above
+# records, arrived at a second time.
+out-pdf-*
