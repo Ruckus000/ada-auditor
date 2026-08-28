@@ -74,14 +74,21 @@ declares no language. Supplying that one fact would close three clauses at
 once (7.2-24, 7.2-33, 7.2-34). Recorded here because a repair that adds a
 failing clause is exactly the kind of thing a vendor's report quietly omits.
 
-## Follow-up this measurement earned
+## Follow-up this measurement earned — since closed
 
-**Make "declare the document's language" a punch-list item.** It is currently
-a gap string (`3.1.1`), which states a fact rather than asking for work — and
-this run showed one missing language blocking three UA-1 clauses on a single
-document. Two documents in the sample are affected. Not built here: it
-changes the punch-list vocabulary and so bumps `INSTRUMENT_VERSION`, and it
-deserves its own change rather than riding along inside this one.
+**Make "declare the document's language" a punch-list item.** It was a gap
+string (`3.1.1`) that stated a fact rather than asking for work, while this
+run showed one missing language failing three UA-1 clauses on a single
+document.
+
+**Done the same day**, as its own change (`INSTRUMENT_VERSION` 4, since the
+punch-list vocabulary grew). Re-measured on the same twenty documents: both
+documents carrying the 3.1.1 gap now carry the item, and `tml-statutes-table`
+— the document above that *gained* a clause and had an **empty punch list**
+despite having actionable work — now names the one fact that would close
+three of its five remaining failures. Repair itself is unchanged: 11
+repaired, 9 refused, 32 clauses removed, 1 green. The item adds information,
+not behaviour.
 
 ## What a client can be told
 

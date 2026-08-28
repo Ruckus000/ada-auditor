@@ -376,8 +376,10 @@ Read this before claiming something works.
   Arm B STOP forbids). One document gained a clause because fixing its links
   surfaced a latent language failure; it is recorded rather than hidden, and
   its root cause is already the document's reported 3.1.1 gap.
-  Open follow-up: "declare the document's language" is a gap string but not
-  yet a punch-list item, and one missing language blocked three clauses.
+  An undeclared language is both a gap and a punch-list item (3.1.1,
+  `INSTRUMENT_VERSION` 4): one missing declaration failed three UA-1 clauses
+  on a real document, and "so none is claimed" is not something anybody can
+  act on.
 
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run

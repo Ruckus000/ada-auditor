@@ -284,6 +284,32 @@ describe('the punch list', () => {
     ]);
   });
 
+  it('asks for the language when the document declares none', () => {
+    const s = summarise({ ...provenance({ headings: ['H1'] }), sourceLanguage: null });
+    expect(s.needs).toEqual([
+      {
+        criterion: '3.1.1',
+        item: 'The document declares no language — name the one it is written in, because a language is never guessed',
+      },
+    ]);
+    // The gap states the fact and the item asks for the work. Both, because
+    // "so none is claimed" is not something anybody can act on.
+    expect(s.gaps.some((g) => g.startsWith('3.1.1'))).toBe(true);
+  });
+
+  it('puts the document-level item first, ahead of per-element ones', () => {
+    const s = summarise({
+      ...provenance({ figures: [{ type: 'Figure', alt: null, actualText: null }], images: 1 }),
+      sourceLanguage: null,
+    });
+    expect(s.needs?.map((n) => n.criterion)).toEqual(['3.1.1', '1.1.1']);
+  });
+
+  it('says nothing about language when the document declares one', () => {
+    const s = summarise({ ...provenance({ headings: ['H1'] }), sourceLanguage: 'cy-GB' });
+    expect('needs' in s).toBe(false);
+  });
+
   it('is absent, never empty, when nothing needs a person', () => {
     const s = summarise(provenance({ headings: ['H1', 'H2'] }));
     expect('needs' in s).toBe(false);
