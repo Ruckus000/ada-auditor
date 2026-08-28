@@ -4,6 +4,7 @@ import { createPlatformContext } from '../../domain/platforms';
 import { resolvePlatformMetadata } from '../platforms';
 import { requestAiAdvisory, type AdvisoryCall } from '../../services/ai-advisory';
 import { runDeterministicAudit } from '../../services/deterministic-audit';
+import { runHtmlcsAudit } from '../../services/htmlcs-audit';
 import { runPageChecks } from '../../services/page-checks';
 import { summarizeRun } from '../../services/reporting';
 import { scoreRun } from '../../services/score';
@@ -71,6 +72,10 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
                 // The checks axe structurally cannot make, over the same
                 // completeness gate: findings only from proven evidence.
                 ...runPageChecks(pageAudit.facts, pageAudit.page.url),
+                // The second opinion. Needs-review only — it can never gate —
+                // and already stripped of what axe reported on the same
+                // element and criterion (see `axeCriteria` on the scan seam).
+                ...runHtmlcsAudit(pageAudit.htmlcs, pageAudit.page.url),
               ]
             : [],
         // Counted here so a partial run carries them too. Computed on the

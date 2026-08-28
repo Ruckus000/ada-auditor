@@ -105,6 +105,27 @@ describe('summarizeRun', () => {
       expect(report.executiveSummary.blockingFindings).toBe(0);
     });
 
+    it('does not fail a run whose only findings are HTMLCS second opinions', () => {
+      // `runHtmlcsAudit` emits everything — errors included — at
+      // `needs-review`, which is the no-gating decision made structural. This
+      // pins it from the gate's side: an `htmlcs:` finding with an A-level
+      // criterion still cannot reach `fail`.
+      const report = summarizeRun({
+        findings: [
+          deterministic({
+            code: 'htmlcs:1_1_1.H37',
+            severity: 'needs-review',
+            conformanceLevel: 'A',
+            wcagCriteria: ['1.1.1'],
+          }),
+        ],
+        evidenceStatus: 'complete',
+      });
+
+      expect(report.ciStatus).toBe('pass');
+      expect(report.executiveSummary.blockingFindings).toBe(0);
+    });
+
     it('does not fail on AAA, which is not the ADA bar', () => {
       const report = summarizeRun({
         findings: [deterministic({ conformanceLevel: 'AAA', wcagCriteria: ['1.4.6'] })],

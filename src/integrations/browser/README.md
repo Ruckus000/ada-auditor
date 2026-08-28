@@ -47,6 +47,12 @@ npm test -- tests/integrations/browser
 - **Every navigation is scanned**, not just the last one. `runJourney` returns
   `{ pages, truncatedPages }`; consecutive steps that leave the URL unchanged
   are captured once.
+- **Two engines per page, one gate.** axe (`axe-scan.ts`) decides; HTMLCS
+  (`htmlcs-scan.ts`, WCAG2AA, main frame only) is a second opinion whose every
+  result is `needs-review`. Its scan failing or timing out
+  (`AUDITOR_HTMLCS_TIMEOUT_MS`, default 15s) degrades to "no second opinion" —
+  never to degraded evidence. Echoes of elements axe already covered are
+  dropped by element identity, resolved in the page.
 - Evidence is per page. Missing `axTreePath` (or `omitAxTree: true`) → that
   page is degraded, its deterministic findings are rejected, and the run takes
   the worst status → `ciStatus: inconclusive`.

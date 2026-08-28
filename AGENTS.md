@@ -164,6 +164,19 @@ Chromium launches on a Vercel function:
   conformance level, a help URL and a snippet. The scan runs in
   `integrations/browser/axe-scan.ts`; `services/deterministic-audit.ts` maps its
   plain-data output and imports neither Playwright nor axe-core.
+- **Second opinion: HTML_CodeSniffer (WCAG2AA) over the same live page.**
+  Injected beside axe (`integrations/browser/htmlcs-scan.ts`, main frame only,
+  bounded by `AUDITOR_HTMLCS_TIMEOUT_MS`), mapped by `services/htmlcs-audit.ts`
+  under the same seam rule. **Everything it emits is `needs-review`** — codes
+  prefixed `htmlcs:`, never gating, never in the score — so its technique-level
+  coverage widens the human-review queue without moving any verdict. Where axe
+  already reported the same element and criterion the echo is dropped, by
+  element identity resolved in the page (selector strings differ between
+  engines); notices collapse to one counted finding per technique per page. A
+  failed or timed-out scan degrades to "no second opinion"
+  (`htmlcs_scan_unavailable`), never to degraded evidence. Named in
+  `RUN_RULESET`, so the first run after this change diffs as an instrument
+  change rather than a site regression.
 - **AI advisory: a real model call through the Vercel AI Gateway**, with forced
   tool use, over the pruned accessibility tree plus axe's undecided checks.
   Judges what rules cannot — alt text that says nothing, headings used for

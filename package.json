@@ -36,6 +36,7 @@
   "dependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@neondatabase/serverless": "^1.1.0",
+    "@pa11y/html_codesniffer": "^2.6.0",
     "@sparticuz/chromium": "^147.0.0",
     "@upstash/redis": "^1.38.0",
     "@vercel/blob": "^2.7.0",

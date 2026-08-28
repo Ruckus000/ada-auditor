@@ -25,6 +25,11 @@ const nextConfig = {
     '@sparticuz/chromium',
     '@axe-core/playwright',
     'axe-core',
+    // Same failure mode as axe-core: `htmlcs-scan.ts` reads the built
+    // HTMLCS.js by path and evaluates it in the page. Bundling would rewrite
+    // the module while the path read goes stale — keep it external, and see
+    // the tracing entries below for the path-read half.
+    '@pa11y/html_codesniffer',
   ],
   // `serverExternalPackages` keeps these out of the bundle, but it does not
   // make the tracer copy everything they need: only the JavaScript reachable
@@ -47,6 +52,9 @@ const nextConfig = {
     '/api/audit/**': [
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
+      // Read by path at runtime (`htmlcs-scan.ts` injects the built bundle
+      // as a source string) — the browsers.json class of miss exactly.
+      './node_modules/@pa11y/html_codesniffer/build/**',
     ],
     // The client-scoped documents route spawns a JVM, not a browser, from a
     // path `/api/documents/**` cannot see. Scoped to `**/documents/**` and
@@ -64,6 +72,9 @@ const nextConfig = {
     '/api/platform/clients/**/documents/discover/**': [
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
+      // Read by path at runtime (`htmlcs-scan.ts` injects the built bundle
+      // as a source string) — the browsers.json class of miss exactly.
+      './node_modules/@pa11y/html_codesniffer/build/**',
     ],
     // The one client-scoped documents route that converts, which needs
     // LibreOffice on top of the JVM — a conversion is two `soffice` runs and
@@ -86,6 +97,9 @@ const nextConfig = {
     '/api/platform/clients/**': [
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
+      // Read by path at runtime (`htmlcs-scan.ts` injects the built bundle
+      // as a source string) — the browsers.json class of miss exactly.
+      './node_modules/@pa11y/html_codesniffer/build/**',
     ],
     // The first browser route outside the two subtrees above. Nothing in the
     // route file says "I need the tracer's help" — that knowledge lives only
@@ -94,6 +108,9 @@ const nextConfig = {
     '/api/platform/discover/**': [
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',
+      // Read by path at runtime (`htmlcs-scan.ts` injects the built bundle
+      // as a source string) — the browsers.json class of miss exactly.
+      './node_modules/@pa11y/html_codesniffer/build/**',
     ],
     // The document stages, which spawn a JVM rather than a browser. Same class
     // of problem as the entries above and the same fix: nothing in the route
