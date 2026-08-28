@@ -125,6 +125,21 @@ export function readDeploymentConfig(
       degraded: !env.AUDITOR_SESSION_SECRET?.trim(),
     },
     {
+      key: 'passkeys',
+      label: 'Passkey sign-in',
+      value:
+        env.AUDITOR_RP_ID?.trim() && env.AUDITOR_RP_ORIGIN?.trim() ? 'available' : 'off',
+      detail:
+        env.AUDITOR_RP_ID?.trim() && env.AUDITOR_RP_ORIGIN?.trim()
+          ? `AUDITOR_RP_ID and AUDITOR_RP_ORIGIN. Operators can sign in with a device instead of a password; passwords keep working, and remain the way back in if every device is lost.`
+          : 'No AUDITOR_RP_ID / AUDITOR_RP_ORIGIN, so passkeys are unavailable and everyone signs in with a password. Both values are configuration by necessity — a relying party taken from a request header would let an attacker mint credentials against a domain they control.',
+      // Not degraded. Password sign-in is a supported way to run, and previews
+      // and local development are *expected* to have this off: a credential is
+      // bound to one origin, so a production passkey could not work there
+      // anyway. Flagging it would cry wolf on every non-production deploy.
+      degraded: false,
+    },
+    {
       key: 'database',
       label: 'Run store',
       value: env.AUDITOR_STORE === 'memory' ? 'in memory' : env.DATABASE_URL ? 'Postgres' : 'not configured',

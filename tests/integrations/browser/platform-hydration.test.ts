@@ -229,6 +229,11 @@ beforeAll(async () => {
       // 503 without a key. A fixed, committed test key — the values it guards
       // live in the ephemeral store and die with this server.
       AUDITOR_CREDENTIAL_KEY: 'ab'.repeat(32),
+      // Turns passkey sign-in on for the harness. `localhost` is a valid
+      // relying-party id and a secure origin as far as WebAuthn is concerned,
+      // so the ceremony endpoints behave here as they do in production.
+      AUDITOR_RP_ID: 'localhost',
+      AUDITOR_RP_ORIGIN: BASE,
     },
     // Own process group, so teardown can kill `next start` and not just the
     // `npx` wrapper in front of it — an orphan keeps the port and makes the
@@ -2555,6 +2560,74 @@ describe('platform accessibility', () => {
           { ...AXE_SETTLE, message: `axe on ${route}` },
         )
         .toBe('');
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+});
+
+/**
+ * Passkey sign-in, through the built application.
+ *
+ * **What this covers and what it does not, stated plainly.** It proves the
+ * parts only a real build can break: that `@simplewebauthn` loads inside the
+ * server bundle, that the ceremony routes are reachable and packaged, and that
+ * the locked screen offers the button when a relying party is configured. That
+ * is the class of failure this suite exists for — the axe bundling incident is
+ * the precedent, where every other suite was green while the product was
+ * broken.
+ *
+ * It does **not** drive a successful register-then-sign-in ceremony. Doing so
+ * needs an operator account with a password in the running server's store, and
+ * operator accounts are deliberately CLI-only against a real database — this
+ * harness runs `AUDITOR_STORE=memory` in a separate process, so there is no
+ * way in without adding a seeding endpoint, and a test-only door into
+ * authentication is worth more to an attacker than it is to this test. The
+ * success path is covered by `tests/api/console-passkey-route.test.ts` against
+ * a stubbed verifier, and the crypto by the library's own suite; a real
+ * device remains a manual check after deploy.
+ */
+describe('passkey sign-in', () => {
+  it('offers the passkey button on the locked screen', async () => {
+    const page = await browser.newPage();
+
+    try {
+      await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+
+      // Rendered after a status probe resolves, so poll rather than read once.
+      await expect
+        .poll(
+          async () =>
+            page.locator('button', { hasText: 'Sign in with a passkey' }).count(),
+          { timeout: 15_000, message: 'passkey button on the locked screen' },
+        )
+        .toBeGreaterThan(0);
+    } finally {
+      await page.close();
+    }
+  }, 60_000);
+
+  it('issues a challenge from the built server', async () => {
+    const page = await browser.newPage();
+
+    try {
+      await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+
+      // Same-origin fetch from the page, so the CSRF guard sees what it
+      // expects. A 200 here means the route ran and the library initialised
+      // inside the built bundle — the thing a unit test cannot tell us.
+      const result = await page.evaluate(async () => {
+        const response = await fetch('/api/console/passkey/options', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const body = (await response.json()) as { options?: { challenge?: string } };
+        return { status: response.status, challenge: body.options?.challenge ?? null };
+      });
+
+      expect(result.status).toBe(200);
+      expect(typeof result.challenge).toBe('string');
+      expect(result.challenge).not.toBe('');
     } finally {
       await page.close();
     }

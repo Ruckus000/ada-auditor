@@ -9,6 +9,7 @@ import type {
   PlatformStore,
   StoredDocumentConversion,
   StoredDocumentInspection,
+  StoredOperatorPasskey,
   TriageEntry,
 } from '../../src/domain/platform';
 import type { RemediationSummary } from '../../src/domain/document-remediation';
@@ -60,6 +61,9 @@ export const CONTRACT_RUN_IDS = [`${PLATFORM_PREFIX}-run-a`, `${PLATFORM_PREFIX}
 
 export const CONTRACT_OPERATOR = `${PLATFORM_PREFIX}-op-a`;
 export const CONTRACT_OPERATOR_EMAIL = `${PLATFORM_PREFIX}-operator@example.com`;
+export const CONTRACT_OPERATOR_B = `${PLATFORM_PREFIX}-op-b`;
+export const CONTRACT_OPERATOR_B_EMAIL = `${PLATFORM_PREFIX}-operator-b@example.com`;
+export const CONTRACT_PASSKEY = `${PLATFORM_PREFIX}-cred-a`;
 
 export type PlatformContractOptions = {
   /** Called before the report cases. A no-op where nothing enforces the FK. */
@@ -1685,6 +1689,118 @@ export function platformStoreContract(
       await store.setOperatorDisabled(CONTRACT_OPERATOR, false);
 
       expect(await store.getOperator(CONTRACT_OPERATOR)).not.toHaveProperty('disabledAt');
+    });
+  });
+
+  describe('operator passkeys', () => {
+    const hash = 'scrypt$16384$8$1$c2FsdA==$aGFzaA==';
+
+    async function seedOperators(store: PlatformStore) {
+      await store.upsertOperator({
+        id: CONTRACT_OPERATOR,
+        email: CONTRACT_OPERATOR_EMAIL,
+        name: 'Contract Operator',
+        passwordHash: hash,
+      });
+      await store.upsertOperator({
+        id: CONTRACT_OPERATOR_B,
+        email: CONTRACT_OPERATOR_B_EMAIL,
+        name: 'Contract Operator B',
+        passwordHash: hash,
+      });
+    }
+
+    function passkey(overrides: Partial<StoredOperatorPasskey> = {}): StoredOperatorPasskey {
+      return {
+        credentialId: CONTRACT_PASSKEY,
+        operatorId: CONTRACT_OPERATOR,
+        publicKey: 'cHVibGljLWtleQ',
+        signCounter: 0,
+        transports: ['internal', 'hybrid'],
+        label: 'Contract Laptop',
+        createdAt: '2026-08-28T12:00:00.000Z',
+        ...overrides,
+      };
+    }
+
+    it('round-trips a passkey by credential id', async () => {
+      const store = await makeStore();
+      await seedOperators(store);
+      await store.insertOperatorPasskey(passkey());
+
+      const found = await store.getOperatorPasskeyByCredentialId(CONTRACT_PASSKEY);
+      expect(found?.operatorId).toBe(CONTRACT_OPERATOR);
+      expect(found?.publicKey).toBe('cHVibGljLWtleQ');
+      expect(found?.label).toBe('Contract Laptop');
+      expect(found?.signCounter).toBe(0);
+      expect(found?.transports).toEqual(['internal', 'hybrid']);
+      expect(found).not.toHaveProperty('lastUsedAt');
+    });
+
+    it('answers null for a credential nobody registered', async () => {
+      const store = await makeStore();
+      expect(
+        await store.getOperatorPasskeyByCredentialId(`${PLATFORM_PREFIX}-cred-missing`),
+      ).toBeNull();
+    });
+
+    it('lists only the passkeys belonging to that operator', async () => {
+      const store = await makeStore();
+      await seedOperators(store);
+      await store.insertOperatorPasskey(passkey());
+      await store.insertOperatorPasskey(
+        passkey({
+          credentialId: `${CONTRACT_PASSKEY}-b`,
+          operatorId: CONTRACT_OPERATOR_B,
+          label: 'Someone Else',
+        }),
+      );
+
+      const mine = await store.listOperatorPasskeys(CONTRACT_OPERATOR);
+      expect(mine.map((entry) => entry.credentialId)).toContain(CONTRACT_PASSKEY);
+      expect(mine.map((entry) => entry.credentialId)).not.toContain(`${CONTRACT_PASSKEY}-b`);
+    });
+
+    // A credential id already on record is either a device registering twice
+    // or a collision. Overwriting would relink an existing credential id to a
+    // new public key, which is an account-takeover shape.
+    it('refuses a duplicate credential id rather than overwriting', async () => {
+      const store = await makeStore();
+      await seedOperators(store);
+      await store.insertOperatorPasskey(passkey());
+
+      await expect(
+        store.insertOperatorPasskey(passkey({ operatorId: CONTRACT_OPERATOR_B })),
+      ).rejects.toThrow();
+
+      expect((await store.getOperatorPasskeyByCredentialId(CONTRACT_PASSKEY))?.operatorId).toBe(
+        CONTRACT_OPERATOR,
+      );
+    });
+
+    it('records a use by advancing the counter and stamping the time', async () => {
+      const store = await makeStore();
+      await seedOperators(store);
+      await store.insertOperatorPasskey(passkey());
+
+      await store.recordOperatorPasskeyUse(CONTRACT_PASSKEY, 7, '2026-08-28T13:00:00.000Z');
+
+      const found = await store.getOperatorPasskeyByCredentialId(CONTRACT_PASSKEY);
+      expect(found?.signCounter).toBe(7);
+      expect(found?.lastUsedAt).toBe('2026-08-28T13:00:00.000Z');
+    });
+
+    it('deletes only when the operator owns the credential', async () => {
+      const store = await makeStore();
+      await seedOperators(store);
+      await store.insertOperatorPasskey(passkey());
+
+      // The authorization is the query: a mismatched operator deletes nothing.
+      await store.deleteOperatorPasskey(CONTRACT_OPERATOR_B, CONTRACT_PASSKEY);
+      expect(await store.getOperatorPasskeyByCredentialId(CONTRACT_PASSKEY)).not.toBeNull();
+
+      await store.deleteOperatorPasskey(CONTRACT_OPERATOR, CONTRACT_PASSKEY);
+      expect(await store.getOperatorPasskeyByCredentialId(CONTRACT_PASSKEY)).toBeNull();
     });
   });
 }
