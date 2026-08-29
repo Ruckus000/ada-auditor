@@ -153,7 +153,7 @@ export function withConformance(
   if (rest.length > 0) {
     items.push({
       criterion: 'PDF/UA',
-      item: `${rest.length} further PDF/UA check${rest.length === 1 ? '' : 's'} fail (${rest.join(', ')}) — a person must review`,
+      item: `${rest.length} further PDF/UA check${rest.length === 1 ? ' fails' : 's fail'} (${rest.join(', ')}) — a person must review`,
     });
   }
 

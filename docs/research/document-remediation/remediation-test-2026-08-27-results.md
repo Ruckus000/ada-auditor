@@ -244,3 +244,39 @@ and 13 → 23 both-green is what the campaign actually moved. The number
 registered was the wrong proxy for the promise; the promise itself is the
 product, and it now holds on every real document.
 
+---
+
+## Addendum, 2026-08-29: the parity subset ran
+
+Access restored (the operator reset `AUDITOR_RUN_TOKEN` and redeployed), and
+the measurement registered above finally ran: the same ten real Word
+documents (r01–r10, authored filenames) through the **same shared core**
+locally and on the deployed function, current code both sides
+(`INSTRUMENT_VERSION` 6, conformance verdicts included), summaries diffed
+field by field.
+
+**Result: 8/10 identical. The registered 10/10 was missed, and both misses
+are one finding — the exact class the prediction named.**
+
+r01 and r02 differ only in `conformance` (and the punch item derived from
+it): production's output fails **UA-1 7.21.7-1** (glyph-to-Unicode mapping)
+where local output does not. veraPDF names the font: **`LinuxLibertineG`** —
+on the production image, LibreOffice resolves these documents' typeface to
+its bundled Linux Libertine G, whose used glyphs lack a `toUnicode` map; on
+macOS the same converter resolves to a font that maps cleanly. Same code,
+different font catalogs, different bytes. The instrument agrees with itself
+on both sides; the *artifacts* differ.
+
+Two things worth saying plainly:
+
+- **The product handled its own difference correctly.** The production
+  delivery carries the catch-all punch item naming 7.21.7-1 — the clause
+  arrived as work, not as silence, which is what the second instrument
+  shipped to guarantee.
+- **Conversion output on production can be less conformant than the same
+  conversion locally**, because the deployed font environment is poorer. That
+  is now a measured fact with a named font, not a suspicion — and the honest
+  scope of any local both-green count is "on this font environment". A
+  follow-up worth having: pin the converter's effective font set so the two
+  environments stop being different instruments.
+
