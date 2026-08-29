@@ -1,6 +1,7 @@
 import {
   clampEventListLimit,
   CLIENT_DOCUMENT_LIST_MAX,
+  DuplicatePasskeyError,
   DOCUMENT_INSPECTION_LIST_MAX,
   journeyRunRefusal,
   UNASSIGNED_CLIENT_ID,
@@ -20,6 +21,7 @@ import type {
   StoredDocumentInspection,
   StoredJourney,
   StoredOperator,
+  StoredOperatorPasskey,
   StoredOperatorWithSecret,
   StoredReport,
   TriageEntry,
@@ -55,6 +57,8 @@ type StoredConversion = { record: StoredDocumentConversion; seq: number };
 
 export class MemoryPlatformStore implements PlatformStore {
   private readonly operators = new Map<string, StoredOperatorWithSecret>();
+  /** Keyed by credential id, matching the Postgres primary key. */
+  private readonly passkeys = new Map<string, StoredOperatorPasskey>();
   private readonly clients = new Map<string, StoredClient>();
   private readonly configs = new Map<string, Record<string, unknown>>();
   private readonly journeys = new Map<string, StoredJourney>();
@@ -159,6 +163,51 @@ export class MemoryPlatformStore implements PlatformStore {
     }
     found.sessionEpoch += 1;
     found.updatedAt = MemoryPlatformStore.now();
+  }
+
+  // ---------------------------------------------------- operator passkeys --
+
+  async listOperatorPasskeys(operatorId: string): Promise<StoredOperatorPasskey[]> {
+    return [...this.passkeys.values()]
+      .filter((passkey) => passkey.operatorId === operatorId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .map((passkey) => structuredClone(passkey));
+  }
+
+  async getOperatorPasskeyByCredentialId(
+    credentialId: string,
+  ): Promise<StoredOperatorPasskey | null> {
+    const found = this.passkeys.get(credentialId);
+    return found ? structuredClone(found) : null;
+  }
+
+  async insertOperatorPasskey(passkey: StoredOperatorPasskey): Promise<void> {
+    // Throws on a duplicate, matching the Postgres primary key. A double that
+    // quietly overwrote would hide exactly the collision the real store
+    // refuses — and a relinked credential id is an account-takeover shape.
+    if (this.passkeys.has(passkey.credentialId)) {
+      throw new DuplicatePasskeyError(`passkey ${passkey.credentialId} already exists`);
+    }
+    this.passkeys.set(passkey.credentialId, structuredClone(passkey));
+  }
+
+  async recordOperatorPasskeyUse(
+    credentialId: string,
+    signCounter: number,
+    usedAt: string,
+  ): Promise<void> {
+    const found = this.passkeys.get(credentialId);
+    if (!found) return;
+
+    found.signCounter = signCounter;
+    found.lastUsedAt = usedAt;
+  }
+
+  async deleteOperatorPasskey(operatorId: string, credentialId: string): Promise<void> {
+    // Both halves, as in Postgres: a mismatched operator deletes nothing
+    // rather than deleting someone else's credential.
+    const found = this.passkeys.get(credentialId);
+    if (found?.operatorId === operatorId) this.passkeys.delete(credentialId);
   }
 
   // ------------------------------------------------------------- clients --

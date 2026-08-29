@@ -1,5 +1,6 @@
 import type { DeploymentConfig } from '../../../services/deployment-config';
 import { FONT, T } from '../lib/tokens';
+import { PasskeysCard, type PasskeySummary } from './passkeys-card';
 
 /**
  * What this deployment is configured to do.
@@ -14,7 +15,18 @@ import { FONT, T } from '../lib/tokens';
  * to change them from a web page would be lying about where the truth lives.
  * Each row says where its answer comes from and what the current state costs.
  */
-export function SettingsScreen({ config }: { config: DeploymentConfig }) {
+export function SettingsScreen({
+  config,
+  passkeys,
+  passkeysAvailable,
+  showPasskeys,
+}: {
+  config: DeploymentConfig;
+  passkeys: PasskeySummary[];
+  passkeysAvailable: boolean;
+  /** False for a machine principal: the run token is not a person with devices. */
+  showPasskeys: boolean;
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -109,6 +121,16 @@ export function SettingsScreen({ config }: { config: DeploymentConfig }) {
           </div>
         ))}
       </dl>
+
+      {/*
+       * The one thing on this screen that is not deploy-time config. It earns
+       * its place here rather than on a screen of its own: it is per-operator
+       * state, it is small, and Settings is where someone already comes to ask
+       * how they get in.
+       */}
+      {showPasskeys && (
+        <PasskeysCard passkeys={passkeys} configured={passkeysAvailable} />
+      )}
     </div>
   );
 }

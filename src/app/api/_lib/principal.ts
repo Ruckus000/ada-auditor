@@ -49,6 +49,45 @@ export function sessionSecretIsShared(): boolean {
 }
 
 /**
+ * Where passkeys are allowed to be used, or null when the feature is off.
+ *
+ * **Never derived from `Host` or `x-forwarded-host`**, and this is the sharpest
+ * instance of a rule the codebase already follows for `AUDITOR_SELF_URL`. A
+ * relying-party id taken from a request header is an account-takeover
+ * primitive: an attacker who can make the app see an id it does not own can
+ * have credentials minted against a domain they control, or replay one there.
+ * It is configuration or it is nothing.
+ *
+ * Nothing is a legitimate state. Unset means passkeys are simply unavailable,
+ * which is correct for local development and for preview deployments — their
+ * origins differ from production, so a production credential could not work
+ * there in any case. The console hides the button and the endpoints refuse.
+ *
+ * The origin must be a full origin (`https://audit.example.com`) and the id
+ * its registrable domain (`audit.example.com`). They are checked against each
+ * other here, because a mismatch is a misconfiguration that would otherwise
+ * surface as every ceremony failing with nothing saying why.
+ */
+export function passkeyRelyingParty(): { id: string; origin: string } | null {
+  const id = process.env.AUDITOR_RP_ID?.trim();
+  const origin = process.env.AUDITOR_RP_ORIGIN?.trim();
+  if (!id || !origin) return null;
+
+  let host: string;
+  try {
+    host = new URL(origin).hostname;
+  } catch {
+    return null;
+  }
+
+  // The id must be the origin's host or a parent of it — what the spec allows
+  // and what a browser will enforce anyway. Checked here so the failure is a
+  // readable config error rather than an opaque ceremony refusal.
+  const idIsHostOrParent = host === id || host.endsWith(`.${id}`);
+  return idIsHostOrParent ? { id, origin } : null;
+}
+
+/**
  * Resolves a cookie value to a principal.
  *
  * Two formats, both valid, meaning different things:

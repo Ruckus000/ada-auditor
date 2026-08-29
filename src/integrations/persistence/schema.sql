@@ -424,6 +424,49 @@ create table if not exists operators (
 -- case-sensitive to the person who owns it.
 create unique index if not exists operators_email_lower_idx on operators (lower(email));
 
+-- --- Passkeys ------------------------------------------------------------
+--
+-- What an operator signs in with instead of remembering a password. The
+-- device keeps the private key in its own secure hardware; this table holds
+-- only the public half, which is why there is no ciphertext here and no key
+-- to rotate. A dump of this table lets someone verify a signature and never
+-- produce one — the property the whole mechanism exists for.
+--
+-- Several rows per operator, one per device. That is what makes a lost laptop
+-- survivable: the phone still signs in, and nobody has to reach for the CLI.
+--
+-- `credential_id` is the primary key rather than a surrogate: the
+-- authenticator chooses it, it is unique across every operator, and a sign-in
+-- arrives carrying nothing else — a discoverable credential names its own
+-- owner, so the lookup has to be by exactly this value.
+--
+-- **Cascade here, unlike `activity_events` below.** An operator row is
+-- disabled rather than deleted precisely so history survives its account; a
+-- credential has the opposite nature — past its operator it is unusable bytes
+-- naming a device nobody can sign in as.
+create table if not exists operator_passkeys (
+  credential_id text primary key,
+  operator_id   text not null references operators (id) on delete cascade,
+  -- Base64url COSE key, as the authenticator encoded it. Stored verbatim
+  -- rather than re-encoded: the verifier wants the bytes it was given.
+  public_key    text not null,
+  -- The authenticator's use counter. Compared, not trusted — synced passkeys
+  -- report zero forever, so zero means "not counting". See
+  -- `isCounterRegression` in `domain/platform.ts`.
+  sign_counter  bigint not null default 0,
+  -- Hints like 'usb,hybrid'. Null when the authenticator offered none.
+  transports    text,
+  -- Operator-supplied device name. UNTRUSTED — escape on render.
+  label         text not null,
+  created_at    timestamptz not null default now(),
+  last_used_at  timestamptz
+);
+
+-- The management screen lists one operator's credentials; the sign-in path
+-- goes through the primary key and needs no index of its own.
+create index if not exists operator_passkeys_operator_idx
+  on operator_passkeys (operator_id);
+
 alter table activity_events add column if not exists actor_operator_id text;
 alter table finding_triage  add column if not exists assignee_operator_id text;
 

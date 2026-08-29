@@ -230,6 +230,22 @@ Chromium launches on a Vercel function:
   - What this does and does not achieve is measured, not asserted — see the
     known-gaps entry and `docs/research/document-remediation/`.
 
+- **Two ways for a person to sign in, one session.** A password, or a
+  **passkey** (WebAuthn) — both mint the identical v2 operator cookie through
+  `createOperatorSessionValue`, so `resolvePrincipal`, the screen guards and
+  `operator -- revoke-sessions` are unchanged by the second method existing.
+  Passkeys are discoverable credentials: no email is typed, and the sign-in
+  challenge endpoint does no lookup at all, so unlike the password path it has
+  no enumeration surface. Registering one **re-verifies the password** even
+  though the operator is already signed in — a credential outlives the session
+  that made it, so a stolen cookie must not become access `revoke-sessions`
+  cannot reach. Off unless `AUDITOR_RP_ID` and `AUDITOR_RP_ORIGIN` are set,
+  which is correct for local and preview work; passwords stay a full peer and
+  remain the recovery route when every device is lost. Ceremony verification
+  is `@simplewebauthn` behind `integrations/webauthn/`, and the clone-detection
+  counter rule is the library's alone — a synced passkey reports zero forever,
+  a device that counted and then reports zero is a clone, and one security
+  rule with two homes drifts.
 - **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
   target is checked four ways: scheme and host; every resolved address; the URL
   the page settled on after each navigation; and the address the browser
