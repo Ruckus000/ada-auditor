@@ -4,6 +4,7 @@ import {
   isWordDocument,
   logSafe,
   summarise,
+  withConformance,
   titleFromFilename,
   type ConversionProvenance,
 } from '../../src/domain/document-remediation';
@@ -344,5 +345,123 @@ describe('the punch list', () => {
   it('is absent, never empty, when nothing needs a person', () => {
     const s = summarise(provenance({ headings: ['H1', 'H2'] }));
     expect('needs' in s).toBe(false);
+  });
+});
+
+
+describe('withConformance', () => {
+  const base = summarise({
+    title: { kind: 'already-titled' as const, title: 'T' },
+    sourceLanguage: 'en',
+    structure: {
+      structureElements: 10,
+      marked: true,
+      signed: false,
+      annotationsNotInStructure: 0,
+      textChars: 100,
+      images: 0,
+      pages: 1,
+      lang: 'en',
+      title: 'T',
+      headings: ['H1'],
+      headingTexts: [{ level: 'H1', text: 'T' }],
+      figures: [],
+      tables: [],
+      lists: [],
+      order: [],
+    },
+  });
+
+  it('carries a compliant verdict and adds no work', () => {
+    const s = withConformance(base, { checker: 'verapdf-ua1', compliant: true });
+    expect(s.conformance).toEqual({ checker: 'verapdf-ua1', compliant: true });
+    expect('needs' in s).toBe(false);
+  });
+
+  it('translates the font family into the work that actually fixes it', () => {
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.1-1', '7.21.4.2-2'],
+    });
+    expect(s.needs).toHaveLength(1);
+    expect(s.needs?.[0].criterion).toBe('PDF/UA 7.21.4');
+    // The remedy is the source, which pairing already surfaces — never a
+    // silent substitution.
+    expect(s.needs?.[0].item).toContain('Word source');
+  });
+
+  it('translates untagged page content without offering to guess it', () => {
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.1-3'],
+    });
+    expect(s.needs?.[0].criterion).toBe('PDF/UA 7.1-3');
+    expect(s.needs?.[0].item).toContain('inventing');
+  });
+
+  it('rolls everything unrecognized into a catch-all — no clause is ever silent', () => {
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['5-1', '7.18.4-1', '6.2-1'],
+    });
+    // 7.18.* is voiced by the annotation item; the other two are not ours.
+    expect(s.needs).toHaveLength(1);
+    expect(s.needs?.[0].item).toContain('2 further PDF/UA checks fail');
+    expect(s.needs?.[0].item).toContain('5-1');
+    expect(s.needs?.[0].item).toContain('6.2-1');
+  });
+
+  it('leaves clauses our own vocabulary already voices to the items that voice them', () => {
+    // Language (7.2.*), figures (7.3), headings (7.4), title (7.1-9) and
+    // annotation nesting (7.18.*) each have a gap or item of their own;
+    // repeating them through the checker would say everything twice.
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.2-34', '7.3-1', '7.4.2-1', '7.1-9', '7.18.5-2'],
+    });
+    expect('needs' in s).toBe(false);
+    // But the verdict itself still says the document is not conformant —
+    // the floor under every translation decision.
+    expect(s.conformance).toMatchObject({ compliant: false });
+  });
+
+  it('an absent checker is an answer, never a pass', () => {
+    const s = withConformance(base, { checker: 'none', reason: 'unavailable' });
+    expect(s.conformance).toEqual({ checker: 'none', reason: 'unavailable' });
+    expect('needs' in s).toBe(false);
+  });
+
+  it('appends to an existing punch list rather than replacing it', () => {
+    const withItem = summarise({
+      title: { kind: 'already-titled' as const, title: 'T' },
+      sourceLanguage: null,
+      structure: {
+        structureElements: 10,
+        marked: true,
+        signed: false,
+        annotationsNotInStructure: 0,
+        textChars: 100,
+        images: 0,
+        pages: 1,
+        lang: null,
+        title: 'T',
+        headings: [],
+        headingTexts: [],
+        figures: [],
+        tables: [],
+        lists: [],
+        order: [],
+      },
+    });
+    const s = withConformance(withItem, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.1-1'],
+    });
+    expect(s.needs?.map((n) => n.criterion)).toEqual(['3.1.1', 'PDF/UA 7.21.4']);
   });
 });

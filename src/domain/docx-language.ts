@@ -42,7 +42,15 @@ const CD_SIG = 0x02014b50;
 const LOCAL_SIG = 0x04034b50;
 
 /** One named entry's bytes out of a ZIP, or null. Central-directory driven. */
-function zipEntry(bytes: Uint8Array, name: string): Buffer | null {
+/**
+ * One named entry out of a ZIP, from the central directory. Dependency-free.
+ *
+ * Exported because `prepare-verapdf.ts` needs exactly this to lift the
+ * installer jar out of a release zip, and a second copy of a central-directory
+ * walk is how the two would drift — the same reasoning that moved StructText
+ * into the shared Java rather than letting the spike keep its own.
+ */
+export function zipEntry(bytes: Uint8Array, name: string): Buffer | null {
   const buf = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
   // EOCD sits in the last 22..(22+65535) bytes; scan back for its signature.

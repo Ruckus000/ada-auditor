@@ -2,9 +2,15 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { isPdf, isWordDocument, summarise } from '../../../domain/document-remediation';
+import {
+  isPdf,
+  isWordDocument,
+  summarise,
+  withConformance,
+} from '../../../domain/document-remediation';
 import type { RemediationSummary } from '../../../domain/document-remediation';
 import { inspectDocument } from '../../../integrations/documents/inspect';
+import { checkUa1 } from '../../../integrations/documents/verapdf';
 import { logWarn } from '../../../services/logger';
 import { fetchDocumentBytes } from './document-fetch';
 import type { UploadRefusal } from './document-upload';
@@ -65,7 +71,8 @@ export async function inspectPdfBytes(
       structure: result.value,
     });
 
-    return { ok: true, summary };
+    // The second instrument reads the same temp file the first did.
+    return { ok: true, summary: withConformance(summary, await checkUa1(source)) };
   } finally {
     await rm(work, { recursive: true, force: true });
   }

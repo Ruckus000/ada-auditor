@@ -448,21 +448,27 @@ Read this before claiming something works.
   on a real document, and "so none is claimed" is not something anybody can
   act on.
 
-- **The punch list is our instrument's vocabulary, not a PDF/UA report.**
-  The product ships one instrument. `Inspect` sees structure, titles,
-  language, figures and — since the corpus check caught three documents
-  delivered non-conformant in total silence — annotations that sit outside the
-  structure tree (1.3.1, `INSTRUMENT_VERSION` 5). veraPDF is a research tool
-  under `experiments/`; it never runs for a client. So a clause only veraPDF
-  can see still arrives as silence: **fonts the producer never embedded
-  (7.21.4.1) and page content neither tagged nor marked as artifact (7.1-3)
-  are invisible to us.** The client-facing copy is honest about this — "No
-  machine-detectable gaps" — but the phrase is carrying weight, and the real
-  fix is making veraPDF the product's second instrument rather than growing
-  our own checker clause by clause, which would leave two definitions of
-  conformance free to drift. `run-pdf-repair-arm.mts` prints the count of
-  documents delivered non-conformant without a gap or punch item; it must
-  stay 0.
+- **The product ships two instruments, and the second is the reference
+  checker itself.** Every reading — a conversion, a repair, an inspection —
+  now carries veraPDF's own UA-1 verdict (`conformance` on the summary,
+  `INSTRUMENT_VERSION` 6): compliant, the failing clause ids, or
+  `checker: 'none'` — which every surface renders as "not checked", **never
+  as clean**, because a silent clause was the defect three incidents in a row.
+  Two clause families translate into punch items a person can act on (fonts
+  never embedded → supply the Word source; untagged page content → needs the
+  source or a person); everything unrecognized rolls into a catch-all naming
+  the clause ids, so no clause present or future fails silently. Families our
+  own vocabulary already voices (language, figures, headings, title,
+  annotation nesting) are left to the items that voice them.
+  `[V]` On the twenty-document real corpus: the product's verdicts agree with
+  an independent veraPDF run on all 11 repaired documents (the runner fails
+  loudly on drift), green unchanged at 2, silent deliveries 0, invented
+  claims 0. The checker is ~15MB of jar (`prepare-verapdf.ts`, pinned and
+  checksummed) on the JVM already shipped; `java.management` joined the jlink
+  modules for it. **Unproven on the deployed function** — blocked on the
+  rotated `AUDITOR_RUN_TOKEN`, like every production measurement. Older
+  stored readings cannot gain the field and render as "not checked". Font
+  *substitution* remains cut: measured twice, it greens zero documents.
 
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run

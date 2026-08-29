@@ -57,7 +57,11 @@ const JDK = {
  * failure is a loud `NoClassDefFoundError` at build verification, not a
  * silently larger artifact.
  */
-const MODULES = 'java.base,java.desktop,java.naming,java.prefs,java.sql';
+// `java.management` is veraPDF's, not ours: its CLI touches
+// ManagementFactory at startup. `[V]` Proven by running the cli jar on a
+// jlink runtime without it (NoClassDefFoundError) and with it (validates a
+// real document in 0.65s); the module costs ~1MB.
+const MODULES = 'java.base,java.desktop,java.naming,java.prefs,java.sql,java.management';
 
 async function download(url: string, to: string, expected: string): Promise<void> {
   console.log(`fetching ${JDK.release} (${JDK.os}/${JDK.arch})`);

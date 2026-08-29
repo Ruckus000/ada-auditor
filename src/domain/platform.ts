@@ -231,6 +231,12 @@ export type DocumentReportEntry = {
    * is "convert the source", not the punch list.
    */
   sourceAvailable?: true;
+  /**
+   * The reference checker's verdict, verbatim from the reading. Absent on
+   * entries pinned before the second instrument shipped — rendered as "not
+   * checked", never as clean.
+   */
+  conformance?: RemediationSummary['conformance'];
 };
 
 export type DocumentReportSection = {
