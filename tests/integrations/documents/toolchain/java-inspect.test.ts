@@ -54,6 +54,76 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
     if (dir) await rm(dir, { recursive: true, force: true });
   });
 
+  /**
+   * A minimal PDF carrying a real signature dictionary.
+   *
+   * Hand-built rather than actually signed: producing a genuine signature
+   * needs a certificate and a keystore, and none of that changes what is
+   * under test, which is whether `Inspect` SEES a signature. There is no
+   * Node PDF writer in this project, so the bytes are written directly.
+   *
+   * `unsigned: true` gives the other shape that matters — a signature FIELD
+   * with no value, which is a placeholder waiting for somebody to sign and
+   * must NOT read as signed. That distinction is the whole reason this uses
+   * PDFBox's `getSignatureDictionaries()` rather than searching for
+   * `/ByteRange`.
+   */
+  function signaturePdf({ unsigned = false } = {}): Buffer {
+    const value = unsigned ? '' : ' /V 6 0 R';
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] /SigFlags 3 >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R /Annots [5 0 R] >>',
+      '<< /Length 36 >>\nstream\nBT /F1 12 Tf 20 100 Td (notice) Tj ET\nendstream',
+      `<< /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) /Rect [0 0 0 0]${value} /P 3 0 R >>`,
+      '<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached'
+        + ' /ByteRange [0 100 200 300] /Contents <00112233> /M (D:20260101000000Z) >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('sees a digital signature, so repair can refuse to destroy it', async () => {
+    // Repair rewrites the catalog, which invalidates a signature — and an
+    // incremental save does not rescue it. The product can only refuse if it
+    // can see the signature, and until now it could not see one at all.
+    const signed = join(dir, 'signed.pdf');
+    await writeFile(signed, signaturePdf());
+
+    const result = await inspectDocument(signed);
+    if (!result.ok) expect.unreachable(`could not read the signed fixture: ${JSON.stringify(result.failure)}`);
+    else expect(result.value.signed).toBe(true);
+  });
+
+  it('does not call an unsigned signature field a signature', async () => {
+    // A placeholder waiting for somebody to sign. Refusing to repair this
+    // would block work for no reason, which is why the check reads signature
+    // dictionaries rather than searching the bytes for /ByteRange — this
+    // fixture contains that string and is still unsigned.
+    const placeholder = join(dir, 'placeholder.pdf');
+    await writeFile(placeholder, signaturePdf({ unsigned: true }));
+
+    const result = await inspectDocument(placeholder);
+    if (!result.ok) expect.unreachable('could not read the placeholder fixture');
+    else expect(result.value.signed).toBe(false);
+  });
+
+  it('reports an ordinary document as unsigned', async () => {
+    const result = await inspectDocument(pdfPath);
+    if (!result.ok) expect.unreachable('could not read the generated document');
+    else expect(result.value.signed).toBe(false);
+  });
+
   it('reports a real document, and the result satisfies the domain contract', async () => {
     const result = await inspectDocument(pdfPath);
 

@@ -84,6 +84,16 @@ export const documentStructureSchema = z.object({
    * them is exactly the thing this project refuses to produce itself.
    */
   marked: z.boolean(),
+  /**
+   * Whether the document carries a real digital signature.
+   *
+   * Repair rewrites the catalog, and that invalidates a signature — an
+   * incremental save does not rescue it, preserving earlier signatures only
+   * for the additive operations DocMDP permits. A certified municipal record
+   * silently losing its signature is a worse outcome than the accessibility
+   * gap it was repaired for, so this is refused on rather than reported.
+   */
+  signed: z.boolean(),
   /** Extracted text length. Distinguishes an untagged PDF from a scanned image. */
   textChars: z.number().int(),
   /**
