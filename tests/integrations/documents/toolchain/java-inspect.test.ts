@@ -124,6 +124,60 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
     else expect(result.value.signed).toBe(false);
   });
 
+  /**
+   * Two Widget annotations: one indexed into the structure tree by
+   * `/StructParent`, one not.
+   *
+   * The distinction is the whole check. A form field with no StructParent
+   * exists on the page and nowhere in the reading order, and veraPDF fails it
+   * (7.18.1) — but a document is not defective merely for HAVING annotations,
+   * so counting all of them would report work nobody has to do.
+   */
+  function annotationPdf(): Buffer {
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 7 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R'
+        + ' /Annots [5 0 R 6 0 R] >>',
+      '<< /Length 10 >>\nstream\n% content\nendstream',
+      // Nested: carries the key that indexes it into the structure tree.
+      '<< /Type /Annot /Subtype /Widget /FT /Tx /T (nested) /Rect [0 0 10 10]'
+        + ' /StructParent 0 /P 3 0 R >>',
+      // Not nested: no StructParent at all.
+      '<< /Type /Annot /Subtype /Widget /FT /Tx /T (orphan) /Rect [0 20 10 30]'
+        + ' /P 3 0 R >>',
+      '<< /Type /StructTreeRoot >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('counts an annotation outside the structure tree, and not one inside it', async () => {
+    const path = join(dir, 'annotations.pdf');
+    await writeFile(path, annotationPdf());
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable(`could not read the fixture: ${JSON.stringify(result.failure)}`);
+    // Two Widgets, one of them indexed. Exactly one is unreachable.
+    else expect(result.value.annotationsNotInStructure).toBe(1);
+  });
+
+  it('reports an ordinary document as having no orphaned annotations', async () => {
+    const result = await inspectDocument(pdfPath);
+    if (!result.ok) expect.unreachable('could not read the generated document');
+    else expect(result.value.annotationsNotInStructure).toBe(0);
+  });
+
   it('reports a real document, and the result satisfies the domain contract', async () => {
     const result = await inspectDocument(pdfPath);
 

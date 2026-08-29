@@ -13,6 +13,7 @@ const structure = (over = {}) =>
   documentStructureSchema.parse({
     marked: true,
     signed: false,
+    annotationsNotInStructure: 0,
     structureElements: 40,
     textChars: 1200,
     images: 0,
@@ -233,6 +234,7 @@ describe('the punch list', () => {
     documentStructureSchema.parse({
       marked: true,
       signed: false,
+      annotationsNotInStructure: 0,
       structureElements: 10, textChars: 100, images: 0, pages: 1, lang: 'en',
       title: 'T', headings: [], headingTexts: [], figures: [], tables: [], lists: [], order: [],
       ...over,
@@ -310,6 +312,33 @@ describe('the punch list', () => {
   it('says nothing about language when the document declares one', () => {
     const s = summarise({ ...provenance({ headings: ['H1'] }), sourceLanguage: 'cy-GB' });
     expect('needs' in s).toBe(false);
+  });
+
+  it('names form fields and links that sit outside the structure', () => {
+    const s = summarise(provenance({ annotationsNotInStructure: 7 }));
+    expect(s.needs?.[0].criterion).toBe('1.3.1');
+    expect(s.needs?.[0].item).toContain('7 form fields or links sit outside');
+    expect(s.needs?.[0].item).toContain('reading order');
+  });
+
+  it('reads as singular for one, because a punch list is read by a person', () => {
+    const s = summarise(provenance({ annotationsNotInStructure: 1 }));
+    expect(s.needs?.[0].item).toContain('1 form field or link');
+    expect(s.needs?.[0].item).not.toContain('fields');
+  });
+
+  it('carries a count and never the document own content', () => {
+    // The item renders on the client's public shared page. Counts and
+    // outcomes only, which is the standing rule for everything leaving here.
+    const s = summarise(
+      provenance({
+        annotationsNotInStructure: 2,
+        headings: ['H1'],
+        headingTexts: [{ level: 'H1', text: 'Ratepayer Jane Doe of 14 Mill Lane' }],
+      }),
+    );
+    expect(s.needs?.[0].item).not.toContain('Jane Doe');
+    expect(s.needs?.[0].item).toContain('2 form fields');
   });
 
   it('is absent, never empty, when nothing needs a person', () => {

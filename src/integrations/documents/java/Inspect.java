@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Set;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
@@ -124,6 +126,46 @@ public final class Inspect {
      * usually lands; deeper nesting is rare and recursing needs cycle
      * detection, which is not worth it for a count.
      */
+    /**
+     * Widget and Link annotations that are not nested in the structure tree.
+     *
+     * An annotation reaches the reading order through `/StructParent`, which
+     * indexes it into the number tree the structure elements point at. Absent,
+     * the form field or link exists on the page and nowhere in the document's
+     * structure — a screen reader cannot reach it in order, and veraPDF fails
+     * it (7.18.1). Counted rather than repaired: nesting an annotation means
+     * creating and placing a structure element, which is the inference the
+     * spike's STOP forbids.
+     *
+     * Widget and Link only. Those are the kinds measured failing on the real
+     * corpus, and PDF/UA exempts others (Popup among them) — counting every
+     * subtype would report work that nobody has to do, which is its own kind
+     * of dishonesty.
+     */
+    private static int unnestedAnnotations(PDDocument doc) {
+        int n = 0;
+        for (PDPage page : doc.getPages()) {
+            List<PDAnnotation> annotations;
+            try {
+                annotations = page.getAnnotations();
+            } catch (IOException e) {
+                // One unreadable page's annotations must not fail the reading.
+                continue;
+            }
+            for (PDAnnotation annotation : annotations) {
+                String subtype = annotation.getSubtype();
+                if (!"Widget".equals(subtype) && !"Link".equals(subtype)) continue;
+                // PDFBox answers 0 for an absent key, and 0 is also a legal
+                // index — so the key's presence is what is asked, not its
+                // value.
+                if (!annotation.getCOSObject().containsKey(COSName.STRUCT_PARENT)) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
+
     private static int imageCount(PDDocument doc) {
         int n = 0;
         for (PDPage page : doc.getPages()) {
@@ -196,6 +238,9 @@ public final class Inspect {
             json.append("  \"structureElements\": ").append(elements).append(",\n");
             json.append("  \"textChars\": ").append(text.length()).append(",\n");
             json.append("  \"images\": ").append(imageCount(doc)).append(",\n");
+            json.append("  \"annotationsNotInStructure\": ")
+                .append(unnestedAnnotations(doc))
+                .append(",\n");
             json.append("  \"pages\": ").append(doc.getNumberOfPages()).append(",\n");
             json.append("  \"lang\": ").append(q(doc.getDocumentCatalog().getLanguage())).append(",\n");
             json.append("  \"title\": ").append(q(doc.getDocumentInformation().getTitle())).append(",\n");

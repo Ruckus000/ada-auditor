@@ -63,6 +63,7 @@ function structure(over = {}) {
   return documentStructureSchema.parse({
     marked: true,
     signed: false,
+    annotationsNotInStructure: 0,
     structureElements: 12,
     textChars: 400,
     images: 0,

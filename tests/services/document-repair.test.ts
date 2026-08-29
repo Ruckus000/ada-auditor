@@ -16,6 +16,7 @@ function structure(over: Partial<DocumentStructure> = {}): DocumentStructure {
     structureElements: 42,
     marked: true,
     signed: false,
+    annotationsNotInStructure: 0,
     textChars: 900,
     images: 0,
     pages: 3,

@@ -436,6 +436,22 @@ Read this before claiming something works.
   on a real document, and "so none is claimed" is not something anybody can
   act on.
 
+- **The punch list is our instrument's vocabulary, not a PDF/UA report.**
+  The product ships one instrument. `Inspect` sees structure, titles,
+  language, figures and — since the corpus check caught three documents
+  delivered non-conformant in total silence — annotations that sit outside the
+  structure tree (1.3.1, `INSTRUMENT_VERSION` 5). veraPDF is a research tool
+  under `experiments/`; it never runs for a client. So a clause only veraPDF
+  can see still arrives as silence: **fonts the producer never embedded
+  (7.21.4.1) and page content neither tagged nor marked as artifact (7.1-3)
+  are invisible to us.** The client-facing copy is honest about this — "No
+  machine-detectable gaps" — but the phrase is carrying weight, and the real
+  fix is making veraPDF the product's second instrument rather than growing
+  our own checker clause by clause, which would leave two definitions of
+  conformance free to drift. `run-pdf-repair-arm.mts` prints the count of
+  documents delivered non-conformant without a gap or punch item; it must
+  stay 0.
+
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run
   (`docs/research/blind-test/2026-08-27-rule-gaps-closed.md`): barriers seen
