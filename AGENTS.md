@@ -512,11 +512,18 @@ Read this before claiming something works.
   console shows it. It does not gate readiness, because a degraded security
   speed bump is not a reason to serve 503 to every operator. The real defence
   remains a high-entropy token.
-- **The catalog tables still have no UI behind them.** `clients`, `journeys`,
-  `client_config`, `reports`, `activity_events` and `finding_triage` now have a
-  store and a tested contract, and `journeys` materialises on every run — but
-  only the screens read or write the rest, and the screens land slice by slice
-  through Phase 2C. Until then they are reachable but mostly empty.
+- **The catalog tables all have screens now.** `clients`, `journeys`,
+  `client_config`, `reports`, `activity_events` and `finding_triage` have a
+  store, a tested contract and an operator surface — the clients, reports,
+  activity and settings screens under `app/(platform)/`, walked end to end by
+  the hydration suite against the built app.
+  This entry used to say they were "reachable but mostly empty … until the
+  screens land slice by slice through Phase 2C", which stopped being true when
+  2C completed — recorded a few lines above in this same file. Third stale
+  status claim found here (after #138 and #157), and the pattern is the same
+  each time: an entry written during a transition and never revisited once the
+  transition finished. **A gap entry that describes finished work is worse
+  than no entry** — it sends a reader looking for something to build.
 - **`data.ts` and `derive.ts` are gone.** Every screen reads the database.
   What that cost is worth knowing: the fixture screens carried features that
   had nothing behind them, and rather than port them they were deleted — the
