@@ -50,8 +50,22 @@ export const trackedPara = (kept, inserted, deleted) =>
   + `<w:ins w:id="101" w:author="Reviewer" w:date="2026-01-01T00:00:00Z"><w:r><w:t xml:space="preserve">${esc(inserted)} </w:t></w:r></w:ins>`
   + `<w:del w:id="102" w:author="Reviewer" w:date="2026-01-01T00:00:00Z"><w:r><w:delText xml:space="preserve">${esc(deleted)}</w:delText></w:r></w:del></w:p>`;
 
+/**
+ * A table cell.
+ *
+ * A header cell is bold by direct formatting, never by a Heading style. The
+ * first blind run caught the difference: styling header cells `Heading3` made
+ * them real outline headings, so a document planted with two headings arrived
+ * carrying four. The product was counting correctly; the fixture was lying
+ * about what it contained. Word marks a header ROW with `w:tblHeader`, which
+ * is what this now does.
+ */
 const cell = (text, header) =>
-  `<w:tc><w:tcPr><w:tcW w:w="2400" w:type="dxa"/></w:tcPr>${para(text, header ? 'Heading3' : undefined)}</w:tc>`;
+  `<w:tc><w:tcPr><w:tcW w:w="2400" w:type="dxa"/></w:tcPr>`
+  + (header
+    ? `<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${esc(text)}</w:t></w:r></w:p>`
+    : para(text))
+  + '</w:tc>';
 
 /** `borders: false` is the layout table — a grid used for placement, not data. */
 export const table = (rows, { borders = true, headerRow = false } = {}) =>
@@ -60,7 +74,12 @@ export const table = (rows, { borders = true, headerRow = false } = {}) =>
       ? '<w:tblBorders><w:top w:val="single" w:sz="4"/><w:bottom w:val="single" w:sz="4"/><w:left w:val="single" w:sz="4"/><w:right w:val="single" w:sz="4"/><w:insideH w:val="single" w:sz="4"/><w:insideV w:val="single" w:sz="4"/></w:tblBorders>'
       : '<w:tblBorders><w:top w:val="none"/><w:bottom w:val="none"/><w:left w:val="none"/><w:right w:val="none"/><w:insideH w:val="none"/><w:insideV w:val="none"/></w:tblBorders>'
   }</w:tblPr>`
-  + rows.map((r, i) => `<w:tr>${r.map((c) => cell(c, headerRow && i === 0)).join('')}</w:tr>`).join('')
+  + rows.map((r, i) => {
+    const isHeader = headerRow && i === 0;
+    return `<w:tr>${isHeader ? '<w:trPr><w:tblHeader/></w:trPr>' : ''}`
+      + r.map((c) => cell(c, isHeader)).join('')
+      + '</w:tr>';
+  }).join('')
   + '</w:tbl>';
 
 /** An inline image; `alt: null` omits the description outright. */

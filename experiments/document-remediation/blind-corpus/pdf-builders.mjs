@@ -120,10 +120,19 @@ export const utf16 = (text) => {
   return `(${out.replace(/([\\()])/g, '\\$1')})`;
 };
 
-/** Content-stream text, optionally wrapped in a marked-content sequence. */
-export const text = (body, mcid = null) => {
+/**
+ * Content-stream text, optionally wrapped in a marked-content sequence.
+ *
+ * The tag matches the structure element that owns the content — `/H1` under an
+ * H1, not `/P` under everything. A conforming tagged PDF does this, and the
+ * first blind run showed why it matters: with every sequence tagged `/P`, the
+ * product counted a heading it could not read the text of, so the title chain
+ * skipped the heading rung and fell through to the filename. The fixture was
+ * wrong, not the product.
+ */
+export const text = (body, mcid = null, tag = 'P') => {
   const draw = `BT /F1 12 Tf 40 700 Td ${lit(body)} Tj ET`;
-  return mcid === null ? draw : `/P << /MCID ${mcid} >> BDC\n${draw}\nEMC`;
+  return mcid === null ? draw : `/${tag} << /MCID ${mcid} >> BDC\n${draw}\nEMC`;
 };
 
 /**
@@ -170,7 +179,7 @@ export function structuredPdf({
   elements.forEach((element, index) => {
     const page = Math.min(element.page ?? 0, pages - 1);
     const mcid = contentPerPage[page].length;
-    contentPerPage[page].push(text(element.text ?? `${element.type} content ${index + 1}`, mcid));
+    contentPerPage[page].push(text(element.text ?? `${element.type} content ${index + 1}`, mcid, element.type));
     const num = d.slot();
     elementObjs.push({ num, element, page, mcid });
   });

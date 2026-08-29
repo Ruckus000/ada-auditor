@@ -266,11 +266,20 @@ function filenameFor(row) {
 }
 
 rmSync(DOCS, { recursive: true, force: true });
-rmSync(KEYS, { recursive: true, force: true });
 rmSync(WORK, { recursive: true, force: true });
 mkdirSync(DOCS, { recursive: true });
 mkdirSync(KEYS, { recursive: true });
 mkdirSync(WORK, { recursive: true });
+
+// Only the planted keys are this file's to remove. Emptying the directory
+// wholesale also deleted the real documents' keys — which are authored by a
+// different script, from different instruments, and are not regenerable
+// without re-reading twenty-eight files. Caught by the independence test
+// counting keys; restored from the lock commit, which is the reason the lock
+// commit exists.
+for (const existing of readdirSync(KEYS)) {
+  if (SPEC.some((row) => `${row.id}.key.json` === existing)) rmSync(join(KEYS, existing));
+}
 
 const manifest = { generated: 'blind-corpus/generate.mjs', documents: {}, keys: {} };
 const written = [];
@@ -350,9 +359,11 @@ if (written.length !== EXPECTED_ROWS) {
 
 // A document that no key can find guards nothing, and a key with no document
 // grades nothing. Both directions, every run.
+// Both directions, over the planted rows only: the keys directory also holds
+// the real documents' keys, which this file neither writes nor owns.
 const docFiles = new Set(readdirSync(DOCS));
-const keyFiles = readdirSync(KEYS);
-if (docFiles.size !== keyFiles.length) {
-  console.error(`docs/ holds ${docFiles.size} files and keys/ holds ${keyFiles.length}`);
+const plantedKeys = readdirSync(KEYS).filter((f) => SPEC.some((row) => `${row.id}.key.json` === f));
+if (docFiles.size !== plantedKeys.length) {
+  console.error(`docs/ holds ${docFiles.size} files and ${plantedKeys.length} planted keys grade them`);
   process.exit(1);
 }

@@ -100,7 +100,31 @@ function ua1(path) {
   }
 }
 
-const HEADING_TYPES = new Set(['/H1', '/H2', '/H3', '/H4', '/H5', '/H6']);
+const HEADING_TYPES = new Set(['/H1', '/H2', '/H3', '/H4', '/H5', '/H6', '/H']);
+
+/**
+ * `/S` also names an ACTION's subtype, and an action is not a structure
+ * element. Actions carry no `/P`, so the parent check already excludes them;
+ * the list is explicit anyway, because "it happens not to match" is a reason
+ * that stops being true.
+ */
+const ACTION_SUBTYPES = new Set([
+  '/URI', '/GoTo', '/GoToR', '/GoToE', '/Launch', '/Named', '/JavaScript', '/SubmitForm',
+  '/ResetForm', '/Hide', '/Thread', '/Sound', '/Movie', '/Rendition', '/Trans', '/SetOCGState',
+  '/GoTo3DView', '/ImportData',
+]);
+
+/**
+ * Is this object a structure element?
+ *
+ * By SHAPE, not by `/Type`. ISO 32000 makes `/Type /StructElem` optional, and
+ * real producers omit it: the first blind run called fourteen genuinely tagged
+ * documents untagged for this reason, and would have recorded the product
+ * delivering untagged PDFs — a broken promise that never happened. Counting by
+ * shape reproduces the product's counts exactly on every document tested.
+ */
+const isStructureElement = (obj) =>
+  obj['/S'] !== undefined && obj['/P'] !== undefined && !ACTION_SUBTYPES.has(obj['/S']);
 
 const deref = (value) => value?.value ?? value;
 const plainString = (value) => {
@@ -125,25 +149,32 @@ function readPdf(path) {
     const obj = deref(value);
     if (!obj || typeof obj !== 'object') continue;
     if (obj['/Type'] === '/Catalog') catalog = obj;
-    if (obj['/Type'] === '/StructElem') structure.push(obj);
+    if (isStructureElement(obj)) structure.push(obj);
     if (obj['/Type'] === '/Sig' || obj['/FT'] === '/Sig') signed = obj['/V'] !== undefined || obj['/Type'] === '/Sig';
     if (obj['/Type'] === '/Annot' && (obj['/Subtype'] === '/Widget' || obj['/Subtype'] === '/Link')) {
       annotations += 1;
       if (obj['/StructParent'] === undefined) annotationsOutside += 1;
     }
-    // The trailer's /Info is not typed, so it is found by shape: a dictionary
-    // carrying document information keys and nothing else.
-    if (obj['/Title'] !== undefined && obj['/Type'] === undefined) info = obj;
+    // Document information is untyped, so it is found by its keys. The first
+    // run required `/Type` to be absent, which missed a document that declares
+    // a title in both docinfo and XMP — and then accused the product of
+    // inventing one.
+    if (info === null && obj['/Title'] !== undefined && obj['/S'] === undefined) info = obj;
   }
 
   const headings = structure.filter((e) => HEADING_TYPES.has(e['/S']));
   const figures = structure.filter((e) => e['/S'] === '/Figure');
-  const declaredTitle = info ? plainString(info['/Title']) : null;
+  const docinfoTitle = info ? plainString(info['/Title']) : null;
+  // A title can also live only in the XMP packet, and a document that states
+  // one there states one.
+  const xmpTitle = /<dc:title>[\s\S]{0,400}?<\/dc:title>/.test(readFileSync(path, 'latin1'));
+  const declaredTitle = docinfoTitle;
   const lang = catalog ? plainString(catalog['/Lang']) : null;
 
   return {
     pages: summary.pages?.length ?? null,
     encrypted: summary.encrypt?.encrypted === true,
+    titleAnywhere: docinfoTitle !== null || xmpTitle,
     tagged: catalog?.['/StructTreeRoot'] !== undefined && structure.length > 0,
     marked: catalog?.['/MarkInfo']?.['/Marked'] === true,
     signed,
@@ -235,6 +266,34 @@ function mustVoiceFrom(clauses) {
 
 mkdirSync(KEYS, { recursive: true });
 
+/**
+ * `--corrections` re-derives the answers and records where they differ from
+ * the locked keys, instead of overwriting them.
+ *
+ * The first run found two defects in THIS file — structure elements counted by
+ * an optional `/Type`, and a title detector that missed XMP — and the honest
+ * repair of a key is an overlay carrying its evidence, not an edit.
+ */
+const CORRECTIONS_MODE = process.argv.includes('--corrections');
+
+const EVIDENCE = {
+  disposition:
+    'qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem,'
+    + ' which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged.',
+  counts:
+    'qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the'
+    + ' optional /Type. Verified to reproduce the same counts on r01, r17 and r22 independently.',
+  needs:
+    'qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first'
+    + ' pass could not see.',
+  titleDeclared:
+    'raw packet: the document declares a title in its XMP dc:title, in document information, or both. The first'
+    + ' pass looked only for an untyped dictionary carrying /Title.',
+  language: 'qpdf: the catalog /Lang, re-read after the structure fix.',
+  default: 'qpdf and the veraPDF CLI, re-read after the authoring defects the first run exposed.',
+};
+
+const corrections = [];
 const files = readdirSync(REAL).sort();
 const rows = [];
 
@@ -261,7 +320,9 @@ for (const file of files) {
   const expected = {
     disposition,
     language: read.language,
-    titleDeclared: read.declaredTitle !== null,
+    // A title in the XMP packet is a declared title even when document
+    // information carries none, so the honesty check reads both.
+    titleDeclared: read.titleAnywhere ?? read.declaredTitle !== null,
     ...(read.declaredTitle === null ? {} : { titleTextSha256: sha256(read.declaredTitle) }),
     counts: disposition === 'delivered' ? { pages: isPdf ? read.pages : null, ...read.counts } : null,
     needs: disposition === 'delivered' ? needsFrom(read) : [],
@@ -297,7 +358,21 @@ for (const file of files) {
     },
   };
 
-  writeFileSync(join(KEYS, `${id}.key.json`), `${JSON.stringify(key, null, 2)}\n`, 'utf8');
+  if (CORRECTIONS_MODE) {
+    // The locked key stands. Where a fixed reading disagrees with it, the
+    // difference is recorded as a correction with its evidence and stays
+    // visible in every future scorecard — a key quietly rewritten after a
+    // disappointing run is the one failure mode a blind test cannot survive.
+    const locked = JSON.parse(readFileSync(join(KEYS, `${id}.key.json`), 'utf8'));
+    for (const field of ['disposition', 'language', 'titleDeclared', 'counts', 'needs']) {
+      const was = locked.expected[field];
+      const now = expected[field];
+      if (JSON.stringify(was) === JSON.stringify(now)) continue;
+      corrections.push({ docId: id, field, was, now, evidence: EVIDENCE[field] ?? EVIDENCE.default });
+    }
+  } else {
+    writeFileSync(join(KEYS, `${id}.key.json`), `${JSON.stringify(key, null, 2)}\n`, 'utf8');
+  }
   rows.push({ id, disposition, tagged: read.tagged, clauses: verdict.checked ? verdict.clauses.length : null, needs: expected.needs.length });
 }
 
@@ -307,7 +382,20 @@ for (const row of rows) {
     + ` ua1 clauses=${row.clauses === null ? 'n/a' : String(row.clauses).padStart(2)} needs=${row.needs}`,
   );
 }
-console.log(`\nauthored ${rows.length} real keys from third-party instruments only`);
+console.log(`\n${CORRECTIONS_MODE ? 're-read' : 'authored'} ${rows.length} real keys from third-party instruments only`);
 console.log(`  delivered expected: ${rows.filter((r) => r.disposition === 'delivered').length}`);
 console.log(`  refused expected:   ${rows.filter((r) => r.disposition !== 'delivered').length}`);
+
+if (CORRECTIONS_MODE) {
+  writeFileSync(join(HERE, 'corrections.json'), `${JSON.stringify(corrections, null, 2)}\n`, 'utf8');
+  const touched = new Set(corrections.map((c) => c.docId));
+  console.log(`\nwrote ${corrections.length} corrections across ${touched.size} documents to corrections.json`);
+  const share = touched.size / rows.length;
+  if (share > 0.1) {
+    console.log(
+      `  ${Math.round(share * 100)}% of real rows corrected — over the 10% the protocol calls a finding`
+      + ' about key quality rather than about the product.',
+    );
+  }
+}
 if (!existsSync(VERAPDF)) console.error(`\nno veraPDF at ${VERAPDF} — conformance evidence is missing from every key`);

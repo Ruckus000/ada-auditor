@@ -210,6 +210,12 @@ let checked = 0;
 
 for (const keyFile of keyFiles) {
   const key = JSON.parse(readFileSync(join(KEYS, keyFile), 'utf8'));
+  // This pass proves that a PLANTED document contains what its key claims.
+  // A real document's key is not a claim about what somebody should have
+  // written — it is a reading of what they did — so there is nothing here to
+  // check it against, and `author-real-keys.mjs` is where it comes from.
+  if (key.origin === 'real') continue;
+
   const path = join(DOCS, key.file);
   const bytes = readFileSync(path);
 

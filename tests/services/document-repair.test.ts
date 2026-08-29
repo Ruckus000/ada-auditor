@@ -167,4 +167,32 @@ describe('planRepair', () => {
     if (!decision.repairable) return;
     expect(decision.plan.language).toBeNull();
   });
+
+  it.each([
+    ['an empty declaration', ''],
+    ['a tag with a space in it', 'en US'],
+    ['a language name rather than a tag', 'english'],
+    ['an underscore where a hyphen belongs', 'EN_US'],
+  ])('treats %s as no language rather than refusing the whole repair', (_label, lang) => {
+    // Found by the blind corpus. `Finish` refuses a tag that is not BCP-47 —
+    // correctly, because writing one states something false — but this planner
+    // used to hand the source's tag straight through, so a document whose own
+    // /Lang was unusable got NO remediation at all. A tag nobody can resolve
+    // is, to a reader, the same as no tag; it is dropped, and the 3.1.1 punch
+    // item asks a person to name the real one.
+    const decision = planRepair(structure({ lang }), 'notice.pdf');
+
+    expect(decision.repairable).toBe(true);
+    if (!decision.repairable) return;
+    expect(decision.plan.language).toBeNull();
+  });
+
+  it('does not mistake an unfamiliar but well-formed tag for a broken one', () => {
+    // The guard must not become a whitelist of languages somebody thought of.
+    const decision = planRepair(structure({ lang: 'haw-US' }), 'notice.pdf');
+
+    expect(decision.repairable).toBe(true);
+    if (!decision.repairable) return;
+    expect(decision.plan.language).toBe('haw-US');
+  });
 });
