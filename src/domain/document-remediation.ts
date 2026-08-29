@@ -110,12 +110,18 @@ export type RemediationSummary = {
  * headings begin at H2+, which is not a *skip between* consecutive headings
  * and so slipped the version-2 check. Same decision family, new vocabulary.
  *
+ * 5 — the punch list gained the unnested-annotation item (1.3.1). Found by
+ * the corpus check that asserts no document is delivered non-conformant in
+ * silence: three real PDFs were, all of them on annotations our reading could
+ * see and our vocabulary could not say.
+ */
+/**
  * 4 — the punch list gained the undeclared-language item. A document that
  * declares no language was already reported as a 3.1.1 gap; it is now also
  * work somebody can do, which is a different sentence and a new one in the
  * vocabulary.
  */
-export const INSTRUMENT_VERSION = 4;
+export const INSTRUMENT_VERSION = 5;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -194,6 +200,22 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     needs.push({
       criterion: '3.1.1',
       item: 'The document declares no language — name the one it is written in, because a language is never guessed',
+    });
+  }
+
+  if (structure.annotationsNotInStructure > 0) {
+    // 1.3.1 rather than a PDF/UA clause: an annotation outside the structure
+    // tree is a relationship that is not programmatically determinable, which
+    // the existing vocabulary already covers. Inventing a second criterion
+    // scheme to look precise would be worse than reusing the one that fits.
+    //
+    // Named, never repaired. Nesting an annotation means creating a structure
+    // element and choosing where it belongs, which is the inference the
+    // PDF-repair STOP forbids.
+    const n = structure.annotationsNotInStructure;
+    needs.push({
+      criterion: '1.3.1',
+      item: `${n} form field${n === 1 ? '' : 's'} or link${n === 1 ? '' : 's'} sit outside the document's structure — a screen reader cannot reach ${n === 1 ? 'it' : 'them'} in reading order, and tagging ${n === 1 ? 'it' : 'them'} into place is a person's decision`,
     });
   }
 

@@ -94,6 +94,15 @@ export const documentStructureSchema = z.object({
    * gap it was repaired for, so this is refused on rather than reported.
    */
   signed: z.boolean(),
+  /**
+   * Widget and Link annotations with no `/StructParent` — form fields and
+   * links that exist on the page and nowhere in the structure tree, so a
+   * screen reader cannot reach them in reading order.
+   *
+   * A count, because the punch list it feeds is counts-and-outcomes: the item
+   * reaches a client's public report, where document content may not go.
+   */
+  annotationsNotInStructure: z.number().int(),
   /** Extracted text length. Distinguishes an untagged PDF from a scanned image. */
   textChars: z.number().int(),
   /**

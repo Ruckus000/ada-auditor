@@ -131,4 +131,18 @@ console.log(`failing UA-1 clauses removed in total: ${clausesRemoved}`);
 const regressions = rows.filter((r) => 'added' in r && (r.added as string[]).length > 0);
 console.log(`documents where repair ADDED a failing clause: ${regressions.length}`);
 
+// The promise, checked rather than asserted: a document that is not
+// conformant must say why. This found three documents that said nothing —
+// their only remaining failures were ones our reading could see and our
+// punch-list vocabulary could not name. It stays because the next such gap
+// will be found the same way, and silence is the one failure that looks
+// identical to success.
+const silent = rows.filter(
+  (r) => r.outcome === 'repaired' && !r.green && (r.gaps as string[]).length === 0 && r.needs === 0,
+);
+console.log(
+  `delivered non-conformant WITHOUT a gap or punch item (must be 0): ${silent.length}` +
+    (silent.length > 0 ? ` — ${silent.map((r) => r.id).join(', ')}` : ''),
+);
+
 writeFileSync(join(outDir, 'rows.json'), JSON.stringify(rows, null, 2));
