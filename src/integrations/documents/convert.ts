@@ -241,6 +241,29 @@ export async function convertSourceToPdf(
         '<fontconfig>',
         `  <dir>${fontsDir}</dir>`,
         `  <cachedir>${cacheDir}</cachedir>`,
+        // The font set is PINNED, not merely present. `[V]` The parity
+        // measurement caught the deployed function resolving two real
+        // documents' typeface to the bundle's Linux Libertine G, whose used
+        // glyphs carry no toUnicode map — so the same conversion was less
+        // conformant on production than locally (UA-1 7.21.7-1), for no
+        // reason a client could see. Libertine and Biolinum are rejected
+        // outright rather than deprioritised, because a fallback that can
+        // still be reached is a fallback that will be; the Liberation set —
+        // shipped precisely for metric compatibility, and mapping-clean on
+        // that same measurement — is what substitution lands on instead.
+        '  <selectfont>',
+        '    <rejectfont>',
+        `      <glob>${fontsDir}/*/LinLibertine*</glob>`,
+        `      <glob>${fontsDir}/*/LinBiolinum*</glob>`,
+        '    </rejectfont>',
+        '  </selectfont>',
+        // And the generic families are named, so "no match at all" resolves
+        // the same way on every run instead of to whatever the cache orders
+        // first. Deterministic resolution is the point: a converter whose
+        // font fallback varies is two instruments wearing one name.
+        '  <alias><family>serif</family><prefer><family>Liberation Serif</family></prefer></alias>',
+        '  <alias><family>sans-serif</family><prefer><family>Liberation Sans</family></prefer></alias>',
+        '  <alias><family>monospace</family><prefer><family>Liberation Mono</family></prefer></alias>',
         '</fontconfig>',
         '',
       ].join('\n'),
