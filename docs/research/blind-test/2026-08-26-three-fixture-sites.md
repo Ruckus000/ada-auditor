@@ -55,6 +55,46 @@ advisory's half, dark on this run; the other four are barriers a rule could
 have reached.
 It is right by its own definition and misleading in a sentence.
 
+## Where this stands: re-run 2026-08-29 on master
+
+Everything below this section is the record of the 26 August run and is left
+as it was — a dated measurement is evidence, not a page to keep current. This
+is where the same three sites stand on master (`cb79cb1`) three days later.
+
+| | 08-26 baseline | 08-27 advisory live | **08-29 master** |
+|---|---:|---:|---:|
+| `deterministic` (19) | 16 | 16 | **18** |
+| `needs-review` (4) | 2 | 2 | **3** |
+| `judgement` (14) | 1 | 6 | **5** |
+| **barriers seen (37)** | **19** | **24** | **26** |
+| `clean` (7) — false positives | 0 | 0 | **0** |
+
+**The advisory was dark for this run**, so it is comparable to the 08-26
+baseline rather than to 08-27: no `AI_GATEWAY_API_KEY`, no `VERCEL_OIDC_TOKEN`,
+and no egress to the gateway from the machine that ran it. Which makes the
+headline the interesting part — **the rules alone (26) now find more than rules
+plus a live model did on the 27th (24)**. Five of the fourteen judgement-class
+barriers are caught deterministically now, by the three checks named after
+them (`click-handler-not-focusable`, `placeholder-as-only-label`,
+`visible-label-not-in-name`) and by HTML_CodeSniffer's technique coverage. What
+was the advisory's exclusive territory is being taken from it by rules, which
+is the cheaper and more defensible half.
+
+**Zero false positives held** across all seven correct implementations — now
+under 135–142 findings per site rather than 8–13. That number is the guard on
+everything above it, and adding a whole second engine did not move it.
+
+**The review queue is reported honestly for the first time** (#162). The
+summary line reads `132 to review (2 axe-undecided)` where it used to read
+`2 undecided`, on a run whose findings carry 132 items at `needs-review`.
+Verdicts, scores and gating counts are unchanged by that fix, which is what it
+was supposed to leave alone.
+
+Eleven barriers remain unseen, nine of them judgement-class. The two a rule
+could reach are C5 (`role="tab"` with no `aria-selected`) and B5 (five links
+reading "Download", each to a different PDF).
+
+
 ## What it missed, and why each one matters
 
 ### 1. A form field labelled only by its placeholder is called clean (A10)
