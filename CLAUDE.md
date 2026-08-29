@@ -20,7 +20,7 @@ npm run dev              # next dev
 npm run build            # next build
 npm start                # next start — needed for the hydration + smoke suites
 npm run lint             # eslint . (flat config; `next lint` is gone in Next 16)
-npm run typecheck        # tsc -p tsconfig.typecheck.json — NOT bare `tsc`
+npm run typecheck        # next typegen && tsc -p tsconfig.typecheck.json — NOT bare `tsc`
 ```
 
 **Two suites run the compiled Java, and both fail loudly when it is stale.**
@@ -38,6 +38,20 @@ was compiled and then moved is not.
 `tests/integrations/**`. Bare `tsc` uses `tsconfig.json`, which excludes that
 directory, so the two suites that drive a real browser would be type-checked by
 nothing.
+
+**It runs `next typegen` first, and that is load-bearing.** `next-env.d.ts` is
+generated and gitignored, and the gate runs before anything builds — `ci.yml`
+has its `npm run typecheck` step above its `npm run build` step, and localci's
+`gate` phase precedes the `suite` that builds. Without the prefix a fresh
+clone type-checks with the file absent, and it *passes*:
+`next/types/global.d.ts` still arrives through the four
+`import type { Metadata } from 'next'` lines in `src/app/**`. That is the
+problem. Those four incidental imports are the only thing keeping
+`NodeJS.ProcessEnv.NODE_ENV` a required `'development' | 'production' | 'test'`,
+which two comments in `integrations/documents/` explain their `Env` type
+against, and an app refactor that drops them weakens the check with nothing
+turning red. `next typegen` is ~0.8s warm or cold and makes the gate mean the
+same thing on a fresh clone as on a built tree.
 
 ### Test suites
 

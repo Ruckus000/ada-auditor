@@ -74,6 +74,17 @@ jobs:
       # `npm run build:kernel` is not this: it emits, and it excludes
       # `src/app/**`. See `tsconfig.typecheck.json` for why this is a third
       # config rather than a widening of the first.
+      #
+      # The script now runs `next typegen` before `tsc`, which matters most
+      # here: this step is above `npm run build`, and `next-env.d.ts` is
+      # generated and gitignored, so on a fresh runner it does not exist yet.
+      # Absent it the check still passes — `next/types/global.d.ts` arrives
+      # through four `import type { Metadata } from 'next'` lines in
+      # `src/app/**` — which is the problem, not the reassurance: drop those
+      # four and `NODE_ENV` quietly stops being a required union, with nothing
+      # red to show for it. ~0.8s, and it belongs in the script rather than as
+      # a step here, so this file and `localci.yml` cannot disagree about the
+      # ordering. They already did once, over `build:documents`.
       - run: npm run typecheck
       - run: npx playwright install chromium --with-deps
       - run: npm test
