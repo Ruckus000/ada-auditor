@@ -68,23 +68,56 @@ export function sessionSecretIsShared(): boolean {
  * other here, because a mismatch is a misconfiguration that would otherwise
  * surface as every ceremony failing with nothing saying why.
  */
-export function passkeyRelyingParty(): { id: string; origin: string } | null {
+export type PasskeyRelyingPartyStatus =
+  | { state: 'configured'; rp: { id: string; origin: string } }
+  /** Neither variable set. Passkeys are off, which is a supported way to run. */
+  | { state: 'off' }
+  /** Both set, and wrong — the case worth naming, because it looks like 'off'. */
+  | { state: 'invalid'; reason: 'origin_unparseable' | 'id_not_host_or_parent' | 'half_set' };
+
+/**
+ * The relying party, with the reason when there isn't one.
+ *
+ * Split out from `passkeyRelyingParty` because "off" and "misconfigured" are
+ * different facts that used to render identically: the console said passkeys
+ * were unavailable, `/api/ready` said nothing at all, and an operator who had
+ * set both variables had no way to learn that one of them was rejected. The
+ * two most common slips — a scheme on the id, or a missing scheme on the
+ * origin — produce exactly that silence, so the distinction is the whole
+ * value of this function.
+ *
+ * The values themselves are never returned in the failure cases and never
+ * logged. A hostname is not a secret, but nothing here needs to hand one to a
+ * caller in order to say which of two shapes is wrong.
+ */
+export function passkeyRelyingPartyStatus(): PasskeyRelyingPartyStatus {
   const id = process.env.AUDITOR_RP_ID?.trim();
   const origin = process.env.AUDITOR_RP_ORIGIN?.trim();
-  if (!id || !origin) return null;
+
+  if (!id && !origin) return { state: 'off' };
+  // One without the other is a half-finished change, not a decision to leave
+  // the feature off — so it is reported as broken rather than as absent.
+  if (!id || !origin) return { state: 'invalid', reason: 'half_set' };
 
   let host: string;
   try {
     host = new URL(origin).hostname;
   } catch {
-    return null;
+    return { state: 'invalid', reason: 'origin_unparseable' };
   }
 
   // The id must be the origin's host or a parent of it — what the spec allows
   // and what a browser will enforce anyway. Checked here so the failure is a
   // readable config error rather than an opaque ceremony refusal.
   const idIsHostOrParent = host === id || host.endsWith(`.${id}`);
-  return idIsHostOrParent ? { id, origin } : null;
+  return idIsHostOrParent
+    ? { state: 'configured', rp: { id, origin } }
+    : { state: 'invalid', reason: 'id_not_host_or_parent' };
+}
+
+export function passkeyRelyingParty(): { id: string; origin: string } | null {
+  const status = passkeyRelyingPartyStatus();
+  return status.state === 'configured' ? status.rp : null;
 }
 
 /**

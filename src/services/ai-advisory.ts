@@ -69,6 +69,27 @@ export function advisoryModel(): string {
   return process.env.AUDITOR_ADVISORY_MODEL || DEFAULT_MODEL;
 }
 
+/**
+ * Whether the configured model is one nobody deliberately chose for this data.
+ *
+ * Two cases, and both mean "no data-handling guarantee was considered": the
+ * unconfigured default, and any gateway id marked free — the gateway's own
+ * naming convention for the tier that advertises neither zero retention nor
+ * no-training.
+ *
+ * **This is a heuristic and it is honest about that.** An explicitly
+ * configured model is a *decision*, not proof of a guarantee: somebody could
+ * point this at another free model and it would pass. What the check actually
+ * buys is that sending an authenticated client's screens to a no-guarantee
+ * model can no longer happen by *forgetting*, which is the failure this
+ * product would otherwise have shipped — the default is what runs when nobody
+ * thought about it.
+ */
+export function modelLacksDataGuarantee(model = advisoryModel()): boolean {
+  const id = model.trim().toLowerCase();
+  return id === DEFAULT_MODEL || /[-:]free$/.test(id);
+}
+
 function advisoryDisabled(): boolean {
   return advisoryModel().trim().toLowerCase() === ADVISORY_OFF;
 }
@@ -260,6 +281,15 @@ export async function requestAiAdvisory(input: {
   pages: AdvisoryPage[];
   minConfidence: number;
   /**
+   * Whether the journey signed in — any step carrying a `credentialRef`.
+   *
+   * The pass sends the accessibility tree of every page walked. On a public
+   * marketing site that is public text; behind a login it is whatever real
+   * end-user data was on screen, which is the same reasoning that put run
+   * evidence in a private blob store.
+   */
+  authenticated?: boolean;
+  /**
    * Injected in tests so the pass never reaches the network.
    *
    * The seam is the call rather than a vendor client object, because there is
@@ -270,6 +300,21 @@ export async function requestAiAdvisory(input: {
   // Checked before the injected-call seam, not behind it: `off` is a statement
   // about where evidence may go, and a test double is still a place.
   if (advisoryDisabled()) {
+    return [];
+  }
+
+  // Refused before the injected-call seam, exactly as `off` is: whether
+  // evidence may leave at all is not a question a test double gets to answer.
+  //
+  // The file has documented this boundary since the gateway landed — "point
+  // AUDITOR_ADVISORY_MODEL at a model with a data-handling guarantee before
+  // running the advisory over an authenticated journey" — and nothing
+  // enforced it, so the safe state depended on an operator remembering. Now
+  // the unsafe combination simply does not run, and the reason is logged
+  // rather than the pass going quiet: an advisory that returns nothing looks
+  // identical to one that found nothing.
+  if (input.authenticated === true && modelLacksDataGuarantee()) {
+    logWarn('advisory_skipped_authenticated_journey', { model: advisoryModel() });
     return [];
   }
 
