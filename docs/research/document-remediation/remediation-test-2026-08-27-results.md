@@ -280,3 +280,27 @@ Two things worth saying plainly:
   follow-up worth having: pin the converter's effective font set so the two
   environments stop being different instruments.
 
+### Same day, later: the pin shipped, and the number moved
+
+The follow-up above landed as its own change (#173): the per-run fontconfig
+now **rejects Libertine and Biolinum outright** — a fallback that can still
+be reached is a fallback that will be — and aliases the generic families to
+the Liberation set, so substitution is deterministic instead of
+cache-ordered.
+
+Re-measured against the deployment carrying the pin, same ten documents,
+same harness:
+
+**Parity: 10/10 identical**, conformance verdicts included. r01 and r02 —
+the two that failed 7.21.7-1 on production's Linux Libertine G — now come
+back byte-for-byte equal in every summary field to the local conversion.
+The registered expectation (8/10 → 10/10, the two misses cured by the pin)
+held exactly.
+
+The measurement registered on 2026-08-28 is now fully closed: local and
+deployed conversion agree on all ten documents, on the current instrument,
+with the reference checker's verdict included in the comparison. Scope as
+ever: conformance identity, not byte identity — macOS resolves fonts through
+CoreText and the PDFs still differ in timestamps and font programs; every
+field the summary carries is what agrees.
+
