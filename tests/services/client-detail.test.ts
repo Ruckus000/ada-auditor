@@ -79,7 +79,11 @@ describe('buildClientDetail', () => {
         createdAt: '2026-08-09T00:00:00.000Z',
         ciStatus: 'fail',
         score: 72,
-        findings: [finding(), finding({ severity: 'major' })],
+        findings: [
+          finding(),
+          finding({ severity: 'major' }),
+          finding({ code: 'htmlcs:notice:2_5_1', severity: 'needs-review' }),
+        ],
         pages: [{ url: 'https://a/1', route: '/1', title: 'One', evidenceStatus: 'complete' }],
       }),
     );
@@ -102,6 +106,10 @@ describe('buildClientDetail', () => {
       score: 72,
       mustFix: 1,
       shouldFix: 1,
+      // `summariseRun` is what the client's shared report renders, so this
+      // assertion is the one standing between a 130-item review queue and a
+      // document that says "1 must fix, 1 should fix" and stops.
+      needsReview: 1,
       pagesAudited: 1,
     });
   });

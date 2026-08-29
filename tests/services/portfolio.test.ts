@@ -97,7 +97,13 @@ describe('buildPortfolio', () => {
           { url: 'https://a/1', route: '/1', title: 'One', evidenceStatus: 'complete' },
           { url: 'https://a/2', route: '/2', title: 'Two', evidenceStatus: 'complete' },
         ],
-        findings: [finding(), finding({ severity: 'major' }), finding({ severity: 'minor' })],
+        findings: [
+          finding(),
+          finding({ severity: 'major' }),
+          finding({ severity: 'minor' }),
+          finding({ code: 'htmlcs:notice:1_3_2.G57', severity: 'needs-review' }),
+          finding({ code: 'htmlcs:1_3_1.H48', severity: 'needs-review' }),
+        ],
       }),
     );
 
@@ -110,6 +116,10 @@ describe('buildPortfolio', () => {
       score: 72,
       mustFix: 1,
       shouldFix: 1,
+      // The row used to stop at the two counts above. A second engine emits
+      // everything as needs-review, so a portfolio that omits this one shows a
+      // fraction of the run and calls it the run.
+      needsReview: 2,
       pagesAudited: 2,
     });
   });

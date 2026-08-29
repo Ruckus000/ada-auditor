@@ -91,6 +91,7 @@ export function SharedReportPage({
           <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(report.run.score)} />
           <Stat label="Must fix" value={String(report.run.mustFix)} />
           <Stat label="Should fix" value={String(report.run.shouldFix)} />
+          <Stat label="Needs review" value={String(report.run.needsReview)} />
           <Stat label="Pages audited" value={String(report.run.pagesAudited)} />
         </dl>
 

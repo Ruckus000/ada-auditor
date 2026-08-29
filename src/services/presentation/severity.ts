@@ -15,6 +15,7 @@
 
 import type { TriageState } from '../../domain/platform';
 import type { DeterministicFinding } from '../deterministic-audit';
+import type { VerdictFinding } from './verdict';
 
 export type DisplaySeverity = 'must' | 'should' | 'nice' | 'review' | 'advisory';
 
@@ -129,4 +130,55 @@ export function findingDisplayStatus(input: {
 /** Whether a stored finding is one the engine proved rather than judged. */
 export function isDeterministic(finding: Pick<DeterministicFinding, 'source'>): boolean {
   return finding.source === 'deterministic';
+}
+
+/**
+ * What a run's findings amount to, in the words the screens use.
+ *
+ * One helper rather than the filter each screen used to write for itself.
+ * `portfolio.ts` and `client-detail.ts` both counted `must` and `should` with
+ * identical inline predicates, and `client-detail`'s copy is what the client's
+ * shared report renders — so the two could drift and the divergence would show
+ * up on the document sent outside, which is the one place this repo has
+ * already been bitten (see `report-html.ts` keying its copy on `ciStatus`).
+ *
+ * **`needsReview` is the number that was missing.** Both callers reported
+ * `must` and `should` and stopped, which was tolerable while the only source of
+ * `needs-review` was axe's handful of undecided checks. HTML_CodeSniffer made
+ * it the largest bucket by an order of magnitude — 130 of 139 findings on a
+ * fixture site — and a summary that omits it describes a different audit from
+ * the one that ran.
+ *
+ * Advisory findings are excluded here, as they are from every count that could
+ * be read as work owed: they are `gateable: false`, and `advisoryFindings` in
+ * `summarizeRun` already reports them under their own name.
+ */
+export function severityCounts(findings: readonly VerdictFinding[]): {
+  mustFix: number;
+  shouldFix: number;
+  needsReview: number;
+} {
+  const counted = { mustFix: 0, shouldFix: 0, needsReview: 0 };
+
+  for (const finding of findings) {
+    if (finding.source !== 'deterministic') continue;
+
+    switch (displaySeverity(finding.severity)) {
+      case 'must':
+        counted.mustFix += 1;
+        break;
+      case 'should':
+        counted.shouldFix += 1;
+        break;
+      case 'review':
+        counted.needsReview += 1;
+        break;
+      // `nice` is deliberately uncounted: it has never had a tile, and adding
+      // one here would be a screen change wearing a bug fix's clothes.
+      default:
+        break;
+    }
+  }
+
+  return counted;
 }

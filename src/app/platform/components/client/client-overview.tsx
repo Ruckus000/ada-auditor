@@ -35,6 +35,7 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
             <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(lastRun.score)} />
             <Stat label="Must fix" value={String(lastRun.mustFix)} tone={lastRun.mustFix > 0} />
             <Stat label="Should fix" value={String(lastRun.shouldFix)} />
+            <Stat label="Needs review" value={String(lastRun.needsReview)} />
             <Stat label="Pages audited" value={String(lastRun.pagesAudited)} />
           </dl>
 

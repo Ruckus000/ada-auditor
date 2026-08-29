@@ -79,7 +79,7 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
               <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
                 run {report.requestId}
                 {report.run
-                  ? ` · ${report.run.mustFix} must fix · ${scoreLine(report.run.score)}`
+                  ? ` · ${report.run.mustFix} must fix · ${report.run.needsReview} to review · ${scoreLine(report.run.score)}`
                   : ' · run no longer stored'}
                 {report.documents
                   ? ` · ${report.documents.documents} document${

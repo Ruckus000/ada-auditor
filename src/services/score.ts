@@ -14,6 +14,16 @@ import type { EvidenceStatus } from '../domain/evidence';
  * to you: "we evaluated 412 automated checks across 8 pages; 389 passed, 23
  * failed, and 17 could not be decided automatically."
  *
+ * **Every number in that sentence is a count of axe *checks*, including the
+ * last one.** `needsReview` here is `sum(pages, 'incomplete')`, and it is not
+ * the size of the human-review queue: HTML_CodeSniffer contributes no check
+ * counts at all and emits findings that are all `needs-review`, so the queue
+ * an operator works is `executiveSummary.needsReviewFindings` in
+ * `services/reporting.ts`. Reporting this one as the queue understated it
+ * sixty-five-fold on a fixture run. Both are honest about what they count;
+ * only the checks belong in the sentence above, because only they share its
+ * denominator.
+ *
  * Three rules make it defensible, and each is a steady-state claim the product
  * already makes elsewhere:
  *

@@ -177,6 +177,18 @@ Chromium launches on a Vercel function:
   (`htmlcs_scan_unavailable`), never to degraded evidence. Named in
   `RUN_RULESET`, so the first run after this change diffs as an instrument
   change rather than a site regression.
+  **The queue it widens is now reported, and it had not been.** Every summary
+  counted `must fix` and `should fix` and stopped, and the only nearby number —
+  `checksNeedingReview` — is `sum(pages, 'incomplete')`, axe's undecided
+  *checks*, to which this engine contributes nothing. `[V]` The 2026-08-28
+  blind-test run printed `2 undecided` beside **130** needs-review findings of
+  139 (124 of 142, 123 of 135 on the other two sites): the queue understated
+  sixty-five-fold on the line an operator reads first, and absent entirely from
+  the client's shared report. `executiveSummary.needsReviewFindings` counts the
+  findings, `checksNeedingReview` keeps counting the checks, and
+  `presentation/severity.ts` owns the one `severityCounts` both screens use —
+  the portfolio and the client detail each held their own copy of that filter,
+  and the second is what the shared report renders.
 - **AI advisory: a real model call through the Vercel AI Gateway**, with forced
   tool use, over the pruned accessibility tree plus axe's undecided checks.
   Judges what rules cannot — alt text that says nothing, headings used for

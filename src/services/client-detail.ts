@@ -9,7 +9,7 @@ import {
   type JourneyStore,
 } from '../domain/platform';
 import { credentialsForSteps, type CredentialPresence } from './credential-presence';
-import { displaySeverity } from './presentation/severity';
+import { severityCounts } from './presentation/severity';
 import { runVerdict, type VerdictKind } from './presentation/verdict';
 
 /**
@@ -92,6 +92,12 @@ export type RunSummary = {
   score: number | null;
   mustFix: number;
   shouldFix: number;
+  /**
+   * The human-review queue. Rendered on the client's shared report as well as
+   * the operator's screens, which is why it is counted once, in
+   * `presentation/severity`, rather than per caller.
+   */
+  needsReview: number;
   pagesAudited: number;
   evidenceStatus: string;
   /**
@@ -138,15 +144,12 @@ export type ClientDetail = {
 };
 
 export function summariseRun(run: StoredRunRecord): RunSummary {
-  const deterministic = run.findings.filter((finding) => finding.source === 'deterministic');
-
   return {
     requestId: run.requestId,
     createdAt: run.createdAt,
     verdict: runVerdict({ status: run.status, ciStatus: run.ciStatus, findings: run.findings }),
     score: run.score ?? null,
-    mustFix: deterministic.filter((f) => displaySeverity(f.severity) === 'must').length,
-    shouldFix: deterministic.filter((f) => displaySeverity(f.severity) === 'should').length,
+    ...severityCounts(run.findings),
     pagesAudited: run.pages?.length ?? 0,
     evidenceStatus: run.evidenceStatus,
     durationMs: run.durationMs || null,

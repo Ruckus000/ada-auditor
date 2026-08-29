@@ -108,6 +108,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                       </Pill>
                       <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
                         {journey.lastRun.mustFix} must fix ·{' '}
+                        {journey.lastRun.needsReview} to review ·{' '}
                         {new Date(journey.lastRun.createdAt).toISOString().slice(0, 10)}
                       </span>
                     </>

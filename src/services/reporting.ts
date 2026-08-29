@@ -86,6 +86,30 @@ export function summarizeRun(input: {
     (finding) => finding.source === 'ai-advisory',
   ).length;
 
+  /**
+   * The human-review queue, counted in findings.
+   *
+   * **Not `checksNeedingReview`, and the difference is the whole reason this
+   * exists.** That number is `sum(pages, 'incomplete')` — axe's undecided
+   * *checks*, a term in the sentence the score tells ("we evaluated 412
+   * checks; 389 passed, 23 failed, 17 could not be decided"). This one counts
+   * *findings* a person has to work through.
+   *
+   * They were close enough to conflate while axe was the only engine. HTML_
+   * CodeSniffer emits everything at `needs-review` by design, so a fixture run
+   * reported `2 undecided` beside 130 needs-review findings — understating the
+   * queue sixty-five-fold on the summary line an operator reads first. Both
+   * numbers are honest about what they count; only one of them was ever the
+   * queue.
+   *
+   * Advisory findings are excluded: they are `gateable: false` and already
+   * counted under their own name, and a queue that silently absorbed them
+   * would make a model's opinion look like outstanding work.
+   */
+  const needsReviewFindings = input.findings.filter(
+    (finding) => finding.source === 'deterministic' && finding.severity === 'needs-review',
+  ).length;
+
   const pages = {
     pagesScanned: input.pagesScanned ?? 0,
     pagesTruncated: input.pagesTruncated ?? 0,
@@ -99,6 +123,11 @@ export function summarizeRun(input: {
       executiveSummary: {
         totalFindings: input.findings.length,
         blockingFindings: 0,
+        // Counted even here. Incomplete evidence rejects a page's
+        // deterministic findings rather than the run's, so whatever survived
+        // is still a queue somebody works — and reporting 0 would say the
+        // opposite of "we could not tell".
+        needsReviewFindings,
         advisoryFindings,
         ...pages,
       },
@@ -114,6 +143,7 @@ export function summarizeRun(input: {
     executiveSummary: {
       totalFindings: input.findings.length,
       blockingFindings,
+      needsReviewFindings,
       advisoryFindings,
       ...pages,
     },
