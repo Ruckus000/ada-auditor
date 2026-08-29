@@ -204,6 +204,48 @@ Chromium launches on a Vercel function:
   otherwise run on every production audit with whatever the default model is.
   `off` wins over everything, including the injected test seam: it is a
   statement about where evidence may go, and a test double is still a place.
+- **Documents: Word converted, PDFs repaired by transcription.** The half of
+  the product that hands back a fixed file rather than a report. A `.docx`,
+  `.doc` or PDF reaches it from an upload, a URL, or the client's inventory
+  screen; LibreOffice and a JVM ship beside the function
+  (`scripts/prepare-libreoffice.ts`, `prepare-jvm.ts`), so this runs on
+  production and not only on a laptop.
+  - **Conversion** (`integrations/documents/convert.ts`) produces a tagged
+    PDF, correcting the exporter's language claim and deriving a title the
+    source already carries — its metadata, its first heading, or the filename
+    its author saved it under.
+  - **Repair** (`services/document-repair.ts`) writes back what a PDF already
+    states — title, declared language, its links' own destinations — and
+    **refuses an untagged PDF** rather than inferring structure. Delivery is
+    gated on reading the result back: `contentChanges` must be empty or the
+    repair is discarded.
+  - **Neither invents.** Every provenance kind is a transcription, VLM alt
+    text is banned, `/Lang` has no default, and what cannot be transcribed
+    becomes a **punch-list item** on the summary — the per-document work a
+    person still has to do, rendered on the operator screen and the client's
+    shared report alike.
+  - A PDF whose Word source sits in the same inventory is **paired** at read
+    time (`services/document-pairing.ts`): converting that source is offered
+    ahead of repairing the PDF, because it reaches structure repair never can.
+  - What this does and does not achieve is measured, not asserted — see the
+    known-gaps entry and `docs/research/document-remediation/`.
+
+- **Two ways for a person to sign in, one session.** A password, or a
+  **passkey** (WebAuthn) — both mint the identical v2 operator cookie through
+  `createOperatorSessionValue`, so `resolvePrincipal`, the screen guards and
+  `operator -- revoke-sessions` are unchanged by the second method existing.
+  Passkeys are discoverable credentials: no email is typed, and the sign-in
+  challenge endpoint does no lookup at all, so unlike the password path it has
+  no enumeration surface. Registering one **re-verifies the password** even
+  though the operator is already signed in — a credential outlives the session
+  that made it, so a stolen cookie must not become access `revoke-sessions`
+  cannot reach. Off unless `AUDITOR_RP_ID` and `AUDITOR_RP_ORIGIN` are set,
+  which is correct for local and preview work; passwords stay a full peer and
+  remain the recovery route when every device is lost. Ceremony verification
+  is `@simplewebauthn` behind `integrations/webauthn/`, and the clone-detection
+  counter rule is the library's alone — a synced passkey reports zero forever,
+  a device that counted and then reports zero is a clone, and one security
+  rule with two homes drifts.
 - **Real targets.** `POST /api/audit/run` takes `targetUrl` and `steps`. Every
   target is checked four ways: scheme and host; every resolved address; the URL
   the page settled on after each navigation; and the address the browser
@@ -470,11 +512,18 @@ Read this before claiming something works.
   console shows it. It does not gate readiness, because a degraded security
   speed bump is not a reason to serve 503 to every operator. The real defence
   remains a high-entropy token.
-- **The catalog tables still have no UI behind them.** `clients`, `journeys`,
-  `client_config`, `reports`, `activity_events` and `finding_triage` now have a
-  store and a tested contract, and `journeys` materialises on every run — but
-  only the screens read or write the rest, and the screens land slice by slice
-  through Phase 2C. Until then they are reachable but mostly empty.
+- **The catalog tables all have screens now.** `clients`, `journeys`,
+  `client_config`, `reports`, `activity_events` and `finding_triage` have a
+  store, a tested contract and an operator surface — the clients, reports,
+  activity and settings screens under `app/(platform)/`, walked end to end by
+  the hydration suite against the built app.
+  This entry used to say they were "reachable but mostly empty … until the
+  screens land slice by slice through Phase 2C", which stopped being true when
+  2C completed — recorded a few lines above in this same file. Third stale
+  status claim found here (after #138 and #157), and the pattern is the same
+  each time: an entry written during a transition and never revisited once the
+  transition finished. **A gap entry that describes finished work is worse
+  than no entry** — it sends a reader looking for something to build.
 - **`data.ts` and `derive.ts` are gone.** Every screen reads the database.
   What that cost is worth knowing: the fixture screens carried features that
   had nothing behind them, and rather than port them they were deleted — the

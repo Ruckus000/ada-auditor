@@ -75,7 +75,9 @@ export async function sweepRunContractRows(
  * so dropping the parent first would work — naming each table keeps the
  * cleanup honest about what the contract touches. `operators` goes last:
  * `activity_events.actor_operator_id` and `finding_triage.assignee_operator_id`
- * both reference it, so the rows pointing at it have to go first.
+ * both reference it, so the rows pointing at it have to go first — as does
+ * `operator_passkeys`, which cascades from it but is named anyway, for the
+ * same reason the cascading client tables are.
  */
 export async function clearPlatformContractRows(sql: SqlClient, prefix: string): Promise<void> {
   const own = `${prefix}-%`;
@@ -91,6 +93,7 @@ export async function clearPlatformContractRows(sql: SqlClient, prefix: string):
   await sql`delete from journeys where id like ${own}`;
   await sql`delete from client_config where client_id like ${own}`;
   await sql`delete from clients where id like ${own}`;
+  await sql`delete from operator_passkeys where operator_id like ${own}`;
   await sql`delete from operators where id like ${own}`;
 }
 
@@ -122,5 +125,6 @@ export async function sweepPlatformContractRows(
     )
   `;
   await sql`delete from clients where id like ${pattern} and created_at < ${cutoffIso}`;
+  await sql`delete from operator_passkeys where operator_id like ${pattern} and created_at < ${cutoffIso}`;
   await sql`delete from operators where id like ${pattern} and created_at < ${cutoffIso}`;
 }

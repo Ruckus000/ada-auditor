@@ -1,4 +1,5 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { inflateSync } from 'node:zlib';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -233,6 +234,115 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
       expect(taggedRead.value.marked).toBe(taggedRead.value.structureElements > 0);
       expect(untaggedRead.value.marked).toBe(untaggedRead.value.structureElements > 0);
     });
+  });
+
+  /**
+   * A CID font whose FontDescriptor carries a CIDSet stream.
+   *
+   * Hand-built because the alternative does not exist: `renderPdf` emits
+   * CIDFontType2 subsets with embedded programs but writes NO CIDSet, so a
+   * rendered fixture would assert nothing. `[V]` Measured on a rendered PDF —
+   * 2 CIDFontType2, 2 FontFile2, 0 CIDSet.
+   *
+   * The chain is complete rather than a bare dictionary with the key on it —
+   * page resources → Type0 → DescendantFonts → FontDescriptor → CIDSet — so
+   * the test still means something if the walk is ever reimplemented.
+   */
+  /**
+   * A PDF's dictionary keys, including the ones inside compressed object
+   * streams.
+   *
+   * A raw byte search is not good enough and the failure is silent both ways:
+   * PDFBox writes objects into `/ObjStm`, so searching the file text finds
+   * neither the key that was removed nor the font that was kept, and an
+   * assertion either way passes for the wrong reason. `[V]` The first version
+   * of this test asserted on raw bytes; `/CIDSet` was "absent" and
+   * `/CIDFontType2` was too, in a document that still had the font.
+   */
+  async function pdfKeys(path: string): Promise<string> {
+    const bytes = await readFile(path);
+    const parts = [bytes.toString('latin1')];
+    const marker = /stream\r?\n/g;
+    let match: RegExpExecArray | null;
+    while ((match = marker.exec(bytes.toString('latin1'))) !== null) {
+      const start = match.index + match[0].length;
+      const end = bytes.indexOf('endstream', start, 'latin1');
+      if (end < 0) continue;
+      try {
+        parts.push(inflateSync(bytes.subarray(start, end)).toString('latin1'));
+      } catch {
+        // Not every stream is deflate — images, the CIDSet itself. Skipped
+        // rather than failed: this helper reads what it can.
+      }
+    }
+    return parts.join('\n');
+  }
+
+  function cidSetPdf(): Buffer {
+    const content = 'BT /F1 12 Tf 20 100 Td <0001> Tj ET';
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R'
+        + ' /Resources << /Font << /F1 5 0 R >> >> >>',
+      `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+      '<< /Type /Font /Subtype /Type0 /BaseFont /ABCDEF+TestFont /Encoding /Identity-H'
+        + ' /DescendantFonts [6 0 R] >>',
+      '<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ABCDEF+TestFont'
+        + ' /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >>'
+        + ' /FontDescriptor 7 0 R /CIDToGIDMap /Identity /DW 1000 >>',
+      '<< /Type /FontDescriptor /FontName /ABCDEF+TestFont /Flags 4'
+        + ' /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 1000 /Descent 0'
+        + ' /CapHeight 1000 /StemV 80 /CIDSet 8 0 R >>',
+      '<< /Length 2 >>\nstream\n\xc0\x00\nendstream',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('drops a CIDSet that indexes an embedded font, keeping the font', async () => {
+    // UA-1 7.21.4.2-2, which four of twenty real municipal PDFs fail: the
+    // font IS embedded and a producer wrote an index of it that does not
+    // match. Removed rather than regenerated, for the reason /Lang is cleared
+    // rather than guessed — we do not carry forward a claim we cannot stand
+    // behind, and CIDSet is optional in PDF/UA.
+    const source = join(dir, 'cidset-source.pdf');
+    const out = join(dir, 'cidset-finished.pdf');
+    await writeFile(source, cidSetPdf());
+
+    const result = await finishDocument({ inputPath: source, outputPath: out, language: 'en' });
+    expect(result.ok).toBe(true);
+
+    expect(await pdfKeys(source)).toContain('/CIDSet');
+    const keys = await pdfKeys(out);
+    expect(keys).not.toContain('/CIDSet');
+    // The font survives — this removes an index, never a glyph source.
+    expect(keys).toContain('/CIDFontType2');
+  });
+
+  it('leaves a document with no CID fonts alone', async () => {
+    // The guard against a walk that damages what it does not understand.
+    const out = join(dir, 'no-cid-fonts.pdf');
+    const result = await finishDocument({ inputPath: source, outputPath: out, language: 'en-GB' });
+    expect(result.ok).toBe(true);
+
+    const after = await inspectDocument(out);
+    if (!after.ok) expect.unreachable('could not read the output');
+    // Still the same document: structure preserved, claims still written.
+    else {
+      expect(contentChanges(before, after.value)).toEqual([]);
+      expect(after.value.lang).toBe('en-GB');
+    }
   });
 
   it('fails cleanly on a file that is not a PDF, writing nothing', async () => {

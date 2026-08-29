@@ -34,26 +34,17 @@ suite:
   # which is why this is not optional.
   - CHAOS_ENABLED=true npm run chaos
   - npm run build
-  # Before the hydration suite, not after it with `test:documents`.
-  #
-  # `test:hydration` drives the Java stages through the running app, so it has
-  # always been able to test class files compiled from another revision -- the
-  # defect `8c13433` fixed for `test:documents` and could not fix here, because
-  # the only step that rebuilds ran three lines further down.
-  #
-  # What that ordering produced is worth naming, because it disguises itself:
-  # every run tested hydration against the classes the **previous** run left
-  # behind, then compiled the current ones on its way out. So a change to the
-  # Java is invisible here for exactly one run and fine on the next -- a failure
-  # that appears once and heals itself, which is the shape `8c13433` opens by
-  # describing: "failed twice with StackOverflowError, then passed eight times.
-  # I called it intermittent. It was not." Same trap, one suite over.
-  #
-  # `[V]` It bit on 2026-08-29: classes from the 26th, a required `marked` field
-  # added to the schema on the 28th, and two hydration cases failed -- one as a
-  # 60 second timeout naming nothing. Same guard as the step below, so a machine
-  # without a JDK still skips rather than going red.
-  - if command -v java >/dev/null 2>&1 || [ -x "$JAVA_HOME/bin/java" ]; then npm run build:documents; else echo "no JVM - document stages not built"; fi
+  # Before hydration, not after it. `test:hydration` uploads a real PDF and
+  # the JVM answers it (`it.runIf(documentToolchain.available)`), and the
+  # resolver counts COMPILED CLASSES as availability -- so with the documents
+  # build last, hydration ran the Java stages against whatever classes
+  # happened to be on disk from some earlier run, on some earlier branch.
+  # `[V]` That is not hypothetical: it failed exactly this way on a branch
+  # that added a field to `Inspect`, because the previous branch's suite had
+  # recompiled the classes without it. Stale classes make hydration's document
+  # cases either pass against code that is not under test, or fail for a
+  # reason that has nothing to do with the change.
+  - if command -v java >/dev/null 2>&1 || [ -x "$JAVA_HOME/bin/java" ]; then npm run build:documents; else echo "no JVM - document stages skipped"; fi
   - npm run test:hydration
   - npm run test:browser
   # The same store contract the unit suite runs against an in-memory double,
@@ -64,10 +55,9 @@ suite:
   - if [ -n "$DATABASE_URL" ]; then npm run migrate && npm run test:db; else echo "DATABASE_URL not set - Postgres store contract skipped"; fi
   # The document stages against a real JVM. Guarded exactly like the Postgres
   # step above and for the same reason: a machine without a JDK should not be
-  # permanently red over a subsystem it cannot run. The build still has to come
-  # first -- `test:documents` skips itself when nothing is compiled, and a suite
-  # that silently skips everything is indistinguishable from one that passed --
-  # but it now happens above, before `test:hydration`, which needs it just as
-  # much. Rebuilding here would be a no-op; the config's staleness guard is what
-  # actually holds the invariant either way.
+  # permanently red over a subsystem it cannot run. The build now happens
+  # above, before hydration, because hydration needs it too -- and it stays
+  # guarded there, because `test:documents` skips itself when nothing is
+  # compiled and a suite that silently skips everything is indistinguishable
+  # from one that passed.
   - if command -v java >/dev/null 2>&1 || [ -x "$JAVA_HOME/bin/java" ]; then npm run test:documents; else echo "no JVM - document stages skipped"; fi

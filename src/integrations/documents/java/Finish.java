@@ -9,6 +9,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.font.PDCIDFont;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
@@ -19,8 +25,14 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructur
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 
 /**
- * Category-A finishing pass. Four document-catalog writes and nothing else,
- * each one conditioned on the document actually earning the claim it makes.
+ * Category-A finishing pass: make this document's metadata state only true
+ * things, and state nothing it has not earned.
+ *
+ * Four document-catalog writes, each conditioned on the document actually
+ * earning the claim it makes, plus the removal of a font index that lies —
+ * see `stripCidSets`. Both halves are the same job, which is why they live
+ * together: a MarkInfo claiming tags that do not exist and a CIDSet claiming
+ * glyphs that do not match are the same defect wearing different keys.
  *
  * Each one closes a specific veraPDF ua1 failure that survived OpenDataLoader,
  * listed in docs/research/document-remediation/failure-classification.md. No
@@ -167,7 +179,83 @@ public final class Finish {
                 }
             }
 
+            stripCidSets(doc);
+
             doc.save(out);
+        }
+    }
+
+    /**
+     * Drop every CIDSet stream from the document's embedded CID fonts.
+     *
+     * `[V]` UA-1 7.21.4.2-2: "if the FontDescriptor dictionary of an embedded
+     * CID font contains a CIDSet stream, then it shall identify all CIDs
+     * which are present in the font program". Four of twenty real municipal
+     * PDFs fail it — the font IS embedded, and a producer wrote an index of
+     * it that does not match. A false statement about the file, not a missing
+     * capability.
+     *
+     * Removed rather than regenerated, for the reason /Lang is cleared rather
+     * than guessed: we will not carry forward a claim we cannot stand behind.
+     * The rule is conditional on the stream's presence, so removing a wrong
+     * one satisfies it honestly rather than by evasion, and CIDSet is
+     * OPTIONAL in PDF/UA — nothing here reads it.
+     *
+     * The one thing this depends on, said plainly so it cannot rot: CIDSet's
+     * real consumer is PDF/A subset validation, and the XMP write above
+     * REPLACES the whole packet, so any PDF/A identification is already gone
+     * from our output before this runs. **If that write is ever changed to
+     * merge rather than replace, revisit this.**
+     *
+     * Structure is untouched, so `Finish`'s standing claim — no structure
+     * element created, moved, re-parented or altered — still holds, and
+     * `contentChanges` still checks it.
+     */
+    private static void stripCidSets(PDDocument doc) {
+        for (PDPage page : doc.getPages()) {
+            stripCidSets(page.getResources(), new java.util.HashSet<>());
+        }
+    }
+
+    /**
+     * Fonts can live in a Form XObject's own resources as well as a page's,
+     * so this recurses. `seen` is identity-based on the resource dictionary:
+     * a malformed document can point two XObjects at each other, and a walk
+     * without it would not terminate.
+     */
+    private static void stripCidSets(PDResources resources, java.util.Set<Object> seen) {
+        if (resources == null || !seen.add(resources.getCOSObject())) {
+            return;
+        }
+
+        for (COSName name : resources.getFontNames()) {
+            PDFont font;
+            try {
+                font = resources.getFont(name);
+            } catch (Exception e) {
+                // One unreadable font must not fail a repair that is otherwise
+                // sound. Nothing is written for it, which is the safe outcome.
+                continue;
+            }
+            if (font instanceof PDType0Font type0) {
+                PDCIDFont descendant = type0.getDescendantFont();
+                if (descendant != null) {
+                    PDFontDescriptor descriptor = descendant.getFontDescriptor();
+                    if (descriptor != null) {
+                        descriptor.getCOSObject().removeItem(COSName.getPDFName("CIDSet"));
+                    }
+                }
+            }
+        }
+
+        for (COSName name : resources.getXObjectNames()) {
+            try {
+                if (resources.getXObject(name) instanceof PDFormXObject form) {
+                    stripCidSets(form.getResources(), seen);
+                }
+            } catch (Exception e) {
+                continue;
+            }
         }
     }
 

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { InfoTip } from './info-tip';
+import { browserSupportsPasskeys, signInWithPasskey } from './passkey-client';
 
 const MESSAGES: Record<string, string> = {
   invalid_credentials: 'That email and password do not match an operator account.',
@@ -13,6 +14,10 @@ const MESSAGES: Record<string, string> = {
   auditor_run_token_too_weak:
     'The server token is too short to be used as a console password. Set a longer AUDITOR_RUN_TOKEN (32+ random characters).',
   console_same_origin_required: 'Reload the page and try again.',
+  passkeys_not_configured:
+    'Passkeys are not set up on this deployment. Sign in with your password instead.',
+  passkey_challenge_expired: 'That took too long. Try the passkey again.',
+  passkey_failed: 'That passkey could not be used. Try again, or sign in with your password.',
 };
 
 /**
@@ -29,6 +34,7 @@ const MESSAGES: Record<string, string> = {
  * available without presenting a shared secret as the normal way to sign in.
  */
 export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
+  const [passkeysOffered, setPasskeysOffered] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
@@ -36,6 +42,52 @@ export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = Boolean((email.trim() && password) || token.trim());
+
+  /**
+   * Offered only when both halves are true: this browser can do WebAuthn, and
+   * the server has a relying party configured. Asked after mount rather than
+   * rendered from a prop, because the locked screen is what an unauthenticated
+   * visitor sees and this status probe is the one call it is already allowed
+   * to make.
+   */
+  useEffect(() => {
+    if (!browserSupportsPasskeys()) return;
+
+    let cancelled = false;
+    fetch('/api/console/session')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload: { passkeysConfigured?: boolean } | null) => {
+        if (!cancelled && payload?.passkeysConfigured) setPasskeysOffered(true);
+      })
+      .catch(() => {
+        // The password form is right there. A status probe that fails is not
+        // worth an error message of its own.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function usePasskey() {
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+
+    const outcome = await signInWithPasskey();
+    setSubmitting(false);
+
+    if (outcome.ok) {
+      onUnlocked();
+      return;
+    }
+    // Cancelling the OS prompt is a choice, not a failure. Saying "could not
+    // sign in" to someone who just pressed Escape is the console arguing with
+    // a decision the person already made.
+    if (outcome.code === 'passkey_cancelled') return;
+
+    setError(MESSAGES[outcome.code] ?? 'Could not sign in with that passkey.');
+  }
 
   async function post(body: Record<string, string>) {
     setSubmitting(true);
@@ -88,6 +140,26 @@ export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
         per browser. After that it stays signed in for 30 days.
       </p>
 
+      {passkeysOffered && (
+        <div className="passkey-signin">
+          <button
+            className="submit-btn"
+            type="button"
+            onClick={usePasskey}
+            disabled={submitting}
+          >
+            {submitting ? 'Waiting for your device…' : 'Sign in with a passkey'}
+          </button>
+          <p className="field-help">
+            Uses the fingerprint, face, or PIN on this device. Nothing to type and nothing to
+            remember.
+          </p>
+          <p className="passkey-divider" aria-hidden="true">
+            or
+          </p>
+        </div>
+      )}
+
       <form className="run-form" onSubmit={submit}>
         <div className="field">
           <label htmlFor="operator-email">Email</label>
@@ -96,7 +168,7 @@ export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
             name="email"
             type="email"
             value={email}
-            autoComplete="username"
+            autoComplete="username webauthn"
             spellCheck={false}
             onChange={(e) => setEmail(e.target.value)}
             aria-invalid={error ? true : undefined}

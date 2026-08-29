@@ -16,7 +16,7 @@ import {
   SESSION_TTL_SECONDS,
   throttleKey,
 } from '../../_lib/console-session';
-import { sessionSecret } from '../../_lib/principal';
+import { passkeyRelyingParty, sessionSecret } from '../../_lib/principal';
 import { getThrottleStore } from '../../_lib/unlock-throttle';
 
 /**
@@ -50,6 +50,10 @@ export async function GET(request: Request) {
     authenticated:
       hasOperatorCookie || (Boolean(configuredToken) && hasConsoleSession(request, configuredToken!)),
     tokenConfigured: Boolean(configuredToken),
+    // Whether to offer the passkey button. Configuration state, not account
+    // state — it is the same answer for every caller, so it tells a stranger
+    // nothing this probe was not already willing to say.
+    passkeysConfigured: Boolean(passkeyRelyingParty()),
   });
 }
 
