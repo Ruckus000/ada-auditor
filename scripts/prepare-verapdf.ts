@@ -41,7 +41,7 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -137,7 +137,14 @@ async function main(): Promise<void> {
     }
 
     await mkdir(dirname(jarPath), { recursive: true });
-    await rename(cliJar, jarPath);
+    // Copy, not rename: the work directory is under /tmp and the workspace is
+    // a different filesystem on the build machine, so a rename dies with
+    // EXDEV — the exact failure `prepare-libreoffice.ts` hit and recorded,
+    // and `[V]` the exact failure this script shipped on its first deploy.
+    // 15MB copies in well under a second; LibreOffice stages under the
+    // workspace instead because its move is 440MB, a cost this one does not
+    // have.
+    await copyFile(cliJar, jarPath);
 
     // Prove the artifact runs on the runtime that ships, before the build
     // moves on. A missing module fails here, in a log somebody reads.
