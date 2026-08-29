@@ -5,6 +5,7 @@ import {
   DOCUMENT_INSPECTION_LIST_MAX,
   UNASSIGNED_CLIENT_ID,
 } from '../../src/domain/platform';
+import { DuplicatePasskeyError } from '../../src/domain/platform';
 import type {
   PlatformStore,
   StoredDocumentConversion,
@@ -1769,9 +1770,12 @@ export function platformStoreContract(
       await seedOperators(store);
       await store.insertOperatorPasskey(passkey());
 
+      // A *typed* refusal, not just any throw: the route tells this outcome
+      // apart from a store outage, and answering 409 to an unreachable
+      // database would report a device the operator does not have.
       await expect(
         store.insertOperatorPasskey(passkey({ operatorId: CONTRACT_OPERATOR_B })),
-      ).rejects.toThrow();
+      ).rejects.toBeInstanceOf(DuplicatePasskeyError);
 
       expect((await store.getOperatorPasskeyByCredentialId(CONTRACT_PASSKEY))?.operatorId).toBe(
         CONTRACT_OPERATOR,

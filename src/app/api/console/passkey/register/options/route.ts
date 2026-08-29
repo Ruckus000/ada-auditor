@@ -35,7 +35,7 @@ const registerOptionsSchema = z.object({
 export async function POST(request: Request) {
   const requestId = createRequestId();
 
-  const context = await passkeyContext(request, requestId);
+  const context = await passkeyContext(request, requestId, 'manage');
   if (isRefusal(context)) return context.response;
 
   const principal = await requireOperator(request);

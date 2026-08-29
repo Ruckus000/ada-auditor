@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { PASSKEY_LABEL_MAX_LENGTH } from '../../../../../domain/platform';
+import { DuplicatePasskeyError, PASSKEY_LABEL_MAX_LENGTH } from '../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../integrations/persistence';
 import { verifyRegistration } from '../../../../../integrations/webauthn/verify';
-import { logInfo } from '../../../../../services/logger';
+import { logInfo, logWarn } from '../../../../../services/logger';
 import { readCookie } from '../../../_lib/console-session';
 import {
   CHALLENGE_COOKIE,
@@ -30,7 +30,7 @@ const registerSchema = z.object({
 export async function POST(request: Request) {
   const requestId = createRequestId();
 
-  const context = await passkeyContext(request, requestId);
+  const context = await passkeyContext(request, requestId, 'manage');
   if (isRefusal(context)) return context.response;
 
   const principal = await requireOperator(request);
@@ -75,12 +75,25 @@ export async function POST(request: Request) {
       label: parsed.data.label,
       createdAt: new Date().toISOString(),
     });
-  } catch {
-    // The credential id is already on record. `excludeCredentials` is meant to
-    // have stopped this in the browser, so reaching here means either an
-    // authenticator that ignored it or a genuine collision — neither of which
-    // may overwrite the existing row.
-    return refuse('passkey_already_registered', 409);
+  } catch (error) {
+    // Only a real collision answers 409. `excludeCredentials` is meant to have
+    // stopped this in the browser, so reaching here means an authenticator
+    // that ignored it or a genuine collision — neither of which may overwrite
+    // the existing row.
+    if (error instanceof DuplicatePasskeyError) {
+      return refuse('passkey_already_registered', 409);
+    }
+    // Anything else is the store failing, and saying "already registered" to
+    // that is worse than saying nothing: the operator reads a fact about their
+    // own devices where the truth is that the database was unreachable, and
+    // retries against a message that will never change. It is logged because
+    // an outage that only ever renders as a 409 leaves no trace at all.
+    logWarn('passkey_registration_failed', {
+      operatorId: principal.id,
+      requestId,
+      reason: error instanceof Error ? error.message : 'unknown',
+    });
+    return refuse('passkey_registration_unavailable', 503);
   }
 
   logInfo('passkey_registered', { operatorId: principal.id, requestId });

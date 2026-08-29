@@ -5,6 +5,7 @@ import {
   DOCUMENT_INSPECTION_LIST_MAX,
   UNASSIGNED_CLIENT_ID,
 } from '../../domain/platform';
+import { DuplicatePasskeyError } from '../../domain/platform';
 import type {
   StoredOperatorPasskey,
   ActivityEvent,
@@ -51,6 +52,16 @@ function toIso(value: Date | string): string {
 
 /** Optional columns are omitted rather than set to `undefined`, so a record
  * read back is `toEqual`-identical to the one written. */
+/** Postgres signals a duplicate key with SQLSTATE 23505, wherever the driver puts it. */
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === '23505'
+  );
+}
+
 function optional<T extends object, K extends string, V>(
   key: K,
   value: V | null | undefined,
@@ -309,13 +320,24 @@ export class PostgresPlatformStore implements PlatformStore {
     // have stopped in the browser — or a collision worth failing loudly on.
     // Silently overwriting would let a second registration relink someone
     // else's credential id to a new key.
-    await this.sql`
-      insert into operator_passkeys
-        (credential_id, operator_id, public_key, sign_counter, transports, label)
-      values (${passkey.credentialId}, ${passkey.operatorId}, ${passkey.publicKey},
-              ${passkey.signCounter}, ${passkey.transports?.join(',') ?? null},
-              ${passkey.label})
-    `;
+    try {
+      await this.sql`
+        insert into operator_passkeys
+          (credential_id, operator_id, public_key, sign_counter, transports, label)
+        values (${passkey.credentialId}, ${passkey.operatorId}, ${passkey.publicKey},
+                ${passkey.signCounter}, ${passkey.transports?.join(',') ?? null},
+                ${passkey.label})
+      `;
+    } catch (error) {
+      // `23505` is a unique violation — here, the primary key. Narrowed rather
+      // than catching everything, so a connection failure stays a connection
+      // failure: the caller turns this one error into "already registered" and
+      // must not be handed an outage wearing that name.
+      if (isUniqueViolation(error)) {
+        throw new DuplicatePasskeyError(`passkey ${passkey.credentialId} already exists`);
+      }
+      throw error;
+    }
   }
 
   async recordOperatorPasskeyUse(

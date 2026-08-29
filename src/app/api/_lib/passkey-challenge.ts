@@ -1,4 +1,4 @@
-import { createHmac, randomBytes } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 import { isSecureRequest } from './same-origin';
 import { safeEqual } from './console-session';
 
@@ -49,11 +49,6 @@ export type ChallengePayload = {
   operatorId?: string;
   expiresAt: number;
 };
-
-/** Base64url, matching how every other value in the ceremony is encoded. */
-export function createChallenge(): string {
-  return randomBytes(32).toString('base64url');
-}
 
 function sign(secret: string, parts: string): string {
   return createHmac('sha256', secret).update(parts).digest('hex');

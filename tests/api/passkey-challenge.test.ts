@@ -3,7 +3,6 @@ import {
   buildChallengeCookie,
   CHALLENGE_TTL_SECONDS,
   clearChallengeCookie,
-  createChallenge,
   encodeChallengeCookie,
   readChallengeCookie,
 } from '../../src/app/api/_lib/passkey-challenge';
@@ -20,18 +19,6 @@ const NOW = Date.UTC(2026, 7, 28, 12, 0, 0);
 function request(url = 'https://audit.example.com/api/console/passkey/options'): Request {
   return new Request(url);
 }
-
-describe('createChallenge', () => {
-  it('produces a fresh base64url value each time', () => {
-    const a = createChallenge();
-    const b = createChallenge();
-
-    expect(a).not.toBe(b);
-    expect(a).toMatch(/^[A-Za-z0-9_-]+$/);
-    // 32 bytes of entropy: guessing is not a threat model this has to defend.
-    expect(Buffer.from(a, 'base64url')).toHaveLength(32);
-  });
-});
 
 describe('the challenge cookie', () => {
   it('round-trips a sign-in challenge', () => {

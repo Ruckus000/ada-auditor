@@ -26,20 +26,37 @@ export type PasskeyContext = {
 export type PasskeyRefusal = { response: Response };
 
 /**
- * Buckets the passkey ceremonies separately from password sign-in.
+ * Which counter a route's failures belong to.
  *
- * Not cosmetic. `throttleKey` falls back to one shared `global` bucket
- * wherever no trusted proxy sets `x-vercel-forwarded-for`, so an unnamespaced
- * passkey counter would share that bucket with the password path — and eight
- * failed passkey attempts would lock every operator out of *both* ways in,
- * turning a new convenience into an outage on the established one.
- *
- * One bucket, not two: there is no email here to scope a second by, and none
- * is needed. A signature cannot be guessed, so this is abuse control rather
- * than the brute-force control the password path needs.
+ * `signin` is the unauthenticated ceremony; `manage` is an authenticated
+ * operator adding a device, whose failures are password typos.
  */
-export function passkeyThrottleKeys(request: Request): string[] {
-  return [`passkey|${throttleKey(request)}`];
+export type PasskeyPurpose = 'signin' | 'manage';
+
+/**
+ * Buckets passkey failures away from password sign-in, and the two passkey
+ * flows away from each other.
+ *
+ * Namespacing away from the password path is not cosmetic: `throttleKey`
+ * falls back to one shared `global` bucket wherever no trusted proxy sets
+ * `x-vercel-forwarded-for`, so an unnamespaced counter would share that
+ * bucket with password sign-in — and eight failed passkey attempts would lock
+ * every operator out of *both* ways in, turning a new convenience into an
+ * outage on the established one.
+ *
+ * Splitting `signin` from `manage` closes the same trap one level down. The
+ * failures mean different things: a stranger presenting a signature that does
+ * not verify, versus an operator who is already signed in mistyping their own
+ * password on the add-a-device form. Sharing one counter let the second lock
+ * out the first — eight typos on the Settings screen and nobody can sign in
+ * with a passkey for five minutes, which on a `global` bucket means every
+ * operator, not just the one who was typing.
+ *
+ * One bucket per purpose, not two: there is no email here to scope a second
+ * by, and none is needed. A signature cannot be guessed.
+ */
+export function passkeyThrottleKeys(request: Request, purpose: PasskeyPurpose): string[] {
+  return [`passkey-${purpose}|${throttleKey(request)}`];
 }
 
 /**
@@ -52,6 +69,7 @@ export function passkeyThrottleKeys(request: Request): string[] {
 export async function passkeyContext(
   request: Request,
   requestId: string,
+  purpose: PasskeyPurpose,
 ): Promise<PasskeyContext | PasskeyRefusal> {
   if (!isSameOriginConsoleRequest(request)) {
     return {
@@ -79,7 +97,7 @@ export async function passkeyContext(
     };
   }
 
-  const throttleKeys = passkeyThrottleKeys(request);
+  const throttleKeys = passkeyThrottleKeys(request, purpose);
   const throttle = getThrottleStore();
   for (const key of throttleKeys) {
     if (await throttle.isThrottled(key)) {

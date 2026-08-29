@@ -1,6 +1,7 @@
 import {
   clampEventListLimit,
   CLIENT_DOCUMENT_LIST_MAX,
+  DuplicatePasskeyError,
   DOCUMENT_INSPECTION_LIST_MAX,
   journeyRunRefusal,
   UNASSIGNED_CLIENT_ID,
@@ -185,7 +186,7 @@ export class MemoryPlatformStore implements PlatformStore {
     // quietly overwrote would hide exactly the collision the real store
     // refuses — and a relinked credential id is an account-takeover shape.
     if (this.passkeys.has(passkey.credentialId)) {
-      throw new Error(`passkey ${passkey.credentialId} already exists`);
+      throw new DuplicatePasskeyError(`passkey ${passkey.credentialId} already exists`);
     }
     this.passkeys.set(passkey.credentialId, structuredClone(passkey));
   }

@@ -19,7 +19,7 @@ import { isRefusal, passkeyContext } from '../_lib/shared';
 export async function POST(request: Request) {
   const requestId = createRequestId();
 
-  const context = await passkeyContext(request, requestId);
+  const context = await passkeyContext(request, requestId, 'signin');
   if (isRefusal(context)) return context.response;
 
   const options = await buildAuthenticationOptions(context.rp);

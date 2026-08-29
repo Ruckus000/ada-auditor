@@ -397,6 +397,18 @@ export type StoredOperatorPasskey = {
  */
 export const PASSKEY_LABEL_MAX_LENGTH = 64;
 
+/**
+ * Thrown when a credential id is already on record.
+ *
+ * A typed error rather than a driver code, because the route has to tell one
+ * outcome apart from every other store failure and the two implementations
+ * fail differently — Postgres raises a unique violation, the in-memory double
+ * raises whatever it likes. Without this the route's only honest option is to
+ * treat *any* throw as a duplicate, which reports a database outage to the
+ * operator as a device they have already registered.
+ */
+export class DuplicatePasskeyError extends Error {}
+
 export interface OperatorPasskeyStore {
   listOperatorPasskeys(operatorId: string): Promise<StoredOperatorPasskey[]>;
   /**
@@ -408,6 +420,7 @@ export interface OperatorPasskeyStore {
   getOperatorPasskeyByCredentialId(
     credentialId: string,
   ): Promise<StoredOperatorPasskey | null>;
+  /** Throws `DuplicatePasskeyError` when the credential id already exists. */
   insertOperatorPasskey(passkey: StoredOperatorPasskey): Promise<void>;
   /** After a successful assertion: advance the counter, stamp the use. */
   recordOperatorPasskeyUse(

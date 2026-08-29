@@ -376,6 +376,31 @@ describe('registering a passkey', () => {
     expect(response.status).toBe(400);
   });
 
+  /**
+   * A store failure is not a duplicate. Saying "already registered" to an
+   * outage tells the operator a fact about their own devices where the truth
+   * is that the database was unreachable.
+   */
+  it('reports a store failure as unavailable, not as a duplicate', async () => {
+    const options = await registerOptionsRoute.POST(
+      post('/api/console/passkey/register/options', { password: PASSWORD }, {
+        cookie: operatorCookie(),
+      }),
+    );
+    vi.spyOn(platform, 'insertOperatorPasskey').mockRejectedValueOnce(
+      new Error('Error connecting to database: fetch failed'),
+    );
+
+    const response = await registerRoute.POST(
+      post('/api/console/passkey/register', { response: { id: CREDENTIAL_ID }, label: 'Laptop' }, {
+        cookie: `${operatorCookie()}; ${challengeCookieFrom(options)}`,
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ error: 'passkey_registration_unavailable' });
+  });
+
   it('refuses to overwrite a credential id already on record', async () => {
     await seedPasskey();
     const options = await registerOptionsRoute.POST(
@@ -512,6 +537,25 @@ describe('throttle isolation', () => {
     );
 
     expect(password.status).toBe(200);
+  });
+
+  /**
+   * The second half of the same trap, one level down. An operator mistyping
+   * their password on the add-a-device form is already signed in; a stranger
+   * presenting a signature is not. Sharing one counter let the first lock out
+   * the second — and on a `global` bucket, for every operator at once.
+   */
+  it('does not throttle passkey sign-in through failed add-a-device passwords', async () => {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      await registerOptionsRoute.POST(
+        post('/api/console/passkey/register/options', { password: 'wrong' }, {
+          cookie: operatorCookie(),
+        }),
+      );
+    }
+
+    const response = await optionsRoute.POST(post('/api/console/passkey/options'));
+    expect(response.status).toBe(200);
   });
 
   it('still throttles the passkey path itself', async () => {
