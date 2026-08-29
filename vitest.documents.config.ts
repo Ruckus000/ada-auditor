@@ -1,11 +1,8 @@
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
-import {
-  DOCUMENT_CLASSES_DIR,
-  resolveJavaRuntime,
-} from './src/integrations/documents/java-runtime';
-import { staleDocumentStage } from './tests/support/compiled-stages';
+import { resolveJavaRuntime } from './src/integrations/documents/java-runtime';
+import { staleStagesComplaint } from './tests/support/compiled-stages';
 
 /**
  * Says *why* when this suite is about to skip everything — and refuses to run
@@ -40,12 +37,9 @@ if (!runtime.available) {
    * failure `localci.yml`'s own comment names — a suite that skips silently is
    * indistinguishable from one that passed.
    */
-  const stale = staleDocumentStage();
-  if (stale) {
-    throw new Error(
-      `${stale} is newer than the compiled stages in ${DOCUMENT_CLASSES_DIR}. ` +
-        'Run `npm run build:documents`.',
-    );
+  const complaint = staleStagesComplaint();
+  if (complaint) {
+    throw new Error(complaint);
   }
 }
 

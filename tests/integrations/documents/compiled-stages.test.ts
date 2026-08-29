@@ -8,7 +8,7 @@ import {
   DOCUMENT_CLASSES_DIR,
   DOCUMENT_JAVA_DIR,
 } from '../../../src/integrations/documents/java-runtime';
-import { staleDocumentStage } from '../../support/compiled-stages';
+import { staleDocumentStage, staleStagesComplaint } from '../../support/compiled-stages';
 
 /**
  * The check that decides whether the real-JVM suite is allowed to speak.
@@ -95,5 +95,27 @@ describe('staleDocumentStage', () => {
     const dir = tree({}, { 'Inspect.class': 1000 });
 
     expect(staleDocumentStage(dir)).toBeNull();
+  });
+});
+
+/**
+ * The sentence two suites now print. It lives beside the check rather than in
+ * either caller, because a second copy is how one of them comes to name a
+ * command that no longer exists.
+ */
+describe('staleStagesComplaint', () => {
+  it('names the stale source and the command that fixes it', () => {
+    const dir = tree({ 'Inspect.java': 3000 }, { 'Inspect.class': 2000 });
+
+    const complaint = staleStagesComplaint(dir);
+
+    expect(complaint).toContain('Inspect.java');
+    expect(complaint).toContain('npm run build:documents');
+  });
+
+  it('says nothing when the build is current', () => {
+    const dir = tree({ 'Inspect.java': 1000 }, { 'Inspect.class': 2000 });
+
+    expect(staleStagesComplaint(dir)).toBeNull();
   });
 });

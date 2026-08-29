@@ -23,6 +23,7 @@ import type { Browser, Page } from 'playwright-core';
 import { launchChromium } from '../../../src/integrations/browser/launch';
 import { renderPdf } from '../../../src/integrations/browser/render-pdf';
 import { resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
+import { staleStagesComplaint } from '../../support/compiled-stages';
 import {
   CONSOLE_COOKIE,
   createSessionValue,
@@ -2049,9 +2050,39 @@ describe('platform hydration', () => {
    */
   const documentToolchain = resolveJavaRuntime();
 
+  /**
+   * Available is not the same as current.
+   *
+   * `resolveJavaRuntime` checks that `dist/documents/classes` *exists*, and
+   * deliberately nothing more — it answers a capability question for
+   * `/api/ready`, where a deployed bundle carries classes and no sources at
+   * all. Whether somebody rebuilt after editing the Java is a question about a
+   * working tree, and it is one these two cases have to ask: they drive the
+   * real stages through the running server.
+   *
+   * `[V]` The cost of not asking, measured on 2026-08-29: `Inspect.class` was
+   * compiled on the 26th, `4f16ba8` added a required `marked` field to both the
+   * Java and the Zod schema on the 28th, so every inspection failed validation,
+   * the route answered 422, nothing persisted — and this file reported a 60
+   * second timeout polling for text the panel was never going to show, plus a
+   * second failure in the case that depends on it. Neither named the cause.
+   *
+   * A failure rather than a skip, matching `vitest.documents.config.ts`: no JDK
+   * and no build are a contributor's environment and skip above, but a
+   * toolchain that is plainly present and merely out of date is somebody's
+   * forgotten command, and until it is run nothing these cases say is about
+   * the code in the tree.
+   */
+  const staleStages = staleStagesComplaint();
+  const requireCurrentStages = () => {
+    if (staleStages) throw new Error(staleStages);
+  };
+
   it.runIf(documentToolchain.available)(
     'a persisted document inspection survives a reload',
     async () => {
+      requireCurrentStages();
+
       const page = await openAuthenticatedPage();
       try {
         const pdf = await renderPdf('<h1>Meeting agenda</h1><p>Hydration fixture body.</p>');
@@ -2109,6 +2140,11 @@ describe('platform hydration', () => {
   it.runIf(documentToolchain.available)(
     'a shared report carries the document snapshot, pinned at issue',
     async () => {
+      // Guarded like its sibling, and for a sharper reason: this case reads
+      // state the one above persists, so a stale build fails it here as a
+      // missing `Documents` section — a symptom two removes from the cause.
+      requireCurrentStages();
+
       // The case above persisted a real inspection for this client, so a
       // report issued NOW snapshots it — and the public page renders the gap
       // string verbatim, behind nothing but the token. Gated with its

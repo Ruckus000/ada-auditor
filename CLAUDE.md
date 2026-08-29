@@ -23,6 +23,17 @@ npm run lint             # eslint . (flat config; `next lint` is gone in Next 16
 npm run typecheck        # tsc -p tsconfig.typecheck.json — NOT bare `tsc`
 ```
 
+**Two suites run the compiled Java, and both fail loudly when it is stale.**
+`dist/documents/classes` is gitignored and nothing rebuilds it on its own, so
+either suite can otherwise report on class files compiled from a different
+revision — a false red once, and a false green waiting to happen.
+`staleStagesComplaint()` (`tests/support/compiled-stages.ts`) compares the
+newest `.java` against the oldest `.class`; `vitest.documents.config.ts` throws
+on it before collecting, and the two document cases in
+`platform-hydration.test.ts` throw on it in their first line. A machine with no
+JDK and no build still skips — that is a contributor's environment. A tree that
+was compiled and then moved is not.
+
 `npm run typecheck` is the CI gate and the **only** config that sees
 `tests/integrations/**`. Bare `tsc` uses `tsconfig.json`, which excludes that
 directory, so the two suites that drive a real browser would be type-checked by
@@ -37,7 +48,7 @@ and `build` must be green before claiming done.
 |---|---|---|---|
 | `npm test` | `vitest.config.ts` | fast unit suite — 103 files under `tests/` | nothing (no browser, no socket) |
 | `npm run test:browser` | `vitest.browser.config.ts` | `tests/integrations/browser/**` | Chromium (`npm run playwright:install`) |
-| `npm run test:hydration` | `vitest.hydration.config.ts` | drives the **built** app under `next start`, runs a real audit, asserts pages hydrated | `npm run build` first |
+| `npm run test:hydration` | `vitest.hydration.config.ts` | drives the **built** app under `next start`, runs a real audit, asserts pages hydrated | `npm run build` first, and `npm run build:documents` — two cases drive the Java stages through the app |
 | `npm run test:db` | `vitest.db.config.ts` | `postgres-*.test.ts` — the store contract against real Neon | `DATABASE_URL`, `npm run migrate` |
 | `npm run test:documents` | `vitest.documents.config.ts` | `java-*.test.ts` — the document stages against a real JVM | JDK 17+, `npm run build:documents` |
 | `npm run chaos` | `scripts/chaos.ts` | steady-state assertions | `CHAOS_ENABLED=true` (hard-fails without it) |

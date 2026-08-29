@@ -40,6 +40,27 @@ import {
  * file with *now*, so moving the tree backwards onto older sources reads as
  * stale too, not just editing forwards.
  */
+/**
+ * The complaint, in one place, because two suites now make it.
+ *
+ * `vitest.documents.config.ts` had the only copy while it was the only caller.
+ * The hydration suite drives the same stages through the running app and needs
+ * to say the same thing — and a second copy of a sentence that names a command
+ * is how one of them comes to name the wrong one.
+ *
+ * Returns null when nothing is stale, so a caller can write
+ * `const complaint = staleStagesComplaint(); if (complaint) throw ...`.
+ */
+export function staleStagesComplaint(root: string = process.cwd()): string | null {
+  const stale = staleDocumentStage(root);
+  if (!stale) return null;
+
+  return (
+    `${stale} is newer than the compiled stages in ${DOCUMENT_CLASSES_DIR}. ` +
+    'Run `npm run build:documents`.'
+  );
+}
+
 export function staleDocumentStage(root: string = process.cwd()): string | null {
   const sources = entries(join(root, DOCUMENT_JAVA_DIR), '.java');
 
