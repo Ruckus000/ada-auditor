@@ -85,12 +85,14 @@ const nextConfig = {
     // every request with `converter_unavailable`.
     '/api/platform/clients/**/documents/convert/**': [
       './vendor/jre/**',
+      './vendor/verapdf/**',
       './vendor/pdfbox-app-3.0.8.jar',
       './dist/documents/classes/**',
       './vendor/libreoffice/**',
     ],
     '/api/platform/clients/**/documents/**': [
       './vendor/jre/**',
+      './vendor/verapdf/**',
       './vendor/pdfbox-app-3.0.8.jar',
       './dist/documents/classes/**',
     ],
@@ -125,18 +127,21 @@ const nextConfig = {
     // grow a 440MB LibreOffice they never exec.
     '/api/documents/remediate/**': [
       './vendor/jre/**',
+      './vendor/verapdf/**',
       './vendor/pdfbox-app-3.0.8.jar',
       './dist/documents/classes/**',
       './vendor/libreoffice/**',
     ],
     '/api/documents/remediate-url/**': [
       './vendor/jre/**',
+      './vendor/verapdf/**',
       './vendor/pdfbox-app-3.0.8.jar',
       './dist/documents/classes/**',
       './vendor/libreoffice/**',
     ],
     '/api/documents/**': [
       './vendor/jre/**',
+      './vendor/verapdf/**',
       './vendor/pdfbox-app-3.0.8.jar',
       './dist/documents/classes/**',
     ],

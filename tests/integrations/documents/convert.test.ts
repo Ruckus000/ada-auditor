@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import { describe, expect, it } from 'vitest';
 
 import { convertSourceToPdf } from '../../../src/integrations/documents/convert';
@@ -125,6 +127,40 @@ describe('convertSourceToPdf', () => {
     // PDF export dies without one. Written per run because the config needs
     // absolute paths and the build machine's differ from the runtime's.
     expect(seen?.FONTCONFIG_FILE).toMatch(/ada-convert-.*fonts\.conf$/);
+  });
+
+  it('pins the deployed font set: Libertine rejected, Liberation preferred', async () => {
+    // The parity measurement caught production resolving real documents to
+    // the bundle's Linux Libertine G — whose used glyphs carry no toUnicode
+    // map — while the same conversion locally resolved to a mapped font. The
+    // same file was less conformant deployed than local, invisibly. So the
+    // per-run fontconfig is a pin, not a search path: the unmappable family
+    // is rejected outright, and the generic families name the Liberation set
+    // shipped for exactly this.
+    let conf = '';
+    await convertSourceToPdf('in.docx', 'out.pdf', {
+      runtime: {
+        available: true,
+        sofficeBin: '/nonexistent/program/soffice',
+        libraryPath: '/bundle/.syslibs',
+      },
+      executor: async (_bin, _args, options) => {
+        const file = options.env?.FONTCONFIG_FILE;
+        if (typeof file === 'string' && conf === '') {
+          conf = await readFile(file, 'utf8');
+        }
+        return { stdout: '', stderr: '' };
+      },
+    });
+
+    expect(conf).toContain('<rejectfont>');
+    expect(conf).toContain('LinLibertine');
+    expect(conf).toContain('LinBiolinum');
+    expect(conf).toContain('<family>Liberation Serif</family>');
+    expect(conf).toContain('<family>Liberation Sans</family>');
+    expect(conf).toContain('<family>Liberation Mono</family>');
+    // Still anchored on the bundle's own fonts directory.
+    expect(conf).toContain('/nonexistent/share/fonts');
   });
 
   it('leaves the loader alone for a host install', async () => {

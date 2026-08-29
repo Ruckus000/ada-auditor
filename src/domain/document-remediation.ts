@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type { DocumentStructure } from './document-structure';
 
 /**
@@ -56,6 +58,25 @@ export type ConversionProvenance = {
  * nothing they did not supply. `logSafe` below strips even that, because a log
  * line persists and travels where a response does not.
  */
+/**
+ * The conformance verdict from the product's second instrument.
+ *
+ * `checker: 'none'` is load-bearing: a host without the checker says
+ * "conformance not checked" on every surface, never "clean" — a silent clause
+ * is the defect the second instrument exists to end, and a missing checker
+ * must not reintroduce it. Clause identifiers only, never content.
+ */
+export const conformanceSchema = z.union([
+  z.object({ checker: z.literal('verapdf-ua1'), compliant: z.literal(true) }),
+  z.object({
+    checker: z.literal('verapdf-ua1'),
+    compliant: z.literal(false),
+    failingClauses: z.array(z.string()),
+  }),
+  z.object({ checker: z.literal('none'), reason: z.literal('unavailable') }),
+]);
+export type Conformance = z.infer<typeof conformanceSchema>;
+
 export type RemediationSummary = {
   title: TitleOutcome['kind'];
   /** Present only when there is one; never invented. */
@@ -76,7 +97,71 @@ export type RemediationSummary = {
    * never a silent gap. Absent (never empty) when nothing needs a person.
    */
   needs?: Array<{ criterion: string; item: string }>;
+  /**
+   * What the reference checker said about this exact file.
+   *
+   * Optional because readings made before the second instrument shipped are
+   * stored verbatim and cannot gain it; surfaces render its absence exactly
+   * as `checker: 'none'` — "conformance not checked" — never as clean.
+   */
+  conformance?: Conformance;
 };
+
+/**
+ * Fold the reference checker's verdict into a summary.
+ *
+ * Pure, so the translation below is testable without a JVM: the verdict is
+ * handed in, never fetched. Two clause families become items a person can act
+ * on; everything else lands in a catch-all naming the clause ids — the
+ * promise generalized, so no clause present or future fails in silence.
+ * Families our own vocabulary already voices (language, figures, headings,
+ * the title, annotation nesting) are left to the items that voice them,
+ * or every document would say everything twice.
+ */
+export function withConformance(
+  summary: RemediationSummary,
+  conformance: Conformance,
+): RemediationSummary {
+  const out: RemediationSummary = { ...summary, conformance };
+  if (conformance.checker !== 'verapdf-ua1' || conformance.compliant) {
+    return out;
+  }
+
+  const items: Array<{ criterion: string; item: string }> = [];
+  const voicedByOurInstrument = /^(7\.2-|7\.2\.|7\.3-|7\.4|7\.1-9|7\.18\.)/;
+  const fonts = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4'));
+  const untagged = conformance.failingClauses.filter((clause) => clause.startsWith('7.1-3'));
+  const rest = conformance.failingClauses.filter(
+    (clause) =>
+      !clause.startsWith('7.21.4') &&
+      !clause.startsWith('7.1-3') &&
+      !voicedByOurInstrument.test(clause),
+  );
+
+  if (fonts.length > 0) {
+    items.push({
+      criterion: 'PDF/UA 7.21.4',
+      item: 'the fonts were never embedded by whatever produced this PDF — supply the Word source it was exported from, or re-export it with fonts embedded',
+    });
+  }
+  if (untagged.length > 0) {
+    items.push({
+      criterion: 'PDF/UA 7.1-3',
+      item: 'page content is neither tagged nor marked as decoration — tagging it needs the source document or a person, because guessing the structure would be inventing it',
+    });
+  }
+  if (rest.length > 0) {
+    items.push({
+      criterion: 'PDF/UA',
+      item: `${rest.length} further PDF/UA check${rest.length === 1 ? ' fails' : 's fail'} (${rest.join(', ')}) — a person must review`,
+    });
+  }
+
+  if (items.length === 0) {
+    return out;
+  }
+  return { ...out, needs: [...(summary.needs ?? []), ...items] };
+}
 
 /**
  * The honest half of the record.
@@ -110,6 +195,12 @@ export type RemediationSummary = {
  * headings begin at H2+, which is not a *skip between* consecutive headings
  * and so slipped the version-2 check. Same decision family, new vocabulary.
  *
+ * 6 — the summary gained `conformance`: the reference checker's own verdict
+ * (veraPDF UA-1), with clause-translated punch items and a catch-all so no
+ * clause can fail silently. Absence of the field reads as "not checked",
+ * never as clean — older stored readings cannot gain it.
+ */
+/**
  * 5 — the punch list gained the unnested-annotation item (1.3.1). Found by
  * the corpus check that asserts no document is delivered non-conformant in
  * silence: three real PDFs were, all of them on annotations our reading could
@@ -121,7 +212,7 @@ export type RemediationSummary = {
  * work somebody can do, which is a different sentence and a new one in the
  * vocabulary.
  */
-export const INSTRUMENT_VERSION = 5;
+export const INSTRUMENT_VERSION = 6;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;

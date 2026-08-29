@@ -45,7 +45,23 @@ type Summary = {
   figures: number;
   gaps: string[];
   needs?: Array<{ criterion: string; item: string }>;
+  conformance?:
+    | { checker: 'verapdf-ua1'; compliant: true }
+    | { checker: 'verapdf-ua1'; compliant: false; failingClauses: string[] }
+    | { checker: 'none'; reason: 'unavailable' };
 };
+
+/**
+ * The reference checker's verdict, in one line. Absence and `checker: 'none'`
+ * read the same — "not checked" — because a reading without a verdict must
+ * never look clean.
+ */
+function conformanceLine(summary: Summary): string {
+  const c = summary.conformance;
+  if (c === undefined || c.checker === 'none') return 'PDF/UA: not checked on this host';
+  if (c.compliant) return 'PDF/UA: compliant (veraPDF)';
+  return `PDF/UA: ${c.failingClauses.length} check${c.failingClauses.length === 1 ? '' : 's'} failing (veraPDF)`;
+}
 
 /** One inventory row, as the client-scoped GET returns it. */
 type ClientDocument = {
@@ -348,6 +364,7 @@ function SummaryView({ summary }: { summary: Summary }) {
         {summary.tables} tables · {summary.figures} figures
         {summary.titleText ? ` · “${summary.titleText}”` : ' · no title'}
       </p>
+      <p style={noteStyle}>{conformanceLine(summary)}</p>
       {summary.gaps.length === 0 ? (
         <p style={noteStyle}>No machine-detectable gaps.</p>
       ) : (

@@ -9,11 +9,11 @@
 //
 // Usage: npx tsx run-pdf-repair-arm.mts <pdfDir> <harvestMap> <outDir>
 
-import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 import { repairPdfBytes } from '../../src/app/api/_lib/document-conversion';
+import { checkUa1 } from '../../src/integrations/documents/verapdf';
 
 const [pdfDir, harvestMap, outDir] = process.argv.slice(2);
 if (!pdfDir || !harvestMap || !outDir) {
@@ -26,8 +26,6 @@ if (!pdfDir || !harvestMap || !outDir) {
 // every document unreadable — a uniform verdict, which is always the
 // instrument rather than the population.
 const ROOT = join(import.meta.dirname, '..', '..');
-const VERAPDF = join(import.meta.dirname, 'vendor', 'verapdf', 'verapdf');
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 
 mkdirSync(join(outDir, 'pdf'), { recursive: true });
 
@@ -39,33 +37,20 @@ for (const line of readFileSync(harvestMap, 'utf8').split('\n')) {
   }
 }
 
-function ua1(pdf: string): { pass: boolean; clauses: string[] } | null {
-  if (!existsSync(VERAPDF)) return null;
-  const env = { ...process.env, JAVA_HOME, PATH: `${JAVA_HOME}/bin:${process.env.PATH}` };
-  let raw = '';
-  try {
-    raw = execFileSync(VERAPDF, ['-f', 'ua1', '--format', 'json', pdf], {
-      maxBuffer: 64 * 1024 * 1024,
-      env,
-    }).toString('utf8');
-  } catch (error) {
-    const e = error as { status?: number; stdout?: Buffer };
-    if (e.status !== 1 || !e.stdout?.length) return null;
-    raw = e.stdout.toString('utf8');
-  }
-  const result = JSON.parse(raw).report.jobs[0]?.validationResult?.[0];
-  const summaries = (result?.details?.ruleSummaries ?? []) as Array<{
-    clause: string;
-    testNumber: number;
-    failedChecks: number;
-  }>;
+// The graduated wrapper — the same parse this file used to carry, moved
+// rather than copied, so the runner and the product cannot drift on how a
+// veraPDF report is read.
+async function ua1(pdf: string): Promise<{ pass: boolean; clauses: string[] } | null> {
+  const verdict = await checkUa1(pdf, { root: ROOT });
+  if (verdict.checker === 'none') return null;
   return {
-    pass: result?.compliant === true,
-    clauses: summaries.filter((r) => r.failedChecks > 0).map((r) => `${r.clause}-${r.testNumber}`),
+    pass: verdict.compliant,
+    clauses: verdict.compliant ? [] : verdict.failingClauses,
   };
 }
 
 const rows = [];
+const drift: string[] = [];
 let repaired = 0;
 let refused = 0;
 let greenAfter = 0;
@@ -74,7 +59,7 @@ let clausesRemoved = 0;
 for (const file of readdirSync(pdfDir).filter((f) => f.endsWith('.pdf')).sort()) {
   const path = join(pdfDir, file);
   const id = basename(file, '.pdf');
-  const before = ua1(path);
+  const before = await ua1(path);
 
   const outcome = await repairPdfBytes(new Uint8Array(readFileSync(path)), `arm-${id}`, {
     sourceName: nameOf.get(id) ?? file,
@@ -95,7 +80,7 @@ for (const file of readdirSync(pdfDir).filter((f) => f.endsWith('.pdf')).sort())
 
   const outPath = join(outDir, 'pdf', `${id}.pdf`);
   writeFileSync(outPath, outcome.pdf);
-  const after = ua1(outPath);
+  const after = await ua1(outPath);
 
   const removed = (before?.clauses ?? []).filter((c) => !(after?.clauses ?? []).includes(c));
   const added = (after?.clauses ?? []).filter((c) => !(before?.clauses ?? []).includes(c));
@@ -103,6 +88,19 @@ for (const file of readdirSync(pdfDir).filter((f) => f.endsWith('.pdf')).sort())
   clausesRemoved += removed.length;
   const green = after?.pass === true && outcome.summary.gaps.length === 0;
   if (green) greenAfter += 1;
+
+  // The drift guard: the verdict the PRODUCT put on the reading must agree
+  // with an independent check of the same bytes. A mismatch is a wiring bug
+  // — same engine, same file — and it fails the run loudly below.
+  const product = outcome.summary.conformance;
+  const productClauses =
+    product?.checker === 'verapdf-ua1' && !product.compliant ? [...product.failingClauses].sort() : [];
+  const independentClauses = [...(after?.clauses ?? [])].sort();
+  const agrees =
+    product?.checker === 'verapdf-ua1' &&
+    product.compliant === (after?.pass ?? false) &&
+    JSON.stringify(productClauses) === JSON.stringify(independentClauses);
+  if (!agrees) drift.push(id);
 
   rows.push({
     id,
@@ -145,4 +143,10 @@ console.log(
     (silent.length > 0 ? ` — ${silent.map((r) => r.id).join(', ')}` : ''),
 );
 
+console.log(
+  `product verdict vs independent veraPDF (must agree on every repaired document): ` +
+    (drift.length === 0 ? 'agree' : `DRIFT on ${drift.join(', ')}`),
+);
+
 writeFileSync(join(outDir, 'rows.json'), JSON.stringify(rows, null, 2));
+if (drift.length > 0) process.exit(1);
