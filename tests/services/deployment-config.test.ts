@@ -150,3 +150,44 @@ describe('readDeploymentConfig', () => {
     expect(get({ AI_GATEWAY_API_KEY: 'gw' }, 'advisory')?.value).toBe('on');
   });
 });
+
+describe('the passkey row', () => {
+  function row(env: Record<string, string | undefined>) {
+    return readDeploymentConfig(env).settings.find((setting) => setting.key === 'passkeys');
+  }
+
+  it('is off, and not degraded, when neither variable is set', () => {
+    const passkeys = row({});
+    expect(passkeys?.value).toBe('off');
+    // Password sign-in is a supported way to run, and every preview deploy is
+    // expected to look like this. Flagging it would cry wolf everywhere.
+    expect(passkeys?.degraded).toBe(false);
+  });
+
+  it('is available when the id is the origin host', () => {
+    const passkeys = row({
+      AUDITOR_RP_ID: 'console.example.com',
+      AUDITOR_RP_ORIGIN: 'https://console.example.com',
+    });
+    expect(passkeys?.value).toBe('available');
+    expect(passkeys?.degraded).toBe(false);
+  });
+
+  /**
+   * The state this row was rewritten for. Both variables set and disagreeing
+   * used to render as "off" — identical to a deployment that never wanted
+   * passkeys — so an operator who had configured them had nowhere to learn
+   * they had not.
+   */
+  it.each([
+    ['a scheme in the id', 'https://console.example.com', 'https://console.example.com'],
+    ['an origin with no scheme', 'console.example.com', 'console.example.com'],
+    ['an unrelated id', 'somewhere-else.test', 'https://console.example.com'],
+    ['only the id set', 'console.example.com', undefined],
+  ])('flags %s as misconfigured, not off', (unused, id, origin) => {
+    const passkeys = row({ AUDITOR_RP_ID: id, AUDITOR_RP_ORIGIN: origin });
+    expect(passkeys?.value).toBe('misconfigured');
+    expect(passkeys?.degraded).toBe(true);
+    expect(passkeys?.detail).toContain('do not agree');
+  });
+});
