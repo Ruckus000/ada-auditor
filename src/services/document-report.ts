@@ -107,6 +107,9 @@ export function buildDocumentReport(
       // same no-titleText review this construction exists for.
       ...(reading.summary.needs === undefined ? {} : { needs: reading.summary.needs.map((n) => ({ ...n })) }),
       ...(pairs.has(record.id) ? { sourceAvailable: true as const } : {}),
+      ...(reading.summary.conformance === undefined
+        ? {}
+        : { conformance: reading.summary.conformance }),
     });
   }
 

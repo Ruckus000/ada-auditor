@@ -2,11 +2,16 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { summarise, type RemediationSummary } from '../../../domain/document-remediation';
+import {
+  summarise,
+  withConformance,
+  type RemediationSummary,
+} from '../../../domain/document-remediation';
 import { contentChanges } from '../../../domain/document-structure';
 import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/documents/convert';
 import { finishDocument } from '../../../integrations/documents/finish';
 import { inspectDocument } from '../../../integrations/documents/inspect';
+import { checkUa1 } from '../../../integrations/documents/verapdf';
 import { logWarn } from '../../../services/logger';
 import { planRepair } from '../../../services/document-repair';
 import type { UploadRefusal } from './document-upload';
@@ -62,7 +67,14 @@ export async function remediateWordBytes(
     }
 
     const pdf = await readFile(output);
-    return { ok: true, pdf, summary: summarise(result.provenance) };
+    // The second instrument, on the delivered bytes. `checker: 'none'` on a
+    // host without it — visible as "not checked", never as clean.
+    const conformance = await checkUa1(output, {
+      ...(options.root === undefined ? {} : { root: options.root }),
+      ...(options.env === undefined ? {} : { env: options.env }),
+      ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
+    });
+    return { ok: true, pdf, summary: withConformance(summarise(result.provenance), conformance) };
   } finally {
     // Every path, including a throw inside the conversion. `convertSourceToPdf`
     // cleans its own working directory; this is ours.
@@ -174,14 +186,22 @@ export async function repairPdfBytes(
     }
 
     const pdf = await readFile(output);
+    const conformance = await checkUa1(output, {
+      ...(options.root === undefined ? {} : { root: options.root }),
+      ...(options.env === undefined ? {} : { env: options.env }),
+      ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
+    });
     return {
       ok: true,
       pdf,
-      summary: summarise({
-        title: decision.plan.title,
-        sourceLanguage: decision.plan.language,
-        structure: after.value,
-      }),
+      summary: withConformance(
+        summarise({
+          title: decision.plan.title,
+          sourceLanguage: decision.plan.language,
+          structure: after.value,
+        }),
+        conformance,
+      ),
     };
   } finally {
     await rm(work, { recursive: true, force: true });

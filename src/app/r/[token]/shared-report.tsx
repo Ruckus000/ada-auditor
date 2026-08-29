@@ -292,6 +292,13 @@ function DocumentsSection({
                   </a>
                 </>
               ) : null}
+              <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
+                {entry.conformance?.checker === 'verapdf-ua1'
+                  ? entry.conformance.compliant
+                    ? 'PDF/UA: compliant (veraPDF)'
+                    : `PDF/UA: ${entry.conformance.failingClauses.length} check${entry.conformance.failingClauses.length === 1 ? '' : 's'} failing (veraPDF)`
+                  : 'PDF/UA: not checked when this reading was made'}
+              </p>
               {entry.gaps.length === 0 ? (
                 <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
                   No machine-detectable gaps.
