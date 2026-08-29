@@ -39,11 +39,20 @@ suite:
   # `test:hydration` drives the Java stages through the running app, so it has
   # always been able to test class files compiled from another revision -- the
   # defect `8c13433` fixed for `test:documents` and could not fix here, because
-  # the only step that rebuilds ran three lines further down. `[V]` It bit on
-  # 2026-08-29: classes from the 26th, a required `marked` field added to the
-  # schema on the 28th, and two hydration cases failed -- one as a 60 second
-  # timeout naming nothing. Same guard as the step below, so a machine without
-  # a JDK still skips rather than going red.
+  # the only step that rebuilds ran three lines further down.
+  #
+  # What that ordering produced is worth naming, because it disguises itself:
+  # every run tested hydration against the classes the **previous** run left
+  # behind, then compiled the current ones on its way out. So a change to the
+  # Java is invisible here for exactly one run and fine on the next -- a failure
+  # that appears once and heals itself, which is the shape `8c13433` opens by
+  # describing: "failed twice with StackOverflowError, then passed eight times.
+  # I called it intermittent. It was not." Same trap, one suite over.
+  #
+  # `[V]` It bit on 2026-08-29: classes from the 26th, a required `marked` field
+  # added to the schema on the 28th, and two hydration cases failed -- one as a
+  # 60 second timeout naming nothing. Same guard as the step below, so a machine
+  # without a JDK still skips rather than going red.
   - if command -v java >/dev/null 2>&1 || [ -x "$JAVA_HOME/bin/java" ]; then npm run build:documents; else echo "no JVM - document stages not built"; fi
   - npm run test:hydration
   - npm run test:browser
