@@ -27,6 +27,7 @@ export function ResultsStage({ detail }: { detail: ClientDetail }) {
           <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(run.score)} />
           <Stat label="Must fix" value={String(run.mustFix)} tone={run.mustFix > 0} />
           <Stat label="Should fix" value={String(run.shouldFix)} />
+          <Stat label="Needs review" value={String(run.needsReview)} />
           <Stat label="Pages audited" value={String(run.pagesAudited)} />
         </dl>
       ) : null}

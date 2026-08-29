@@ -9,7 +9,7 @@ const journey = (over: Partial<JourneySummary> = {}): JourneySummary => ({
 });
 const run = (over: Partial<RunSummary> = {}): RunSummary => ({
   requestId: 'r1', createdAt: '2026-08-19T00:00:00.000Z', verdict: 'pass', score: 90,
-  mustFix: 0, shouldFix: 0, pagesAudited: 1, evidenceStatus: 'complete',
+  mustFix: 0, shouldFix: 0, needsReview: 0, pagesAudited: 1, evidenceStatus: 'complete',
   durationMs: 1000, slowestPageMs: 500, ...over,
 });
 const detail = (over: Partial<ClientDetail>): ClientDetail => ({

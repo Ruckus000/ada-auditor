@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   displaySeverity,
   findingDisplayStatus,
+  severityCounts,
 } from '../../src/services/presentation/severity';
 
 describe('displaySeverity', () => {
@@ -121,5 +122,62 @@ describe('findingDisplayStatus', () => {
     expect(
       findingDisplayStatus({ inLatestRun: false, inBaseline: true, triage: 'assigned' }),
     ).toBe('Fixed');
+  });
+});
+
+describe('severityCounts', () => {
+  const finding = (severity: string, source = 'deterministic') => ({ severity, source });
+
+  it('counts the three buckets the screens show', () => {
+    const counts = severityCounts([
+      finding('critical'),
+      finding('major'),
+      finding('major'),
+      finding('needs-review'),
+      finding('needs-review'),
+      finding('needs-review'),
+    ]);
+
+    expect(counts).toEqual({ mustFix: 1, shouldFix: 2, needsReview: 3 });
+  });
+
+  /**
+   * The reason this helper exists. Everything HTML_CodeSniffer emits is
+   * `needs-review` by design, and on a real fixture run that was 130 findings
+   * of 139 — so a summary counting only `must` and `should` described nine of
+   * them and called it the audit.
+   */
+  it('counts a second engine\'s findings, which are all needs-review', () => {
+    const counts = severityCounts([
+      finding('critical'),
+      ...Array.from({ length: 130 }, () => finding('needs-review')),
+    ]);
+
+    expect(counts.needsReview).toBe(130);
+    expect(counts.mustFix).toBe(1);
+  });
+
+  /**
+   * Advisory findings are `gateable: false` and are reported under their own
+   * name. Absorbing them into the review queue would present a model's opinion
+   * as outstanding work.
+   */
+  it('excludes advisory findings from every bucket', () => {
+    const counts = severityCounts([finding('advisory', 'ai-advisory')]);
+
+    expect(counts).toEqual({ mustFix: 0, shouldFix: 0, needsReview: 0 });
+  });
+
+  /**
+   * `displaySeverity` sends an unrecognised severity to `review` rather than
+   * to a low-priority bucket, and the counts have to agree with it — a finding
+   * nobody can categorise is precisely one a human should see.
+   */
+  it('counts an unknown severity as needing review, as displaySeverity does', () => {
+    expect(severityCounts([finding('bizarre')]).needsReview).toBe(1);
+  });
+
+  it('counts nothing for an empty run', () => {
+    expect(severityCounts([])).toEqual({ mustFix: 0, shouldFix: 0, needsReview: 0 });
   });
 });

@@ -246,4 +246,96 @@ describe('summarizeRun', () => {
     expect(report.ciStatus).toBe('inconclusive');
     expect(report.executiveSummary.blockingFindings).toBe(0);
   });
+
+  /**
+   * The queue an operator works, counted in findings rather than in checks.
+   *
+   * `checksNeedingReview` — axe's undecided *checks* — was the only number
+   * near this, and a real run reported it as `2 undecided` beside 130
+   * needs-review findings, because HTML_CodeSniffer emits everything at that
+   * severity and contributes no check counts at all.
+   */
+  it('counts needs-review findings as the human-review queue', () => {
+    const report = summarizeRun({
+      findings: [
+        finding({ code: 'color-contrast', severity: 'needs-review' }),
+        finding({ code: 'htmlcs:notice:1_3_2.G57', severity: 'needs-review' }),
+        finding({ code: 'htmlcs:1_3_1.H48', severity: 'needs-review' }),
+        finding({ code: 'image-alt', severity: 'critical' }),
+      ],
+      evidenceStatus: 'complete',
+    });
+
+    expect(report.executiveSummary.needsReviewFindings).toBe(3);
+    expect(report.executiveSummary.totalFindings).toBe(4);
+  });
+
+  it('keeps the review queue out of the gate it can never enter', () => {
+    const report = summarizeRun({
+      findings: [finding({ severity: 'needs-review', conformanceLevel: 'A' })],
+      evidenceStatus: 'complete',
+    });
+
+    // A needs-review finding carries a conformance level like any other, and
+    // still cannot fail a run — the steady-state rule. Counting it in the
+    // queue must not have changed that.
+    expect(report.executiveSummary.needsReviewFindings).toBe(1);
+    expect(report.executiveSummary.blockingFindings).toBe(0);
+    expect(report.ciStatus).toBe('pass');
+  });
+
+  it('does not count an advisory finding as review work', () => {
+    const report = summarizeRun({
+      findings: [
+        {
+          code: 'ai-advisory',
+          severity: 'advisory',
+          source: 'ai-advisory',
+          gateable: false,
+          message: 'Alt text does not describe the image.',
+          confidence: 0.8,
+        },
+      ],
+      evidenceStatus: 'complete',
+    });
+
+    expect(report.executiveSummary.needsReviewFindings).toBe(0);
+    expect(report.executiveSummary.advisoryFindings).toBe(1);
+  });
+
+  /**
+   * Incomplete evidence zeroes `blockingFindings`, because nothing can be
+   * asserted to fail. It must not zero the queue: whatever findings survived
+   * are still work, and reporting 0 would say the opposite of "we could not
+   * tell".
+   */
+  it('still reports the queue when evidence is incomplete', () => {
+    const report = summarizeRun({
+      findings: [finding({ severity: 'needs-review' })],
+      evidenceStatus: 'degraded',
+    });
+
+    expect(report.ciStatus).toBe('inconclusive');
+    expect(report.executiveSummary.blockingFindings).toBe(0);
+    expect(report.executiveSummary.needsReviewFindings).toBe(1);
+  });
 });
+
+/** A deterministic finding with only the fields these assertions care about. */
+function finding(over: Partial<DeterministicFinding> = {}): DeterministicFinding {
+  return {
+    code: 'image-alt',
+    severity: 'critical',
+    source: 'deterministic',
+    title: 'Images must have alternate text',
+    message: 'Element does not have an alt attribute',
+    remediation: { anyOf: [], allOf: [] },
+    wcagCriteria: ['1.1.1'],
+    conformanceLevel: 'A',
+    pageUrl: 'https://app.example.com/dashboard',
+    selector: '#hero',
+    htmlSnippet: '<img src="hero.png">',
+    helpUrl: 'https://dequeuniversity.com/rules/axe/4.12/image-alt',
+    ...over,
+  } as DeterministicFinding;
+}

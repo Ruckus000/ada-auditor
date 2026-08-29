@@ -1,6 +1,6 @@
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
 import type { ClientStore, JourneyStore } from '../domain/platform';
-import { displaySeverity } from './presentation/severity';
+import { severityCounts } from './presentation/severity';
 import { runVerdict, type VerdictKind } from './presentation/verdict';
 
 /**
@@ -32,6 +32,12 @@ export type PortfolioRow = {
     score: number | null;
     mustFix: number;
     shouldFix: number;
+    /**
+     * The human-review queue. Since HTML_CodeSniffer joined axe this is
+     * routinely the largest of the three, so a row showing only the first two
+     * describes a fraction of the run.
+     */
+    needsReview: number;
     pagesAudited: number;
   } | null;
   /** True until the first completed run — the portfolio's "Finish setup" hint reads this. */
@@ -39,8 +45,6 @@ export type PortfolioRow = {
 };
 
 function summarise(run: StoredRunRecord): NonNullable<PortfolioRow['lastRun']> {
-  const deterministic = run.findings.filter((finding) => finding.source === 'deterministic');
-
   return {
     requestId: run.requestId,
     createdAt: run.createdAt,
@@ -50,8 +54,11 @@ function summarise(run: StoredRunRecord): NonNullable<PortfolioRow['lastRun']> {
       findings: run.findings,
     }),
     score: run.score ?? null,
-    mustFix: deterministic.filter((f) => displaySeverity(f.severity) === 'must').length,
-    shouldFix: deterministic.filter((f) => displaySeverity(f.severity) === 'should').length,
+    // Counted by `presentation/severity`, not here. This screen and the client
+    // detail screen held one inline copy of the filter each, and the second of
+    // those is what the client's shared report renders — two copies of a rule
+    // that has to agree, on the two documents that must not disagree.
+    ...severityCounts(run.findings),
     pagesAudited: run.pages?.length ?? 0,
   };
 }

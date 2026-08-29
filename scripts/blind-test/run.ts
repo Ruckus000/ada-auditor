@@ -146,7 +146,12 @@ async function main() {
     console.log(
       `verdict ${report.ciStatus} · score ${report.score ?? 'null'} · evidence ${report.evidenceStatus} · ` +
         `${report.executiveSummary.totalFindings} findings, ${report.executiveSummary.blockingFindings} gating, ` +
-        `${report.checksNeedingReview} undecided · advisory ${report.executiveSummary.advisoryFindings}`,
+        // Both numbers, each labelled for what it counts. This line used to
+        // print only the second under the word "undecided", which read as the
+        // size of the review queue and was short of it by sixty-five times.
+        `${report.executiveSummary.needsReviewFindings} to review ` +
+        `(${report.checksNeedingReview} axe-undecided) · ` +
+        `advisory ${report.executiveSummary.advisoryFindings}`,
     );
     console.log(
       `journey ${report.phaseMs.journey}ms · advisory ${report.phaseMs.advisory}ms · ` +
