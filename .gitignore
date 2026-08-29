@@ -48,3 +48,8 @@ skills-lock.json
 # Blind-test output. The fixture sites and their answer keys are checked in;
 # what one run of the auditor made of them is a measurement, not a source.
 /.blind-test/
+
+# Document blind-test output: raw route responses and delivered PDF bytes
+# derived from real documents. Same rule as above — a measurement, not a
+# source, and real bytes never land in git.
+/.doc-blind-test/
