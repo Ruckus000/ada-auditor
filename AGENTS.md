@@ -94,7 +94,9 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - Domain/service unit tests required for contract and reporting changes
 - Chaos-style regressions required for steady-state claims (incomplete evidence, hint conflicts, scope fail-closed, complete-evidence CI fail path)
 - Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos`, `npm run build` and `npm run test:hydration` evidence
-- `npm run typecheck`, not bare `tsc`, and it is a CI gate. `tsconfig.json`
+- `npm run typecheck`, not bare `tsc`, and it is a CI gate. It runs
+  `next typegen` first because `next-env.d.ts` is generated and gitignored and
+  the gate runs before anything builds — see `CLAUDE.md`. `tsconfig.json`
   excludes `tests/integrations/**` so `next build` will not type-check a
   Playwright suite it never bundles — which meant the browser and hydration
   suites were type-checked by nothing, and “tsc clean” in a commit message was
