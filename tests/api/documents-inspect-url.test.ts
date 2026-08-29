@@ -62,6 +62,7 @@ const PDF_BYTES = new Uint8Array(Buffer.from('%PDF-1.7\nfixture', 'latin1'));
 function structure(over = {}) {
   return documentStructureSchema.parse({
     marked: true,
+    signed: false,
     structureElements: 12,
     textChars: 400,
     images: 0,

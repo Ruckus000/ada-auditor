@@ -75,6 +75,7 @@ function conversionSucceeds() {
         sourceLanguage: 'en-GB',
         structure: documentStructureSchema.parse({
           marked: true,
+          signed: false,
           structureElements: 40,
           textChars: 900,
           images: 0,
@@ -106,6 +107,7 @@ function pdfBytes(): Uint8Array {
 function repairReads(over: Record<string, unknown> = {}) {
   const reading = documentStructureSchema.parse({
     marked: true,
+    signed: false,
     structureElements: 40,
     textChars: 900,
     images: 0,
@@ -366,6 +368,7 @@ describe('POST /api/documents/remediate', () => {
           sourceLanguage: 'en-GB',
           structure: documentStructureSchema.parse({
             marked: true,
+            signed: false,
             structureElements: 4,
             textChars: 100,
             images: 0,

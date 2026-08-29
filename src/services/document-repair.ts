@@ -30,10 +30,10 @@ import { titleFromFilename, type TitleOutcome } from '../domain/document-remedia
  * one a catalog fact, none of them requiring an inference.
  */
 
-/** A PDF with no structure tree, and why that is the end of the road. */
+/** Why a PDF cannot honestly be repaired, and what to do instead. */
 export type RepairRefusal = {
-  kind: 'not-tagged';
-  /** Operator-facing, and true: there is nothing to transcribe. */
+  kind: 'not-tagged' | 'signed';
+  /** Operator-facing, and true: what is in the way and what still works. */
   reason: string;
 };
 
@@ -66,6 +66,28 @@ export function planRepair(
   structure: DocumentStructure,
   sourceName: string | undefined,
 ): RepairDecision {
+  if (structure.signed) {
+    // Repair rewrites the document catalog, and that invalidates a signature.
+    // An incremental save does not rescue it — incremental updates preserve
+    // earlier signatures only for the additive operations DocMDP permits, not
+    // for edits — so there is no version of this that keeps both.
+    //
+    // Refused rather than offered as a trade, because the loss is invisible:
+    // the delivered file looks fine and the signature is simply gone. A
+    // certified municipal record losing its signature is a worse outcome than
+    // the accessibility gap it was repaired for, and the operator cannot see
+    // it happen. Converting a paired Word source stays available and produces
+    // a NEW document, with no signature to destroy.
+    return {
+      repairable: false,
+      refusal: {
+        kind: 'signed',
+        reason:
+          'this PDF carries a digital signature, and repairing it would invalidate that signature — convert the Word source it was exported from instead, or have the signer re-issue it once it is accessible',
+      },
+    };
+  }
+
   if (!isTagged(structure)) {
     // The one thing repair cannot supply. Tagging an untagged PDF means
     // inferring reading order and heading levels from layout, which is the

@@ -163,6 +163,21 @@ public final class Inspect {
             // making a false statement about its own accessibility, and that
             // is a finding rather than a detail — reporting it is the whole
             // difference between "we left a gap" and "somebody asserted".
+            // Whether the document carries a real digital signature.
+            //
+            // PDFBox's own accessor rather than a search for /ByteRange: it
+            // walks the AcroForm's signature fields and returns the signature
+            // dictionaries, so an UNSIGNED signature field — a placeholder
+            // waiting for somebody to sign — correctly reads as unsigned.
+            //
+            // Repair rewrites the document catalog, which invalidates a
+            // signature. An incremental save does not rescue that: it
+            // preserves earlier signatures only for additive operations
+            // DocMDP permits, not for edits. So this fact exists to be
+            // refused on, in `services/document-repair.ts`.
+            json.append("  \"signed\": ")
+                .append(!doc.getSignatureDictionaries().isEmpty())
+                .append(",\n");
             json.append("  \"marked\": ")
                 .append(doc.getDocumentCatalog().getMarkInfo() != null
                     && doc.getDocumentCatalog().getMarkInfo().isMarked())
