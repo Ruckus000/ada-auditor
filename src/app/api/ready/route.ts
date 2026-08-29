@@ -4,7 +4,7 @@ import { createRedisClient } from '../_lib/redis';
 import { isThrottleKvConfigured, KvThrottleStore } from '../_lib/unlock-throttle';
 import { isDatabaseConfigured } from '../../../integrations/persistence';
 import { isCredentialStoreConfigured } from '../../../integrations/persistence/credential-cipher';
-import { sessionSecretIsShared } from '../_lib/principal';
+import { passkeyRelyingPartyStatus, sessionSecretIsShared } from '../_lib/principal';
 import { isBlobConfigured } from '../../../integrations/artifacts/blob-store';
 import { isAiAdvisoryConfigured } from '../../../services/ai-advisory';
 import { isDocumentToolchainAvailable } from '../../../integrations/documents/java-runtime';
@@ -123,6 +123,12 @@ export async function GET(request: Request) {
     documentToolchainAvailable: isDocumentToolchainAvailable(),
     documentConverterAvailable: isDocumentConverterAvailable(),
     chaosEnabled: process.env.CHAOS_ENABLED === 'true',
+    // Three states, not two. `off` is a supported way to run — passkeys are
+    // bound to one origin, so local and preview deployments are expected to
+    // have them off — but `invalid` is a deploy that believes it enabled them
+    // and did not, which used to be indistinguishable from `off` anywhere an
+    // operator could look.
+    passkeySignIn: passkeyRelyingPartyStatus().state,
   };
 
   const ready = checks.auditorRunTokenConfigured && checks.runStoreConfigured;
@@ -216,6 +222,23 @@ export async function GET(request: Request) {
   // array, so anything that makes results untrustworthy has to appear in it.
   // Chaos was reported in `checks` and nowhere else, which meant a production
   // deployment able to serve scripted audit outcomes passed the checklist.
+  // Named reason, no values. The two shapes below are the slips that actually
+  // happen: `AUDITOR_RP_ID` pasted with a scheme, or `AUDITOR_RP_ORIGIN`
+  // pasted without one. Saying which one is wrong is the difference between a
+  // one-minute fix and a guessing game against an encrypted variable.
+  if (checks.passkeySignIn === 'invalid') {
+    const reason = passkeyRelyingPartyStatus();
+    const detail =
+      reason.state === 'invalid' && reason.reason === 'origin_unparseable'
+        ? 'AUDITOR_RP_ORIGIN is not a URL — it needs the scheme, as in https://console.example.com.'
+        : reason.state === 'invalid' && reason.reason === 'id_not_host_or_parent'
+          ? "AUDITOR_RP_ID must be AUDITOR_RP_ORIGIN's hostname or a parent of it, with no scheme and no path."
+          : 'Only one of AUDITOR_RP_ID and AUDITOR_RP_ORIGIN is set; passkeys need both.';
+    warnings.push(
+      `Passkey sign-in is configured but unusable, so everyone is signing in with a password. ${detail}`,
+    );
+  }
+
   if (checks.chaosEnabled) {
     warnings.push(
       'chaos_enabled: CHAOS_ENABLED is set, so callers can request scripted audit outcomes. This must not be set in production.',

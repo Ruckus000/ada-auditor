@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { StoredFinding, StoredRunRecord } from '../../src/domain/persistence';
 import { MemoryPlatformStore } from '../../src/integrations/persistence/memory-platform-store';
 import { MemoryRunStore } from '../../src/integrations/persistence/memory-run-store';
@@ -13,7 +13,18 @@ beforeEach(() => {
 });
 
 function deps() {
-  return { clients: platform, journeys: platform, runs };
+  return { clients: platform, journeys: platform, credentials: platform, runs };
+}
+
+/** A journey whose one step logs in with `ref`. */
+async function loginJourney(clientId: string, ref: string) {
+  await platform.upsertJourney({
+    id: `j-${ref}`,
+    clientId,
+    name: 'Login',
+    targetUrl: 'https://acme.test/',
+    steps: [{ action: 'login', type: 'fill', selector: '#u', credentialRef: ref, field: 'user' }],
+  });
 }
 
 function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
@@ -247,6 +258,11 @@ describe('buildClientDetail, for a journey whose last run failed', () => {
  * `credentialsForSteps` has its own tests; this is the other half, and the
  * half three separate guards in this repo have shipped without. A rule with no
  * caller is green forever.
+ *
+ * Two sources now answer the same question — the deployment's environment and
+ * the per-client store — so these cover the seam between them. Presence only
+ * throughout: nothing below asserts a value, because nothing here may carry
+ * one.
  */
 describe('buildClientDetail, on credentials', () => {
   it('reports which of a journey’s credentials are configured', async () => {
@@ -278,6 +294,86 @@ describe('buildClientDetail, on credentials', () => {
     }
   });
 
+  it('counts a credential stored through the editor, with no env var set', async () => {
+    // The state this screen used to get wrong: the value lives in the store,
+    // the environment has never heard of it, and the list printed "no username
+    // and no password configured" in red over a login that resolves.
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await loginJourney('acme', 'stored');
+    await platform.setClientCredential('acme', 'stored', {
+      user: 'auditor@acme.test',
+      pass: 'hunter2',
+    });
+
+    const detail = await buildClientDetail('acme', deps());
+
+    expect(detail?.journeys[0].credentials).toEqual([{ ref: 'stored', user: true, pass: true }]);
+  });
+
+  it('ORs the two sources per field rather than letting one win', async () => {
+    // Half from each. A store row that answered for the whole credential would
+    // hide a missing env half, and an env answer that shadowed the store is
+    // the bug this replaces.
+    const previous = process.env.AUDIT_CREDENTIAL_SPLIT_USER;
+    process.env.AUDIT_CREDENTIAL_SPLIT_USER = 'auditor@acme.test';
+
+    try {
+      await platform.upsertClient({ id: 'acme', name: 'Acme' });
+      await loginJourney('acme', 'split');
+      // The store holds a pair, so `pass` can only come from it; what this
+      // pins is that the env `user` survives the merge rather than being
+      // overwritten by the row beside it.
+      await platform.setClientCredential('acme', 'split', { user: 'stored', pass: 'hunter2' });
+
+      const detail = await buildClientDetail('acme', deps());
+
+      expect(detail?.journeys[0].credentials).toEqual([
+        { ref: 'split', user: true, pass: true },
+      ]);
+    } finally {
+      if (previous === undefined) delete process.env.AUDIT_CREDENTIAL_SPLIT_USER;
+      else process.env.AUDIT_CREDENTIAL_SPLIT_USER = previous;
+    }
+  });
+
+  it('does not credit a ref stored under a different name', async () => {
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await loginJourney('acme', 'wanted');
+    await platform.setClientCredential('acme', 'other', { user: 'u', pass: 'p' });
+
+    const detail = await buildClientDetail('acme', deps());
+
+    expect(detail?.journeys[0].credentials).toEqual([{ ref: 'wanted', user: false, pass: false }]);
+  });
+
+  it('does not credit another client’s stored credential', async () => {
+    // `listClientCredentialRefs` is asked for one client, and the screen it
+    // feeds is that client's. Crossing clients here would be the same class of
+    // mistake as the fixture that showed one client's findings under another.
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertClient({ id: 'beta', name: 'Beta' });
+    await loginJourney('acme', 'shared');
+    await platform.setClientCredential('beta', 'shared', { user: 'u', pass: 'p' });
+
+    const detail = await buildClientDetail('acme', deps());
+
+    expect(detail?.journeys[0].credentials).toEqual([{ ref: 'shared', user: false, pass: false }]);
+  });
+
+  it('carries no stored value or timestamp to the screen', async () => {
+    // The store's presence row has an `updatedAt` this shape does not; spread
+    // it in and the write-only surface starts widening one field at a time.
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await loginJourney('acme', 'stored');
+    await platform.setClientCredential('acme', 'stored', { user: 'auditor', pass: 'hunter2' });
+
+    const json = JSON.stringify((await buildClientDetail('acme', deps()))?.journeys[0].credentials);
+
+    expect(json).not.toContain('hunter2');
+    expect(json).not.toContain('auditor');
+    expect(json).not.toContain('updatedAt');
+  });
+
   it('says nothing for a journey that names none', async () => {
     await platform.upsertClient({ id: 'acme', name: 'Acme' });
     await platform.upsertJourney({
@@ -288,6 +384,24 @@ describe('buildClientDetail, on credentials', () => {
     });
 
     expect((await buildClientDetail('acme', deps()))?.journeys[0].credentials).toEqual([]);
+  });
+
+  it('does not ask the credential store when no journey names one', async () => {
+    // Every client page would otherwise pay a query for a question it has not
+    // asked. Same stance as `run-credentials`, and worth pinning because the
+    // cost is invisible from the screen.
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({
+      id: 'j1',
+      clientId: 'acme',
+      name: 'Plain',
+      steps: [{ action: 'navigate', type: 'goto', path: '/' }],
+    });
+    const listClientCredentialRefs = vi.fn(platform.listClientCredentialRefs.bind(platform));
+
+    await buildClientDetail('acme', { ...deps(), credentials: { listClientCredentialRefs } });
+
+    expect(listClientCredentialRefs).not.toHaveBeenCalled();
   });
 });
 

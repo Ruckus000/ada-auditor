@@ -81,6 +81,13 @@ jobs:
         env:
           CHAOS_ENABLED: 'true'
       - run: npm run build
+      # Before hydration: `test:hydration` uploads a real PDF and the JVM
+      # answers it, and the toolchain resolver counts compiled classes as
+      # availability. Without this the document cases either skip silently on
+      # a fresh runner or, worse on a warm one, run against classes built from
+      # different source. localci.yml carries the same ordering and the longer
+      # note.
+      - run: npm run build:documents
       # Drives the built app in a real browser. The unit suite, the type
       # checker and the build are all blind to whether a page hydrates.
       - run: npm run test:hydration

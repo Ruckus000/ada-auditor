@@ -85,6 +85,7 @@ function conversionSucceeds() {
         sourceLanguage: 'en-GB',
         structure: documentStructureSchema.parse({
           marked: true,
+          signed: false,
           structureElements: 40,
           textChars: 900,
           images: 0,

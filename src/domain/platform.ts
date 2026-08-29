@@ -356,6 +356,86 @@ export interface OperatorStore {
   setOperatorDisabled(id: string, disabled: boolean): Promise<void>;
 }
 
+/**
+ * One passkey an operator can sign in with.
+ *
+ * The stored half is the **public** key, which is why this type has no
+ * `WithSecret` sibling the way `StoredOperator` does: there is nothing here
+ * that is dangerous to read. That is the whole point of the mechanism — a
+ * dump of this table lets an attacker verify signatures, never make them.
+ *
+ * An operator may have several, one per device. That is what makes a lost
+ * laptop survivable without the CLI: the phone still signs in.
+ */
+export type StoredOperatorPasskey = {
+  /** Base64url, chosen by the authenticator. Unique across all operators. */
+  credentialId: string;
+  operatorId: string;
+  /** Base64url COSE public key, as the authenticator encoded it. */
+  publicKey: string;
+  /**
+   * The authenticator's own use counter, kept so a cloned key can be spotted.
+   *
+   * Stored here, but **judged by the verifier** — the rule is subtler than it
+   * looks (a synced passkey reports zero forever, so "must increase" would
+   * lock out the passkeys most people have) and it lives in exactly one place:
+   * `integrations/webauthn/verify.ts`, which explains it.
+   */
+  signCounter: number;
+  /** Authenticator hints (`usb`, `internal`, `hybrid`…), as given. Optional. */
+  transports?: string[];
+  /** Operator-supplied name for the device. UNTRUSTED — escape on render. */
+  label: string;
+  createdAt: string;
+  lastUsedAt?: string;
+};
+
+/**
+ * Bounds the device name an operator can type. Long enough for "Sam's work
+ * MacBook Touch ID", short enough that the column is not a place to store
+ * something else.
+ */
+export const PASSKEY_LABEL_MAX_LENGTH = 64;
+
+/**
+ * Thrown when a credential id is already on record.
+ *
+ * A typed error rather than a driver code, because the route has to tell one
+ * outcome apart from every other store failure and the two implementations
+ * fail differently — Postgres raises a unique violation, the in-memory double
+ * raises whatever it likes. Without this the route's only honest option is to
+ * treat *any* throw as a duplicate, which reports a database outage to the
+ * operator as a device they have already registered.
+ */
+export class DuplicatePasskeyError extends Error {}
+
+export interface OperatorPasskeyStore {
+  listOperatorPasskeys(operatorId: string): Promise<StoredOperatorPasskey[]>;
+  /**
+   * The sign-in lookup. By credential id alone, because a discoverable
+   * credential identifies its own operator — the assertion arrives with no
+   * email and no session, and the credential is the only thing naming who is
+   * signing in.
+   */
+  getOperatorPasskeyByCredentialId(
+    credentialId: string,
+  ): Promise<StoredOperatorPasskey | null>;
+  /** Throws `DuplicatePasskeyError` when the credential id already exists. */
+  insertOperatorPasskey(passkey: StoredOperatorPasskey): Promise<void>;
+  /** After a successful assertion: advance the counter, stamp the use. */
+  recordOperatorPasskeyUse(
+    credentialId: string,
+    signCounter: number,
+    usedAt: string,
+  ): Promise<void>;
+  /**
+   * Scoped by operator on purpose. Taking the id alone would let any signed-in
+   * operator delete anyone's credential by guessing it — authorization
+   * expressed in the query rather than remembered at each call site.
+   */
+  deleteOperatorPasskey(operatorId: string, credentialId: string): Promise<void>;
+}
+
 export interface ClientStore {
   listClients(): Promise<StoredClient[]>;
   getClient(id: string): Promise<StoredClient | null>;
@@ -780,6 +860,7 @@ export interface ClientDocumentStore {
 }
 
 export type PlatformStore = OperatorStore &
+  OperatorPasskeyStore &
   ClientStore &
   JourneyStore &
   TriageStore &

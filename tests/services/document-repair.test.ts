@@ -15,6 +15,7 @@ function structure(over: Partial<DocumentStructure> = {}): DocumentStructure {
   return {
     structureElements: 42,
     marked: true,
+    signed: false,
     textChars: 900,
     images: 0,
     pages: 3,
@@ -41,6 +42,31 @@ describe('planRepair', () => {
     // leaves an operator with a dead end rather than a next action.
     expect(decision.refusal.reason).toContain('Word source');
     expect(decision.refusal.reason).toContain('tagged by a person');
+  });
+
+  it('refuses a signed PDF, because repair would invalidate the signature', () => {
+    // Rewriting the catalog breaks a signature, and an incremental save does
+    // not rescue it — incremental updates preserve earlier signatures only
+    // for the additive operations DocMDP permits. There is no version of
+    // this that keeps both, and the loss is invisible in the delivered file.
+    const decision = planRepair(structure({ signed: true }), 'Recorded_Notice.pdf');
+
+    expect(decision.repairable).toBe(false);
+    if (decision.repairable) return;
+    expect(decision.refusal.kind).toBe('signed');
+    // Names the route that still works rather than leaving a dead end.
+    expect(decision.refusal.reason).toContain('Word source');
+  });
+
+  it('refuses a signed PDF even when it is otherwise perfectly repairable', () => {
+    // The signature check comes first on purpose: a tagged, titled, richly
+    // structured document is exactly the one a repair would happily rewrite.
+    const decision = planRepair(
+      structure({ signed: true, structureElements: 900, title: 'Certified Record' }),
+      'record.pdf',
+    );
+    expect(decision.repairable).toBe(false);
+    if (!decision.repairable) expect(decision.refusal.kind).toBe('signed');
   });
 
   it('refuses on an empty tree even when the document claims to be tagged', () => {

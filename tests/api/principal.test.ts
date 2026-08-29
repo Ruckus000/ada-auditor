@@ -4,7 +4,13 @@ import {
   createSessionValue,
   readOperatorSessionClaims,
 } from '../../src/app/api/_lib/console-session';
-import { resolvePrincipal, sessionSecret, sessionSecretIsShared } from '../../src/app/api/_lib/principal';
+import {
+  passkeyRelyingParty,
+  passkeyRelyingPartyStatus,
+  resolvePrincipal,
+  sessionSecret,
+  sessionSecretIsShared,
+} from '../../src/app/api/_lib/principal';
 import { MemoryPlatformStore } from '../../src/integrations/persistence/memory-platform-store';
 import type { StoredOperator } from '../../src/domain/platform';
 
@@ -116,6 +122,85 @@ describe('operator session cookie', () => {
   // The two formats must not be confusable in either direction.
   it('does not read a machine cookie as an operator cookie', () => {
     expect(readOperatorSessionClaims(createSessionValue(TOKEN), TOKEN)).toBeNull();
+  });
+});
+
+/**
+ * "Off" and "misconfigured" are different facts.
+ *
+ * They used to render identically — the console said passkeys were
+ * unavailable and nothing said why — which is exactly the state a deployment
+ * lands in when someone pastes a scheme into the id or leaves it off the
+ * origin. These cases exist so that silence cannot come back.
+ */
+describe('passkeyRelyingPartyStatus', () => {
+  const original = { id: process.env.AUDITOR_RP_ID, origin: process.env.AUDITOR_RP_ORIGIN };
+
+  function set(id?: string, origin?: string) {
+    if (id === undefined) delete process.env.AUDITOR_RP_ID;
+    else process.env.AUDITOR_RP_ID = id;
+    if (origin === undefined) delete process.env.AUDITOR_RP_ORIGIN;
+    else process.env.AUDITOR_RP_ORIGIN = origin;
+  }
+
+  afterEach(() => set(original.id, original.origin));
+
+  it('is off when neither is set — a supported way to run', () => {
+    set(undefined, undefined);
+    expect(passkeyRelyingPartyStatus()).toEqual({ state: 'off' });
+  });
+
+  it('is configured when the id is the origin host', () => {
+    set('console.example.com', 'https://console.example.com');
+    expect(passkeyRelyingPartyStatus()).toEqual({
+      state: 'configured',
+      rp: { id: 'console.example.com', origin: 'https://console.example.com' },
+    });
+  });
+
+  it('is configured when the id is a parent of the origin host', () => {
+    set('example.com', 'https://console.example.com');
+    expect(passkeyRelyingPartyStatus().state).toBe('configured');
+  });
+
+  // The slip that produced this function: the origin pasted without a scheme.
+  it('names an origin that is not a URL', () => {
+    set('console.example.com', 'console.example.com');
+    expect(passkeyRelyingPartyStatus()).toEqual({
+      state: 'invalid',
+      reason: 'origin_unparseable',
+    });
+  });
+
+  // The other slip: a scheme pasted into the id.
+  it('names an id that is not the origin host', () => {
+    set('https://console.example.com', 'https://console.example.com');
+    expect(passkeyRelyingPartyStatus()).toEqual({
+      state: 'invalid',
+      reason: 'id_not_host_or_parent',
+    });
+  });
+
+  it('names an unrelated id rather than accepting it', () => {
+    set('somewhere-else.test', 'https://console.example.com');
+    expect(passkeyRelyingPartyStatus()).toEqual({
+      state: 'invalid',
+      reason: 'id_not_host_or_parent',
+    });
+  });
+
+  // Half-finished is broken, not off: somebody meant to turn this on.
+  it.each([
+    ['id only', 'console.example.com', undefined],
+    ['origin only', undefined, 'https://console.example.com'],
+  ])('reports %s as invalid rather than off', (unused, id, origin) => {
+    set(id, origin);
+    expect(passkeyRelyingPartyStatus()).toEqual({ state: 'invalid', reason: 'half_set' });
+  });
+
+  it('keeps passkeyRelyingParty null for every invalid shape', () => {
+    set('https://console.example.com', 'https://console.example.com');
+    expect(passkeyRelyingParty()).toBeNull();
   });
 });
 

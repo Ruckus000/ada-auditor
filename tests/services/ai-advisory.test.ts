@@ -20,6 +20,7 @@ import {
   advisoryModel,
   createAiAdvisoryFinding,
   isAiAdvisoryConfigured,
+  modelLacksDataGuarantee,
   requestAiAdvisory,
   SYSTEM_PROMPT,
   type AdvisoryPage,
@@ -93,6 +94,106 @@ describe('isAiAdvisoryConfigured', () => {
     delete process.env.AI_GATEWAY_API_KEY;
     process.env.VERCEL_OIDC_TOKEN = 'oidc-test';
     expect(isAiAdvisoryConfigured()).toBe(true);
+  });
+});
+
+describe('the authenticated-journey guard', () => {
+  const originals = {
+    model: process.env.AUDITOR_ADVISORY_MODEL,
+    key: process.env.AI_GATEWAY_API_KEY,
+  };
+
+  afterEach(() => {
+    for (const [env, value] of [
+      ['AUDITOR_ADVISORY_MODEL', originals.model],
+      ['AI_GATEWAY_API_KEY', originals.key],
+    ] as const) {
+      if (value === undefined) delete process.env[env];
+      else process.env[env] = value;
+    }
+  });
+
+  const page = () => ({
+    page: { key: 'home', url: 'https://client.invalid/', title: 'Home' },
+    axTree: [],
+    axe: { violations: [], incomplete: [], passes: 0 },
+  });
+
+  it('refuses to send an authenticated journey to the unconfigured default', async () => {
+    // The failure this exists to stop is forgetting, not malice: the default
+    // is what runs when nobody thought about it, and it would have carried a
+    // logged-in client's screens to a model with no retention guarantee.
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    delete process.env.AUDITOR_ADVISORY_MODEL;
+    const call = vi.fn();
+
+    const findings = await requestAiAdvisory({
+      pages: [page()] as never,
+      minConfidence: 0,
+      authenticated: true,
+      call,
+    });
+
+    expect(findings).toEqual([]);
+    // Refused before the seam — a test double is still a place.
+    expect(call).not.toHaveBeenCalled();
+  });
+
+  it('refuses any model the gateway marks free, not just the default', async () => {
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    process.env.AUDITOR_ADVISORY_MODEL = 'someone/other-model-free';
+    const call = vi.fn();
+
+    await requestAiAdvisory({
+      pages: [page()] as never,
+      minConfidence: 0,
+      authenticated: true,
+      call,
+    });
+
+    expect(call).not.toHaveBeenCalled();
+  });
+
+  it('runs on an authenticated journey once a model was deliberately chosen', async () => {
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    process.env.AUDITOR_ADVISORY_MODEL = 'openai/gpt-5.4';
+    const call = vi.fn().mockResolvedValue([]);
+
+    await requestAiAdvisory({
+      pages: [page()] as never,
+      minConfidence: 0,
+      authenticated: true,
+      call,
+    });
+
+    expect(call).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves an unauthenticated journey alone — public pages are public text', async () => {
+    process.env.AI_GATEWAY_API_KEY = 'gw-test';
+    delete process.env.AUDITOR_ADVISORY_MODEL;
+    const call = vi.fn().mockResolvedValue([]);
+
+    await requestAiAdvisory({
+      pages: [page()] as never,
+      minConfidence: 0,
+      call,
+    });
+
+    expect(call).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('modelLacksDataGuarantee', () => {
+  it('is honest about being a heuristic', () => {
+    // An explicitly configured model is a DECISION, not proof of a guarantee.
+    // These assertions are the boundary of what the check can actually claim.
+    expect(modelLacksDataGuarantee('minimax/minimax-m3-free')).toBe(true);
+    expect(modelLacksDataGuarantee('vendor/model:free')).toBe(true);
+    expect(modelLacksDataGuarantee('openai/gpt-5.4')).toBe(false);
+    // Not detectable, and deliberately so — naming it here so nobody reads
+    // the guard as stronger than it is.
+    expect(modelLacksDataGuarantee('vendor/some-other-zero-cost-model')).toBe(false);
   });
 });
 
