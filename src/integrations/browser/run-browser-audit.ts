@@ -215,6 +215,10 @@ export async function runBrowserAudit(input: RunBrowserAuditInput) {
       axe: pageAudit.axe,
     })),
     minConfidence: contract.confidencePolicy.minReport,
+    // A journey that signs in walked pages holding real end-user data. The
+    // advisory refuses to send those to a model nobody chose for them; the
+    // steps are the only place that fact lives.
+    authenticated: steps.some((step) => 'credentialRef' in step && step.credentialRef !== undefined),
     call: input.advisoryCall,
   });
   const advisoryMs = Date.now() - advisoryStartedAt;

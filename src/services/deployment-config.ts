@@ -99,6 +99,38 @@ function documentDetail(facts: DeploymentFacts): string {
   return `Document stages run on a JVM and the source path needs LibreOffice; a serverless function has neither, so this is expected on a deployed environment rather than a fault, and nothing else is affected by it. Where it is wanted, install: ${missing.join(' and ')}.`;
 }
 
+/**
+ * Mirrors `passkeyRelyingPartyStatus` in `api/_lib/principal.ts`, over the
+ * `env` this module is handed rather than `process.env` — services take their
+ * environment as a parameter so a test can pass four keys, and importing the
+ * API helper would point this module at the wrong one.
+ */
+function passkeyConfigValue(env: Env): 'available' | 'off' | 'misconfigured' {
+  const id = env.AUDITOR_RP_ID?.trim();
+  const origin = env.AUDITOR_RP_ORIGIN?.trim();
+
+  if (!id && !origin) return 'off';
+  if (!id || !origin) return 'misconfigured';
+
+  try {
+    const host = new URL(origin).hostname;
+    return host === id || host.endsWith(`.${id}`) ? 'available' : 'misconfigured';
+  } catch {
+    return 'misconfigured';
+  }
+}
+
+function passkeyConfigDetail(env: Env): string {
+  switch (passkeyConfigValue(env)) {
+    case 'available':
+      return 'AUDITOR_RP_ID and AUDITOR_RP_ORIGIN. Operators can sign in with a device instead of a password; passwords keep working, and remain the way back in if every device is lost.';
+    case 'misconfigured':
+      return 'Both variables are set but they do not agree, so passkeys are unavailable and the deployment cannot tell you that anywhere else. AUDITOR_RP_ORIGIN needs a scheme (https://console.example.com); AUDITOR_RP_ID is that origin\'s hostname or a parent of it, with no scheme and no path. `/api/ready` names which half is wrong.';
+    default:
+      return 'No AUDITOR_RP_ID / AUDITOR_RP_ORIGIN, so passkeys are unavailable and everyone signs in with a password. Both values are configuration by necessity — a relying party taken from a request header would let an attacker mint credentials against a domain they control.';
+  }
+}
+
 export function readDeploymentConfig(
   env: Env = process.env,
   facts: DeploymentFacts = {},
@@ -127,17 +159,14 @@ export function readDeploymentConfig(
     {
       key: 'passkeys',
       label: 'Passkey sign-in',
-      value:
-        env.AUDITOR_RP_ID?.trim() && env.AUDITOR_RP_ORIGIN?.trim() ? 'available' : 'off',
-      detail:
-        env.AUDITOR_RP_ID?.trim() && env.AUDITOR_RP_ORIGIN?.trim()
-          ? `AUDITOR_RP_ID and AUDITOR_RP_ORIGIN. Operators can sign in with a device instead of a password; passwords keep working, and remain the way back in if every device is lost.`
-          : 'No AUDITOR_RP_ID / AUDITOR_RP_ORIGIN, so passkeys are unavailable and everyone signs in with a password. Both values are configuration by necessity — a relying party taken from a request header would let an attacker mint credentials against a domain they control.',
-      // Not degraded. Password sign-in is a supported way to run, and previews
-      // and local development are *expected* to have this off: a credential is
-      // bound to one origin, so a production passkey could not work there
-      // anyway. Flagging it would cry wolf on every non-production deploy.
-      degraded: false,
+      value: passkeyConfigValue(env),
+      detail: passkeyConfigDetail(env),
+      // `off` is not degraded — password sign-in is a supported way to run,
+      // and previews and local development are *expected* to have this off,
+      // since a credential is bound to one origin. `misconfigured` is: both
+      // variables are set, the deploy believes passkeys are on, and they are
+      // not. That is the state worth a flag, and it used to read as `off`.
+      degraded: passkeyConfigValue(env) === 'misconfigured',
     },
     {
       key: 'database',
