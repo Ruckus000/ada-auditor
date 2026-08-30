@@ -467,10 +467,39 @@ Read this before claiming something works.
   loudly on drift), green unchanged at 2, silent deliveries 0, invented
   claims 0. The checker is ~15MB of jar (`prepare-verapdf.ts`, pinned and
   checksummed) on the JVM already shipped; `java.management` joined the jlink
-  modules for it. **Unproven on the deployed function** — blocked on the
-  rotated `AUDITOR_RUN_TOKEN`, like every production measurement. Older
-  stored readings cannot gain the field and render as "not checked". Font
-  *substitution* remains cut: measured twice, it greens zero documents.
+  modules for it. Older stored readings cannot gain the field and render as
+  "not checked". Font *substitution* remains cut: measured twice, it greens
+  zero documents.
+  **Suppression is earned, not assumed.** Families our own vocabulary voices
+  are left to the items that voice them **only when the item is actually
+  present** — checked per family. It used to be unconditional, and the blind
+  corpus found two documents delivered with no items, no gaps, and
+  `compliant: false` naming two annotation clauses: neither conformant nor
+  punch-listed, which is the one outcome this product promises never to
+  produce.
+
+- **The pipeline has been measured on documents it had never seen.**
+  `experiments/document-remediation/blind-corpus/` — 92 documents (64 planted,
+  28 real from 25 hosts sharing no domain with any training manifest), keys
+  hash-locked before first contact, scored by `scripts/doc-blind-test/`.
+  Results in `docs/research/document-remediation/blind-test-2026-08-29-*.md`.
+  `[V]` 81 documents past the door: 66 delivered, 15 refused; 19 fully
+  conformant on both instruments; **47 of 47 non-conformant deliveries carry a
+  punch list, and 0 came back as neither**. Invented claims 0, silent gaps 0,
+  drift 0, door leaks 0, punch items missing 0, disposition 35/35 on core
+  rows. It found two product defects — an unusable source `/Lang` costing the
+  client the entire repair, and the suppression assumption above — and six
+  defects in itself, which is why 40 corrections across 18 of 28 real keys
+  (64%) are recorded in `corrections.json` and print on every scorecard. Keys
+  for real documents are authored by qpdf, unzip and the veraPDF CLI and by
+  nothing in `src/`, enforced by
+  `tests/scripts/blind-corpus-keys-are-independent.test.ts`.
+  **Known gap it confirmed:** a portfolio's attachments are examined by
+  neither instrument, so a cover sheet can deliver clean over an unremediated
+  payload — no clause fails, so nothing is voiced, and the punch-list
+  vocabulary has no word for it. **Still open:** a junk title an exporter left
+  behind is carried forward faithfully, where the same junk in a *filename* is
+  refused.
 
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run
