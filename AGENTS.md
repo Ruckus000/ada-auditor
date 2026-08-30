@@ -499,7 +499,11 @@ Read this before claiming something works.
   payload — no clause fails, so nothing is voiced, and the punch-list
   vocabulary has no word for it. **Still open:** a junk title an exporter left
   behind is carried forward faithfully, where the same junk in a *filename* is
-  refused.
+  refused. **The numbers are local-only:** a seven-document spot-check against
+  the deployed function answered 401 on all seven — the app's own
+  `unauthorized`, not Vercel SSO, with `AUDITOR_RUN_TOKEN` set in Production
+  but diverged from the local `.env.local`. Reconciling them is an operator
+  action; until then nothing here is proven on the deployed function.
 
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run

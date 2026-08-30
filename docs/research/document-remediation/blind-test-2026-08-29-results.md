@@ -145,6 +145,30 @@ client could receive a clean-looking verdict on a document whose payload is
 unremediated. The punch-list vocabulary has no word for it. Predicted before
 the run; confirmed; now a known gap.
 
+## The deployed spot-check: attempted, blocked
+
+Seven corpus documents — both product fixes, both refusal kinds, and the
+ordinary good case — were posted to the production deployment carrying these
+changes (`oile61is6`, Ready, built from the merge). All seven answered **401**,
+uniformly.
+
+A uniform verdict is always the instrument, so it was diagnosed rather than
+reported as a result:
+
+- the body is the application's own `{"error":"unauthorized"}`, not Vercel's
+  SSO page, so this is the route's constant-time token comparison failing
+  rather than deployment protection;
+- `AUDITOR_RUN_TOKEN` **is** set in Vercel Production (created 3h before the
+  attempt, names listed without values);
+- the value in the local `.env.local` is 66 characters and is rejected by both
+  the new deployment and the previous one, so the local file and the deployed
+  variable have diverged since the parity run earlier the same day.
+
+**This measures nothing about the pipeline.** Making the two match is a
+credential operation and is the operator's, not this campaign's. Until then the
+blind test's numbers are local-only — the same caveat every production
+measurement in this project has carried, named rather than glossed.
+
 ## What this test still cannot do
 
 Unchanged from the predictions, and worth repeating where the results are:
