@@ -64,7 +64,7 @@ function emptyTreePdf() {
  * reads inside an attachment, so whether that silence is voiced anywhere is
  * the question this row asks.
  */
-function portfolioPdf() {
+function portfolioPdf({ collection = true } = {}) {
   const attached = structuredPdf({ tagged: false, marked: false, title: 'Attached Schedule', lang: 'en-US', elements: [] });
   const d = pdf();
   const catalog = d.slot();
@@ -96,7 +96,8 @@ function portfolioPdf() {
     catalog,
     `<< /Type /Catalog /Pages ${d.ref(pagesNode)} /StructTreeRoot ${d.ref(treeRoot)}`
       + ' /MarkInfo << /Marked true >> /Lang (en-US)'
-      + ` /Names ${d.ref(namesDict)} /Collection << /Type /Collection /View /D >> >>`,
+      + ` /Names ${d.ref(namesDict)}`
+      + `${collection ? ' /Collection << /Type /Collection /View /D >>' : ''} >>`,
   );
   return d.serialize({ trailerExtra: `/Root ${d.ref(catalog)} /Info ${d.ref(info)}` });
 }
@@ -245,7 +246,7 @@ const PDF_BUILDERS = {
   cyclic: cyclicTreePdf,
   signed: (args) => signedPdf(args),
   encrypted: encryptedPdf,
-  portfolio: portfolioPdf,
+  portfolio: (args) => portfolioPdf(args),
   incremental: (args) => incrementalTitlePdf(args),
   'no-pages': noPagesPdf,
 };

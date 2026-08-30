@@ -182,10 +182,26 @@ pdfRow(
 
 pdfRow(
   'p16-portfolio',
-  'A portfolio: a tagged cover sheet with unremediated documents attached to it.',
+  'A portfolio: a tagged cover sheet with an unremediated document attached to it.',
   { fn: 'portfolio' },
-  { dispositionOneOf: ['delivered', 'refused-not-tagged'] },
-  { weight: 'probe', note: 'The open question is whether attachments nobody remediated are voiced at all.' },
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Portfolio Cover', language: 'en-US',
+    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 0 },
+    needs: ['PDF/UA 7.11'], gapCriteria: [] },
+  // Was a probe, and the first run answered it: delivered clean over an
+  // untagged payload, because veraPDF validates the outer document's bytes and
+  // our reading walks the outer tree. Now a claim the product makes.
+);
+
+pdfRow(
+  'p17-attachment-no-collection',
+  'An ordinary PDF with a document attached — no portfolio flag, the same unexamined payload.',
+  { fn: 'portfolio', args: { collection: false } },
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Portfolio Cover', language: 'en-US',
+    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 0 },
+    needs: ['PDF/UA 7.11'], gapCriteria: [] },
+  // /Collection makes a viewer show the portfolio UI; it is not what makes the
+  // attachment unexamined. Keying on it would miss every plain PDF that simply
+  // has a file attached.
 );
 
 pdfRow(

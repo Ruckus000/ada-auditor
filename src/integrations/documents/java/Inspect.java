@@ -10,6 +10,10 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
@@ -166,6 +170,56 @@ public final class Inspect {
         return n;
     }
 
+    /**
+     * Documents attached to this one.
+     *
+     * A portfolio is a cover sheet with other documents inside it, and a plain
+     * PDF can carry attachments the same way — both through the EmbeddedFiles
+     * name tree. Neither instrument looks inside one: our reading walks this
+     * document's structure, and veraPDF validates this document's bytes, so an
+     * attached file that nobody remediated fails no clause and produces no
+     * finding.
+     *
+     * `[V]` The blind corpus planted exactly that and watched it deliver
+     * clean: a tagged cover sheet over an untagged payload, with an empty
+     * punch list. Counted here so the punch list can say so — the count is all
+     * that leaves this stage, never a filename, because attachment names are
+     * document content and the punch list renders on a public page.
+     *
+     * Counted, not opened. Remediating an attachment would mean rewriting the
+     * container around it, and the honest instruction is that each attached
+     * document goes through this pipeline on its own.
+     */
+    private static int embeddedFiles(PDDocument doc) {
+        PDDocumentNameDictionary names = doc.getDocumentCatalog().getNames();
+        if (names == null) return 0;
+        PDEmbeddedFilesNameTreeNode tree = names.getEmbeddedFiles();
+        if (tree == null) return 0;
+        return countNames(tree, 0);
+    }
+
+    /**
+     * A name tree is a tree, and a malformed one can be a graph — so the walk
+     * is depth-bounded for the reason the structure walk is.
+     */
+    private static int countNames(PDNameTreeNode<PDComplexFileSpecification> node, int depth) {
+        if (depth > 64) return 0;
+        int n = 0;
+        try {
+            Map<String, PDComplexFileSpecification> here = node.getNames();
+            if (here != null) n += here.size();
+        } catch (IOException e) {
+            // An unreadable branch is not a reason to fail the whole reading.
+        }
+        List<PDNameTreeNode<PDComplexFileSpecification>> kids = node.getKids();
+        if (kids != null) {
+            for (PDNameTreeNode<PDComplexFileSpecification> kid : kids) {
+                n += countNames(kid, depth + 1);
+            }
+        }
+        return n;
+    }
+
     private static int imageCount(PDDocument doc) {
         int n = 0;
         for (PDPage page : doc.getPages()) {
@@ -241,6 +295,7 @@ public final class Inspect {
             json.append("  \"annotationsNotInStructure\": ")
                 .append(unnestedAnnotations(doc))
                 .append(",\n");
+            json.append("  \"embeddedFiles\": ").append(embeddedFiles(doc)).append(",\n");
             json.append("  \"pages\": ").append(doc.getNumberOfPages()).append(",\n");
             json.append("  \"lang\": ").append(q(doc.getDocumentCatalog().getLanguage())).append(",\n");
             json.append("  \"title\": ").append(q(doc.getDocumentInformation().getTitle())).append(",\n");

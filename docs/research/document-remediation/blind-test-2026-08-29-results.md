@@ -1,20 +1,20 @@
 # Document blind test — results
 
-Six runs of 92 documents the pipeline had never seen, against keys locked in
+Seven runs of 92 documents, then 93 the pipeline had never seen, against keys locked in
 `5ad8352` before the first byte reached it. Counts and clause identifiers only.
 Predictions are in `blind-test-2026-08-29-predictions.md`, written first.
 
 ## The scorecard, final run
 
 ```
-Disposition   core 36/36 hit · 0 refused differently · 0 delivered when a refusal was expected
+Disposition   core 38/38 hit · 0 refused differently · 0 delivered when a refusal was expected
 Door          11/11 · 0 leaked · 0 wrong status
 Punch items   0 missing · 1 unexpected (listed; a person decides)
 Invented claims  0
 Silent gaps   0 · 0 suppressed with nothing voicing them
 Drift         0
 Counts        2 off · 18 unverifiable
-Probes        70 observations across 47 rows (data, not failures)
+Probes        69 observations across 46 rows (data, not failures)
 Key corrections this run: 40
 vs previous run: 0 fixed · 0 regressed · 0 still failing
 ```
@@ -42,7 +42,7 @@ came back as neither.
 
 | promise | result |
 |---|---|
-| accurate disposition | 36/36 core rows |
+| accurate disposition | 38/38 core rows |
 | zero invented claims | 0 |
 | zero silent gaps | 0 |
 | zero drift between the product's verdict and an independent one | 0 across every delivery |
@@ -55,13 +55,17 @@ machine, and claiming otherwise is what the FTC fined a competitor $1M for.
 
 ## What the test found in the product
 
-**Two defects, and one broken promise.**
+**Three defects, and one broken promise.**
 
-**1. A placeholder title outranked the document's own heading.** See the
+**1. A document's attachments were examined by nobody.** See the decided
+questions below: a tagged cover sheet delivered clean over an untagged payload,
+with nothing in the vocabulary able to say so.
+
+**2. A placeholder title outranked the document's own heading.** See the
 decided question below: an exporter's stamp was delivered as `already-titled`,
 satisfying UA-1's DisplayDocTitle while telling a reader nothing.
 
-**2. A document with one bad metadata field got no remediation at all.**
+**3. A document with one bad metadata field got no remediation at all.**
 `Finish` refuses a language tag that is not BCP-47 — correctly, since writing
 `en US` states something false while passing every machine check there is. But
 `planRepair` handed the source's tag straight through, so a PDF whose own
@@ -70,7 +74,7 @@ the client got nothing. A tag nobody can resolve is, to a reader, the same as
 no tag; it is now dropped, and the 3.1.1 punch item asks a person to name the
 real one. `[V]` p21 and p22 now deliver, carrying that item.
 
-**3. Two documents were delivered neither conformant nor punch-listed.**
+**4. Two documents were delivered neither conformant nor punch-listed.**
 The promise, broken, and found only because the corpus was new. `withConformance`
 suppressed every clause in a family our own vocabulary can speak for — on the
 assumption the matching item would be there. Our annotation item counts
@@ -131,7 +135,7 @@ problem and is now fixed (below); the heading-level vocabulary disagreement was 
 product's; the portfolio row behaved exactly as predicted (below); and
 suppressed-but-quiet clauses were real, and were the broken promise.
 
-## One question decided, one still open
+## Both open questions, decided
 
 **A title an exporter left behind is no longer carried forward.** p04 declared
 `Microsoft Word - Document1.docx` and the product reported it as
@@ -157,13 +161,28 @@ title changed** — p04's, to `transcribed`. No real document lost a legitimate
 title, which is the guard against a policy that eats what it was meant to
 protect.
 
-**A portfolio's attachments are examined by nobody.** p16 is a tagged cover
-sheet with an untagged PDF attached. It delivers, and neither instrument looks
-inside the attachment, so no clause fails and nothing is voiced. This is not a
-silent gap by the promise's definition — every failing clause is named — but a
-client could receive a clean-looking verdict on a document whose payload is
-unremediated. The punch-list vocabulary has no word for it. Predicted before
-the run; confirmed; now a known gap.
+**A portfolio's attachments are now named.** p16 is a tagged cover sheet with
+an untagged PDF attached. It delivered, and neither instrument looked inside:
+our reading walks the outer structure and veraPDF validates the outer bytes, so
+no clause failed and nothing was voiced. Not a silent gap by the promise's
+definition — every failing *clause* was named — but a client could receive a
+clean-looking verdict over an unremediated payload, and the vocabulary had no
+word for it. Predicted before the run, confirmed by it, and now closed.
+
+`Inspect` counts the EmbeddedFiles name tree and the punch list says so.
+Labelled **`PDF/UA 7.11`**, the standard's own section for embedded files,
+rather than a WCAG criterion — and that is the opposite choice from the
+annotation item, deliberately. There the defect is known, so 1.3.1 fits. Here
+the attachment was never opened, so naming a success criterion would assert a
+failure nobody checked, which is the invention this product refuses. Counted,
+never opened: remediating an attachment means rewriting the container around
+it, and the honest instruction is that each attached document goes through the
+pipeline on its own. `INSTRUMENT_VERSION` 8.
+
+`[V]` Two corpus rows now hold it — the portfolio and a plain PDF with a file
+attached, because `/Collection` only makes a viewer show the portfolio UI and
+is not what makes the payload unexamined. Both voice the item; disposition
+**38/38** on core rows, nothing regressed.
 
 ## The deployed spot-check: attempted, blocked
 

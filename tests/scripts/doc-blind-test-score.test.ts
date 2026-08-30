@@ -216,6 +216,19 @@ describe('the punch list', () => {
     expect(fatalOutcomes(k, one)).toEqual(['punch-missing']);
   });
 
+  it('holds our own PDF/UA-labelled item to the exact-needs comparison', () => {
+    // The attached-documents item is labelled `PDF/UA 7.11` because nothing
+    // opened the attachment, so naming a success criterion would assert an
+    // unverified failure. It is still OUR item, and a scorer that matched on
+    // the `PDF/UA` prefix would have excused it from being checked at all.
+    const k = key({ expected: { needs: ['PDF/UA 7.11'] } });
+
+    expect(fatalOutcomes(k, delivered())).toContain('punch-missing');
+    expect(fatalOutcomes(k, delivered({
+      needs: [{ criterion: 'PDF/UA 7.11', item: '1 document is attached to this file' }],
+    }))).toEqual([]);
+  });
+
   it('lists an item the key did not predict without failing the run', () => {
     const found = scoreDocument(key(), delivered({
       needs: [{ criterion: '2.4.10', item: 'Heading levels skip' }],

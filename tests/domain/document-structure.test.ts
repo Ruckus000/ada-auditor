@@ -19,6 +19,7 @@ const REAL_OUTPUT = {
   marked: true,
   signed: false,
   annotationsNotInStructure: 0,
+  embeddedFiles: 0,
   structureElements: 42,
   textChars: 1500,
   images: 2,
@@ -111,6 +112,7 @@ describe('isTagged', () => {
       marked: false,
       signed: false,
       annotationsNotInStructure: 0,
+      embeddedFiles: 0,
       structureElements: 0,
     }) satisfies DocumentStructure;
     expect(isTagged(untagged)).toBe(false);
@@ -127,6 +129,7 @@ describe('isTagged', () => {
       marked: true,
       signed: false,
       annotationsNotInStructure: 0,
+      embeddedFiles: 0,
       structureElements: 0,
     }) satisfies DocumentStructure;
     expect(lying.marked).toBe(true);
@@ -212,6 +215,7 @@ describe('contentChanges', () => {
       marked: true,
       signed: false,
       annotationsNotInStructure: 0,
+      embeddedFiles: 0,
       structureElements: 1,
       images: 0,
       figures: [],

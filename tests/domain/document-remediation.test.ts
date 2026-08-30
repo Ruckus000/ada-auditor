@@ -17,6 +17,7 @@ const structure = (over = {}) =>
     marked: true,
     signed: false,
     annotationsNotInStructure: 0,
+    embeddedFiles: 0,
     structureElements: 40,
     textChars: 1200,
     images: 0,
@@ -238,6 +239,7 @@ describe('the punch list', () => {
       marked: true,
       signed: false,
       annotationsNotInStructure: 0,
+      embeddedFiles: 0,
       structureElements: 10, textChars: 100, images: 0, pages: 1, lang: 'en',
       title: 'T', headings: [], headingTexts: [], figures: [], tables: [], lists: [], order: [],
       ...over,
@@ -336,6 +338,7 @@ describe('the punch list', () => {
     const s = summarise(
       provenance({
         annotationsNotInStructure: 2,
+        embeddedFiles: 0,
         headings: ['H1'],
         headingTexts: [{ level: 'H1', text: 'Ratepayer Jane Doe of 14 Mill Lane' }],
       }),
@@ -360,6 +363,7 @@ describe('withConformance', () => {
       marked: true,
       signed: false,
       annotationsNotInStructure: 0,
+      embeddedFiles: 0,
       textChars: 100,
       images: 0,
       pages: 1,
@@ -494,6 +498,7 @@ describe('withConformance', () => {
         marked: true,
         signed: false,
         annotationsNotInStructure: 0,
+        embeddedFiles: 0,
         textChars: 100,
         images: 0,
         pages: 1,
@@ -513,6 +518,45 @@ describe('withConformance', () => {
       failingClauses: ['7.21.4.1-1'],
     });
     expect(s.needs?.map((n) => n.criterion)).toEqual(['3.1.1', 'PDF/UA 7.21.4']);
+  });
+});
+
+describe('documents attached to the document', () => {
+  const needs = (over = {}) => summarise(provenance({ structure: structure(over) })).needs ?? [];
+
+  it('says nothing when there are no attachments', () => {
+    expect(needs().some((n) => n.criterion === 'PDF/UA 7.11')).toBe(false);
+  });
+
+  it('names an attachment nobody examined', () => {
+    // The blind corpus planted a tagged cover sheet over an untagged payload
+    // and watched it deliver with an empty punch list: no clause fails,
+    // because veraPDF validates the outer document and our reading walks the
+    // outer structure. Neither instrument opens an attachment.
+    const item = needs({ embeddedFiles: 1 }).find((n) => n.criterion === 'PDF/UA 7.11');
+
+    expect(item?.item).toContain('1 document is attached');
+    expect(item?.item).toContain('was not examined');
+    expect(item?.item).toContain('needs remediating on its own');
+  });
+
+  it('pluralises, and counts rather than naming', () => {
+    const item = needs({ embeddedFiles: 3 }).find((n) => n.criterion === 'PDF/UA 7.11');
+
+    expect(item?.item).toContain('3 documents are attached');
+    expect(item?.item).toContain('were not examined');
+    // Counts and outcomes only: this renders on a client's public report, and
+    // an attachment's filename is document content.
+    expect(item?.item).not.toMatch(/\.(pdf|docx?|xlsx?)/i);
+  });
+
+  it('is not a WCAG criterion, because nothing was checked', () => {
+    // The annotation item reuses 1.3.1 because the defect is KNOWN. Here the
+    // attachment was never opened, so naming a success criterion would assert
+    // a failure nobody verified — the invention this product refuses.
+    const item = needs({ embeddedFiles: 2 }).find((n) => n.item.includes('attached'));
+
+    expect(item?.criterion).toBe('PDF/UA 7.11');
   });
 });
 
