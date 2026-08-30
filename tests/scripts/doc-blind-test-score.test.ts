@@ -156,6 +156,17 @@ describe('invented claims', () => {
     expect(fatalOutcomes(k, delivered({ sourceLanguage: 'en-US' }))).toContain('invented-language');
   });
 
+  it('does not call a wrong title an invented one', () => {
+    // p04 carries an exporter's leftover as its title. Reporting that
+    // faithfully is transcription working, even where the key wanted the
+    // heading instead — and the invented-claims line has to mean what it says.
+    const k = key({ weight: 'probe', expected: { titleText: 'Annual Report' } });
+    const found = scoreDocument(k, delivered({ titleText: 'Microsoft Word - Document1.docx' })).findings;
+
+    expect(found.map((f) => f.outcome)).toContain('wrong-title');
+    expect(found.every((f) => f.facet !== 'invented-claim')).toBe(true);
+  });
+
   it('fails a title the document superseded', () => {
     const k = key({ mustNotClaim: ['Superseded Title'], expected: { titleText: 'Current Title' } });
     expect(fatalOutcomes(k, delivered({ titleText: 'Superseded Title' }))).toContain('superseded-claim');

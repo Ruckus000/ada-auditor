@@ -270,7 +270,13 @@ export function scoreDocument(
     push('invented-claim', 'invented-title', `claims a title where the key plants none: ${JSON.stringify(summary.titleText)}`, true);
   }
   if (typeof expected.titleText === 'string' && summary.titleText !== expected.titleText) {
-    push('invented-claim', 'wrong-title', `expected ${JSON.stringify(expected.titleText)}, got ${JSON.stringify(summary.titleText)}`, key.weight === 'core');
+    // A title that differs from the key is a WRONG title, not an invented
+    // one, and the difference is the whole point of the facet: p04 carries
+    // an exporter's leftover as its title, and reporting that faithfully is
+    // transcription doing its job even where the key wanted the heading.
+    // Filing it under invented claims put a 1 beside the line that must read
+    // zero, which is the one number nobody should have to interpret.
+    push('claim', 'wrong-title', `expected ${JSON.stringify(expected.titleText)}, got ${JSON.stringify(summary.titleText)}`, key.weight === 'core');
   }
   if (expected.titleDeclared === false && summary.title === 'already-titled') {
     push('invented-claim', 'invented-title', 'reports an existing title in a document that declares none', true);

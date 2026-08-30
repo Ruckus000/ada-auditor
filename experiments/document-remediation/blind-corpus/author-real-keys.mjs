@@ -134,6 +134,46 @@ const plainString = (value) => {
   return null;
 };
 
+/**
+ * The heading levels a reader meets, in the order a reader meets them.
+ *
+ * Walking the structure tree, not the object map. The first pass collected
+ * heading levels by iterating qpdf's objects, whose order is whatever the file
+ * happens to store — so "starts at H3" and "skips a level" were derived from
+ * an order no reader experiences, and three documents were credited with
+ * heading problems on that basis.
+ *
+ * Bounded by a seen-set: a structure tree is a tree by intent and a graph in
+ * practice, which the planted cyclic fixture exists to prove.
+ */
+function headingOrder(objects, catalog) {
+  const root = catalog?.['/StructTreeRoot'];
+  if (typeof root !== 'string') return [];
+
+  const levels = [];
+  const seen = new Set();
+  const resolve = (ref) => (typeof ref === 'string' && ref.endsWith(' R') ? deref(objects[`obj:${ref}`]) : ref);
+
+  const walk = (ref, depth) => {
+    if (depth > 200 || (typeof ref === 'string' && seen.has(ref))) return;
+    if (typeof ref === 'string') seen.add(ref);
+    const node = resolve(ref);
+    if (!node || typeof node !== 'object') return;
+
+    if (typeof node['/S'] === 'string' && HEADING_TYPES.has(node['/S'])) {
+      levels.push(node['/S'] === '/H' ? 1 : Number(node['/S'].slice(2)));
+    }
+    const kids = node['/K'];
+    for (const kid of Array.isArray(kids) ? kids : [kids]) {
+      if (kid === undefined || typeof kid === 'number') continue;
+      walk(kid, depth + 1);
+    }
+  };
+
+  walk(root, 0);
+  return levels;
+}
+
 function readPdf(path) {
   const objects = qpdfObjects(path);
   const summary = qpdfSummary(path);
@@ -180,7 +220,7 @@ function readPdf(path) {
     signed,
     language: lang === null || lang === '' ? null : lang,
     declaredTitle,
-    headingLevels: headings.map((e) => Number(e['/S'].slice(2))),
+    headingLevels: headingOrder(objects, catalog),
     counts: {
       headings: headings.length,
       tables: structure.filter((e) => e['/S'] === '/Table').length,
@@ -218,13 +258,27 @@ function readDocx(path) {
     language: /<w:lang[^>]*w:val="([^"]+)"/.exec(styles)?.[1] ?? null,
     declaredTitle: /<dc:title>([^<]*)<\/dc:title>/.exec(core)?.[1] ?? null,
     headingLevels,
+    // Recorded as evidence, but NOT turned into a heading-level expectation.
+    //
+    // These levels describe the SOURCE. What gets graded is the PDF the
+    // converter produced, and the two are not the same document: r28's source
+    // runs H1, H1, H3 — a skip — and the delivered PDF has twelve headings
+    // where the source had thirteen, so the heading that made it a skip did
+    // not survive. The product reported the document it delivered, correctly.
+    // Predicting output structure from input structure is a category error,
+    // and this is where it stops.
+    headingLevelsAreSourceOnly: true,
     counts: {
       headings: headingLevels.length,
       tables: (doc.match(/<w:tbl>/g) ?? []).length,
       lists: null,
       figures: drawings.length,
     },
-    figuresWithoutAlt: drawings.filter((m) => !/\bdescr="[^"]+"/.test(m[0])).length,
+    // `descr` and `title` are both author-supplied descriptions, and the
+    // converter carries either into /Alt. Counting only `descr` credited a
+    // seal captioned with `title` as undescribed, and then expected a punch
+    // item for work somebody had already done.
+    figuresWithoutAlt: drawings.filter((m) => !/\b(?:descr|title)="[^"]+"/.test(m[0])).length,
     annotations: 0,
     annotationsOutside: 0,
   };
@@ -244,6 +298,10 @@ function needsFrom(read) {
   if (read.language === null) needs.push('3.1.1');
   if (read.annotationsOutside > 0) needs.push('1.3.1');
   for (let i = 0; i < read.figuresWithoutAlt; i += 1) needs.push('1.1.1');
+
+  // A Word source's heading levels describe the source, not the PDF that will
+  // be graded; see `headingLevelsAreSourceOnly`.
+  if (read.headingLevelsAreSourceOnly === true) return needs;
 
   const levels = read.headingLevels;
   if (levels.length > 0) {
