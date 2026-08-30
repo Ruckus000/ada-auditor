@@ -265,7 +265,15 @@ export function withConformance(
  * gap says "no title a reader could use" so it stays true of a document that
  * carries one.
  */
-export const INSTRUMENT_VERSION = 7;
+/**
+ * 8 — the punch list gained the attached-documents item. A portfolio is a
+ * cover sheet with other documents inside it, and neither instrument looks
+ * inside one: our reading walks this document's structure, veraPDF validates
+ * this document's bytes, so an unremediated attachment failed no clause and
+ * produced no finding. The blind corpus planted a tagged cover sheet over an
+ * untagged payload and watched it deliver with an empty punch list.
+ */
+export const INSTRUMENT_VERSION = 8;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -363,6 +371,26 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     needs.push({
       criterion: '1.3.1',
       item: `${n} form field${n === 1 ? '' : 's'} or link${n === 1 ? '' : 's'} sit outside the document's structure — a screen reader cannot reach ${n === 1 ? 'it' : 'them'} in reading order, and tagging ${n === 1 ? 'it' : 'them'} into place is a person's decision`,
+    });
+  }
+
+  if (structure.embeddedFiles > 0) {
+    // `PDF/UA 7.11` rather than a WCAG criterion, and for the opposite reason
+    // the item above reuses 1.3.1. There, the defect was known: an annotation
+    // outside the tree IS a relationship that is not programmatically
+    // determinable. Here nothing is known — an attachment was never opened, so
+    // naming a success criterion would assert a failure that has not been
+    // checked, which is the invention this product refuses. 7.11 is the
+    // standard's own section for embedded files, and says only what is true:
+    // this concerns the attachments.
+    //
+    // Counted, never opened. Remediating an attachment means rewriting the
+    // container around it, and the honest instruction is that each attached
+    // document goes through this pipeline on its own.
+    const n = structure.embeddedFiles;
+    needs.push({
+      criterion: 'PDF/UA 7.11',
+      item: `${n} document${n === 1 ? ' is' : 's are'} attached to this file and ${n === 1 ? 'was' : 'were'} not examined — nothing here reads inside an attachment, so ${n === 1 ? 'it needs' : 'each needs'} remediating on its own`,
     });
   }
 

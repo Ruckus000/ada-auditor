@@ -178,6 +178,88 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
     else expect(result.value.annotationsNotInStructure).toBe(0);
   });
 
+  /**
+   * A document with other documents inside it.
+   *
+   * `collection: true` makes it a portfolio; without it, the same attachment
+   * mechanism is an ordinary PDF with a file attached. Both reach a reader the
+   * same way and neither instrument opens either, so the count must not depend
+   * on the `/Collection` flag — which is the thing this fixture pins.
+   */
+  function attachmentPdf({ collection = false, count = 1 } = {}): Buffer {
+    const attached = '%PDF-1.7\n% a document nobody remediated\n%%EOF\n';
+    const specs: string[] = [];
+    const streams: string[] = [];
+    // Objects 5.. alternate: file spec, then its embedded stream.
+    for (let i = 0; i < count; i += 1) {
+      const specNum = 5 + i * 2;
+      const streamNum = specNum + 1;
+      specs.push(
+        `<< /Type /Filespec /F (attached-${i}.pdf) /UF (attached-${i}.pdf)`
+          + ` /EF << /F ${streamNum} 0 R >> /Desc (An attached document) >>`,
+      );
+      streams.push(
+        `<< /Type /EmbeddedFile /Subtype /application#2Fpdf /Length ${attached.length} >>`
+          + `\nstream\n${attached}\nendstream`,
+      );
+    }
+    const names = specs.map((_, i) => `(attached-${i}.pdf) ${5 + i * 2} 0 R`).join(' ');
+
+    const objs = [
+      `<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 4 0 R /Names 3 0 R`
+        + `${collection ? ' /Collection << /Type /Collection /View /D >>' : ''} >>`,
+      '<< /Type /Pages /Kids [' + `${5 + count * 2} 0 R` + '] /Count 1 >>',
+      `<< /EmbeddedFiles << /Names [${names}] >> >>`,
+      '<< /Type /StructTreeRoot >>',
+      ...specs.flatMap((spec, i) => [spec, streams[i]]),
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('counts the documents attached to a portfolio', async () => {
+    // The blind corpus planted a tagged cover sheet over an untagged payload
+    // and it delivered clean: veraPDF validates the outer document's bytes and
+    // the structure walk reads the outer tree, so an unremediated attachment
+    // failed no clause and produced no finding. Counting is what lets the
+    // punch list say so.
+    const path = join(dir, 'portfolio.pdf');
+    await writeFile(path, attachmentPdf({ collection: true, count: 2 }));
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable(`could not read the fixture: ${JSON.stringify(result.failure)}`);
+    else expect(result.value.embeddedFiles).toBe(2);
+  });
+
+  it('counts an attachment on a document that is not a portfolio', async () => {
+    // `/Collection` makes a viewer show the portfolio UI; it is not what makes
+    // the attachment unexamined. Keying on it would miss every plain PDF that
+    // simply has a file attached.
+    const path = join(dir, 'attachment.pdf');
+    await writeFile(path, attachmentPdf({ collection: false, count: 1 }));
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable('could not read the fixture');
+    else expect(result.value.embeddedFiles).toBe(1);
+  });
+
+  it('reports an ordinary document as carrying nothing', async () => {
+    const result = await inspectDocument(pdfPath);
+    if (!result.ok) expect.unreachable('could not read the generated document');
+    else expect(result.value.embeddedFiles).toBe(0);
+  });
+
   it('reports a real document, and the result satisfies the domain contract', async () => {
     const result = await inspectDocument(pdfPath);
 

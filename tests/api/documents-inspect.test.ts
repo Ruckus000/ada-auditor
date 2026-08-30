@@ -52,6 +52,7 @@ function inspected(over = {}) {
       marked: true,
       signed: false,
       annotationsNotInStructure: 0,
+      embeddedFiles: 0,
       structureElements: 40,
       textChars: 900,
       images: 2,

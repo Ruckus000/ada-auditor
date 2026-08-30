@@ -154,12 +154,24 @@ function multisetDiff(expected: string[], actual: string[]): { missing: string[]
   return { missing, extra: remaining };
 }
 
+/**
+ * The three criteria that come from the checker's verdict rather than from our
+ * own reading.
+ *
+ * Named explicitly rather than matched on a `PDF/UA` prefix. The prefix was a
+ * proxy for "the checker said this", and it stopped being one the moment our
+ * own instrument gained an item labelled `PDF/UA 7.11` — the attached-documents
+ * item, which is ours, and which a prefix test would have quietly excluded from
+ * the exact-needs comparison it is supposed to be held to.
+ */
+const CHECKER_DERIVED = new Set(['PDF/UA 7.21.4', 'PDF/UA 7.1-3', 'PDF/UA']);
+
 /** Our own vocabulary's criteria; the checker's items are held to a property. */
 const ourCriteria = (needs: DeliverySummary['needs']) =>
-  (needs ?? []).map((n) => n.criterion).filter((c) => !c.startsWith('PDF/UA'));
+  (needs ?? []).map((n) => n.criterion).filter((c) => !CHECKER_DERIVED.has(c));
 
 const clauseCriteria = (needs: DeliverySummary['needs']) =>
-  (needs ?? []).filter((n) => n.criterion.startsWith('PDF/UA'));
+  (needs ?? []).filter((n) => CHECKER_DERIVED.has(n.criterion));
 
 /**
  * Every failing clause must be voiced somewhere.

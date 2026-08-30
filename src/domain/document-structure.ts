@@ -103,6 +103,20 @@ export const documentStructureSchema = z.object({
    * reaches a client's public report, where document content may not go.
    */
   annotationsNotInStructure: z.number().int(),
+  /**
+   * Documents attached to this one, through the EmbeddedFiles name tree.
+   *
+   * A portfolio is a cover sheet with other documents inside it; a plain PDF
+   * can carry attachments the same way. Neither instrument looks inside one —
+   * our reading walks this document's structure and veraPDF validates this
+   * document's bytes — so an unremediated attachment fails no clause and
+   * produces no finding. The blind corpus planted exactly that and watched it
+   * deliver clean over an untagged payload.
+   *
+   * A count, for the same reason as the field above: the item it feeds renders
+   * on a client's public report, and an attachment's filename is content.
+   */
+  embeddedFiles: z.number().int(),
   /** Extracted text length. Distinguishes an untagged PDF from a scanned image. */
   textChars: z.number().int(),
   /**

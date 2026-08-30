@@ -486,19 +486,25 @@ Read this before claiming something works.
   `[V]` 81 documents past the door: 66 delivered, 15 refused; 19 fully
   conformant on both instruments; **47 of 47 non-conformant deliveries carry a
   punch list, and 0 came back as neither**. Invented claims 0, silent gaps 0,
-  drift 0, door leaks 0, punch items missing 0, disposition 36/36 on core
-  rows. It found three product defects — an unusable source `/Lang` costing the
-  client the entire repair, the suppression assumption above, and a producer's
-  placeholder title outranking the document's own heading — and six defects in
+  drift 0, door leaks 0, punch items missing 0, disposition 38/38 on core
+  rows. It found four product defects — an unusable source `/Lang` costing the
+  client the entire repair, the suppression assumption above, a producer's
+  placeholder title outranking the document's own heading, and attachments
+  nobody examined — and six defects in
   itself, which is why 40 corrections across 18 of 28 real keys (64%) are
   recorded in `corrections.json` and print on every scorecard. Keys
   for real documents are authored by qpdf, unzip and the veraPDF CLI and by
   nothing in `src/`, enforced by
   `tests/scripts/blind-corpus-keys-are-independent.test.ts`.
-  **Known gap it confirmed:** a portfolio's attachments are examined by
-  neither instrument, so a cover sheet can deliver clean over an unremediated
-  payload — no clause fails, so nothing is voiced, and the punch-list
-  vocabulary has no word for it. **A placeholder is no longer a title**
+  **Attachments are now named** (`INSTRUMENT_VERSION` 8): a portfolio is a
+  cover sheet with other documents inside it, and neither instrument opens one,
+  so an unremediated payload used to fail no clause and produce no finding.
+  `Inspect` counts the EmbeddedFiles name tree and the punch list says so,
+  labelled `PDF/UA 7.11` rather than a WCAG criterion — the opposite choice
+  from the annotation item, and deliberately: there the defect is known, here
+  the attachment was never opened, so naming a success criterion would assert
+  a failure nobody checked. Counted, never opened; each attached document goes
+  through the pipeline on its own. **A placeholder is no longer a title**
   (`INSTRUMENT_VERSION` 7): a producer stamp is what Word writes when a
   document has none, so `isPlaceholderTitle` declines it on provenance and the
   chain continues to the document's own heading, then the filename, then the
