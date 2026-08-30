@@ -118,6 +118,50 @@ export type RemediationSummary = {
  * the title, annotation nesting) are left to the items that voice them,
  * or every document would say everything twice.
  */
+/**
+ * Which of our own items is supposed to be saying what a clause says.
+ *
+ * The UA-1 clause a family belongs to, paired with the criterion our own
+ * vocabulary voices it under: 7.2 Text with the language item, 7.3 Graphics
+ * with the figure descriptions, 7.4 Headings with the heading-level item, 7.18
+ * Annotations with the unreachable-annotation item, and 7.1-9 with the title.
+ */
+const VOICED_BY_OUR_INSTRUMENT: ReadonlyArray<{ clause: RegExp; criterion: string }> = [
+  { clause: /^7\.2[-.]/, criterion: '3.1.1' },
+  { clause: /^7\.3-/, criterion: '1.1.1' },
+  { clause: /^7\.4/, criterion: '2.4.10' },
+  { clause: /^7\.18\./, criterion: '1.3.1' },
+  { clause: /^7\.1-9/, criterion: '2.4.2' },
+];
+
+/**
+ * Is one of our own items actually saying this?
+ *
+ * Suppression has to be EARNED. It used to be unconditional: any clause in a
+ * family our vocabulary can speak for was dropped from the catch-all on the
+ * assumption that the matching item would be there — and when the item was not
+ * there, the clause reached the client as silence.
+ *
+ * `[V]` The blind corpus found two documents delivered with `needs: []`,
+ * `gaps: []` and `compliant: false` naming 7.18.1-2 and 7.18.5-2: not
+ * conformant, and not punch-listed either, which is the one outcome this
+ * product promises never to produce. Our annotation item counts annotations
+ * with no `/StructParent`; veraPDF fails 7.18 for reasons that counter does
+ * not see, so it stayed quiet while the suppression spoke for it.
+ *
+ * Deduplication is still worth having — a document should not say everything
+ * twice — so the rule is now: suppress only where the item that covers this
+ * clause is present. Otherwise the catch-all names it, and the promise holds.
+ */
+function alreadyVoiced(clause: string, summary: RemediationSummary): boolean {
+  const rule = VOICED_BY_OUR_INSTRUMENT.find((entry) => entry.clause.test(clause));
+  if (rule === undefined) return false;
+  return (
+    (summary.needs ?? []).some((need) => need.criterion === rule.criterion) ||
+    summary.gaps.some((gap) => gap.startsWith(`${rule.criterion}:`))
+  );
+}
+
 export function withConformance(
   summary: RemediationSummary,
   conformance: Conformance,
@@ -128,14 +172,13 @@ export function withConformance(
   }
 
   const items: Array<{ criterion: string; item: string }> = [];
-  const voicedByOurInstrument = /^(7\.2-|7\.2\.|7\.3-|7\.4|7\.1-9|7\.18\.)/;
   const fonts = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4'));
   const untagged = conformance.failingClauses.filter((clause) => clause.startsWith('7.1-3'));
   const rest = conformance.failingClauses.filter(
     (clause) =>
       !clause.startsWith('7.21.4') &&
       !clause.startsWith('7.1-3') &&
-      !voicedByOurInstrument.test(clause),
+      !alreadyVoiced(clause, summary),
   );
 
   if (fonts.length > 0) {

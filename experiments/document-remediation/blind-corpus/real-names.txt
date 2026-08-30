@@ -1,0 +1,42 @@
+# The fresh real corpus: local id, then source URL. Bytes stay local; this
+# map is what makes the harvest reproducible and the disjointness checkable.
+#
+# Chosen for genre distance from the training set, which was almost entirely
+# municipal: university policy, court self-help forms, foundation annual
+# reports, federal agency publications, and public Word templates. No domain
+# here appears in pdf-harvest.txt or real-word-names.txt, checked by harvest.mjs
+# rather than by eye.
+r01.pdf	https://policies.osu.edu/sites/default/files/documents/2025/08/accessibility-policy.pdf
+r02.pdf	https://studentaffairs.utah.edu/assessment/_resources/documents/annual-reports/cda.annualreport.22.pdf
+r03.pdf	https://www.ndcourts.gov/Media/Default/Legal%20Resources/Legal%20Self%20Help/Civil%20Action/Caption%20%20Signature%20(Petition)%20form.pdf
+r04.pdf	https://www.occourts.org/system/files/selfhelp/shc-rfo-04.pdf
+r05.pdf	https://www.occourts.org/system/files/selfhelp/shc-rfo-06.pdf
+r06.pdf	https://www.tulare.courts.ca.gov/system/files/forms-and-filings/petition-custody-and-support-packet-rev-71524.pdf
+r07.pdf	https://www.napa.courts.ca.gov/system/files/request-order.pdf
+r08.pdf	https://resources.forvis.com/rs/932-BAC-700/images/2024%20Nonprofit%20Sector%20Report.pdf
+r09.pdf	https://www.peacedevelopmentfund.org/wp-content/uploads/2025/04/PDF-2024-Annual-ReportvNov4.24.pdf
+r10.pdf	https://www.pa.gov/content/dam/copapwp-pagov/en/dos/programs/charities/reports/2024-annual-charities-report.pdf
+r11.pdf	https://cfhoco.org/wp-content/uploads/2025/07/2024-CFHoCo-Annual-Report_spreads.pdf
+r12.pdf	https://www.fidelitycharitable.org/content/dam/fc-public/docs/insights/2024-giving-report.pdf
+r13.pdf	https://dfi.wi.gov/Documents/BusinessServices/CharitableProfessionalOrganizations/Forms/CRED308.pdf
+r14.pdf	https://anschutzfamilyfoundation.org/wp-content/uploads/2025/06/AFF-Annual-Report-2024-Web-version.pdf
+r15.pdf	https://wtgrantfoundation.org/wp-content/uploads/2025/06/2024-Annual-Report.pdf
+r16.pdf	https://www2.census.gov/about/linkage/data-file-inventory.pdf
+r17.pdf	https://www2.census.gov/library/working-papers/2023/decennial/census-data-federal-funds-fy-2021.pdf
+r18.pdf	https://www.gao.gov/assets/gao-23-105656.pdf
+r19.pdf	https://www.congress.gov/crs_external_products/R/PDF/R41705/R41705.28.pdf
+r20.pdf	https://www.acadrad.org/wp-content/uploads/2018/04/NIH-Fact-Sheet_2018.pdf
+r21.pdf	https://www.congress.gov/crs_external_products/R/PDF/R47847/R47847.2.pdf
+r22.pdf	https://www.sco.ca.gov/Files-EO/hr_application_package.pdf
+r23.docx	https://ombud.msu.edu/sites/default/files/content/MSU_accessible_syllabus_template.docx
+r24.docx	https://www.oakland.edu/Assets/Oakland/ucm/files-and-documents/accessible-templates/OU%20Accessible%20Word%20Template.docx
+r25.docx	https://universitypolicy.unc.edu/wp-content/uploads/sites/953/2020/06/Unit-Policy-Template.docx
+r26.docx	https://www.purdue.edu/policies/documents/PolicyTemplate.docx
+r27.docx	https://policies.northwestern.edu/docs/standard-policy-template-final.docx
+r28.docx	https://www.mtsac.edu/webdesign/accessible-docs/word/example03.docx
+r29.docx	https://open.defense.gov/Portals/23/Documents/Regulatory/Rule_Preamble_Template.docx
+r30.docx	https://www.oregon.gov/das/Policies/Data%20Governance%20Plan%20Template.docx
+r31.docx	https://www.pca.state.mn.us/sites/default/files/i-admin9-10.docx
+r32.docx	https://public.iema.state.il.us/webdocs/training/hseep/conduct/Participant%20Feedback%20Form_Conduct_HSEEP%20Template.docx
+r33.docx	https://www.creativemoco.com/wp-content/uploads/2019/06/FY25-AG-Application-Template-1.docx
+r34.docx	https://ieeeaccess.ieee.org/wp-content/uploads/2025/08/Access-Template-2024.docx

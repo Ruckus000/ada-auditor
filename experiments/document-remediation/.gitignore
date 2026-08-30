@@ -37,3 +37,11 @@ out-arm-*/
 # character. Match the prefix, not a shape — the same lesson real-pdf/ above
 # records, arrived at a second time.
 out-pdf-*
+
+# Blind-test campaign (2026-08-29). Planted bytes are regenerable from
+# blind-corpus generators; real bytes are somebody else's documents. Keys,
+# spec, generators, manifest, predictions and prior-hashes stay tracked.
+# Named here BEFORE the first byte lands — the rule above, followed this time.
+blind-corpus/docs/
+blind-corpus/real/
+blind-corpus/work/

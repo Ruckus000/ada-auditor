@@ -7,6 +7,7 @@ import {
   withConformance,
   titleFromFilename,
   type ConversionProvenance,
+  type RemediationSummary,
 } from '../../src/domain/document-remediation';
 import { documentStructureSchema } from '../../src/domain/document-structure';
 
@@ -407,26 +408,74 @@ describe('withConformance', () => {
       compliant: false,
       failingClauses: ['5-1', '7.18.4-1', '6.2-1'],
     });
-    // 7.18.* is voiced by the annotation item; the other two are not ours.
+    // `base` voices no annotation item, so 7.18.4-1 is named here too: a
+    // clause is only left to one of our items when that item is present.
     expect(s.needs).toHaveLength(1);
-    expect(s.needs?.[0].item).toContain('2 further PDF/UA checks fail');
+    expect(s.needs?.[0].item).toContain('3 further PDF/UA checks fail');
     expect(s.needs?.[0].item).toContain('5-1');
     expect(s.needs?.[0].item).toContain('6.2-1');
+    expect(s.needs?.[0].item).toContain('7.18.4-1');
   });
 
   it('leaves clauses our own vocabulary already voices to the items that voice them', () => {
     // Language (7.2.*), figures (7.3), headings (7.4), title (7.1-9) and
     // annotation nesting (7.18.*) each have a gap or item of their own;
-    // repeating them through the checker would say everything twice.
-    const s = withConformance(base, {
+    // repeating them through the checker would say everything twice. Each one
+    // has to actually BE there, which is what this fixture supplies.
+    const voiced: RemediationSummary = {
+      ...base,
+      gaps: ['2.4.2: no title, and no heading to copy one from'],
+      needs: [
+        { criterion: '3.1.1', item: 'name the language it is written in' },
+        { criterion: '1.1.1', item: 'Figure 1 needs a human-written description' },
+        { criterion: '2.4.10', item: 'heading levels skip' },
+        { criterion: '1.3.1', item: 'a form field sits outside the structure' },
+      ],
+    };
+    const s = withConformance(voiced, {
       checker: 'verapdf-ua1',
       compliant: false,
       failingClauses: ['7.2-34', '7.3-1', '7.4.2-1', '7.1-9', '7.18.5-2'],
     });
-    expect('needs' in s).toBe(false);
+    // The four items it arrived with, and no catch-all on top of them.
+    expect(s.needs).toHaveLength(4);
+    expect(s.needs?.some((n) => n.criterion === 'PDF/UA')).toBe(false);
     // But the verdict itself still says the document is not conformant —
     // the floor under every translation decision.
     expect(s.conformance).toMatchObject({ compliant: false });
+  });
+
+  it('names a clause whose item is missing rather than assuming it was said', () => {
+    // The defect the blind corpus found, as a test. Two real documents came
+    // back with no items, no gaps, and `compliant: false` naming 7.18.1-2 and
+    // 7.18.5-2 — neither conformant nor punch-listed, which is the one
+    // outcome this product promises never to produce. Suppression assumed the
+    // annotation item would be there; our counter had found nothing to say,
+    // so nothing said it.
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.18.1-2', '7.18.5-2'],
+    });
+
+    expect(s.needs).toHaveLength(1);
+    expect(s.needs?.[0].criterion).toBe('PDF/UA');
+    expect(s.needs?.[0].item).toContain('7.18.1-2');
+    expect(s.needs?.[0].item).toContain('7.18.5-2');
+  });
+
+  it('suppresses a clause per family, not per document', () => {
+    // A document that voices headings but not annotations suppresses the
+    // heading clause and names the annotation one. The old rule dropped both
+    // because it never looked at which item was present.
+    const s = withConformance(
+      { ...base, needs: [{ criterion: '2.4.10', item: 'heading levels skip' }] },
+      { checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.4.2-1', '7.18.5-2'] },
+    );
+
+    const catchAll = s.needs?.find((n) => n.criterion === 'PDF/UA');
+    expect(catchAll?.item).toContain('7.18.5-2');
+    expect(catchAll?.item).not.toContain('7.4.2-1');
   });
 
   it('an absent checker is an answer, never a pass', () => {

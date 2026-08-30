@@ -1,0 +1,161 @@
+# Document blind test — results
+
+Five runs of 92 documents the pipeline had never seen, against keys locked in
+`5ad8352` before the first byte reached it. Counts and clause identifiers only.
+Predictions are in `blind-test-2026-08-29-predictions.md`, written first.
+
+## The scorecard, final run
+
+```
+Disposition   core 35/35 hit · 0 refused differently · 0 delivered when a refusal was expected
+Door          11/11 · 0 leaked · 0 wrong status
+Punch items   0 missing · 1 unexpected (listed; a person decides)
+Invented claims  0
+Silent gaps   0 · 0 suppressed with nothing voicing them
+Drift         0
+Counts        2 off · 18 unverifiable
+Probes        73 observations across 48 rows (data, not failures)
+Key corrections this run: 40
+vs previous run: 0 fixed · 0 regressed · 0 still failing
+```
+
+Exit 0. **Every promise held.**
+
+## What the corpus actually produced
+
+81 documents past the door: **66 delivered, 15 refused**.
+
+| | count |
+|---|---|
+| deliveries fully conformant on both instruments | **19** |
+| deliveries not conformant | 47 |
+| of those, carrying a punch list or a gap | **47 of 47** |
+| **delivered non-conformant with nothing to do about it** | **0** |
+| punch items written across the corpus | 173 |
+| real PDFs delivered / refused | 14 / 5 |
+
+That bottom-left number is the whole product. A document either comes back
+conformant or comes back with the work named. Across 92 documents it never
+came back as neither.
+
+## The five promises, measured
+
+| promise | result |
+|---|---|
+| accurate disposition | 35/35 core rows |
+| zero invented claims | 0 |
+| zero silent gaps | 0 |
+| zero drift between the product's verdict and an independent one | 0 across every delivery |
+| complete punch list | 0 missing on any row |
+| door behaves | 11/11, nothing leaked |
+
+Conformance is reported beside these and is deliberately not one of them: the
+Matterhorn Protocol puts 47 of PDF/UA-1's 136 failure conditions beyond any
+machine, and claiming otherwise is what the FTC fined a competitor $1M for.
+
+## What the test found in the product
+
+**One defect, and one broken promise.**
+
+**1. A document with one bad metadata field got no remediation at all.**
+`Finish` refuses a language tag that is not BCP-47 — correctly, since writing
+`en US` states something false while passing every machine check there is. But
+`planRepair` handed the source's tag straight through, so a PDF whose own
+`/Lang` was empty or malformed came back `repair_failed: invalid-language` and
+the client got nothing. A tag nobody can resolve is, to a reader, the same as
+no tag; it is now dropped, and the 3.1.1 punch item asks a person to name the
+real one. `[V]` p21 and p22 now deliver, carrying that item.
+
+**2. Two documents were delivered neither conformant nor punch-listed.**
+The promise, broken, and found only because the corpus was new. `withConformance`
+suppressed every clause in a family our own vocabulary can speak for — on the
+assumption the matching item would be there. Our annotation item counts
+annotations with no `/StructParent`; veraPDF fails 7.18 for reasons that
+counter cannot see. The item stayed quiet, the suppression spoke for it, and
+two failing clauses reached the client as silence.
+
+Suppression is now **earned**: a clause is left to one of our items only when
+that item is present, checked per family. `[V]` The corpus-wide count of
+"suppressed with nothing voicing them" went 4 → 0.
+
+That second finding is the answer to whether this test was worth running. No
+unit test could have produced it: it needed a real document, through the real
+door, checked by an instrument that did not share the product's assumptions.
+
+## What the test found in itself
+
+Six defects, all mine, and they outnumber the product's three to one. Worth
+recording, because a blind test that only reports on the product is not being
+read carefully.
+
+| defect | consequence |
+|---|---|
+| structure elements counted by the optional `/Type /StructElem` | 14 tagged documents read as untagged; would have reported the product delivering untagged PDFs |
+| title detector blind to XMP | accused the product of inventing a title the document declares twice |
+| synthetic Identity-H font with a placeholder font program | no text extractable at all, so the title chain "failed" the heading rung |
+| table header cells styled `Heading3` | a document planted with two headings really contained four |
+| heading order read from qpdf's object map | three documents credited with heading problems in an order no reader experiences |
+| `descr` counted as a description, `title` not | a captioned seal called undescribed |
+
+`generate.mjs` also emptied the whole keys directory, deleting 28 real keys it
+does not own — caught by the independence test counting keys, restored from the
+lock commit, which is why the lock commit exists.
+
+**40 corrections across 18 of 28 real documents: 64%**, far past the 10% the
+protocol calls a finding about key quality. It is a finding about mine. Every
+one is in `corrections.json` with its evidence and prints on every future
+scorecard.
+
+The strongest single result of the campaign is what happened after those fixes:
+counting structure elements by shape reproduces the product's counts **exactly**
+— r01 11/3/25/1, r17 32/31/11/1, r22 2/0/10/2, every facet. Two independent
+readings of the same bytes, agreeing.
+
+## Predictions against outcomes
+
+| registered | actual | |
+|---|---|---|
+| refusals among real PDFs: 16 of 19 | **5 of 19** | wrong, and the reason was my `/Type` defect. The wild is far more tagged than the training corpus suggested |
+| deliveries among real Word documents: 9 of 9 | 9 of 9 | held |
+| invented claims 0 · silent gaps 0 · drift 0 · door leaks 0 · punch missing 0 | all 0 | held (silent gaps only after the fix above) |
+| fully conformant deliveries: 3–6 of ~21 | **19 of 66** | both numbers moved; more documents were repairable than predicted |
+| r01 stays compliant through repair | compliant | held — repair did not break an already-conformant document |
+| at least 2 real PDFs failing 7.21.4 | held | |
+
+**The four things I registered as likely wrong:** the junk-title rows are still
+open (below); the heading-level vocabulary disagreement was mine, not the
+product's; the portfolio row behaved exactly as predicted (below); and
+suppressed-but-quiet clauses were real, and were the broken promise.
+
+## Two open questions, recorded rather than decided
+
+**A title an exporter left behind is carried forward.** p04 declares
+`Microsoft Word - Document1.docx` and the product reports it as
+`already-titled`. That is faithful — the document does say it — but the product
+already refuses junk of exactly this shape when it comes from a *filename*, and
+a screen-reader user gets a meaningless title either way. Changing it means
+discarding a claim the document makes, which is a product decision and not a
+defect. Registered as a probe before the run; still open.
+
+**A portfolio's attachments are examined by nobody.** p16 is a tagged cover
+sheet with an untagged PDF attached. It delivers, and neither instrument looks
+inside the attachment, so no clause fails and nothing is voiced. This is not a
+silent gap by the promise's definition — every failing clause is named — but a
+client could receive a clean-looking verdict on a document whose payload is
+unremediated. The punch-list vocabulary has no word for it. Predicted before
+the run; confirmed; now a known gap.
+
+## What this test still cannot do
+
+Unchanged from the predictions, and worth repeating where the results are:
+
+- One person authored both the pipeline and the keys. The mechanisms bound the
+  leak; nothing proves it is zero — and 64% of real keys needed correcting,
+  which is the honest measure of how much that matters.
+- The planted corpus is bounded by one imagination. The 28 real documents are
+  the only guard against unknown-unknowns, and 28 is thin.
+- Two count disagreements remain (r28, r32: one heading each), both explained
+  by headings that do not survive conversion, and both the source-side-predicts-
+  output-side category error rather than product defects.
+- 18 count facets are unverifiable by any third-party instrument and are listed
+  as such rather than quietly scored.

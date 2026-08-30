@@ -25,6 +25,7 @@
     "operator": "tsx scripts/operator.ts",
     "smoke:real": "tsx scripts/smoke-real.ts",
     "blind:test": "tsx scripts/blind-test/run.ts",
+    "blind:documents": "tsx scripts/doc-blind-test/run.ts",
     "test:db": "vitest run --config vitest.db.config.ts",
     "test:hydration": "vitest run --config vitest.hydration.config.ts",
     "test:documents": "vitest run --config vitest.documents.config.ts"
