@@ -5,6 +5,7 @@ import {
   logSafe,
   summarise,
   withConformance,
+  isPlaceholderTitle,
   titleFromFilename,
   type ConversionProvenance,
   type RemediationSummary,
@@ -512,5 +513,40 @@ describe('withConformance', () => {
       failingClauses: ['7.21.4.1-1'],
     });
     expect(s.needs?.map((n) => n.criterion)).toEqual(['3.1.1', 'PDF/UA 7.21.4']);
+  });
+});
+
+describe('a placeholder is not a title', () => {
+  it.each([
+    'Microsoft Word - Fee_Schedule.docx',
+    'Microsoft Word - Document1',
+    'Word - notice.docx',
+    'Acrobat: scan_0001.pdf',
+  ])('refuses %s on provenance — a producer filled that field, not a person', (title) => {
+    expect(isPlaceholderTitle(title)).toBe(true);
+  });
+
+  it.each(['Document1.docx', 'untitled', 'scan 0001', 'final v2', 'IMG_2031', 'a', '   '])(
+    'refuses %s on the same junk table the filename chain uses',
+    (title) => {
+      expect(isPlaceholderTitle(title)).toBe(true);
+    },
+  );
+
+  it.each([
+    'Annual Drainage Report',
+    'Agenda',
+    '2026 Fee Schedule',
+    'Word Choice in Municipal Notices',
+    'Conflict of Interest Law for Municipal Employees',
+  ])('keeps %s, because a policy that eats real titles is worse than the problem', (title) => {
+    expect(isPlaceholderTitle(title)).toBe(false);
+  });
+
+  it('judges the words, not the spacing around them', () => {
+    // The same normalisation `titleFromFilename` does, so a title neither
+    // survives nor dies by how it was spaced.
+    expect(isPlaceholderTitle('  Untitled  ')).toBe(true);
+    expect(isPlaceholderTitle('  Annual Drainage  Report ')).toBe(false);
   });
 });

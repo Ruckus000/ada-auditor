@@ -1,20 +1,20 @@
 # Document blind test — results
 
-Five runs of 92 documents the pipeline had never seen, against keys locked in
+Six runs of 92 documents the pipeline had never seen, against keys locked in
 `5ad8352` before the first byte reached it. Counts and clause identifiers only.
 Predictions are in `blind-test-2026-08-29-predictions.md`, written first.
 
 ## The scorecard, final run
 
 ```
-Disposition   core 35/35 hit · 0 refused differently · 0 delivered when a refusal was expected
+Disposition   core 36/36 hit · 0 refused differently · 0 delivered when a refusal was expected
 Door          11/11 · 0 leaked · 0 wrong status
 Punch items   0 missing · 1 unexpected (listed; a person decides)
 Invented claims  0
 Silent gaps   0 · 0 suppressed with nothing voicing them
 Drift         0
 Counts        2 off · 18 unverifiable
-Probes        73 observations across 48 rows (data, not failures)
+Probes        70 observations across 47 rows (data, not failures)
 Key corrections this run: 40
 vs previous run: 0 fixed · 0 regressed · 0 still failing
 ```
@@ -42,7 +42,7 @@ came back as neither.
 
 | promise | result |
 |---|---|
-| accurate disposition | 35/35 core rows |
+| accurate disposition | 36/36 core rows |
 | zero invented claims | 0 |
 | zero silent gaps | 0 |
 | zero drift between the product's verdict and an independent one | 0 across every delivery |
@@ -55,9 +55,13 @@ machine, and claiming otherwise is what the FTC fined a competitor $1M for.
 
 ## What the test found in the product
 
-**One defect, and one broken promise.**
+**Two defects, and one broken promise.**
 
-**1. A document with one bad metadata field got no remediation at all.**
+**1. A placeholder title outranked the document's own heading.** See the
+decided question below: an exporter's stamp was delivered as `already-titled`,
+satisfying UA-1's DisplayDocTitle while telling a reader nothing.
+
+**2. A document with one bad metadata field got no remediation at all.**
 `Finish` refuses a language tag that is not BCP-47 — correctly, since writing
 `en US` states something false while passing every machine check there is. But
 `planRepair` handed the source's tag straight through, so a PDF whose own
@@ -66,7 +70,7 @@ the client got nothing. A tag nobody can resolve is, to a reader, the same as
 no tag; it is now dropped, and the 3.1.1 punch item asks a person to name the
 real one. `[V]` p21 and p22 now deliver, carrying that item.
 
-**2. Two documents were delivered neither conformant nor punch-listed.**
+**3. Two documents were delivered neither conformant nor punch-listed.**
 The promise, broken, and found only because the corpus was new. `withConformance`
 suppressed every clause in a family our own vocabulary can speak for — on the
 assumption the matching item would be there. Our annotation item counts
@@ -78,7 +82,7 @@ Suppression is now **earned**: a clause is left to one of our items only when
 that item is present, checked per family. `[V]` The corpus-wide count of
 "suppressed with nothing voicing them" went 4 → 0.
 
-That second finding is the answer to whether this test was worth running. No
+That last finding is the answer to whether this test was worth running. No
 unit test could have produced it: it needed a real document, through the real
 door, checked by an instrument that did not share the product's assumptions.
 
@@ -122,20 +126,36 @@ readings of the same bytes, agreeing.
 | r01 stays compliant through repair | compliant | held — repair did not break an already-conformant document |
 | at least 2 real PDFs failing 7.21.4 | held | |
 
-**The four things I registered as likely wrong:** the junk-title rows are still
-open (below); the heading-level vocabulary disagreement was mine, not the
+**The four things I registered as likely wrong:** the junk-title row was a real
+problem and is now fixed (below); the heading-level vocabulary disagreement was mine, not the
 product's; the portfolio row behaved exactly as predicted (below); and
 suppressed-but-quiet clauses were real, and were the broken promise.
 
-## Two open questions, recorded rather than decided
+## One question decided, one still open
 
-**A title an exporter left behind is carried forward.** p04 declares
-`Microsoft Word - Document1.docx` and the product reports it as
-`already-titled`. That is faithful — the document does say it — but the product
-already refuses junk of exactly this shape when it comes from a *filename*, and
-a screen-reader user gets a meaningless title either way. Changing it means
-discarding a claim the document makes, which is a product decision and not a
-defect. Registered as a probe before the run; still open.
+**A title an exporter left behind is no longer carried forward.** p04 declared
+`Microsoft Word - Document1.docx` and the product reported it as
+`already-titled` — faithful, since the document does say it, but the product
+already refused junk of exactly that shape from a *filename*, and a
+screen-reader user got a meaningless title either way.
+
+Decided on **provenance rather than content**: a producer stamp is what Word
+writes when a document has no title, so its presence is evidence that nobody
+filled the field. Such a title is declined and the chain continues — the
+document's own heading, then the filename, then the honest gap — which recovers
+the same words under a label that is true. `isPlaceholderTitle` is a predicate,
+never a rewriter: a title that survives is delivered exactly as written. It
+delegates to the junk table the filename chain already used, so there is one
+policy and not two, and it now governs all three paths that decide a title
+(repair, conversion, inspection) so no two surfaces can disagree about one
+document. `INSTRUMENT_VERSION` 7; the 2.4.2 gap now reads "no title a reader
+could use", which stays true of a document that carries a placeholder.
+
+`[V]` Re-run: **disposition 36/36 on core rows** (p04 promoted from probe, since
+the product now makes this claim), and across all 92 documents **exactly one
+title changed** — p04's, to `transcribed`. No real document lost a legitimate
+title, which is the guard against a policy that eats what it was meant to
+protect.
 
 **A portfolio's attachments are examined by nobody.** p16 is a tagged cover
 sheet with an untagged PDF attached. It delivers, and neither instrument looks

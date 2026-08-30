@@ -1,4 +1,4 @@
-import type { TitleOutcome } from '../../domain/document-remediation';
+import { isPlaceholderTitle, type TitleOutcome } from '../../domain/document-remediation';
 
 /**
  * Reading and repairing a flat ODF source, as pure string transforms.
@@ -132,7 +132,11 @@ export type TitleRepair = {
  */
 export function repairTitle(xml: string, filenameTitle?: string | null): TitleRepair {
   const existing = readTitle(xml);
-  if (existing !== null) {
+  // Same policy as the filename chain below, and as the PDF repair path: a
+  // placeholder an exporter wrote is not a title, and letting it stand would
+  // outrank the document's own first heading with a string that tells a reader
+  // nothing.
+  if (existing !== null && !isPlaceholderTitle(existing)) {
     return { xml, outcome: { kind: 'already-titled', title: existing } };
   }
 

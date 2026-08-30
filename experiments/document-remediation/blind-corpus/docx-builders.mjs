@@ -11,8 +11,30 @@
  * generation, where it cannot be mistaken for a system failure.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
+/**
+ * One fixed timestamp for every part, because a ZIP stores modification times.
+ *
+ * Without this, regenerating the corpus produced different bytes for every
+ * Word document even when nothing about them had changed — so every rebuild
+ * invalidated eighteen hashes and a real content change was indistinguishable
+ * from the clock moving. A hash-locked corpus has to be reproducible or the
+ * lock says nothing.
+ */
+const FIXED_MTIME = new Date('2026-01-01T00:00:00Z');
+
+function stampTree(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) stampTree(full);
+    utimesSync(full, FIXED_MTIME, FIXED_MTIME);
+  }
+  utimesSync(dir, FIXED_MTIME, FIXED_MTIME);
+}
+
+export { stampTree, FIXED_MTIME };
 
 /** A 1x1 red PNG, inline so the repo carries no image file. */
 export const PNG_1PX = Buffer.from(
@@ -194,6 +216,7 @@ export function writeDocx(workDir, outPath, spec) {
   }
 
   rmSync(outPath, { force: true });
+  stampTree(workDir);
   execFileSync('zip', ['-X', '-q', '-r', outPath, '.'], { cwd: workDir });
   rmSync(workDir, { recursive: true, force: true });
   return outPath;

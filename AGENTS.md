@@ -486,20 +486,26 @@ Read this before claiming something works.
   `[V]` 81 documents past the door: 66 delivered, 15 refused; 19 fully
   conformant on both instruments; **47 of 47 non-conformant deliveries carry a
   punch list, and 0 came back as neither**. Invented claims 0, silent gaps 0,
-  drift 0, door leaks 0, punch items missing 0, disposition 35/35 on core
-  rows. It found two product defects — an unusable source `/Lang` costing the
-  client the entire repair, and the suppression assumption above — and six
-  defects in itself, which is why 40 corrections across 18 of 28 real keys
-  (64%) are recorded in `corrections.json` and print on every scorecard. Keys
+  drift 0, door leaks 0, punch items missing 0, disposition 36/36 on core
+  rows. It found three product defects — an unusable source `/Lang` costing the
+  client the entire repair, the suppression assumption above, and a producer's
+  placeholder title outranking the document's own heading — and six defects in
+  itself, which is why 40 corrections across 18 of 28 real keys (64%) are
+  recorded in `corrections.json` and print on every scorecard. Keys
   for real documents are authored by qpdf, unzip and the veraPDF CLI and by
   nothing in `src/`, enforced by
   `tests/scripts/blind-corpus-keys-are-independent.test.ts`.
   **Known gap it confirmed:** a portfolio's attachments are examined by
   neither instrument, so a cover sheet can deliver clean over an unremediated
   payload — no clause fails, so nothing is voiced, and the punch-list
-  vocabulary has no word for it. **Still open:** a junk title an exporter left
-  behind is carried forward faithfully, where the same junk in a *filename* is
-  refused. **The numbers are local-only:** a seven-document spot-check against
+  vocabulary has no word for it. **A placeholder is no longer a title**
+  (`INSTRUMENT_VERSION` 7): a producer stamp is what Word writes when a
+  document has none, so `isPlaceholderTitle` declines it on provenance and the
+  chain continues to the document's own heading, then the filename, then the
+  honest gap. It is a predicate, never a rewriter, delegates to the junk table
+  the filename chain already used, and governs all three paths that decide a
+  title so no two surfaces disagree about one document. `[V]` Exactly one
+  document of 92 changed. **The numbers are local-only:** a seven-document spot-check against
   the deployed function answered 401 on all seven — the app's own
   `unauthorized`, not Vercel SSO, with `AUDITOR_RUN_TOKEN` set in Production
   but diverged from the local `.env.local`. Reconciling them is an operator
