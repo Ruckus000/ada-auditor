@@ -149,7 +149,20 @@ export function structuredPdf({
   titleEncoding = 'literal',
   marked = true,
   tagged = true,
-  font = 'embedded-type0',
+  // Base-14 Helvetica by default, because the text has to be READABLE.
+  //
+  // The first corpus used a synthetic Identity-H font with a placeholder font
+  // program, and no reader could decode a character of it: `[V]` textChars 0,
+  // every heading's text empty, and the title chain fell through the heading
+  // rung to the filename. That looked exactly like a product defect and was
+  // not one — with Helvetica the same document transcribes "Drainage
+  // Assessment" correctly.
+  //
+  // The trade is that base-14 is not embedded, so these documents fail UA-1
+  // 7.21.4.1. That is honest — a large share of real PDFs are exactly this —
+  // and the punch list is expected to say so. `cidset` and `not-embedded`
+  // remain available for the rows that are about fonts.
+  font = 'not-embedded',
   extraCatalog = '',
   annots = [],
   pages = 1,

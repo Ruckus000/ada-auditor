@@ -467,5 +467,33 @@
       "figures": 2
     },
     "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type. Verified to reproduce the same counts on r01, r17 and r22 independently."
+  },
+  {
+    "docId": "r34",
+    "field": "counts",
+    "was": {
+      "pages": null,
+      "headings": 0,
+      "tables": 1,
+      "lists": null,
+      "figures": 4
+    },
+    "now": {
+      "pages": null,
+      "headings": 0,
+      "tables": 1,
+      "lists": null,
+      "figures": 5
+    },
+    "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type. Verified to reproduce the same counts on r01, r17 and r22 independently."
+  },
+  {
+    "docId": "r34",
+    "field": "needs",
+    "was": [],
+    "now": [
+      "1.1.1"
+    ],
+    "evidence": "qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first pass could not see."
   }
 ]

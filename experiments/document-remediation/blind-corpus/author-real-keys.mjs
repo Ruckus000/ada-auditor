@@ -204,7 +204,14 @@ function readDocx(path) {
   const core = part('docProps/core.xml');
 
   const headingLevels = [...doc.matchAll(/w:val="Heading(\d)"/g)].map((m) => Number(m[1]));
-  const drawings = [...doc.matchAll(/<wp:docPr\b[^>]*>/g)];
+  // DrawingML images AND the legacy VML ones. A document that predates the
+  // DrawingML era, or that embeds an OLE object, carries `<v:imagedata>` and
+  // no `<wp:docPr>` — the first pass counted four images in a document with
+  // five and accused the product of inventing the fifth.
+  const drawings = [
+    ...doc.matchAll(/<wp:docPr\b[^>]*>/g),
+    ...doc.matchAll(/<v:imagedata\b[^>]*>/g),
+  ];
 
   return {
     tagged: null,
