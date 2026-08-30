@@ -1,5 +1,9 @@
 import { isTagged, languageTagSchema, type DocumentStructure } from '../domain/document-structure';
-import { titleFromFilename, type TitleOutcome } from '../domain/document-remediation';
+import {
+  isPlaceholderTitle,
+  titleFromFilename,
+  type TitleOutcome,
+} from '../domain/document-remediation';
 
 /**
  * What an honest repair of a PDF is allowed to do to it.
@@ -145,7 +149,10 @@ function languageToCarry(lang: string | null): string | null {
  */
 function titleFor(structure: DocumentStructure, sourceName: string | undefined): TitleOutcome {
   const carried = structure.title?.trim();
-  if (carried !== undefined && carried !== '') {
+  // A placeholder is not a title. The chain already refuses "Document1" from a
+  // filename; refusing it from the metadata field too means an exporter's
+  // leftover does not outrank the document's own first heading.
+  if (carried !== undefined && carried !== '' && !isPlaceholderTitle(carried)) {
     return { kind: 'already-titled', title: carried };
   }
 

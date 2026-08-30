@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import {
   isPdf,
+  isPlaceholderTitle,
   isWordDocument,
   summarise,
   withConformance,
@@ -63,8 +64,13 @@ export async function inspectPdfBytes(
     // that describe provenance are answered from the file itself: the title
     // it carries, and the language it declares. Neither is inferred.
     const summary = summarise({
+      // A placeholder reads as no title here too. An inspection that reported
+      // "Microsoft Word - Document1.docx" as `already-titled` would tell an
+      // operator there is no title work to do, and then the repair of the same
+      // file would replace it — two surfaces disagreeing about one document,
+      // which is the failure `presentation/verdict.ts` exists to prevent.
       title:
-        result.value.title === null
+        result.value.title === null || isPlaceholderTitle(result.value.title)
           ? { kind: 'no-heading-to-copy' }
           : { kind: 'already-titled', title: result.value.title },
       sourceLanguage: result.value.lang,

@@ -21,7 +21,7 @@ import {
 } from './pdf-builders.mjs';
 import {
   fakeHeading, fakeListItem, figure, foreignRun, heading, listItem, oleContainer, para, table,
-  trackedPara, writeDocx,
+  stampTree, trackedPara, writeDocx,
 } from './docx-builders.mjs';
 import { SPEC, EXPECTED_ROWS } from './spec.mjs';
 
@@ -194,6 +194,7 @@ function zipOf(entries, outPath) {
     writeFileSync(full, body);
   }
   rmSync(outPath, { force: true });
+  stampTree(dir);
   execFileSync('zip', ['-X', '-q', '-r', outPath, '.'], { cwd: dir });
   rmSync(dir, { recursive: true, force: true });
   return readFileSync(outPath);

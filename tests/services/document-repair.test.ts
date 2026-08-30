@@ -187,6 +187,57 @@ describe('planRepair', () => {
     expect(decision.plan.language).toBeNull();
   });
 
+  it.each([
+    ['an exporter stamp over a filename', 'Microsoft Word - Fee_Schedule.docx'],
+    ['a bare exporter placeholder', 'Microsoft Word - Document1'],
+    ['the filename alone', 'Document1.docx'],
+    ['a scanner name', 'scan_0001'],
+    ['untitled', 'Untitled'],
+    ['a bare version', 'final v2'],
+  ])('does not let %s outrank the document\'s own heading', (_label, carried) => {
+    // The blind corpus registered this as an open question before the run and
+    // then answered it: the chain already refuses this junk from a FILENAME,
+    // and a placeholder in the metadata field is the same string doing the
+    // same damage — it satisfies DisplayDocTitle and tells a reader nothing.
+    const decision = planRepair(
+      structure({ title: carried, headingTexts: [{ level: 'H1', text: 'Annual Drainage Report' }] }),
+      'notice.pdf',
+    );
+
+    expect(decision.repairable).toBe(true);
+    if (!decision.repairable) return;
+    expect(decision.plan.title).toEqual({ kind: 'transcribed', title: 'Annual Drainage Report' });
+  });
+
+  it.each([
+    ['an ordinary title', 'Annual Drainage Report'],
+    ['a short real one', 'Agenda'],
+    ['one that merely mentions a producer', 'Word Choice in Municipal Notices'],
+    ['one with a year in it', '2026 Fee Schedule'],
+  ])('keeps %s exactly as the document wrote it', (_label, carried) => {
+    // The guard against a policy that eats real titles. It is a predicate, not
+    // a rewriter: what survives is delivered verbatim.
+    const decision = planRepair(
+      structure({ title: carried, headingTexts: [{ level: 'H1', text: 'A Heading' }] }),
+      'notice.pdf',
+    );
+
+    expect(decision.repairable).toBe(true);
+    if (!decision.repairable) return;
+    expect(decision.plan.title).toEqual({ kind: 'already-titled', title: carried });
+  });
+
+  it('falls all the way to the honest gap when nothing usable is left', () => {
+    const decision = planRepair(
+      structure({ title: 'Microsoft Word - Document1.docx', headingTexts: [] }),
+      'Document1.pdf',
+    );
+
+    expect(decision.repairable).toBe(true);
+    if (!decision.repairable) return;
+    expect(decision.plan.title).toEqual({ kind: 'no-heading-to-copy' });
+  });
+
   it('does not mistake an unfamiliar but well-formed tag for a broken one', () => {
     // The guard must not become a whitelist of languages somebody thought of.
     const decision = planRepair(structure({ lang: 'haw-US' }), 'notice.pdf');

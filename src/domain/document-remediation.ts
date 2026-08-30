@@ -255,7 +255,17 @@ export function withConformance(
  * work somebody can do, which is a different sentence and a new one in the
  * vocabulary.
  */
-export const INSTRUMENT_VERSION = 6;
+/**
+ * 7 — a title that is only a placeholder stopped counting as a title. An
+ * exporter's leftover ("Microsoft Word - Document1.docx") used to be delivered
+ * as `already-titled`, satisfying UA-1's DisplayDocTitle while telling a
+ * screen-reader user nothing, and it outranked the document's own first
+ * heading. The junk policy that always governed filenames now governs the
+ * metadata field too, on all three paths that decide a title, and the 2.4.2
+ * gap says "no title a reader could use" so it stays true of a document that
+ * carries one.
+ */
+export const INSTRUMENT_VERSION = 7;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -263,7 +273,10 @@ function gapsIn(provenance: ConversionProvenance): string[] {
 
   if (title.kind === 'no-heading-to-copy') {
     gaps.push(
-      '2.4.2: the document has no title, no heading to copy one from, and no usable filename to derive one',
+      // "no title a reader could use" rather than "no title": since version 7
+      // this also covers a document that carries a placeholder an exporter
+      // wrote, and saying it has no title at all would be false about it.
+      '2.4.2: the document has no title a reader could use, no heading to copy one from, and no usable filename to derive one',
     );
   }
 
@@ -507,6 +520,54 @@ export function isPdf(bytes: Uint8Array): UploadCheck {
  */
 const JUNK_FILENAMES =
   /^(doc(ument)?s?[ ]?\d*|untitled|new|final([ ]?v?\d+)?|scan(ned)?[ ]?\d*|img[ ]?\d*|image[ ]?\d*|file[ ]?\d*|copy([ ]of)?.*|temp|draft|[a-z]{0,3}[\d .]*)$/i;
+
+/**
+ * A producer stamping its own name onto a title it invented.
+ *
+ * "Microsoft Word - Fee_Schedule.docx" is not a title somebody wrote; it is an
+ * exporter announcing that nobody did.
+ */
+const PRODUCER_STAMP = /^(microsoft\s+)?(word|excel|powerpoint|publisher|acrobat)\s*[-–—:]\s*/i;
+
+/**
+ * Is this title a placeholder rather than a title?
+ *
+ * The product already refuses junk when it comes from a *filename* — "doc1",
+ * "untitled", "scan_0001" produce no title at all, because a bad derived title
+ * is worse than a reported absence. The same junk arriving in the metadata
+ * field was carried through untouched, so a document could be delivered
+ * `already-titled` as "Microsoft Word - Document1.docx": satisfying UA-1's
+ * DisplayDocTitle and telling a screen-reader user nothing. That asymmetry is
+ * what this closes — same policy, same table, both doors.
+ *
+ * It is a PREDICATE, never a rewriter. A title that survives is delivered
+ * exactly as the document wrote it: declining a claim we cannot stand behind
+ * is the move `/Lang` established, and editing one would be a different and
+ * much larger liberty.
+ *
+ * `[V]` Found by the blind corpus, where it was registered as an open question
+ * before the run rather than discovered after it.
+ */
+export function isPlaceholderTitle(title: string): boolean {
+  const cleaned = title
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (cleaned.length < 3) return true;
+
+  // A producer stamp settles it on PROVENANCE rather than on content.
+  // "Microsoft Word - Fee_Schedule.docx" is what Word writes when the document
+  // has no title: it fills the field with the filename. The residue may well
+  // be informative, and that is exactly why declining costs nothing — the
+  // chain's next rungs are the document's own heading and then the filename,
+  // which recovers the same words under a provenance label that is true.
+  if (PRODUCER_STAMP.test(cleaned)) return true;
+
+  // Otherwise the same junk table the filename chain uses, so there is one
+  // policy and not two to keep in step.
+  return titleFromFilename(cleaned) === null;
+}
 
 export function titleFromFilename(name: string): string | null {
   const stem = name

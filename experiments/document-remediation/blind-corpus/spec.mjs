@@ -99,13 +99,16 @@ pdfRow(
 
 pdfRow(
   'p04-junk-docinfo-title',
-  'The title an exporter left behind. A heading exists to transcribe instead.',
+  'The title an exporter left behind. A heading exists to transcribe instead, and it wins.',
   { fn: 'structured', args: { title: 'Microsoft Word - Document1.docx', lang: 'en-US', elements: [
     { type: 'H1', text: 'Annual Report' }, { type: 'P', text: BODY },
   ] } },
   { disposition: 'delivered', title: 'transcribed', titleText: 'Annual Report', language: 'en-US',
     counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 0 }, needs: [], gapCriteria: [] },
-  { weight: 'probe' },
+  // Registered as an open question before the first run, and decided after it:
+  // a producer stamp is proof the title field was auto-filled, so the document's
+  // own heading outranks it. Now a claim the product makes, so a regression
+  // fails the run rather than being noted in passing.
 );
 
 pdfRow(

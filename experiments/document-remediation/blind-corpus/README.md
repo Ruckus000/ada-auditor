@@ -88,5 +88,17 @@ commit the new key and hash. Real: add a line to `real-names.txt`,
 `node harvest.mjs real-names.txt` (it refuses training-set domains and
 byte-identical files), then `node author-real-keys.mjs`.
 
-Rebuilding the planted corpus changes its hashes. That is a new lock, and the
-commit should say so.
+## Reproducibility
+
+`node generate.mjs` twice produces byte-identical planted documents, so a hash
+that moves means content that moved. That took a fix: a ZIP stores modification
+times, so every rebuild used to change all eighteen Word documents even when
+nothing about them had, and a real change was indistinguishable from the clock.
+Every part is now stamped with one fixed timestamp before packaging.
+
+**One documented exception.** `p13-encrypted` is encrypted by qpdf, which
+generates a random file key each time, so its bytes and hash change on every
+rebuild. Nothing can be concluded from that row's hash moving.
+
+Rebuilding the planted corpus for any other reason changes its hashes. That is
+a new lock, and the commit should say so.
