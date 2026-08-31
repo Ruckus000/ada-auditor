@@ -508,16 +508,31 @@ Read this before claiming something works.
   See `docs/research/document-remediation/use-of-color-feasibility.md`. Both
   stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
 
-- **The summary header is unbounded, and a large punch list breaks the
-  delivery.** The remediation summary travels in the `x-remediation-summary`
-  response header with one item per undescribed figure. A real municipal
-  document carrying 101 of them produced a 22,743-byte header, and every client
-  on Node's 16KB default rejected the whole response with `Headers Overflow
-  Error` — the client got no punch list at all. Shortening the two figure items
-  brought the same 104 items to 12,946 bytes and the delivery back to 200, but
-  that is HEADROOM, not a bound: ~3.4KB remains and a few hundred figures would
-  breach it again. The response contract is what needs fixing.
-  See `docs/research/document-remediation/alt-and-identifier-results.md`.
+- **The summary header is BOUNDED, and the bound is a safety net rather than a
+  routine trim.** The summary travels in `x-remediation-summary` with one item
+  per undescribed figure and per unnamed form field — a list with no upper
+  limit. A real municipal document carrying 101 figures once produced a
+  22,743-byte header, and every client on Node's 16KB default rejected the whole
+  response with `Headers Overflow Error`: the file arrived, the punch list did
+  not. `boundSummary` now fits it to `SUMMARY_HEADER_BUDGET` (14,000 of the
+  16,384, leaving the balance for the rest of the block) by keeping one item of
+  every criterion, then as many of the rest as fit, then ONE item saying how
+  many are not shown. Never a silent cap.
+
+  Two things to know before touching it. **It bounds the punch list only** —
+  counts, title and clause list are facts, not a list to shorten, so a document
+  whose title alone exceeded the budget would still overflow. And **the budget
+  must not be tuned down to make the bound fire**: at 12,000 the blind test
+  reported 12 punch items missing, twelve of r05's figures dropped from a
+  client's list, and the bound's own property is already proved by unit tests
+  driving 5,000 items.
+  See `docs/research/document-remediation/summary-header-bound.md`.
+
+- **A key file is not what the scorer reads.** `score.ts` applies
+  `corrections.json` over the key, so `r05.key.json` says `needs: []` while the
+  scorer expects 101 `1.1.1` items from the overlay. A design validated against
+  the key alone was wrong about what the corpus would accept, and only the run
+  caught it.
 
 - **The blind corpus could not notice the product losing certification
   entirely.** Gating the PDF/UA identifier briefly took conformant deliveries
