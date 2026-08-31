@@ -237,6 +237,14 @@ export type DocumentReportEntry = {
    * checked", never as clean.
    */
   conformance?: RemediationSummary['conformance'];
+  /**
+   * Which WCAG criteria the reading behind this entry could evaluate.
+   *
+   * Absent on entries pinned before the instrument recorded its own scope —
+   * rendered as "not recorded", never as full coverage, the same rule
+   * `conformance` above carries.
+   */
+  scope?: RemediationSummary['scope'];
 };
 
 export type DocumentReportSection = {
