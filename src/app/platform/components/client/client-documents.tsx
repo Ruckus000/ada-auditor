@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
+import { conformanceLine, scopeLine } from '../../../../services/presentation/document-verdict';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -49,19 +50,9 @@ type Summary = {
     | { checker: 'verapdf-ua1'; compliant: true }
     | { checker: 'verapdf-ua1'; compliant: false; failingClauses: string[] }
     | { checker: 'none'; reason: 'unavailable' };
+  /** Absent on readings taken before the instrument recorded its own scope. */
+  scope?: { criteria: string[] };
 };
-
-/**
- * The reference checker's verdict, in one line. Absence and `checker: 'none'`
- * read the same — "not checked" — because a reading without a verdict must
- * never look clean.
- */
-function conformanceLine(summary: Summary): string {
-  const c = summary.conformance;
-  if (c === undefined || c.checker === 'none') return 'PDF/UA: not checked on this host';
-  if (c.compliant) return 'PDF/UA: compliant (veraPDF)';
-  return `PDF/UA: ${c.failingClauses.length} check${c.failingClauses.length === 1 ? '' : 's'} failing (veraPDF)`;
-}
 
 /** One inventory row, as the client-scoped GET returns it. */
 type ClientDocument = {
@@ -365,6 +356,7 @@ function SummaryView({ summary }: { summary: Summary }) {
         {summary.titleText ? ` · “${summary.titleText}”` : ' · no title'}
       </p>
       <p style={noteStyle}>{conformanceLine(summary)}</p>
+      <p style={noteStyle}>{scopeLine(summary)}</p>
       {summary.gaps.length === 0 ? (
         <p style={noteStyle}>No machine-detectable gaps.</p>
       ) : (

@@ -5,6 +5,8 @@ import {
   logSafe,
   summarise,
   withConformance,
+  CHECKED_CRITERIA,
+  NOT_CHECKED_CRITERIA,
   isPlaceholderAlt,
   undescribedFigures,
   isPlaceholderTitle,
@@ -57,6 +59,10 @@ describe('summarise', () => {
       lists: 1,
       figures: 0,
       gaps: [],
+      // What the reading looked for, travelling with it. An exact match, so a
+      // criterion silently entering or leaving the instrument's scope fails
+      // here as well as in the emitted-criteria test below.
+      scope: { criteria: [...CHECKED_CRITERIA] },
     });
 
     // The body text of the document appears nowhere. `headingTexts` and
@@ -434,8 +440,12 @@ describe('withConformance', () => {
     });
     const identifier = s.needs?.find((n) => n.criterion === 'PDF/UA 5-1');
 
-    expect(identifier?.item).toContain('carries no PDF/UA-1 conformance identifier');
-    expect(identifier?.item).toContain('not work');
+    expect(identifier?.item).toContain('No PDF/UA-1 conformance identifier is written');
+    expect(identifier?.item).toContain('needs no action');
+    // Self-contained, because the public report renders punch items without
+    // their criterion label — an item that leaned on "PDF/UA 5-1:" trailed off
+    // mid-sentence there, under a heading that called it work.
+    expect(identifier?.item.trim().endsWith('.')).toBe(true);
     // It states the file's state and never who chose it. `withConformance` also
     // runs on the INSPECTION path, over a client's own document that we neither
     // wrote nor decided anything about; claiming we withheld the identifier
@@ -757,5 +767,76 @@ describe('figures a reader learns nothing about', () => {
     expect(items).toHaveLength(1);
     expect(items[0].criterion).toBe('1.1.1');
     expect(JSON.stringify(items)).not.toContain('192.168');
+  });
+});
+
+describe('the scope this instrument claims', () => {
+  /**
+   * Every criterion the emitters can actually produce, collected by running
+   * them rather than by reading them.
+   *
+   * This is the guard that keeps `CHECKED_CRITERIA` honest. The constant is
+   * rendered to a client as "checked here", so a criterion added to `gapsIn` or
+   * `needsIn` without being added to the constant would understate the
+   * instrument, and one removed without the constant changing would overstate
+   * it. Both are the same defect as the claim this whole change exists to fix.
+   */
+  const emitted = () => {
+    const seen = new Set<string>();
+    const collect = (summary: RemediationSummary) => {
+      for (const gap of summary.gaps) seen.add(gap.slice(0, gap.indexOf(':')));
+      for (const need of summary.needs ?? []) seen.add(need.criterion);
+    };
+
+    // 2.4.2 — nothing to title with. 3.1.1 — no declared language.
+    collect(summarise(provenance({
+      title: { kind: 'no-heading-to-copy' },
+      sourceLanguage: null,
+      structure: structure({ title: null }),
+    })));
+    // 1.1.1 — an undescribed figure. 1.3.1 — no structure tree at all.
+    collect(summarise(provenance({
+      structure: structure({
+        figures: [{ type: 'Figure', alt: null, actualText: null }],
+        images: 1,
+        structureElements: 0,
+      }),
+    })));
+    // 1.3.1 again, from the other side: an annotation outside the tree.
+    collect(summarise(provenance({
+      structure: structure({ annotationsNotInStructure: 2 }),
+    })));
+    // 2.4.10 — a heading ladder that starts below H1.
+    collect(summarise(provenance({
+      structure: structure({ headings: ['H3'], headingTexts: [{ level: 'H3', text: 'Deep' }] }),
+    })));
+
+    return seen;
+  };
+
+  it('claims exactly the criteria its emitters can produce', () => {
+    expect([...emitted()].sort()).toEqual([...CHECKED_CRITERIA].sort());
+  });
+
+  it('never lists a criterion as both checked and not checked', () => {
+    const checked = new Set<string>(CHECKED_CRITERIA);
+    for (const criterion of NOT_CHECKED_CRITERIA) {
+      expect(checked.has(criterion.number), `${criterion.number} is on both lists`).toBe(false);
+    }
+  });
+
+  it('travels with every summary, so a caller reading the header sees it', () => {
+    // The response header carries the summary and nothing else. Scope that
+    // lived only in rendered copy would leave an API consumer with the same
+    // unqualified claim this change removes from the screens.
+    expect(summarise(provenance()).scope).toEqual({ criteria: [...CHECKED_CRITERIA] });
+  });
+
+  it('costs the header almost nothing, and nothing that grows', () => {
+    // The summary travels in `x-remediation-summary`, which a 101-figure
+    // document already took to 12,946 bytes against Node's 16KB default.
+    // A scope that scaled with the document would re-break that delivery.
+    const bytes = JSON.stringify(summarise(provenance()).scope).length;
+    expect(bytes).toBeLessThan(120);
   });
 });

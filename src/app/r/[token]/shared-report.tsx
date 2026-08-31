@@ -1,4 +1,5 @@
 import type { SharedReport } from '../../../services/report-view';
+import { conformanceLine, scopeLine } from '../../../services/presentation/document-verdict';
 import { describePageEvidence } from '../../../services/presentation/page-evidence';
 import {
   SCORE_EXPLAINER,
@@ -265,6 +266,9 @@ function DocumentsSection({
         <p style={{ margin: '0 0 10px', fontSize: 13, color: T.inkMuted, lineHeight: 1.55 }}>
           Criteria found failing in reviewed documents:{' '}
           {failed.map((criterion) => `${criterion.number} ${criterion.name}`).join(' · ')}.
+          {' '}Criteria not listed were not necessarily met — only those this
+          instrument can evaluate appear here, and each document below states
+          what that covered.
         </p>
       ) : null}
 
@@ -293,11 +297,10 @@ function DocumentsSection({
                 </>
               ) : null}
               <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
-                {entry.conformance?.checker === 'verapdf-ua1'
-                  ? entry.conformance.compliant
-                    ? 'PDF/UA: compliant (veraPDF)'
-                    : `PDF/UA: ${entry.conformance.failingClauses.length} check${entry.conformance.failingClauses.length === 1 ? '' : 's'} failing (veraPDF)`
-                  : 'PDF/UA: not checked when this reading was made'}
+                {conformanceLine(entry)}
+              </p>
+              <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
+                {scopeLine(entry)}
               </p>
               {entry.gaps.length === 0 ? (
                 <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
@@ -316,7 +319,13 @@ function DocumentsSection({
                 <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>
                   {entry.needs.map((need) => (
                     <li key={need.item} style={{ fontSize: 12.5, color: T.inkSoft, lineHeight: 1.5 }}>
-                      To do: {need.item}
+                      {/* The criterion, not a "To do:" label. Not every item is
+                          work — the PDF/UA 5-1 item exists to say an omission
+                          is correct — and labelling that one as a task told a
+                          client to do something the item itself says not to.
+                          This is also what the operator screen prints, so the
+                          two surfaces describe one document the same way. */}
+                      {need.criterion}: {need.item}
                     </li>
                   ))}
                 </ul>

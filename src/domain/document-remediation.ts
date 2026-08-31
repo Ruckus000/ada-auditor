@@ -105,6 +105,15 @@ export type RemediationSummary = {
    * as `checker: 'none'` — "conformance not checked" — never as clean.
    */
   conformance?: Conformance;
+  /**
+   * Which WCAG success criteria this reading was able to evaluate at all.
+   *
+   * OPTIONAL, and its absence means "not recorded" — never "everything". Every
+   * reading stored before this field existed lacks it, and a surface rendering
+   * that absence as full coverage would reintroduce the exact overstatement the
+   * field was added to end. The same rule `checker: 'none'` already carries.
+   */
+  scope?: { criteria: string[] };
 };
 
 /**
@@ -211,7 +220,12 @@ export function withConformance(
     // that it only says what it checked.
     items.push({
       criterion: 'PDF/UA 5-1',
-      item: 'this file carries no PDF/UA-1 conformance identifier, which is correct while it does not conform — adding one would assert conformance it does not have, so it is not work: the remaining items are',
+      // Self-contained on purpose. The public report renders punch items
+      // WITHOUT their criterion label, so an item written to lean on "PDF/UA
+      // 5-1:" trails off mid-sentence there — and this one has to carry the
+      // word "correct" itself, because it is the only item in the list that is
+      // not work.
+      item: 'No PDF/UA-1 conformance identifier is written on this file, and that is correct while it does not conform — adding one would assert a conformance it does not have. This line needs no action; the other items listed are the work.',
     });
   }
   if (rest.length > 0) {
@@ -311,6 +325,35 @@ export function withConformance(
  * `incomparable` for one cycle, on purpose, so that our change is never
  * reported as the client's document changing.
  */
+/**
+ * The WCAG success criteria this instrument can reach, and the ones it cannot.
+ *
+ * These exist because every surface said "no machine-detectable gaps" without
+ * saying which gaps it looked for. `legal-standard.md` required the correction
+ * on 2026-08-24 — "any claim we make must exclude these explicitly or cover them
+ * by other means" — and nothing implemented it.
+ *
+ * `CHECKED_CRITERIA` is what `gapsIn` and `needsIn` between them can emit; note
+ * `2.4.10` comes only from `needsIn`. A test drives `summarise` over a battery
+ * of fixtures and asserts the emitted set equals this one, so a criterion cannot
+ * be added to the instrument without appearing in what the product claims to
+ * have checked.
+ *
+ * `NOT_CHECKED_CRITERIA` is curated rather than derived, and deliberately short:
+ * these four are the ones `legal-standard.md`'s own pass mark requires and this
+ * pipeline does not reach. Deriving "every AA criterion minus CHECKED" would
+ * name captions and audio description on a text document, which is noise
+ * wearing the costume of disclosure.
+ */
+export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '2.4.2', '2.4.10', '3.1.1'] as const;
+
+export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string }> = [
+  { number: '1.4.3', name: 'Contrast (Minimum)' },
+  { number: '1.4.1', name: 'Use of Color' },
+  { number: '1.3.2', name: 'Meaningful Sequence' },
+  { number: '4.1.2', name: 'Name, Role, Value' },
+];
+
 export const INSTRUMENT_VERSION = 9;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
@@ -388,6 +431,11 @@ export function summarise(provenance: ConversionProvenance): RemediationSummary 
     figures: structure.figures.length,
     gaps: gapsIn(provenance),
     ...needsIn(provenance),
+    // What this reading looked for, travelling with the reading. A caller
+    // reading the response header would otherwise get a gap list with no way to
+    // know how narrow it is — the same shape of overstatement as a conformance
+    // identifier written without a verdict behind it.
+    scope: { criteria: [...CHECKED_CRITERIA] },
   };
 }
 

@@ -110,6 +110,15 @@ export function buildDocumentReport(
       ...(reading.summary.conformance === undefined
         ? {}
         : { conformance: reading.summary.conformance }),
+      // Criterion identifiers only — the same counts-and-outcomes material the
+      // gaps and needs above are, and the thing that stops a pinned entry
+      // reading as a broader claim than the instrument made. Omitted rather
+      // than defaulted when the reading predates the field: absence means "not
+      // recorded", and inventing a scope for an old reading would be the
+      // overstatement this exists to end.
+      ...(reading.summary.scope === undefined
+        ? {}
+        : { scope: { criteria: [...reading.summary.scope.criteria] } }),
     });
   }
 
