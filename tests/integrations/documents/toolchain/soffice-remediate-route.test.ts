@@ -122,6 +122,45 @@ describe.skipIf(skip)('POST /api/documents/remediate, end to end', () => {
     }
   });
 
+  /**
+   * The bytes may not claim what the report denies.
+   *
+   * Computed on a file this run produced, never a grep over a frozen artifact:
+   * the defect this exists to catch was `Finish` writing `pdfuaid:part` with no
+   * guard, so 49 of 68 delivered documents asserted PDF/UA-1 conformance in
+   * their own XMP while the verdict beside them said they did not conform. A
+   * consumer reading the metadata — which is how conformance is machine
+   * detected — would have believed the file over the report.
+   *
+   * Asserted as a BICONDITIONAL rather than "no false claims". Only refusing
+   * the false direction would pass a build that never wrote the identifier at
+   * all, and then nothing could ever be reported as conformant.
+   */
+  it('asserts PDF/UA-1 in its own XMP only when the checker agrees', async () => {
+    const response = await POST(upload(docx));
+    expect(response.status).toBe(200);
+
+    const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
+    const bytes = Buffer.from(await response.arrayBuffer());
+
+    // veraPDF may be absent on a contributor's machine; the claim is only
+    // checkable against a verdict, so skip rather than assert half of it.
+    if (summary.conformance?.checker !== 'verapdf-ua1') return;
+
+    const out = join(dir, 'identifier.pdf');
+    await writeFile(out, bytes);
+    // The packet is inside a compressed stream, so a raw scan of the file finds
+    // nothing. That is exactly how the defect stayed invisible.
+    const flat = join(dir, 'identifier-flat.pdf');
+    await execFileAsync('qpdf', [
+      '--qdf', '--object-streams=disable', '--decode-level=specialized', out, flat,
+    ]).catch(() => undefined);
+    const readable = await readFile(flat).catch(() => bytes);
+    const claimsUa1 = readable.includes('pdfuaid:part');
+
+    expect(claimsUa1).toBe(summary.conformance.compliant === true);
+  }, 180_000);
+
   it('refuses a text file named .docx rather than converting it', async () => {
     // The end-to-end version of the measured trap. LibreOffice would accept
     // this; the route does not, and nothing is spawned.

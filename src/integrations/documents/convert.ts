@@ -336,8 +336,11 @@ export async function convertSourceToPdf(
     // 4. Correct the exporter's language claim — including removing it when the
     //    source declared none. `Finish` also writes the XMP packet and the
     //    viewer preference PDF/UA needs.
+    // Finished WITHOUT the PDF/UA-1 identifier. Conformance is decided by a
+    // checker that has not run yet, so this stage is in no position to assert
+    // it; the caller writes it back once it holds a verdict for these bytes.
     const finished = await finishDocument(
-      { inputPath: exported, outputPath, language: sourceLanguage },
+      { inputPath: exported, outputPath, language: sourceLanguage, claimUa1: false },
       {
         runtime: options.javaRuntime,
         root: options.root,

@@ -67,13 +67,20 @@ public final class Finish {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]");
+            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier]");
             System.exit(2);
         }
         String in = args[0], out = args[1];
         // Absent means "remove the claim", not "leave whatever is there".
         String lang = null;
         String givenTitle = null;
+        // The PDF/UA-1 identifier is a CLAIM, and this stage is the one party
+        // that cannot know whether it is true: conformance is decided by
+        // veraPDF after the file is written. Default on, so every existing
+        // caller keeps its behaviour; the conversion path passes the flag once
+        // it holds a verdict. Same shape as the MarkInfo gate below, which is
+        // already conditional on the document having earned it.
+        boolean claimUa1 = true;
         int i = 2;
         // Positional language first, so every existing caller keeps working.
         if (i < args.length && !args[i].startsWith("--")) {
@@ -83,8 +90,10 @@ public final class Finish {
         for (; i < args.length; i++) {
             if ("--title-file".equals(args[i]) && i + 1 < args.length) {
                 givenTitle = Files.readString(Path.of(args[++i]), StandardCharsets.UTF_8);
+            } else if ("--no-ua-identifier".equals(args[i])) {
+                claimUa1 = false;
             } else {
-                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]");
+                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier]");
                 System.exit(2);
             }
         }
@@ -152,7 +161,7 @@ public final class Finish {
                 title = givenTitle;
                 doc.getDocumentInformation().setTitle(title);
             }
-            byte[] xmp = buildXmp(lang, title).getBytes(StandardCharsets.UTF_8);
+            byte[] xmp = buildXmp(lang, title, claimUa1).getBytes(StandardCharsets.UTF_8);
             catalog.setMetadata(new PDMetadata(doc, new ByteArrayInputStream(xmp)));
 
             // 7.18.5-2 / 7.18.1-2 — a Link annotation shall carry an
@@ -301,7 +310,7 @@ public final class Finish {
         return null;
     }
 
-    private static String buildXmp(String lang, String title) {
+    private static String buildXmp(String lang, String title, boolean claimUa1) {
         String dcLanguage = lang == null ? "" : String.format(
             "   <dc:language><rdf:Bag><rdf:li>%s</rdf:li></rdf:Bag></dc:language>%n",
             escape(lang));
@@ -309,6 +318,19 @@ public final class Finish {
         String dcTitle = (title == null || title.isBlank()) ? "" : String.format(
             "   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">%s</rdf:li></rdf:Alt></dc:title>%n",
             escape(title));
+
+        // The identifier is an ASSERTION OF CONFORMANCE, not metadata, and
+        // it is how conformance is machine-detected downstream. Emitted
+        // unconditionally it said "this conforms to PDF/UA-1" on files our own
+        // checker had just failed, which is the conduct the FTC fined a
+        // competitor $1M for. A reader trusts the bytes over any report
+        // travelling beside them.
+        String uaIdentifier = claimUa1
+            ? "  <rdf:Description rdf:about=\"\"\n"
+                + "      xmlns:pdfuaid=\"http://www.aiim.org/pdfua/ns/id/\">\n"
+                + "   <pdfuaid:part>1</pdfuaid:part>\n"
+                + "  </rdf:Description>\n"
+            : "";
 
         return ""
             + "<?xpacket begin=\"﻿\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n"
@@ -319,10 +341,7 @@ public final class Finish {
             + dcTitle
             + dcLanguage
             + "  </rdf:Description>\n"
-            + "  <rdf:Description rdf:about=\"\"\n"
-            + "      xmlns:pdfuaid=\"http://www.aiim.org/pdfua/ns/id/\">\n"
-            + "   <pdfuaid:part>1</pdfuaid:part>\n"
-            + "  </rdf:Description>\n"
+            + uaIdentifier
             + " </rdf:RDF>\n"
             + "</x:xmpmeta>\n"
             + "<?xpacket end=\"w\"?>";

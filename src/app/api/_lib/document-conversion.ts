@@ -1,20 +1,96 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
   summarise,
   withConformance,
+  type Conformance,
   type RemediationSummary,
 } from '../../../domain/document-remediation';
 import { contentChanges } from '../../../domain/document-structure';
 import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/documents/convert';
-import { finishDocument } from '../../../integrations/documents/finish';
+import { finishDocument, type FinishRequest } from '../../../integrations/documents/finish';
 import { inspectDocument } from '../../../integrations/documents/inspect';
 import { checkUa1 } from '../../../integrations/documents/verapdf';
 import { logWarn } from '../../../services/logger';
 import { planRepair } from '../../../services/document-repair';
 import type { UploadRefusal } from './document-upload';
+
+/**
+ * Write the PDF/UA-1 identifier only onto a document that earned it.
+ *
+ * The identifier is an assertion of conformance, and the stage that writes it
+ * runs BEFORE the checker that could justify it. Written unconditionally, 49 of
+ * 68 documents in the blind corpus asserted PDF/UA-1 in their own XMP while our
+ * own verdict beside them said they did not conform. Downstream, the bytes win.
+ *
+ * So the file is finished without the claim and then measured. Withholding it
+ * costs exactly one clause — `5-1`, "the document does not carry the PDF/UA
+ * identifier" — and nothing else: measured on a conformant document, removing
+ * the identifier turns `compliant: true, []` into `compliant: false, ['5-1']`.
+ * That makes the inverse test exact rather than approximate: if `5-1` is the
+ * ONLY thing failing, the identifier is the only thing missing, and writing it
+ * is a true claim.
+ *
+ * The stamped file is built beside the honest one and moved into place only
+ * after it re-validates. A second pass that failed halfway would otherwise
+ * leave a corrupt document where a correct one had been, and the correct one is
+ * always the better thing to deliver.
+ *
+ * The returned verdict always describes the bytes on disk when this returns —
+ * which is what keeps an independent reading of the delivered file in agreement
+ * with the report travelling beside it.
+ */
+async function earnUaIdentifier(
+  verdict: Conformance,
+  request: FinishRequest,
+  stageOptions: Parameters<typeof finishDocument>[1],
+  checkOptions: Parameters<typeof checkUa1>[1],
+): Promise<Conformance> {
+  if (verdict.checker !== 'verapdf-ua1' || verdict.compliant) return verdict;
+  const onlyIdentifierMissing =
+    verdict.failingClauses.length === 1 && verdict.failingClauses[0].startsWith('5-1');
+  if (!onlyIdentifierMissing) return verdict;
+
+  // The extension matters: veraPDF exits 4 on a file that does not end `.pdf`,
+  // and this helper's own guard would then read that as "the identifier did not
+  // work" and silently discard every stamp. It did exactly that, and the run
+  // still passed — no answer key asserts conformance, so nothing noticed the
+  // product had stopped being able to certify anything at all.
+  const staged = request.outputPath.replace(/\.pdf$/i, '') + '-ua.pdf';
+  const stamped = await finishDocument(
+    { ...request, outputPath: staged, claimUa1: true },
+    stageOptions,
+  );
+  if (!stamped.ok) {
+    // Safe direction — an unstamped honest file beats a stamped one we cannot
+    // vouch for — but never a quiet one. A silent bail-out here is how the
+    // product lost the ability to certify anything and still ran green.
+    logWarn('document_identifier_not_earned', { step: 'finish', failure: stamped.failure.kind });
+    await rm(staged, { force: true });
+    return verdict;
+  }
+
+  const rechecked = await checkUa1(staged, checkOptions);
+  if (rechecked.checker !== 'verapdf-ua1' || !rechecked.compliant) {
+    // The identifier did not do what the clause said it would. Keep the file we
+    // can defend, and report what it actually is — loudly, because this means a
+    // document that should have been certifiable was not.
+    logWarn('document_identifier_not_earned', {
+      step: 'recheck',
+      checker: rechecked.checker,
+      ...(rechecked.checker === 'verapdf-ua1' && !rechecked.compliant
+        ? { clauses: rechecked.failingClauses }
+        : {}),
+    });
+    await rm(staged, { force: true });
+    return verdict;
+  }
+
+  await rename(staged, request.outputPath);
+  return rechecked;
+}
 
 /** What `repairPdfBytes` needs: the stage plumbing, plus the client-facing name. */
 export type RepairOptions = Pick<ConvertOptions, 'javaRuntime' | 'root' | 'env' | 'timeoutMs' | 'sourceName'>;
@@ -66,14 +142,35 @@ export async function remediateWordBytes(
       };
     }
 
-    const pdf = await readFile(output);
     // The second instrument, on the delivered bytes. `checker: 'none'` on a
     // host without it — visible as "not checked", never as clean.
-    const conformance = await checkUa1(output, {
+    const checkOptions = {
       ...(options.root === undefined ? {} : { root: options.root }),
       ...(options.env === undefined ? {} : { env: options.env }),
       ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
-    });
+    };
+    const stageOptions = {
+      ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
+      ...(options.root === undefined ? {} : { root: options.root }),
+      ...(options.env === undefined ? {} : { env: options.env }),
+      ...(options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs }),
+    };
+    // Re-finished from the converted file rather than the source: everything
+    // else is already written, and the only thing this pass adds is the claim.
+    const { title, sourceLanguage } = result.provenance;
+    const conformance = await earnUaIdentifier(
+      await checkUa1(output, checkOptions),
+      {
+        inputPath: output,
+        outputPath: output,
+        language: sourceLanguage,
+        ...(title.kind === 'no-heading-to-copy' ? {} : { title: title.title }),
+      },
+      stageOptions,
+      checkOptions,
+    );
+    // Read after the decision, so the verdict describes these exact bytes.
+    const pdf = await readFile(output);
     return { ok: true, pdf, summary: withConformance(summarise(result.provenance), conformance) };
   } finally {
     // Every path, including a throw inside the conversion. `convertSourceToPdf`
@@ -145,17 +242,17 @@ export async function repairPdfBytes(
       };
     }
 
-    const finished = await finishDocument(
-      {
-        inputPath: source,
-        outputPath: output,
-        language: decision.plan.language,
-        ...(decision.plan.title.kind === 'no-heading-to-copy'
-          ? {}
-          : { title: decision.plan.title.title }),
-      },
-      stageOptions,
-    );
+    const finishRequest = {
+      inputPath: source,
+      outputPath: output,
+      language: decision.plan.language,
+      ...(decision.plan.title.kind === 'no-heading-to-copy'
+        ? {}
+        : { title: decision.plan.title.title }),
+    };
+    // Written WITHOUT the PDF/UA-1 identifier, because at this point nobody
+    // knows whether the claim would be true. It is earned back below.
+    const finished = await finishDocument({ ...finishRequest, claimUa1: false }, stageOptions);
     if (!finished.ok) {
       logWarn('document_repair_failed', { requestId, step: 'finish', failure: finished.failure.kind });
       return {
@@ -185,12 +282,22 @@ export async function repairPdfBytes(
       };
     }
 
-    const pdf = await readFile(output);
-    const conformance = await checkUa1(output, {
+    const checkOptions = {
       ...(options.root === undefined ? {} : { root: options.root }),
       ...(options.env === undefined ? {} : { env: options.env }),
       ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
-    });
+    };
+    const conformance = await earnUaIdentifier(
+      await checkUa1(output, checkOptions),
+      finishRequest,
+      stageOptions,
+      checkOptions,
+    );
+    // Read AFTER the identifier decision, and after the re-check. The verdict
+    // this function returns has to describe the bytes it returns beside it: an
+    // independent checker reading the delivered file must reach the same list,
+    // or the report and the document disagree about the same document.
+    const pdf = await readFile(output);
     return {
       ok: true,
       pdf,

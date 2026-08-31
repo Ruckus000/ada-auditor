@@ -174,10 +174,12 @@ export function withConformance(
   const items: Array<{ criterion: string; item: string }> = [];
   const fonts = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4'));
   const untagged = conformance.failingClauses.filter((clause) => clause.startsWith('7.1-3'));
+  const identifier = conformance.failingClauses.filter((clause) => clause.startsWith('5-1'));
   const rest = conformance.failingClauses.filter(
     (clause) =>
       !clause.startsWith('7.21.4') &&
       !clause.startsWith('7.1-3') &&
+      !clause.startsWith('5-1') &&
       !alreadyVoiced(clause, summary),
   );
 
@@ -191,6 +193,17 @@ export function withConformance(
     items.push({
       criterion: 'PDF/UA 7.1-3',
       item: 'page content is neither tagged nor marked as decoration — tagging it needs the source document or a person, because guessing the structure would be inventing it',
+    });
+  }
+  if (identifier.length > 0) {
+    // Named rather than left to the catch-all, which would have said "a person
+    // must review 5-1" — i.e. instructed the client to add back the very claim
+    // this document is not entitled to make. The clause is still reported as
+    // failing, because it is: what changes is that the punch list says the
+    // absence is deliberate and asks for no work.
+    items.push({
+      criterion: 'PDF/UA 5-1',
+      item: 'this file deliberately does not carry the PDF/UA-1 identifier, because it does not conform — nothing to do here, and the remaining items are what would change that',
     });
   }
   if (rest.length > 0) {
@@ -273,7 +286,24 @@ export function withConformance(
  * produced no finding. The blind corpus planted a tagged cover sheet over an
  * untagged payload and watched it deliver with an empty punch list.
  */
-export const INSTRUMENT_VERSION = 8;
+/**
+ * 9 — alt text is read for legibility, not only for presence. `1.1.1` used to
+ * mean "no alt attribute"; it now means "a reader learns nothing about this
+ * figure", which also covers a description that is a filename, a path, a `cid:`
+ * reference or a placeholder word. WCAG Technique F30 is the authority, so the
+ * item cites a published failure condition rather than our opinion.
+ *
+ * `[V]` Across the blind corpus's delivered bytes, 153 of 173 `/Alt` strings
+ * were one placeholder word, three were a path naming a private host, and one
+ * was an embedded-mail reference — all of them counted as descriptions, and the
+ * documents carrying them delivered with that work unnamed.
+ *
+ * This is a MEANING SHIFT, which is why it is a version bump and not a count
+ * changing inside an existing string: every stored baseline reads
+ * `incomparable` for one cycle, on purpose, so that our change is never
+ * reported as the client's document changing.
+ */
+export const INSTRUMENT_VERSION = 9;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -297,10 +327,24 @@ function gapsIn(provenance: ConversionProvenance): string[] {
   // Absent alt and empty alt are different claims and must not be counted
   // together: empty says the graphic carries no meaning, absent says nobody
   // answered. Only the second is a gap.
-  const withoutAlt = structure.figures.filter((figure) => figure.alt === null).length;
-  if (withoutAlt > 0) {
+  //
+  // A PRESENT alt that describes nothing is a third case and belongs with the
+  // absent one, because it is the same work for the same person. It is folded
+  // into this single gap string rather than given its own: `documentGapKey`
+  // identifies a gap by the criterion before its colon, so a second `1.1.1:`
+  // gap would collide with this one and the regression comparator would read
+  // one failure as two.
+  const undescribed = undescribedFigures(structure.figures);
+  if (undescribed.total > 0) {
+    const noun = `figure${undescribed.total === 1 ? '' : 's'}`;
     gaps.push(
-      `1.1.1: ${withoutAlt} figure${withoutAlt === 1 ? '' : 's'} with no alt text`,
+      undescribed.placeholder === 0
+        // Unchanged wording when nothing new applies, so a stored baseline
+        // taken before this reading does not read as a changed document.
+        ? `1.1.1: ${undescribed.total} ${noun} with no alt text`
+        : `1.1.1: ${undescribed.total} ${noun} a reader learns nothing about`
+          + ` (${undescribed.absent} with no alt text,`
+          + ` ${undescribed.placeholder} whose description is a placeholder)`,
     );
   }
 
@@ -394,11 +438,31 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     });
   }
 
+  // These two items are deliberately TERSE, and that is a transport constraint
+  // rather than a style choice. The summary travels in the
+  // `x-remediation-summary` response header, one item per undescribed figure,
+  // and a real municipal document in the blind corpus carries 101 of them. At
+  // the original wording that header reached 22,743 bytes and every client on
+  // Node's 16KB default rejected the whole response with "Headers Overflow
+  // Error" — the client got no punch list at all, which is worse than a blunt
+  // one. See the residual note in AGENTS.md: shortening buys headroom, it does
+  // not bound the header, and the contract is what actually needs fixing.
+  // The item never quotes the description it is refusing. One of the strings
+  // this rule catches in the wild is a UNC path naming a private host and an
+  // internal directory tree; echoing it here would publish that on the client's
+  // own report page, which is the exact thing the counts-and-outcomes rule at
+  // the top of this file exists to prevent. What the item says is WHY, by
+  // shape — never the string itself.
   structure.figures.forEach((figure, index) => {
     if (figure.alt === null) {
       needs.push({
         criterion: '1.1.1',
-        item: `Figure ${index + 1} needs a human-written description — no alt text, and no caption to transcribe one from`,
+        item: `Figure ${index + 1}: no alt text and no caption to transcribe — write a description`,
+      });
+    } else if (isPlaceholderAlt(figure.alt)) {
+      needs.push({
+        criterion: '1.1.1',
+        item: `Figure ${index + 1}: its alt text is a placeholder, not a description (WCAG F30) — write one`,
       });
     }
   });
@@ -595,6 +659,89 @@ export function isPlaceholderTitle(title: string): boolean {
   // Otherwise the same junk table the filename chain uses, so there is one
   // policy and not two to keep in step.
   return titleFromFilename(cleaned) === null;
+}
+
+/**
+ * Descriptions a machine left behind, by the three shapes WCAG names.
+ *
+ * `PLACEHOLDER_ALT` is matched WHOLE and case-insensitively, never as a prefix:
+ * "Image of the north pump house at dusk" is a real description that begins with
+ * a placeholder word, and a prefix test would eat it.
+ */
+const PLACEHOLDER_ALT = new Set([
+  'decorative', 'spacer', 'image', 'picture', 'graphic', 'photo', 'blank',
+  'untitled', 'placeholder',
+]);
+const ALT_FILE_PATH = /^(\\\\|[A-Za-z]:\\|\/Users\/|\/home\/|file:\/\/)/;
+const ALT_FILENAME = /\.(png|jpe?g|gif|bmp|tiff?|emf|wmf|svg|eps)$/i;
+const ALT_CID_REFERENCE = /\bcid:/i;
+const ALT_PROGRAMMATIC = /^(picture|image|photo|graphic|figure|img)\s*\d+$|^\d+$/i;
+
+/**
+ * Is this description one a reader can use, or one an exporter left behind?
+ *
+ * WCAG 2.1 **Technique F30** is the standard, not our taste: "Failure of
+ * Success Criterion 1.1.1 and 1.2.1 due to using text alternatives that are not
+ * alternatives (e.g., filenames or placeholder text)". Its three categories —
+ * placeholder text, programming references, filenames — are what this refuses,
+ * and it refuses nothing beyond them. A punch item that cites a published
+ * failure condition is defensible; one that cites our opinion of a sentence is
+ * not, and this product's whole position is that it only says what it checked.
+ *
+ * PROVENANCE, never quality — the same footing as `isPlaceholderTitle`. Every
+ * rule here says "a machine put this here", and none says "this description is
+ * poor". We cannot know whether a description is accurate; we can know that a
+ * UNC path is not one.
+ *
+ * A PREDICATE, never a rewriter. Nothing in this product invents a description:
+ * the VLM ban is absolute, so what a flagged figure gets is a punch item asking
+ * a person for one.
+ *
+ * Two normalisations before testing, both provenance rather than cosmetics:
+ * a TRAILING NUL is a producer's string terminator (without stripping it, three
+ * legitimate descriptions in the blind corpus read as illegible, one of them on
+ * the only conformant real PDF), and a leading "Description:" is an exporter
+ * prefix in the shape `PRODUCER_STAMP` already refuses on titles.
+ *
+ * Deliberately NOT copied from `isPlaceholderTitle`: its `length < 3` refusal.
+ * A legitimate CJK description can be two characters, and short is not the same
+ * as absent.
+ */
+export function isPlaceholderAlt(alt: string): boolean {
+  const cleaned = alt
+    // Bounded before any pattern runs: the string comes from an untrusted
+    // document and must not set the amount of work.
+    .slice(0, 500)
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]+$/, '')
+    .replace(/^description:\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Empty is a positive claim that the graphic carries no meaning, which is a
+  // different answer from an absent one and is not this predicate's business.
+  if (cleaned === '') return false;
+
+  return (
+    ALT_FILE_PATH.test(cleaned)
+    || ALT_CID_REFERENCE.test(cleaned)
+    || ALT_FILENAME.test(cleaned)
+    || PLACEHOLDER_ALT.has(cleaned.toLowerCase())
+    || ALT_PROGRAMMATIC.test(cleaned)
+  );
+}
+
+/**
+ * Figures a reader learns nothing about: no description, or one that describes
+ * nothing. Counted together because they are the same work for the same person.
+ */
+export function undescribedFigures(
+  figures: ReadonlyArray<{ alt: string | null }>,
+): { absent: number; placeholder: number; total: number } {
+  const absent = figures.filter((figure) => figure.alt === null).length;
+  const placeholder = figures.filter(
+    (figure) => figure.alt !== null && isPlaceholderAlt(figure.alt),
+  ).length;
+  return { absent, placeholder, total: absent + placeholder };
 }
 
 export function titleFromFilename(name: string): string | null {

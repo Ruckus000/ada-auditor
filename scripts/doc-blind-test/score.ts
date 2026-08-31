@@ -183,7 +183,7 @@ function multisetDiff(expected: string[], actual: string[]): { missing: string[]
  * item, which is ours, and which a prefix test would have quietly excluded from
  * the exact-needs comparison it is supposed to be held to.
  */
-const CHECKER_DERIVED = new Set(['PDF/UA 7.21.4', 'PDF/UA 7.1-3', 'PDF/UA']);
+const CHECKER_DERIVED = new Set(['PDF/UA 7.21.4', 'PDF/UA 7.1-3', 'PDF/UA 5-1', 'PDF/UA']);
 
 /** Our own vocabulary's criteria; the checker's items are held to a property. */
 const ourCriteria = (needs: DeliverySummary['needs']) =>
@@ -217,6 +217,11 @@ function unvoicedClauses(summary: DeliverySummary): { silent: string[]; suppress
   for (const clause of conformance.failingClauses) {
     if (clause.startsWith('7.21.4') && families.has('PDF/UA 7.21.4')) continue;
     if (clause.startsWith('7.1-3') && families.has('PDF/UA 7.1-3')) continue;
+    // `5-1` is the PDF/UA identifier, and its absence is now DELIBERATE on any
+    // document that does not conform — the product withholds a claim it cannot
+    // support. That is still a failing clause and still has to be voiced, so
+    // the named item is what accounts for it; silence would not.
+    if (clause.startsWith('5-1') && families.has('PDF/UA 5-1')) continue;
     if (catchAllText.includes(clause)) continue;
     if (SUPPRESSED.test(clause)) {
       // Suppressed means "one of our own items says this". If the document

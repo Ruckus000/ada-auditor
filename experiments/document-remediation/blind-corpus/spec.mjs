@@ -477,7 +477,21 @@ wordRow(
   'The easy case: titled, a language, a real heading ladder, a data table and a real list.',
   { fn: 'docx', args: { title: 'Program Notice', lang: 'en-US', shape: 'baseline' } },
   { disposition: 'delivered', title: 'already-titled', titleText: 'Program Notice', language: 'en-US',
-    counts: { headings: 2, tables: 1, lists: 1, figures: 0 }, needs: [], gapCriteria: [] },
+    counts: { headings: 2, tables: 1, lists: 1, figures: 0 }, needs: [], gapCriteria: [],
+    // THE ONE ROW THAT ASSERTS CONFORMANCE, and it exists because of a miss.
+    //
+    // Gating the PDF/UA identifier on the verdict broke it: the re-check ran on
+    // a staged file named `.pdf.ua`, veraPDF exits 4 on anything not ending
+    // `.pdf`, and the guard read that as "the identifier did not help" and
+    // discarded every stamp. Conformant deliveries went 19 to 0 — the product
+    // could no longer certify ANY document — and the run still reported every
+    // promise held, because not one key claimed a document should come back
+    // conformant. A corpus that cannot notice that is measuring the wrong thing.
+    //
+    // This is the easy case on purpose: titled, a language, a heading ladder, a
+    // table and a list, converted from a source that has all of it. If this
+    // document is not conformant, the conversion path is broken.
+    conformance: { compliant: true } },
 );
 
 wordRow(
