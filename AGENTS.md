@@ -483,8 +483,8 @@ Read this before claiming something works.
   28 real from 25 hosts sharing no domain with any training manifest), keys
   hash-locked before first contact, scored by `scripts/doc-blind-test/`.
   Results in `docs/research/document-remediation/blind-test-2026-08-29-*.md`.
-  `[V]` 81 documents past the door: 66 delivered, 15 refused; 19 fully
-  conformant on both instruments; **47 of 47 non-conformant deliveries carry a
+  `[V]` 82 documents past the door: 67 delivered, 15 refused; 19 fully
+  conformant on both instruments; **48 of 48 non-conformant deliveries carry a
   punch list, and 0 came back as neither**. Invented claims 0, silent gaps 0,
   drift 0, door leaks 0, punch items missing 0, disposition 38/38 on core
   rows. It found four product defects — an unusable source `/Lang` costing the

@@ -23,20 +23,25 @@ Exit 0. **Every promise held.**
 
 ## What the corpus actually produced
 
-81 documents past the door: **66 delivered, 15 refused**.
+82 documents past the door: **67 delivered, 15 refused**.
 
 | | count |
 |---|---|
 | deliveries fully conformant on both instruments | **19** |
-| deliveries not conformant | 47 |
-| of those, carrying a punch list or a gap | **47 of 47** |
+| deliveries not conformant | 48 |
+| of those, carrying a punch list or a gap | **48 of 48** |
 | **delivered non-conformant with nothing to do about it** | **0** |
-| punch items written across the corpus | 173 |
-| real PDFs delivered / refused | 14 / 5 |
+| punch items written across the corpus | 176 |
+| planted delivered / refused | 44 / 10 |
+| real delivered / refused | 23 / 5 |
 
 That bottom-left number is the whole product. A document either comes back
-conformant or comes back with the work named. Across 92 documents it never
+conformant or comes back with the work named. Across 93 documents it never
 came back as neither.
+
+These are the figures from the final rerun on `389bc03`, with every fix in
+this campaign merged — the corpus grew to 93 rows when the attached-documents
+gap was closed and a second attachment shape was planted.
 
 ## The five promises, measured
 
