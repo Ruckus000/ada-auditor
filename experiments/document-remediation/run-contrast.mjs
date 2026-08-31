@@ -3,6 +3,13 @@
 // Not a pipeline stage. Contrast is a property of the rendered page, not of the
 // structure tree, so it neither consumes nor produces a remediated PDF — it sits
 // beside validate.mjs rather than between two transformation passes.
+//
+// `Contrast.java` GRADUATED to `src/integrations/documents/java/` and is no
+// longer here: stages graduate by moving, not copying, and the spike compiles
+// against the moved source exactly as it does for `Inspect` and `StructText`.
+// The graduated stage also drops the `sample` field this runner's output shows,
+// because a summary carrying 30 glyphs of the measured text renders on a
+// client's public report. Use `npm run build:documents` to compile it.
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';

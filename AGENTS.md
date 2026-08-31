@@ -478,16 +478,30 @@ Read this before claiming something works.
   punch-listed, which is the one outcome this product promises never to
   produce.
 
-- **The document pipeline reaches five WCAG criteria, and now says so.**
-  `gapsIn`/`needsIn` can emit `1.1.1`, `1.3.1`, `2.4.2`, `2.4.10` and `3.1.1` —
-  five of the roughly fifty in 2.1 AA. It never evaluates contrast, use of
-  colour, meaningful sequence or name/role/value, which `legal-standard.md`'s
-  own pass mark requires. Every reading now carries `scope.criteria` and every
+- **Contrast is detected and flagged — the first blocking condition is met.**
+  `decision-2026-08-24.md` said *"No document goes to a client until contrast is
+  at least detected and flagged"*, and that stood unmet for a week.
+  `Contrast.java` graduated from the spike: foreground exactly from the graphics
+  state, background sampled from the rendered page at 150 DPI with anti-aliasing
+  off (WCAG 1.4.3 Note 2 sanctions that explicitly). `[V]` Across the blind
+  corpus's 23 real documents, **5 fail 1.4.3**, worst 1.49:1 — every one of them
+  was being delivered in silence. Three buckets that are never merged: failing,
+  undetermined (no background could be read), and decorative (the document marks
+  it `/Artifact` or `/Figure`).
+  **It never gates.** Contrast is a source-design problem this pipeline cannot
+  fix, and it is the one detector with a false-positive class it cannot rule out.
+  **1.4.1 Use of Color did NOT move with it** — the same fee schedule marks
+  changed values in red, which is meaning carried by colour alone, and nothing
+  here detects that.
+
+- **The document pipeline reaches SIX WCAG criteria, and says so.**
+  The vocabulary can emit `1.1.1`, `1.3.1`, `1.4.3`, `2.4.2`, `2.4.10` and
+  `3.1.1` — six of the roughly fifty in 2.1 AA. It still never evaluates use
+  of colour, meaningful sequence or name/role/value, which
+  `legal-standard.md`'s own pass mark requires. Every reading now carries `scope.criteria` and every
   surface renders it through `services/presentation/document-verdict.ts`.
-  **What this does NOT do is check any of them.** `decision-2026-08-24.md`
-  says *"No document goes to a client until contrast is at least detected and
-  flagged"* — disclosing that we do not check contrast is not detecting it, and
-  that commitment is still open.
+  Every reading carries `scope.criteria` and every surface renders it through
+  `services/presentation/document-verdict.ts`.
 
 - **The summary header is unbounded, and a large punch list breaks the
   delivery.** The remediation summary travels in the `x-remediation-summary`
