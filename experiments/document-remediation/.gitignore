@@ -23,8 +23,15 @@ real-word-truth/
 out-arm-a-real/
 # The rule that just failed: EVERY real-bytes directory is named here BEFORE
 # its first fetch. real-pdf/ was not, and `git add -A` on a results branch
-# swept 23 real municipal PDFs onto public master (removed in the same PR as
-# this line; history purge is a separate, user-authorized operation).
+# swept 23 real municipal PDFs onto public master (removed from the tree in
+# the same PR as this line).
+#
+# The blobs are still in history, and on 2026-08-31 the decision was made to
+# LEAVE THEM THERE. Not an oversight, and not a pending task — see the
+# known-gaps entry in AGENTS.md for the measurements behind it. In short: the
+# rewrite was built and verified, and it would have cost 628 rewritten commits
+# and all 173 commit signatures to remove 9.6MB of documents that are already
+# published on government websites.
 real-pdf/
 out-arm-b-evidence/
 # The rescore runs write versioned evidence dirs; the suffix must never
