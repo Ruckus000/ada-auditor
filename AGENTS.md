@@ -511,11 +511,10 @@ Read this before claiming something works.
   honest gap. It is a predicate, never a rewriter, delegates to the junk table
   the filename chain already used, and governs all three paths that decide a
   title so no two surfaces disagree about one document. `[V]` Exactly one
-  document of 92 changed. **The numbers are local-only:** a seven-document spot-check against
-  the deployed function answered 401 on all seven — the app's own
-  `unauthorized`, not Vercel SSO, with `AUDITOR_RUN_TOKEN` set in Production
-  but diverged from the local `.env.local`. Reconciling them is an operator
-  action; until then nothing here is proven on the deployed function.
+  document of 92 changed. **Proven on the deployed function:** a nine-document
+  spot-check — one row per fix above, both refusal kinds, the ordinary good
+  case — came back **9/9 identical** to the local run against production built
+  from `dce358b`. The numbers are no longer local-only.
 
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run
