@@ -189,29 +189,50 @@ attached, because `/Collection` only makes a viewer show the portfolio UI and
 is not what makes the payload unexamined. Both voice the item; disposition
 **38/38** on core rows, nothing regressed.
 
-## The deployed spot-check: attempted, blocked
+## The deployed spot-check: 9 of 9 identical
 
-Seven corpus documents — both product fixes, both refusal kinds, and the
-ordinary good case — were posted to the production deployment carrying these
-changes (`oile61is6`, Ready, built from the merge). All seven answered **401**,
-uniformly.
+Nine corpus documents — one per product fix from this campaign, both refusal
+kinds, and the ordinary good case — posted to the production deployment built
+from `dce358b`. **Every one came back identical to the local run**, field for
+field across title, provenance, language, counts, gaps, punch items and the
+conformance verdict.
 
-A uniform verdict is always the instrument, so it was diagnosed rather than
-reported as a result:
+| row | what it proves | |
+|---|---|---|
+| p01 | the ordinary good case | identical |
+| p04 | a placeholder is not a title | identical — `transcribed`, not the exporter's stamp |
+| p21 | an unusable language is not a refusal | identical — delivered with the 3.1.1 item, not a 422 |
+| p16 | attachments are named | identical — the `PDF/UA 7.11` item |
+| r23 | suppression must be earned | identical — the two-clause catch-all |
+| p27 | figures and punch items | identical |
+| p31 | a clause-family item | identical |
+| p05 | refusal: nothing to transcribe | identical (`not-tagged`) |
+| p10 | refusal: would destroy a signature | identical (`signed`) |
 
-- the body is the application's own `{"error":"unauthorized"}`, not Vercel's
-  SSO page, so this is the route's constant-time token comparison failing
-  rather than deployment protection;
-- `AUDITOR_RUN_TOKEN` **is** set in Vercel Production (created 3h before the
-  attempt, names listed without values);
-- the value in the local `.env.local` is 66 characters and is rejected by both
-  the new deployment and the previous one, so the local file and the deployed
-  variable have diverged since the parity run earlier the same day.
+The blind test's numbers are no longer local-only. The pipeline behaves on the
+deployed function exactly as it behaves on the machine it was measured on.
 
-**This measures nothing about the pipeline.** Making the two match is a
-credential operation and is the operator's, not this campaign's. Until then the
-blind test's numbers are local-only — the same caveat every production
-measurement in this project has carried, named rather than glossed.
+### Two instrument failures on the way here, both mine
+
+The first attempt returned **401 on all nine**, and a uniform verdict is always
+the instrument — so it was diagnosed rather than reported. Two separate causes,
+neither of them the product:
+
+**The token was read wrong.** The value in `.env.local` was wrapped in double
+quotes, which is legal in a `.env` file and which every real loader strips. The
+spot-check used a raw regex and sent the quotes as part of the bearer token.
+Stripping them the way dotenv does, authentication worked immediately. That is
+the fourth time in this project a uniform verdict turned out to be the
+measuring apparatus.
+
+**The deployment was built from a stale tree.** With authentication fixed, five
+of nine matched and four differed — and the four were *exactly* the four fixes
+from this campaign, while the five that matched were all pre-campaign
+behaviour. `vercel --prod` uploads the directory it is run from, and the local
+`master` was ten commits behind the remote, so production was running code from
+before the fixes. The shape of the disagreement identified the cause before
+anything was inspected: when the differences line up precisely with a known
+changeset, the question is which vintage is deployed, not what is broken.
 
 ## What this test still cannot do
 
