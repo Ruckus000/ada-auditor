@@ -500,13 +500,22 @@ Read this before claiming something works.
   `scope.criteria` and every surface renders it through
   `services/presentation/document-verdict.ts`.
 
-  **One criterion on `legal-standard.md`'s pass mark is still unreached:
-  `1.3.2` Meaningful Sequence.** `1.4.1` Use of Color is NOT on that pass mark;
-  it was measured and deliberately declined — 17 of 23 real documents carry a
-  saturated minority accent and the overwhelming majority are hyperlinks and
-  Word theme heading colours, so a detector would be right about roughly four.
-  See `docs/research/document-remediation/use-of-color-feasibility.md`. Both
-  stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
+  **Both criteria the pipeline does not reach have now been MEASURED and
+  declined, rather than left unexamined.** `1.3.2` Meaningful Sequence is on
+  `legal-standard.md`'s pass mark; `1.4.1` Use of Color is not. Neither ships:
+
+  - `1.4.1` — 17 of 23 real documents carry a saturated minority accent, and
+    the overwhelming majority are hyperlinks and Word theme heading colours, so
+    a detector would be right about roughly four.
+    See `docs/research/document-remediation/use-of-color-feasibility.md`.
+  - `1.3.2` — a page-monotonicity check over the structure tree fires on 7 of
+    23 and has **zero true positives**. Two were the probe reading a container's
+    `/Pg` as content, four were stories or footnotes ordered correctly, and the
+    two survivors are letterhead logos and a full-page cover image, whose place
+    in the reading order does not affect meaning.
+    See `docs/research/document-remediation/meaningful-sequence-feasibility.md`.
+
+  Both stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
 
 - **The summary header is BOUNDED, and the bound is a safety net rather than a
   routine trim.** The summary travels in `x-remediation-summary` with one item
@@ -527,6 +536,21 @@ Read this before claiming something works.
   client's list, and the bound's own property is already proved by unit tests
   driving 5,000 items.
   See `docs/research/document-remediation/summary-header-bound.md`.
+
+- **Reading order is ordered by STORY, not by page, and a page-monotonicity
+  check is measuring the wrong thing.** Every backward page jump in the corpus's
+  InDesign exports (r09, r15, r33, r34) falls exactly at a container boundary —
+  one story or section ending on a later page than the next begins — which is
+  the correct order for a reader and looks like a defect to the metric. A
+  1.3.2 detector built on page order would report correct documents as broken.
+  See `docs/research/document-remediation/meaningful-sequence-feasibility.md`.
+
+- **The corpus cannot see reading-order defects, structurally.** The pipeline
+  refuses untagged PDFs rather than tagging them by inference — 13 documents
+  come back `repair_refused` — so every PDF delivered was tagged by a real
+  tagger, and real taggers get sequence right. The documents whose order would
+  actually be scrambled are the ones never delivered. Any future reading-order
+  work needs evidence from a population this corpus does not contain.
 
 - **A key file is not what the scorer reads.** `score.ts` applies
   `corrections.json` over the key, so `r05.key.json` says `needs: []` while the

@@ -580,6 +580,12 @@ export function withConformance(
  * pass mark alone — that drops `1.4.1`. And do not derive "every AA criterion
  * minus CHECKED" either: that names captions and audio description on a text
  * document, which is noise wearing the costume of disclosure.
+ *
+ * BOTH entries are measured decisions, not unexamined gaps, and the detectors
+ * were built far enough to know what they would say before being refused. Read
+ * `use-of-color-feasibility.md` and `meaningful-sequence-feasibility.md` before
+ * proposing either — 1.4.1 fires on 17 of 23 real documents and is right about
+ * roughly 4, and 1.3.2's page-order check has zero true positives in 23.
  */
 export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '1.4.3', '2.4.2', '2.4.10', '3.1.1', '4.1.2'] as const;
 
@@ -589,6 +595,11 @@ export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string 
   // contrast sets changed values in red, which is meaning carried by colour
   // alone, and nothing here detects that.
   { number: '1.4.1', name: 'Use of Color' },
+  // Measured the same way and refused for a sharper reason: a page-monotonicity
+  // check over the structure tree has ZERO true positives on the 23 real
+  // documents. Reading order follows the STORY, not the page, so a correctly
+  // tagged magazine looks broken to it — and the exemptions needed to quiet
+  // that would silently pass over a real defect at a section boundary.
   { number: '1.3.2', name: 'Meaningful Sequence' },
 ];
 
