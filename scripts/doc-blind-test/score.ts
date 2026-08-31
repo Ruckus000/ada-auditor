@@ -104,10 +104,29 @@ export type Disposition =
   | 'refused-pipeline'
   | 'door';
 
-/** A correction to a key, applied as an overlay and never as an edit. */
+/**
+ * A correction to a key, applied as an overlay and never as an edit.
+ *
+ * `kind` exists because the two reasons a key changes are not the same fact and
+ * must never be summed into one integer. An INSTRUMENT DEFECT is the key author
+ * having misread the document — a criticism of the keys, which is what the
+ * protocol's 10% threshold is about. A SCOPE CHANGE is the product correctly
+ * claiming more than it used to, where the key was right about the old
+ * vocabulary and is simply describing a smaller instrument. Reporting a scope
+ * change as a key defect would make the campaign look sloppier the more it
+ * improves.
+ *
+ * `legibilityAdded` records how many items the alt-legibility reading
+ * contributed to a row. When a key was already wrong for an unrelated reason
+ * the row classifies as `instrument-defect` and the scope contribution would
+ * otherwise disappear — conservative, but it under-reports, so it is counted
+ * outright.
+ */
 export type Correction = {
   docId: string;
   field: string;
+  kind: 'instrument-defect' | 'scope-change';
+  legibilityAdded?: number;
   was: unknown;
   now: unknown;
   evidence: string;
@@ -164,7 +183,7 @@ function multisetDiff(expected: string[], actual: string[]): { missing: string[]
  * item, which is ours, and which a prefix test would have quietly excluded from
  * the exact-needs comparison it is supposed to be held to.
  */
-const CHECKER_DERIVED = new Set(['PDF/UA 7.21.4', 'PDF/UA 7.1-3', 'PDF/UA']);
+const CHECKER_DERIVED = new Set(['PDF/UA 7.21.4', 'PDF/UA 7.1-3', 'PDF/UA 5-1', 'PDF/UA']);
 
 /** Our own vocabulary's criteria; the checker's items are held to a property. */
 const ourCriteria = (needs: DeliverySummary['needs']) =>
@@ -198,6 +217,11 @@ function unvoicedClauses(summary: DeliverySummary): { silent: string[]; suppress
   for (const clause of conformance.failingClauses) {
     if (clause.startsWith('7.21.4') && families.has('PDF/UA 7.21.4')) continue;
     if (clause.startsWith('7.1-3') && families.has('PDF/UA 7.1-3')) continue;
+    // `5-1` is the PDF/UA identifier, and its absence is now DELIBERATE on any
+    // document that does not conform — the product withholds a claim it cannot
+    // support. That is still a failing clause and still has to be voiced, so
+    // the named item is what accounts for it; silence would not.
+    if (clause.startsWith('5-1') && families.has('PDF/UA 5-1')) continue;
     if (catchAllText.includes(clause)) continue;
     if (SUPPRESSED.test(clause)) {
       // Suppressed means "one of our own items says this". If the document
@@ -404,7 +428,8 @@ export function scoreDocument(
 export type Score = {
   findings: Finding[];
   byId: Record<string, { disposition: Disposition; fatal: number; corrected: boolean }>;
-  corrections: number;
+  corrections: { total: number; instrumentDefects: number; scopeChanges: number;
+    documents: number; legibilityAdded: number };
 };
 
 export function scoreRun(
@@ -435,7 +460,17 @@ export function scoreRun(
     };
   }
 
-  return { findings, byId, corrections: corrections.length };
+  return {
+    findings,
+    byId,
+    corrections: {
+      total: corrections.length,
+      instrumentDefects: corrections.filter((c) => c.kind === 'instrument-defect').length,
+      scopeChanges: corrections.filter((c) => c.kind === 'scope-change').length,
+      documents: new Set(corrections.map((c) => c.docId)).size,
+      legibilityAdded: corrections.reduce((n, c) => n + (c.legibilityAdded ?? 0), 0),
+    },
+  };
 }
 
 const count = (findings: Finding[], outcome: string) => findings.filter((f) => f.outcome === outcome).length;
@@ -479,7 +514,16 @@ export function renderScore(score: Score, keys: DocKey[], previous?: Score): str
   lines.push(`Conformance   ${count(score.findings, 'not-checked')} not checked`
     + ` · ${count(score.findings, 'not-compliant')} short of a compliant key`);
   lines.push(`Probes        ${probe.length} observations across ${keys.filter((k) => k.weight === 'probe').length} rows (data, not failures)`);
-  lines.push(`Key corrections this run: ${score.corrections}`);
+  // Never one integer. A scope change reported as a key defect would make the
+  // campaign read as sloppier the more the product improves.
+  const c = score.corrections;
+  lines.push(`Key corrections  ${c.total} across ${c.documents} documents`
+    + ` — ${c.instrumentDefects} instrument defect${c.instrumentDefects === 1 ? '' : 's'}`
+    + `, ${c.scopeChanges} scope change${c.scopeChanges === 1 ? '' : 's'}`);
+  if (c.legibilityAdded > 0) {
+    lines.push(`  alt-legibility contributed ${c.legibilityAdded} item`
+      + `${c.legibilityAdded === 1 ? '' : 's'} (some inside instrument-defect rows)`);
+  }
 
   if (previous) {
     const wasFatal = new Set(Object.entries(previous.byId).filter(([, v]) => v.fatal > 0).map(([id]) => id));

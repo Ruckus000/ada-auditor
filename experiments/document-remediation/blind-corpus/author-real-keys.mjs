@@ -135,6 +135,72 @@ const plainString = (value) => {
 };
 
 /**
+ * A PDF text string, decoded the way a reader would get it.
+ *
+ * `plainString` reads `b:` as UTF-8, which is right for the fields it was
+ * written for and wrong for a description: three of the corpus's alt strings
+ * are hex UTF-16BE with a byte-order mark, and reading those as UTF-8 produces
+ * mojibake rather than the file path they actually contain. A first scan that
+ * missed them entirely is what proved this matters.
+ */
+const textString = (value) => {
+  if (typeof value !== 'string') return null;
+  if (value.startsWith('u:')) return value.slice(2);
+  if (!value.startsWith('b:')) return null;
+  const bytes = Buffer.from(value.slice(2), 'hex');
+  if (bytes[0] !== 0xfe || bytes[1] !== 0xff) return bytes.toString('utf8');
+  const be = bytes.subarray(2);
+  // swap16 needs an even length and mutates, so copy first.
+  return Buffer.from(be.subarray(0, be.length - (be.length % 2))).swap16().toString('utf16le');
+};
+
+/**
+ * Does this description fail WCAG Technique F30?
+ *
+ * F30 — "text alternatives that are not alternatives (e.g. filenames or
+ * placeholder text)" — names three categories, and this implements those and
+ * nothing beyond them. Provenance evidence only: each rule says "a machine put
+ * this here", never "this description is poor".
+ *
+ * DELIBERATELY DUPLICATED from `isPlaceholderAlt` in the product. The
+ * independence test forbids this file from importing anything under `src/`, so
+ * the rule has to exist twice. Written by one person, the two agree by
+ * construction — which means the corrected keys prove what the alt strings ARE,
+ * and prove nothing about whether classifying them this way is right.
+ */
+/** An OOXML attribute value is XML-escaped; F30 is about the decoded string. */
+const decodeXmlEntities = (value) => value
+  .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+  .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+  .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+  .replace(/&amp;/g, '&');
+
+const ALT_PLACEHOLDER = new Set([
+  'decorative', 'spacer', 'image', 'picture', 'graphic', 'photo', 'blank',
+  'untitled', 'placeholder',
+]);
+const ALT_PATH = /^(\\\\|[A-Za-z]:\\|\/Users\/|\/home\/|file:\/\/)/;
+const ALT_FILENAME = /\.(png|jpe?g|gif|bmp|tiff?|emf|wmf|svg|eps)$/i;
+const ALT_CID = /\bcid:/i;
+const ALT_PROGRAMMATIC = /^(picture|image|photo|graphic|figure|img)\s*\d+$|^\d+$/i;
+
+const isPlaceholderAlt = (raw) => {
+  if (typeof raw !== 'string') return false;
+  // A trailing NUL is a producer's string terminator, not content, and a
+  // leading "Description:" is an exporter artifact. Without the first, three
+  // legitimate descriptions read as illegible - one of them on r01, the only
+  // conformant real PDF in the corpus.
+  const s = raw.slice(0, 500)
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]+$/, '')
+    .replace(/^description:\s*/i, '')
+    .trim();
+  if (s === '') return false; // Empty is a positive claim of no meaning, not a gap.
+  return ALT_PATH.test(s) || ALT_CID.test(s) || ALT_FILENAME.test(s)
+    || ALT_PLACEHOLDER.has(s.toLowerCase()) || ALT_PROGRAMMATIC.test(s);
+};
+
+/**
  * The heading levels a reader meets, in the order a reader meets them.
  *
  * Walking the structure tree, not the object map. The first pass collected
@@ -228,6 +294,11 @@ function readPdf(path) {
       figures: figures.length,
     },
     figuresWithoutAlt: figures.filter((e) => e['/Alt'] === undefined).length,
+    // Counted separately from absent alt, so the two readings can be compared
+    // and each correction attributed to the right cause.
+    figuresIllegibleAlt: figures.filter(
+      (e) => e['/Alt'] !== undefined && isPlaceholderAlt(textString(e['/Alt'])),
+    ).length,
     annotations,
     annotationsOutside,
   };
@@ -279,6 +350,16 @@ function readDocx(path) {
     // seal captioned with `title` as undescribed, and then expected a punch
     // item for work somebody had already done.
     figuresWithoutAlt: drawings.filter((m) => !/\b(?:descr|title)="[^"]+"/.test(m[0])).length,
+    // The same F30 reading as the PDF path. A `descr` the author never wrote —
+    // an exporter's file path, a placeholder word — is not a description just
+    // because the attribute is populated, and the converter carries it into
+    // /Alt unchanged. Without this the Word half of the corpus reads a
+    // placeholder as described while the PDF half does not, and the key author
+    // disagrees with itself about the same string.
+    figuresIllegibleAlt: drawings.filter((m) => {
+      const value = /\b(?:descr|title)="([^"]+)"/.exec(m[0])?.[1];
+      return value !== undefined && isPlaceholderAlt(decodeXmlEntities(value));
+    }).length,
     annotations: 0,
     annotationsOutside: 0,
   };
@@ -293,11 +374,18 @@ function readDocx(path) {
  * the test: two independent readings of the same facts, and a disagreement is
  * a finding rather than a foregone conclusion.
  */
-function needsFrom(read) {
+function needsFrom(read, { legibility = true } = {}) {
   const needs = [];
   if (read.language === null) needs.push('3.1.1');
   if (read.annotationsOutside > 0) needs.push('1.3.1');
-  for (let i = 0; i < read.figuresWithoutAlt; i += 1) needs.push('1.1.1');
+  // Two readings, on purpose. `legibility: false` reproduces the ORIGINAL rule
+  // — alt absent — so a correction can be attributed: a difference the old rule
+  // already implied is an instrument defect I made, and a difference only the
+  // new rule sees is a scope change. Without the split, both land in one
+  // integer the protocol reads as a criticism of key quality.
+  const undescribed = read.figuresWithoutAlt
+    + (legibility ? (read.figuresIllegibleAlt ?? 0) : 0);
+  for (let i = 0; i < undescribed; i += 1) needs.push('1.1.1');
 
   // A Word source's heading levels describe the source, not the PDF that will
   // be graded; see `headingLevelsAreSourceOnly`.
@@ -355,6 +443,10 @@ const EVIDENCE = {
     'raw packet: the document declares a title in its XMP dc:title, in document information, or both. The first'
     + ' pass looked only for an untyped dictionary carrying /Title.',
   language: 'qpdf: the catalog /Lang, re-read after the structure fix.',
+  legibility:
+    'qpdf: figures whose /Alt is PRESENT but fails WCAG Technique F30 — a filename, a path, a cid: reference or a'
+    + ' placeholder word. The first pass tested only whether the key was absent, so a description that describes'
+    + ' nothing counted as a description. This is a SCOPE CHANGE, not a defect in the earlier reading.',
   default: 'qpdf and the veraPDF CLI, re-read after the authoring defects the first run exposed.',
 };
 
@@ -429,11 +521,38 @@ for (const file of files) {
     // visible in every future scorecard — a key quietly rewritten after a
     // disappointing run is the one failure mode a blind test cannot survive.
     const locked = JSON.parse(readFileSync(join(KEYS, `${id}.key.json`), 'utf8'));
+    // The middle reading is what makes attribution mechanical rather than a
+    // judgement about field names: `needs` now carries corrections of BOTH
+    // kinds, so classifying by field would conflate them.
+    //   locked  -> presenceOnly : the old rule already implied it. My defect.
+    //   presenceOnly -> now     : only the new rule sees it. A scope change.
+    const presenceOnly = disposition === 'delivered'
+      ? needsFrom(read, { legibility: false })
+      : [];
     for (const field of ['disposition', 'language', 'titleDeclared', 'counts', 'needs']) {
       const was = locked.expected[field];
       const now = expected[field];
       if (JSON.stringify(was) === JSON.stringify(now)) continue;
-      corrections.push({ docId: id, field, was, now, evidence: EVIDENCE[field] ?? EVIDENCE.default });
+      const kind = field === 'needs' && JSON.stringify(was) === JSON.stringify(presenceOnly)
+        ? 'scope-change'
+        : 'instrument-defect';
+      // When a key was ALREADY wrong for another reason, the legibility items
+      // land inside an instrument-defect row and vanish from the split. That is
+      // the conservative direction — it never inflates the scope-change count —
+      // but it under-reports it, so the contribution is recorded outright
+      // rather than left to be inferred from a total.
+      const legibilityAdded = field === 'needs'
+        ? now.filter((c) => c === '1.1.1').length - presenceOnly.filter((c) => c === '1.1.1').length
+        : 0;
+      corrections.push({
+        docId: id,
+        field,
+        kind,
+        ...(legibilityAdded > 0 ? { legibilityAdded } : {}),
+        was,
+        now,
+        evidence: kind === 'scope-change' ? EVIDENCE.legibility : (EVIDENCE[field] ?? EVIDENCE.default),
+      });
     }
   } else {
     writeFileSync(join(KEYS, `${id}.key.json`), `${JSON.stringify(key, null, 2)}\n`, 'utf8');

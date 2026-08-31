@@ -5,6 +5,8 @@ import {
   logSafe,
   summarise,
   withConformance,
+  isPlaceholderAlt,
+  undescribedFigures,
   isPlaceholderTitle,
   titleFromFilename,
   type ConversionProvenance,
@@ -411,15 +413,43 @@ describe('withConformance', () => {
     const s = withConformance(base, {
       checker: 'verapdf-ua1',
       compliant: false,
-      failingClauses: ['5-1', '7.18.4-1', '6.2-1'],
+      failingClauses: ['7.18.4-1', '6.2-1'],
     });
     // `base` voices no annotation item, so 7.18.4-1 is named here too: a
     // clause is only left to one of our items when that item is present.
     expect(s.needs).toHaveLength(1);
-    expect(s.needs?.[0].item).toContain('3 further PDF/UA checks fail');
-    expect(s.needs?.[0].item).toContain('5-1');
+    expect(s.needs?.[0].item).toContain('2 further PDF/UA checks fail');
     expect(s.needs?.[0].item).toContain('6.2-1');
     expect(s.needs?.[0].item).toContain('7.18.4-1');
+  });
+
+  it('says the missing identifier is correct, and asks for no work', () => {
+    // The catch-all would have said "a person must review 5-1" — telling the
+    // client to add back the conformance claim this document is not entitled
+    // to make. The clause is still reported as failing, because it is.
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['5-1', '6.2-1'],
+    });
+    const identifier = s.needs?.find((n) => n.criterion === 'PDF/UA 5-1');
+
+    expect(identifier?.item).toContain('carries no PDF/UA-1 conformance identifier');
+    expect(identifier?.item).toContain('not work');
+    // It states the file's state and never who chose it. `withConformance` also
+    // runs on the INSPECTION path, over a client's own document that we neither
+    // wrote nor decided anything about; claiming we withheld the identifier
+    // there would be a statement about provenance nobody checked.
+    expect(identifier?.item).not.toMatch(/deliberate|we |withheld/i);
+    // Still counted as failing by the checker, and still carried in the verdict.
+    expect(s.conformance).toEqual({
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['5-1', '6.2-1'],
+    });
+    // And it never lands in the catch-all as work.
+    const catchAll = s.needs?.find((n) => n.criterion === 'PDF/UA');
+    expect(catchAll?.item).not.toContain('5-1');
   });
 
   it('leaves clauses our own vocabulary already voices to the items that voice them', () => {
@@ -592,5 +622,140 @@ describe('a placeholder is not a title', () => {
     // survives nor dies by how it was spaced.
     expect(isPlaceholderTitle('  Untitled  ')).toBe(true);
     expect(isPlaceholderTitle('  Annual Drainage  Report ')).toBe(false);
+  });
+});
+
+describe('a description that describes nothing', () => {
+  // WCAG Technique F30 category 1: placeholder text. Matched WHOLE, never as a
+  // prefix — see the "keeps" block below for why that distinction is the whole
+  // safety of the rule.
+  it.each(['Decorative', 'image', 'PICTURE', 'graphic', 'spacer', 'blank', 'placeholder'])(
+    'refuses %s — a placeholder word is not a description (F30)',
+    (alt) => {
+      expect(isPlaceholderAlt(alt)).toBe(true);
+    },
+  );
+
+  // F30 category 3: filenames, and the paths they arrive inside. These are the
+  // shapes an exporter writes when a person did not.
+  it.each([
+    '\\\\fileserver\\Design\\Templates\\banner',
+    'C:\\Users\\clerk\\Desktop\\seal.png',
+    '/Users/clerk/Pictures/logo',
+    'file:///tmp/chart',
+    'chart_final_v2.png',
+    'DSC_0041.JPEG',
+  ])('refuses %s on provenance — a machine put that there', (alt) => {
+    expect(isPlaceholderAlt(alt)).toBe(true);
+  });
+
+  // F30 category 2: programming references, and a mail client's own handle for
+  // an inline image.
+  it.each(['Picture 3', 'image12', '0001', 'cid:image001.png@01D0A82E'])(
+    'refuses %s — a reference to the graphic is not a description of it',
+    (alt) => {
+      expect(isPlaceholderAlt(alt)).toBe(true);
+    },
+  );
+
+  // The guard that matters more than every detection above it. A description
+  // beginning with a placeholder word is still a description, and a predicate
+  // that ate these would be worse than the problem it solves.
+  it.each([
+    'Image of the north pump house at dusk',
+    'Picture of the council chamber, seats empty',
+    'Photo showing the east basin after the storm',
+    'Graphic comparing 2025 and 2026 permit volumes',
+    'County seal',
+    'Chart of quarterly permit volumes',
+  ])('keeps %s, because a real description is not a placeholder', (alt) => {
+    expect(isPlaceholderAlt(alt)).toBe(false);
+  });
+
+  it('keeps a two-character CJK description — short is not absent', () => {
+    // Deliberately NOT the `length < 3` refusal the title chain uses. This is a
+    // real description of a building, and it is two characters.
+    expect(isPlaceholderAlt('\u5e81\u820e')).toBe(false);
+    expect(isPlaceholderAlt('\u062d\u062f\u064a\u0642\u0629')).toBe(false);
+  });
+
+  it('treats a trailing NUL as a terminator, not as content', () => {
+    // Three legitimate descriptions in the blind corpus carry one, and one of
+    // them is on the only conformant real PDF. Reading the NUL as content
+    // flagged all three.
+    expect(isPlaceholderAlt('The Ohio State University\u0000')).toBe(false);
+    expect(isPlaceholderAlt('Decorative\u0000')).toBe(true);
+  });
+
+  it('strips an exporter prefix before judging, as the title chain does', () => {
+    expect(isPlaceholderAlt('Description: cid:image001.png@01D0A82E')).toBe(true);
+    expect(isPlaceholderAlt('Description: the mayor at the ribbon cutting')).toBe(false);
+  });
+
+  it('leaves empty alt alone — that is a claim, not an omission', () => {
+    // `document-structure.ts` records why: empty says the graphic carries no
+    // meaning. Whether PDF/UA agrees is a separate question, and not this
+    // predicate's to decide.
+    expect(isPlaceholderAlt('')).toBe(false);
+    expect(isPlaceholderAlt('   ')).toBe(false);
+  });
+
+  it('bounds the work an untrusted document can set', () => {
+    expect(isPlaceholderAlt('x'.repeat(200_000))).toBe(false);
+  });
+});
+
+describe('figures a reader learns nothing about', () => {
+  const figs = (...alts: Array<string | null>) =>
+    alts.map((alt) => ({ type: 'Figure', alt, actualText: null }));
+  const read = (...alts: Array<string | null>) =>
+    summarise(provenance({ structure: structure({ figures: figs(...alts), images: alts.length }) }));
+
+  it('counts absent and placeholder descriptions as the same work', () => {
+    expect(undescribedFigures(figs(null, 'Decorative', 'The north basin', null)))
+      .toEqual({ absent: 2, placeholder: 1, total: 3 });
+  });
+
+  it('folds both into ONE 1.1.1 gap, because gap identity is the criterion', () => {
+    // A second `1.1.1:` gap would collide under `documentGapKey`, and the
+    // regression comparator would read one failure as two.
+    const alt = read(null, 'Decorative').gaps.filter((line) => line.startsWith('1.1.1:'));
+
+    expect(alt).toHaveLength(1);
+    expect(alt[0]).toContain('2 figures');
+  });
+
+  it('prints only the sub-counts that are non-zero', () => {
+    // A bulk export gives every figure the same placeholder, so absent is zero.
+    // Gaps render on a client's report, and "(0 with no alt text, ...)" spends
+    // the reader's attention on a clause that says nothing.
+    const only = read('Decorative', 'Decorative').gaps.find((g) => g.startsWith('1.1.1:'));
+
+    expect(only).toContain('2 figures whose description is a placeholder');
+    expect(only).not.toContain('0 with no alt text');
+  });
+
+  it('leaves the wording untouched when nothing new applies', () => {
+    // A stored baseline taken before this reading must not read as a changed
+    // document just because the instrument grew.
+    expect(read(null).gaps).toContain('1.1.1: 1 figure with no alt text');
+  });
+
+  it('raises one punch item per figure, whichever way it is undescribed', () => {
+    const items = (read(null, 'Decorative', 'A real description').needs ?? [])
+      .filter((n) => n.criterion === '1.1.1');
+
+    expect(items).toHaveLength(2);
+    expect(items[1].item).toContain('F30');
+  });
+
+  it('never quotes the description it is refusing', () => {
+    // One of these strings in the wild is a UNC path naming a private host and
+    // an internal directory tree, and the punch list renders on a public page.
+    const items = read('\\\\192.168.0.8\\Design\\Projects').needs ?? [];
+
+    expect(items).toHaveLength(1);
+    expect(items[0].criterion).toBe('1.1.1');
+    expect(JSON.stringify(items)).not.toContain('192.168');
   });
 });

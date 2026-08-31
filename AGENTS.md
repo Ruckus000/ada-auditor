@@ -478,8 +478,27 @@ Read this before claiming something works.
   punch-listed, which is the one outcome this product promises never to
   produce.
 
+- **The summary header is unbounded, and a large punch list breaks the
+  delivery.** The remediation summary travels in the `x-remediation-summary`
+  response header with one item per undescribed figure. A real municipal
+  document carrying 101 of them produced a 22,743-byte header, and every client
+  on Node's 16KB default rejected the whole response with `Headers Overflow
+  Error` — the client got no punch list at all. Shortening the two figure items
+  brought the same 104 items to 12,946 bytes and the delivery back to 200, but
+  that is HEADROOM, not a bound: ~3.4KB remains and a few hundred figures would
+  breach it again. The response contract is what needs fixing.
+  See `docs/research/document-remediation/alt-and-identifier-results.md`.
+
+- **The blind corpus could not notice the product losing certification
+  entirely.** Gating the PDF/UA identifier briefly took conformant deliveries
+  from 19 to 0, and the run still reported every promise held — because not one
+  answer key claimed a document should come back conformant. `w01-baseline` now
+  asserts `conformance: { compliant: true }` and that exact failure now fails
+  the run, but the general shape stands: the corpus grades what is CLAIMED, and
+  a capability nobody registered a claim about is invisible to it.
+
 - **The pipeline has been measured on documents it had never seen.**
-  `experiments/document-remediation/blind-corpus/` — 92 documents (64 planted,
+  `experiments/document-remediation/blind-corpus/` — 97 documents (69 planted,
   28 real from 25 hosts sharing no domain with any training manifest), keys
   hash-locked before first contact, scored by `scripts/doc-blind-test/`.
   Results in `docs/research/document-remediation/blind-test-2026-08-29-*.md`.

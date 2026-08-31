@@ -68,6 +68,18 @@ export type FinishRequest = {
    * rather than an assertion no reader can.
    */
   language: string | null;
+  /**
+   * Whether the delivered file may ASSERT PDF/UA-1 conformance in its own XMP.
+   *
+   * `pdfuaid:part` is how conformance is machine-detected, so writing it is a
+   * claim rather than a piece of metadata — and this stage cannot know whether
+   * the claim is true, because the checker runs after it. The caller decides,
+   * once it holds a verdict for the bytes it is about to deliver.
+   *
+   * Defaults to true so existing callers are unchanged; the conversion path
+   * passes `false` and then earns it back.
+   */
+  claimUa1?: boolean;
 };
 
 export type FinishOutcome =
@@ -95,6 +107,10 @@ export async function finishDocument(
     if (titleFile !== null) await rm(titleFile, { force: true });
   };
 
+  // Absence means "claim it", matching the stage's own default, so no existing
+  // caller changes behaviour by not knowing about this.
+  const uaArgs = request.claimUa1 === false ? ['--no-ua-identifier'] : [];
+
   // Omitting the argument is what tells the stage to remove the claim; three
   // arguments set one. There is no sentinel string, because a sentinel is a
   // value somebody eventually passes by accident.
@@ -102,7 +118,7 @@ export async function finishDocument(
     try {
       return await runWritingStage(
         'Finish',
-        [request.inputPath, request.outputPath, ...titleArgs],
+        [request.inputPath, request.outputPath, ...titleArgs, ...uaArgs],
         options,
       );
     } finally {
@@ -128,7 +144,7 @@ export async function finishDocument(
   try {
     return await runWritingStage(
       'Finish',
-      [request.inputPath, request.outputPath, language.data, ...titleArgs],
+      [request.inputPath, request.outputPath, language.data, ...titleArgs, ...uaArgs],
       options,
     );
   } finally {

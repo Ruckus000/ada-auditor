@@ -210,7 +210,12 @@ export function structuredPdf({
   }
 
   for (const { num, element, page, mcid } of elementObjs) {
-    const alt = element.alt === undefined ? '' : ` /Alt ${lit(element.alt)}`;
+    // A non-ASCII description has to travel as UTF-16BE, which is what real
+    // producers write and what PDFBox decodes back. `lit()` would emit the
+    // bytes raw and a reader would get mojibake, so a CJK row planted to prove
+    // the predicate leaves it alone would prove nothing about a CJK string.
+    const encode = /^[\x20-\x7e]*$/.test(String(element.alt)) ? lit : utf16;
+    const alt = element.alt === undefined ? '' : ` /Alt ${encode(element.alt)}`;
     d.set(
       num,
       `<< /Type /StructElem /S /${element.type} /P ${d.ref(treeRoot)} /Pg ${d.ref(pageNums[page])}`

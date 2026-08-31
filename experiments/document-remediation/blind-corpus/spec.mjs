@@ -328,6 +328,78 @@ pdfRow(
   { weight: 'probe' },
 );
 
+// ---------------------------------------------------------------------------
+// The four rows below are REGRESSION LOCKS, not blind evidence.
+//
+// Their keys assert behaviour written in the same change, so they cannot
+// surprise anyone — the p16/p17 lesson, labelled this time rather than counted
+// as corroboration. What they are for is the opposite direction: they fail the
+// run if the predicate is ever widened into a quality judgement, or narrowed
+// back into a presence check.
+//
+// WCAG Technique F30 is the standard being implemented: "text alternatives that
+// are not alternatives (e.g., filenames or placeholder text)".
+// ---------------------------------------------------------------------------
+
+pdfRow(
+  'p36-alt-placeholder-word',
+  'Three figures whose description is a placeholder word. F30 category 1.',
+  { fn: 'structured', args: { title: 'Placeholder Descriptions', lang: 'en-US', elements: [
+    { type: 'H1', text: 'Placeholder Descriptions' },
+    { type: 'Figure', alt: 'Decorative', text: 'one' },
+    { type: 'Figure', alt: 'image', text: 'two' },
+    { type: 'Figure', alt: 'Picture 3', text: 'three' },
+  ] } },
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Placeholder Descriptions', language: 'en-US',
+    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 3 },
+    needs: ['1.1.1', '1.1.1', '1.1.1'], gapCriteria: ['1.1.1'] },
+);
+
+pdfRow(
+  'p37-alt-file-path',
+  'Descriptions that are a file path and a filename. F30 category 3.',
+  { fn: 'structured', args: { title: 'Paths As Descriptions', lang: 'en-US', elements: [
+    { type: 'H1', text: 'Paths As Descriptions' },
+    { type: 'Figure', alt: 'C:\\Projects\\Templates\\banner', text: 'one' },
+    { type: 'Figure', alt: 'chart_final_v2.png', text: 'two' },
+  ] } },
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Paths As Descriptions', language: 'en-US',
+    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 2 },
+    needs: ['1.1.1', '1.1.1'], gapCriteria: ['1.1.1'] },
+);
+
+pdfRow(
+  'p38-alt-near-miss',
+  'Real descriptions that merely BEGIN with a placeholder word. They must survive.',
+  { fn: 'structured', args: { title: 'Descriptions That Survive', lang: 'en-US', elements: [
+    { type: 'H1', text: 'Descriptions That Survive' },
+    { type: 'Figure', alt: 'Image of the north pump house at dusk', text: 'one' },
+    { type: 'Figure', alt: 'Picture of the council chamber, seats empty', text: 'two' },
+  ] } },
+  // The guard that matters more than the detections. A predicate that eats real
+  // descriptions is worse than the problem it solves, which is why the table is
+  // an EXACT match and never a prefix test.
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Descriptions That Survive', language: 'en-US',
+    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 2 },
+    needs: [], gapCriteria: [] },
+);
+
+pdfRow(
+  'p39-alt-cjk',
+  'A two-character CJK description. Short is not the same as absent.',
+  { fn: 'structured', args: { title: 'A Description In Japanese', lang: 'ja', elements: [
+    { type: 'H1', text: 'A Description In Japanese' },
+    { type: 'Figure', alt: '庁舎', text: 'one' },
+  ] } },
+  // No row in the corpus carried a non-Latin description before this one, so the
+  // predicate had no track record on them at all. It is also why the title
+  // chain's `length < 3` refusal is deliberately NOT copied into the alt
+  // predicate: this description is two characters and it is a real one.
+  { disposition: 'delivered', title: 'already-titled', titleText: 'A Description In Japanese', language: 'ja',
+    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 1 },
+    needs: [], gapCriteria: [] },
+);
+
 pdfRow(
   'p29-table-and-list',
   'A table and a list, counted as what they are.',
@@ -405,7 +477,21 @@ wordRow(
   'The easy case: titled, a language, a real heading ladder, a data table and a real list.',
   { fn: 'docx', args: { title: 'Program Notice', lang: 'en-US', shape: 'baseline' } },
   { disposition: 'delivered', title: 'already-titled', titleText: 'Program Notice', language: 'en-US',
-    counts: { headings: 2, tables: 1, lists: 1, figures: 0 }, needs: [], gapCriteria: [] },
+    counts: { headings: 2, tables: 1, lists: 1, figures: 0 }, needs: [], gapCriteria: [],
+    // THE ONE ROW THAT ASSERTS CONFORMANCE, and it exists because of a miss.
+    //
+    // Gating the PDF/UA identifier on the verdict broke it: the re-check ran on
+    // a staged file named `.pdf.ua`, veraPDF exits 4 on anything not ending
+    // `.pdf`, and the guard read that as "the identifier did not help" and
+    // discarded every stamp. Conformant deliveries went 19 to 0 — the product
+    // could no longer certify ANY document — and the run still reported every
+    // promise held, because not one key claimed a document should come back
+    // conformant. A corpus that cannot notice that is measuring the wrong thing.
+    //
+    // This is the easy case on purpose: titled, a language, a heading ladder, a
+    // table and a list, converted from a source that has all of it. If this
+    // document is not conformant, the conversion path is broken.
+    conformance: { compliant: true } },
 );
 
 wordRow(
