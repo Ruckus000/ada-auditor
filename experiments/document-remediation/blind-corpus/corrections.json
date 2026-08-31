@@ -2,6 +2,7 @@
   {
     "docId": "r01",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": {
       "pages": 6,
       "headings": 10,
@@ -21,6 +22,7 @@
   {
     "docId": "r03",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -28,6 +30,7 @@
   {
     "docId": "r03",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 5,
@@ -41,6 +44,7 @@
   {
     "docId": "r04",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -48,6 +52,7 @@
   {
     "docId": "r04",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 21,
@@ -59,8 +64,71 @@
     "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type. Verified to reproduce the same counts on r01, r17 and r22 independently."
   },
   {
+    "docId": "r04",
+    "field": "needs",
+    "kind": "scope-change",
+    "legibilityAdded": 52,
+    "was": [],
+    "now": [
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1"
+    ],
+    "evidence": "qpdf: figures whose /Alt is PRESENT but fails WCAG Technique F30 — a filename, a path, a cid: reference or a placeholder word. The first pass tested only whether the key was absent, so a description that describes nothing counted as a description. This is a SCOPE CHANGE, not a defect in the earlier reading."
+  },
+  {
     "docId": "r05",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -68,6 +136,7 @@
   {
     "docId": "r05",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 37,
@@ -79,8 +148,120 @@
     "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type. Verified to reproduce the same counts on r01, r17 and r22 independently."
   },
   {
+    "docId": "r05",
+    "field": "needs",
+    "kind": "scope-change",
+    "legibilityAdded": 101,
+    "was": [],
+    "now": [
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1"
+    ],
+    "evidence": "qpdf: figures whose /Alt is PRESENT but fails WCAG Technique F30 — a filename, a path, a cid: reference or a placeholder word. The first pass tested only whether the key was absent, so a description that describes nothing counted as a description. This is a SCOPE CHANGE, not a defect in the earlier reading."
+  },
+  {
     "docId": "r06",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -88,6 +269,7 @@
   {
     "docId": "r06",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 16,
@@ -101,9 +283,12 @@
   {
     "docId": "r06",
     "field": "needs",
+    "kind": "instrument-defect",
+    "legibilityAdded": 1,
     "was": [],
     "now": [
       "3.1.1",
+      "1.1.1",
       "1.1.1",
       "1.1.1",
       "1.1.1",
@@ -116,6 +301,7 @@
   {
     "docId": "r08",
     "field": "titleDeclared",
+    "kind": "instrument-defect",
     "was": false,
     "now": true,
     "evidence": "raw packet: the document declares a title in its XMP dc:title, in document information, or both. The first pass looked only for an untyped dictionary carrying /Title."
@@ -123,6 +309,7 @@
   {
     "docId": "r09",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -130,6 +317,7 @@
   {
     "docId": "r09",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 16,
@@ -143,6 +331,7 @@
   {
     "docId": "r09",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [],
     "now": [
       "1.1.1",
@@ -189,6 +378,7 @@
   {
     "docId": "r10",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -196,6 +386,7 @@
   {
     "docId": "r10",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 26,
@@ -209,6 +400,7 @@
   {
     "docId": "r10",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [],
     "now": [
       "3.1.1",
@@ -219,6 +411,7 @@
   {
     "docId": "r11",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -226,6 +419,7 @@
   {
     "docId": "r11",
     "field": "titleDeclared",
+    "kind": "instrument-defect",
     "was": false,
     "now": true,
     "evidence": "raw packet: the document declares a title in its XMP dc:title, in document information, or both. The first pass looked only for an untyped dictionary carrying /Title."
@@ -233,6 +427,7 @@
   {
     "docId": "r11",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 9,
@@ -246,6 +441,7 @@
   {
     "docId": "r11",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [],
     "now": [
       "1.1.1",
@@ -290,6 +486,7 @@
   {
     "docId": "r12",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -297,6 +494,7 @@
   {
     "docId": "r12",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 26,
@@ -310,6 +508,7 @@
   {
     "docId": "r13",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -317,6 +516,7 @@
   {
     "docId": "r13",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 12,
@@ -330,6 +530,7 @@
   {
     "docId": "r13",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [],
     "now": [
       "1.3.1",
@@ -346,6 +547,7 @@
   {
     "docId": "r14",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -353,6 +555,7 @@
   {
     "docId": "r14",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 47,
@@ -366,6 +569,7 @@
   {
     "docId": "r14",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [],
     "now": [
       "3.1.1"
@@ -375,6 +579,7 @@
   {
     "docId": "r15",
     "field": "disposition",
+    "kind": "instrument-defect",
     "was": "refused-not-tagged",
     "now": "delivered",
     "evidence": "qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem, which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged."
@@ -382,6 +587,7 @@
   {
     "docId": "r15",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": null,
     "now": {
       "pages": 45,
@@ -395,6 +601,7 @@
   {
     "docId": "r15",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [],
     "now": [
       "1.1.1",
@@ -417,6 +624,7 @@
   {
     "docId": "r17",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": {
       "pages": 53,
       "headings": 32,
@@ -436,6 +644,7 @@
   {
     "docId": "r17",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [
       "2.4.10",
       "2.4.10"
@@ -448,6 +657,7 @@
   {
     "docId": "r22",
     "field": "titleDeclared",
+    "kind": "instrument-defect",
     "was": false,
     "now": true,
     "evidence": "raw packet: the document declares a title in its XMP dc:title, in document information, or both. The first pass looked only for an untyped dictionary carrying /Title."
@@ -455,6 +665,7 @@
   {
     "docId": "r22",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": {
       "pages": 2,
       "headings": 2,
@@ -474,6 +685,7 @@
   {
     "docId": "r27",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [
       "1.1.1",
       "1.1.1"
@@ -486,6 +698,7 @@
   {
     "docId": "r28",
     "field": "needs",
+    "kind": "instrument-defect",
     "was": [
       "2.4.10"
     ],
@@ -495,6 +708,7 @@
   {
     "docId": "r34",
     "field": "counts",
+    "kind": "instrument-defect",
     "was": {
       "pages": null,
       "headings": 0,
@@ -514,8 +728,13 @@
   {
     "docId": "r34",
     "field": "needs",
+    "kind": "instrument-defect",
+    "legibilityAdded": 3,
     "was": [],
     "now": [
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
       "1.1.1"
     ],
     "evidence": "qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first pass could not see."

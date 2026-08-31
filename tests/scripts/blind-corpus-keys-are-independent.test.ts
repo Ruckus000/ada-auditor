@@ -50,6 +50,34 @@ describe('the blind corpus authors its keys independently', () => {
     }
   });
 
+  // Rule 3 of the protocol is that a wrong key gets an overlay carrying its
+  // evidence, never an edit. This holds the shape of that overlay: an untyped
+  // `kind` would let a scope change be counted as a key defect, which inflates
+  // the one number the protocol reads as a criticism of the corpus.
+  it('every correction says which kind it is, and carries evidence', () => {
+    const path = join(CORPUS, 'corrections.json');
+    const corrections = JSON.parse(readFileSync(path, 'utf8')) as Array<{
+      docId?: string; field?: string; kind?: string; evidence?: string; legibilityAdded?: number;
+    }>;
+    expect(corrections.length).toBeGreaterThan(0);
+
+    for (const correction of corrections) {
+      expect(correction.docId, 'a correction names no document').toBeTruthy();
+      expect(correction.field, `${correction.docId} names no field`).toBeTruthy();
+      expect(
+        ['instrument-defect', 'scope-change'],
+        `${correction.docId}/${correction.field} has kind ${String(correction.kind)}`,
+      ).toContain(correction.kind);
+      // Free text, but it has to say something: an overlay whose evidence is
+      // blank is an edit wearing a different hat.
+      expect((correction.evidence ?? '').length, `${correction.docId} cites no evidence`)
+        .toBeGreaterThan(20);
+      if (correction.legibilityAdded !== undefined) {
+        expect(correction.legibilityAdded).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it('every key records which instruments read the document', () => {
     const keys = readdirSync(join(CORPUS, 'keys')).filter((f) => f.endsWith('.key.json'));
     expect(keys.length).toBeGreaterThan(80);

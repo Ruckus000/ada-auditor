@@ -355,7 +355,10 @@ describe('drift between the product and an independent reading', () => {
 
 describe('corrections are an overlay, never an edit', () => {
   const correction: Correction[] = [
-    { docId: 'p01', field: 'language', was: 'en-US', now: null, evidence: 'qpdf shows no /Lang' },
+    {
+      docId: 'p01', field: 'language', kind: 'instrument-defect',
+      was: 'en-US', now: null, evidence: 'qpdf shows no /Lang',
+    },
   ];
 
   it('applies the corrected value', () => {
@@ -366,6 +369,42 @@ describe('corrections are an overlay, never an edit', () => {
   it('marks the row as corrected so it can never read as a plain hit', () => {
     expect(scoreDocument(key(), delivered(), correction).corrected).toBe(true);
     expect(scoreDocument(key(), delivered()).corrected).toBe(false);
+  });
+
+  // A key the author misread and a key describing a smaller vocabulary are
+  // different facts. Summed into one integer, the campaign reads as sloppier
+  // the more the product improves, which is the wrong incentive to build in.
+  it('reports instrument defects and scope changes separately, never summed', () => {
+    const mixed: Correction[] = [
+      { ...correction[0] },
+      {
+        docId: 'p02', field: 'needs', kind: 'scope-change', legibilityAdded: 52,
+        was: [], now: ['1.1.1'], evidence: 'qpdf: /Alt present but fails F30',
+      },
+    ];
+    const score = scoreRun([key()], { p01: delivered() }, mixed);
+
+    expect(score.corrections.total).toBe(2);
+    expect(score.corrections.instrumentDefects).toBe(1);
+    expect(score.corrections.scopeChanges).toBe(1);
+    expect(score.corrections.documents).toBe(2);
+    expect(score.corrections.legibilityAdded).toBe(52);
+  });
+
+  // The conservative direction: when a key was already wrong for an unrelated
+  // reason, the legibility items land in an instrument-defect row. That must
+  // not make them vanish from the record.
+  it('counts a legibility contribution even inside an instrument-defect row', () => {
+    const folded: Correction[] = [
+      {
+        docId: 'p03', field: 'needs', kind: 'instrument-defect', legibilityAdded: 3,
+        was: [], now: ['1.1.1'], evidence: 'qpdf: re-read',
+      },
+    ];
+    const score = scoreRun([key()], { p01: delivered() }, folded);
+
+    expect(score.corrections.scopeChanges).toBe(0);
+    expect(score.corrections.legibilityAdded).toBe(3);
   });
 });
 
