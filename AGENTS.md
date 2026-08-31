@@ -494,14 +494,19 @@ Read this before claiming something works.
   changed values in red, which is meaning carried by colour alone, and nothing
   here detects that.
 
-- **The document pipeline reaches SIX WCAG criteria, and says so.**
-  The vocabulary can emit `1.1.1`, `1.3.1`, `1.4.3`, `2.4.2`, `2.4.10` and
-  `3.1.1` — six of the roughly fifty in 2.1 AA. It still never evaluates use
-  of colour, meaningful sequence or name/role/value, which
-  `legal-standard.md`'s own pass mark requires. Every reading now carries `scope.criteria` and every
-  surface renders it through `services/presentation/document-verdict.ts`.
-  Every reading carries `scope.criteria` and every surface renders it through
+- **The document pipeline reaches SEVEN WCAG criteria, and says so.**
+  The vocabulary can emit `1.1.1`, `1.3.1`, `1.4.3`, `2.4.2`, `2.4.10`, `3.1.1`
+  and `4.1.2` — seven of the roughly fifty in 2.1 AA. Every reading carries
+  `scope.criteria` and every surface renders it through
   `services/presentation/document-verdict.ts`.
+
+  **One criterion on `legal-standard.md`'s pass mark is still unreached:
+  `1.3.2` Meaningful Sequence.** `1.4.1` Use of Color is NOT on that pass mark;
+  it was measured and deliberately declined — 17 of 23 real documents carry a
+  saturated minority accent and the overwhelming majority are hyperlinks and
+  Word theme heading colours, so a detector would be right about roughly four.
+  See `docs/research/document-remediation/use-of-color-feasibility.md`. Both
+  stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
 
 - **The summary header is unbounded, and a large punch list breaks the
   delivery.** The remediation summary travels in the `x-remediation-summary`
@@ -521,6 +526,28 @@ Read this before claiming something works.
   asserts `conformance: { compliant: true }` and that exact failure now fails
   the run, but the general shape stands: the corpus grades what is CLAIMED, and
   a capability nobody registered a claim about is invisible to it.
+
+- **Earned suppression can still suppress the wrong thing.** `alreadyVoiced`
+  drops a veraPDF clause from the catch-all only when one of our own items is
+  actually present — the fix for an earlier defect where suppression was
+  unconditional. But it routes by clause FAMILY, and `7.18` holds two unrelated
+  questions: whether a reader can REACH an annotation (1.3.1) and whether a form
+  field has a NAME (4.1.2). r13 was delivered with 135 unnamed form fields and a
+  punch list that named none of them, because the reachability item was present
+  and legitimately earned the suppression of `7.18.1-3`. Routing is now split.
+  The general shape stands: a family is not a criterion, and any new clause
+  added to an existing family inherits that family's voice whether or not it
+  belongs to it.
+  See `docs/research/document-remediation/form-names-results.md`.
+
+- **A count read from the AcroForm field tree is not a count of form fields.**
+  PDFBox's `getFieldTree()` resolves inherited `/TU` correctly and returns
+  NOTHING for a document whose widgets are on the page but in no field tree —
+  which a planted corpus row is, and real PDFs are. The first implementation of
+  the 4.1.2 pass read that document as having no form at all. The population has
+  to come from the page annotations; the field tree is only good for resolving
+  inheritance. Caught by scanning the whole corpus with the compiled stage, not
+  by a test.
 
 - **The pipeline has been measured on documents it had never seen.**
   `experiments/document-remediation/blind-corpus/` — 97 documents (69 planted,

@@ -103,6 +103,8 @@ function conversionSucceeds() {
           marked: true,
           signed: false,
           annotationsNotInStructure: 0,
+          formFields: 0,
+          formFieldsWithoutName: 0,
           embeddedFiles: 0,
           structureElements: 40,
           textChars: 900,

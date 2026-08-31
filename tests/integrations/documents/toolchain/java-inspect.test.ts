@@ -179,6 +179,92 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
   });
 
   /**
+   * Four widgets covering each way a form field can and cannot be named.
+   *
+   * The accessible name is `/TU`. `/T` is the internal field name a form
+   * processor uses and assistive technology never speaks, so a widget carrying
+   * only `/T` is unnamed however descriptive that string looks — which is the
+   * case this fixture exists to pin, because it is the one a reasonable reader
+   * of the bytes gets wrong.
+   *
+   * `acroForm: false` drops the `/AcroForm` entry while leaving the widgets on
+   * the page. A first implementation walked PDFBox's field tree and reported
+   * ZERO fields for exactly that document — a planted corpus row with two
+   * unlabelled fields, read as a document with no form at all.
+   */
+  function formPdf({ acroForm = true } = {}): Buffer {
+    const fields = acroForm ? ' /AcroForm << /Fields [5 0 R 6 0 R 8 0 R 9 0 R] >>' : '';
+    const objs = [
+      `<< /Type /Catalog /Pages 2 0 R${fields} >>`,
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R'
+        + ' /Annots [5 0 R 6 0 R 7 0 R 8 0 R] >>',
+      '<< /Length 10 >>\nstream\n% content\nendstream',
+      // Named outright.
+      '<< /Type /Annot /Subtype /Widget /FT /Tx /T (surname) /TU (Applicant surname)'
+        + ' /Rect [0 0 10 10] /P 3 0 R >>',
+      // /T only — an internal field name, not a label.
+      '<< /Type /Annot /Subtype /Widget /FT /Tx /T (Text12)'
+        + ' /Rect [0 20 10 30] /P 3 0 R >>',
+      // Named through the field it belongs to, which is a separate object.
+      '<< /Type /Annot /Subtype /Widget /FT /Tx /Parent 9 0 R'
+        + ' /Rect [0 40 10 50] /P 3 0 R >>',
+      // The rule's second limb: an alternative description on the widget.
+      '<< /Type /Annot /Subtype /Widget /FT /Tx /T (dob) /Contents (Date of birth)'
+        + ' /Rect [0 60 10 70] /P 3 0 R >>',
+      '<< /FT /Tx /T (parentfield) /TU (Parent label) /Kids [7 0 R] >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('counts only the form field that carries no accessible name', async () => {
+    const path = join(dir, 'form.pdf');
+    await writeFile(path, formPdf());
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable(`could not read the form fixture: ${JSON.stringify(result.failure)}`);
+    else {
+      expect(result.value.formFields).toBe(4);
+      // Only the /T-only widget. /TU, an inherited /TU and /Contents all name.
+      expect(result.value.formFieldsWithoutName).toBe(1);
+    }
+  });
+
+  it('sees widgets that no AcroForm registers', async () => {
+    // The silent gap: a first implementation walked the field tree and read
+    // this document as having no form fields at all.
+    const path = join(dir, 'form-no-acroform.pdf');
+    await writeFile(path, formPdf({ acroForm: false }));
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable('could not read the AcroForm-less fixture');
+    else {
+      expect(result.value.formFields).toBe(4);
+      expect(result.value.formFieldsWithoutName).toBe(1);
+    }
+  });
+
+  it('reports an ordinary document as carrying no form fields', async () => {
+    const result = await inspectDocument(pdfPath);
+    if (!result.ok) expect.unreachable('could not read the generated document');
+    else {
+      expect(result.value.formFields).toBe(0);
+      expect(result.value.formFieldsWithoutName).toBe(0);
+    }
+  });
+
+  /**
    * A document with other documents inside it.
    *
    * `collection: true` makes it a portfolio; without it, the same attachment

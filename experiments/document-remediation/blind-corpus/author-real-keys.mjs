@@ -240,6 +240,36 @@ function headingOrder(objects, catalog) {
   return levels;
 }
 
+/**
+ * veraPDF's 7.18.1-3, read from the objects: *a form field shall have a TU key
+ * present, or all its widget annotations shall have alternative descriptions*.
+ *
+ * The published rule rather than a tighter one of ours, so this reading and the
+ * reference checker's can be compared as two independent answers to the same
+ * question instead of two different questions.
+ *
+ * `/TU` is walked up `/Parent` because a field and its widget are often
+ * separate objects, and the walk starts at the widget so a merged field-widget
+ * dictionary is covered by the same pass. Depth-bounded: a malformed loop must
+ * not hang the author.
+ */
+function hasAccessibleName(widget, objects) {
+  const resolve = (ref) => (typeof ref === 'string' && ref.endsWith(' R') ? deref(objects[`obj:${ref}`]) : ref);
+  const named = (value) => {
+    const text = textString(value);
+    return typeof text === 'string' && text.trim() !== '';
+  };
+
+  if (named(widget['/Contents'])) return true;
+
+  let node = widget;
+  for (let depth = 0; node && typeof node === 'object' && depth < 8; depth += 1) {
+    if (named(node['/TU'])) return true;
+    node = resolve(node['/Parent']);
+  }
+  return false;
+}
+
 function readPdf(path) {
   const objects = qpdfObjects(path);
   const summary = qpdfSummary(path);
@@ -249,6 +279,8 @@ function readPdf(path) {
   const structure = [];
   let annotations = 0;
   let annotationsOutside = 0;
+  let formFields = 0;
+  let formFieldsWithoutName = 0;
   let signed = false;
 
   for (const value of Object.values(objects)) {
@@ -260,6 +292,13 @@ function readPdf(path) {
     if (obj['/Type'] === '/Annot' && (obj['/Subtype'] === '/Widget' || obj['/Subtype'] === '/Link')) {
       annotations += 1;
       if (obj['/StructParent'] === undefined) annotationsOutside += 1;
+    }
+    // A form field's accessible name, read independently of the product.
+    // `/TU` is what assistive technology speaks; `/T` is the internal field
+    // name and is not a label however descriptive it looks.
+    if (obj['/Subtype'] === '/Widget') {
+      formFields += 1;
+      if (!hasAccessibleName(obj, objects)) formFieldsWithoutName += 1;
     }
     // Document information is untyped, so it is found by its keys. The first
     // run required `/Type` to be absent, which missed a document that declares
@@ -301,6 +340,8 @@ function readPdf(path) {
     ).length,
     annotations,
     annotationsOutside,
+    formFields,
+    formFieldsWithoutName,
   };
 }
 
@@ -378,6 +419,7 @@ function needsFrom(read, { legibility = true } = {}) {
   const needs = [];
   if (read.language === null) needs.push('3.1.1');
   if (read.annotationsOutside > 0) needs.push('1.3.1');
+  if ((read.formFieldsWithoutName ?? 0) > 0) needs.push('4.1.2');
   // Two readings, on purpose. `legibility: false` reproduces the ORIGINAL rule
   // — alt absent — so a correction can be attributed: a difference the old rule
   // already implied is an instrument defect I made, and a difference only the
@@ -507,6 +549,7 @@ for (const file of files) {
       ...(isPdf ? {
         pages: read.pages, tagged: read.tagged, marked: read.marked, signed: read.signed,
         encrypted: read.encrypted, annotations: read.annotations, annotationsOutside: read.annotationsOutside,
+        formFields: read.formFields, formFieldsWithoutName: read.formFieldsWithoutName,
         figuresWithoutAlt: read.figuresWithoutAlt,
         ua1: verdict.checked ? { compliant: verdict.compliant, failingClauses: verdict.clauses } : 'unchecked',
       } : {

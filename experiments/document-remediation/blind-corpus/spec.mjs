@@ -177,7 +177,17 @@ pdfRow(
     elements: [{ type: 'H1', text: 'Permit Application' }, { type: 'P', text: BODY }],
     annots: [{ nested: true }, { nested: false }] } },
   { disposition: 'delivered', title: 'already-titled', titleText: 'Permit Application', language: 'en-US',
-    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 0 }, needs: ['1.3.1'], gapCriteria: [] },
+    counts: { pages: 1, headings: 1, tables: 0, lists: 0, figures: 0 },
+    needs: ['1.3.1', '4.1.2'], gapCriteria: ['4.1.2'] },
+  // The 4.1.2 half is a REGRESSION LOCK, not blind evidence — it asserts
+  // behaviour written in the same change and cannot surprise anyone. Recorded
+  // because it is a fact about the fixture rather than about the product: the
+  // builder writes both widgets with `/T (Field1)` and neither with `/TU`, and
+  // `/T` is the internal field name a form processor uses, never a label a
+  // screen reader speaks. What the lock is FOR is the other direction — it
+  // fails the run if the reading is ever narrowed back to fields an `/AcroForm`
+  // registers, which is what a first implementation did. This document has no
+  // `/AcroForm` at all, and that implementation read it as having no form.
 );
 
 pdfRow(

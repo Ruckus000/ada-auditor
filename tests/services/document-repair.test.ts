@@ -17,6 +17,8 @@ function structure(over: Partial<DocumentStructure> = {}): DocumentStructure {
     marked: true,
     signed: false,
     annotationsNotInStructure: 0,
+    formFields: 0,
+    formFieldsWithoutName: 0,
     embeddedFiles: 0,
     textChars: 900,
     images: 0,
