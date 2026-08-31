@@ -7,7 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.contentstream.operator.color.SetNonStrokingColor;
 import org.apache.pdfbox.contentstream.operator.color.SetNonStrokingColorN;
 import org.apache.pdfbox.contentstream.operator.color.SetNonStrokingColorSpace;
@@ -17,6 +22,7 @@ import org.apache.pdfbox.contentstream.operator.color.SetNonStrokingDeviceRGBCol
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.util.Matrix;
@@ -80,14 +86,15 @@ public final class Contrast extends PDFTextStripper {
     private static final java.util.regex.Pattern SUBSET_TAG =
         java.util.regex.Pattern.compile("^[A-Z]{6}\\+");
 
-    private record Pair(String fg, String bg, boolean large) {}
+    private record Pair(String fg, String bg, boolean large, int page, boolean exempt) {}
     private static final class Tally {
         int glyphs;
         double ratio;
-        String sample = "";
     }
 
     private final Map<Pair, Tally> tallies = new LinkedHashMap<>();
+    /** The marked-content tags enclosing the glyph being drawn, outermost first. */
+    private final Deque<String> marked = new ArrayDeque<>();
     private PDFRenderer renderer;
     private BufferedImage rendered;
     private int renderedPage = -1;
@@ -102,12 +109,53 @@ public final class Contrast extends PDFTextStripper {
         addOperator(new SetNonStrokingColorN(this));
     }
 
+    /**
+     * WCAG exempts text that is pure decoration or part of a logo, and a PDF
+     * says both — in the only place it can, the marked-content tags around the
+     * glyph. `/Artifact` is the format's own word for "this is not content",
+     * and a `/Figure` sequence is where a logotype drawn as live text lives.
+     *
+     * COUNTED SEPARATELY, NEVER DROPPED. `/Artifact` is broader than WCAG's
+     * exemption: it covers pure decoration, but also running heads and page
+     * numbers, which are visible text a sighted reader uses and which WCAG
+     * does NOT exempt. `[V]` Excluding them outright silenced a real 4.0:1
+     * failure on 82 glyphs of a running header in a federal publication.
+     * So the tally keeps them in their own bucket and the punch list asks a
+     * person whether they are decoration — the same answer the undetermined
+     * bucket gives, for the same reason: we cannot tell, so we say so.
+     */
+    @Override
+    public void beginMarkedContentSequence(COSName tag, COSDictionary properties) {
+        marked.push(tag == null ? "" : tag.getName());
+        super.beginMarkedContentSequence(tag, properties);
+    }
+
+    @Override
+    public void endMarkedContentSequence() {
+        if (!marked.isEmpty()) marked.pop();
+        super.endMarkedContentSequence();
+    }
+
+    private boolean exempt() {
+        for (String tag : marked) {
+            if ("Artifact".equals(tag) || "Figure".equals(tag)) return true;
+        }
+        return false;
+    }
+
     @Override
     protected void showGlyph(Matrix trm, PDFont font, int code, Vector displacement) throws IOException {
         String glyph = font == null ? null : font.toUnicode(code);
         // Whitespace has no foreground to contrast, and counting it would swamp
         // the tally with the page's background against itself.
         if (glyph == null || glyph.isBlank()) { super.showGlyph(trm, font, code, displacement); return; }
+
+        // Text that paints nothing has no contrast. Rendering mode 3 is the
+        // invisible OCR layer under every scanned page, and mode 7 only clips;
+        // measuring either invents a failure a reader could never see.
+        RenderingMode mode = getGraphicsState().getTextState().getRenderingMode();
+        if (!mode.isFill() && !mode.isStroke()) { super.showGlyph(trm, font, code, displacement); return; }
+
 
         int fg = rgbOf(getGraphicsState().getNonStrokingColor());
         float size = trm.getScaleY();
@@ -116,11 +164,11 @@ public final class Contrast extends PDFTextStripper {
         boolean large = size >= LARGE_PT || (bold && size >= LARGE_PT_BOLD);
 
         int bg = backgroundAt(trm, size, fg);
-        Pair key = new Pair(hex(fg), bg == UNDETERMINED ? "undetermined" : hex(bg), large);
+        Pair key = new Pair(hex(fg), bg == UNDETERMINED ? "undetermined" : hex(bg), large,
+            getCurrentPageNo(), exempt());
         Tally t = tallies.computeIfAbsent(key, k -> new Tally());
         t.glyphs++;
         t.ratio = bg == UNDETERMINED ? Double.NaN : ratio(fg, bg);
-        if (t.sample.length() < 30) t.sample += glyph;
 
         super.showGlyph(trm, font, code, displacement);
     }
@@ -197,10 +245,25 @@ public final class Contrast extends PDFTextStripper {
     protected void startPage(org.apache.pdfbox.pdmodel.PDPage page) throws IOException {
         int index = getCurrentPageNo() - 1;
         if (index != renderedPage) {
+            // Anti-aliasing OFF. WCAG 1.4.3 Note 2 says outright that "the
+            // contrast ratio for text can be evaluated with anti-aliasing
+            // turned off", and it has to be: a blended edge pixel is a mix of
+            // the two colours being compared, so sampling it drags the measured
+            // foreground toward the background and flatters every ratio.
+            renderer.setRenderingHints(noAntiAliasing());
             rendered = renderer.renderImageWithDPI(index, DPI);
             renderedPage = index;
         }
         super.startPage(page);
+    }
+
+    private static java.awt.RenderingHints noAntiAliasing() {
+        java.awt.RenderingHints hints = new java.awt.RenderingHints(
+            java.awt.RenderingHints.KEY_ANTIALIASING,
+            java.awt.RenderingHints.VALUE_ANTIALIAS_OFF);
+        hints.put(java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
+            java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        return hints;
     }
 
     public static void main(String[] args) throws Exception {
@@ -215,6 +278,7 @@ public final class Contrast extends PDFTextStripper {
 
             List<String> findings = new ArrayList<>();
             int failing = 0, passing = 0, failingGlyphs = 0, undetermined = 0, undeterminedGlyphs = 0;
+            int decorative = 0, decorativeGlyphs = 0;
             for (Map.Entry<Pair, Tally> e : c.tallies.entrySet()) {
                 Pair p = e.getKey();
                 Tally t = e.getValue();
@@ -222,19 +286,27 @@ public final class Contrast extends PDFTextStripper {
                 double need = p.large() ? MIN_LARGE : MIN_NORMAL;
                 boolean ok = t.ratio >= need;
                 if (ok) { passing++; continue; }
+                // Below the threshold, but the document marks it as decoration or
+                // as part of a figure. Its own bucket: not a failure we assert,
+                // not a pass we invent.
+                if (p.exempt()) { decorative++; decorativeGlyphs += t.glyphs; continue; }
                 failing++;
                 failingGlyphs += t.glyphs;
+                // No sample of the measured text. The summary this feeds
+                // renders on a client's public report, and the run that proved
+                // the point printed a sentence off a real document.
                 findings.add(String.format(
                     "{\"fg\":\"%s\",\"bg\":\"%s\",\"large\":%b,\"ratio\":%.2f,\"required\":%.1f,"
-                    + "\"glyphs\":%d,\"sample\":\"%s\"}",
-                    p.fg(), p.bg(), p.large(), t.ratio, need, t.glyphs,
-                    t.sample.replace("\\", "").replace("\"", "'")));
+                    + "\"glyphs\":%d,\"page\":%d}",
+                    p.fg(), p.bg(), p.large(), t.ratio, need, t.glyphs, p.page()));
             }
             System.out.printf(
                 "{\"pairs\":%d,\"passing\":%d,\"failing\":%d,\"failingGlyphs\":%d,"
-                + "\"undetermined\":%d,\"undeterminedGlyphs\":%d,\"findings\":[%s]}%n",
+                + "\"undetermined\":%d,\"undeterminedGlyphs\":%d,"
+                + "\"decorative\":%d,\"decorativeGlyphs\":%d,\"findings\":[%s]}%n",
                 c.tallies.size(), passing, failing, failingGlyphs,
-                undetermined, undeterminedGlyphs, String.join(",", findings));
+                undetermined, undeterminedGlyphs, decorative, decorativeGlyphs,
+                String.join(",", findings));
         }
     }
 }

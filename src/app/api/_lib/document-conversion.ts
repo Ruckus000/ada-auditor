@@ -5,11 +5,13 @@ import { join } from 'node:path';
 import {
   summarise,
   withConformance,
+  withContrast,
   type Conformance,
   type RemediationSummary,
 } from '../../../domain/document-remediation';
 import { contentChanges, type DocumentStructure } from '../../../domain/document-structure';
 import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/documents/convert';
+import { measureContrast } from '../../../integrations/documents/contrast';
 import { finishDocument, type FinishRequest } from '../../../integrations/documents/finish';
 import { inspectDocument } from '../../../integrations/documents/inspect';
 import { checkUa1 } from '../../../integrations/documents/verapdf';
@@ -107,6 +109,31 @@ async function earnUaIdentifier(
   return rechecked;
 }
 
+/**
+ * Contrast on the delivered bytes, folded in when the pass could run.
+ *
+ * Never refuses. Contrast is a source-design problem this pipeline cannot fix —
+ * changing a client's colours is changing their design — so the commitment was
+ * "detected and flagged", not "repaired". It is also the one detector with a
+ * known false-positive class, decorative text being indistinguishable from a
+ * running head, and a refusal on a false positive costs the client the document.
+ *
+ * A stage that cannot run leaves the field absent, which every surface renders
+ * as "not checked" rather than clean.
+ */
+async function withMeasuredContrast(
+  summary: RemediationSummary,
+  pdfPath: string,
+  stageOptions: Parameters<typeof measureContrast>[1],
+): Promise<RemediationSummary> {
+  const reading = await measureContrast(pdfPath, stageOptions);
+  if (!reading.ok) {
+    logWarn('document_contrast_not_measured', { failure: reading.failure.kind });
+    return summary;
+  }
+  return withContrast(summary, reading.value);
+}
+
 /** What `repairPdfBytes` needs: the stage plumbing, plus the client-facing name. */
 export type RepairOptions = Pick<ConvertOptions, 'javaRuntime' | 'root' | 'env' | 'timeoutMs' | 'sourceName'>;
 
@@ -187,7 +214,12 @@ export async function remediateWordBytes(
     );
     // Read after the decision, so the verdict describes these exact bytes.
     const pdf = await readFile(output);
-    return { ok: true, pdf, summary: withConformance(summarise(result.provenance), conformance) };
+    const summary = await withMeasuredContrast(
+      withConformance(summarise(result.provenance), conformance),
+      output,
+      stageOptions,
+    );
+    return { ok: true, pdf, summary };
   } finally {
     // Every path, including a throw inside the conversion. `convertSourceToPdf`
     // cleans its own working directory; this is ours.
@@ -315,10 +347,8 @@ export async function repairPdfBytes(
     // independent checker reading the delivered file must reach the same list,
     // or the report and the document disagree about the same document.
     const pdf = await readFile(output);
-    return {
-      ok: true,
-      pdf,
-      summary: withConformance(
+    const summary = await withMeasuredContrast(
+      withConformance(
         summarise({
           title: decision.plan.title,
           sourceLanguage: decision.plan.language,
@@ -326,7 +356,10 @@ export async function repairPdfBytes(
         }),
         conformance,
       ),
-    };
+      output,
+      stageOptions,
+    );
+    return { ok: true, pdf, summary };
   } finally {
     await rm(work, { recursive: true, force: true });
   }

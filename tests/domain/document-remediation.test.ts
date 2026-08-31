@@ -5,6 +5,7 @@ import {
   logSafe,
   summarise,
   withConformance,
+  withContrast,
   CHECKED_CRITERIA,
   NOT_CHECKED_CRITERIA,
   isPlaceholderAlt,
@@ -810,6 +811,15 @@ describe('the scope this instrument claims', () => {
     collect(summarise(provenance({
       structure: structure({ headings: ['H3'], headingTexts: [{ level: 'H3', text: 'Deep' }] }),
     })));
+    // 1.4.3 — contrast, which arrives through `withContrast` rather than the
+    // two emitters, exactly as the conformance items arrive through
+    // `withConformance`. Driving only `summarise` would leave the criterion
+    // claimed in the scope and produced by nothing the test can see.
+    collect(withContrast(summarise(provenance()), {
+      pairs: 2, passing: 0, failing: 1, failingGlyphs: 9,
+      undetermined: 1, undeterminedGlyphs: 4, decorative: 1, decorativeGlyphs: 2,
+      findings: [{ fg: '#FF0000', bg: '#FFFFFF', large: false, ratio: 4, required: 4.5, glyphs: 9, page: 2 }],
+    }));
 
     return seen;
   };
@@ -838,5 +848,98 @@ describe('the scope this instrument claims', () => {
     // A scope that scaled with the document would re-break that delivery.
     const bytes = JSON.stringify(summarise(provenance()).scope).length;
     expect(bytes).toBeLessThan(120);
+  });
+});
+
+describe('withContrast', () => {
+  const base = (): RemediationSummary => summarise(provenance());
+  const reading = (over = {}) => ({
+    pairs: 1, passing: 0, failing: 0, failingGlyphs: 0,
+    undetermined: 0, undeterminedGlyphs: 0, decorative: 0, decorativeGlyphs: 0,
+    findings: [] as Array<{
+      fg: string; bg: string; large: boolean; ratio: number;
+      required: number; glyphs: number; page: number;
+    }>,
+    ...over,
+  });
+  const finding = (over = {}) => ({
+    fg: '#FF0000', bg: '#FFFFFF', large: false, ratio: 4, required: 4.5, glyphs: 9, page: 2, ...over,
+  });
+
+  it('names a failure with its worst ratio and its pages', () => {
+    const s = withContrast(base(), reading({
+      failing: 1, failingGlyphs: 9, findings: [finding()],
+    }));
+
+    expect(s.gaps).toContainEqual(expect.stringContaining('1.4.3:'));
+    expect(s.gaps.find((g) => g.startsWith('1.4.3'))).toContain('4.00:1');
+    expect(s.needs?.[0].item).toContain('page 2');
+  });
+
+  it('folds every contrast fact into ONE 1.4.3 gap', () => {
+    // `documentGapKey` identifies a gap by the criterion before its colon, so a
+    // second `1.4.3:` string would read as two failures where there is one.
+    const s = withContrast(base(), reading({
+      failing: 1, failingGlyphs: 9, undetermined: 1, undeterminedGlyphs: 4,
+      findings: [finding()],
+    }));
+
+    expect(s.gaps.filter((g) => g.startsWith('1.4.3:'))).toHaveLength(1);
+  });
+
+  it('voices undetermined text rather than passing over it', () => {
+    // A ratio nobody could measure is not a pass. Reporting one from an
+    // unreliable sample would invent a failure; saying nothing would hide one.
+    const s = withContrast(base(), reading({ undetermined: 3, undeterminedGlyphs: 40 }));
+
+    expect(s.needs?.some((n) => n.criterion === '1.4.3' && /could|no ratio|by eye/.test(n.item)))
+      .toBe(true);
+    expect(s.gaps.some((g) => g.startsWith('1.4.3:'))).toBe(true);
+  });
+
+  it('keeps decoration in its own bucket, neither failure nor pass', () => {
+    // `/Artifact` is broader than WCAG's exemption — it also covers running
+    // heads and page numbers, which are visible text WCAG does not exempt.
+    const s = withContrast(base(), reading({ decorative: 1, decorativeGlyphs: 82 }));
+    const item = s.needs?.find((n) => n.criterion === '1.4.3');
+
+    expect(item?.item).toContain('82');
+    expect(item?.item).toMatch(/decoration/);
+    // Not asserted as a failure: no gap, because we did not establish one.
+    expect(s.gaps.some((g) => g.startsWith('1.4.3:'))).toBe(false);
+  });
+
+  it('says nothing at all when every pair passes', () => {
+    const s = withContrast(base(), reading({ passing: 4 }));
+
+    expect(s.gaps.some((g) => g.startsWith('1.4.3:'))).toBe(false);
+    expect(s.needs).toBeUndefined();
+    // The reading still travels, so a surface can say "checked" rather than
+    // leaving the reader to guess whether it ran.
+    expect(s.contrast?.passing).toBe(4);
+  });
+
+  it('never carries the measured text, and bounds the page list', () => {
+    // The stage this replaced printed 30 glyphs of the run it measured, off a
+    // real municipal document. The summary renders on a public report page.
+    const s = withContrast(base(), reading({
+      failing: 9, failingGlyphs: 200,
+      findings: Array.from({ length: 9 }, (_, i) => finding({ page: i + 1 })),
+    }));
+    const item = s.needs?.find((n) => n.criterion === '1.4.3')?.item ?? '';
+
+    expect(JSON.stringify(s)).not.toContain('sample');
+    // Five pages then a count — an unbounded list is a header-size problem.
+    expect(item).toContain('and 4 more');
+    expect(item.length).toBeLessThan(400);
+  });
+
+  it('reports large text against 3:1, as WCAG does', () => {
+    // 18pt, or 14pt bold. A large-text pair at 3.2:1 passes and must not appear.
+    const s = withContrast(base(), reading({
+      passing: 1, findings: [],
+    }));
+
+    expect(s.gaps.some((g) => g.startsWith('1.4.3:'))).toBe(false);
   });
 });

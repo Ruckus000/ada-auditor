@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { DocumentStructure } from './document-structure';
+import type { ContrastReading, DocumentStructure } from './document-structure';
 
 /**
  * What a remediation produced, and where every claim in it came from.
@@ -114,6 +114,13 @@ export type RemediationSummary = {
    * field was added to end. The same rule `checker: 'none'` already carries.
    */
   scope?: { criteria: string[] };
+  /**
+   * What the contrast pass measured on these bytes.
+   *
+   * Optional, and absence means the pass did not run — "not checked", never
+   * clean. Readings taken before `Contrast` graduated cannot gain it.
+   */
+  contrast?: ContrastReading;
 };
 
 /**
@@ -169,6 +176,88 @@ function alreadyVoiced(clause: string, summary: RemediationSummary): boolean {
     (summary.needs ?? []).some((need) => need.criterion === rule.criterion) ||
     summary.gaps.some((gap) => gap.startsWith(`${rule.criterion}:`))
   );
+}
+
+/**
+ * At most five page numbers, then a count. A page list is not document content,
+ * but an unbounded one is a header-size problem: the summary travels in
+ * `x-remediation-summary`, which a 101-figure document already took to within
+ * 3KB of Node's 16KB default.
+ */
+function pageList(pages: number[]): string {
+  const unique = [...new Set(pages)].sort((a, b) => a - b);
+  const noun = unique.length === 1 ? 'page' : 'pages';
+  if (unique.length <= 5) return `${noun} ${unique.join(', ')}`;
+  return `${noun} ${unique.slice(0, 5).join(', ')} and ${unique.length - 5} more`;
+}
+
+/**
+ * Fold a contrast reading into a summary.
+ *
+ * Three buckets, never merged, and the two that are not failures are still
+ * VOICED. A ratio nobody could measure and a low-contrast run the document
+ * calls decoration are both things this instrument did not decide, and the
+ * promise is that what we did not decide is named rather than passed over.
+ *
+ * One `1.4.3:` gap string, because `documentGapKey` identifies a gap by the
+ * criterion before its colon and a second would read as two failures where
+ * there is one. The punch items may be several — they are keyed by nothing.
+ *
+ * Absence of a reading means the pass did not run, and renders as "not
+ * checked", never as clean. Same rule `conformance` carries.
+ */
+export function withContrast(
+  summary: RemediationSummary,
+  contrast: ContrastReading,
+): RemediationSummary {
+  const out: RemediationSummary = { ...summary, contrast };
+  const items: Array<{ criterion: string; item: string }> = [];
+  const gapParts: string[] = [];
+
+  if (contrast.failing > 0) {
+    const worst = Math.min(...contrast.findings.map((f) => f.ratio));
+    const pages = pageList(contrast.findings.map((f) => f.page));
+    gapParts.push(
+      `${contrast.failingGlyphs} character${contrast.failingGlyphs === 1 ? '' : 's'}`
+      + ` below the minimum contrast ratio, the lowest at ${worst.toFixed(2)}:1`,
+    );
+    items.push({
+      criterion: '1.4.3',
+      item: `Contrast: ${contrast.failing} colour combination${contrast.failing === 1 ? '' : 's'}`
+        + ` on ${pages} fall below the minimum ratio, the lowest at ${worst.toFixed(2)}:1`
+        + ' — a person must decide whether to change the colours, because changing them is a design decision',
+    });
+  }
+
+  if (contrast.undetermined > 0) {
+    gapParts.push(
+      `${contrast.undeterminedGlyphs} character${contrast.undeterminedGlyphs === 1 ? '' : 's'}`
+      + ' whose contrast could not be measured',
+    );
+    items.push({
+      criterion: '1.4.3',
+      item: `Contrast: ${contrast.undeterminedGlyphs} character`
+        + `${contrast.undeterminedGlyphs === 1 ? '' : 's'} sit on an image, a gradient or a`
+        + ' mixed background, so no single background colour could be read and no ratio is'
+        + ' claimed — a person must check these by eye',
+    });
+  }
+
+  if (contrast.decorative > 0) {
+    items.push({
+      criterion: '1.4.3',
+      item: `Contrast: ${contrast.decorativeGlyphs} character`
+        + `${contrast.decorativeGlyphs === 1 ? '' : 's'} below the minimum ratio are marked as`
+        + ' decoration or as part of a figure by the document itself. WCAG exempts decoration'
+        + ' but not running heads or page numbers, which carry the same marking — a person must'
+        + ' confirm which these are',
+    });
+  }
+
+  if (gapParts.length > 0) {
+    out.gaps = [...summary.gaps, `1.4.3: ${gapParts.join(', and ')}`];
+  }
+  return items.length === 0 ? out : { ...out, needs: [...(summary.needs ?? []), ...items] };
 }
 
 export function withConformance(
@@ -345,16 +434,36 @@ export function withConformance(
  * name captions and audio description on a text document, which is noise
  * wearing the costume of disclosure.
  */
-export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '2.4.2', '2.4.10', '3.1.1'] as const;
+export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '1.4.3', '2.4.2', '2.4.10', '3.1.1'] as const;
 
 export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string }> = [
-  { number: '1.4.3', name: 'Contrast (Minimum)' },
+  // 1.4.3 moved to CHECKED when `Contrast` graduated. 1.4.1 did NOT move with
+  // it and must not be assumed to have: the same fee schedule that fails
+  // contrast sets changed values in red, which is meaning carried by colour
+  // alone, and nothing here detects that.
   { number: '1.4.1', name: 'Use of Color' },
   { number: '1.3.2', name: 'Meaningful Sequence' },
   { number: '4.1.2', name: 'Name, Role, Value' },
 ];
 
-export const INSTRUMENT_VERSION = 9;
+/**
+ * 10 — the punch list gained contrast. `Contrast` graduated from the spike and
+ * measures WCAG 1.4.3 on the delivered bytes: foreground exactly from the
+ * graphics state, background sampled from the rendered page.
+ *
+ * This closes the first of the three blocking conditions in
+ * `decision-2026-08-24.md` — "No document goes to a client until contrast is at
+ * least detected and flagged" — which had stood unmet since it was written.
+ *
+ * `[V]` Across the blind corpus's 23 real documents: 5 fail, 3,626 failing
+ * glyphs, the worst at 1.49:1. The pipeline delivered every one of them in
+ * silence before this.
+ *
+ * A new criterion is the clearest case the bump rule covers. Without it every
+ * stored baseline would report `1.4.3` as a new gap, and the comparator would
+ * read our instrument growing as the client's document getting worse.
+ */
+export const INSTRUMENT_VERSION = 10;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;

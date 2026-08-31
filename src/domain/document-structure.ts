@@ -213,3 +213,58 @@ export function contentChanges(
     (field) => JSON.stringify(before[field]) !== JSON.stringify(after[field]),
   );
 }
+
+/**
+ * One colour pair the contrast pass measured, and what it decided.
+ *
+ * Colours and a ratio, a page, and a count of glyphs — no text. The stage that
+ * produced these used to emit a 30-character sample of the measured run, and it
+ * printed a sentence off a real municipal document; the summary this feeds
+ * renders on a client's public report, so the sample is gone and what remains is
+ * the shape of the failure rather than its words.
+ *
+ * `required` travels with the finding rather than being re-derived: 3.0 for
+ * large text (18pt, or 14pt bold) and 4.5 otherwise, and a reader of the finding
+ * should not have to know the rule to check the arithmetic.
+ */
+export const contrastFindingSchema = z.object({
+  /** sRGB hex, e.g. `#FF0000`. */
+  fg: z.string(),
+  bg: z.string(),
+  large: z.boolean(),
+  ratio: z.number(),
+  required: z.number(),
+  glyphs: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+});
+
+/**
+ * What the contrast pass found, in three buckets that are never merged.
+ *
+ * FAILING is measured and below the threshold. UNDETERMINED is text whose
+ * background could not be established — over an image, a gradient, or a sample
+ * too mixed to call — and reporting a ratio from an unreliable sample would
+ * invent a failure, which is the same class of error as inventing a heading.
+ * DECORATIVE is below the threshold but marked `/Artifact` or inside a `/Figure`
+ * by the document itself.
+ *
+ * The third bucket exists because `/Artifact` is broader than WCAG's exemption:
+ * it covers pure decoration, and also running heads and page numbers, which are
+ * visible text a sighted reader uses and which WCAG does not exempt. `[V]`
+ * Dropping them outright silenced a real 4.0:1 failure across 82 glyphs of a
+ * running header in a federal publication. Counted and named instead.
+ */
+export const contrastReadingSchema = z.object({
+  pairs: z.number().int().nonnegative(),
+  passing: z.number().int().nonnegative(),
+  failing: z.number().int().nonnegative(),
+  failingGlyphs: z.number().int().nonnegative(),
+  undetermined: z.number().int().nonnegative(),
+  undeterminedGlyphs: z.number().int().nonnegative(),
+  decorative: z.number().int().nonnegative(),
+  decorativeGlyphs: z.number().int().nonnegative(),
+  findings: z.array(contrastFindingSchema),
+});
+
+export type ContrastFinding = z.infer<typeof contrastFindingSchema>;
+export type ContrastReading = z.infer<typeof contrastReadingSchema>;
