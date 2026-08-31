@@ -8,7 +8,7 @@ import {
   type Conformance,
   type RemediationSummary,
 } from '../../../domain/document-remediation';
-import { contentChanges } from '../../../domain/document-structure';
+import { contentChanges, type DocumentStructure } from '../../../domain/document-structure';
 import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/documents/convert';
 import { finishDocument, type FinishRequest } from '../../../integrations/documents/finish';
 import { inspectDocument } from '../../../integrations/documents/inspect';
@@ -45,6 +45,8 @@ import type { UploadRefusal } from './document-upload';
 async function earnUaIdentifier(
   verdict: Conformance,
   request: FinishRequest,
+  /** The structure of the unstamped file, to prove the stamp moved nothing. */
+  unstamped: DocumentStructure,
   stageOptions: Parameters<typeof finishDocument>[1],
   checkOptions: Parameters<typeof checkUa1>[1],
 ): Promise<Conformance> {
@@ -68,6 +70,19 @@ async function earnUaIdentifier(
     // vouch for — but never a quiet one. A silent bail-out here is how the
     // product lost the ability to certify anything and still ran green.
     logWarn('document_identifier_not_earned', { step: 'finish', failure: stamped.failure.kind });
+    await rm(staged, { force: true });
+    return verdict;
+  }
+
+  // The stamped file is a SECOND Finish pass, and it is the one that ships. The
+  // content gate that ran on the unstamped file proves nothing about it, so it
+  // is proven here instead — otherwise the only documents delivered without a
+  // fidelity check would be the ones certified as conformant. Applies to both
+  // lanes: the Word path has no `contentChanges` gate of its own at all.
+  const restamped = await inspectDocument(staged, stageOptions);
+  const moved = restamped.ok ? contentChanges(unstamped, restamped.value) : ['unreadable'];
+  if (moved.length > 0) {
+    logWarn('document_identifier_not_earned', { step: 'fidelity', fields: moved });
     await rm(staged, { force: true });
     return verdict;
   }
@@ -166,6 +181,7 @@ export async function remediateWordBytes(
         language: sourceLanguage,
         ...(title.kind === 'no-heading-to-copy' ? {} : { title: title.title }),
       },
+      result.provenance.structure,
       stageOptions,
       checkOptions,
     );
@@ -290,6 +306,7 @@ export async function repairPdfBytes(
     const conformance = await earnUaIdentifier(
       await checkUa1(output, checkOptions),
       finishRequest,
+      after.value,
       stageOptions,
       checkOptions,
     );

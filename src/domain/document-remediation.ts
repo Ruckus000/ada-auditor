@@ -199,11 +199,19 @@ export function withConformance(
     // Named rather than left to the catch-all, which would have said "a person
     // must review 5-1" — i.e. instructed the client to add back the very claim
     // this document is not entitled to make. The clause is still reported as
-    // failing, because it is: what changes is that the punch list says the
-    // absence is deliberate and asks for no work.
+    // failing, because it is: what changes is that the item says the absence is
+    // CORRECT and asks for no work.
+    //
+    // The wording states the state of the file, never who chose it. This same
+    // function runs on the INSPECTION path, over a client's own source document
+    // that we neither wrote nor decided anything about — 13 of 19 real
+    // documents in the blind corpus fail 5-1 simply because their producer
+    // never wrote an identifier. Saying we withheld it there would be a claim
+    // about provenance nobody checked, on a product whose whole position is
+    // that it only says what it checked.
     items.push({
       criterion: 'PDF/UA 5-1',
-      item: 'this file deliberately does not carry the PDF/UA-1 identifier, because it does not conform — nothing to do here, and the remaining items are what would change that',
+      item: 'this file carries no PDF/UA-1 conformance identifier, which is correct while it does not conform — adding one would assert conformance it does not have, so it is not work: the remaining items are',
     });
   }
   if (rest.length > 0) {
@@ -337,15 +345,25 @@ function gapsIn(provenance: ConversionProvenance): string[] {
   const undescribed = undescribedFigures(structure.figures);
   if (undescribed.total > 0) {
     const noun = `figure${undescribed.total === 1 ? '' : 's'}`;
-    gaps.push(
-      undescribed.placeholder === 0
-        // Unchanged wording when nothing new applies, so a stored baseline
-        // taken before this reading does not read as a changed document.
-        ? `1.1.1: ${undescribed.total} ${noun} with no alt text`
-        : `1.1.1: ${undescribed.total} ${noun} a reader learns nothing about`
-          + ` (${undescribed.absent} with no alt text,`
-          + ` ${undescribed.placeholder} whose description is a placeholder)`,
-    );
+    if (undescribed.placeholder === 0) {
+      // Unchanged wording when nothing new applies, so a stored baseline taken
+      // before this reading does not read as a changed document.
+      gaps.push(`1.1.1: ${undescribed.total} ${noun} with no alt text`);
+    } else if (undescribed.absent === 0) {
+      gaps.push(
+        `1.1.1: ${undescribed.total} ${noun} whose description is a placeholder,`
+        + ' not a description',
+      );
+    } else {
+      // Only ever the sub-counts that are non-zero. This renders on a client's
+      // report, and a breakdown reading "(0 with no alt text, ...)" spends the
+      // reader's attention on a clause that says nothing.
+      gaps.push(
+        `1.1.1: ${undescribed.total} ${noun} a reader learns nothing about`
+        + ` (${undescribed.absent} with no alt text,`
+        + ` ${undescribed.placeholder} whose description is a placeholder)`,
+      );
+    }
   }
 
   if (structure.structureElements === 0) {

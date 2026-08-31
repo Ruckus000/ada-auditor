@@ -423,7 +423,7 @@ describe('withConformance', () => {
     expect(s.needs?.[0].item).toContain('7.18.4-1');
   });
 
-  it('says the missing identifier is deliberate, and asks for no work', () => {
+  it('says the missing identifier is correct, and asks for no work', () => {
     // The catch-all would have said "a person must review 5-1" — telling the
     // client to add back the conformance claim this document is not entitled
     // to make. The clause is still reported as failing, because it is.
@@ -434,8 +434,13 @@ describe('withConformance', () => {
     });
     const identifier = s.needs?.find((n) => n.criterion === 'PDF/UA 5-1');
 
-    expect(identifier?.item).toContain('deliberately');
-    expect(identifier?.item).toContain('nothing to do');
+    expect(identifier?.item).toContain('carries no PDF/UA-1 conformance identifier');
+    expect(identifier?.item).toContain('not work');
+    // It states the file's state and never who chose it. `withConformance` also
+    // runs on the INSPECTION path, over a client's own document that we neither
+    // wrote nor decided anything about; claiming we withheld the identifier
+    // there would be a statement about provenance nobody checked.
+    expect(identifier?.item).not.toMatch(/deliberate|we |withheld/i);
     // Still counted as failing by the checker, and still carried in the verdict.
     expect(s.conformance).toEqual({
       checker: 'verapdf-ua1',
@@ -718,6 +723,16 @@ describe('figures a reader learns nothing about', () => {
 
     expect(alt).toHaveLength(1);
     expect(alt[0]).toContain('2 figures');
+  });
+
+  it('prints only the sub-counts that are non-zero', () => {
+    // A bulk export gives every figure the same placeholder, so absent is zero.
+    // Gaps render on a client's report, and "(0 with no alt text, ...)" spends
+    // the reader's attention on a clause that says nothing.
+    const only = read('Decorative', 'Decorative').gaps.find((g) => g.startsWith('1.1.1:'));
+
+    expect(only).toContain('2 figures whose description is a placeholder');
+    expect(only).not.toContain('0 with no alt text');
   });
 
   it('leaves the wording untouched when nothing new applies', () => {
