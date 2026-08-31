@@ -124,6 +124,141 @@ export type RemediationSummary = {
 };
 
 /**
+ * The most the summary may occupy in the response header, in encoded bytes.
+ *
+ * The whole summary rides in `x-remediation-summary` because the body is the
+ * PDF, and Node's default `--max-http-header-size` is 16,384 bytes for the
+ * ENTIRE header block. A real municipal document carrying 101 undescribed
+ * figures once produced a 22,743-byte value, and every client on that default
+ * rejected the whole response with `Headers Overflow Error` — the client got
+ * the file and no punch list at all, which is worse than a blunt one.
+ *
+ * That was patched by shortening two item strings, which bought headroom and
+ * not a bound: the worst document sat at 13,212 bytes with roughly 23 items of
+ * margin, and every criterion added since has spent some of it.
+ *
+ * 14,000 leaves 2,384 of the 16,384 for the rest of the header block — an order
+ * of magnitude more than the four headers this response sets, with the balance
+ * for whatever a proxy adds. The worst real document (13,212) still fits whole,
+ * which is the point: this is a safety net for a punch list that grows without
+ * limit, not a routine trim.
+ *
+ * It was 12,000 first, chosen so the corpus's worst document would cross it on
+ * the reasoning that a bound nothing reaches is a bound nothing has verified.
+ * That was wrong twice over. The property is verified by tests that drive 400
+ * and 5,000 items, so the corpus does not need to exercise it — and at 12,000
+ * the blind test showed the real cost: 12 of r05's 101 figure items dropped
+ * from a client's punch list to make room for nothing.
+ */
+export const SUMMARY_HEADER_BUDGET = 14_000;
+
+/**
+ * Fit a summary into the header budget without ever dropping anything quietly.
+ *
+ * `measure` is injected because the encoding is a transport detail — the header
+ * value is ASCII-escaped JSON, where one CJK character costs six bytes — and
+ * the vocabulary should not know that. It also lets the test drive the boundary
+ * with a trivial measure instead of reconstructing the escaping.
+ *
+ * Three rules, in order:
+ *
+ * 1. **Every criterion keeps at least one item.** The items that matter most on
+ *    the worst real document sit at the END of its list — the fonts item, the
+ *    identifier item, the PDF/UA catch-all — behind 101 figure items that
+ *    differ only by their number. Truncating the tail would keep a hundred
+ *    near-identical lines and drop the three that say something. It also means
+ *    a criterion can never vanish from the punch list, so the blind corpus's
+ *    `punch-missing` can never fire because of a size limit.
+ * 2. **Then as many of the rest as fit**, in their original order.
+ * 3. **Then one item saying how many are not shown.** Never a silent cap. The
+ *    gaps carry the counts, so what is lost is which figure, not how many.
+ *
+ * Returns the summary unchanged when it already fits, which is every document
+ * in the corpus but one.
+ *
+ * **It bounds the punch list, not the whole summary.** The list is the part
+ * that grows without limit — one item per undescribed figure, per unnamed form
+ * field — and it is the part that broke a delivery. The rest is counts, a
+ * title and the failing-clause list, and trimming those would change facts
+ * rather than shorten a list. If a document ever arrives whose title and gaps
+ * alone exceed the budget, this returns the smallest summary it can build and
+ * the header is still too large; that is a different bug from the one here and
+ * should be fixed where those fields are produced.
+ */
+export function boundSummary(
+  summary: RemediationSummary,
+  measure: (value: RemediationSummary) => number,
+  budget: number = SUMMARY_HEADER_BUDGET,
+): RemediationSummary {
+  if (measure(summary) <= budget) return summary;
+
+  const all = summary.needs ?? [];
+  const omittedItem = (n: number, anyShown: boolean) => ({
+    // No criterion of its own: this is a statement about the list, not a
+    // finding about the document, and giving it one would put a criterion in
+    // the summary that no emitter produced.
+    criterion: 'summary',
+    // Self-contained, because the public report renders items without their
+    // criterion label — and careful to say what is missing and what is not.
+    // The "listed above" clause is dropped when nothing is listed above, which
+    // happens when a single item is larger than the whole budget.
+    item: `${n} item${n === 1 ? '' : 's'}${anyShown ? ' of the kinds listed above' : ''} ${n === 1 ? 'is' : 'are'} not shown here, because the summary has a size limit this response must respect — nothing is missing from the counts, only from this list`,
+  });
+
+  // Which items to keep is decided here; the ORDER they go out in is always the
+  // order they arrived in. Selecting and ordering separately matters: the
+  // per-criterion picks below are drawn from all over the list, and emitting
+  // them in selection order would silently reshuffle a client's punch list.
+  const chosen = new Set<number>();
+  const rest: number[] = [];
+  const seen = new Set<string>();
+  all.forEach((need, index) => {
+    // Rule 1: the first item of each criterion, wherever it appears.
+    if (seen.has(need.criterion)) rest.push(index);
+    else {
+      seen.add(need.criterion);
+      chosen.add(index);
+    }
+  });
+
+  const emit = (indices: Set<number>) =>
+    all.filter((_, index) => indices.has(index));
+
+  const fits = (indices: Set<number>) => {
+    const needs = emit(indices);
+    const omitted = all.length - needs.length;
+    return measure({
+      ...summary,
+      needs: omitted > 0 ? [...needs, omittedItem(omitted, needs.length > 0)] : needs,
+    }) <= budget;
+  };
+
+  // Rule 2: add what fits, in the order the items arrived.
+  for (const index of rest) {
+    chosen.add(index);
+    if (!fits(chosen)) {
+      chosen.delete(index);
+      break;
+    }
+  }
+
+  // Rule 1 is a preference, not a guarantee, and saying otherwise would be the
+  // kind of bound that is really headroom. A document with very many criteria,
+  // or one item larger than the entire budget, overflows on the per-criterion
+  // set alone. Drop the LAST-appearing of them in that case, and go all the way
+  // to zero if that is what it takes — an over-budget header delivers NO punch
+  // list at all, so a short one always beats it.
+  while (chosen.size > 0 && !fits(chosen)) {
+    chosen.delete(Math.max(...chosen));
+  }
+
+  const needs = emit(chosen);
+  const omitted = all.length - needs.length;
+  if (omitted <= 0) return { ...summary, needs };
+  return { ...summary, needs: [...needs, omittedItem(omitted, needs.length > 0)] };
+}
+
+/**
  * Fold the reference checker's verdict into a summary.
  *
  * Pure, so the translation below is testable without a JVM: the verdict is

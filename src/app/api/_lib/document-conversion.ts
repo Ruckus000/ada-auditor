@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
+  boundSummary,
   summarise,
   withConformance,
   withContrast,
@@ -391,13 +392,20 @@ export function remediationResponse(outcome: {
   summary: RemediationSummary;
   requestId: string;
 }): Response {
+  // Bounded HERE rather than where the summary is built, because the limit is a
+  // property of this transport and not of the vocabulary: the same summary
+  // handed to any other consumer should be whole. `asciiJson` is the measure
+  // because it is the encoding that actually goes on the wire — a title with an
+  // em-dash costs six bytes there and one in `JSON.stringify`.
+  const summary = boundSummary(outcome.summary, (value) => asciiJson(value).length);
+
   return new Response(new Uint8Array(outcome.pdf), {
     status: 200,
     headers: {
       'content-type': 'application/pdf',
       // A generated name, for the same reason the temp path is generated.
       'content-disposition': `attachment; filename="remediated-${outcome.requestId}.pdf"`,
-      'x-remediation-summary': asciiJson(outcome.summary),
+      'x-remediation-summary': asciiJson(summary),
       'x-request-id': outcome.requestId,
     },
   });

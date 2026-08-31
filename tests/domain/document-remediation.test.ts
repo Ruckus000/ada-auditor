@@ -8,6 +8,8 @@ import {
   withContrast,
   CHECKED_CRITERIA,
   NOT_CHECKED_CRITERIA,
+  SUMMARY_HEADER_BUDGET,
+  boundSummary,
   isPlaceholderAlt,
   undescribedFigures,
   isPlaceholderTitle,
@@ -792,6 +794,108 @@ describe('the scope this instrument claims', () => {
    * instrument, and one removed without the constant changing would overstate
    * it. Both are the same defect as the claim this whole change exists to fix.
    */
+  describe('the summary header budget', () => {
+    const measure = (value: RemediationSummary) => JSON.stringify(value).length;
+    const withNeeds = (needs: Array<{ criterion: string; item: string }>): RemediationSummary => ({
+      ...summarise(provenance()),
+      needs,
+    });
+    const figures = (n: number, from = 1) =>
+      Array.from({ length: n }, (_, i) => ({
+        criterion: '1.1.1',
+        item: `Figure ${i + from}: no alt text and no caption to transcribe — write a description`,
+      }));
+
+    it('leaves a summary that already fits completely alone', () => {
+      const summary = withNeeds(figures(3));
+      expect(boundSummary(summary, measure)).toBe(summary);
+    });
+
+    it('never exceeds the budget, however many items arrive', () => {
+      // The property the whole thing exists for. 101 figures is the real
+      // document that broke a delivery; 5,000 is the shape nobody has sent yet.
+      for (const n of [101, 500, 5000]) {
+        const bounded = boundSummary(withNeeds(figures(n)), measure);
+        expect(measure(bounded), `${n} items overflowed`).toBeLessThanOrEqual(SUMMARY_HEADER_BUDGET);
+      }
+    });
+
+    it('says how many it did not show, and never drops them in silence', () => {
+      const bounded = boundSummary(withNeeds(figures(400)), measure);
+      const notice = (bounded.needs ?? []).find((n) => n.criterion === 'summary');
+      expect(notice, 'omitted items were dropped silently').toBeDefined();
+
+      const shown = (bounded.needs ?? []).filter((n) => n.criterion !== 'summary').length;
+      expect(notice?.item).toContain(`${400 - shown} items`);
+      // Self-contained: the public report renders items with no criterion, and
+      // this one has to distinguish a short LIST from a short COUNT itself.
+      expect(notice?.item).toContain('nothing is missing from the counts');
+    });
+
+    it('keeps one item of every criterion, even the ones at the end', () => {
+      // The reason truncation is not enough. On the real document the three
+      // items worth reading — fonts, identifier, the PDF/UA catch-all — sit
+      // behind 101 near-identical figure lines.
+      const bounded = boundSummary(
+        withNeeds([
+          ...figures(400),
+          { criterion: 'PDF/UA 7.21.4', item: 'the fonts were never embedded' },
+          { criterion: 'PDF/UA 5-1', item: 'no conformance identifier, which is correct' },
+          { criterion: 'PDF/UA', item: '2 further PDF/UA checks fail — a person must review' },
+        ]),
+        measure,
+      );
+
+      const criteria = new Set((bounded.needs ?? []).map((n) => n.criterion));
+      expect(criteria).toContain('1.1.1');
+      expect(criteria).toContain('PDF/UA 7.21.4');
+      expect(criteria).toContain('PDF/UA 5-1');
+      expect(criteria).toContain('PDF/UA');
+    });
+
+    it('keeps the punch list in the order it arrived', () => {
+      // Selection and ordering are separate steps on purpose. The
+      // per-criterion picks are drawn from all over the list — the PDF/UA items
+      // sit behind 101 figure lines on the real document — and emitting them in
+      // selection order would hoist them to the front and silently reshuffle a
+      // client's punch list.
+      const all = [
+        ...figures(400),
+        { criterion: 'PDF/UA 7.21.4', item: 'the fonts were never embedded' },
+        { criterion: 'PDF/UA', item: '2 further PDF/UA checks fail — a person must review' },
+      ];
+      const bounded = boundSummary(withNeeds(all), measure);
+
+      const shown = (bounded.needs ?? []).filter((n) => n.criterion !== 'summary');
+      const positions = shown.map((n) => all.findIndex((a) => a.item === n.item));
+      expect(positions).toEqual([...positions].sort((a, b) => a - b));
+      // Non-vacuous: the picks really do come from both ends of the list.
+      expect(shown.length).toBeGreaterThan(2);
+      expect(shown.at(-1)?.criterion).toBe('PDF/UA');
+    });
+
+    it('holds the budget even when one item is itself enormous', () => {
+      // Rule 1 cannot save a document whose single item exceeds the budget on
+      // its own; what it must not do is emit it anyway.
+      const bounded = boundSummary(
+        withNeeds([
+          { criterion: '1.1.1', item: 'x'.repeat(SUMMARY_HEADER_BUDGET * 2) },
+          { criterion: '1.3.1', item: 'y'.repeat(SUMMARY_HEADER_BUDGET * 2) },
+        ]),
+        measure,
+      );
+      expect(measure(bounded)).toBeLessThanOrEqual(SUMMARY_HEADER_BUDGET);
+    });
+
+    it('bounds the gaps it was given rather than rewriting them', () => {
+      // The counts live in the gaps, and the notice promises they are complete.
+      // If bounding ever touched them that promise would be false.
+      const summary = withNeeds(figures(400));
+      const bounded = boundSummary(summary, measure);
+      expect(bounded.gaps).toEqual(summary.gaps);
+    });
+  });
+
   describe('4.1.2 form field names', () => {
     it('names the count, and says the label is not the internal field name', () => {
       const s = summarise(provenance({
