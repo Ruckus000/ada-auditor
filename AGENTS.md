@@ -516,6 +516,32 @@ Read this before claiming something works.
   case — came back **9/9 identical** to the local run against production built
   from `dce358b`. The numbers are no longer local-only.
 
+- **23 municipal PDFs are in git history, deliberately.** `git add -A` on a
+  results branch swept them onto public master on 2026-08-27 (`6228d41`);
+  they were removed from the tree two commits later (`2f534d2`) and the
+  directory was gitignored. The blobs remain reachable in history, and on
+  2026-08-31 the decision was to leave them. **This is a recorded gap, not a
+  pending task** — do not "fix" it without re-reading this.
+  The rewrite was built and fully verified before the decision, so the cost is
+  measured rather than guessed. `git filter-repo --path
+  experiments/document-remediation/real-pdf --invert-paths` produces a master
+  whose tree hash is **byte-identical** (`dffedf33`), same 408 commits, lint,
+  typecheck and 1834 tests green, 16MB → 7.1MB. But it rewrites **628 of 638
+  commits, not the ~96 the leak spans**, and strips **all 173 commit
+  signatures** — filter-repo drops `gpgsig` by design, every GitHub merge
+  commit carries one, and each stripped signature cascades to its descendants.
+  133 of those signatures predate the leak and would be collateral. Weighed
+  against that: these are public municipal records already published on
+  government websites with their URLs in `real-sources.md`, the current tree
+  is already clean, and a force-push does not remove anything from GitHub
+  anyway — unreachable objects stay fetchable by SHA until GitHub garbage-
+  collects, which needs a Support request. Hygiene, not containment.
+  Two traps for anyone who revisits this: `src/app/api/audit/runs/[requestId]/
+  report.pdf/` is a live route DIRECTORY, so a `*.pdf` glob filter deletes a
+  production endpoint; and verifying a purge by fetching the pre-purge history
+  into the purged repo re-introduces every blob you just removed — compare
+  tree hashes across repositories instead.
+
 - **Rule-shaped audit gaps: measured, then closed, then re-measured.**
   The 2026-08-27 milestone run
   (`docs/research/blind-test/2026-08-27-rule-gaps-closed.md`): barriers seen
