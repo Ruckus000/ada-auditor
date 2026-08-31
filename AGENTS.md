@@ -494,14 +494,19 @@ Read this before claiming something works.
   changed values in red, which is meaning carried by colour alone, and nothing
   here detects that.
 
-- **The document pipeline reaches SIX WCAG criteria, and says so.**
-  The vocabulary can emit `1.1.1`, `1.3.1`, `1.4.3`, `2.4.2`, `2.4.10` and
-  `3.1.1` — six of the roughly fifty in 2.1 AA. It still never evaluates use
-  of colour, meaningful sequence or name/role/value, which
-  `legal-standard.md`'s own pass mark requires. Every reading now carries `scope.criteria` and every
-  surface renders it through `services/presentation/document-verdict.ts`.
-  Every reading carries `scope.criteria` and every surface renders it through
+- **The document pipeline reaches SEVEN WCAG criteria, and says so.**
+  The vocabulary can emit `1.1.1`, `1.3.1`, `1.4.3`, `2.4.2`, `2.4.10`, `3.1.1`
+  and `4.1.2` — seven of the roughly fifty in 2.1 AA. Every reading carries
+  `scope.criteria` and every surface renders it through
   `services/presentation/document-verdict.ts`.
+
+  **One criterion on `legal-standard.md`'s pass mark is still unreached:
+  `1.3.2` Meaningful Sequence.** `1.4.1` Use of Color is NOT on that pass mark;
+  it was measured and deliberately declined — 17 of 23 real documents carry a
+  saturated minority accent and the overwhelming majority are hyperlinks and
+  Word theme heading colours, so a detector would be right about roughly four.
+  See `docs/research/document-remediation/use-of-color-feasibility.md`. Both
+  stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
 
 - **The summary header is unbounded, and a large punch list breaks the
   delivery.** The remediation summary travels in the `x-remediation-summary`
