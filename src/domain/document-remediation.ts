@@ -428,11 +428,15 @@ export function withConformance(
  * be added to the instrument without appearing in what the product claims to
  * have checked.
  *
- * `NOT_CHECKED_CRITERIA` is curated rather than derived, and deliberately short:
- * these four are the ones `legal-standard.md`'s own pass mark requires and this
- * pipeline does not reach. Deriving "every AA criterion minus CHECKED" would
- * name captions and audio description on a text document, which is noise
- * wearing the costume of disclosure.
+ * `NOT_CHECKED_CRITERIA` is curated rather than derived, and deliberately short.
+ * Two of the three — `1.3.2` and `4.1.2` — are what is left when you subtract
+ * `CHECKED_CRITERIA` from `legal-standard.md`'s seven-criterion pass mark.
+ * `1.4.1` is NOT on that pass mark and is disclosed anyway: the corpus raises it
+ * (a fee schedule marks changed values in red) and we measured that we cannot
+ * check it, so silence would read as a pass. Do not re-derive this list from the
+ * pass mark alone — that drops `1.4.1`. And do not derive "every AA criterion
+ * minus CHECKED" either: that names captions and audio description on a text
+ * document, which is noise wearing the costume of disclosure.
  */
 export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '1.4.3', '2.4.2', '2.4.10', '3.1.1'] as const;
 
