@@ -104,6 +104,32 @@ export const documentStructureSchema = z.object({
    */
   annotationsNotInStructure: z.number().int(),
   /**
+   * Interactive form-field widgets on the pages, and how many of those a
+   * screen reader cannot name.
+   *
+   * WCAG 4.1.2 asks that every interactive control expose an accessible name.
+   * In a PDF that name is `/TU` — never `/T`, which is the internal field name
+   * a form processor uses and assistive technology does not speak. A permit
+   * application whose fields are all `Text12` reads as a page of unlabelled
+   * boxes.
+   *
+   * Distinct from `annotationsNotInStructure`, which is the same widgets asked
+   * a different question: that field asks whether a reader can REACH them,
+   * this one whether the reader learns what they are FOR. A document can fail
+   * either alone, and folding them together is what let 135 unlabelled fields
+   * ship unmentioned.
+   *
+   * Counts, because the punch item they feed renders on a client's public
+   * report, and a field's label is document content.
+   *
+   * Required, like the counts above it. This schema only ever parses fresh
+   * `Inspect` output — never a stored reading — so a stage that stopped
+   * emitting them should fail loudly rather than read as a document with no
+   * form fields, which is the silence this pass exists to end.
+   */
+  formFields: z.number().int(),
+  formFieldsWithoutName: z.number().int(),
+  /**
    * Documents attached to this one, through the EmbeddedFiles name tree.
    *
    * A portfolio is a cover sheet with other documents inside it; a plain PDF

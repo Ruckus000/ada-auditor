@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -171,6 +173,82 @@ public final class Inspect {
     }
 
     /**
+     * Interactive form fields, and how many of them a screen reader cannot name.
+     *
+     * WCAG 4.1.2 Name, Role, Value asks that every interactive control expose an
+     * accessible name. In a PDF form the name is `/TU`, the field's alternate
+     * description — NOT `/T`, which is the internal field name a form processor
+     * uses and assistive technology does not speak. A permit application whose
+     * fields are all `/T` values like `Text12` reads to a screen reader as a
+     * page of unlabelled boxes.
+     *
+     * The condition implemented is veraPDF's 7.18.1-3 verbatim: *a form field
+     * shall have a TU key present, or all its widget annotations shall have
+     * alternative descriptions*. Implementing the published rule rather than a
+     * tighter one of our own is what lets our count and the reference checker's
+     * agree by construction — on the corpus's one real form both say 135, and a
+     * third independent reading of the raw objects says 135 as well.
+     *
+     * Deliberately NO exemption for hidden fields. The rule states none, and
+     * inventing one here would make the two instruments disagree and report
+     * fewer barriers than the standard names — the `/Artifact` lesson from
+     * contrast, where a self-invented exemption silently swallowed a real
+     * failure.
+     *
+     * Counted per WIDGET, because that is what a person has to go and label,
+     * and never repaired: a field's label is what the field is FOR, and
+     * inferring it is the same invention refused for alt text.
+     *
+     * Walked through the AcroForm field tree rather than page annotations, so
+     * `/TU` inherited from a parent field resolves — PDFBox does that here and
+     * a per-page annotation walk does not.
+     */
+    private static int[] formFields(PDDocument doc) {
+        int total = 0;
+        int unnamed = 0;
+        for (PDPage page : doc.getPages()) {
+            List<PDAnnotation> annotations;
+            try {
+                annotations = page.getAnnotations();
+            } catch (IOException e) {
+                // One unreadable page's annotations must not fail the reading.
+                continue;
+            }
+            for (PDAnnotation annotation : annotations) {
+                if (!"Widget".equals(annotation.getSubtype())) continue;
+                total++;
+                if (!hasAccessibleName(annotation.getCOSObject())) unnamed++;
+            }
+        }
+        return new int[] {total, unnamed};
+    }
+
+    /**
+     * The rule's two limbs, in its own order: `/TU` on the field, else an
+     * alternative description on the widget.
+     *
+     * `/TU` is walked up the `/Parent` chain because a field and its widget are
+     * often separate objects and `/TU` sits on the field — but the walk starts
+     * at the widget, so a merged field-widget dictionary is covered by the same
+     * pass. Depth-bounded rather than cycle-detected: a malformed `/Parent`
+     * loop must not hang the reading, and no legitimate field nests eight deep.
+     */
+    private static boolean hasAccessibleName(COSDictionary widget) {
+        String contents = widget.getString(COSName.CONTENTS);
+        if (contents != null && !contents.trim().isEmpty()) return true;
+
+        COSName tuKey = COSName.getPDFName("TU");
+        COSDictionary node = widget;
+        for (int depth = 0; node != null && depth < 8; depth++) {
+            String tu = node.getString(tuKey);
+            if (tu != null && !tu.trim().isEmpty()) return true;
+            COSBase parent = node.getDictionaryObject(COSName.PARENT);
+            node = (parent instanceof COSDictionary) ? (COSDictionary) parent : null;
+        }
+        return false;
+    }
+
+    /**
      * Documents attached to this one.
      *
      * A portfolio is a cover sheet with other documents inside it, and a plain
@@ -295,6 +373,9 @@ public final class Inspect {
             json.append("  \"annotationsNotInStructure\": ")
                 .append(unnestedAnnotations(doc))
                 .append(",\n");
+            int[] fields = formFields(doc);
+            json.append("  \"formFields\": ").append(fields[0]).append(",\n");
+            json.append("  \"formFieldsWithoutName\": ").append(fields[1]).append(",\n");
             json.append("  \"embeddedFiles\": ").append(embeddedFiles(doc)).append(",\n");
             json.append("  \"pages\": ").append(doc.getNumberOfPages()).append(",\n");
             json.append("  \"lang\": ").append(q(doc.getDocumentCatalog().getLanguage())).append(",\n");

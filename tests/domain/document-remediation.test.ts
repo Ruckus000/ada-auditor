@@ -22,6 +22,8 @@ const structure = (over = {}) =>
     marked: true,
     signed: false,
     annotationsNotInStructure: 0,
+    formFields: 0,
+    formFieldsWithoutName: 0,
     embeddedFiles: 0,
     structureElements: 40,
     textChars: 1200,
@@ -248,6 +250,8 @@ describe('the punch list', () => {
       marked: true,
       signed: false,
       annotationsNotInStructure: 0,
+      formFields: 0,
+      formFieldsWithoutName: 0,
       embeddedFiles: 0,
       structureElements: 10, textChars: 100, images: 0, pages: 1, lang: 'en',
       title: 'T', headings: [], headingTexts: [], figures: [], tables: [], lists: [], order: [],
@@ -347,6 +351,8 @@ describe('the punch list', () => {
     const s = summarise(
       provenance({
         annotationsNotInStructure: 2,
+        formFields: 0,
+        formFieldsWithoutName: 0,
         embeddedFiles: 0,
         headings: ['H1'],
         headingTexts: [{ level: 'H1', text: 'Ratepayer Jane Doe of 14 Mill Lane' }],
@@ -372,6 +378,8 @@ describe('withConformance', () => {
       marked: true,
       signed: false,
       annotationsNotInStructure: 0,
+      formFields: 0,
+      formFieldsWithoutName: 0,
       embeddedFiles: 0,
       textChars: 100,
       images: 0,
@@ -539,6 +547,8 @@ describe('withConformance', () => {
         marked: true,
         signed: false,
         annotationsNotInStructure: 0,
+        formFields: 0,
+        formFieldsWithoutName: 0,
         embeddedFiles: 0,
         textChars: 100,
         images: 0,
@@ -782,6 +792,85 @@ describe('the scope this instrument claims', () => {
    * instrument, and one removed without the constant changing would overstate
    * it. Both are the same defect as the claim this whole change exists to fix.
    */
+  describe('4.1.2 form field names', () => {
+    it('names the count, and says the label is not the internal field name', () => {
+      const s = summarise(provenance({
+        structure: structure({ formFields: 289, formFieldsWithoutName: 135 }),
+      }));
+
+      expect(s.gaps).toContain('4.1.2: 135 form fields with no accessible name');
+      const need = (s.needs ?? []).find((n) => n.criterion === '4.1.2');
+      expect(need?.item).toContain('135 of 289 form fields');
+      // The commonest wrong fix is to treat /T as a label, so the item has to
+      // rule it out itself: the public report renders items with no criterion.
+      expect(need?.item).toContain('internal field name');
+    });
+
+    it('says nothing when every field is named', () => {
+      const s = summarise(provenance({
+        structure: structure({ formFields: 12, formFieldsWithoutName: 0 }),
+      }));
+      expect(s.gaps.some((g) => g.startsWith('4.1.2:'))).toBe(false);
+      expect((s.needs ?? []).some((n) => n.criterion === '4.1.2')).toBe(false);
+    });
+
+    it('drops the "of" clause when every field is unnamed', () => {
+      const s = summarise(provenance({
+        structure: structure({ formFields: 2, formFieldsWithoutName: 2 }),
+      }));
+      const need = (s.needs ?? []).find((n) => n.criterion === '4.1.2');
+      expect(need?.item).toContain('2 form fields have no accessible name');
+      expect(need?.item).not.toContain(' of 2');
+    });
+
+    it('is a separate item from the annotation-nesting one on the same widgets', () => {
+      // Both fire on r13's 289 widgets and answer different questions: can a
+      // reader REACH the field, and does the reader learn what it is FOR.
+      const s = summarise(provenance({
+        structure: structure({
+          annotationsNotInStructure: 289,
+          formFields: 289,
+          formFieldsWithoutName: 135,
+        }),
+      }));
+      const criteria = (s.needs ?? []).map((n) => n.criterion);
+      expect(criteria).toContain('1.3.1');
+      expect(criteria).toContain('4.1.2');
+    });
+
+    it('leaves 7.18.1-3 to the catch-all when our own item is absent', () => {
+      // The earned-suppression rule. Our counter says every field is named;
+      // veraPDF disagrees. The clause must still reach the client rather than
+      // be suppressed by an item that is not there.
+      const s = withConformance(
+        summarise(provenance({ structure: structure({ formFields: 4, formFieldsWithoutName: 0 }) })),
+        { checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.18.1-3'] },
+      );
+      const catchAll = (s.needs ?? []).find((n) => n.criterion === 'PDF/UA');
+      expect(catchAll?.item).toContain('7.18.1-3');
+    });
+
+    it('does not let the nesting item suppress the form-name clause', () => {
+      // The defect itself. `7.18.1-3` used to route to 1.3.1, so an annotation
+      // item present for an unrelated reason swallowed it and 135 unlabelled
+      // fields reached a client named nowhere.
+      const s = withConformance(
+        summarise(provenance({
+          structure: structure({
+            annotationsNotInStructure: 289,
+            formFields: 289,
+            formFieldsWithoutName: 0,
+          }),
+        })),
+        { checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.18.1-3'] },
+      );
+      const voiced = (s.needs ?? []).some(
+        (n) => n.criterion === '4.1.2' || (n.criterion === 'PDF/UA' && n.item.includes('7.18.1-3')),
+      );
+      expect(voiced, '7.18.1-3 reached the client nowhere').toBe(true);
+    });
+  });
+
   const emitted = () => {
     const seen = new Set<string>();
     const collect = (summary: RemediationSummary) => {
@@ -806,6 +895,10 @@ describe('the scope this instrument claims', () => {
     // 1.3.1 again, from the other side: an annotation outside the tree.
     collect(summarise(provenance({
       structure: structure({ annotationsNotInStructure: 2 }),
+    })));
+    // 4.1.2 — a form field carrying no accessible name.
+    collect(summarise(provenance({
+      structure: structure({ formFields: 3, formFieldsWithoutName: 2 }),
     })));
     // 2.4.10 — a heading ladder that starts below H1.
     collect(summarise(provenance({

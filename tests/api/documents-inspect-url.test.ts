@@ -64,6 +64,8 @@ function structure(over = {}) {
     marked: true,
     signed: false,
     annotationsNotInStructure: 0,
+    formFields: 0,
+    formFieldsWithoutName: 0,
     embeddedFiles: 0,
     structureElements: 12,
     textChars: 400,

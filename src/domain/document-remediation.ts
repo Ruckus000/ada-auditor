@@ -146,6 +146,13 @@ const VOICED_BY_OUR_INSTRUMENT: ReadonlyArray<{ clause: RegExp; criterion: strin
   { clause: /^7\.2[-.]/, criterion: '3.1.1' },
   { clause: /^7\.3-/, criterion: '1.1.1' },
   { clause: /^7\.4/, criterion: '2.4.10' },
+  // BEFORE the 7.18 family rule below, because `find` takes the first match.
+  // 7.18.1-3 is the accessible NAME of a form field, which 4.1.2 voices; the
+  // rest of 7.18 is annotation nesting, which 1.3.1 voices. Routed together
+  // they were routed wrongly: the nesting item was present on the corpus's one
+  // real form, so it suppressed 7.18.1-3, and 135 unlabelled form fields
+  // reached the client in a punch list that never mentioned them.
+  { clause: /^7\.18\.1-3/, criterion: '4.1.2' },
   { clause: /^7\.18\./, criterion: '1.3.1' },
   { clause: /^7\.1-9/, criterion: '2.4.2' },
 ];
@@ -429,8 +436,9 @@ export function withConformance(
  * have checked.
  *
  * `NOT_CHECKED_CRITERIA` is curated rather than derived, and deliberately short.
- * Two of the three — `1.3.2` and `4.1.2` — are what is left when you subtract
- * `CHECKED_CRITERIA` from `legal-standard.md`'s seven-criterion pass mark.
+ * `1.3.2` is what is left when you subtract `CHECKED_CRITERIA` from
+ * `legal-standard.md`'s seven-criterion pass mark — `4.1.2` left this list when
+ * `Inspect` began counting form fields with no accessible name.
  * `1.4.1` is NOT on that pass mark and is disclosed anyway: the corpus raises it
  * (a fee schedule marks changed values in red) and we measured that we cannot
  * check it, so silence would read as a pass. Do not re-derive this list from the
@@ -438,7 +446,7 @@ export function withConformance(
  * minus CHECKED" either: that names captions and audio description on a text
  * document, which is noise wearing the costume of disclosure.
  */
-export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '1.4.3', '2.4.2', '2.4.10', '3.1.1'] as const;
+export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '1.4.3', '2.4.2', '2.4.10', '3.1.1', '4.1.2'] as const;
 
 export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string }> = [
   // 1.4.3 moved to CHECKED when `Contrast` graduated. 1.4.1 did NOT move with
@@ -447,7 +455,6 @@ export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string 
   // alone, and nothing here detects that.
   { number: '1.4.1', name: 'Use of Color' },
   { number: '1.3.2', name: 'Meaningful Sequence' },
-  { number: '4.1.2', name: 'Name, Role, Value' },
 ];
 
 /**
@@ -467,7 +474,27 @@ export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string 
  * stored baseline would report `1.4.3` as a new gap, and the comparator would
  * read our instrument growing as the client's document getting worse.
  */
-export const INSTRUMENT_VERSION = 10;
+/**
+ * 11 — the punch list gained form-field names. `Inspect` counts widget
+ * annotations and how many carry no accessible name, and `4.1.2 Name, Role,
+ * Value` moves out of `NOT_CHECKED_CRITERIA` into what we claim to check.
+ *
+ * The defect this closes is a SILENT one, which is why it is worth the bump on
+ * a criterion only one corpus document raises. veraPDF fails 7.18.1-3 — "a form
+ * field shall have a TU key present" — and `alreadyVoiced` routed the whole
+ * `7.18` family to the 1.3.1 annotation-nesting item. On the corpus's one real
+ * form that item is present, so it suppressed 7.18.1-3, and the clause appeared
+ * in no gap, no need and no catch-all.
+ *
+ * `[V]` r13 delivered with 135 form fields carrying no accessible name and a
+ * punch list that named none of them, while the same summary told the client
+ * 4.1.2 was not checked. Three independent readings agree on 135: veraPDF's
+ * 7.18.1-3, a raw-object scan, and this pass.
+ *
+ * Same bump reasoning as 10: without it every stored baseline reads `4.1.2` as
+ * a new gap the client's document just grew.
+ */
+export const INSTRUMENT_VERSION = 11;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -524,6 +551,15 @@ function gapsIn(provenance: ConversionProvenance): string[] {
 
   if (structure.structureElements === 0) {
     gaps.push('1.3.1: the output carries no structure tree');
+  }
+
+  // One `4.1.2:` gap string, because `documentGapKey` identifies a gap by the
+  // criterion before its colon and a second would collide with this one.
+  if (structure.formFieldsWithoutName > 0) {
+    const n = structure.formFieldsWithoutName;
+    gaps.push(
+      `4.1.2: ${n} form field${n === 1 ? '' : 's'} with no accessible name`,
+    );
   }
 
   return gaps;
@@ -594,6 +630,28 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     needs.push({
       criterion: '1.3.1',
       item: `${n} form field${n === 1 ? '' : 's'} or link${n === 1 ? '' : 's'} sit outside the document's structure — a screen reader cannot reach ${n === 1 ? 'it' : 'them'} in reading order, and tagging ${n === 1 ? 'it' : 'them'} into place is a person's decision`,
+    });
+  }
+
+  if (structure.formFieldsWithoutName > 0) {
+    // Named, never written. A field's label is what the field is FOR, and
+    // inferring it from a nearby word is the same invention refused for alt
+    // text — worse here, because a wrong label on a form is a barrier that
+    // looks like a fix.
+    //
+    // Distinct from the 1.3.1 annotation item above even when both fire on the
+    // same widgets: that one says a reader cannot REACH the field, this one
+    // that the reader does not learn what it is for. Answering one leaves the
+    // other standing.
+    const n = structure.formFieldsWithoutName;
+    const of = structure.formFields > n ? ` of ${structure.formFields}` : '';
+    needs.push({
+      criterion: '4.1.2',
+      // Self-contained: the public report renders items without their criterion
+      // label, and says what the name has to be rather than only that it is
+      // missing, because the commonest wrong fix is to treat the internal field
+      // name as one.
+      item: `${n}${of} form field${n === 1 ? '' : 's'} ${n === 1 ? 'has' : 'have'} no accessible name — label each with what it asks for, because a screen reader speaks the label and never the internal field name`,
     });
   }
 
