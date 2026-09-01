@@ -623,10 +623,14 @@ wordRow(
 
 wordRow(
   'w13-heading-starts-deep',
-  'A document whose first heading is a Heading 3.',
+  'A document whose first heading is a Heading 3. Under the 7.4.2 standing '
+    + 'policy the conversion lane re-ranks it to H1 — one authored level, '
+    + 'wrongly seated by the exporter — so no punch item survives. This row '
+    + 'is the lock on that policy staying RANK-PRESERVING: if renumbering '
+    + 'ever merges levels or stops firing, the needs multiset moves.',
   { fn: 'docx', args: { title: 'Deep Start', lang: 'en-US', shape: 'deep-start' } },
   { disposition: 'delivered', title: 'already-titled', titleText: 'Deep Start', language: 'en-US',
-    counts: { headings: 1, tables: 0, lists: 0, figures: 0 }, needs: ['2.4.10'], gapCriteria: [] },
+    counts: { headings: 1, tables: 0, lists: 0, figures: 0 }, needs: [], gapCriteria: [] },
 );
 
 wordRow(

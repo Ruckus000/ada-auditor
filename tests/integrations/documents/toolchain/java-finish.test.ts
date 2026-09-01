@@ -544,6 +544,100 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     expect((await pdfKeys(out)).split('/Contents (').length - 1).toBe(1);
   });
 
+  /**
+   * A tagged PDF whose headings sit at the given levels, one text run each.
+   *
+   * Hand-built for the same reason as `internallyLinkedPdf`: the shape under
+   * test is the exporter's — a ladder parked below H1, or a skip — and
+   * Chromium normalises headings on its own. `mapVia` swaps the elements'
+   * own /S for a custom name and adds a RoleMap entry resolving it, which is
+   * the shape the re-rank must refuse.
+   */
+  function headingLadderPdf(levels: string[], mapVia?: string): Buffer {
+    const stream = levels
+      .map((level, i) => `BT /F1 12 Tf 20 ${160 - i * 20} Td /${mapVia ?? level} <</MCID ${i}>> BDC (Item ${i + 1}) Tj EMC ET`)
+      .join('\n');
+    const kids = levels.map((_, i) => `${7 + i} 0 R`).join(' ');
+    const roleMap = mapVia ? ` /RoleMap << /${mapVia} /${levels[0]} >>` : '';
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R'
+        + ' /Resources << /Font << /F1 5 0 R >> >> /StructParents 0 >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      `<< /Type /StructTreeRoot /K [7 0 R]${roleMap} >>`,
+    ];
+    // A Document root would be truer to life, but a flat tree keeps the
+    // object count readable and the walk under test is recursive either way.
+    objs[5] = `<< /Type /StructTreeRoot /K [${kids}]${roleMap} >>`;
+    levels.forEach((level, i) => {
+      objs.push(`<< /Type /StructElem /S /${mapVia ?? level} /P 6 0 R /Pg 3 0 R /K ${i} >>`);
+    });
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  async function finishedHeadings(name: string, levels: string[], renumber: boolean): Promise<string[]> {
+    const source = join(dir, `${name}.pdf`);
+    await writeFile(source, headingLadderPdf(levels));
+    const out = join(dir, `${name}-finished.pdf`);
+    const finished = await finishDocument(
+      { inputPath: source, outputPath: out, language: 'en', renumberHeadings: renumber },
+    );
+    expect(finished.ok).toBe(true);
+    const after = await inspectDocument(out);
+    if (!after.ok) expect.unreachable('could not read the output');
+    return after.ok ? after.value.headings : [];
+  }
+
+  /**
+   * `[V]` The measured shape the standing policy exists for: both real Word
+   * documents failing 7.4.2-1 are a FLAT ladder the exporter parked below H1
+   * — 19×H2 and 49×H3. One authored level, wrongly seated.
+   */
+  it('re-ranks a flat deep ladder onto H1 under the standing policy', async () => {
+    expect(await finishedHeadings('deep-flat', ['H2', 'H2', 'H2'], true))
+      .toEqual(['H1', 'H1', 'H1']);
+  });
+
+  it('closes a skip while keeping authored levels DISTINCT', async () => {
+    // Rank-preserving, never merging: H1-then-H3 becomes H1-then-H2. If this
+    // ever comes back ['H1','H1'], the policy has started deciding which of
+    // two authored levels was the mistake, which is the punch list's question.
+    expect(await finishedHeadings('skip', ['H1', 'H3'], true)).toEqual(['H1', 'H2']);
+  });
+
+  it('changes no heading without the flag — the repair lane never asks', async () => {
+    expect(await finishedHeadings('untouched', ['H2', 'H2'], false)).toEqual(['H2', 'H2']);
+  });
+
+  it('refuses to renumber a heading reached through the RoleMap', async () => {
+    // The element's own /S is not the name a reader resolves, and rewriting
+    // /S underneath a live mapping trades one lie for another. The punch item
+    // survives instead.
+    const source = join(dir, 'rolemapped.pdf');
+    await writeFile(source, headingLadderPdf(['H2', 'H2'], 'Kop2'));
+    const out = join(dir, 'rolemapped-finished.pdf');
+    expect((await finishDocument(
+      { inputPath: source, outputPath: out, language: 'en', renumberHeadings: true },
+    )).ok).toBe(true);
+
+    const keys = await pdfKeys(out);
+    expect(keys).toContain('/Kop2');
+    expect(keys).not.toContain('/H1');
+  });
+
   it('fails cleanly on a file that is not a PDF, writing nothing', async () => {
     const notPdf = join(dir, 'not-a.pdf');
     await writeFile(notPdf, 'this is not a PDF');

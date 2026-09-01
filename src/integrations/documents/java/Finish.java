@@ -10,6 +10,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -46,9 +47,15 @@ import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferenc
  *
  * Each one closes a specific veraPDF ua1 failure that survived OpenDataLoader,
  * listed in docs/research/document-remediation/failure-classification.md. No
- * structure element is created, moved, re-parented or altered — if that ever
- * becomes necessary, the spike's kill criterion has fired and the answer is
- * STOP rather than a bigger version of this file.
+ * structure element is created, moved, re-parented or altered — with ONE
+ * deliberate exception, taken as a standing policy rather than drifted into:
+ * `--renumber-headings` re-ranks H* levels onto a gapless ladder, and only the
+ * CONVERSION lane passes it, where the levels being corrected are an
+ * exporter's mapping of the author's outline rather than a client's own PDF.
+ * See `renumberHeadings` for what it refuses. Everything else in this file
+ * still creates, moves and re-parents nothing — if more than this one
+ * exception ever becomes necessary, the spike's kill criterion has fired and
+ * the answer is STOP rather than a bigger version of this file.
  *
  * Usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]
  *
@@ -77,7 +84,7 @@ public final class Finish {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier]");
+            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier] [--renumber-headings]");
             System.exit(2);
         }
         String in = args[0], out = args[1];
@@ -91,6 +98,10 @@ public final class Finish {
         // it holds a verdict. Same shape as the MarkInfo gate below, which is
         // already conditional on the document having earned it.
         boolean claimUa1 = true;
+        // Heading re-ranking is OFF unless the caller asks: the repair lane
+        // never asks, because renumbering a client's own PDF is guessing a
+        // heading level, which its charter forbids.
+        boolean renumberHeadings = false;
         int i = 2;
         // Positional language first, so every existing caller keeps working.
         if (i < args.length && !args[i].startsWith("--")) {
@@ -102,8 +113,10 @@ public final class Finish {
                 givenTitle = Files.readString(Path.of(args[++i]), StandardCharsets.UTF_8);
             } else if ("--no-ua-identifier".equals(args[i])) {
                 claimUa1 = false;
+            } else if ("--renumber-headings".equals(args[i])) {
+                renumberHeadings = true;
             } else {
-                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier]");
+                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier] [--renumber-headings]");
                 System.exit(2);
             }
         }
@@ -214,6 +227,10 @@ public final class Finish {
                 }
             }
             describeInternalLinks(doc, undescribed);
+
+            if (renumberHeadings) {
+                renumberHeadings(catalog);
+            }
 
             stripCidSets(doc);
 
@@ -374,9 +391,96 @@ public final class Finish {
      * language beats a nameless one, and such a document already fails `7.2-34`
      * on every word it contains — but it is a clause appearing because we
      * wrote something, which is the kind of thing that reads as a regression
-     * later. `[V]` Empty on the current corpus: all six documents this pass
-     * touches declare a language.
+     * later. `[V]` No longer empty on the corpus: one real undeclared document
+     * now carries described links failing `7.2-24` on exactly this coupling
+     * (two checks, against 32,399 `7.2-34` failures in the same file — the
+     * trade stands). An earlier version of this note said the case was empty,
+     * and it was, until the corpus grew.
      */
+    /**
+     * Re-rank heading levels onto a gapless ladder starting at H1 — the
+     * conversion lane's standing policy for PDF/UA 7.4.2.
+     *
+     * RANK-preserving, never merging: the distinct levels the author used map
+     * onto 1..k in first-to-deepest order, so an exporter's flat H2 ladder
+     * becomes H1, and H1-then-H3 becomes H1-then-H2 — but two levels the
+     * author distinguished STAY distinct. A sequence skip across levels that
+     * both survive the re-rank is left exactly as it stands, because clearing
+     * it would mean deciding which of two authored levels was the mistake,
+     * and that is the punch list's question, not this stage's.
+     *
+     * `[V]` Both real Word documents failing 7.4.2-1 are a flat ladder the
+     * exporter parked below H1 — 19×H2 and 49×H3 — which is the case this
+     * exists for: one authored level, wrongly seated.
+     *
+     * REFUSED outright when any heading is reached through the RoleMap: the
+     * element's own /S is then not the name a reader resolves, and rewriting
+     * /S underneath a live mapping trades one lie for another. The punch item
+     * survives, which is the honest outcome.
+     */
+    private static void renumberHeadings(PDDocumentCatalog catalog) {
+        PDStructureTreeRoot root = catalog.getStructureTreeRoot();
+        if (root == null) {
+            return;
+        }
+        List<PDStructureElement> headings = new ArrayList<>();
+        boolean[] roleMapped = { false };
+        collectHeadings(root, headings, roleMapped,
+            Collections.newSetFromMap(new IdentityHashMap<>()));
+        if (roleMapped[0] || headings.isEmpty()) {
+            return;
+        }
+        // TreeMap so iteration order IS rank order.
+        TreeMap<Integer, Integer> rank = new TreeMap<>();
+        for (PDStructureElement el : headings) {
+            rank.put(headingLevel(el.getStructureType()), 0);
+        }
+        int next = 1;
+        boolean identity = true;
+        for (Map.Entry<Integer, Integer> entry : rank.entrySet()) {
+            entry.setValue(next);
+            if (entry.getKey() != next) {
+                identity = false;
+            }
+            next++;
+        }
+        if (identity) {
+            return;
+        }
+        for (PDStructureElement el : headings) {
+            el.setStructureType("H" + rank.get(headingLevel(el.getStructureType())));
+        }
+    }
+
+    /** H1..H9 by the element's OWN /S — a plain "H" is not a numbered level. */
+    private static int headingLevel(String type) {
+        if (type != null && type.length() == 2 && type.charAt(0) == 'H'
+                && type.charAt(1) >= '1' && type.charAt(1) <= '9') {
+            return type.charAt(1) - '0';
+        }
+        return -1;
+    }
+
+    private static void collectHeadings(PDStructureNode node, List<PDStructureElement> out,
+            boolean[] roleMapped, Set<Object> seen) {
+        if (!seen.add(node.getCOSObject())) {
+            return;
+        }
+        for (Object kid : node.getKids()) {
+            if (kid instanceof PDStructureElement el) {
+                if (headingLevel(el.getStructureType()) > 0) {
+                    out.add(el);
+                } else if (headingLevel(el.getStandardStructureType()) > 0) {
+                    // Reached only via the RoleMap — the refusal case.
+                    roleMapped[0] = true;
+                }
+            }
+            if (kid instanceof PDStructureNode child) {
+                collectHeadings(child, out, roleMapped, seen);
+            }
+        }
+    }
+
     private static void describeInternalLinks(PDDocument doc, List<PDAnnotationLink> links) {
         if (links.isEmpty()) {
             return;
