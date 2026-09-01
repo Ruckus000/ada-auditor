@@ -460,6 +460,90 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     }
   });
 
+  /**
+   * A tagged PDF with two internal links: one over text, one over nothing.
+   *
+   * Hand-built because nothing in the toolchain emits this shape. `renderPdf`
+   * is Chromium, whose `<a href="#x">` does not produce a `/Link` structure
+   * element wrapping an `/OBJR`, and the corpus's own `p30-link-outside-
+   * structure` builds the opposite case on purpose — a link that is NOT in the
+   * tree. What is under test is the pairing: an annotation reachable from the
+   * structure element whose text describes it.
+   *
+   * Both links carry a `/Dest` and no `/A`, which is what a Word table of
+   * contents exports as and what `linkUri` returns null for.
+   */
+  function internallyLinkedPdf(): Buffer {
+    const stream = 'BT /F1 12 Tf 20 100 Td /Link <</MCID 0>> BDC (Budget Section) Tj EMC ET';
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R'
+        + ' /Resources << /Font << /F1 5 0 R >> >> /Annots [8 0 R 9 0 R] /StructParents 0 >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      '<< /Type /StructTreeRoot /K [7 0 R] >>',
+      '<< /Type /StructElem /S /Document /P 6 0 R /K [10 0 R 11 0 R] >>',
+      // Over the text. `/Dest`, never `/A`, so there is no URI to transcribe.
+      '<< /Type /Annot /Subtype /Link /Rect [20 100 200 120] /F 4 /Dest [3 0 R /XYZ 0 0 0] /StructParent 1 >>',
+      // Over nothing — the image-link case. Its structure element references
+      // the annotation and no marked content, so there is no text to read.
+      '<< /Type /Annot /Subtype /Link /Rect [20 40 60 60] /F 4 /Dest [3 0 R /XYZ 0 0 0] /StructParent 2 >>',
+      '<< /Type /StructElem /S /Link /P 7 0 R /Pg 3 0 R /K [0 12 0 R] >>',
+      '<< /Type /StructElem /S /Link /P 7 0 R /Pg 3 0 R /K [13 0 R] >>',
+      '<< /Type /OBJR /Obj 8 0 R >>',
+      '<< /Type /OBJR /Obj 9 0 R >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  /**
+   * `[V]` The measured shape this exists for: one real delivered document
+   * carries 70 link annotations, 35 with a URI and described by the pass above,
+   * and 35 with a direct `/Dest` — a Word table of contents — described by
+   * nothing. Both `7.18.5-2` and `7.18.1-2` failed on it, and on a second
+   * document whose ONLY remaining failures were those two.
+   */
+  it('describes an internal link with the text the link itself displays', async () => {
+    const source = join(dir, 'internal-links.pdf');
+    await writeFile(source, internallyLinkedPdf());
+
+    const out = join(dir, 'internal-links-finished.pdf');
+    expect((await finishDocument({ inputPath: source, outputPath: out, language: 'en' })).ok).toBe(true);
+
+    // Through `pdfKeys`, not the raw bytes: PDFBox saves with object streams,
+    // so every dictionary in the output is deflated and a plain byte search
+    // finds nothing — including the page's own `/Contents`. A first version of
+    // this test read the raw file and reported the fix missing when it had
+    // worked.
+    expect(await pdfKeys(out)).toContain('/Contents (Budget Section)');
+  });
+
+  it('leaves a link with no text to transcribe silent, rather than naming it', async () => {
+    // The half that matters more. A link over an image has nothing the
+    // document says about it, and the honest output is the punch item asking a
+    // person for a description — not a name we made up from a destination.
+    const source = join(dir, 'internal-links-2.pdf');
+    await writeFile(source, internallyLinkedPdf());
+
+    const out = join(dir, 'internal-links-2-finished.pdf');
+    expect((await finishDocument({ inputPath: source, outputPath: out, language: 'en' })).ok).toBe(true);
+
+    // Exactly one of the two links is described: the one with words.
+    expect((await pdfKeys(out)).split('/Contents (').length - 1).toBe(1);
+  });
+
   it('fails cleanly on a file that is not a PDF, writing nothing', async () => {
     const notPdf = join(dir, 'not-a.pdf');
     await writeFile(notPdf, 'this is not a PDF');

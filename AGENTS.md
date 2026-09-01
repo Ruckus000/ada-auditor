@@ -816,6 +816,35 @@ Read this before claiming something works.
   instead: `experiments/document-remediation/title-from-real-filenames.mts`.
   See `docs/research/document-remediation/title-gap-is-the-corpus.md`.
 
+- **A link description read from the URI covers half the links in a real
+  document, and the half it misses is the table of contents.** `Finish` has
+  described `/Link` annotations since the annotation work, transcribing the
+  URI as the author's stated destination. `linkUri` reads `PDActionURI` and
+  nothing else, and an INTERNAL link has no action at all — a Word table of
+  contents exports as a direct `/Dest` array naming a page. `[V]` One real
+  delivered document: 70 link annotations, 35 with a URI and described, 35 with
+  a `/Dest` and silent, and `7.18.5-2`/`7.18.1-2` failing on the strength of
+  those 35. The fix takes the link's OWN TEXT — the glyphs its `/Link`
+  structure element already references, via `StructText`, which `Inspect` and
+  `Headings` use for the same purpose — and never the destination, which
+  resolves to a page index or an exporter's `__RefHeading___Toc12345`. A link
+  with no text keeps its silence and its punch item; naming an image link from
+  its destination would silence the item that asks a person for a real
+  description. `[V]` Two real Word documents whose ONLY residual clauses were
+  those two are now fully PDF/UA-1 conformant: the Word lane moved 12/26 to
+  14/26, with 0 regressed and no other delivered fact changed across 148
+  documents.
+
+  **Two things this cost that were not obvious.** `Finish` had never parsed a
+  content stream — every other write there reads the catalog — so `StructText`
+  introduced a way for a malformed stream to crash a document that used to be
+  delivered; it is caught, degrading to exactly the previous silence. And an
+  annotation `/Contents` is TEXT, so `7.2-24` wants a language for it: on a
+  document that declares none, and we never default `/Lang`, this names links
+  that had no name AND adds a clause. Empty on this corpus — all six documents
+  touched declare a language — and right either way, but it is a clause
+  appearing because we wrote something.
+
 - **Route a CLAUSE, never a family — suppression is earned per criterion, so a
   family route lets one item silence everything beside it.** `alreadyVoiced`
   drops a veraPDF clause from the catch-all only when one of our own items is

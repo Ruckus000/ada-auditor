@@ -1,11 +1,19 @@
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -20,7 +28,9 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkInfo;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDObjectReference;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 
@@ -184,6 +194,7 @@ public final class Finish {
             // wrote, exported without Contents. The description TRANSCRIBES —
             // the link's own URI is the author's stated destination — and
             // never invents; a link with no URI keeps its silence.
+            List<PDAnnotationLink> undescribed = new ArrayList<>();
             for (PDPage page : doc.getPages()) {
                 boolean hasAnnotation = false;
                 for (PDAnnotation annotation : page.getAnnotations()) {
@@ -193,6 +204,8 @@ public final class Finish {
                         String destination = linkUri(link);
                         if (destination != null && !destination.isEmpty()) {
                             link.setContents(destination);
+                        } else {
+                            undescribed.add(link);
                         }
                     }
                 }
@@ -200,6 +213,7 @@ public final class Finish {
                     page.getCOSObject().setName(COSName.getPDFName("Tabs"), "S");
                 }
             }
+            describeInternalLinks(doc, undescribed);
 
             stripCidSets(doc);
 
@@ -316,6 +330,125 @@ public final class Finish {
     }
 
     /** The URI a link action points at, or null for every other action kind. */
+    /**
+     * Give a link with no URI the accessible name it already displays.
+     *
+     * The loop above transcribes a link's destination from its URI action. An
+     * INTERNAL link has none — a Word table of contents exports as a `/Dest`
+     * array naming a page, and `linkUri` returns null for every one of them, so
+     * the whole table of contents ships with no accessible name at all. `[V]`
+     * On one real delivered document: 70 link annotations, 35 with a URI and
+     * described, 35 with a direct `/Dest` and silent.
+     *
+     * What gets written is the link's OWN TEXT — the glyphs the `/Link`
+     * structure element already references, read by `StructText`, which is the
+     * same resolution `Inspect` and `Headings` use. It is the author's word for
+     * their own link, and it is on the page: a reader sees it, and until now
+     * only a sighted reader did.
+     *
+     * NOT the destination, which is the one thing a `/Dest` could offer. It
+     * resolves to a page index or an exporter's `__RefHeading___Toc12345`, and
+     * "page 14" thirty times over is our phrasing of a fact about the file
+     * rather than anything the document says. A named destination is worse — it
+     * is exporter noise wearing the shape of a description.
+     *
+     * A link with NO text keeps its silence and its punch item, exactly as a
+     * link with no URI did before this. An image link has nothing to
+     * transcribe, and inventing a name for it would silence the item that asks
+     * a person to write a real one.
+     *
+     * The tree is read, never touched: this sets `/Contents` on the ANNOTATION.
+     * `Finish`'s standing claim — no structure element created, moved,
+     * re-parented or altered — still holds, and `contentChanges` still checks
+     * it.
+     *
+     * Nothing is built unless a document needs it. `StructText` runs a
+     * marked-content pass over every page, and a document whose links all carry
+     * a URI never pays for one.
+     *
+     * ONE COUPLING, because it is invisible from either side. A `/Contents`
+     * string is text, and `7.2-24` requires a determinable natural language for
+     * it. We never default `/Lang`, so on a document that declares none this
+     * describes links the document could not otherwise name AND adds `7.2-24`
+     * to its clause list. That trade is right — a named link in an undeclared
+     * language beats a nameless one, and such a document already fails `7.2-34`
+     * on every word it contains — but it is a clause appearing because we
+     * wrote something, which is the kind of thing that reads as a regression
+     * later. `[V]` Empty on the current corpus: all six documents this pass
+     * touches declare a language.
+     */
+    private static void describeInternalLinks(PDDocument doc, List<PDAnnotationLink> links) {
+        if (links.isEmpty()) {
+            return;
+        }
+        PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
+        if (root == null) {
+            return;
+        }
+
+        // Identity, because COSBase does not override equals: two dictionaries
+        // holding equal keys are still two objects, and the one we want is the
+        // instance the annotation wraps. PDFBox resolves an indirect reference
+        // to a cached instance, which is what makes the lookup below hit.
+        Map<COSDictionary, PDAnnotationLink> wanted = new IdentityHashMap<>();
+        for (PDAnnotationLink link : links) {
+            wanted.put(link.getCOSObject(), link);
+        }
+
+        StructText text;
+        try {
+            text = new StructText(doc);
+        } catch (IOException | RuntimeException e) {
+            // Until this pass, `Finish` never parsed a content stream — every
+            // other write here reads the catalog. `StructText` runs the page
+            // through PDFBox's marked-content extractor, and a malformed
+            // content stream can throw where nothing threw before. Letting it
+            // propagate would turn a document that used to be DELIVERED with a
+            // punch list into a stage crash, which is a far worse trade than
+            // the naming this buys.
+            //
+            // Swallowed rather than counted, unlike `stripCidSets`, because
+            // the degraded state tells no lie: the links keep their silence and
+            // keep the punch item that asks a person to name them, which is
+            // exactly what the document got before this existed.
+            return;
+        }
+
+        describe(root, text, wanted, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    /**
+     * `seen` is identity-based and per traversal, for the reason `StructText`
+     * carries the same guard: a structure tree is a tree by convention and a
+     * graph by format, and `p07-cyclic-tree` is the fixture that proved an
+     * unguarded walk recurses until the stack gives out.
+     */
+    private static void describe(PDStructureNode node, StructText text,
+            Map<COSDictionary, PDAnnotationLink> wanted, Set<Object> seen) {
+        if (wanted.isEmpty() || !seen.add(node.getCOSObject())) {
+            return;
+        }
+        for (Object kid : node.getKids()) {
+            if (kid instanceof PDStructureNode child) {
+                describe(child, text, wanted, seen);
+            } else if (kid instanceof PDObjectReference ref && node instanceof PDStructureElement owner) {
+                if (!(ref.getCOSObject().getDictionaryObject(COSName.getPDFName("Obj"))
+                        instanceof COSDictionary referenced)) {
+                    continue;
+                }
+                PDAnnotationLink link = wanted.get(referenced);
+                if (link == null) {
+                    continue;
+                }
+                String described = text.of(owner);
+                if (!described.isEmpty()) {
+                    link.setContents(described);
+                    wanted.remove(referenced);
+                }
+            }
+        }
+    }
+
     private static String linkUri(PDAnnotationLink link) {
         if (link.getAction() instanceof PDActionURI uri) {
             return uri.getURI();
