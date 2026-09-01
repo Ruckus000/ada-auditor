@@ -120,6 +120,22 @@ export async function checkUa1(pdfPath: string, options: VeraPdfOptions = {}): P
       .map((rule) => `${rule.clause}-${rule.testNumber}`)
       .filter((value, index, all) => all.indexOf(value) === index)
       .sort();
+    if (failingClauses.length === 0) {
+      // Non-compliant, and the report names nothing that failed.
+      //
+      // `withConformance` turns clauses into items, so this shape delivered a
+      // document marked NOT CONFORMANT carrying no statement of what was wrong
+      // with it — a silent gap on the one surface a client reads for the
+      // answer. The verdict and the explanation come from the same reading,
+      // and a reading that cannot explain itself is not an answer.
+      //
+      // A checker that says "no" and cannot say why knows nothing usable about
+      // the document, so this joins the crash path: `checker: 'none'`, which
+      // every surface renders as "not checked". Losing a true non-conformance
+      // to "not checked" is the safe direction; the reverse is the promise.
+      logWarn('document_conformance_unexplained', { bytes: raw.length });
+      return { checker: 'none', reason: 'unavailable' };
+    }
     return conformanceSchema.parse({ checker: 'verapdf-ua1', compliant: false, failingClauses });
   } catch {
     logWarn('document_conformance_unparseable', { bytes: raw.length });

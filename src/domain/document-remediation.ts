@@ -368,7 +368,17 @@ export function withContrast(
   summary: RemediationSummary,
   contrast: ContrastReading,
 ): RemediationSummary {
-  const out: RemediationSummary = { ...summary, contrast };
+  const out: RemediationSummary = {
+    ...summary,
+    contrast,
+    // The pass ran, so `1.4.3` joins what this reading claims to have looked at.
+    // Absent scope stays absent: a reading stored before the field existed
+    // cannot say what it looked for, and inventing one here would render as
+    // full coverage on every surface.
+    ...(summary.scope === undefined
+      ? {}
+      : { scope: scopeOf(new Set([...summary.scope.criteria, MEASURED_BY_A_SEPARATE_STAGE])) }),
+  };
   const items: Array<{ criterion: string; item: string }> = [];
   const gapParts: string[] = [];
 
@@ -605,6 +615,33 @@ export function withConformance(
  */
 export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '1.4.3', '2.4.2', '2.4.10', '3.1.1', '4.1.2'] as const;
 
+/**
+ * The one criterion in `CHECKED_CRITERIA` that no reading can claim on its own.
+ *
+ * Every other criterion is decided by `gapsIn`/`needsIn` from the structure
+ * `Inspect` returned, so if there is a summary at all, they were evaluated.
+ * `1.4.3` is different: it comes from a SEPARATE STAGE that may not run — a
+ * host without the contrast jar, a JVM that dies, a page geometry the sampler
+ * abstains on — and `withMeasuredContrast` deliberately never refuses over it.
+ *
+ * So `summarise` cannot claim it, and `withContrast` adds it when the pass
+ * actually produced a reading. The bug this closes: `scope` was the whole
+ * constant unconditionally, so a delivery whose contrast stage failed told the
+ * client "Checked here: WCAG ... 1.4.3 ..." while the `contrast` field beside
+ * it was absent and every surface rendered that absence as "not checked". The
+ * inspect-only path never runs contrast at all and claimed it on every reading.
+ *
+ * This is the same overstatement `checker: 'none'` and the optional `contrast`
+ * field already exist to prevent, reintroduced through the field that was added
+ * to state the instrument's limits.
+ */
+const MEASURED_BY_A_SEPARATE_STAGE = '1.4.3';
+
+/** `CHECKED_CRITERIA` order, kept canonical however a scope was assembled. */
+function scopeOf(claimed: ReadonlySet<string>): { criteria: string[] } {
+  return { criteria: CHECKED_CRITERIA.filter((criterion) => claimed.has(criterion)) };
+}
+
 export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string }> = [
   // 1.4.3 moved to CHECKED when `Contrast` graduated. 1.4.1 did NOT move with
   // it and must not be assumed to have: the same fee schedule that fails
@@ -746,7 +783,10 @@ export function summarise(provenance: ConversionProvenance): RemediationSummary 
     // reading the response header would otherwise get a gap list with no way to
     // know how narrow it is — the same shape of overstatement as a conformance
     // identifier written without a verdict behind it.
-    scope: { criteria: [...CHECKED_CRITERIA] },
+    //
+    // Everything this function's own two emitters can decide, and nothing else:
+    // `1.4.3` joins only in `withContrast`, when the pass that measures it ran.
+    scope: scopeOf(new Set(CHECKED_CRITERIA.filter((c) => c !== MEASURED_BY_A_SEPARATE_STAGE))),
   };
 }
 

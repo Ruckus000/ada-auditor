@@ -42,6 +42,21 @@ const structure = (over = {}) =>
     ...over,
   });
 
+/**
+ * What `summarise` alone claims: everything its two emitters can decide.
+ *
+ * 1.4.3 is not among them. The contrast pass is a separate stage that may not
+ * run, so the criterion joins the scope in `withContrast` and nowhere else.
+ */
+const SUMMARISE_CRITERIA = CHECKED_CRITERIA.filter((c) => c !== '1.4.3');
+
+/** A reading that measured contrast and found nothing wrong. */
+const CLEAN_CONTRAST = {
+  pairs: 4, passing: 4, failing: 0, failingGlyphs: 0,
+  undetermined: 0, undeterminedGlyphs: 0, decorative: 0, decorativeGlyphs: 0,
+  findings: [],
+};
+
 const provenance = (over: Partial<ConversionProvenance> = {}): ConversionProvenance => ({
   title: { kind: 'already-titled', title: 'Planning Committee Agenda' },
   sourceLanguage: 'en-GB',
@@ -66,8 +81,10 @@ describe('summarise', () => {
       gaps: [],
       // What the reading looked for, travelling with it. An exact match, so a
       // criterion silently entering or leaving the instrument's scope fails
-      // here as well as in the emitted-criteria test below.
-      scope: { criteria: [...CHECKED_CRITERIA] },
+      // here as well as in the emitted-criteria test below. 1.4.3 is absent
+      // because the contrast pass is a separate stage and has not run: it
+      // joins in `withContrast`, never here.
+      scope: { criteria: SUMMARISE_CRITERIA },
     });
 
     // The body text of the document appears nowhere. `headingTexts` and
@@ -1114,7 +1131,32 @@ describe('the scope this instrument claims', () => {
     // The response header carries the summary and nothing else. Scope that
     // lived only in rendered copy would leave an API consumer with the same
     // unqualified claim this change removes from the screens.
-    expect(summarise(provenance()).scope).toEqual({ criteria: [...CHECKED_CRITERIA] });
+    expect(summarise(provenance()).scope).toEqual({ criteria: SUMMARISE_CRITERIA });
+  });
+
+  it('does not claim contrast until the pass that measures it has run', () => {
+    // The defect: `scope` was the whole constant unconditionally, so a delivery
+    // whose contrast stage could not run told the client 1.4.3 was checked
+    // while the `contrast` field beside it was absent — and every surface
+    // renders that absence as "not checked". The two disagreed about the same
+    // document. The inspect-only path, which never runs contrast at all,
+    // claimed it on every reading.
+    const withoutTheStage = summarise(provenance());
+    expect(withoutTheStage.contrast).toBeUndefined();
+    expect(withoutTheStage.scope?.criteria).not.toContain('1.4.3');
+
+    const measured = withContrast(withoutTheStage, CLEAN_CONTRAST);
+    expect(measured.scope?.criteria).toContain('1.4.3');
+    // Canonical order, not append order: the line renders to a client.
+    expect(measured.scope).toEqual({ criteria: [...CHECKED_CRITERIA] });
+  });
+
+  it('leaves an unrecorded scope unrecorded when contrast runs', () => {
+    // A reading stored before the field existed cannot say what it looked for.
+    // Inventing a scope here would render as full coverage on every surface —
+    // the exact overstatement the optional field exists to prevent.
+    const stored: RemediationSummary = { ...summarise(provenance()), scope: undefined };
+    expect(withContrast(stored, CLEAN_CONTRAST).scope).toBeUndefined();
   });
 
   it('costs the header almost nothing, and nothing that grows', () => {

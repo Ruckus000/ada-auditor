@@ -459,7 +459,11 @@ Read this before claiming something works.
   Two clause families translate into punch items a person can act on (fonts
   never embedded → supply the Word source; untagged page content → needs the
   source or a person); everything unrecognized rolls into a catch-all naming
-  the clause ids, so no clause present or future fails silently. Families our
+  the clause ids, so no clause present or future fails silently. A report that
+  says `compliant: false` and names NO failing clause is read as `checker:
+  'none'`, not as a non-conformance: the items are built from the clause list,
+  so that shape delivered a document marked not conformant whose punch list
+  said nothing about why. Families our
   own vocabulary already voices (language, figures, headings, title,
   annotation nesting) are left to the items that voice them.
   `[V]` On the twenty-document real corpus: the product's verdicts agree with
@@ -499,6 +503,18 @@ Read this before claiming something works.
   and `4.1.2` — seven of the roughly fifty in 2.1 AA. Every reading carries
   `scope.criteria` and every surface renders it through
   `services/presentation/document-verdict.ts`.
+
+  **`scope` states what RAN, not what the instrument owns.** `1.4.3` is the one
+  criterion no reading can claim on its own: contrast is a separate stage,
+  `withMeasuredContrast` deliberately never refuses when it fails, and the
+  inspect-only path never runs it at all. So `summarise` emits the other six
+  and `withContrast` adds `1.4.3` when a reading exists. Before this, `scope`
+  was the whole constant unconditionally — a delivery whose contrast stage died
+  told the client "Checked here: … 1.4.3 …" while the `contrast` field beside
+  it was absent and every surface rendered that absence as "not checked". The
+  same overstatement `checker: 'none'` exists to prevent, reintroduced through
+  the field added to state the limits. **Do not assemble `scope` from a
+  constant: a stage that can fail must add its own criterion.**
 
   **Both criteria the pipeline does not reach have now been MEASURED and
   declined, rather than left unexamined.** `1.3.2` Meaningful Sequence is on
