@@ -307,8 +307,29 @@ function readPdf(path) {
     if (info === null && obj['/Title'] !== undefined && obj['/S'] === undefined) info = obj;
   }
 
-  const headings = structure.filter((e) => HEADING_TYPES.has(e['/S']));
-  const figures = structure.filter((e) => e['/S'] === '/Figure');
+  // ISO 32000 requires a conforming reader to resolve a custom structure type
+  // through the tree's /RoleMap, and the product does (`Inspect.standard()`).
+  // Reading the raw `/S` instead made this instrument disagree with the product
+  // on five real documents and call the difference an invented claim: n03 maps
+  // /Title -> /H1 six times, n22 maps /Shape and /Vector -> /Figure, n05, n21
+  // and n30 one element each. Every one of those was the product being right.
+  const roleMap = (() => {
+    const raw = catalog?.['/StructTreeRoot'];
+    const root = typeof raw === 'string' && raw.endsWith(' R') ? deref(objects[`obj:${raw}`]) : raw;
+    const map = root?.['/RoleMap'];
+    const resolved = typeof map === 'string' && map.endsWith(' R') ? deref(objects[`obj:${map}`]) : map;
+    return resolved && typeof resolved === 'object' ? resolved : {};
+  })();
+  /** The standard type an element resolves to, one hop through the role map. */
+  const roleOf = (e) => {
+    const own = e['/S'];
+    return HEADING_TYPES.has(own) || own === '/Figure' || own === '/Table' || own === '/L'
+      ? own
+      : (roleMap[own] ?? own);
+  };
+
+  const headings = structure.filter((e) => HEADING_TYPES.has(roleOf(e)));
+  const figures = structure.filter((e) => roleOf(e) === '/Figure');
   const docinfoTitle = info ? plainString(info['/Title']) : null;
   // A title can also live only in the XMP packet, and a document that states
   // one there states one.
@@ -328,8 +349,8 @@ function readPdf(path) {
     headingLevels: headingOrder(objects, catalog),
     counts: {
       headings: headings.length,
-      tables: structure.filter((e) => e['/S'] === '/Table').length,
-      lists: structure.filter((e) => e['/S'] === '/L').length,
+      tables: structure.filter((e) => roleOf(e) === '/Table').length,
+      lists: structure.filter((e) => roleOf(e) === '/L').length,
       figures: figures.length,
     },
     figuresWithoutAlt: figures.filter((e) => e['/Alt'] === undefined).length,
@@ -354,6 +375,15 @@ function readDocx(path) {
   const doc = part('word/document.xml');
   const styles = part('word/styles.xml');
   const core = part('docProps/core.xml');
+  // Every STORY part, not just the body. A table can live in a footnote, an
+  // endnote, a header or a text box, and the converter carries it into the PDF
+  // as a table like any other. Reading only `word/document.xml` counted n42's
+  // single table — which sits in `word/footnotes.xml` — as zero, and then
+  // accused the product of inventing it.
+  const stories = names
+    .filter((n) => /^word\/(document|footnotes|endnotes|header\d*|footer\d*)\.xml$/.test(n))
+    .map((n) => part(n))
+    .join('');
 
   const headingLevels = [...doc.matchAll(/w:val="Heading(\d)"/g)].map((m) => Number(m[1]));
   // DrawingML images AND the legacy VML ones. A document that predates the
@@ -382,7 +412,7 @@ function readDocx(path) {
     headingLevelsAreSourceOnly: true,
     counts: {
       headings: headingLevels.length,
-      tables: (doc.match(/<w:tbl>/g) ?? []).length,
+      tables: (stories.match(/<w:tbl[ >]/g) ?? []).length,
       lists: null,
       figures: drawings.length,
     },
@@ -484,13 +514,35 @@ const CORRECTIONS_MODE = process.argv.includes('--corrections');
  */
 const ONLY = (process.argv.find((a) => a.startsWith('--only=')) ?? '').slice('--only='.length);
 
+/**
+ * With `--only`, corrections for every OTHER cohort have to survive the write.
+ *
+ * `corrections.json` is rebuilt from the rows this run processed, so running a
+ * single cohort would drop every correction belonging to the others — 42 of
+ * them, the whole record of where this instrument has been wrong before. The
+ * same shape overwrote `real-manifest.json` during the harvest. A file that is
+ * a RECORD must be merged, never rewritten from a partial pass.
+ */
+function mergeCorrections(fresh) {
+  if (!ONLY) return fresh;
+  const path = join(HERE, 'corrections.json');
+  if (!existsSync(path)) return fresh;
+  const prior = JSON.parse(readFileSync(path, 'utf8'));
+  return [...prior.filter((c) => !c.docId.startsWith(ONLY)), ...fresh];
+}
+
 const EVIDENCE = {
   disposition:
     'qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem,'
     + ' which ISO 32000 permits. The first authoring pass required /Type and so read a tagged document as untagged.',
   counts:
     'qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the'
-    + ' optional /Type. Verified to reproduce the same counts on r01, r17 and r22 independently.',
+    + ' optional /Type, and resolved one hop through the structure tree /RoleMap, which ISO 32000 requires a'
+    + ' conforming reader to apply and this instrument previously ignored — n03 maps /Title to /H1 six times,'
+    + ' n22 maps /Shape and /Vector to /Figure, n05, n21 and n30 one element each. For Word sources, tables are'
+    + ' counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml'
+    + ' alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product'
+    + ' reading the document correctly and this instrument reading it wrongly.',
   needs:
     'qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first'
     + ' pass could not see.',
@@ -628,7 +680,8 @@ console.log(`  delivered expected: ${rows.filter((r) => r.disposition === 'deliv
 console.log(`  refused expected:   ${rows.filter((r) => r.disposition !== 'delivered').length}`);
 
 if (CORRECTIONS_MODE) {
-  writeFileSync(join(HERE, 'corrections.json'), `${JSON.stringify(corrections, null, 2)}\n`, 'utf8');
+  const allCorrections = mergeCorrections(corrections);
+  writeFileSync(join(HERE, 'corrections.json'), `${JSON.stringify(allCorrections, null, 2)}\n`, 'utf8');
   const touched = new Set(corrections.map((c) => c.docId));
   console.log(`\nwrote ${corrections.length} corrections across ${touched.size} documents to corrections.json`);
   const share = touched.size / rows.length;

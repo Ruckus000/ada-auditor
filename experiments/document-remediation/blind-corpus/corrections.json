@@ -738,5 +738,190 @@
       "1.1.1"
     ],
     "evidence": "qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first pass could not see."
+  },
+  {
+    "docId": "n03",
+    "field": "counts",
+    "kind": "instrument-defect",
+    "was": {
+      "pages": 20,
+      "headings": 0,
+      "tables": 0,
+      "lists": 103,
+      "figures": 0
+    },
+    "now": {
+      "pages": 20,
+      "headings": 6,
+      "tables": 0,
+      "lists": 103,
+      "figures": 0
+    },
+    "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type, and resolved one hop through the structure tree /RoleMap, which ISO 32000 requires a conforming reader to apply and this instrument previously ignored — n03 maps /Title to /H1 six times, n22 maps /Shape and /Vector to /Figure, n05, n21 and n30 one element each. For Word sources, tables are counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product reading the document correctly and this instrument reading it wrongly."
+  },
+  {
+    "docId": "n05",
+    "field": "counts",
+    "kind": "instrument-defect",
+    "was": {
+      "pages": 578,
+      "headings": 94,
+      "tables": 17,
+      "lists": 175,
+      "figures": 43
+    },
+    "now": {
+      "pages": 578,
+      "headings": 95,
+      "tables": 17,
+      "lists": 175,
+      "figures": 43
+    },
+    "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type, and resolved one hop through the structure tree /RoleMap, which ISO 32000 requires a conforming reader to apply and this instrument previously ignored — n03 maps /Title to /H1 six times, n22 maps /Shape and /Vector to /Figure, n05, n21 and n30 one element each. For Word sources, tables are counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product reading the document correctly and this instrument reading it wrongly."
+  },
+  {
+    "docId": "n21",
+    "field": "counts",
+    "kind": "instrument-defect",
+    "was": {
+      "pages": 9,
+      "headings": 4,
+      "tables": 2,
+      "lists": 16,
+      "figures": 5
+    },
+    "now": {
+      "pages": 9,
+      "headings": 5,
+      "tables": 2,
+      "lists": 16,
+      "figures": 5
+    },
+    "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type, and resolved one hop through the structure tree /RoleMap, which ISO 32000 requires a conforming reader to apply and this instrument previously ignored — n03 maps /Title to /H1 six times, n22 maps /Shape and /Vector to /Figure, n05, n21 and n30 one element each. For Word sources, tables are counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product reading the document correctly and this instrument reading it wrongly."
+  },
+  {
+    "docId": "n22",
+    "field": "counts",
+    "kind": "instrument-defect",
+    "was": {
+      "pages": 2,
+      "headings": 0,
+      "tables": 0,
+      "lists": 0,
+      "figures": 0
+    },
+    "now": {
+      "pages": 2,
+      "headings": 0,
+      "tables": 0,
+      "lists": 0,
+      "figures": 2
+    },
+    "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type, and resolved one hop through the structure tree /RoleMap, which ISO 32000 requires a conforming reader to apply and this instrument previously ignored — n03 maps /Title to /H1 six times, n22 maps /Shape and /Vector to /Figure, n05, n21 and n30 one element each. For Word sources, tables are counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product reading the document correctly and this instrument reading it wrongly."
+  },
+  {
+    "docId": "n22",
+    "field": "needs",
+    "kind": "instrument-defect",
+    "was": [
+      "3.1.1",
+      "1.3.1",
+      "4.1.2"
+    ],
+    "now": [
+      "3.1.1",
+      "1.3.1",
+      "4.1.2",
+      "1.1.1",
+      "1.1.1"
+    ],
+    "evidence": "qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first pass could not see."
+  },
+  {
+    "docId": "n30",
+    "field": "counts",
+    "kind": "instrument-defect",
+    "was": {
+      "pages": 4,
+      "headings": 0,
+      "tables": 0,
+      "lists": 1,
+      "figures": 17
+    },
+    "now": {
+      "pages": 4,
+      "headings": 0,
+      "tables": 0,
+      "lists": 1,
+      "figures": 18
+    },
+    "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type, and resolved one hop through the structure tree /RoleMap, which ISO 32000 requires a conforming reader to apply and this instrument previously ignored — n03 maps /Title to /H1 six times, n22 maps /Shape and /Vector to /Figure, n05, n21 and n30 one element each. For Word sources, tables are counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product reading the document correctly and this instrument reading it wrongly."
+  },
+  {
+    "docId": "n30",
+    "field": "needs",
+    "kind": "instrument-defect",
+    "was": [
+      "3.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1"
+    ],
+    "now": [
+      "3.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1",
+      "1.1.1"
+    ],
+    "evidence": "qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first pass could not see."
+  },
+  {
+    "docId": "n42",
+    "field": "counts",
+    "kind": "instrument-defect",
+    "was": {
+      "pages": null,
+      "headings": 0,
+      "tables": 0,
+      "lists": null,
+      "figures": 0
+    },
+    "now": {
+      "pages": null,
+      "headings": 0,
+      "tables": 1,
+      "lists": null,
+      "figures": 0
+    },
+    "evidence": "qpdf: structure elements counted by shape (/S with a parent, excluding action subtypes) rather than by the optional /Type, and resolved one hop through the structure tree /RoleMap, which ISO 32000 requires a conforming reader to apply and this instrument previously ignored — n03 maps /Title to /H1 six times, n22 maps /Shape and /Vector to /Figure, n05, n21 and n30 one element each. For Word sources, tables are counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product reading the document correctly and this instrument reading it wrongly."
   }
 ]
