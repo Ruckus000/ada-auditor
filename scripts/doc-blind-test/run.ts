@@ -60,6 +60,51 @@ function documentPath(key: DocKey): string {
 }
 
 /**
+ * The filename a real document is POSTED under: the basename of its harvest
+ * URL, from the tracked provenance manifests.
+ *
+ * The corpus stores real bytes as generated ids so a name can never leak a
+ * hint — that stays. But the id also matches the product's own junk-filename
+ * table, so the title chain's filename rung had never once fired on a real
+ * document, and 22 of the 23 documents failing 7.1-9 were failing a clause
+ * their production upload would not have failed. See
+ * docs/research/document-remediation/title-gap-is-the-corpus.md and the
+ * registered predictions in real-filenames-predictions.md.
+ *
+ * Basename derivation matches title-from-real-filenames.mts — last path
+ * segment, query stripped, percent-decoded — which is what a browser download
+ * and an operator upload both produce. Planted rows keep their own names: those
+ * are part of their design. A real row with no manifest entry falls back to its
+ * id, exactly the old behaviour.
+ */
+const realNames = (() => {
+  const names = new Map<string, string>();
+  for (const file of ['real-names.txt', 'new-names.txt']) {
+    const path = join(CORPUS, file);
+    if (!existsSync(path)) continue;
+    for (const line of readFileSync(path, 'utf8').split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed === '' || trimmed.startsWith('#')) continue;
+      const [local, url] = trimmed.split(/\s+/, 2);
+      if (!local || !url) continue;
+      let segment = '';
+      try {
+        segment = decodeURIComponent(url.split('?')[0].split('/').filter(Boolean).pop() ?? '');
+      } catch {
+        continue; // a malformed percent-escape names nothing
+      }
+      if (segment !== '') names.set(local, segment);
+    }
+  }
+  return names;
+})();
+
+function postedFilename(key: DocKey): string {
+  if (key.origin !== 'real') return key.file;
+  return realNames.get(key.file) ?? key.file;
+}
+
+/**
  * Nothing runs until the corpus is the corpus the keys were written against.
  *
  * A key edited after a disappointing run is the one failure mode a blind test
@@ -144,7 +189,7 @@ async function post(key: DocKey, bytes: Buffer): Promise<RunResult> {
     body = JSON.stringify({ file: 'a document, but not a form' });
   } else {
     const form = new FormData();
-    const file = new File([new Uint8Array(bytes)], key.file, { type: 'application/octet-stream' });
+    const file = new File([new Uint8Array(bytes)], postedFilename(key), { type: 'application/octet-stream' });
     if (request.field === 'document') form.set('document', file);
     else if (request.field === 'duplicate') {
       form.append('file', file);
