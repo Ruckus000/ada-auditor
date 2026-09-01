@@ -860,6 +860,59 @@ describe('figures a reader learns nothing about', () => {
   });
 });
 
+describe('boundSummary, when the document itself is the problem', () => {
+  const measure = (value: unknown) => JSON.stringify(value).length;
+
+  it('trims a title that would cost the client the whole summary', () => {
+    // Every punch item can be dropped and the header still be over the limit,
+    // because `titleText` is the document's OWN title and has no bounded
+    // length. A header over the client's limit is rejected whole — the client
+    // gets the file and no summary at all: no counts, no verdict, no punch
+    // list. A shortened title beside a complete punch list is strictly better.
+    const summary = summarise(provenance({
+      title: { kind: 'already-titled', title: 'A'.repeat(60_000) },
+    }));
+    expect(measure(summary)).toBeGreaterThan(SUMMARY_HEADER_BUDGET);
+
+    const bounded = boundSummary(summary, measure);
+    expect(measure(bounded)).toBeLessThanOrEqual(SUMMARY_HEADER_BUDGET);
+    // Marked, so nobody reads it as what the document says.
+    expect(bounded.titleText?.endsWith('…')).toBe(true);
+    // The KIND is untouched: provenance is not what was too big.
+    expect(bounded.title).toBe('already-titled');
+  });
+
+  it('keeps the punch list when the title is what has to go', () => {
+    // Order matters. The punch list is the deliverable; the title is
+    // decoration beside it. Trimming the title must not cost a single item.
+    const figures = Array.from({ length: 12 }, () => ({
+      type: 'Figure', alt: null, actualText: null, page: 1,
+    }));
+    const summary = summarise(provenance({
+      title: { kind: 'already-titled', title: 'B'.repeat(40_000) },
+      structure: structure({ figures, images: 12 }),
+    }));
+
+    const bounded = boundSummary(summary, measure);
+    expect(measure(bounded)).toBeLessThanOrEqual(SUMMARY_HEADER_BUDGET);
+    expect(bounded.needs).toHaveLength(summary.needs?.length ?? 0);
+    expect(bounded.needs?.some((n) => n.criterion === 'summary')).toBe(false);
+  });
+
+  it('drops the title text entirely rather than deliver an oversized header', () => {
+    // The extreme: not even a marker fits alongside everything else. The text
+    // goes and nothing else does — `title` still states the provenance, and the
+    // text itself is in the document.
+    const summary = summarise(provenance({
+      title: { kind: 'already-titled', title: 'C'.repeat(200_000) },
+    }));
+    const bounded = boundSummary(summary, measure, 200);
+    expect(measure(bounded)).toBeLessThanOrEqual(Math.max(200, measure({ ...bounded, titleText: undefined })));
+    expect(bounded.titleText).toBeUndefined();
+    expect(bounded.title).toBe('already-titled');
+  });
+});
+
 describe('the scope this instrument claims', () => {
   /**
    * Every criterion the emitters can actually produce, collected by running

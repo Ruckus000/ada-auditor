@@ -459,6 +459,27 @@ Read this before claiming something works.
   clauses silent and buy nothing a reader can see. When an item's TEXT is what
   is wrong, change the text.
 
+- **The four ways of not earning the identifier are now tested, and the title
+  is trimmed before any punch item is.** `earnUaIdentifier` had NO fast-suite
+  coverage at all — the function whose silent bail-out once took conformant
+  deliveries from 19 to 0 while the corpus reported every promise held. All
+  four are covered now, and each was checked against a deliberately broken
+  gate: two of them passed at first because a later bail-out masked the one
+  under test, which is worth knowing when writing the next one.
+
+  `boundSummary` bounded `needs` only. `titleText` is the document's OWN title
+  and has no bounded length, so it could take the header over the client's
+  limit after every punch item had already been dropped — and an oversized
+  header is rejected whole, leaving the client the file and NO summary: no
+  counts, no verdict, no punch list. The title is now trimmed **first**, before
+  a single item goes, because the punch list is the deliverable and the title is
+  decoration beside it. A first attempt trimmed it last and cost a client an
+  item to save a title; the test that caught that is in the file.
+
+  And the operator console kept its own hand-written copy of the summary type,
+  a contract in two places by hope — already behind (no `contrast`). It imports
+  `RemediationSummary` now, so the shape moves with its producer.
+
 - **The XMP packet is REBUILT, so anything not written again is gone.**
   `Finish` calls `setMetadata` with a packet it constructs, which replaces
   whatever the document declared. `[V]` Of 52 real PDFs in the blind corpus, 46

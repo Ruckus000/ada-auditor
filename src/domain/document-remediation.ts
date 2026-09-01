@@ -192,6 +192,39 @@ export function boundSummary(
 ): RemediationSummary {
   if (measure(summary) <= budget) return summary;
 
+  // The title goes before any punch item does.
+  //
+  // Everything in a summary is either computed by us and small — counts, gaps
+  // (one string per criterion), a clause list bounded by what UA-1 defines —
+  // or it is `titleText`, which is the document's OWN title: content we
+  // transcribed, of no bounded length. The corpus's longest is 159 characters;
+  // a `/Title` holding a paragraph is a document we have not met yet.
+  //
+  // Order is the whole point. The punch list is the deliverable and the title
+  // is decoration beside it, so an oversized title must never cost a client a
+  // single item — which is exactly what happened when this trimmed last. And
+  // the failure it prevents is total: a header over the client's limit is
+  // rejected whole, and they get the FILE with no summary at all — no counts,
+  // no verdict, no punch list.
+  //
+  // The marker means nobody mistakes the result for what the document says.
+  if (typeof summary.titleText === 'string') {
+    let title = summary.titleText;
+    while (title.length > 0 && measure({ ...summary, titleText: `${title}…` }) > budget) {
+      title = title.slice(0, Math.floor(title.length * 0.8));
+    }
+    if (title.length !== summary.titleText.length) {
+      // Dropped entirely if not even a marker fits. `title` still states the
+      // KIND — already-titled, transcribed — so no provenance is lost; only the
+      // text goes, and the text is in the document.
+      const { titleText: _too_long, ...withoutTitle } = summary;
+      const trimmed: RemediationSummary =
+        title.length === 0 ? withoutTitle : { ...summary, titleText: `${title}…` };
+      if (measure(trimmed) <= budget) return trimmed;
+      summary = trimmed;
+    }
+  }
+
   const all = summary.needs ?? [];
   const omittedItem = (n: number, anyShown: boolean) => ({
     // No criterion of its own: this is a statement about the list, not a
