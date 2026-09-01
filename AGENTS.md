@@ -816,6 +816,23 @@ Read this before claiming something works.
   instead: `experiments/document-remediation/title-from-real-filenames.mts`.
   See `docs/research/document-remediation/title-gap-is-the-corpus.md`.
 
+- **`isTagged` is a floor of one, and whether that is right is UNMEASURED.** A
+  non-empty structure tree makes a PDF repairable. `[V]` Nineteen delivered
+  documents fail `7.1-3`, and the counts split into two shapes the clause hides:
+  90 and 121 untagged runs on some documents, 2,407 and 7,928 on others — the
+  largest against 32,399 untagged text runs in the same file. Such a document
+  has a decorative tree, and we accept it, repair it and deliver something that
+  can never conform. An attempt to measure coverage as `order[].text` over
+  `textChars` **failed its own registered calibration** — the negative control
+  came in at 0.56 against a 0.80 gate, the two populations 0.07 apart, one
+  control document at 1.42 — and was discarded. Five documents did land below
+  0.25, which is the shape the hypothesis predicted and is NOT a finding: a
+  proxy that cannot separate the middle has not earned the tail. What would
+  answer it is MCID reachability in Java, over the per-page map `StructText`
+  already builds. Not built: `7.1-3` alone clears one document, and any change
+  to the gate REFUSES documents we currently deliver, which is a person's
+  decision. See `docs/research/document-remediation/tree-coverage-declined.md`.
+
 - **A link description read from the URI covers half the links in a real
   document, and the half it misses is the table of contents.** `Finish` has
   described `/Link` annotations since the annotation work, transcribing the
