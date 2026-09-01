@@ -534,6 +534,26 @@ Read this before claiming something works.
   false on both lanes; fixing it means distinguishing "declared nothing" from
   "declared junk" in the summary contract.
 
+- **`counts.headings` on a Word row is a FIDELITY expectation, not the category
+  error the levels are.** The comment forbidding source-predicts-output in
+  `author-real-keys.mjs` is attached to heading LEVELS, and it is right about
+  them: whether r28's H1/H1/H3 skip survives depends on what the exporter does
+  with the heading that made it. The COUNT is a different claim — carrying an
+  author's headings across is the conversion's whole job — and it is graded
+  asymmetrically for exactly that reason: **more** than the source had is
+  `invented-structure` and fatal, the corpus's only guard against the converter
+  fabricating structure; **fewer** is a non-fatal note. Do not delete the check
+  to silence the notes.
+
+  **The two standing notes are NOT explained.** `second-corpus-results.md` says
+  r28 (key 13, delivered 12) and r32 (key 5, delivered 4) are headings lost in
+  conversion. A crude re-read of the sources counts 11 and 4 — so on r32 the
+  source and the delivery agree with each other and not with the key, which is
+  not "a heading was lost". That re-read is a throwaway script and settles
+  nothing; what it establishes is that the recorded explanation was never
+  verified. Open, and to be answered with the key author rather than another
+  quick probe.
+
 - **A partial structure collapse has no guard, and that is a measured choice.**
   `convert.ts` refuses only `structureElements === 0`, so a half-lost structure
   tree would ship. `[V]` Across 148 documents the delivered heading counts track

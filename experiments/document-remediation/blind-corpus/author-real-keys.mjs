@@ -476,6 +476,31 @@ function readDocx(path) {
     // and this is where it stops.
     headingLevelsAreSourceOnly: true,
     counts: {
+      // The COUNT is not the same claim as the LEVELS above, and the comment
+      // there does not reach it.
+      //
+      // A level SEQUENCE cannot be predicted from the source: r28's source runs
+      // H1, H1, H3, and whether that skip survives depends on what the exporter
+      // does with the heading that made it. A count is a different thing — a
+      // fidelity expectation, and one the product is supposed to meet, because
+      // carrying an author's headings across is the conversion's whole job.
+      //
+      // It is graded asymmetrically on purpose (`score.ts`): MORE headings than
+      // the source had is `invented-structure` and fatal, which is the corpus's
+      // only guard against the converter fabricating structure; FEWER is
+      // `counts-off` and a non-fatal note on a probe row, because a heading
+      // that does not survive is a finding to look at rather than a promise
+      // broken. Do not delete this check to silence those notes.
+      //
+      // UNRESOLVED: r28 (key 13, delivered 12) and r32 (key 5, delivered 4).
+      // `second-corpus-results.md` explained both as headings lost in
+      // conversion. A crude independent re-read of the sources disagrees —
+      // it counts 11 non-empty outline-levelled paragraphs for r28 and 4 for
+      // r32, so for r32 the source and the DELIVERY agree with each other and
+      // not with the key. That re-read is a throwaway script and the least
+      // reliable instrument involved, so it settles nothing; what it does show
+      // is that the recorded explanation has not been verified. Investigate
+      // with this file, not with another quick probe.
       headings: headingLevels.length,
       tables: (stories.match(/<w:tbl[ >]/g) ?? []).length,
       lists: null,
