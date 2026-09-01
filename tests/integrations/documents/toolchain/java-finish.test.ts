@@ -573,10 +573,15 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
    */
   function headingLadderPdf(levels: string[], mapVia?: string): Buffer {
     const stream = levels
-      .map((level, i) => `BT /F1 12 Tf 20 ${160 - i * 20} Td /${mapVia ?? level} <</MCID ${i}>> BDC (Item ${i + 1}) Tj EMC ET`)
+      .map((level, i) => {
+        const tag = mapVia === 'AWAY' ? level : (mapVia ?? level);
+        return `BT /F1 12 Tf 20 ${160 - i * 20} Td /${tag} <</MCID ${i}>> BDC (Item ${i + 1}) Tj EMC ET`;
+      })
       .join('\n');
     const kids = levels.map((_, i) => `${7 + i} 0 R`).join(' ');
-    const roleMap = mapVia ? ` /RoleMap << /${mapVia} /${levels[0]} >>` : '';
+    const roleMap = mapVia === 'AWAY'
+      ? ` /RoleMap << /${levels[levels.length - 1]} /P >>`
+      : mapVia ? ` /RoleMap << /${mapVia} /${levels[0]} >>` : '';
     const objs = [
       '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>',
       '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
@@ -590,7 +595,8 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     // object count readable and the walk under test is recursive either way.
     objs[5] = `<< /Type /StructTreeRoot /K [${kids}]${roleMap} >>`;
     levels.forEach((level, i) => {
-      objs.push(`<< /Type /StructElem /S /${mapVia ?? level} /P 6 0 R /Pg 3 0 R /K ${i} >>`);
+      const s = mapVia === 'AWAY' ? level : (mapVia ?? level);
+      objs.push(`<< /Type /StructElem /S /${s} /P 6 0 R /Pg 3 0 R /K ${i} >>`);
     });
 
     let out = '%PDF-1.7\n';
@@ -654,6 +660,24 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     const keys = await pdfKeys(out);
     expect(keys).toContain('/Kop2');
     expect(keys).not.toContain('/H1');
+  });
+
+  it('refuses to renumber when the RoleMap resolves a heading AWAY', async () => {
+    // r34's shape, and the wave run's one invented claim: elements whose own
+    // /S is H-named while the RoleMap resolves them to P. Re-ranking H3 to H2
+    // — a name the map does not cover — MANUFACTURED six headings the reader
+    // never had, on a delivered document, invisibly to veraPDF because the
+    // invented ladder was valid. The whole remap is refused instead.
+    const source = join(dir, 'mapped-away.pdf');
+    await writeFile(source, headingLadderPdf(['H1', 'H3'], 'AWAY'));
+    const out = join(dir, 'mapped-away-finished.pdf');
+    expect((await finishDocument(
+      { inputPath: source, outputPath: out, language: 'en', renumberHeadings: true },
+    )).ok).toBe(true);
+
+    const keys = await pdfKeys(out);
+    expect(keys).toContain('/S /H3');
+    expect(keys).not.toContain('/S /H2');
   });
 
   /**

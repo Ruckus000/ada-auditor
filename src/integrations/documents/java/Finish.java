@@ -725,10 +725,23 @@ public final class Finish {
         }
         for (Object kid : node.getKids()) {
             if (kid instanceof PDStructureElement el) {
-                if (headingLevel(el.getStructureType()) > 0) {
-                    out.add(el);
-                } else if (headingLevel(el.getStandardStructureType()) > 0) {
-                    // Reached only via the RoleMap — the refusal case.
+                String raw = el.getStructureType();
+                String resolved = el.getStandardStructureType();
+                if (headingLevel(raw) > 0) {
+                    if (raw.equals(resolved)) {
+                        out.add(el);
+                    } else {
+                        // An H-named element the RoleMap resolves to something
+                        // ELSE — a real document maps H1 and H3 to P. Re-ranking
+                        // its /S can land on a level the map does not cover,
+                        // which MANUFACTURES a heading the reader never had.
+                        // `[V]` The blind corpus caught exactly that: six
+                        // invented headings on one delivered document, invisible
+                        // to veraPDF because the invented ladder was valid.
+                        roleMapped[0] = true;
+                    }
+                } else if (headingLevel(resolved) > 0) {
+                    // The mirror case: reached only via the RoleMap.
                     roleMapped[0] = true;
                 }
             }
