@@ -1014,10 +1014,11 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
       // if it is decorative, the mechanism is the artifact, and if the word
       // was stamped on in bulk to clear a checker, a person still looks.
       //
-      // `[V]` Three bytes SHORTER than the item it replaces — 303 across the
-      // 101 of them on one real document, which roughly doubles that
-      // document's ~283 bytes of headroom rather than eating it. Correcting
-      // an instruction is not a licence to spend the budget; see the
+      // `[V]` Three bytes SHORTER than the item it replaces. Measured on the
+      // worst real document, with `asciiJson` — the function that actually
+      // bounds the header — rather than a reimplementation of it: 101 items,
+      // 13,382 -> 13,079, so headroom goes 618 -> 921. Correcting an
+      // instruction is not a licence to spend the budget; see the
       // header-budget note above.
       needs.push({
         criterion: '1.1.1',
