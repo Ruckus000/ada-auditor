@@ -178,10 +178,23 @@ export async function remediateWordBytes(
 
     const result = await convertSourceToPdf(source, output, options);
     if (!result.ok) {
-      logWarn('document_remediation_failed', { requestId, failure: result.failure.kind });
+      // The STEP, not just the kind. `converter-failed` covers everything from
+      // "LibreOffice could not open this file" to "our own Finish stage refused
+      // the language tag it read", and an operator holding only the kind cannot
+      // tell a broken document from a broken pipeline — the remedies are
+      // opposite. The step is already on the failure; it was being dropped.
+      //
+      // Still a fixed vocabulary of our own words: `step` is a literal from
+      // `convertSourceToPdf`, never anything the document said.
+      const step = 'step' in result.failure ? result.failure.step : undefined;
+      logWarn('document_remediation_failed', { requestId, failure: result.failure.kind, step });
       return {
         ok: false,
-        refusal: { status: 422, error: 'remediation_failed', detail: result.failure.kind },
+        refusal: {
+          status: 422,
+          error: 'remediation_failed',
+          detail: step === undefined ? result.failure.kind : `${result.failure.kind}/${step}`,
+        },
       };
     }
 

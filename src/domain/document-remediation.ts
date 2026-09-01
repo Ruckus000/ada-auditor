@@ -192,6 +192,39 @@ export function boundSummary(
 ): RemediationSummary {
   if (measure(summary) <= budget) return summary;
 
+  // The title goes before any punch item does.
+  //
+  // Everything in a summary is either computed by us and small — counts, gaps
+  // (one string per criterion), a clause list bounded by what UA-1 defines —
+  // or it is `titleText`, which is the document's OWN title: content we
+  // transcribed, of no bounded length. The corpus's longest is 159 characters;
+  // a `/Title` holding a paragraph is a document we have not met yet.
+  //
+  // Order is the whole point. The punch list is the deliverable and the title
+  // is decoration beside it, so an oversized title must never cost a client a
+  // single item — which is exactly what happened when this trimmed last. And
+  // the failure it prevents is total: a header over the client's limit is
+  // rejected whole, and they get the FILE with no summary at all — no counts,
+  // no verdict, no punch list.
+  //
+  // The marker means nobody mistakes the result for what the document says.
+  if (typeof summary.titleText === 'string') {
+    let title = summary.titleText;
+    while (title.length > 0 && measure({ ...summary, titleText: `${title}…` }) > budget) {
+      title = title.slice(0, Math.floor(title.length * 0.8));
+    }
+    if (title.length !== summary.titleText.length) {
+      // Dropped entirely if not even a marker fits. `title` still states the
+      // KIND — already-titled, transcribed — so no provenance is lost; only the
+      // text goes, and the text is in the document.
+      const { titleText: _too_long, ...withoutTitle } = summary;
+      const trimmed: RemediationSummary =
+        title.length === 0 ? withoutTitle : { ...summary, titleText: `${title}…` };
+      if (measure(trimmed) <= budget) return trimmed;
+      summary = trimmed;
+    }
+  }
+
   const all = summary.needs ?? [];
   const omittedItem = (n: number, anyShown: boolean) => ({
     // No criterion of its own: this is a statement about the list, not a
@@ -368,7 +401,17 @@ export function withContrast(
   summary: RemediationSummary,
   contrast: ContrastReading,
 ): RemediationSummary {
-  const out: RemediationSummary = { ...summary, contrast };
+  const out: RemediationSummary = {
+    ...summary,
+    contrast,
+    // The pass ran, so `1.4.3` joins what this reading claims to have looked at.
+    // Absent scope stays absent: a reading stored before the field existed
+    // cannot say what it looked for, and inventing one here would render as
+    // full coverage on every surface.
+    ...(summary.scope === undefined
+      ? {}
+      : { scope: scopeOf(new Set([...summary.scope.criteria, MEASURED_BY_A_SEPARATE_STAGE])) }),
+  };
   const items: Array<{ criterion: string; item: string }> = [];
   const gapParts: string[] = [];
 
@@ -428,6 +471,24 @@ export function withConformance(
   }
 
   const items: Array<{ criterion: string; item: string }> = [];
+  // `7.21.4` is a FAMILY, and its two members say opposite things about the
+  // document. `7.21.4.1` is a font that was never embedded — there is no font
+  // data, and the fix is the source. `7.21.4.2` is an embedded font whose
+  // CIDSet does not list every character used — the font IS there.
+  //
+  // Matching the family prefix and printing the embedding sentence told 13
+  // documents in the blind corpus, whose only font failure is `7.21.4.2-2`,
+  // that "the fonts were never embedded by whatever produced this PDF" and
+  // sent them to re-export a source to fix a problem they do not have. A false
+  // statement about a client's document, and work that would not have helped.
+  //
+  // The CRITERION label stays `PDF/UA 7.21.4` for both. It names the family
+  // the clause belongs to, `score.ts` accounts for the clause by that family,
+  // and the keys carry `mustVoice: ["7.21.4"]` — splitting the label would
+  // turn every one of these clauses silent and buy nothing a reader can see.
+  // What a reader sees is the item text, and that is what was wrong.
+  const notEmbedded = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4.1'));
+  const cidSet = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4.2'));
   const fonts = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4'));
   const untagged = conformance.failingClauses.filter((clause) => clause.startsWith('7.1-3'));
   const identifier = conformance.failingClauses.filter((clause) => clause.startsWith('5-1'));
@@ -439,10 +500,28 @@ export function withConformance(
       !alreadyVoiced(clause, summary),
   );
 
-  if (fonts.length > 0) {
+  if (notEmbedded.length > 0) {
     items.push({
       criterion: 'PDF/UA 7.21.4',
       item: 'the fonts were never embedded by whatever produced this PDF — supply the Word source it was exported from, or re-export it with fonts embedded',
+    });
+  }
+  if (cidSet.length > 0) {
+    items.push({
+      criterion: 'PDF/UA 7.21.4',
+      item: "an embedded font's character-set table (CIDSet) does not list every character the document uses — the fonts themselves ARE embedded, so re-exporting from the source with fonts fully embedded is what resolves this",
+    });
+  }
+  // A member of the family that is neither: voiced by id rather than described,
+  // so a clause this vocabulary has never seen cannot reach a client in
+  // silence just because its family is known.
+  const otherFonts = fonts.filter(
+    (clause) => !clause.startsWith('7.21.4.1') && !clause.startsWith('7.21.4.2'),
+  );
+  if (otherFonts.length > 0) {
+    items.push({
+      criterion: 'PDF/UA 7.21.4',
+      item: `${otherFonts.length} further font check${otherFonts.length === 1 ? '' : 's'} fail (${otherFonts.join(', ')}) — a person must review`,
     });
   }
   if (untagged.length > 0) {
@@ -605,6 +684,33 @@ export function withConformance(
  */
 export const CHECKED_CRITERIA = ['1.1.1', '1.3.1', '1.4.3', '2.4.2', '2.4.10', '3.1.1', '4.1.2'] as const;
 
+/**
+ * The one criterion in `CHECKED_CRITERIA` that no reading can claim on its own.
+ *
+ * Every other criterion is decided by `gapsIn`/`needsIn` from the structure
+ * `Inspect` returned, so if there is a summary at all, they were evaluated.
+ * `1.4.3` is different: it comes from a SEPARATE STAGE that may not run — a
+ * host without the contrast jar, a JVM that dies, a page geometry the sampler
+ * abstains on — and `withMeasuredContrast` deliberately never refuses over it.
+ *
+ * So `summarise` cannot claim it, and `withContrast` adds it when the pass
+ * actually produced a reading. The bug this closes: `scope` was the whole
+ * constant unconditionally, so a delivery whose contrast stage failed told the
+ * client "Checked here: WCAG ... 1.4.3 ..." while the `contrast` field beside
+ * it was absent and every surface rendered that absence as "not checked". The
+ * inspect-only path never runs contrast at all and claimed it on every reading.
+ *
+ * This is the same overstatement `checker: 'none'` and the optional `contrast`
+ * field already exist to prevent, reintroduced through the field that was added
+ * to state the instrument's limits.
+ */
+const MEASURED_BY_A_SEPARATE_STAGE = '1.4.3';
+
+/** `CHECKED_CRITERIA` order, kept canonical however a scope was assembled. */
+function scopeOf(claimed: ReadonlySet<string>): { criteria: string[] } {
+  return { criteria: CHECKED_CRITERIA.filter((criterion) => claimed.has(criterion)) };
+}
+
 export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string }> = [
   // 1.4.3 moved to CHECKED when `Contrast` graduated. 1.4.1 did NOT move with
   // it and must not be assumed to have: the same fee schedule that fails
@@ -617,6 +723,28 @@ export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string 
   // tagged magazine looks broken to it — and the exemptions needed to quiet
   // that would silently pass over a real defect at a section boundary.
   { number: '1.3.2', name: 'Meaningful Sequence' },
+  // Measured third, and refused for a DIFFERENT reason from the other two,
+  // which is worth keeping straight because it changes what would reopen it.
+  //
+  // A heading that is a sentence is a real barrier — one corpus document
+  // carries 49 of them, the longest 77 words, because its author outline-
+  // levelled body paragraphs. The signal is clean: the share of a document's
+  // headings that end in sentence punctuation, one comparison, no exemptions.
+  // At >= 30% it fires on exactly that document and nothing else, with no
+  // false positives anywhere in 118 delivered documents.
+  //
+  // It is refused because it fires ONCE. 1.4.1 was refused for imprecision (17
+  // documents to be right about 4) and 1.3.2 for being wrong (zero true
+  // positives); this one is refused for insufficient evidence. One document
+  // cannot distinguish a rule that works from a rule fitted to the document it
+  // was written against — and it was written knowing what that document looked
+  // like. Shipping it would claim we check something seen to work once.
+  //
+  // The threshold is measured and waiting in
+  // `experiments/document-remediation/prose-headings.mjs`. Two more documents
+  // above 30% in a later corpus and the registered criteria are met.
+  // See `docs/research/document-remediation/prose-headings-feasibility.md`.
+  { number: '2.4.6', name: 'Headings and Labels' },
 ];
 
 /**
@@ -746,7 +874,10 @@ export function summarise(provenance: ConversionProvenance): RemediationSummary 
     // reading the response header would otherwise get a gap list with no way to
     // know how narrow it is — the same shape of overstatement as a conformance
     // identifier written without a verdict behind it.
-    scope: { criteria: [...CHECKED_CRITERIA] },
+    //
+    // Everything this function's own two emitters can decide, and nothing else:
+    // `1.4.3` joins only in `withContrast`, when the pass that measures it ran.
+    scope: scopeOf(new Set(CHECKED_CRITERIA.filter((c) => c !== MEASURED_BY_A_SEPARATE_STAGE))),
   };
 }
 

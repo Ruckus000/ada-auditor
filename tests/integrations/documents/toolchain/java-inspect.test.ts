@@ -1,10 +1,12 @@
+import { execFile } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { inspectDocument } from '../../../../src/integrations/documents/inspect';
-import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
+import { PDFBOX_JAR, resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
 import { documentStructureSchema } from '../../../../src/domain/document-structure';
 import { renderPdf } from '../../../../src/integrations/browser/render-pdf';
 
@@ -122,6 +124,48 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
     const result = await inspectDocument(pdfPath);
     if (!result.ok) expect.unreachable('could not read the generated document');
     else expect(result.value.signed).toBe(false);
+  });
+
+  /**
+   * Encryption, from the tool that is already a precondition of this suite.
+   *
+   * PDFBox's own CLI ships in the same jar `Inspect` runs against, so the
+   * fixture costs no new dependency and no committed binary — and the
+   * encryption is produced by a third party rather than by the code under
+   * test.
+   *
+   * An EMPTY user password with an owner password is the shape that matters:
+   * the document opens and inspects completely without anyone supplying
+   * anything, so every other field in the reading looks ordinary. It is the
+   * municipal case — restricting printing, not reading.
+   */
+  it('sees an encryption dictionary, so repair can refuse by name', async () => {
+    const encrypted = join(dir, 'encrypted.pdf');
+    // Narrowing, not a second skip: `describe.skipIf` already guarantees this.
+    if (!runtime.available) return expect.unreachable('the suite runs only with a runtime');
+    await promisify(execFile)(runtime.javaBin, [
+      '-jar', join(process.cwd(), PDFBOX_JAR),
+      'encrypt', '-i', pdfPath, '-o', encrypted, '-O=owner', '-U=', '-canPrint=false',
+    ]);
+
+    const result = await inspectDocument(encrypted);
+    if (!result.ok) expect.unreachable(`could not read the encrypted fixture: ${JSON.stringify(result.failure)}`);
+    else {
+      expect(result.value.encrypted).toBe(true);
+      // The point of the field: nothing ELSE in the reading says it is locked.
+      // No password was supplied and the document read completely — pages,
+      // text and all — so every other signal looks like an ordinary document
+      // right up until `Finish` cannot write it back.
+      expect(result.value.signed).toBe(false);
+      expect(result.value.pages).toBeGreaterThan(0);
+      expect(result.value.textChars).toBeGreaterThan(0);
+    }
+  });
+
+  it('reports an ordinary document as unencrypted', async () => {
+    const result = await inspectDocument(pdfPath);
+    if (!result.ok) expect.unreachable('could not read the generated document');
+    else expect(result.value.encrypted).toBe(false);
   });
 
   /**

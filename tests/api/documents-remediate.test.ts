@@ -38,6 +38,9 @@ vi.mock('../../src/integrations/documents/java-runtime', () => ({
       : { available: false, reason: 'no Java runtime found' },
 }));
 
+const { checkUa1 } = vi.hoisted(() => ({ checkUa1: vi.fn() }));
+vi.mock('../../src/integrations/documents/verapdf', () => ({ checkUa1 }));
+
 const authorized = vi.hoisted(() => ({ ok: true }));
 vi.mock('../../src/app/api/_lib/authorize', () => ({
   authorizePrincipal: async () => (authorized.ok ? { kind: 'machine', name: 'CI' } : null),
@@ -76,6 +79,7 @@ function conversionSucceeds() {
         structure: documentStructureSchema.parse({
           marked: true,
           signed: false,
+          encrypted: false,
           annotationsNotInStructure: 0,
           formFields: 0,
           formFieldsWithoutName: 0,
@@ -112,6 +116,7 @@ function repairReads(over: Record<string, unknown> = {}) {
   const reading = documentStructureSchema.parse({
     marked: true,
     signed: false,
+    encrypted: false,
     annotationsNotInStructure: 0,
     formFields: 0,
     formFieldsWithoutName: 0,
@@ -138,6 +143,157 @@ function repairReads(over: Record<string, unknown> = {}) {
   });
   return reading;
 }
+
+/**
+ * The identifier is EARNED, and every way of failing to earn it is safe.
+ *
+ * `earnUaIdentifier` finishes the document a second time with the PDF/UA
+ * identifier claimed, proves the second pass moved no content, and re-checks
+ * it. Any of those can fail, and each failure keeps the honest unstamped file
+ * and the verdict that describes it.
+ *
+ * None of this was covered. `AGENTS.md` records what that cost: gating the
+ * identifier once took conformant deliveries from 19 to 0 — the product could
+ * not certify ANY document — and the blind corpus still reported every promise
+ * held, because no answer key claimed a document should come back conformant.
+ * These are the four bail-outs that silence would hide again.
+ */
+describe('earning the PDF/UA identifier', () => {
+  /** The honest file: conformant except for the identifier it has not claimed. */
+  const ONLY_IDENTIFIER = {
+    checker: 'verapdf-ua1' as const,
+    compliant: false as const,
+    failingClauses: ['5-1'],
+  };
+
+  beforeEach(() => {
+    convertSourceToPdf.mockReset();
+    checkUa1.mockReset();
+    runtimes.soffice = true;
+    runtimes.java = true;
+    authorized.ok = true;
+  });
+
+  async function deliver() {
+    const response = await POST(upload(pdfBytes(), 'notice.pdf'));
+    return {
+      response,
+      summary: JSON.parse(response.headers.get('x-remediation-summary') ?? '{}'),
+    };
+  }
+
+  it('stamps the file when the second pass earns it', async () => {
+    repairReads();
+    checkUa1
+      .mockResolvedValueOnce(ONLY_IDENTIFIER)
+      .mockResolvedValue({ checker: 'verapdf-ua1', compliant: true });
+
+    const { response, summary } = await deliver();
+    expect(response.status).toBe(200);
+    expect(summary.conformance).toEqual({ checker: 'verapdf-ua1', compliant: true });
+  });
+
+  it('keeps the honest file when the stamping pass fails', async () => {
+    repairReads();
+    // The first Finish writes the deliverable; the second — the stamped one —
+    // fails. The document must still be delivered, uncertified.
+    let calls = 0;
+    finishDocument.mockImplementation(async (request: { outputPath: string }) => {
+      calls += 1;
+      if (calls === 2) return { ok: false, failure: { kind: 'failed', exitCode: 1 } };
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(request.outputPath, Buffer.from('%PDF-1.7 repaired'));
+      return { ok: true };
+    });
+    checkUa1.mockResolvedValue(ONLY_IDENTIFIER);
+
+    const { response, summary } = await deliver();
+    expect(response.status).toBe(200);
+    expect(summary.conformance).toEqual(ONLY_IDENTIFIER);
+  });
+
+  /**
+   * The repair reads the document THREE times: the source, the repaired file
+   * (which its own `contentChanges` gate compares against the source), and —
+   * only if the identifier is the single failing clause — the stamped file.
+   * A test that disturbs read 2 trips the repair's gate and never reaches the
+   * one under test here, which is read 3.
+   */
+  function stagedReadIs(result: unknown, reading: unknown) {
+    let reads = 0;
+    inspectDocument.mockImplementation(async () => {
+      reads += 1;
+      return reads >= 3 ? result : { ok: true, value: reading };
+    });
+  }
+
+  it('keeps the honest file when the stamped pass moved content', async () => {
+    const reading = repairReads();
+    // The stamped file reads back saying something else. A certificate is worth
+    // nothing on a document that no longer says what it said.
+    stagedReadIs(
+      { ok: true, value: { ...reading, headings: ['H1', 'H2'], headingTexts: [] } },
+      reading,
+    );
+    // The re-check SUCCEEDS, so the fidelity gate is the only thing that can
+    // stop this. Otherwise a broken gate is masked by the next bail-out and
+    // the test proves nothing.
+    checkUa1
+      .mockResolvedValueOnce(ONLY_IDENTIFIER)
+      .mockResolvedValue({ checker: 'verapdf-ua1', compliant: true });
+
+    const { response, summary } = await deliver();
+    expect(response.status).toBe(200);
+    expect(summary.conformance).toEqual(ONLY_IDENTIFIER);
+  });
+
+  it('keeps the honest file when the stamped file cannot be read back', async () => {
+    const reading = repairReads();
+    // Unreadable is not "unchanged". A stamp that cannot be verified is not one
+    // this product will ship.
+    stagedReadIs({ ok: false, failure: { kind: 'invalid-output', detail: 'nope' } }, reading);
+    checkUa1
+      .mockResolvedValueOnce(ONLY_IDENTIFIER)
+      .mockResolvedValue({ checker: 'verapdf-ua1', compliant: true });
+
+    const { response, summary } = await deliver();
+    expect(response.status).toBe(200);
+    expect(summary.conformance).toEqual(ONLY_IDENTIFIER);
+  });
+
+  it('keeps the honest file when the identifier did not actually help', async () => {
+    // The stamp was written and the document STILL does not conform. Reporting
+    // the pre-stamp verdict is the only honest answer, and the file that ships
+    // is the one that verdict describes.
+    repairReads();
+    checkUa1
+      .mockResolvedValueOnce(ONLY_IDENTIFIER)
+      .mockResolvedValue({
+        checker: 'verapdf-ua1',
+        compliant: false,
+        failingClauses: ['5-1', '7.1-3'],
+      });
+
+    const { response, summary } = await deliver();
+    expect(response.status).toBe(200);
+    expect(summary.conformance).toEqual(ONLY_IDENTIFIER);
+  });
+
+  it('never attempts a stamp when more than the identifier is failing', async () => {
+    repairReads();
+    checkUa1.mockResolvedValue({
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['5-1', '7.21.4.1-1'],
+    });
+
+    const { summary } = await deliver();
+    // One check only: the second would mean a stamp was attempted on a document
+    // the identifier could not rescue.
+    expect(checkUa1).toHaveBeenCalledTimes(1);
+    expect(summary.conformance.compliant).toBe(false);
+  });
+});
 
 describe('POST /api/documents/remediate', () => {
   beforeEach(() => {
@@ -377,6 +533,7 @@ describe('POST /api/documents/remediate', () => {
           structure: documentStructureSchema.parse({
             marked: true,
             signed: false,
+            encrypted: false,
             annotationsNotInStructure: 0,
             formFields: 0,
             formFieldsWithoutName: 0,

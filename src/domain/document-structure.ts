@@ -109,6 +109,18 @@ export const documentStructureSchema = z.object({
    */
   signed: z.boolean(),
   /**
+   * Whether the document carries an encryption dictionary.
+   *
+   * A PDF encrypted with an empty user password and an owner password — the
+   * common municipal shape, where the point is restricting printing rather
+   * than reading — opens and inspects completely, so nothing else in this
+   * reading says it is locked. `Finish` cannot write it back: PDFBox refuses
+   * to save a document holding an encryption dictionary. The repair therefore
+   * already fails safely, and this field exists so the refusal can NAME the
+   * cause instead of surfacing a generic stage crash.
+   */
+  encrypted: z.boolean(),
+  /**
    * Widget and Link annotations with no `/StructParent` — form fields and
    * links that exist on the page and nowhere in the structure tree, so a
    * screen reader cannot reach them in reading order.
@@ -206,6 +218,35 @@ export function isTagged(structure: DocumentStructure): boolean {
 export const languageTagSchema = z
   .string()
   .regex(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/, 'expected a BCP-47 language tag such as `en` or `cy-GB`');
+
+/**
+ * The language a document declares — unless nobody could use it.
+ *
+ * `Finish` refuses a tag that is not BCP-47, and it is right to: writing
+ * `en US` into a delivered file states something false while passing every
+ * machine check there is. But a caller that hands the source's tag straight
+ * through makes ONE BAD METADATA FIELD cost the client the entire document.
+ *
+ * A tag nobody can resolve is, for a reader, the same situation as no tag:
+ * nothing usable is declared. So it is not carried forward, and the `3.1.1`
+ * item then says what it always says — name the language it is written in,
+ * because a language is never guessed. Clearing a claim we cannot stand behind
+ * is the move `/Lang` already established.
+ *
+ * `[V]` Found by the blind corpus on the REPAIR lane: two planted documents,
+ * one with `/Lang ()` and one with `/Lang (en US)`, were refused outright
+ * where every other unusable-metadata case becomes a task for a person.
+ *
+ * Lives here, beside the schema it asks, because both lanes need it: the
+ * conversion lane reads `w:lang w:val` out of an untrusted `.docx` and passed
+ * it through unvalidated, so a document declaring anything unparseable lost
+ * its whole conversion to `converter-failed` — the same defect the repair lane
+ * had already fixed, on the other side of the pipeline.
+ */
+export function languageToCarry(lang: string | null): string | null {
+  if (lang === null) return null;
+  return languageTagSchema.safeParse(lang).success ? lang : null;
+}
 
 /**
  * The fields that describe what the document *says*, as opposed to what it is

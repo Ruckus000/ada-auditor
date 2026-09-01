@@ -175,6 +175,60 @@ describe('deriveAltFromCaptions', () => {
     expect(deriveAltFromCaptions(input).derived).toBe(0);
   });
 
+  it('refuses a sentence that merely begins with a caption word', () => {
+    // `[V]` The false positive this closes: "Map of the district was
+    // circulated to members." is a sentence about a meeting, and it became an
+    // image's description. Worse than no description, because it also silences
+    // the 1.1.1 punch item that would have reported the figure as undescribed
+    // — so nobody ever finds out it is wrong.
+    const prose = [
+      'Map of the district was circulated to members.',
+      'Maps of the district are available on request.',
+      'The committee agreed to proceed.',
+      'Figures were presented by the treasurer.',
+      'Photographs may be requested from the clerk.',
+    ];
+    for (const text of prose) {
+      const input = `<text:p>${frame()}</text:p><text:p>${text}</text:p>`;
+      expect(deriveAltFromCaptions(input), text).toEqual({ xml: input, derived: 0 });
+    }
+  });
+
+  it('still transcribes the labelled shapes an author writes', () => {
+    // A number or letter ("Figure 3", "Exhibit A"), or a delimiter that marks a
+    // label ("Photo —", "Image:"). Both are the shape of something written to
+    // NAME a figure rather than to say something.
+    const captions = [
+      'Figure 3: the site plan',
+      'Figure 3 The site plan',
+      'Fig. 2 — Culvert inlet',
+      'Photo — the mayor at the opening',
+      'Exhibit A: schedule of fees',
+      'Map 4: district boundaries',
+      'Chart 1 Annual rainfall',
+      'Illustration B — cross-section',
+      'Image: front elevation',
+    ];
+    for (const text of captions) {
+      const input = `<text:p>${frame()}</text:p><text:p>${text}</text:p>`;
+      expect(deriveAltFromCaptions(input).derived, text).toBe(1);
+    }
+  });
+
+  it('transcribes only from the paragraph that immediately follows', () => {
+    // Adjacency was already strict and is worth pinning: a heading or a body
+    // paragraph in between means the caption-shaped text belongs to something
+    // else, and pairing across it would attach a description to the wrong
+    // image.
+    const separated = [
+      `<text:p>${frame()}</text:p><text:h>Section 2</text:h><text:p>Figure 3: the site plan</text:p>`,
+      `<text:p>${frame()}</text:p><text:p>Unrelated body text.</text:p><text:p>Figure 3: the site plan</text:p>`,
+    ];
+    for (const input of separated) {
+      expect(deriveAltFromCaptions(input).derived).toBe(0);
+    }
+  });
+
   it('escapes caption entities on the way in', () => {
     const { xml } = deriveAltFromCaptions(
       `<text:p>${frame()}</text:p><text:p>Figure 2: Roads &amp; Bridges</text:p>`,

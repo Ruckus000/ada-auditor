@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react';
 import { conformanceLine, scopeLine } from '../../../../services/presentation/document-verdict';
+import type { RemediationSummary } from '../../../../domain/document-remediation';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -34,25 +35,16 @@ import { FONT, T } from '../../lib/tokens';
  * lives. A screen that rephrased them would be a second copy free to drift.
  */
 
-type Summary = {
-  title: string;
-  titleText?: string;
-  sourceLanguage: string | null;
-  tagged: boolean;
-  pages: number;
-  headings: number;
-  tables: number;
-  lists: number;
-  figures: number;
-  gaps: string[];
-  needs?: Array<{ criterion: string; item: string }>;
-  conformance?:
-    | { checker: 'verapdf-ua1'; compliant: true }
-    | { checker: 'verapdf-ua1'; compliant: false; failingClauses: string[] }
-    | { checker: 'none'; reason: 'unavailable' };
-  /** Absent on readings taken before the instrument recorded its own scope. */
-  scope?: { criteria: string[] };
-};
+/**
+ * The summary the route sends, as the route's own vocabulary defines it.
+ *
+ * Imported rather than restated. This was a hand-maintained structural copy,
+ * which is a contract kept in two places by hope: it had already fallen behind
+ * (no `contrast`), and the only thing that would notice a field changing shape
+ * is a person reading both files. The parse below is still a cast, but what it
+ * casts TO now moves with the producer.
+ */
+type Summary = RemediationSummary;
 
 /** One inventory row, as the client-scoped GET returns it. */
 type ClientDocument = {

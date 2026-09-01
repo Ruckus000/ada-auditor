@@ -295,7 +295,14 @@ public final class Contrast extends PDFTextStripper {
                 // No sample of the measured text. The summary this feeds
                 // renders on a client's public report, and the run that proved
                 // the point printed a sentence off a real document.
+                // Locale.ROOT because this is JSON, not prose. A JVM whose
+                // default locale writes decimals with a comma -- every
+                // de_DE, fr_FR, pt_BR host -- turned 4.50 into 4,50 and
+                // emitted a ratio field that is not valid JSON. The stage then
+                // reads as unparseable and contrast is dropped from the whole
+                // delivery, on those hosts only.
                 findings.add(String.format(
+                    java.util.Locale.ROOT,
                     "{\"fg\":\"%s\",\"bg\":\"%s\",\"large\":%b,\"ratio\":%.2f,\"required\":%.1f,"
                     + "\"glyphs\":%d,\"page\":%d}",
                     p.fg(), p.bg(), p.large(), t.ratio, need, t.glyphs, p.page()));

@@ -1,4 +1,4 @@
-import { isTagged, languageTagSchema, type DocumentStructure } from '../domain/document-structure';
+import { isTagged, languageToCarry, type DocumentStructure } from '../domain/document-structure';
 import {
   isPlaceholderTitle,
   titleFromFilename,
@@ -36,7 +36,7 @@ import {
 
 /** Why a PDF cannot honestly be repaired, and what to do instead. */
 export type RepairRefusal = {
-  kind: 'not-tagged' | 'signed';
+  kind: 'not-tagged' | 'signed' | 'encrypted';
   /** Operator-facing, and true: what is in the way and what still works. */
   reason: string;
 };
@@ -92,6 +92,37 @@ export function planRepair(
     };
   }
 
+  if (structure.encrypted) {
+    // Refused because the repair CANNOT proceed, not because it would do harm.
+    //
+    // A PDF encrypted with an empty user password and an owner password — the
+    // common municipal shape, restricting printing rather than reading — opens
+    // and inspects completely. It looks like any other repairable document
+    // right up until `Finish` writes it, and PDFBox will not save a document
+    // holding an encryption dictionary.
+    //
+    // `[V]` Verified on the corpus's own encrypted fixture: `Inspect` reads it
+    // as tagged with a full structure tree, and `Finish` throws
+    // `IllegalStateException: PDF contains an encryption dictionary`. So this
+    // ALREADY fails safely and nothing wrong is delivered — the defect is that
+    // it fails as an unnamed stage crash, which an operator cannot tell apart
+    // from a corrupt file or a broken pipeline. Naming it is the whole change.
+    //
+    // Deliberately NOT removing the encryption to proceed: the restrictions
+    // are the document owner's decision, and stripping them to deliver a
+    // "repaired" file would be making that decision for them, invisibly.
+    // After `signed`, which must win when both are true — that refusal names
+    // the one thing repair could destroy.
+    return {
+      repairable: false,
+      refusal: {
+        kind: 'encrypted',
+        reason:
+          'this PDF is encrypted, and its restrictions cannot be rewritten or removed here — supply an unprotected copy, or the Word source it was exported from',
+      },
+    };
+  }
+
   if (!isTagged(structure)) {
     // The one thing repair cannot supply. Tagging an untagged PDF means
     // inferring reading order and heading levels from layout, which is the
@@ -114,31 +145,6 @@ export function planRepair(
   };
 }
 
-/**
- * The language the document declares — unless nobody could use it.
- *
- * `Finish` refuses a tag that is not BCP-47, and it is right to: writing
- * `en US` into a delivered file states something false while passing every
- * machine check there is. But this planner used to hand the source's tag
- * straight through, so a document whose own `/Lang` was empty or malformed
- * made the whole repair fail — `repair_failed: invalid-language` — and the
- * client got no remediation at all because of one bad metadata field.
- *
- * A tag nobody can resolve is, for a reader, the same situation as no tag:
- * nothing usable is declared. So it is not carried forward, and the 3.1.1
- * punch item then says what it always says — name the language it is written
- * in, because a language is never guessed. Clearing a claim we cannot stand
- * behind is the move `/Lang` already established and CIDSet removal was
- * argued from; the item is what keeps it from being silent.
- *
- * `[V]` Found by the blind corpus: two planted documents, one with `/Lang ()`
- * and one with `/Lang (en US)`, were refused outright where every other
- * unusable-metadata case becomes a task for a person.
- */
-function languageToCarry(lang: string | null): string | null {
-  if (lang === null) return null;
-  return languageTagSchema.safeParse(lang).success ? lang : null;
-}
 
 /**
  * The title chain, in the order the product already uses for Word.

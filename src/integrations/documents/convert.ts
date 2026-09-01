@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 
 import { logWarn } from '../../services/logger';
 import { titleFromFilename, type ConversionProvenance } from '../../domain/document-remediation';
+import { languageToCarry } from '../../domain/document-structure';
 import { finishDocument } from './finish';
 import { inspectDocument } from './inspect';
 import { deriveAltFromCaptions, readLanguage, removeEmptyHeadings, repairTitle } from './flat-odf';
@@ -300,7 +301,18 @@ export async function convertSourceToPdf(
     //    that format is the only reading there is — inflation caveat and all.
     const original = await readFile(fodt, 'utf8');
     const declared = docxDeclaredLanguage(await readFile(sourcePath));
-    const sourceLanguage = declared.readable ? declared.language : readLanguage(original);
+    // Through `languageToCarry`, because `w:lang w:val` is an arbitrary
+    // attribute out of a document nobody here wrote. Handed straight to
+    // `finishDocument` it was refused as `invalid-language`, which surfaces as
+    // `converter-failed` — so a single unparseable metadata field cost the
+    // client the whole conversion, with no document and no punch list. The
+    // repair lane fixed exactly this and the conversion lane never got it.
+    //
+    // An unusable tag is, for a reader, the same as no tag. Nothing is carried,
+    // and the `3.1.1` item asks a person to name the language.
+    const sourceLanguage = languageToCarry(
+      declared.readable ? declared.language : readLanguage(original),
+    );
     // Empty headings go first, so a blank heading-styled line can never be
     // the "first heading" a title gets transcribed from.
     const cleaned = removeEmptyHeadings(original);

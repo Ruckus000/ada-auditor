@@ -1,6 +1,7 @@
 import { deflateRawSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { docxDeclaredLanguage } from '../../src/domain/docx-language';
+import { languageToCarry } from '../../src/domain/document-structure';
 
 /**
  * The reader that beats the importer to the source's own words.
@@ -62,6 +63,44 @@ function zip(entries: Array<[string, string]>, method: 0 | 8 = 8): Uint8Array {
 const styles = (lang: string | null) =>
   `<w:styles><w:docDefaults><w:rPrDefault><w:rPr>${lang === null ? '' : `<w:lang w:val="${lang}"/>`}</w:rPr></w:rPrDefault></w:docDefaults></w:styles>`;
 const doc = (body = '<w:p/>') => `<w:document><w:body>${body}</w:body></w:document>`;
+
+describe('what the conversion lane carries from a declared tag', () => {
+  /**
+   * `w:lang w:val` is an arbitrary attribute out of a document nobody here
+   * wrote, and it used to reach `finishDocument` unvalidated. `Finish` refuses
+   * a tag that is not BCP-47 — correctly — and that refusal surfaces as
+   * `converter-failed`, so ONE unparseable metadata field cost the client the
+   * entire conversion: no document, no punch list, nothing to act on.
+   *
+   * The repair lane had already fixed exactly this, found by the blind corpus
+   * on two planted documents (`/Lang ()` and `/Lang (en US)`). The conversion
+   * lane never got the same treatment.
+   */
+  it('carries a usable tag through unchanged', () => {
+    for (const lang of ['en', 'en-GB', 'es-419', 'zh-Hant-TW']) {
+      const read = docxDeclaredLanguage(zip([
+        ['word/styles.xml', styles(lang)],
+        ['word/document.xml', doc()],
+      ]));
+      expect(read).toEqual({ readable: true, language: lang });
+      expect(languageToCarry(read.readable ? read.language : null)).toBe(lang);
+    }
+  });
+
+  it('carries nothing rather than losing the document, when the tag is unusable', () => {
+    // A reader cannot resolve any of these, so for a reader they are the same
+    // situation as no tag at all. The 3.1.1 item then asks a person to name the
+    // language, which is what it always says — a language is never guessed.
+    for (const junk of ['en US', '', 'not a language', '!!', 'e']) {
+      const read = docxDeclaredLanguage(zip([
+        ['word/styles.xml', styles(junk)],
+        ['word/document.xml', doc()],
+      ]));
+      const carried = languageToCarry(read.readable ? read.language : null);
+      expect(carried, junk).toBeNull();
+    }
+  });
+});
 
 describe('docxDeclaredLanguage', () => {
   it('reads the document-wide default exactly, un-widened', () => {

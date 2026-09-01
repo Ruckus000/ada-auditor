@@ -432,6 +432,180 @@ Read this before claiming something works.
   (emoji embedding) fails one *generated* stratum silently; zero real
   documents hit it.
 
+- **`7.21.4` is a FAMILY, and its two members say opposite things.**
+  `7.21.4.1` is a font with NO data — the fix is the source. `7.21.4.2` is an
+  EMBEDDED font whose CIDSet does not list every character used. Matching the
+  prefix printed the never-embedded sentence for both, so a CIDSet failure
+  would tell a client their fonts are missing and send them to re-export a
+  source to fix a problem they do not have. Both now get their own sentence,
+  and an unrecognised member of the family is voiced by id rather than
+  inheriting either.
+
+  **It is latent, and a first write-up of this got it wrong.** Thirteen
+  documents fail only `7.21.4.2-2` *in the answer keys*, and I reported that
+  all thirteen had been told the wrong thing — a source-side number asserted as
+  a delivery-side consequence, the same mistake as the outline-level
+  retraction. `[V]` Of 52 delivered documents carrying a `7.21.4` clause, **all
+  52 carry `7.21.4.1-1` and none carries `7.21.4.2`**: `stripCidSets` removes
+  the CIDSet before delivery, so the keys record what the SOURCE failed and the
+  clause is gone by the time a client sees the file. The path that reaches it
+  is a font `stripCidSets` cannot read, which has not happened in 148
+  documents. **Read the delivered summaries, never the keys, before saying what
+  a client was told.**
+
+  **The criterion label stays `PDF/UA 7.21.4` for all three** — `score.ts`
+  accounts for the clause by that family and the keys carry
+  `mustVoice: ["7.21.4"]`, so splitting the label would turn every one of these
+  clauses silent and buy nothing a reader can see. When an item's TEXT is what
+  is wrong, change the text.
+
+- **The four ways of not earning the identifier are now tested, and the title
+  is trimmed before any punch item is.** `earnUaIdentifier` had NO fast-suite
+  coverage at all — the function whose silent bail-out once took conformant
+  deliveries from 19 to 0 while the corpus reported every promise held. All
+  four are covered now, and each was checked against a deliberately broken
+  gate: two of them passed at first because a later bail-out masked the one
+  under test, which is worth knowing when writing the next one.
+
+  `boundSummary` bounded `needs` only. `titleText` is the document's OWN title
+  and has no bounded length, so it could take the header over the client's
+  limit after every punch item had already been dropped — and an oversized
+  header is rejected whole, leaving the client the file and NO summary: no
+  counts, no verdict, no punch list. The title is now trimmed **first**, before
+  a single item goes, because the punch list is the deliverable and the title is
+  decoration beside it. A first attempt trimmed it last and cost a client an
+  item to save a title; the test that caught that is in the file.
+
+  And the operator console kept its own hand-written copy of the summary type,
+  a contract in two places by hope — already behind (no `contrast`). It imports
+  `RemediationSummary` now, so the shape moves with its producer.
+
+- **The XMP packet is REBUILT, so anything not written again is gone.**
+  `Finish` calls `setMetadata` with a packet it constructs, which replaces
+  whatever the document declared. `[V]` Of 52 real PDFs in the blind corpus, 46
+  carry an XMP packet and **35 declare `dc:creator`** — every repair dropped the
+  author of the document. `contentChanges` cannot see it, because metadata is
+  not a content field, so nothing disclosed it either. The author is now carried
+  the way the title already is: **from DocInfo, which this pass preserves**,
+  rather than by parsing and merging the old packet — a bad merge writes WRONG
+  metadata where a rebuild writes none. `[V]` 13 of 13 authored documents keep
+  it; a document with no author must not gain one, and a test holds both
+  directions.
+
+  `[V]` Measured on the delivered corpus afterwards — 42 real PDFs through the
+  repair path: 34 sources declare an author, 34 deliveries declare one, **32
+  carry it straight through**. The two differences in each direction are both
+  explained and neither is a defect:
+
+  - **2 lost.** Their author lives in XMP and NOT in DocInfo, so the rebuild has
+    nothing to carry. Recovering these means parsing the old packet, which is
+    the merge this deliberately avoids.
+  - **2 gained**, and this is the one that could be misread as invention. Their
+    author is in DocInfo and was absent from the source's XMP. Writing it into
+    the packet is the move the TITLE already makes — `7.1-11` requires DocInfo
+    and XMP to agree — so it is a transcription within the document, not a new
+    claim about it. The document said it; it now says it in both places.
+
+  The PDF/A identifier (1 of 52) is dropped ON PURPOSE: we do not check PDF/A,
+  and carrying an unverified conformance claim through a rewrite is the exact
+  conduct the PDF/UA identifier is withheld to avoid.
+
+- **A caption keyword is not a caption, and `languageToCarry` now guards both
+  lanes.** Two conversion-lane defects, one of each class the product cares
+  about.
+
+  `deriveAltFromCaptions` required only that a paragraph START with a caption
+  word, so `[V]` "Map of the district was circulated to members." became an
+  image's description — a sentence about a meeting, asserted as a description
+  of a picture. Worse than no description, because it also silences the `1.1.1`
+  item that would have reported the figure as undescribed, so nobody finds out.
+  A LABEL is now required: a number or letter ("Figure 3", "Exhibit A") or a
+  delimiter ("Photo —", "Image:"). The trade is stated rather than hidden — a
+  bare "Map of the district" is no longer transcribed and that figure reaches
+  the punch list undescribed. Separating it from "Map of the district was
+  circulated" needs a finite verb, which is the judgement `1.4.1` and heading
+  promotion both refused to make. **Adjacency was already strict** and is now
+  pinned by a test: an intervening heading or body paragraph blocks derivation,
+  contrary to an audit finding that claimed otherwise.
+
+  And `w:lang w:val` — an arbitrary attribute from an untrusted `.docx` —
+  reached `finishDocument` unvalidated, which refuses a non-BCP-47 tag and
+  surfaces as `converter-failed`. **One unparseable metadata field cost the
+  client the entire conversion**: no document, no punch list. The repair lane
+  had already fixed exactly this (blind corpus, `/Lang ()` and `/Lang (en US)`),
+  so `languageToCarry` moved to `domain/document-structure.ts` beside the schema
+  it asks and both lanes use it. An unusable tag carries nothing and `3.1.1`
+  asks a person to name the language.
+
+  **Two things deliberately NOT changed.** The legacy `.doc` fodt fallback still
+  carries LibreOffice's inflated reading (declared-nothing arriving as `en-US`),
+  because for `.doc` it is the only reading there is — a documented decision
+  with `w02-legacy-doc` pinned to it; changing it needs its own evidence and a
+  key correction. And the `3.1.1` gap still reads "the source declares no
+  language" when the source declared something unusable, which is slightly
+  false on both lanes; fixing it means distinguishing "declared nothing" from
+  "declared junk" in the summary contract.
+
+- **`counts.headings` on a Word row is a FIDELITY expectation, not the category
+  error the levels are.** The comment forbidding source-predicts-output in
+  `author-real-keys.mjs` is attached to heading LEVELS, and it is right about
+  them: whether r28's H1/H1/H3 skip survives depends on what the exporter does
+  with the heading that made it. The COUNT is a different claim — carrying an
+  author's headings across is the conversion's whole job — and it is graded
+  asymmetrically for exactly that reason: **more** than the source had is
+  `invented-structure` and fatal, the corpus's only guard against the converter
+  fabricating structure; **fewer** is a non-fatal note. Do not delete the check
+  to silence the notes.
+
+  **The two standing notes are NOT explained.** `second-corpus-results.md` says
+  r28 (key 13, delivered 12) and r32 (key 5, delivered 4) are headings lost in
+  conversion. A crude re-read of the sources counts 11 and 4 — so on r32 the
+  source and the delivery agree with each other and not with the key, which is
+  not "a heading was lost". That re-read is a throwaway script and settles
+  nothing; what it establishes is that the recorded explanation was never
+  verified. Open, and to be answered with the key author rather than another
+  quick probe.
+
+- **A partial structure collapse has no guard, and that is a measured choice.**
+  `convert.ts` refuses only `structureElements === 0`, so a half-lost structure
+  tree would ship. `[V]` Across 148 documents the delivered heading counts track
+  the keys exactly except r28 and r32, each off by one — no collapse occurs. A
+  source-vs-output bound is also the category error `author-real-keys.mjs`
+  names in its own comments. Left unbuilt on the evidence rather than on
+  principle; build it when a document shows the shape.
+
+- **An encrypted PDF is refused BY NAME, and it was never a data-loss bug.**
+  A PDF encrypted with an empty user password and an owner password — the
+  common municipal shape, restricting printing rather than reading — opens
+  without a password and inspects completely, so nothing else in the reading
+  says it is locked. `[V]` Verified directly against the corpus fixture:
+  `Inspect` reads it as tagged with a full structure tree, and `Finish` throws
+  `IllegalStateException: PDF contains an encryption dictionary` — PDFBox will
+  not save a document holding one. **It has always failed safely: nothing is
+  delivered and no permissions are stripped.** An audit claimed the opposite —
+  that `doc.save` silently wrote it decrypted — and running it disproved that
+  before any code was written. Do not "fix" that bug; it does not exist. What
+  was actually wrong is that the refusal arrived as an unnamed stage crash an
+  operator could not tell from a corrupt file, so `structure.encrypted` now
+  feeds a named refusal beside `signed`. The encryption is deliberately NOT
+  removed to proceed: the restrictions are the owner's decision.
+
+- **Two Java defects that only fire off the developer's machine.** `Contrast`
+  formatted its one float with the JVM's default locale, so a host whose locale
+  writes decimals with a comma emitted `"ratio":4,50` — not valid JSON — and
+  contrast was dropped from the entire delivery, on those hosts only. The ratio
+  is emitted for FAILING pairs only, so such a host could run clean documents
+  indefinitely before anything went wrong. `Locale.ROOT` fixes it.
+  **Reproducing it needs `-Duser.language`, not `LC_ALL`**: `childEnv` forwards
+  LANG/LC_ALL, but macOS JVMs take their locale from OS preferences and ignore
+  both, so an environment-based test passes whether the bug is present or not —
+  the first version of that test did exactly that. And `Finish.escape()` passed
+  C0 control characters through into the XMP packet, which XML 1.0 forbids
+  outright even as numeric references; the title is never ours (a heading from
+  the client's document, or the document's own info dictionary on the repair
+  path) and nothing validates it anywhere else. Both new tests were checked
+  against the unfixed code and both fail there.
+
 - **PDFs are repaired by transcription, or refused — never tagged by
   inference.** `services/document-repair.ts` decides; `Finish` writes; the
   result is read back and `contentChanges` must be empty or the repair is
@@ -459,7 +633,11 @@ Read this before claiming something works.
   Two clause families translate into punch items a person can act on (fonts
   never embedded → supply the Word source; untagged page content → needs the
   source or a person); everything unrecognized rolls into a catch-all naming
-  the clause ids, so no clause present or future fails silently. Families our
+  the clause ids, so no clause present or future fails silently. A report that
+  says `compliant: false` and names NO failing clause is read as `checker:
+  'none'`, not as a non-conformance: the items are built from the clause list,
+  so that shape delivered a document marked not conformant whose punch list
+  said nothing about why. Families our
   own vocabulary already voices (language, figures, headings, title,
   annotation nesting) are left to the items that voice them.
   `[V]` On the twenty-document real corpus: the product's verdicts agree with
@@ -500,9 +678,22 @@ Read this before claiming something works.
   `scope.criteria` and every surface renders it through
   `services/presentation/document-verdict.ts`.
 
-  **Both criteria the pipeline does not reach have now been MEASURED and
+  **`scope` states what RAN, not what the instrument owns.** `1.4.3` is the one
+  criterion no reading can claim on its own: contrast is a separate stage,
+  `withMeasuredContrast` deliberately never refuses when it fails, and the
+  inspect-only path never runs it at all. So `summarise` emits the other six
+  and `withContrast` adds `1.4.3` when a reading exists. Before this, `scope`
+  was the whole constant unconditionally — a delivery whose contrast stage died
+  told the client "Checked here: … 1.4.3 …" while the `contrast` field beside
+  it was absent and every surface rendered that absence as "not checked". The
+  same overstatement `checker: 'none'` exists to prevent, reintroduced through
+  the field added to state the limits. **Do not assemble `scope` from a
+  constant: a stage that can fail must add its own criterion.**
+
+  **All three criteria the pipeline does not reach have been MEASURED and
   declined, rather than left unexamined.** `1.3.2` Meaningful Sequence is on
-  `legal-standard.md`'s pass mark; `1.4.1` Use of Color is not. Neither ships:
+  `legal-standard.md`'s pass mark; `1.4.1` Use of Color and `2.4.6` Headings and
+  Labels are not. None ships:
 
   - `1.4.1` — 17 of 23 real documents carry a saturated minority accent, and
     the overwhelming majority are hyperlinks and Word theme heading colours, so
@@ -515,7 +706,27 @@ Read this before claiming something works.
     in the reading order does not affect meaning.
     See `docs/research/document-remediation/meaningful-sequence-feasibility.md`.
 
-  Both stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
+  - `2.4.6` — a heading that IS a sentence is a real barrier, and one corpus
+    document carries 49 of them (longest: 77 words) because its author
+    outline-levelled body paragraphs. The signal is clean — the share of a
+    document's headings ending in sentence punctuation, one comparison, no
+    exemptions — and at ≥30% it fires on **exactly that document** across 118
+    delivered documents, with zero false positives.
+
+    **Refused for a third and different reason: it fires ONCE.** 1.4.1 was
+    refused for imprecision and 1.3.2 for being wrong; this one for
+    insufficient evidence. One document cannot distinguish a rule that works
+    from a rule fitted to the document it was written against — and it was
+    written knowing what that document looked like. Two more above 30% in a
+    later corpus meets the registered criteria; the threshold is already in
+    `experiments/document-remediation/prose-headings.mjs`.
+    See `docs/research/document-remediation/prose-headings-feasibility.md`.
+
+  All three stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
+  **Do not add a fourth without registering decline criteria first.** The 2.4.6
+  measurement's first pass narrowed on four stacked conditions to get 13
+  documents down to 1 — the `/Artifact` contrast mistake in miniature — and was
+  discarded for a single comparison that does the same work honestly.
 
 - **The summary header is BOUNDED, and the bound is a safety net rather than a
   routine trim.** The summary travels in `x-remediation-summary` with one item

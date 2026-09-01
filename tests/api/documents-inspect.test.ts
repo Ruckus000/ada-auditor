@@ -51,6 +51,7 @@ function inspected(over = {}) {
     value: documentStructureSchema.parse({
       marked: true,
       signed: false,
+      encrypted: false,
       annotationsNotInStructure: 0,
       formFields: 0,
       formFieldsWithoutName: 0,

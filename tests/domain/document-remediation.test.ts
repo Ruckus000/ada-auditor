@@ -23,6 +23,7 @@ const structure = (over = {}) =>
   documentStructureSchema.parse({
     marked: true,
     signed: false,
+    encrypted: false,
     annotationsNotInStructure: 0,
     formFields: 0,
     formFieldsWithoutName: 0,
@@ -41,6 +42,21 @@ const structure = (over = {}) =>
     order: [{ type: 'H1', text: 'Planning Committee Agenda' }],
     ...over,
   });
+
+/**
+ * What `summarise` alone claims: everything its two emitters can decide.
+ *
+ * 1.4.3 is not among them. The contrast pass is a separate stage that may not
+ * run, so the criterion joins the scope in `withContrast` and nowhere else.
+ */
+const SUMMARISE_CRITERIA = CHECKED_CRITERIA.filter((c) => c !== '1.4.3');
+
+/** A reading that measured contrast and found nothing wrong. */
+const CLEAN_CONTRAST = {
+  pairs: 4, passing: 4, failing: 0, failingGlyphs: 0,
+  undetermined: 0, undeterminedGlyphs: 0, decorative: 0, decorativeGlyphs: 0,
+  findings: [],
+};
 
 const provenance = (over: Partial<ConversionProvenance> = {}): ConversionProvenance => ({
   title: { kind: 'already-titled', title: 'Planning Committee Agenda' },
@@ -66,8 +82,10 @@ describe('summarise', () => {
       gaps: [],
       // What the reading looked for, travelling with it. An exact match, so a
       // criterion silently entering or leaving the instrument's scope fails
-      // here as well as in the emitted-criteria test below.
-      scope: { criteria: [...CHECKED_CRITERIA] },
+      // here as well as in the emitted-criteria test below. 1.4.3 is absent
+      // because the contrast pass is a separate stage and has not run: it
+      // joins in `withContrast`, never here.
+      scope: { criteria: SUMMARISE_CRITERIA },
     });
 
     // The body text of the document appears nowhere. `headingTexts` and
@@ -251,6 +269,7 @@ describe('the punch list', () => {
     documentStructureSchema.parse({
       marked: true,
       signed: false,
+      encrypted: false,
       annotationsNotInStructure: 0,
       formFields: 0,
       formFieldsWithoutName: 0,
@@ -379,6 +398,7 @@ describe('withConformance', () => {
       structureElements: 10,
       marked: true,
       signed: false,
+      encrypted: false,
       annotationsNotInStructure: 0,
       formFields: 0,
       formFieldsWithoutName: 0,
@@ -403,17 +423,67 @@ describe('withConformance', () => {
     expect('needs' in s).toBe(false);
   });
 
-  it('translates the font family into the work that actually fixes it', () => {
+  it('translates a font that was never embedded into the work that fixes it', () => {
     const s = withConformance(base, {
       checker: 'verapdf-ua1',
       compliant: false,
-      failingClauses: ['7.21.4.1-1', '7.21.4.2-2'],
+      failingClauses: ['7.21.4.1-1'],
     });
     expect(s.needs).toHaveLength(1);
     expect(s.needs?.[0].criterion).toBe('PDF/UA 7.21.4');
     // The remedy is the source, which pairing already surfaces — never a
     // silent substitution.
     expect(s.needs?.[0].item).toContain('Word source');
+  });
+
+  it('does not tell a document with embedded fonts that its fonts are missing', () => {
+    // The defect: `7.21.4` was matched as a FAMILY and always printed the
+    // never-embedded sentence. Its two members say opposite things —
+    // `7.21.4.1` is a font with no data, `7.21.4.2` is an embedded font whose
+    // CIDSet does not list every character used.
+    //
+    // Latent rather than shipped, and worth stating precisely: 13 documents
+    // fail only `7.21.4.2-2` in the KEYS, but `[V]` all 52 delivered documents
+    // carrying a `7.21.4` clause carry `7.21.4.1-1` and none carries
+    // `7.21.4.2` — `stripCidSets` removes the CIDSet before delivery. The path
+    // that reaches this is a font that pass cannot read, which has not
+    // happened in 148 documents. The sentence would still be false when it
+    // did.
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.2-2'],
+    });
+    expect(s.needs).toHaveLength(1);
+    expect(s.needs?.[0].criterion).toBe('PDF/UA 7.21.4');
+    expect(s.needs?.[0].item).toContain('CIDSet');
+    expect(s.needs?.[0].item).not.toContain('never embedded');
+  });
+
+  it('says both things when a document has both problems', () => {
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.1-1', '7.21.4.2-2'],
+    });
+    // Two items, because they are two different defects with two different
+    // remedies. They share the family criterion, which is what `score.ts`
+    // accounts for the clauses by.
+    expect(s.needs).toHaveLength(2);
+    expect(s.needs?.every((n) => n.criterion === 'PDF/UA 7.21.4')).toBe(true);
+  });
+
+  it('names an unrecognised member of the font family by id rather than describing it', () => {
+    // A family is not a licence to guess. A clause this vocabulary has never
+    // seen must not inherit either sentence just because its prefix is known.
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.3-9'],
+    });
+    expect(s.needs).toHaveLength(1);
+    expect(s.needs?.[0].item).toContain('7.21.4.3-9');
+    expect(s.needs?.[0].item).not.toContain('never embedded');
   });
 
   it('translates untagged page content without offering to guess it', () => {
@@ -554,6 +624,7 @@ describe('withConformance', () => {
         structureElements: 10,
         marked: true,
         signed: false,
+        encrypted: false,
         annotationsNotInStructure: 0,
         formFields: 0,
         formFieldsWithoutName: 0,
@@ -786,6 +857,59 @@ describe('figures a reader learns nothing about', () => {
     expect(items).toHaveLength(1);
     expect(items[0].criterion).toBe('1.1.1');
     expect(JSON.stringify(items)).not.toContain('192.168');
+  });
+});
+
+describe('boundSummary, when the document itself is the problem', () => {
+  const measure = (value: unknown) => JSON.stringify(value).length;
+
+  it('trims a title that would cost the client the whole summary', () => {
+    // Every punch item can be dropped and the header still be over the limit,
+    // because `titleText` is the document's OWN title and has no bounded
+    // length. A header over the client's limit is rejected whole — the client
+    // gets the file and no summary at all: no counts, no verdict, no punch
+    // list. A shortened title beside a complete punch list is strictly better.
+    const summary = summarise(provenance({
+      title: { kind: 'already-titled', title: 'A'.repeat(60_000) },
+    }));
+    expect(measure(summary)).toBeGreaterThan(SUMMARY_HEADER_BUDGET);
+
+    const bounded = boundSummary(summary, measure);
+    expect(measure(bounded)).toBeLessThanOrEqual(SUMMARY_HEADER_BUDGET);
+    // Marked, so nobody reads it as what the document says.
+    expect(bounded.titleText?.endsWith('…')).toBe(true);
+    // The KIND is untouched: provenance is not what was too big.
+    expect(bounded.title).toBe('already-titled');
+  });
+
+  it('keeps the punch list when the title is what has to go', () => {
+    // Order matters. The punch list is the deliverable; the title is
+    // decoration beside it. Trimming the title must not cost a single item.
+    const figures = Array.from({ length: 12 }, () => ({
+      type: 'Figure', alt: null, actualText: null, page: 1,
+    }));
+    const summary = summarise(provenance({
+      title: { kind: 'already-titled', title: 'B'.repeat(40_000) },
+      structure: structure({ figures, images: 12 }),
+    }));
+
+    const bounded = boundSummary(summary, measure);
+    expect(measure(bounded)).toBeLessThanOrEqual(SUMMARY_HEADER_BUDGET);
+    expect(bounded.needs).toHaveLength(summary.needs?.length ?? 0);
+    expect(bounded.needs?.some((n) => n.criterion === 'summary')).toBe(false);
+  });
+
+  it('drops the title text entirely rather than deliver an oversized header', () => {
+    // The extreme: not even a marker fits alongside everything else. The text
+    // goes and nothing else does — `title` still states the provenance, and the
+    // text itself is in the document.
+    const summary = summarise(provenance({
+      title: { kind: 'already-titled', title: 'C'.repeat(200_000) },
+    }));
+    const bounded = boundSummary(summary, measure, 200);
+    expect(measure(bounded)).toBeLessThanOrEqual(Math.max(200, measure({ ...bounded, titleText: undefined })));
+    expect(bounded.titleText).toBeUndefined();
+    expect(bounded.title).toBe('already-titled');
   });
 });
 
@@ -1114,7 +1238,32 @@ describe('the scope this instrument claims', () => {
     // The response header carries the summary and nothing else. Scope that
     // lived only in rendered copy would leave an API consumer with the same
     // unqualified claim this change removes from the screens.
-    expect(summarise(provenance()).scope).toEqual({ criteria: [...CHECKED_CRITERIA] });
+    expect(summarise(provenance()).scope).toEqual({ criteria: SUMMARISE_CRITERIA });
+  });
+
+  it('does not claim contrast until the pass that measures it has run', () => {
+    // The defect: `scope` was the whole constant unconditionally, so a delivery
+    // whose contrast stage could not run told the client 1.4.3 was checked
+    // while the `contrast` field beside it was absent — and every surface
+    // renders that absence as "not checked". The two disagreed about the same
+    // document. The inspect-only path, which never runs contrast at all,
+    // claimed it on every reading.
+    const withoutTheStage = summarise(provenance());
+    expect(withoutTheStage.contrast).toBeUndefined();
+    expect(withoutTheStage.scope?.criteria).not.toContain('1.4.3');
+
+    const measured = withContrast(withoutTheStage, CLEAN_CONTRAST);
+    expect(measured.scope?.criteria).toContain('1.4.3');
+    // Canonical order, not append order: the line renders to a client.
+    expect(measured.scope).toEqual({ criteria: [...CHECKED_CRITERIA] });
+  });
+
+  it('leaves an unrecorded scope unrecorded when contrast runs', () => {
+    // A reading stored before the field existed cannot say what it looked for.
+    // Inventing a scope here would render as full coverage on every surface —
+    // the exact overstatement the optional field exists to prevent.
+    const stored: RemediationSummary = { ...summarise(provenance()), scope: undefined };
+    expect(withContrast(stored, CLEAN_CONTRAST).scope).toBeUndefined();
   });
 
   it('costs the header almost nothing, and nothing that grows', () => {

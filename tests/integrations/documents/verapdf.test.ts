@@ -52,6 +52,23 @@ describe('checkUa1', () => {
     expect(result).toEqual({ checker: 'verapdf-ua1', compliant: true });
   });
 
+  it('refuses a non-compliance it cannot explain', async () => {
+    // `compliant: false` with nothing failing. `withConformance` builds its
+    // items from the clause list, so this shape once delivered a document
+    // marked NOT CONFORMANT whose punch list said nothing at all about why —
+    // a silent gap on the one line a client reads for the answer.
+    //
+    // "not checked" is the safe direction. A checker that says no and cannot
+    // say why knows nothing usable about the document.
+    for (const stdout of [report(false, []), report(false, [['7.2', 34, 0]])]) {
+      const result = await checkUa1('/tmp/a.pdf', {
+        runtime,
+        executor: async () => ({ stdout }),
+      });
+      expect(result).toEqual({ checker: 'none', reason: 'unavailable' });
+    }
+  });
+
   it('reads exit 1 as the answer it is — non-compliant, with clauses', async () => {
     // veraPDF exits 1 for a non-compliant file WITH the report on stdout.
     // A wrapper that treated that as a failure would turn every finding into
