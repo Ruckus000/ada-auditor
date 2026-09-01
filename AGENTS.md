@@ -862,6 +862,53 @@ Read this before claiming something works.
   touched declare a language — and right either way, but it is a clause
   appearing because we wrote something.
 
+- **Artifacting decorative figures is DECLINED, and the code for it already
+  exists.** `experiments/document-remediation/Figures.java` (302 lines)
+  implements the whole technique: the two-part edit that PDF/UA requires — the
+  content stream's `/Figure <</MCID n>> BDC` becomes `/Artifact <<>> BDC` *and*
+  the element leaves the tree, because doing only the second orphans the marked
+  content and fails 7.1 — with a thin-band test (`MIN_RULE_RATIO = 20f`) and a
+  byte-identical-repeat test, and area explicitly refused as a criterion.
+  **It stopped as part of a LINE of work rather than on its own defect, and both
+  halves of that are easy to quote wrongly.** `experiment-2-decision.md` STOPPED
+  deterministic-only remediation at a reachable rate of 25% against an 80% gate
+  — and its own header then records that 25% **FALSIFIED**: a later abstention
+  pass took it to 40%, still short of the gate. Quote 40%, not 25%. Artifacting
+  was one of the last two techniques added, and the pair moved holdout 1 from 2
+  deliverable documents to 3.
+
+  Its residue in that comparator is two assertions reading "Figure elements for
+  decorative or repeated graphics" — decorative graphics the pipeline still
+  tagged as **content**. That is the detector UNDER-reaching. Nothing on the
+  record says this technique artifacted something it should not have, and an
+  entry claiming it did would be arguing against the feature with the wrong
+  evidence. The argument below stands on its own.
+
+  The price of leaving it declined is **+2 of 78** real documents. `[V]` `n07`
+  and `r27` are the only two whose residual is `7.3-1` plus `5-1`, and `5-1` is
+  earned rather than failed, so clearing the figures would conform them both.
+
+  **Two blockers, and the first is a safety gate rather than an oversight.**
+  `contentChanges` (`document-structure.ts:289`) compares `structureElements`,
+  `figures` and `order`; artifacting moves all three, so the repair lane refuses
+  the file. The comment above it names this exact scenario — "four meaningful
+  images artifacted out of the structure tree look identical, in the PDF, to
+  four images that were never there" — and `Inspect.java:136-145` records the
+  document that lost all four of its meaningful images and scored DELIVERABLE
+  with zero defects. Shipping this means punching a hole in the check that
+  caught that. Second, `StructText.boxOf` returns **null** for an image-only
+  figure: boxes register only for MCIDs that harvested text glyphs, so a
+  geometry classifier is blind to precisely the population it would target.
+  A probe over the delivered corpus could locate only 109 of 249 undescribed
+  figures for that reason.
+
+  What would reopen it is a **declared-change channel** — a way for a repair to
+  state an intended structural change so `contentChanges` records it instead of
+  refusing — which is architecture, not a fix. Until then the standing rule from
+  `repair-results.md` holds: **a gap a reviewer can see beats a deletion nobody
+  can.** Do not re-measure the spike to reopen the question; the measurement is
+  the thing that already exists.
+
 - **Route a CLAUSE, never a family — suppression is earned per criterion, so a
   family route lets one item silence everything beside it.** `alreadyVoiced`
   drops a veraPDF clause from the catch-all only when one of our own items is
