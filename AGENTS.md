@@ -492,11 +492,23 @@ Read this before claiming something works.
   it; a document with no author must not gain one, and a test holds both
   directions.
 
-  **Two residuals, both deliberate.** A document declaring `dc:creator` in XMP
-  but NOT in DocInfo still loses it (3 of 52) — recovering that means parsing
-  the packet. And the PDF/A identifier (1 of 52) is dropped ON PURPOSE: we do
-  not check PDF/A, and carrying an unverified conformance claim through a
-  rewrite is the exact conduct the PDF/UA identifier is withheld to avoid.
+  `[V]` Measured on the delivered corpus afterwards — 42 real PDFs through the
+  repair path: 34 sources declare an author, 34 deliveries declare one, **32
+  carry it straight through**. The two differences in each direction are both
+  explained and neither is a defect:
+
+  - **2 lost.** Their author lives in XMP and NOT in DocInfo, so the rebuild has
+    nothing to carry. Recovering these means parsing the old packet, which is
+    the merge this deliberately avoids.
+  - **2 gained**, and this is the one that could be misread as invention. Their
+    author is in DocInfo and was absent from the source's XMP. Writing it into
+    the packet is the move the TITLE already makes — `7.1-11` requires DocInfo
+    and XMP to agree — so it is a transcription within the document, not a new
+    claim about it. The document said it; it now says it in both places.
+
+  The PDF/A identifier (1 of 52) is dropped ON PURPOSE: we do not check PDF/A,
+  and carrying an unverified conformance claim through a rewrite is the exact
+  conduct the PDF/UA identifier is withheld to avoid.
 
 - **A caption keyword is not a caption, and `languageToCarry` now guards both
   lanes.** Two conversion-lane defects, one of each class the product cares
