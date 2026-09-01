@@ -107,9 +107,9 @@ describe('summarise', () => {
       provenance({
         structure: structure({
           figures: [
-            { type: 'Figure', alt: null, actualText: null },
-            { type: 'Figure', alt: '', actualText: null },
-            { type: 'Figure', alt: 'A site map', actualText: null },
+            { type: 'Figure', alt: null, actualText: null , page: null},
+            { type: 'Figure', alt: '', actualText: null , page: null},
+            { type: 'Figure', alt: 'A site map', actualText: null , page: null},
           ],
           images: 3,
         }),
@@ -125,8 +125,8 @@ describe('summarise', () => {
       provenance({
         structure: structure({
           figures: [
-            { type: 'Figure', alt: null, actualText: null },
-            { type: 'Figure', alt: null, actualText: null },
+            { type: 'Figure', alt: null, actualText: null , page: null},
+            { type: 'Figure', alt: null, actualText: null , page: null},
           ],
           images: 2,
         }),
@@ -268,9 +268,9 @@ describe('the punch list', () => {
   it('names each undescribed figure as one actionable item', () => {
     const s = summarise(provenance({
       figures: [
-        { type: 'Figure', alt: null, actualText: null },
-        { type: 'Figure', alt: 'described', actualText: null },
-        { type: 'Figure', alt: null, actualText: null },
+        { type: 'Figure', alt: null, actualText: null , page: null},
+        { type: 'Figure', alt: 'described', actualText: null , page: null},
+        { type: 'Figure', alt: null, actualText: null , page: null},
       ],
       images: 3,
     }));
@@ -323,7 +323,7 @@ describe('the punch list', () => {
 
   it('puts the document-level item first, ahead of per-element ones', () => {
     const s = summarise({
-      ...provenance({ figures: [{ type: 'Figure', alt: null, actualText: null }], images: 1 }),
+      ...provenance({ figures: [{ type: 'Figure', alt: null, actualText: null , page: null}], images: 1 }),
       sourceLanguage: null,
     });
     expect(s.needs?.map((n) => n.criterion)).toEqual(['3.1.1', '1.1.1']);
@@ -474,10 +474,15 @@ describe('withConformance', () => {
   });
 
   it('leaves clauses our own vocabulary already voices to the items that voice them', () => {
-    // Language (7.2.*), figures (7.3), headings (7.4), title (7.1-9) and
-    // annotation nesting (7.18.*) each have a gap or item of their own;
-    // repeating them through the checker would say everything twice. Each one
-    // has to actually BE there, which is what this fixture supplies.
+    // Language (7.2.*), figures (7.3), headings (7.4), title (7.1-9) and a form
+    // field's name (7.18.1-3) each have a gap or item of their own; repeating
+    // them through the checker would say everything twice. Each one has to
+    // actually BE there, which is what this fixture supplies.
+    //
+    // The 7.18 clause here is `7.18.1-3` and NOT `7.18.5-2`, which this fixture
+    // used to carry. A link with no `/Contents` is not what the annotation
+    // item says — it says a reader cannot REACH the annotation — so routing the
+    // 7.18 family whole let one item silence four unrelated clauses.
     const voiced: RemediationSummary = {
       ...base,
       gaps: ['2.4.2: no title, and no heading to copy one from'],
@@ -486,15 +491,16 @@ describe('withConformance', () => {
         { criterion: '1.1.1', item: 'Figure 1 needs a human-written description' },
         { criterion: '2.4.10', item: 'heading levels skip' },
         { criterion: '1.3.1', item: 'a form field sits outside the structure' },
+        { criterion: '4.1.2', item: 'a form field has no accessible name' },
       ],
     };
     const s = withConformance(voiced, {
       checker: 'verapdf-ua1',
       compliant: false,
-      failingClauses: ['7.2-34', '7.3-1', '7.4.2-1', '7.1-9', '7.18.5-2'],
+      failingClauses: ['7.2-34', '7.3-1', '7.4.2-1', '7.1-9', '7.18.1-3'],
     });
-    // The four items it arrived with, and no catch-all on top of them.
-    expect(s.needs).toHaveLength(4);
+    // The five items it arrived with, and no catch-all on top of them.
+    expect(s.needs).toHaveLength(5);
     expect(s.needs?.some((n) => n.criterion === 'PDF/UA')).toBe(false);
     // But the verdict itself still says the document is not conformant —
     // the floor under every translation decision.
@@ -730,7 +736,7 @@ describe('a description that describes nothing', () => {
 
 describe('figures a reader learns nothing about', () => {
   const figs = (...alts: Array<string | null>) =>
-    alts.map((alt) => ({ type: 'Figure', alt, actualText: null }));
+    alts.map((alt) => ({ type: 'Figure', alt, actualText: null , page: null}));
   const read = (...alts: Array<string | null>) =>
     summarise(provenance({ structure: structure({ figures: figs(...alts), images: alts.length }) }));
 
@@ -794,6 +800,47 @@ describe('the scope this instrument claims', () => {
    * instrument, and one removed without the constant changing would overstate
    * it. Both are the same defect as the claim this whole change exists to fix.
    */
+  describe('where a figure is', () => {
+    const fig = (over = {}) => ({ type: 'Figure', alt: null, actualText: null, page: null, ...over });
+    const items = (figures: unknown[]) =>
+      (summarise(provenance({ structure: structure({ figures, images: figures.length }) })).needs ?? [])
+        .filter((n) => n.criterion === '1.1.1')
+        .map((n) => n.item);
+
+    it('names the page, so the item can be acted on', () => {
+      // The ordinal alone is a position in `structure.figures`; nobody can find
+      // figure 47 in a 37-page document without counting tags.
+      expect(items([fig({ page: 5 })])[0]).toContain('Figure 1 (p5)');
+    });
+
+    it('says nothing about the page when the element declares none', () => {
+      // Absent beats invented. Never "(page unknown)", which spends header
+      // bytes to say nothing.
+      const item = items([fig()])[0];
+      expect(item).toContain('Figure 1:');
+      expect(item).not.toContain('(p');
+      expect(item.toLowerCase()).not.toContain('unknown');
+    });
+
+    it('calls a Formula a Formula', () => {
+      // `Inspect` collects Formula into the same array. Once the item names a
+      // page, a client can go there and find no figure.
+      expect(items([fig({ type: 'Formula', page: 2 })])[0]).toContain('Formula 1 (p2)');
+    });
+
+    it('locates a placeholder description too, not only a missing one', () => {
+      expect(items([fig({ alt: 'image', page: 9 })])[0])
+        .toBe('Figure 1 (p9): alt text is a placeholder, not a description (WCAG F30) — write one');
+    });
+
+    it('keeps one item per figure, because the corpus counts them', () => {
+      // `score.ts` compares `needs` as a multiset, and p36/p37 exist to fail if
+      // the F30 predicate ever narrows back to a presence check. Collapsing
+      // these into one aggregated item would delete that guard silently.
+      expect(items([fig({ page: 1 }), fig({ page: 2 }), fig({ alt: 'photo', page: 3 })])).toHaveLength(3);
+    });
+  });
+
   describe('the summary header budget', () => {
     const measure = (value: RemediationSummary) => JSON.stringify(value).length;
     const withNeeds = (needs: Array<{ criterion: string; item: string }>): RemediationSummary => ({
@@ -954,6 +1001,37 @@ describe('the scope this instrument claims', () => {
       expect(catchAll?.item).toContain('7.18.1-3');
     });
 
+    it('names every other 7.18 clause even while the annotation item fires', () => {
+      // The family-route defect, measured on the corpus before it was fixed:
+      // r13 reached a client with 7.18.3-1 and 7.18.4-1 in no gap, no need and
+      // no catch-all, because /^7\.18\./ routed the whole family to 1.3.1 and
+      // the annotation item was present for an unrelated reason. Suppression is
+      // earned per CRITERION, so one item silenced four unrelated questions.
+      const s = withConformance(
+        summarise(provenance({
+          structure: structure({
+            annotationsNotInStructure: 289,
+            formFields: 289,
+            formFieldsWithoutName: 135,
+          }),
+        })),
+        {
+          checker: 'verapdf-ua1',
+          compliant: false,
+          // r13's real 7.18 set, plus p30's link clause.
+          failingClauses: ['7.18.1-3', '7.18.3-1', '7.18.4-1', '7.18.5-1'],
+        },
+      );
+
+      const catchAll = (s.needs ?? []).find((n) => n.criterion === 'PDF/UA');
+      for (const clause of ['7.18.3-1', '7.18.4-1', '7.18.5-1']) {
+        expect(catchAll?.item, `${clause} reached the client nowhere`).toContain(clause);
+      }
+      // 7.18.1-3 stays suppressed, because the 4.1.2 item genuinely says it.
+      expect((s.needs ?? []).some((n) => n.criterion === '4.1.2')).toBe(true);
+      expect(catchAll?.item).not.toContain('7.18.1-3');
+    });
+
     it('does not let the nesting item suppress the form-name clause', () => {
       // The defect itself. `7.18.1-3` used to route to 1.3.1, so an annotation
       // item present for an unrelated reason swallowed it and 135 unlabelled
@@ -991,7 +1069,7 @@ describe('the scope this instrument claims', () => {
     // 1.1.1 — an undescribed figure. 1.3.1 — no structure tree at all.
     collect(summarise(provenance({
       structure: structure({
-        figures: [{ type: 'Figure', alt: null, actualText: null }],
+        figures: [{ type: 'Figure', alt: null, actualText: null , page: null}],
         images: 1,
         structureElements: 0,
       }),

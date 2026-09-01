@@ -566,18 +566,38 @@ Read this before claiming something works.
   the run, but the general shape stands: the corpus grades what is CLAIMED, and
   a capability nobody registered a claim about is invisible to it.
 
-- **Earned suppression can still suppress the wrong thing.** `alreadyVoiced`
+- **Route a CLAUSE, never a family — suppression is earned per criterion, so a
+  family route lets one item silence everything beside it.** `alreadyVoiced`
   drops a veraPDF clause from the catch-all only when one of our own items is
-  actually present — the fix for an earlier defect where suppression was
-  unconditional. But it routes by clause FAMILY, and `7.18` holds two unrelated
-  questions: whether a reader can REACH an annotation (1.3.1) and whether a form
-  field has a NAME (4.1.2). r13 was delivered with 135 unnamed form fields and a
-  punch list that named none of them, because the reachability item was present
-  and legitimately earned the suppression of `7.18.1-3`. Routing is now split.
-  The general shape stands: a family is not a criterion, and any new clause
-  added to an existing family inherits that family's voice whether or not it
-  belongs to it.
-  See `docs/research/document-remediation/form-names-results.md`.
+  present, which is right. But `VOICED_BY_OUR_INSTRUMENT` used to route all of
+  `/^7\.18\./` to 1.3.1, and `7.18` holds unrelated questions: a form field's
+  name (7.18.1-3), a page's `/Tabs` (7.18.3-1), a widget's `Form` nesting
+  (7.18.4-1), a link's `Link` nesting (7.18.5-1). Any document carrying the
+  annotation item suppressed the whole family with it.
+
+  This bit twice. First: r13 delivered with 135 unnamed form fields named
+  nowhere. Splitting `7.18.1-3` out fixed that one clause and left the rule.
+  Then `[V]` a sweep of the corpus found **four more instances still reaching
+  nobody** — r13 with `7.18.3-1` and `7.18.4-1`, p15 with `7.18.4-1`, p30 with
+  `7.18.5-1` — in no gap, no need and no catch-all. Documents where the 1.3.1
+  item happened to be absent voiced their clauses correctly, which is what
+  showed the mechanism was sound and the route was not. The family route is now
+  gone; only `7.18.1-3` is suppressed, because the 4.1.2 item genuinely says it.
+
+  **The corpus cannot catch this class.** `SUPPRESSED` in `score.ts` mirrors the
+  domain route, so a suppressed-but-unvoiced clause is neither `silent` nor
+  `suppressedButQuiet` — the scorecard read `Silent gaps 0` the whole time.
+  Verify a routing change by diffing veraPDF's clauses against our items
+  directly, never by the scorecard. And move the mirror in the same commit.
+  See `docs/research/document-remediation/annotation-clauses-results.md`.
+
+- **`PDPage` does not override `equals`, so never key a map on it.**
+  `PDStructureElement.getPage()` builds a fresh wrapper around the page's
+  dictionary. A `Map<PDPage, Integer>` misses every time: all 101 of r05's
+  figures reported no page while qpdf showed every one carrying `/Pg`. Key on
+  `page.getCOSObject()`, which is the same object. `StructText.java` has a
+  `Map<PDPage, Integer>` of its own that works only because it never looks up
+  with a wrapper obtained elsewhere.
 
 - **A count read from the AcroForm field tree is not a count of form fields.**
   PDFBox's `getFieldTree()` resolves inherited `/TU` correctly and returns

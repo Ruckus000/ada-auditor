@@ -33,7 +33,7 @@ const REAL_OUTPUT = {
     { level: 'H1', text: 'Agenda' },
     { level: 'H2', text: 'Apologies' },
   ],
-  figures: [{ type: 'Figure', alt: 'A map of the site', actualText: null }],
+  figures: [{ type: 'Figure', alt: 'A map of the site', actualText: null , page: null}],
   tables: [
     {
       th: 1,
@@ -65,7 +65,7 @@ describe('documentStructureSchema', () => {
       ...REAL_OUTPUT,
       lang: null,
       title: null,
-      figures: [{ type: 'Figure', alt: null, actualText: null }],
+      figures: [{ type: 'Figure', alt: null, actualText: null , page: null}],
     });
     expect(parsed.title).toBeNull();
     expect(parsed.figures[0]?.alt).toBeNull();
@@ -77,7 +77,7 @@ describe('documentStructureSchema', () => {
     // were the same deleted four meaningful images from one document.
     const empty = documentStructureSchema.parse({
       ...REAL_OUTPUT,
-      figures: [{ type: 'Figure', alt: '', actualText: null }],
+      figures: [{ type: 'Figure', alt: '', actualText: null , page: null}],
     });
     expect(empty.figures[0]?.alt).toBe('');
     expect(empty.figures[0]?.alt).not.toBeNull();

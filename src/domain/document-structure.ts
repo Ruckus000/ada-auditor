@@ -69,6 +69,20 @@ export const figureSchema = z.object({
   type: z.string(),
   alt: z.string().nullable(),
   actualText: z.string().nullable(),
+  /**
+   * The 1-based page the element declares, or null when it declares none.
+   *
+   * The punch list's figure ordinal is a position in THIS array, which nobody
+   * can find in a 37-page document without counting `/Figure` tags. The page is
+   * what makes the item actionable, and it is the same thing contrast findings
+   * already carry.
+   *
+   * Nullable rather than optional: `Inspect` always emits the key, so a stage
+   * that stopped would fail loudly instead of reading as "no page". Null is the
+   * honest answer for an element with no `/Pg` — measured at 0 of 279 across the
+   * corpus, but absent beats invented.
+   */
+  page: z.number().int().positive().nullable(),
 });
 
 export const documentStructureSchema = z.object({
