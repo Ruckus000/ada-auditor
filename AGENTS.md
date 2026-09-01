@@ -874,6 +874,36 @@ Read this before claiming something works.
   touched declare a language — and right either way, but it is a clause
   appearing because we wrote something.
 
+- **A description library is DECLINED on evidence, and the claim that it needed
+  "a client with repeat documents" was half wrong.** The proposal was that a
+  description written once be reused for the same image. `[V]` Two measurements
+  killed it. First, the cross-document case cannot be tested here at all: all
+  24 delivered documents failing `7.3-1` come from **24 different hosts**, and
+  the corpus's six real multi-document organizations contribute **zero**
+  description-blocked figures between them. Second, the within-document case —
+  which needs no client and no invented repeat rate — was measured over 250
+  undescribed figures and clears **fewer than 3% of items** (2 documents met
+  the registered ≥30% bar against a threshold of 3).
+
+  The finding worth carrying: **page furniture accounts for 25 of the 35
+  figures that share an image at all** — a logo on every page, tagged `/Figure`
+  rather than `/Artifact`. r09 carries 20 of them behind 4 images. That is the
+  artifacting question above, not a description problem, and the registered
+  criterion excluding furniture is the only reason this run did not read as a
+  positive result.
+
+  Two things about the instrument, stated because they bound the conclusion:
+  it resolves only **44.8%** of undescribed figures to an image (8 of 24
+  documents resolve none), and the decline criterion was written per-DOCUMENT
+  (8/24, exactly a third, does not fire) when the question is per-FIGURE. A
+  better instrument is the only thing that could overturn this, and it would
+  have to find sharing in the 138 unmapped figures at a rate the mapped ones do
+  not show. **Do not re-propose reuse without clearing that bar first.** If it
+  is ever reopened, it is approval-gated and never automatic: the same
+  photograph is "the town hall" in a directory and "the property showing the
+  unpermitted addition" in an enforcement notice. See
+  `docs/research/document-remediation/image-reuse-declined.md`.
+
 - **Artifacting decorative figures is DECLINED, and the code for it already
   exists.** `experiments/document-remediation/Figures.java` (302 lines)
   implements the whole technique: the two-part edit that PDF/UA requires — the
