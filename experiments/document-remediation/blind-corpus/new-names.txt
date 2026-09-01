@@ -1,0 +1,70 @@
+# The second fresh real corpus: local id, then source URL. Bytes stay local and
+# gitignored; this map is what makes the harvest reproducible and the
+# disjointness from the training set checkable by somebody else.
+#
+# 50 documents, 33 PDF and 17 Word, across 44 hosts sharing no domain with the
+# training manifests or with the first blind corpus. Every URL was fetched and
+# its MAGIC BYTES checked before it was written here — a login page saved as a
+# .pdf would otherwise enter the corpus and be scored as a document the product
+# mishandled. Constructed URLs were rejected at a high rate; these are links
+# that were live at harvest time.
+#
+# The genre spread is deliberate and reflects what public bodies actually
+# publish: council and board minutes, permit and licence applications, employee
+# and grant forms, university policy and syllabus templates, accessibility
+# guidance, and one federal passport form. The Word half is dominated by
+# municipal minutes because that is where Word survives in public publishing.
+
+# ---------------------------------------------------------------- PDF (33)
+n01.pdf https://mml.org/resources/publications/ebooks/Meeting%20Agendas%20And%20Minutes%2011-28-17%20(1).pdf
+n02.pdf https://valleycountyne.gov/wp-content/uploads/sites/54/2026/01/bos-2025-12-30-agenda.pdf
+n03.pdf https://itsapps.kerncounty.com/clerk/minutes/boardagenda.pdf
+n04.pdf https://mysccar.org/upload/files/Meetings48Agenda_20250307234916333.pdf
+n05.pdf https://usd437.net/uploads/content/editor/boe/board-policies_63b58fb159b37.pdf
+n06.pdf https://arpa.cookcountyil.gov/sites/g/files/ywwepo311/files/document/file/2025-05/20250226_BUC%20grant%20guide_FINAL.pdf
+n07.pdf https://crcogct.gov/wp-content/uploads/2025/04/SS4A-FY25_Implementation_Narrative_Template_03312025.pdf
+n08.pdf https://www.dhs.state.il.us/OneNetLibrary/27896/documents/DDDWavierAppendix/dddnofo/ProgramNarrativeTemplate.pdf
+n09.pdf https://www.cityofwoodland.gov/DocumentCenter/View/193/City-Clerk-PDF
+n10.pdf https://www.fontanaca.gov/DocumentCenter/View/2748/CLAIM-FORM
+n11.pdf https://eforms.state.gov/Forms/ds11_pdf.PDF
+n12.pdf https://www.castlepinesco.gov/wp-content/uploads/2025/12/December-9-City-Council-Meeting-Agenda.pdf
+n13.pdf https://www.cityofsebastopol.gov/wp-content/uploads/2024/09/FINAL-DECEMBER-16-2025-City-Council-Meeting-Agenda-.pdf
+n14.pdf https://www.cityofwarren.org/wp-content/uploads/2025/07/City-Council-Meeting-March-25-2025-Agenda.pdf
+n15.pdf https://conwayarkansas.gov/wp-content/uploads/2025/06/November-25-2025-City-Council-Agenda.pdf
+n16.pdf https://www.burlingame.org/DocumentCenter/View/156/Building-Permit-Application-PDF
+n17.pdf https://www.waterfordct.gov/DocumentCenter/View/200/Keeping-of-Poultry-and-Rabbit-Permit-Application-PDF
+n18.pdf https://www.milpitas.gov/DocumentCenter/View/210/Scope-of-Work-Form-PDF
+n19.pdf https://www.gardencityny.net/DocumentCenter/View/242/Building-Permit-Application-Form-with-Instructions-PDF
+n20.pdf https://www.durhamnc.gov/DocumentCenter/View/983/Building-Permit-Application-Form-PDF
+n21.pdf https://www.grantcountywa.gov/DocumentCenter/View/435/Conditional-Use-Permit-Application-Form-PDF
+n22.pdf https://www.livingstonnj.org/DocumentCenter/View/71/Permit-Request-Form-PDF
+n23.pdf https://www.albanyny.gov/DocumentCenter/View/954/Grading-Permit-Application-Form-PDF
+n24.pdf https://powderspringsga.gov/DocumentCenter/View/8100/Commercial_Permit_Application-Cobb-County
+n25.pdf https://www.placer.ca.gov/DocumentCenter/View/1930/Permits-Fact-Sheet-PDF
+n26.pdf https://elginil.gov/DocumentCenter/View/85400/Rental-License-Application-NEW
+n27.pdf https://www.middletownnj.org/AgendaCenter/ViewFile/Minutes/_01072026-748
+n28.pdf https://www.richmondca.gov/DocumentCenter/View/62422/City-of-Richmond-Partnership-Policy-and-Application
+n29.pdf https://www.cms.gov/files/document/partscdreadinesschecklistcy2024.pdf
+n30.pdf https://www.cityofmontrose.org/DocumentCenter/View/258/Residential-Construction-Permit
+n31.pdf https://lafayette.in.gov/AgendaCenter/ViewFile/ArchivedAgenda/_04252017-795?packet=true
+n32.pdf https://www.ada.nv.gov/siteassets/adanew.nv.gov/content/training/Word-ADA-Instructions.pdf
+n33.pdf https://www.binghamton.edu/grad-school/pdf/graduate_program_handbook_template.pdf
+
+# --------------------------------------------------------------- Word (17)
+n34.docx https://www.fnsb.gov/DocumentCenter/View/1308/Meeting-Minutes-Template-DOCX
+n35.docx https://www.marionks.net/DocumentCenter/View/368/Application-for-Residential-Conditional-Use-Permit-DOCX
+n36.docx https://valenciacollege.edu/students/office-for-students-with-disabilities/documents/osd-creating-an-accessible-syllabus.docx
+n37.docx https://policy.usc.edu/wp-content/uploads/2021/06/Guidelines-Template.docx
+n38.docx https://accessibility.psu.edu/files/2023/07/Instructions-for-Template-SFL-23.docx
+n39.docx https://accessibility.psu.edu/files/2023/07/Schedule-Samples-TNR23.docx
+n40.docx https://accessibility.psu.edu/files/2023/08/Instructions-for-Template-BB23.docx
+n41.docx https://content-calpoly-edu.s3.amazonaws.com/ctlt/1/images/CalPolySLOAccessibleSyllabusTemplate%202023.docx
+n42.docx https://policy.ufl.edu/wp-content/uploads/2023/10/UF-Policy-Template-10-18-2023.docx
+n43.docx https://tunkboro.com/wp-content/uploads/2020/06/April-Minutes-2020.docx
+n44.docx https://tunkboro.com/wp-content/uploads/2021/05/May-6-2021-Minutes.docx
+n45.docx https://tunkboro.com/wp-content/uploads/2022/09/August-1-2022-Minutes.docx
+n46.docx https://tunkboro.com/wp-content/uploads/2023/08/July-6-2023-Minutes.docx
+n47.docx https://www.toftemn.com/wp-content/uploads/2024/08/Tofte-Township-2024-Annual-Meeting-Minutes.docx
+n48.docx https://huntingdonboro.com/wp-content/uploads/2024/04/02202024-Huntingdon-Borough-Council-Meeting-Minutes.docx
+n49.docx https://huntingdonboro.com/wp-content/uploads/2024/07/07022024-Huntingdon-Borough-Administrative-Committee-Meeting-Minutes.docx
+n50.docx https://www.westsadsburytwp.org/wp-content/uploads/2025/09/2025-02-11-BOS-Meeting-Minutes-final.docx

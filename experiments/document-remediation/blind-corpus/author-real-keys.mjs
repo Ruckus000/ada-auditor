@@ -471,6 +471,19 @@ mkdirSync(KEYS, { recursive: true });
  */
 const CORRECTIONS_MODE = process.argv.includes('--corrections');
 
+/**
+ * `--only=<prefix>` authors keys for one cohort and leaves every other locked
+ * key alone.
+ *
+ * Without it, default mode rewrites EVERY key in `keys/` from the current
+ * reading — which for the documents already locked would silently replace the
+ * answers the product has been graded against, and erase the corrections that
+ * record where the instrument was wrong. That is the one failure mode a blind
+ * test cannot survive, so adding a second cohort has to be able to say which
+ * cohort it means.
+ */
+const ONLY = (process.argv.find((a) => a.startsWith('--only=')) ?? '').slice('--only='.length);
+
 const EVIDENCE = {
   disposition:
     'qpdf: the catalog carries /StructTreeRoot and structure elements that omit the optional /Type /StructElem,'
@@ -497,6 +510,7 @@ const files = readdirSync(REAL).sort();
 const rows = [];
 
 for (const file of files) {
+  if (ONLY && !file.startsWith(ONLY)) continue;
   const path = join(REAL, file);
   const bytes = readFileSync(path);
   const isPdf = bytes.subarray(0, 1024).includes('%PDF-');
