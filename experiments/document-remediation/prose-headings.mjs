@@ -73,56 +73,57 @@ const docs = [];
 for (const file of readdirSync(DELIVERED).filter((f) => f.endsWith('.pdf')).sort()) {
   const read = inspect(join(DELIVERED, file));
   if (read === null) continue;
-  const headings = read.headingTexts ?? [];
-  if (headings.length === 0) continue;
+  const texts = (read.headingTexts ?? []).map((h) => (h.text ?? '').trim()).filter(Boolean);
+  // Under three headings there is no "share" worth the name.
+  if (texts.length < 3) continue;
 
-  const lengths = headings.map((h) => WORDS(h.text ?? ''));
-  const levels = new Set(headings.map((h) => h.level));
+  const lengths = texts.map(WORDS).sort((a, b) => a - b);
   docs.push({
     id: file.replace(/\.pdf$/, ''),
-    headings: headings.length,
-    blocks: (read.order ?? []).length,
-    levels: levels.size,
-    long: lengths.filter((n) => n >= 12).length,
-    veryLong: lengths.filter((n) => n >= 20).length,
-    sentences: headings.filter((h) => ENDS_SENTENCE(h.text ?? '')).length,
-    longAndSentence: headings.filter(
-      (h) => WORDS(h.text ?? '') >= 12 && ENDS_SENTENCE(h.text ?? ''),
-    ).length,
-    maxWords: Math.max(...lengths),
+    headings: texts.length,
+    levels: new Set((read.headingTexts ?? []).map((h) => h.level)).size,
+    medianWords: lengths[Math.floor(lengths.length / 2)],
+    maxWords: lengths[lengths.length - 1],
+    sentences: texts.filter(ENDS_SENTENCE).length,
+    share: texts.filter(ENDS_SENTENCE).length / texts.length,
   });
 }
 
-const fires = (predicate) => docs.filter(predicate);
-const pct = (n) => `${((n / docs.length) * 100).toFixed(0)}%`;
+const table = (label, hits) =>
+  console.log(`| ${label.padEnd(50)} | ${String(hits.length).padStart(2)} | ${hits.map((d) => d.id).join(' ') || '—'} |`);
 
-console.log(`documents with at least one heading: ${docs.length}`);
-console.log(`headings in total                  : ${docs.reduce((a, d) => a + d.headings, 0)}`);
-console.log();
-console.log('| narrowing                                              | documents firing |');
-console.log('|---|---:|');
-const rows = [
-  ['any heading of 12+ words', (d) => d.long > 0],
-  ['any heading of 20+ words', (d) => d.veryLong > 0],
-  ['any heading ending in sentence punctuation', (d) => d.sentences > 0],
-  ['12+ words AND ends a sentence', (d) => d.longAndSentence > 0],
-  ['...and more than 5 such headings', (d) => d.longAndSentence > 5],
-  ['...and the document has ONE heading level only', (d) => d.longAndSentence > 5 && d.levels === 1],
-  ['...and headings are over a third of all blocks', (d) => d.longAndSentence > 5 && d.levels === 1 && d.blocks > 0 && d.headings / d.blocks > 1 / 3],
-];
-for (const [label, predicate] of rows) {
-  const n = fires(predicate).length;
-  console.log(`| ${label.padEnd(54)} | ${String(n).padStart(3)} (${pct(n)}) |`);
+console.log(`documents with 3+ headings: ${docs.length}`);
+console.log(`headings in total         : ${docs.reduce((a, d) => a + d.headings, 0)}`);
+
+// ---------------------------------------------------------------- length
+//
+// The obvious signal, and the weaker one. It cannot separate a VERBOSE heading
+// from a sentence: n29 carries 83 headings with a median of 11 words and a
+// maximum of 34, and not one of them ends a sentence. They are long section
+// titles, correctly marked up. A length rule calls that document broken.
+console.log('\n## Length alone\n');
+console.log('| narrowing | documents | which |');
+console.log('|---|---:|---|');
+table('median heading of 8+ words', docs.filter((d) => d.medianWords >= 8));
+table('median heading of 12+ words', docs.filter((d) => d.medianWords >= 12));
+table('any heading of 20+ words', docs.filter((d) => d.maxWords >= 20));
+
+// ------------------------------------------------------------ punctuation
+//
+// The better signal, and a FACT rather than a judgement: a heading ending in a
+// full stop is a sentence somebody marked as a heading. Measured as a SHARE,
+// because one such heading in ninety is a typo and thirty in forty-nine is how
+// the document was written.
+console.log('\n## Sentence punctuation, as a share of the document\'s headings\n');
+console.log('| threshold | documents | which |');
+console.log('|---|---:|---|');
+for (const t of [0.6, 0.5, 0.4, 0.3, 0.25, 0.2, 0.1]) {
+  table(`>= ${(t * 100).toFixed(0)}% of headings end a sentence`, docs.filter((d) => d.share >= t));
 }
 
-console.log();
-console.log('documents firing the narrowest rule, with their numbers:');
-for (const d of fires(rows[rows.length - 1][1])) {
-  console.log(`  ${d.id.padEnd(24)} headings=${d.headings} blocks=${d.blocks} levels=${d.levels} long+sentence=${d.longAndSentence} maxWords=${d.maxWords}`);
-}
-
-console.log();
-console.log('documents firing "12+ words AND ends a sentence" but NOT the narrowest:');
-for (const d of fires((x) => x.longAndSentence > 0 && !(x.longAndSentence > 5 && x.levels === 1 && x.blocks > 0 && x.headings / x.blocks > 1 / 3))) {
-  console.log(`  ${d.id.padEnd(24)} headings=${d.headings} blocks=${d.blocks} levels=${d.levels} long+sentence=${d.longAndSentence} maxWords=${d.maxWords}`);
+console.log('\n## Every document above zero\n');
+console.log('| document | headings ending a sentence | of | share |');
+console.log('|---|---:|---:|---:|');
+for (const d of docs.filter((x) => x.share > 0).sort((a, b) => b.share - a.share)) {
+  console.log(`| ${d.id} | ${d.sentences} | ${d.headings} | ${(d.share * 100).toFixed(0)}% |`);
 }

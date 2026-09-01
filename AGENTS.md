@@ -658,9 +658,10 @@ Read this before claiming something works.
   the field added to state the limits. **Do not assemble `scope` from a
   constant: a stage that can fail must add its own criterion.**
 
-  **Both criteria the pipeline does not reach have now been MEASURED and
+  **All three criteria the pipeline does not reach have been MEASURED and
   declined, rather than left unexamined.** `1.3.2` Meaningful Sequence is on
-  `legal-standard.md`'s pass mark; `1.4.1` Use of Color is not. Neither ships:
+  `legal-standard.md`'s pass mark; `1.4.1` Use of Color and `2.4.6` Headings and
+  Labels are not. None ships:
 
   - `1.4.1` — 17 of 23 real documents carry a saturated minority accent, and
     the overwhelming majority are hyperlinks and Word theme heading colours, so
@@ -673,7 +674,27 @@ Read this before claiming something works.
     in the reading order does not affect meaning.
     See `docs/research/document-remediation/meaningful-sequence-feasibility.md`.
 
-  Both stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
+  - `2.4.6` — a heading that IS a sentence is a real barrier, and one corpus
+    document carries 49 of them (longest: 77 words) because its author
+    outline-levelled body paragraphs. The signal is clean — the share of a
+    document's headings ending in sentence punctuation, one comparison, no
+    exemptions — and at ≥30% it fires on **exactly that document** across 118
+    delivered documents, with zero false positives.
+
+    **Refused for a third and different reason: it fires ONCE.** 1.4.1 was
+    refused for imprecision and 1.3.2 for being wrong; this one for
+    insufficient evidence. One document cannot distinguish a rule that works
+    from a rule fitted to the document it was written against — and it was
+    written knowing what that document looked like. Two more above 30% in a
+    later corpus meets the registered criteria; the threshold is already in
+    `experiments/document-remediation/prose-headings.mjs`.
+    See `docs/research/document-remediation/prose-headings-feasibility.md`.
+
+  All three stay in `NOT_CHECKED_CRITERIA`, which is disclosure, not silence.
+  **Do not add a fourth without registering decline criteria first.** The 2.4.6
+  measurement's first pass narrowed on four stacked conditions to get 13
+  documents down to 1 — the `/Artifact` contrast mistake in miniature — and was
+  discarded for a single comparison that does the same work honestly.
 
 - **The summary header is BOUNDED, and the bound is a safety net rather than a
   routine trim.** The summary travels in `x-remediation-summary` with one item

@@ -723,6 +723,28 @@ export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string 
   // tagged magazine looks broken to it — and the exemptions needed to quiet
   // that would silently pass over a real defect at a section boundary.
   { number: '1.3.2', name: 'Meaningful Sequence' },
+  // Measured third, and refused for a DIFFERENT reason from the other two,
+  // which is worth keeping straight because it changes what would reopen it.
+  //
+  // A heading that is a sentence is a real barrier — one corpus document
+  // carries 49 of them, the longest 77 words, because its author outline-
+  // levelled body paragraphs. The signal is clean: the share of a document's
+  // headings that end in sentence punctuation, one comparison, no exemptions.
+  // At >= 30% it fires on exactly that document and nothing else, with no
+  // false positives anywhere in 118 delivered documents.
+  //
+  // It is refused because it fires ONCE. 1.4.1 was refused for imprecision (17
+  // documents to be right about 4) and 1.3.2 for being wrong (zero true
+  // positives); this one is refused for insufficient evidence. One document
+  // cannot distinguish a rule that works from a rule fitted to the document it
+  // was written against — and it was written knowing what that document looked
+  // like. Shipping it would claim we check something seen to work once.
+  //
+  // The threshold is measured and waiting in
+  // `experiments/document-remediation/prose-headings.mjs`. Two more documents
+  // above 30% in a later corpus and the registered criteria are met.
+  // See `docs/research/document-remediation/prose-headings-feasibility.md`.
+  { number: '2.4.6', name: 'Headings and Labels' },
 ];
 
 /**
