@@ -523,6 +523,29 @@ wordRow(
 );
 
 wordRow(
+  'w19-outline-level-headings',
+  'Headings declared by outline level alone: one direct, one through a custom style that inherits it.',
+  { fn: 'docx', args: { title: 'Permit Conditions', lang: 'en-US', shape: 'outline-headings' } },
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Permit Conditions', language: 'en-US',
+    counts: { headings: 3, tables: 0, lists: 0, figures: 0 }, needs: [], gapCriteria: [] },
+  // The shape the corpus could not express, and so could not catch. `heading()`
+  // writes a `w:pStyle`, and until now that was the only heading this corpus
+  // knew how to plant — so every row agreed with a reader that matched on the
+  // style NAME. Two real documents did not: one declared 84 headings with a
+  // direct `w:outlineLvl` and no style at all, the other used a custom style
+  // inheriting its level through `w:basedOn`. Both were scored as the product
+  // inventing structure when the product had read them correctly.
+  //
+  // THREE, not four: the body carries a fourth outline-levelled paragraph with
+  // no text, and `removeEmptyHeadings` deletes it. The count proves that
+  // deletion happens rather than assuming it.
+  //
+  // `core`, so a miscount is fatal either way: `invented-structure` is fatal at
+  // any weight, and a shortfall is fatal on core. If the converter ever stops
+  // carrying outline-level headings, or starts inventing them, this row fails.
+);
+
+wordRow(
   'w04-fake-headings',
   'Bold twenty-four point text that looks like a heading and is structurally a paragraph.',
   { fn: 'docx', args: { title: 'Looks Structured', lang: 'en-US', shape: 'fake-headings' } },

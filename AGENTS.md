@@ -552,6 +552,28 @@ Read this before claiming something works.
   actually be scrambled are the ones never delivered. Any future reading-order
   work needs evidence from a population this corpus does not contain.
 
+- **A heading in Word is an OUTLINE LEVEL, not a style called `HeadingN`.**
+  A style name is the commonest way to acquire one, and matching the name misses
+  two shapes that occur in the wild: a direct `w:outlineLvl` in a paragraph's
+  `w:pPr` (a township's minutes declared all 84 of its headings that way, with
+  zero `HeadingN` in the body), and a custom style carrying no level of its own
+  that inherits one through `w:basedOn` (`contactheading` based on `Heading2`).
+  Count only paragraphs that carry text, because `removeEmptyHeadings`
+  (`flat-odf.ts:200`) deletes the blank ones — that is what makes a source
+  reading agree with the delivered document instead of approximating it.
+  `w19-outline-level-headings` plants both shapes; before it, the corpus could
+  not express either.
+
+- **The second blind corpus's 8 "invented claims" were all instrument, and I
+  published the opposite before checking.** 50 real documents from 44 unseen
+  hosts, first run: five PDFs disagreed because the key ignored `/RoleMap`, one
+  because a table sat in `word/footnotes.xml`, and two because of the heading
+  rule above. I reported that the converter had fabricated 49 headings and
+  called it a manufactured barrier. It had not; the document's own author
+  outline-levelled 49 body sentences. Four campaigns in, the keys have been
+  wrong far more often than the product — assume the instrument first.
+  See `docs/research/document-remediation/second-corpus-results.md`.
+
 - **A key file is not what the scorer reads.** `score.ts` applies
   `corrections.json` over the key, so `r05.key.json` says `needs: []` while the
   scorer expects 101 `1.1.1` items from the overlay. A design validated against

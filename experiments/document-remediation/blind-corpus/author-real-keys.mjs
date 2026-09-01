@@ -385,7 +385,72 @@ function readDocx(path) {
     .map((n) => part(n))
     .join('');
 
-  const headingLevels = [...doc.matchAll(/w:val="Heading(\d)"/g)].map((m) => Number(m[1]));
+  // A heading is a paragraph with an OUTLINE LEVEL. A style called `HeadingN`
+  // is merely the commonest way to acquire one, and matching that name was this
+  // instrument's third failure of the same kind: reading a document more
+  // narrowly than a conforming consumer does, then calling the difference an
+  // invention by the product.
+  //
+  // `[V]` n50 declares its entire outline with 84 direct `w:outlineLvl` on
+  // otherwise unstyled paragraphs and zero `HeadingN` — the key said 0 while the
+  // delivered PDF correctly carried 49. n41 uses `contactheading`, which is
+  // `w:basedOn="Heading2"` and inherits that style's level — the key said 34
+  // against a correct 43. Both were scored as invented claims against a product
+  // that had read the document right.
+  //
+  // The three shapes, after `extract-docx-truth.mjs:88-124`, which already
+  // records two of them from the earlier campaign ("one municipal document used
+  // a style literally named 'Heading', no digit"; "four documents declared all
+  // their structure that way, zero pStyle in the body"). Copied rather than
+  // imported for the reason `isPlaceholderAlt` is copied above: the
+  // independence test forbids this file from reaching outside its own
+  // directory, and one person writing the rule twice is the price of that.
+  // The `w:basedOn` chain is NEW here — that shape defeated the earlier
+  // implementation too.
+  const styleLevel = (() => {
+    const own = new Map();
+    const basedOn = new Map();
+    for (const block of styles.matchAll(/<w:style [^>]*w:styleId="([^"]+)"[\s\S]*?<\/w:style>/g)) {
+      const id = block[1];
+      const level = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(block[0]);
+      if (level) own.set(id, Number(level[1]) + 1);
+      const parent = /<w:basedOn w:val="([^"]+)"\s*\/?>/.exec(block[0]);
+      if (parent) basedOn.set(id, parent[1]);
+    }
+    // Resolve inheritance. Depth-bounded rather than cycle-detected: a
+    // malformed style graph is a document defect and must not hang the author.
+    const resolved = new Map(own);
+    for (const id of basedOn.keys()) {
+      if (resolved.has(id)) continue;
+      let cursor = id;
+      for (let hop = 0; hop < 8; hop += 1) {
+        cursor = basedOn.get(cursor);
+        if (cursor === undefined) break;
+        if (own.has(cursor)) { resolved.set(id, own.get(cursor)); break; }
+      }
+    }
+    return resolved;
+  })();
+
+  const headingLevels = [];
+  for (const m of doc.matchAll(/<w:p[ >][\s\S]*?<\/w:p>/g)) {
+    const para = m[0];
+    // Only paragraphs that SAY something. `removeEmptyHeadings`
+    // (`flat-odf.ts:200`) deletes blank headings on the way through, so
+    // counting them here would make the key disagree with the delivered
+    // document by exactly the number of blanks — 35 of them on n50.
+    const text = [...para.matchAll(/<w:t(?: [^>]*)?>([\s\S]*?)<\/w:t>/g)].map((t) => t[1]).join('');
+    if (text.trim() === '') continue;
+    // Direct formatting first: it overrides the style, which is what OOXML says
+    // and what the converter honours.
+    const direct = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(para);
+    const style = /w:pStyle w:val="([^"]+)"/.exec(para)?.[1];
+    const fromStyle = style
+      ? styleLevel.get(style) ?? (/^Heading([1-9])$/.exec(style) ? Number(style.slice(7)) : null)
+      : null;
+    const level = direct ? Number(direct[1]) + 1 : fromStyle;
+    if (level !== null && level !== undefined) headingLevels.push(level);
+  }
   // DrawingML images AND the legacy VML ones. A document that predates the
   // DrawingML era, or that embeds an OLE object, carries `<v:imagedata>` and
   // no `<wp:docPr>` — the first pass counted four images in a document with
