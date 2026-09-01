@@ -64,8 +64,8 @@ function inspected(over = {}) {
       headings: ['H1', 'H2'],
       headingTexts: [{ level: 'H1', text: SECRET_HEADING }],
       figures: [
-        { type: 'Figure', alt: null, actualText: null },
-        { type: 'Figure', alt: 'a map', actualText: null },
+        { type: 'Figure', alt: null, actualText: null , page: null},
+        { type: 'Figure', alt: 'a map', actualText: null , page: null},
       ],
       tables: [],
       lists: [],

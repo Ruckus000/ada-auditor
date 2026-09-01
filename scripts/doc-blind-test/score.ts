@@ -137,8 +137,14 @@ export type Correction = {
  * them. Mirrored from the domain deliberately rather than imported: if the two
  * drift apart the scorer stops agreeing with the product, which is the point
  * of having a second copy in the instrument that grades it.
+ *
+ * `7.18.1-3` only, not the `7.18` family. The family route let one item
+ * suppress four clauses that reached no one; the domain's own comment records
+ * the measurement. This copy has to move with it, or the scorer keeps grading
+ * against a rule the product no longer follows — which is the exact failure a
+ * second copy exists to catch.
  */
-const SUPPRESSED = /^(7\.2-|7\.2\.|7\.3-|7\.4|7\.1-9|7\.18\.)/;
+const SUPPRESSED = /^(7\.2-|7\.2\.|7\.3-|7\.4|7\.1-9|7\.18\.1-3)/;
 
 /** What the product actually did, read off the response. */
 export function observedDisposition(result: RunResult): Disposition {

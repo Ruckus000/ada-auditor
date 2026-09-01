@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,24 @@ public final class Inspect {
     private static final List<String> HEADINGS = List.of("H1", "H2", "H3", "H4", "H5", "H6");
 
     private final List<String[]> headings = new ArrayList<>();  // {type, text}
-    private final List<String[]> figures = new ArrayList<>();   // {type, alt, actualText}
+    private final List<String[]> figures = new ArrayList<>();   // {type, alt, actualText, page}
+
+    /**
+     * Page object to its 1-based number, built once so a figure can say where
+     * it is.
+     *
+     * Keyed on the page's COSDictionary, NOT on `PDPage`. `el.getPage()` builds a
+     * fresh `PDPage` wrapper around the same underlying dictionary, and `PDPage`
+     * does not override `equals`, so a map keyed by the wrapper misses every
+     * time — measured: all 101 of r05's figures came back with no page while
+     * qpdf showed every one of them carrying `/Pg`. The dictionary is the same
+     * object, so it is the thing to key on.
+     *
+     * Stored 1-BASED because that is what the punch list and `pageList` speak;
+     * `StructText`'s own copy is 0-based, and mixing the two bases is exactly
+     * the off-by-one nobody notices in a page number.
+     */
+    private final Map<COSDictionary, Integer> pageNumbers = new HashMap<>();
     /**
      * Per table: cell counts, and the TEXT of every cell promoted to TH.
      *
@@ -358,6 +376,9 @@ public final class Inspect {
                 .append(",\n");
 
             text = new StructText(doc);
+            for (int i = 0; i < doc.getNumberOfPages(); i++) {
+                pageNumbers.put(doc.getPage(i).getCOSObject(), i + 1);
+            }
 
             if (root != null) {
                 roleMap = root.getRoleMap();
@@ -400,7 +421,12 @@ public final class Inspect {
                 String[] f = figures.get(i);
                 json.append("    {\"type\": ").append(q(f[0]))
                     .append(", \"alt\": ").append(q(f[1]))
-                    .append(", \"actualText\": ").append(q(f[2])).append("}")
+                    .append(", \"actualText\": ").append(q(f[2]))
+                    // A number, not a string: `q()` would quote it and the
+                    // schema parses `z.number()`. `null` is the honest answer
+                    // when the element declares no page.
+                    .append(", \"page\": ").append(f[3] == null ? "null" : f[3])
+                    .append("}")
                     .append(i < figures.size() - 1 ? "," : "").append("\n");
             }
             json.append("  ],\n");
@@ -492,8 +518,21 @@ public final class Inspect {
                 // heading too many says nothing about which one is wrong.
                 headings.add(new String[] { type, text.of(el) });
             } else if ("Figure".equals(type) || "Formula".equals(type)) {
+                // `el.getPage()` reads the element's own `/Pg`, and every one of
+                // the 279 figure elements in the blind corpus carries it.
+                //
+                // Deliberately NOT `text.boxOf(el).page()`: that registers a box
+                // only when text was harvested, so an image-only figure — the
+                // ordinary undescribed one — resolves to nothing, and its
+                // fallback scans every page's MCID map and takes the first hit.
+                // MCIDs restart at 0 on each page, so that path can return the
+                // WRONG page, and a wrong page on a client's public report is a
+                // fabricated location. Absent beats invented.
+                PDPage page = el.getPage();
+                Integer number = page == null ? null : pageNumbers.get(page.getCOSObject());
                 figures.add(new String[] {
                     type, el.getAlternateDescription(), el.getActualText(),
+                    number == null ? null : String.valueOf(number),
                 });
             } else if ("Table".equals(type)) {
                 table = new Tbl();

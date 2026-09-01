@@ -265,6 +265,64 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
   });
 
   /**
+   * Two tagged figures on different pages, and one that declares no page.
+   *
+   * The page a figure reports is printed on a client's public report, and no
+   * answer key in the blind corpus checks it — so this is the only thing that
+   * would catch it being wrong. A wrong page is worse than no page: it sends a
+   * person to the wrong part of their own document.
+   *
+   * It also pins the bug that made the first implementation report NOTHING.
+   * `el.getPage()` builds a fresh `PDPage` wrapper around the page's
+   * dictionary, and `PDPage` does not override `equals`, so a map keyed on the
+   * wrapper missed every time — all 101 of r05's figures came back with no page
+   * while qpdf showed every one carrying `/Pg`. Two pages here, so a map that
+   * regressed to identity would fail rather than accidentally pass.
+   */
+  function figurePdf(): Buffer {
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 8 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 5 0 R >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 6 0 R >>',
+      '<< /Length 10 >>\nstream\n% page 1\nendstream',
+      '<< /Length 10 >>\nstream\n% page 2\nendstream',
+      // Unused, kept so object numbering stays readable against /K below.
+      '<< /Type /StructElem /S /Document /K [9 0 R 10 0 R 11 0 R] /P 8 0 R >>',
+      '<< /Type /StructTreeRoot /K 7 0 R >>',
+      // On page 1.
+      '<< /Type /StructElem /S /Figure /P 7 0 R /Pg 3 0 R >>',
+      // On page 2 — a different page, so an identity-keyed map cannot pass.
+      '<< /Type /StructElem /S /Figure /P 7 0 R /Pg 4 0 R >>',
+      // Declares no page at all.
+      '<< /Type /StructElem /S /Figure /P 7 0 R >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('reports the page each figure declares, 1-based, and null for none', async () => {
+    const path = join(dir, 'figures.pdf');
+    await writeFile(path, figurePdf());
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable(`could not read the figure fixture: ${JSON.stringify(result.failure)}`);
+    else {
+      expect(result.value.figures.map((f) => f.page)).toEqual([1, 2, null]);
+    }
+  });
+
+  /**
    * A document with other documents inside it.
    *
    * `collection: true` makes it a portfolio; without it, the same attachment

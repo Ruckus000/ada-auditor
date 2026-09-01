@@ -265,30 +265,46 @@ export function boundSummary(
  * handed in, never fetched. Two clause families become items a person can act
  * on; everything else lands in a catch-all naming the clause ids — the
  * promise generalized, so no clause present or future fails in silence.
- * Families our own vocabulary already voices (language, figures, headings,
- * the title, annotation nesting) are left to the items that voice them,
- * or every document would say everything twice.
+ * Clauses our own vocabulary already voices (language, figures, headings, the
+ * title, a form field's name) are left to the items that voice them, or every
+ * document would say everything twice. Note CLAUSES, not families — see the
+ * table below for the four that reached nobody when 7.18 was routed whole.
  */
 /**
  * Which of our own items is supposed to be saying what a clause says.
  *
  * The UA-1 clause a family belongs to, paired with the criterion our own
  * vocabulary voices it under: 7.2 Text with the language item, 7.3 Graphics
- * with the figure descriptions, 7.4 Headings with the heading-level item, 7.18
- * Annotations with the unreachable-annotation item, and 7.1-9 with the title.
+ * with the figure descriptions, 7.4 Headings with the heading-level item,
+ * 7.1-9 with the title, and 7.18.1-3 with the form-field name.
+ *
+ * ## Route a CLAUSE, never a family
+ *
+ * `7.18` used to be routed whole, to 1.3.1, on the reading that our
+ * unreachable-annotation item speaks for annotations. It does not. `7.18` holds
+ * unrelated questions — a form field's name (7.18.1-3), a page's `/Tabs`
+ * (7.18.3-1), a widget's `Form` nesting (7.18.4-1), a link's `Link` nesting
+ * (7.18.5-1) — and our item answers only the last two, approximately. Because
+ * suppression is earned per CRITERION rather than per clause, any document
+ * carrying the 1.3.1 item suppressed the whole family with it.
+ *
+ * `[V]` Measured across the corpus: r13 (a real document) reached the client
+ * with `7.18.3-1` and `7.18.4-1` named nowhere, p15 with `7.18.4-1`, p30 with
+ * `7.18.5-1` — four instances, in no gap, no need and no catch-all. Documents
+ * where the 1.3.1 item was absent voiced their 7.18 clauses correctly, which is
+ * what showed the mechanism was sound and the route was not.
+ *
+ * Only `7.18.1-3` stays, because 4.1.2's item genuinely says what that clause
+ * says: this many form fields have no accessible name. The rest of 7.18 now
+ * falls to the catch-all and is named by id. That costs mild duplication on a
+ * document where the 1.3.1 item also fires, which is a far smaller thing than a
+ * clause reaching nobody.
  */
 const VOICED_BY_OUR_INSTRUMENT: ReadonlyArray<{ clause: RegExp; criterion: string }> = [
   { clause: /^7\.2[-.]/, criterion: '3.1.1' },
   { clause: /^7\.3-/, criterion: '1.1.1' },
   { clause: /^7\.4/, criterion: '2.4.10' },
-  // BEFORE the 7.18 family rule below, because `find` takes the first match.
-  // 7.18.1-3 is the accessible NAME of a form field, which 4.1.2 voices; the
-  // rest of 7.18 is annotation nesting, which 1.3.1 voices. Routed together
-  // they were routed wrongly: the nesting item was present on the corpus's one
-  // real form, so it suppressed 7.18.1-3, and 135 unlabelled form fields
-  // reached the client in a punch list that never mentioned them.
   { clause: /^7\.18\.1-3/, criterion: '4.1.2' },
-  { clause: /^7\.18\./, criterion: '1.3.1' },
   { clause: /^7\.1-9/, criterion: '2.4.2' },
 ];
 
@@ -828,8 +844,13 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
   // the original wording that header reached 22,743 bytes and every client on
   // Node's 16KB default rejected the whole response with "Headers Overflow
   // Error" — the client got no punch list at all, which is worse than a blunt
-  // one. See the residual note in AGENTS.md: shortening buys headroom, it does
-  // not bound the header, and the contract is what actually needs fixing.
+  // one.
+  //
+  // `boundSummary` now bounds the header, so overrunning no longer breaks the
+  // delivery — it trims items off the end instead, which is still a client
+  // losing work they were owed. That is why the page is `(p5)` and why this
+  // wording lost the words it could spare: r05 sits ~283 bytes under the budget
+  // WITH the page, and would be over it with `(page 5)`.
   // The item never quotes the description it is refusing. One of the strings
   // this rule catches in the wild is a UNC path naming a private host and an
   // internal directory tree; echoing it here would publish that on the client's
@@ -837,15 +858,26 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
   // the top of this file exists to prevent. What the item says is WHY, by
   // shape — never the string itself.
   structure.figures.forEach((figure, index) => {
+    // The ordinal alone is a position in `structure.figures`, which nobody can
+    // find without counting tags. The page is what makes the item actionable —
+    // and `(p5)` rather than `(page 5)` because those four bytes, times a
+    // document with 101 undescribed figures, are the difference between fitting
+    // the header budget and having items trimmed off the end of the list.
+    //
+    // `figure.type` rather than a literal "Figure": `Inspect` collects `Formula`
+    // into the same array, and once an item names a page a client can go there
+    // and find no figure.
+    const where = figure.page === null ? '' : ` (p${figure.page})`;
+    const at = `${figure.type} ${index + 1}${where}`;
     if (figure.alt === null) {
       needs.push({
         criterion: '1.1.1',
-        item: `Figure ${index + 1}: no alt text and no caption to transcribe — write a description`,
+        item: `${at}: no alt text, no caption to transcribe — write a description`,
       });
     } else if (isPlaceholderAlt(figure.alt)) {
       needs.push({
         criterion: '1.1.1',
-        item: `Figure ${index + 1}: its alt text is a placeholder, not a description (WCAG F30) — write one`,
+        item: `${at}: alt text is a placeholder, not a description (WCAG F30) — write one`,
       });
     }
   });
