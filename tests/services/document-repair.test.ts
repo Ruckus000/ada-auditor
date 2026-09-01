@@ -16,6 +16,7 @@ function structure(over: Partial<DocumentStructure> = {}): DocumentStructure {
     structureElements: 42,
     marked: true,
     signed: false,
+    encrypted: false,
     annotationsNotInStructure: 0,
     formFields: 0,
     formFieldsWithoutName: 0,
@@ -69,6 +70,38 @@ describe('planRepair', () => {
       structure({ signed: true, structureElements: 900, title: 'Certified Record' }),
       'record.pdf',
     );
+    expect(decision.repairable).toBe(false);
+    if (!decision.repairable) expect(decision.refusal.kind).toBe('signed');
+  });
+
+  it('refuses an encrypted PDF by name, not as a stage crash', () => {
+    // The document that started this: encrypted with an EMPTY user password
+    // and an owner password, the shape that restricts printing rather than
+    // reading. It opens, it inspects completely, and it reads as a perfectly
+    // ordinary repairable document — right up until `Finish` tries to write
+    // it and PDFBox refuses to save a file holding an encryption dictionary.
+    //
+    // `[V]` Verified against the corpus fixture: `Inspect` reports it tagged
+    // with a full structure tree, `Finish` throws IllegalStateException. So
+    // the pipeline already failed SAFELY. What it did not do was say why — the
+    // operator saw a generic stage failure, indistinguishable from a corrupt
+    // file. This refusal exists to name the cause and the way out.
+    const decision = planRepair(
+      structure({ encrypted: true, structureElements: 900, title: 'Locked Notice' }),
+      'notice.pdf',
+    );
+
+    expect(decision.repairable).toBe(false);
+    if (decision.repairable) return;
+    expect(decision.refusal.kind).toBe('encrypted');
+    expect(decision.refusal.reason).toContain('unprotected copy');
+  });
+
+  it('names the signature first when a document is both signed and encrypted', () => {
+    // Both refuse, and the order is not arbitrary: the signature is the one
+    // thing a repair could DESTROY, so it is the fact the operator must hear.
+    // Encryption only blocks the write.
+    const decision = planRepair(structure({ signed: true, encrypted: true }), 'record.pdf');
     expect(decision.repairable).toBe(false);
     if (!decision.repairable) expect(decision.refusal.kind).toBe('signed');
   });

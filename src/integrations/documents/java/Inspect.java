@@ -370,6 +370,24 @@ public final class Inspect {
             json.append("  \"signed\": ")
                 .append(!doc.getSignatureDictionaries().isEmpty())
                 .append(",\n");
+            // Whether the document carries an encryption dictionary.
+            //
+            // A PDF encrypted with an EMPTY user password and an owner
+            // password — the common municipal shape, where the point is
+            // restricting printing rather than reading — opens here without a
+            // password and inspects completely. Nothing about the reading says
+            // it is locked.
+            //
+            // `Finish` then cannot write it: PDFBox refuses to save a document
+            // holding an encryption dictionary unless the caller removes the
+            // security or supplies a protection policy. So the repair already
+            // fails safely; what it does NOT do is say why. The stage throws,
+            // and the operator gets a generic pipeline failure that reads the
+            // same as a corrupt file. This fact exists so the refusal can name
+            // the cause, in `services/document-repair.ts`.
+            json.append("  \"encrypted\": ")
+                .append(doc.isEncrypted())
+                .append(",\n");
             json.append("  \"marked\": ")
                 .append(doc.getDocumentCatalog().getMarkInfo() != null
                     && doc.getDocumentCatalog().getMarkInfo().isMarked())

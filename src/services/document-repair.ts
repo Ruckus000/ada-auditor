@@ -36,7 +36,7 @@ import {
 
 /** Why a PDF cannot honestly be repaired, and what to do instead. */
 export type RepairRefusal = {
-  kind: 'not-tagged' | 'signed';
+  kind: 'not-tagged' | 'signed' | 'encrypted';
   /** Operator-facing, and true: what is in the way and what still works. */
   reason: string;
 };
@@ -88,6 +88,37 @@ export function planRepair(
         kind: 'signed',
         reason:
           'this PDF carries a digital signature, and repairing it would invalidate that signature — convert the Word source it was exported from instead, or have the signer re-issue it once it is accessible',
+      },
+    };
+  }
+
+  if (structure.encrypted) {
+    // Refused because the repair CANNOT proceed, not because it would do harm.
+    //
+    // A PDF encrypted with an empty user password and an owner password — the
+    // common municipal shape, restricting printing rather than reading — opens
+    // and inspects completely. It looks like any other repairable document
+    // right up until `Finish` writes it, and PDFBox will not save a document
+    // holding an encryption dictionary.
+    //
+    // `[V]` Verified on the corpus's own encrypted fixture: `Inspect` reads it
+    // as tagged with a full structure tree, and `Finish` throws
+    // `IllegalStateException: PDF contains an encryption dictionary`. So this
+    // ALREADY fails safely and nothing wrong is delivered — the defect is that
+    // it fails as an unnamed stage crash, which an operator cannot tell apart
+    // from a corrupt file or a broken pipeline. Naming it is the whole change.
+    //
+    // Deliberately NOT removing the encryption to proceed: the restrictions
+    // are the document owner's decision, and stripping them to deliver a
+    // "repaired" file would be making that decision for them, invisibly.
+    // After `signed`, which must win when both are true — that refusal names
+    // the one thing repair could destroy.
+    return {
+      repairable: false,
+      refusal: {
+        kind: 'encrypted',
+        reason:
+          'this PDF is encrypted, and its restrictions cannot be rewritten or removed here — supply an unprotected copy, or the Word source it was exported from',
       },
     };
   }

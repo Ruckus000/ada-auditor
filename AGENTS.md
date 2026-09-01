@@ -432,6 +432,22 @@ Read this before claiming something works.
   (emoji embedding) fails one *generated* stratum silently; zero real
   documents hit it.
 
+- **An encrypted PDF is refused BY NAME, and it was never a data-loss bug.**
+  A PDF encrypted with an empty user password and an owner password — the
+  common municipal shape, restricting printing rather than reading — opens
+  without a password and inspects completely, so nothing else in the reading
+  says it is locked. `[V]` Verified directly against the corpus fixture:
+  `Inspect` reads it as tagged with a full structure tree, and `Finish` throws
+  `IllegalStateException: PDF contains an encryption dictionary` — PDFBox will
+  not save a document holding one. **It has always failed safely: nothing is
+  delivered and no permissions are stripped.** An audit claimed the opposite —
+  that `doc.save` silently wrote it decrypted — and running it disproved that
+  before any code was written. Do not "fix" that bug; it does not exist. What
+  was actually wrong is that the refusal arrived as an unnamed stage crash an
+  operator could not tell from a corrupt file, so `structure.encrypted` now
+  feeds a named refusal beside `signed`. The encryption is deliberately NOT
+  removed to proceed: the restrictions are the owner's decision.
+
 - **PDFs are repaired by transcription, or refused — never tagged by
   inference.** `services/document-repair.ts` decides; `Finish` writes; the
   result is read back and `contentChanges` must be empty or the repair is

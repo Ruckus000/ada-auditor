@@ -109,6 +109,18 @@ export const documentStructureSchema = z.object({
    */
   signed: z.boolean(),
   /**
+   * Whether the document carries an encryption dictionary.
+   *
+   * A PDF encrypted with an empty user password and an owner password — the
+   * common municipal shape, where the point is restricting printing rather
+   * than reading — opens and inspects completely, so nothing else in this
+   * reading says it is locked. `Finish` cannot write it back: PDFBox refuses
+   * to save a document holding an encryption dictionary. The repair therefore
+   * already fails safely, and this field exists so the refusal can NAME the
+   * cause instead of surfacing a generic stage crash.
+   */
+  encrypted: z.boolean(),
+  /**
    * Widget and Link annotations with no `/StructParent` — form fields and
    * links that exist on the page and nowhere in the structure tree, so a
    * screen reader cannot reach them in reading order.

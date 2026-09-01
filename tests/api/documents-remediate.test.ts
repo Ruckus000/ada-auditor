@@ -76,6 +76,7 @@ function conversionSucceeds() {
         structure: documentStructureSchema.parse({
           marked: true,
           signed: false,
+          encrypted: false,
           annotationsNotInStructure: 0,
           formFields: 0,
           formFieldsWithoutName: 0,
@@ -112,6 +113,7 @@ function repairReads(over: Record<string, unknown> = {}) {
   const reading = documentStructureSchema.parse({
     marked: true,
     signed: false,
+    encrypted: false,
     annotationsNotInStructure: 0,
     formFields: 0,
     formFieldsWithoutName: 0,
@@ -377,6 +379,7 @@ describe('POST /api/documents/remediate', () => {
           structure: documentStructureSchema.parse({
             marked: true,
             signed: false,
+            encrypted: false,
             annotationsNotInStructure: 0,
             formFields: 0,
             formFieldsWithoutName: 0,

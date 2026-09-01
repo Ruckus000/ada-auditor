@@ -23,6 +23,7 @@ const structure = (over = {}) =>
   documentStructureSchema.parse({
     marked: true,
     signed: false,
+    encrypted: false,
     annotationsNotInStructure: 0,
     formFields: 0,
     formFieldsWithoutName: 0,
@@ -268,6 +269,7 @@ describe('the punch list', () => {
     documentStructureSchema.parse({
       marked: true,
       signed: false,
+      encrypted: false,
       annotationsNotInStructure: 0,
       formFields: 0,
       formFieldsWithoutName: 0,
@@ -396,6 +398,7 @@ describe('withConformance', () => {
       structureElements: 10,
       marked: true,
       signed: false,
+      encrypted: false,
       annotationsNotInStructure: 0,
       formFields: 0,
       formFieldsWithoutName: 0,
@@ -571,6 +574,7 @@ describe('withConformance', () => {
         structureElements: 10,
         marked: true,
         signed: false,
+        encrypted: false,
         annotationsNotInStructure: 0,
         formFields: 0,
         formFieldsWithoutName: 0,
