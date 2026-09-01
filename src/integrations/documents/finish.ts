@@ -98,6 +98,17 @@ export type FinishRequest = {
    * that says nothing changes nothing.
    */
   renumberHeadings?: boolean;
+  /**
+   * Directory of Liberation font programs, when the caller wants 7.21.4.1
+   * closed for fonts that can be replaced METRIC-IDENTICALLY — the stage
+   * proves the widths per document and refuses anything that differs.
+   *
+   * Only the repair lane passes it: LibreOffice embeds everything on
+   * conversion, so there the pass would be a no-op paid for on every run.
+   * Absent (or pointing at nothing), no font is touched and every punch item
+   * stays — the safe direction.
+   */
+  embedFontsDir?: string;
 };
 
 export type FinishOutcome =
@@ -133,6 +144,11 @@ export async function finishDocument(
   // conversion path asks. See the field's comment for why.
   const renumberArgs = request.renumberHeadings === true ? ['--renumber-headings'] : [];
 
+  const embedArgs =
+    request.embedFontsDir !== undefined && request.embedFontsDir !== ''
+      ? ['--embed-fonts', request.embedFontsDir]
+      : [];
+
   // Omitting the argument is what tells the stage to remove the claim; three
   // arguments set one. There is no sentinel string, because a sentinel is a
   // value somebody eventually passes by accident.
@@ -140,7 +156,7 @@ export async function finishDocument(
     try {
       return await runWritingStage(
         'Finish',
-        [request.inputPath, request.outputPath, ...titleArgs, ...uaArgs, ...renumberArgs],
+        [request.inputPath, request.outputPath, ...titleArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
         options,
       );
     } finally {
@@ -166,7 +182,7 @@ export async function finishDocument(
   try {
     return await runWritingStage(
       'Finish',
-      [request.inputPath, request.outputPath, language.data, ...titleArgs, ...uaArgs, ...renumberArgs],
+      [request.inputPath, request.outputPath, language.data, ...titleArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
       options,
     );
   } finally {

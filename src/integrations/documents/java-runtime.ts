@@ -47,6 +47,15 @@ export const DOCUMENT_CLASSES_DIR = join('dist', 'documents', 'classes');
 export const PDFBOX_JAR = join('vendor', `pdfbox-app-${PDFBOX_VERSION}.jar`);
 
 /**
+ * The Liberation font family, fetched pinned-and-checksummed by
+ * `build-documents.ts` — metric-compatible replacements for the Windows faces
+ * real PDFs name without embedding (Arial, Times New Roman, Courier New).
+ * `Finish --embed-fonts` reads programs from here; absent, it embeds nothing
+ * and every punch item stays, which is the safe direction.
+ */
+export const DOCUMENT_FONTS_DIR = join('vendor', 'fonts', 'liberation');
+
+/**
  * A minimal Java runtime shipped beside the function, built by
  * `scripts/prepare-jvm.ts` during a Vercel build.
  *

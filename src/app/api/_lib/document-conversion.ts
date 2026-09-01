@@ -15,6 +15,7 @@ import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/d
 import { measureContrast } from '../../../integrations/documents/contrast';
 import { finishDocument, type FinishRequest } from '../../../integrations/documents/finish';
 import { inspectDocument } from '../../../integrations/documents/inspect';
+import { DOCUMENT_FONTS_DIR } from '../../../integrations/documents/java-runtime';
 import { checkUa1 } from '../../../integrations/documents/verapdf';
 import { logWarn } from '../../../services/logger';
 import { planRepair } from '../../../services/document-repair';
@@ -308,6 +309,13 @@ export async function repairPdfBytes(
       inputPath: source,
       outputPath: output,
       language: decision.plan.language,
+      // Metric-identical replacement programs for fonts the producer named
+      // and never embedded. Finish proves the widths per font and refuses on
+      // any mismatch; with the directory absent it embeds nothing. The
+      // identifier re-stamp spreads this request, which is safe: a font that
+      // gained its program on the first pass is skipped as embedded on the
+      // second.
+      embedFontsDir: join(options.root ?? process.cwd(), DOCUMENT_FONTS_DIR),
       ...(decision.plan.title.kind === 'no-heading-to-copy'
         ? {}
         : { title: decision.plan.title.title }),

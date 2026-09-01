@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { finishDocument } from '../../../../src/integrations/documents/finish';
+import { DOCUMENT_FONTS_DIR } from '../../../../src/integrations/documents/java-runtime';
 import { inspectDocument } from '../../../../src/integrations/documents/inspect';
 import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
 import { contentChanges, type DocumentStructure } from '../../../../src/domain/document-structure';
@@ -393,7 +394,7 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     return parts.join('\n');
   }
 
-  function cidSetPdf(): Buffer {
+  function cidSetPdf(embeddedNoMap = false): Buffer {
     const content = 'BT /F1 12 Tf 20 100 Td <0001> Tj ET';
     const objs = [
       '<< /Type /Catalog /Pages 2 0 R >>',
@@ -405,10 +406,13 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
         + ' /DescendantFonts [6 0 R] >>',
       '<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ABCDEF+TestFont'
         + ' /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >>'
-        + ' /FontDescriptor 7 0 R /CIDToGIDMap /Identity /DW 1000 >>',
+        // The rider's shape drops the map an embedded CIDFontType2 must
+        // carry; the original keeps it, so the CIDSet test proves removal
+        // never touches a map that exists.
+        + ` /FontDescriptor 7 0 R${embeddedNoMap ? '' : ' /CIDToGIDMap /Identity'} /DW 1000 >>`,
       '<< /Type /FontDescriptor /FontName /ABCDEF+TestFont /Flags 4'
         + ' /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 1000 /Descent 0'
-        + ' /CapHeight 1000 /StemV 80 /CIDSet 8 0 R >>',
+        + ` /CapHeight 1000 /StemV 80 /CIDSet 8 0 R${embeddedNoMap ? ' /FontFile2 8 0 R' : ''} >>`,
       '<< /Length 2 >>\nstream\n\xc0\x00\nendstream',
     ];
 
@@ -443,6 +447,20 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     expect(keys).not.toContain('/CIDSet');
     // The font survives — this removes an index, never a glyph source.
     expect(keys).toContain('/CIDFontType2');
+  });
+
+  it('states the CIDToGIDMap default an embedded CIDFontType2 must carry', async () => {
+    // UA-1 7.21.3.2-1. ISO 32000 defines the absent value as Identity, so
+    // writing /Identity states the default every reader already applies —
+    // zero semantic change, one clause honestly closed. Only onto an EMBEDDED
+    // font: on an unembedded one the map is not the problem.
+    const source = join(dir, 'cidmap-source.pdf');
+    const out = join(dir, 'cidmap-finished.pdf');
+    await writeFile(source, cidSetPdf(true));
+
+    expect(await pdfKeys(source)).not.toContain('/CIDToGIDMap');
+    expect((await finishDocument({ inputPath: source, outputPath: out, language: 'en' })).ok).toBe(true);
+    expect(await pdfKeys(out)).toContain('/CIDToGIDMap /Identity');
   });
 
   it('leaves a document with no CID fonts alone', async () => {
@@ -636,6 +654,91 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     const keys = await pdfKeys(out);
     expect(keys).toContain('/Kop2');
     expect(keys).not.toContain('/H1');
+  });
+
+  /**
+   * A TrueType font a producer named and never embedded — the measured shape
+   * carried by 17 of the 19 real documents failing 7.21.4.1-1: a Windows
+   * metric-clone BaseFont, WinAnsi encoding, full /Widths, a descriptor with
+   * no FontFile*.
+   */
+  function unembeddedFontPdf(widths: string, flags: number): Buffer {
+    const stream = 'BT /F1 12 Tf 20 100 Td (AB) Tj ET';
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R'
+        + ' /Resources << /Font << /F1 5 0 R >> >> >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      '<< /Type /Font /Subtype /TrueType /BaseFont /ArialMT /FirstChar 65 /LastChar 66'
+        + ` /Widths [${widths}] /Encoding /WinAnsiEncoding /FontDescriptor 6 0 R >>`,
+      `<< /Type /FontDescriptor /FontName /ArialMT /Flags ${flags} /FontBBox [0 0 1000 1000]`
+        + ' /ItalicAngle 0 /Ascent 728 /Descent -210 /CapHeight 716 /StemV 88 >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  const fontsDir = join(process.cwd(), DOCUMENT_FONTS_DIR);
+
+  async function finishedWithFonts(name: string, fixture: Buffer, embed: boolean): Promise<string> {
+    const source = join(dir, `${name}.pdf`);
+    await writeFile(source, fixture);
+    const out = join(dir, `${name}-finished.pdf`);
+    const finished = await finishDocument({
+      inputPath: source,
+      outputPath: out,
+      language: 'en',
+      ...(embed ? { embedFontsDir: fontsDir } : {}),
+    });
+    expect(finished.ok).toBe(true);
+    return pdfKeys(out);
+  }
+
+  it('embeds a metric-identical program for a font the producer only named', async () => {
+    // Arial 'A' and 'B' are 667/1000 em, and `[V]` Liberation Sans measures
+    // 666.99 for both — inside the guard's 0.5. The write is ONE key: the
+    // descriptor gains a FontFile2 carrying its uncompressed Length1;
+    // BaseFont, Encoding, /Widths and the content stream are untouched, which
+    // is why layout provably cannot move.
+    const keys = await finishedWithFonts('embed-exact', unembeddedFontPdf('667 667', 32), true);
+
+    expect(keys).toContain('/FontFile2');
+    expect(keys).toContain('/Length1');
+  });
+
+  it('refuses the same font over ONE mismatched width', async () => {
+    // 700 where Liberation Sans measures 667. A replacement that changes an
+    // advance moves the client's layout, so the guard refuses the whole font
+    // and the 7.21.4 punch item keeps voicing it — the state before this pass
+    // existed.
+    const keys = await finishedWithFonts('embed-mismatch', unembeddedFontPdf('700 667', 32), true);
+
+    expect(keys).not.toContain('/FontFile2');
+  });
+
+  it('refuses a symbolic font, whatever its widths say', async () => {
+    // Flag bit 3: the encoding is defined by the font program we do not have,
+    // so no width table can prove the replacement draws the same characters.
+    const keys = await finishedWithFonts('embed-symbolic', unembeddedFontPdf('667 667', 4), true);
+
+    expect(keys).not.toContain('/FontFile2');
+  });
+
+  it('embeds nothing without the directory — absence is the safe direction', async () => {
+    const keys = await finishedWithFonts('embed-off', unembeddedFontPdf('667 667', 32), false);
+
+    expect(keys).not.toContain('/FontFile2');
   });
 
   it('fails cleanly on a file that is not a PDF, writing nothing', async () => {
