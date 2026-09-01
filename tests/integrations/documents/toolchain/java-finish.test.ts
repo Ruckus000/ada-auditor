@@ -178,6 +178,76 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     expect(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(packet)).toBe(false);
   });
 
+  /**
+   * A minimal PDF whose DocInfo names an author.
+   *
+   * Hand-written because nothing in the toolchain sets `/Author`: `renderPdf`
+   * is Chromium and does not, and PDFBox's CLI has no metadata setter. The
+   * same approach `java-inspect.test.ts` uses for its signature fixture, and
+   * for the same reason — what is under test is whether `Finish` CARRIES the
+   * field, not how it got there.
+   */
+  function authoredPdf(author: string): Buffer {
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R >>',
+      '<< /Length 36 >>\nstream\nBT /F1 12 Tf 20 100 Td (notice) Tj ET\nendstream',
+      `<< /Author (${author}) /Title (Planning Notice) >>`,
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info 5 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  /**
+   * The author survives the repair.
+   *
+   * `setMetadata` REPLACES the whole XMP packet, so everything a document
+   * declared there is gone unless it is written again. `[V]` 35 of the 52 real
+   * PDFs in the blind corpus declare `dc:creator`, and every repair dropped
+   * it — losing the author of a municipal record while fixing its
+   * accessibility is an edit to somebody's document that nothing discloses and
+   * `contentChanges` cannot see, because metadata is not a content field.
+   *
+   * Carried from DocInfo, which this pass preserves, rather than by parsing
+   * and merging the old packet: DocInfo is already the source of truth for the
+   * title here, and a bad merge writes WRONG metadata where a rebuild writes
+   * none.
+   */
+  it('keeps the author the source declared', async () => {
+    const source = join(dir, 'authored-source.pdf');
+    await writeFile(source, authoredPdf('Borough Clerk'));
+
+    const out = join(dir, 'authored-finished.pdf');
+    expect((await finishDocument({ inputPath: source, outputPath: out, language: 'en' })).ok).toBe(true);
+
+    const packet = (await readFile(out)).toString('latin1');
+    expect(packet).toContain('<dc:creator>');
+    expect(packet).toContain('Borough Clerk');
+  });
+
+  it('does not invent an author for a document that declares none', async () => {
+    // The other half of the rule, and the one that matters more: a rebuilt
+    // packet must not gain a field the document never had.
+    const source = join(dir, 'unauthored-source.pdf');
+    await writeFile(source, await renderPdf('<h1>Notice</h1><p>Body.</p>', { tagged: true }));
+
+    const out = join(dir, 'unauthored-finished.pdf');
+    expect((await finishDocument({ inputPath: source, outputPath: out, language: 'en' })).ok).toBe(true);
+
+    expect((await readFile(out)).toString('latin1')).not.toContain('<dc:creator>');
+  });
+
   it('removes a language claim when the source declared none', async () => {
     // `[V]` The measurement behind this: LibreOffice writes /Lang as `en-US`
     // onto a PDF exported from a source with EVERY fo:language declaration

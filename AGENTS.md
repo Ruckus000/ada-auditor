@@ -459,6 +459,24 @@ Read this before claiming something works.
   clauses silent and buy nothing a reader can see. When an item's TEXT is what
   is wrong, change the text.
 
+- **The XMP packet is REBUILT, so anything not written again is gone.**
+  `Finish` calls `setMetadata` with a packet it constructs, which replaces
+  whatever the document declared. `[V]` Of 52 real PDFs in the blind corpus, 46
+  carry an XMP packet and **35 declare `dc:creator`** — every repair dropped the
+  author of the document. `contentChanges` cannot see it, because metadata is
+  not a content field, so nothing disclosed it either. The author is now carried
+  the way the title already is: **from DocInfo, which this pass preserves**,
+  rather than by parsing and merging the old packet — a bad merge writes WRONG
+  metadata where a rebuild writes none. `[V]` 13 of 13 authored documents keep
+  it; a document with no author must not gain one, and a test holds both
+  directions.
+
+  **Two residuals, both deliberate.** A document declaring `dc:creator` in XMP
+  but NOT in DocInfo still loses it (3 of 52) — recovering that means parsing
+  the packet. And the PDF/A identifier (1 of 52) is dropped ON PURPOSE: we do
+  not check PDF/A, and carrying an unverified conformance claim through a
+  rewrite is the exact conduct the PDF/UA identifier is withheld to avoid.
+
 - **A caption keyword is not a caption, and `languageToCarry` now guards both
   lanes.** Two conversion-lane defects, one of each class the product cares
   about.

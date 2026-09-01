@@ -161,7 +161,20 @@ public final class Finish {
                 title = givenTitle;
                 doc.getDocumentInformation().setTitle(title);
             }
-            byte[] xmp = buildXmp(lang, title, claimUa1).getBytes(StandardCharsets.UTF_8);
+            // The author travels with the title, for the same reason and by the
+            // same route. `setMetadata` REPLACES the whole XMP packet, so
+            // everything the document declared there is gone unless it is
+            // written again — and `[V]` 35 of the 52 real PDFs in the blind
+            // corpus declare `dc:creator`. Losing the author of a municipal
+            // record while repairing its accessibility is a silent edit to
+            // somebody's document.
+            //
+            // Taken from DocInfo, which this pass preserves, rather than by
+            // parsing and merging the old packet: DocInfo is already the
+            // source of truth for the title here, and a bad merge writes
+            // wrong metadata where a rebuild writes none.
+            String author = doc.getDocumentInformation().getAuthor();
+            byte[] xmp = buildXmp(lang, title, author, claimUa1).getBytes(StandardCharsets.UTF_8);
             catalog.setMetadata(new PDMetadata(doc, new ByteArrayInputStream(xmp)));
 
             // 7.18.5-2 / 7.18.1-2 — a Link annotation shall carry an
@@ -310,10 +323,16 @@ public final class Finish {
         return null;
     }
 
-    private static String buildXmp(String lang, String title, boolean claimUa1) {
+    private static String buildXmp(String lang, String title, String author, boolean claimUa1) {
         String dcLanguage = lang == null ? "" : String.format(
             "   <dc:language><rdf:Bag><rdf:li>%s</rdf:li></rdf:Bag></dc:language>%n",
             escape(lang));
+
+        // An ordered list, because dc:creator is a Seq in the XMP schema and a
+        // reader that expects one must not find a bare literal.
+        String dcCreator = (author == null || author.isBlank()) ? "" : String.format(
+            "   <dc:creator><rdf:Seq><rdf:li>%s</rdf:li></rdf:Seq></dc:creator>%n",
+            escape(author));
 
         String dcTitle = (title == null || title.isBlank()) ? "" : String.format(
             "   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">%s</rdf:li></rdf:Alt></dc:title>%n",
@@ -339,6 +358,7 @@ public final class Finish {
             + "  <rdf:Description rdf:about=\"\"\n"
             + "      xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
             + dcTitle
+            + dcCreator
             + dcLanguage
             + "  </rdf:Description>\n"
             + uaIdentifier
