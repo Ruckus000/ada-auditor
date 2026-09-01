@@ -133,6 +133,51 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     }
   });
 
+  /**
+   * A title carrying a character XML forbids outright.
+   *
+   * XML 1.0 admits no C0 control other than tab, newline and carriage return —
+   * not even as a numeric character reference — so one in a title produced an
+   * XMP packet that is not well-formed XML. veraPDF then fails the delivered
+   * file for a metadata reason this vocabulary cannot name, and it reaches the
+   * client as a bare clause id in the catch-all.
+   *
+   * The title is never ours: it is copied from a heading in the client's
+   * document, or on the repair path read straight out of the document's own
+   * info dictionary, and nothing validates it anywhere. `Finish` is the
+   * boundary where it has to be made safe.
+   *
+   * Asserted as the property rather than by parsing: this project has no XML
+   * parser and one assertion does not justify adding a dependency. "Contains
+   * no character XML forbids" is exactly the invariant that was broken.
+   */
+  it('writes a well-formed XMP packet when the title carries a control character', async () => {
+    const source = join(dir, 'control-char-source.pdf');
+    await writeFile(source, await renderPdf('<h1>Notice</h1><p>Body.</p>', { tagged: true }));
+
+    const out = join(dir, 'control-char-finished.pdf');
+    const result = await finishDocument({
+      inputPath: source,
+      outputPath: out,
+      language: 'en',
+      title: 'Notice\u0001 of Meeting',
+    });
+    expect(result.ok).toBe(true);
+
+    const bytes = await readFile(out);
+    const text = bytes.toString('latin1');
+    const start = text.indexOf('<x:xmpmeta');
+    const end = text.indexOf('</x:xmpmeta>');
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const packet = text.slice(start, end + '</x:xmpmeta>'.length);
+
+    // Dropped, not replaced: substituting a visible character would put
+    // something in the client's title their document never said.
+    expect(packet).toContain('Notice of Meeting');
+    expect(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(packet)).toBe(false);
+  });
+
   it('removes a language claim when the source declared none', async () => {
     // `[V]` The measurement behind this: LibreOffice writes /Lang as `en-US`
     // onto a PDF exported from a source with EVERY fo:language declaration

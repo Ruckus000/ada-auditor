@@ -1,6 +1,8 @@
+import { execFile } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { measureContrast } from '../../../../src/integrations/documents/contrast';
@@ -76,6 +78,40 @@ describe.skipIf(skip)('Contrast, against a real JVM', () => {
     expect(finding.ratio).toBeCloseTo(4.0, 1);
     expect(finding.required).toBe(4.5);
     expect(finding.page).toBe(1);
+  }, 120_000);
+
+  /**
+   * The one float in this stage's output, under a locale that writes decimals
+   * with a comma.
+   *
+   * Run against the compiled class directly rather than through `measureContrast`,
+   * because the JVM's default locale cannot be set from the environment this
+   * stage is allowed to pass: `childEnv` forwards LANG/LC_ALL, but macOS JVMs
+   * take their locale from OS preferences and ignore both, so an env-based
+   * version of this test passes on a developer's machine whether the bug is
+   * present or not. `-Duser.language` reproduces it everywhere.
+   *
+   * `[V]` Without `Locale.ROOT`, this JVM formats 4.5 as `4,50` under de_DE and
+   * emits `"ratio":4,50` — not valid JSON. The stage then reads as unparseable
+   * and contrast is dropped from the whole delivery, on those hosts only. The
+   * ratio is emitted for FAILING pairs only, so such a host could process clean
+   * documents indefinitely before anything went wrong.
+   */
+  it('emits locale-independent JSON, so a comma-decimal host still parses', async () => {
+    if (!runtime.available) return expect.unreachable('the suite runs only with a runtime');
+    const path = join(dir, 'comma-locale.pdf');
+    await writeFile(path, onePage('1 0 0 rg'));
+
+    const { stdout } = await promisify(execFile)(
+      runtime.javaBin,
+      ['-Duser.language=de', '-Duser.country=DE', '-cp', runtime.classpath, 'Contrast', path],
+      { maxBuffer: 32 * 1024 * 1024 },
+    );
+
+    // The assertion is that this parses at all.
+    const reading = JSON.parse(stdout) as { failing: number; findings: Array<{ ratio: number }> };
+    expect(reading.failing).toBeGreaterThan(0);
+    expect(reading.findings[0].ratio).toBeCloseTo(4.0, 1);
   }, 120_000);
 
   it('passes black on white and reports no failure', async () => {

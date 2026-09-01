@@ -432,6 +432,33 @@ Read this before claiming something works.
   (emoji embedding) fails one *generated* stratum silently; zero real
   documents hit it.
 
+- **`7.21.4` is a FAMILY, and its two members say opposite things.**
+  `7.21.4.1` is a font with NO data — the fix is the source. `7.21.4.2` is an
+  EMBEDDED font whose CIDSet does not list every character used. Matching the
+  prefix printed the never-embedded sentence for both, so a CIDSet failure
+  would tell a client their fonts are missing and send them to re-export a
+  source to fix a problem they do not have. Both now get their own sentence,
+  and an unrecognised member of the family is voiced by id rather than
+  inheriting either.
+
+  **It is latent, and a first write-up of this got it wrong.** Thirteen
+  documents fail only `7.21.4.2-2` *in the answer keys*, and I reported that
+  all thirteen had been told the wrong thing — a source-side number asserted as
+  a delivery-side consequence, the same mistake as the outline-level
+  retraction. `[V]` Of 52 delivered documents carrying a `7.21.4` clause, **all
+  52 carry `7.21.4.1-1` and none carries `7.21.4.2`**: `stripCidSets` removes
+  the CIDSet before delivery, so the keys record what the SOURCE failed and the
+  clause is gone by the time a client sees the file. The path that reaches it
+  is a font `stripCidSets` cannot read, which has not happened in 148
+  documents. **Read the delivered summaries, never the keys, before saying what
+  a client was told.**
+
+  **The criterion label stays `PDF/UA 7.21.4` for all three** — `score.ts`
+  accounts for the clause by that family and the keys carry
+  `mustVoice: ["7.21.4"]`, so splitting the label would turn every one of these
+  clauses silent and buy nothing a reader can see. When an item's TEXT is what
+  is wrong, change the text.
+
 - **An encrypted PDF is refused BY NAME, and it was never a data-loss bug.**
   A PDF encrypted with an empty user password and an owner password — the
   common municipal shape, restricting printing rather than reading — opens
@@ -447,6 +474,22 @@ Read this before claiming something works.
   operator could not tell from a corrupt file, so `structure.encrypted` now
   feeds a named refusal beside `signed`. The encryption is deliberately NOT
   removed to proceed: the restrictions are the owner's decision.
+
+- **Two Java defects that only fire off the developer's machine.** `Contrast`
+  formatted its one float with the JVM's default locale, so a host whose locale
+  writes decimals with a comma emitted `"ratio":4,50` — not valid JSON — and
+  contrast was dropped from the entire delivery, on those hosts only. The ratio
+  is emitted for FAILING pairs only, so such a host could run clean documents
+  indefinitely before anything went wrong. `Locale.ROOT` fixes it.
+  **Reproducing it needs `-Duser.language`, not `LC_ALL`**: `childEnv` forwards
+  LANG/LC_ALL, but macOS JVMs take their locale from OS preferences and ignore
+  both, so an environment-based test passes whether the bug is present or not —
+  the first version of that test did exactly that. And `Finish.escape()` passed
+  C0 control characters through into the XMP packet, which XML 1.0 forbids
+  outright even as numeric references; the title is never ours (a heading from
+  the client's document, or the document's own info dictionary on the repair
+  path) and nothing validates it anywhere else. Both new tests were checked
+  against the unfixed code and both fail there.
 
 - **PDFs are repaired by transcription, or refused — never tagged by
   inference.** `services/document-repair.ts` decides; `Finish` writes; the

@@ -438,6 +438,24 @@ export function withConformance(
   }
 
   const items: Array<{ criterion: string; item: string }> = [];
+  // `7.21.4` is a FAMILY, and its two members say opposite things about the
+  // document. `7.21.4.1` is a font that was never embedded — there is no font
+  // data, and the fix is the source. `7.21.4.2` is an embedded font whose
+  // CIDSet does not list every character used — the font IS there.
+  //
+  // Matching the family prefix and printing the embedding sentence told 13
+  // documents in the blind corpus, whose only font failure is `7.21.4.2-2`,
+  // that "the fonts were never embedded by whatever produced this PDF" and
+  // sent them to re-export a source to fix a problem they do not have. A false
+  // statement about a client's document, and work that would not have helped.
+  //
+  // The CRITERION label stays `PDF/UA 7.21.4` for both. It names the family
+  // the clause belongs to, `score.ts` accounts for the clause by that family,
+  // and the keys carry `mustVoice: ["7.21.4"]` — splitting the label would
+  // turn every one of these clauses silent and buy nothing a reader can see.
+  // What a reader sees is the item text, and that is what was wrong.
+  const notEmbedded = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4.1'));
+  const cidSet = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4.2'));
   const fonts = conformance.failingClauses.filter((clause) => clause.startsWith('7.21.4'));
   const untagged = conformance.failingClauses.filter((clause) => clause.startsWith('7.1-3'));
   const identifier = conformance.failingClauses.filter((clause) => clause.startsWith('5-1'));
@@ -449,10 +467,28 @@ export function withConformance(
       !alreadyVoiced(clause, summary),
   );
 
-  if (fonts.length > 0) {
+  if (notEmbedded.length > 0) {
     items.push({
       criterion: 'PDF/UA 7.21.4',
       item: 'the fonts were never embedded by whatever produced this PDF — supply the Word source it was exported from, or re-export it with fonts embedded',
+    });
+  }
+  if (cidSet.length > 0) {
+    items.push({
+      criterion: 'PDF/UA 7.21.4',
+      item: "an embedded font's character-set table (CIDSet) does not list every character the document uses — the fonts themselves ARE embedded, so re-exporting from the source with fonts fully embedded is what resolves this",
+    });
+  }
+  // A member of the family that is neither: voiced by id rather than described,
+  // so a clause this vocabulary has never seen cannot reach a client in
+  // silence just because its family is known.
+  const otherFonts = fonts.filter(
+    (clause) => !clause.startsWith('7.21.4.1') && !clause.startsWith('7.21.4.2'),
+  );
+  if (otherFonts.length > 0) {
+    items.push({
+      criterion: 'PDF/UA 7.21.4',
+      item: `${otherFonts.length} further font check${otherFonts.length === 1 ? '' : 's'} fail (${otherFonts.join(', ')}) — a person must review`,
     });
   }
   if (untagged.length > 0) {

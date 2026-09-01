@@ -423,17 +423,67 @@ describe('withConformance', () => {
     expect('needs' in s).toBe(false);
   });
 
-  it('translates the font family into the work that actually fixes it', () => {
+  it('translates a font that was never embedded into the work that fixes it', () => {
     const s = withConformance(base, {
       checker: 'verapdf-ua1',
       compliant: false,
-      failingClauses: ['7.21.4.1-1', '7.21.4.2-2'],
+      failingClauses: ['7.21.4.1-1'],
     });
     expect(s.needs).toHaveLength(1);
     expect(s.needs?.[0].criterion).toBe('PDF/UA 7.21.4');
     // The remedy is the source, which pairing already surfaces — never a
     // silent substitution.
     expect(s.needs?.[0].item).toContain('Word source');
+  });
+
+  it('does not tell a document with embedded fonts that its fonts are missing', () => {
+    // The defect: `7.21.4` was matched as a FAMILY and always printed the
+    // never-embedded sentence. Its two members say opposite things —
+    // `7.21.4.1` is a font with no data, `7.21.4.2` is an embedded font whose
+    // CIDSet does not list every character used.
+    //
+    // Latent rather than shipped, and worth stating precisely: 13 documents
+    // fail only `7.21.4.2-2` in the KEYS, but `[V]` all 52 delivered documents
+    // carrying a `7.21.4` clause carry `7.21.4.1-1` and none carries
+    // `7.21.4.2` — `stripCidSets` removes the CIDSet before delivery. The path
+    // that reaches this is a font that pass cannot read, which has not
+    // happened in 148 documents. The sentence would still be false when it
+    // did.
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.2-2'],
+    });
+    expect(s.needs).toHaveLength(1);
+    expect(s.needs?.[0].criterion).toBe('PDF/UA 7.21.4');
+    expect(s.needs?.[0].item).toContain('CIDSet');
+    expect(s.needs?.[0].item).not.toContain('never embedded');
+  });
+
+  it('says both things when a document has both problems', () => {
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.1-1', '7.21.4.2-2'],
+    });
+    // Two items, because they are two different defects with two different
+    // remedies. They share the family criterion, which is what `score.ts`
+    // accounts for the clauses by.
+    expect(s.needs).toHaveLength(2);
+    expect(s.needs?.every((n) => n.criterion === 'PDF/UA 7.21.4')).toBe(true);
+  });
+
+  it('names an unrecognised member of the font family by id rather than describing it', () => {
+    // A family is not a licence to guess. A clause this vocabulary has never
+    // seen must not inherit either sentence just because its prefix is known.
+    const s = withConformance(base, {
+      checker: 'verapdf-ua1',
+      compliant: false,
+      failingClauses: ['7.21.4.3-9'],
+    });
+    expect(s.needs).toHaveLength(1);
+    expect(s.needs?.[0].item).toContain('7.21.4.3-9');
+    expect(s.needs?.[0].item).not.toContain('never embedded');
   });
 
   it('translates untagged page content without offering to guess it', () => {

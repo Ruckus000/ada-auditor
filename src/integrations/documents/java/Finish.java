@@ -347,7 +347,37 @@ public final class Finish {
             + "<?xpacket end=\"w\"?>";
     }
 
+    /**
+     * XML-safe text for the XMP packet.
+     *
+     * The three entities, plus the characters XML 1.0 forbids OUTRIGHT: a C0
+     * control other than tab, newline or carriage return cannot appear in a
+     * conforming XML document at all, not even escaped as a numeric reference.
+     * One of them in a title produces a malformed XMP packet, and veraPDF then
+     * fails the delivered file for a metadata reason this vocabulary cannot
+     * name -- it arrives in the catch-all as a bare clause id.
+     *
+     * The title is not ours and is not validated anywhere: it is either copied
+     * from a heading in the client's document or, on the repair path, read
+     * straight out of the document's own info dictionary. So this is the
+     * boundary where it has to be made safe.
+     *
+     * Dropped rather than replaced. A control character carries no meaning a
+     * reader loses, and substituting a visible character would put something
+     * in the client's title that their document never said.
+     */
     private static String escape(String s) {
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        StringBuilder b = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < 0x20 && c != '\t' && c != '\n' && c != '\r') continue;
+            switch (c) {
+                case '&' -> b.append("&amp;");
+                case '<' -> b.append("&lt;");
+                case '>' -> b.append("&gt;");
+                default -> b.append(c);
+            }
+        }
+        return b.toString();
     }
 }
