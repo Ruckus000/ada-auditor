@@ -1005,6 +1005,24 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
         criterion: '1.1.1',
         item: `${at}: no alt text, no caption to transcribe — write a description`,
       });
+    } else if (isDeclaredDecorative(figure.alt)) {
+      // Tested BEFORE the placeholder branch, because it is a subset of it.
+      // Same criterion, same one-item-per-figure, so no count moves anywhere —
+      // only the instruction, which was wrong. "Write a description" for an
+      // image the source itself calls decorative asks for work the author
+      // already said was unnecessary. Both readings of that word are served:
+      // if it is decorative, the mechanism is the artifact, and if the word
+      // was stamped on in bulk to clear a checker, a person still looks.
+      //
+      // `[V]` Three bytes SHORTER than the item it replaces — 303 across the
+      // 101 of them on one real document, which roughly doubles that
+      // document's ~283 bytes of headroom rather than eating it. Correcting
+      // an instruction is not a licence to spend the budget; see the
+      // header-budget note above.
+      needs.push({
+        criterion: '1.1.1',
+        item: `${at}: described only as decorative (F30) — artifact it, or describe it`,
+      });
     } else if (isPlaceholderAlt(figure.alt)) {
       needs.push({
         criterion: '1.1.1',
@@ -1224,6 +1242,55 @@ const ALT_CID_REFERENCE = /\bcid:/i;
 const ALT_PROGRAMMATIC = /^(picture|image|photo|graphic|figure|img)\s*\d+$|^\d+$/i;
 
 /**
+ * One reading of an `/Alt` string, shared by every predicate that judges one.
+ *
+ * Extracted so the two cannot disagree. Both normalisations are provenance
+ * rather than cosmetics: a TRAILING NUL is a producer's string terminator
+ * (without stripping it, three legitimate descriptions in the blind corpus read
+ * as illegible, one of them on the only conformant real PDF), and a leading
+ * "Description:" is an exporter prefix in the shape `PRODUCER_STAMP` already
+ * refuses on titles.
+ */
+function normalisedAlt(alt: string): string {
+  return alt
+    // Bounded before any pattern runs: the string comes from an untrusted
+    // document and must not set the amount of work.
+    .slice(0, 500)
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]+$/, '')
+    .replace(/^description:\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Did the author say this graphic carries nothing, rather than leave the field
+ * to an exporter?
+ *
+ * A SUBSET of `isPlaceholderAlt`, never a competitor to it: "Decorative" is not
+ * a description, and F30 is right to refuse it. What this separates is what the
+ * client should DO about it. Telling someone to write a description for an
+ * image their own source calls decorative is the wrong instruction; the
+ * mechanism they want is the decorative control, which artifacts the image.
+ *
+ * ONE word, and the other two were refused on evidence. The registered rule
+ * admitted `spacer` and `blank` only if they appeared alongside `decorative` in
+ * the same document — one author's family of markers rather than two more words
+ * describing appearance. `[V]` Across every delivered real document, `spacer`
+ * and `blank` occur ZERO times; `decorative` occurs 153 times. Widening this
+ * set later needs the same evidence, not the same intuition.
+ *
+ * This changes what an item SAYS and never whether it exists. Nothing here
+ * artifacts anything: acting on the word would be a structural write that
+ * `contentChanges` refuses, and an assertion on a client's bytes made from a
+ * single word. `[V]` The two documents carrying all 153 use ONE distinct string
+ * each, so this is a template convention rather than 52 and 101 separate
+ * judgements — which is exactly why the item stays and only its advice moves.
+ */
+export function isDeclaredDecorative(alt: string): boolean {
+  return normalisedAlt(alt).toLowerCase() === 'decorative';
+}
+
+/**
  * Is this description one a reader can use, or one an exporter left behind?
  *
  * WCAG 2.1 **Technique F30** is the standard, not our taste: "Failure of
@@ -1243,25 +1310,17 @@ const ALT_PROGRAMMATIC = /^(picture|image|photo|graphic|figure|img)\s*\d+$|^\d+$
  * the VLM ban is absolute, so what a flagged figure gets is a punch item asking
  * a person for one.
  *
- * Two normalisations before testing, both provenance rather than cosmetics:
- * a TRAILING NUL is a producer's string terminator (without stripping it, three
- * legitimate descriptions in the blind corpus read as illegible, one of them on
- * the only conformant real PDF), and a leading "Description:" is an exporter
- * prefix in the shape `PRODUCER_STAMP` already refuses on titles.
+ * Two normalisations run before any pattern does, and they live in
+ * `normalisedAlt` so `isDeclaredDecorative` reads the same string this does.
+ * Both are provenance rather than cosmetics; the reasoning is stated there
+ * once rather than in two comments that can drift apart.
  *
  * Deliberately NOT copied from `isPlaceholderTitle`: its `length < 3` refusal.
  * A legitimate CJK description can be two characters, and short is not the same
  * as absent.
  */
 export function isPlaceholderAlt(alt: string): boolean {
-  const cleaned = alt
-    // Bounded before any pattern runs: the string comes from an untrusted
-    // document and must not set the amount of work.
-    .slice(0, 500)
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]+$/, '')
-    .replace(/^description:\s*/i, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const cleaned = normalisedAlt(alt);
 
   // Empty is a positive claim that the graphic carries no meaning, which is a
   // different answer from an absent one and is not this predicate's business.
