@@ -799,22 +799,25 @@ Read this before claiming something works.
   the run, but the general shape stands: the corpus grades what is CLAIMED, and
   a capability nobody registered a claim about is invisible to it.
 
-- **The blind corpus understates 2.4.2 and conformance by 14 points, and always
-  has.** Every real document is stored and posted under a generated id —
-  `n02.pdf`, `r23.docx` — and `JUNK_FILENAMES`
-  (`src/domain/document-remediation.ts:1160`) refuses `^[a-z]{0,3}[\d .]*$`,
-  which every one of those ids matches. So the FILENAME rung of the title chain
-  has never once fired on a real document, in any of four campaigns. `[V]` Of
-  the 23 delivered real documents failing `7.1-9` (XMP `dc:title`), **22 would
-  have carried a title from the name their publisher gave them**, including all
-  10 whose only residual clause is that one: real conformance is 24/68 rather
-  than the measured 14/68. The anonymisation is right and stays; the junk rule
-  is right and stays; what is wrong is reading the measured column as if it were
-  production. **Do not "fix" this by posting a synthetic filename** — a title we
-  invented at the door, then graded ourselves on, is the conduct the junk table
-  exists to refuse, with an extra step. Compute the production-equivalent column
-  instead: `experiments/document-remediation/title-from-real-filenames.mts`.
-  See `docs/research/document-remediation/title-gap-is-the-corpus.md`.
+- **The corpus title bias is CLOSED — the runner posts real filenames now, and
+  a synthetic one is still forbidden.** For four campaigns every real document
+  was posted under its generated id, the id matched `JUNK_FILENAMES`, and the
+  filename rung of the title chain never fired on a real document — so the
+  blind test failed 23 documents on a `7.1-9`/2.4.2 their production upload
+  would not have raised. Since `3117d72` the runner posts each real document
+  under the basename of its harvest URL, read from the tracked provenance
+  manifests (`blind-corpus/real-names.txt`, `new-names.txt`); bytes, ids on
+  disk, hashes and keys are unchanged. `[V]` Exactly the ten predicted
+  documents became conformant (16/78 → 26/78; Word 21/26), every clause delta
+  was `7.1-9` and/or the earned `5-1`, and all five promises held. What
+  remains true: **never post a synthetic filename** — a title we invented at
+  the door, then graded ourselves on, is the conduct the junk table exists to
+  refuse; the real name is a fact the harvest had hidden, which is the
+  opposite thing. One stale-number lesson is on the record: the registered
+  "22 of 23" came from a measurement made before the title chain improved,
+  and all 23 titled — a prediction that cites a measurement inherits that
+  measurement's date. See
+  `docs/research/document-remediation/real-filenames-results.md`.
 
 - **`isTagged` is a floor of one, and whether that is right is UNMEASURED.** A
   non-empty structure tree makes a PDF repairable. `[V]` Nineteen delivered
