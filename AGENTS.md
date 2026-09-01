@@ -819,22 +819,31 @@ Read this before claiming something works.
   measurement's date. See
   `docs/research/document-remediation/real-filenames-results.md`.
 
-- **`isTagged` is a floor of one, and whether that is right is UNMEASURED.** A
-  non-empty structure tree makes a PDF repairable. `[V]` Nineteen delivered
-  documents fail `7.1-3`, and the counts split into two shapes the clause hides:
-  90 and 121 untagged runs on some documents, 2,407 and 7,928 on others — the
-  largest against 32,399 untagged text runs in the same file. Such a document
-  has a decorative tree, and we accept it, repair it and deliver something that
-  can never conform. An attempt to measure coverage as `order[].text` over
-  `textChars` **failed its own registered calibration** — the negative control
-  came in at 0.56 against a 0.80 gate, the two populations 0.07 apart, one
-  control document at 1.42 — and was discarded. Five documents did land below
-  0.25, which is the shape the hypothesis predicted and is NOT a finding: a
-  proxy that cannot separate the middle has not earned the tail. What would
-  answer it is MCID reachability in Java, over the per-page map `StructText`
-  already builds. Not built: `7.1-3` alone clears one document, and any change
-  to the gate REFUSES documents we currently deliver, which is a person's
-  decision. See `docs/research/document-remediation/tree-coverage-declined.md`.
+- **`isTagged` is a floor of one — now MEASURED, and the standing policy is
+  DECLINED, by decision.** The MCID-reachability probe the previous entry
+  named was built and run: `[V]` 19 of 19 documents failing `7.1-3` parsed
+  with zero stream errors, and the negative control — 8 delivered documents
+  that do not fail the clause — sat at exactly **zero untagged text ops on 8
+  of 8**, where the discarded `order[].text` proxy had put its control at
+  0.56 against a 0.80 gate. The population splits three ways, and the axis is
+  not the one the clause number suggests: **tree reachability is near-perfect
+  almost everywhere** (17 of 19 at ≥0.93); what varies is how much text ever
+  gets an MCID at all. Three to four documents have genuinely decorative
+  trees (r14: a 47-page document whose tree reaches 16 text ops — untagged
+  ratio 0.993; r10 0.924; n30 0.863; r06 0.600); two have real gaps (n05
+  0.191 at 578 pages, n28 0.158); and thirteen have **fully-tagged text** —
+  their `7.1-3` failures are untagged GRAPHICS, out of the probe's deliberate
+  text-only scope. A tree-emptiness floor would catch r14 alone; only a
+  content-side ratio can see the other three.
+
+  The user's decision, probe in hand: **no standing policy.** Artifacting the
+  untagged graphics is content-stream surgery worth about one document (n33)
+  in the direction the product has refused twice; refusing decorative trees
+  would UN-deliver four documents and conform none. The six blocked documents
+  stay honestly blocked, and this gets revisited when a client engagement
+  makes the trade concrete — not before. Tables and method:
+  `docs/research/document-remediation/mcid-reachability-results.md`; the
+  discarded proxy stays in `tree-coverage-declined.md`.
 
 - **A link description read from the URI covers half the links in a real
   document, and the half it misses is the table of contents.** `Finish` has
@@ -911,6 +920,53 @@ Read this before claiming something works.
   `repair-results.md` holds: **a gap a reviewer can see beats a deletion nobody
   can.** Do not re-measure the spike to reopen the question; the measurement is
   the thing that already exists.
+
+- **The empty-table-row collapse is PROVEN and DECLINED.** r04 and r05 fail
+  `7.2-43` on one table each: producer-written formatting-only continuation
+  rows — a TR with zero TD/TH children under RowSpan'd cells — which veraPDF
+  scores as spanning 0 columns unconditionally (RowSpan carry is never
+  consulted for the has-cells test; read out of `GFSETable#checkRegular`'s
+  bytecode). `[V]` A deterministic collapse — delete each cell-less TR after
+  asserting the grid fully covers it, decrement crossing RowSpans — was
+  applied to scratch copies and re-checked: `7.2-43` gone on both, **every
+  other clause and check-count byte-identical**. Declined anyway: it deletes
+  structure elements, which is the repair charter's kill criterion, and it
+  buys **zero verdicts** — both documents stay blocked by font shapes the
+  embedding pass correctly refuses (r04: invalid ToUnicode CMaps; r05:
+  descriptor-less Type0). A second charter exception for zero conformance
+  fails the ladder's first rung. What reopens it is the same declared-change
+  channel as figure artifacting — and a document whose residual it would
+  actually finish.
+
+- **The annotation clause family prices at ZERO conformance at any charter
+  level — verified, not assumed.** Every carrier of 7.18.4-1 (7 docs),
+  7.18.5-1 (4), 7.18.1-3 (5), 7.18.3-1 (2), 7.18.4-2, 7.1-1/2, 7.9-1, 7.10-1
+  and 7.1-7 is co-blocked by clauses outside the family, so even fixing all
+  eleven — charter-breaking Form/Link element creation included — conforms
+  nothing. `[V]` The old "7.18.5-1 clears 0" pricing re-verified true on the
+  current corpus. Three fixes are charter-COMPATIBLE and verdict-free, kept
+  on the shelf as punch-list accuracy: `/TU` from the field's own `/T`
+  (every failing field has one, but most are exporter junk — a junk-name
+  predicate is the real work), overwriting a producer's `/Tabs W` (the two
+  failing documents carry that PDF 2.0 value, which Finish's absent-only
+  guard skips), and the OC configuration `/Name`. r04's `7.18.1-2` residue
+  is two drawn Square annotations with nothing stating their meaning — a
+  human item, not a mechanical one.
+
+- **The 7.2 family is TWO families, and the language half is already won
+  everywhere it can be.** Read out of the veraPDF UA-1 profile itself: tests
+  7.2-2/-21/-22/-24/-25/-33/-34 are natural language, and every one accepts
+  catalog `/Lang` — which `Finish` already writes. `[V]` Zero language-test
+  failures exist on any delivered document that declares a language. All 28
+  remaining instances sit on **7 documents that declare none** (n05, n22,
+  n23, n30, r06, r10, r14) — a permanent floor under the never-default rule,
+  and the rule holds: r14 is one `/Lang` plus the declined `7.1-3` from
+  conformant, and supplying it would be asserting a language nobody chose.
+  Tests 7.2-10/-20/-42/-43 are STRUCTURE tests (table/list nesting) wearing
+  the same clause number; pricing them as language work was the error this
+  entry exists to stop. One coupling became live: the described links on one
+  undeclared document now fail `7.2-24` — two checks against 32,399 `7.2-34`
+  failures in the same file; the trade stands and is noted in `Finish`.
 
 - **Route a CLAUSE, never a family — suppression is earned per criterion, so a
   family route lets one item silence everything beside it.** `alreadyVoiced`
