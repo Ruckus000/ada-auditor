@@ -799,6 +799,69 @@ Read this before claiming something works.
   the run, but the general shape stands: the corpus grades what is CLAIMED, and
   a capability nobody registered a claim about is invisible to it.
 
+- **The blind corpus understates 2.4.2 and conformance by 14 points, and always
+  has.** Every real document is stored and posted under a generated id —
+  `n02.pdf`, `r23.docx` — and `JUNK_FILENAMES`
+  (`src/domain/document-remediation.ts:1160`) refuses `^[a-z]{0,3}[\d .]*$`,
+  which every one of those ids matches. So the FILENAME rung of the title chain
+  has never once fired on a real document, in any of four campaigns. `[V]` Of
+  the 23 delivered real documents failing `7.1-9` (XMP `dc:title`), **22 would
+  have carried a title from the name their publisher gave them**, including all
+  10 whose only residual clause is that one: real conformance is 24/68 rather
+  than the measured 14/68. The anonymisation is right and stays; the junk rule
+  is right and stays; what is wrong is reading the measured column as if it were
+  production. **Do not "fix" this by posting a synthetic filename** — a title we
+  invented at the door, then graded ourselves on, is the conduct the junk table
+  exists to refuse, with an extra step. Compute the production-equivalent column
+  instead: `experiments/document-remediation/title-from-real-filenames.mts`.
+  See `docs/research/document-remediation/title-gap-is-the-corpus.md`.
+
+- **`isTagged` is a floor of one, and whether that is right is UNMEASURED.** A
+  non-empty structure tree makes a PDF repairable. `[V]` Nineteen delivered
+  documents fail `7.1-3`, and the counts split into two shapes the clause hides:
+  90 and 121 untagged runs on some documents, 2,407 and 7,928 on others — the
+  largest against 32,399 untagged text runs in the same file. Such a document
+  has a decorative tree, and we accept it, repair it and deliver something that
+  can never conform. An attempt to measure coverage as `order[].text` over
+  `textChars` **failed its own registered calibration** — the negative control
+  came in at 0.56 against a 0.80 gate, the two populations 0.07 apart, one
+  control document at 1.42 — and was discarded. Five documents did land below
+  0.25, which is the shape the hypothesis predicted and is NOT a finding: a
+  proxy that cannot separate the middle has not earned the tail. What would
+  answer it is MCID reachability in Java, over the per-page map `StructText`
+  already builds. Not built: `7.1-3` alone clears one document, and any change
+  to the gate REFUSES documents we currently deliver, which is a person's
+  decision. See `docs/research/document-remediation/tree-coverage-declined.md`.
+
+- **A link description read from the URI covers half the links in a real
+  document, and the half it misses is the table of contents.** `Finish` has
+  described `/Link` annotations since the annotation work, transcribing the
+  URI as the author's stated destination. `linkUri` reads `PDActionURI` and
+  nothing else, and an INTERNAL link has no action at all — a Word table of
+  contents exports as a direct `/Dest` array naming a page. `[V]` One real
+  delivered document: 70 link annotations, 35 with a URI and described, 35 with
+  a `/Dest` and silent, and `7.18.5-2`/`7.18.1-2` failing on the strength of
+  those 35. The fix takes the link's OWN TEXT — the glyphs its `/Link`
+  structure element already references, via `StructText`, which `Inspect` and
+  `Headings` use for the same purpose — and never the destination, which
+  resolves to a page index or an exporter's `__RefHeading___Toc12345`. A link
+  with no text keeps its silence and its punch item; naming an image link from
+  its destination would silence the item that asks a person for a real
+  description. `[V]` Two real Word documents whose ONLY residual clauses were
+  those two are now fully PDF/UA-1 conformant: the Word lane moved 12/26 to
+  14/26, with 0 regressed and no other delivered fact changed across 148
+  documents.
+
+  **Two things this cost that were not obvious.** `Finish` had never parsed a
+  content stream — every other write there reads the catalog — so `StructText`
+  introduced a way for a malformed stream to crash a document that used to be
+  delivered; it is caught, degrading to exactly the previous silence. And an
+  annotation `/Contents` is TEXT, so `7.2-24` wants a language for it: on a
+  document that declares none, and we never default `/Lang`, this names links
+  that had no name AND adds a clause. Empty on this corpus — all six documents
+  touched declare a language — and right either way, but it is a clause
+  appearing because we wrote something.
+
 - **Route a CLAUSE, never a family — suppression is earned per criterion, so a
   family route lets one item silence everything beside it.** `alreadyVoiced`
   drops a veraPDF clause from the catch-all only when one of our own items is
