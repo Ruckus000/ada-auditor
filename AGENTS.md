@@ -459,6 +459,50 @@ Read this before claiming something works.
   clauses silent and buy nothing a reader can see. When an item's TEXT is what
   is wrong, change the text.
 
+- **A caption keyword is not a caption, and `languageToCarry` now guards both
+  lanes.** Two conversion-lane defects, one of each class the product cares
+  about.
+
+  `deriveAltFromCaptions` required only that a paragraph START with a caption
+  word, so `[V]` "Map of the district was circulated to members." became an
+  image's description — a sentence about a meeting, asserted as a description
+  of a picture. Worse than no description, because it also silences the `1.1.1`
+  item that would have reported the figure as undescribed, so nobody finds out.
+  A LABEL is now required: a number or letter ("Figure 3", "Exhibit A") or a
+  delimiter ("Photo —", "Image:"). The trade is stated rather than hidden — a
+  bare "Map of the district" is no longer transcribed and that figure reaches
+  the punch list undescribed. Separating it from "Map of the district was
+  circulated" needs a finite verb, which is the judgement `1.4.1` and heading
+  promotion both refused to make. **Adjacency was already strict** and is now
+  pinned by a test: an intervening heading or body paragraph blocks derivation,
+  contrary to an audit finding that claimed otherwise.
+
+  And `w:lang w:val` — an arbitrary attribute from an untrusted `.docx` —
+  reached `finishDocument` unvalidated, which refuses a non-BCP-47 tag and
+  surfaces as `converter-failed`. **One unparseable metadata field cost the
+  client the entire conversion**: no document, no punch list. The repair lane
+  had already fixed exactly this (blind corpus, `/Lang ()` and `/Lang (en US)`),
+  so `languageToCarry` moved to `domain/document-structure.ts` beside the schema
+  it asks and both lanes use it. An unusable tag carries nothing and `3.1.1`
+  asks a person to name the language.
+
+  **Two things deliberately NOT changed.** The legacy `.doc` fodt fallback still
+  carries LibreOffice's inflated reading (declared-nothing arriving as `en-US`),
+  because for `.doc` it is the only reading there is — a documented decision
+  with `w02-legacy-doc` pinned to it; changing it needs its own evidence and a
+  key correction. And the `3.1.1` gap still reads "the source declares no
+  language" when the source declared something unusable, which is slightly
+  false on both lanes; fixing it means distinguishing "declared nothing" from
+  "declared junk" in the summary contract.
+
+- **A partial structure collapse has no guard, and that is a measured choice.**
+  `convert.ts` refuses only `structureElements === 0`, so a half-lost structure
+  tree would ship. `[V]` Across 148 documents the delivered heading counts track
+  the keys exactly except r28 and r32, each off by one — no collapse occurs. A
+  source-vs-output bound is also the category error `author-real-keys.mjs`
+  names in its own comments. Left unbuilt on the evidence rather than on
+  principle; build it when a document shows the shape.
+
 - **An encrypted PDF is refused BY NAME, and it was never a data-loss bug.**
   A PDF encrypted with an empty user password and an owner password — the
   common municipal shape, restricting printing rather than reading — opens

@@ -220,6 +220,35 @@ export const languageTagSchema = z
   .regex(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/, 'expected a BCP-47 language tag such as `en` or `cy-GB`');
 
 /**
+ * The language a document declares — unless nobody could use it.
+ *
+ * `Finish` refuses a tag that is not BCP-47, and it is right to: writing
+ * `en US` into a delivered file states something false while passing every
+ * machine check there is. But a caller that hands the source's tag straight
+ * through makes ONE BAD METADATA FIELD cost the client the entire document.
+ *
+ * A tag nobody can resolve is, for a reader, the same situation as no tag:
+ * nothing usable is declared. So it is not carried forward, and the `3.1.1`
+ * item then says what it always says — name the language it is written in,
+ * because a language is never guessed. Clearing a claim we cannot stand behind
+ * is the move `/Lang` already established.
+ *
+ * `[V]` Found by the blind corpus on the REPAIR lane: two planted documents,
+ * one with `/Lang ()` and one with `/Lang (en US)`, were refused outright
+ * where every other unusable-metadata case becomes a task for a person.
+ *
+ * Lives here, beside the schema it asks, because both lanes need it: the
+ * conversion lane reads `w:lang w:val` out of an untrusted `.docx` and passed
+ * it through unvalidated, so a document declaring anything unparseable lost
+ * its whole conversion to `converter-failed` — the same defect the repair lane
+ * had already fixed, on the other side of the pipeline.
+ */
+export function languageToCarry(lang: string | null): string | null {
+  if (lang === null) return null;
+  return languageTagSchema.safeParse(lang).success ? lang : null;
+}
+
+/**
  * The fields that describe what the document *says*, as opposed to what it is
  * labelled with.
  *

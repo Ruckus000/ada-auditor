@@ -218,9 +218,34 @@ export function removeEmptyHeadings(xml: string): { xml: string; removed: number
  * Caption shapes an author actually writes. Conservative on purpose: a
  * paragraph that merely FOLLOWS an image is not a description of it, but one
  * beginning "Figure 3:" or "Photo —" exists for no other reason.
+ *
+ * A LABEL is required, not just the keyword. Starting with the keyword alone
+ * matched ordinary prose: `[V]` "Map of the district was circulated to
+ * members." became an image's description — a sentence the author wrote about
+ * the meeting, asserted as a description of a picture. That is worse than no
+ * description at all, because it also silences the `1.1.1` punch item that
+ * would have reported the figure as undescribed, so nobody ever finds out.
+ *
+ * So the keyword must be followed by a reference — a number or letter
+ * ("Figure 3", "Exhibit A") — or by a delimiter that marks a label ("Photo —",
+ * "Map:"). Both are the shape of something written to name a figure rather
+ * than to say something.
+ *
+ * The trade is stated rather than hidden: a bare descriptive caption ("Map of
+ * the district") is no longer transcribed, and that image now reaches the
+ * punch list as undescribed. A missing description is an honest gap a person
+ * can fill; an invented one is a claim nobody can find. Distinguishing "Map of
+ * the district" from "Map of the district was circulated to members." needs a
+ * finite verb, which is the judgement `1.4.1` and heading promotion both
+ * refused to make.
  */
-const CAPTION_SHAPE =
-  /^\s*(?:figure|fig\.?|photo(?:graph)?|image|map|chart|illustration|exhibit)\b[\s\S]{0,300}$/i;
+const CAPTION_LABEL = String.raw`(?:\s*(?:\d{1,3}|[A-Za-z])\b\s*[:.\u2013\u2014-]?|\s*[:.\u2013\u2014-])`;
+const CAPTION_SHAPE = new RegExp(
+  String.raw`^\s*(?:figure|fig\.?|photo(?:graph)?|image|map|chart|illustration|exhibit)\b`
+  + CAPTION_LABEL
+  + String.raw`\s*\S[\s\S]{0,300}$`,
+  'i',
+);
 
 /**
  * Transcribes an adjacent caption into an image's alternative description.

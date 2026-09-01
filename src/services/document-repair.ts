@@ -1,4 +1,4 @@
-import { isTagged, languageTagSchema, type DocumentStructure } from '../domain/document-structure';
+import { isTagged, languageToCarry, type DocumentStructure } from '../domain/document-structure';
 import {
   isPlaceholderTitle,
   titleFromFilename,
@@ -145,31 +145,6 @@ export function planRepair(
   };
 }
 
-/**
- * The language the document declares — unless nobody could use it.
- *
- * `Finish` refuses a tag that is not BCP-47, and it is right to: writing
- * `en US` into a delivered file states something false while passing every
- * machine check there is. But this planner used to hand the source's tag
- * straight through, so a document whose own `/Lang` was empty or malformed
- * made the whole repair fail — `repair_failed: invalid-language` — and the
- * client got no remediation at all because of one bad metadata field.
- *
- * A tag nobody can resolve is, for a reader, the same situation as no tag:
- * nothing usable is declared. So it is not carried forward, and the 3.1.1
- * punch item then says what it always says — name the language it is written
- * in, because a language is never guessed. Clearing a claim we cannot stand
- * behind is the move `/Lang` already established and CIDSet removal was
- * argued from; the item is what keeps it from being silent.
- *
- * `[V]` Found by the blind corpus: two planted documents, one with `/Lang ()`
- * and one with `/Lang (en US)`, were refused outright where every other
- * unusable-metadata case becomes a task for a person.
- */
-function languageToCarry(lang: string | null): string | null {
-  if (lang === null) return null;
-  return languageTagSchema.safeParse(lang).success ? lang : null;
-}
 
 /**
  * The title chain, in the order the product already uses for Word.
