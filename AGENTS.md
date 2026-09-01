@@ -799,39 +799,51 @@ Read this before claiming something works.
   the run, but the general shape stands: the corpus grades what is CLAIMED, and
   a capability nobody registered a claim about is invisible to it.
 
-- **The blind corpus understates 2.4.2 and conformance by 14 points, and always
-  has.** Every real document is stored and posted under a generated id —
-  `n02.pdf`, `r23.docx` — and `JUNK_FILENAMES`
-  (`src/domain/document-remediation.ts:1160`) refuses `^[a-z]{0,3}[\d .]*$`,
-  which every one of those ids matches. So the FILENAME rung of the title chain
-  has never once fired on a real document, in any of four campaigns. `[V]` Of
-  the 23 delivered real documents failing `7.1-9` (XMP `dc:title`), **22 would
-  have carried a title from the name their publisher gave them**, including all
-  10 whose only residual clause is that one: real conformance is 24/68 rather
-  than the measured 14/68. The anonymisation is right and stays; the junk rule
-  is right and stays; what is wrong is reading the measured column as if it were
-  production. **Do not "fix" this by posting a synthetic filename** — a title we
-  invented at the door, then graded ourselves on, is the conduct the junk table
-  exists to refuse, with an extra step. Compute the production-equivalent column
-  instead: `experiments/document-remediation/title-from-real-filenames.mts`.
-  See `docs/research/document-remediation/title-gap-is-the-corpus.md`.
+- **The corpus title bias is CLOSED — the runner posts real filenames now, and
+  a synthetic one is still forbidden.** For four campaigns every real document
+  was posted under its generated id, the id matched `JUNK_FILENAMES`, and the
+  filename rung of the title chain never fired on a real document — so the
+  blind test failed 23 documents on a `7.1-9`/2.4.2 their production upload
+  would not have raised. Since `3117d72` the runner posts each real document
+  under the basename of its harvest URL, read from the tracked provenance
+  manifests (`blind-corpus/real-names.txt`, `new-names.txt`); bytes, ids on
+  disk, hashes and keys are unchanged. `[V]` Exactly the ten predicted
+  documents became conformant (16/78 → 26/78; Word 21/26), every clause delta
+  was `7.1-9` and/or the earned `5-1`, and all five promises held. What
+  remains true: **never post a synthetic filename** — a title we invented at
+  the door, then graded ourselves on, is the conduct the junk table exists to
+  refuse; the real name is a fact the harvest had hidden, which is the
+  opposite thing. One stale-number lesson is on the record: the registered
+  "22 of 23" came from a measurement made before the title chain improved,
+  and all 23 titled — a prediction that cites a measurement inherits that
+  measurement's date. See
+  `docs/research/document-remediation/real-filenames-results.md`.
 
-- **`isTagged` is a floor of one, and whether that is right is UNMEASURED.** A
-  non-empty structure tree makes a PDF repairable. `[V]` Nineteen delivered
-  documents fail `7.1-3`, and the counts split into two shapes the clause hides:
-  90 and 121 untagged runs on some documents, 2,407 and 7,928 on others — the
-  largest against 32,399 untagged text runs in the same file. Such a document
-  has a decorative tree, and we accept it, repair it and deliver something that
-  can never conform. An attempt to measure coverage as `order[].text` over
-  `textChars` **failed its own registered calibration** — the negative control
-  came in at 0.56 against a 0.80 gate, the two populations 0.07 apart, one
-  control document at 1.42 — and was discarded. Five documents did land below
-  0.25, which is the shape the hypothesis predicted and is NOT a finding: a
-  proxy that cannot separate the middle has not earned the tail. What would
-  answer it is MCID reachability in Java, over the per-page map `StructText`
-  already builds. Not built: `7.1-3` alone clears one document, and any change
-  to the gate REFUSES documents we currently deliver, which is a person's
-  decision. See `docs/research/document-remediation/tree-coverage-declined.md`.
+- **`isTagged` is a floor of one — now MEASURED, and the standing policy is
+  DECLINED, by decision.** The MCID-reachability probe the previous entry
+  named was built and run: `[V]` 19 of 19 documents failing `7.1-3` parsed
+  with zero stream errors, and the negative control — 8 delivered documents
+  that do not fail the clause — sat at exactly **zero untagged text ops on 8
+  of 8**, where the discarded `order[].text` proxy had put its control at
+  0.56 against a 0.80 gate. The population splits three ways, and the axis is
+  not the one the clause number suggests: **tree reachability is near-perfect
+  almost everywhere** (17 of 19 at ≥0.93); what varies is how much text ever
+  gets an MCID at all. Three to four documents have genuinely decorative
+  trees (r14: a 47-page document whose tree reaches 16 text ops — untagged
+  ratio 0.993; r10 0.924; n30 0.863; r06 0.600); two have real gaps (n05
+  0.191 at 578 pages, n28 0.158); and thirteen have **fully-tagged text** —
+  their `7.1-3` failures are untagged GRAPHICS, out of the probe's deliberate
+  text-only scope. A tree-emptiness floor would catch r14 alone; only a
+  content-side ratio can see the other three.
+
+  The user's decision, probe in hand: **no standing policy.** Artifacting the
+  untagged graphics is content-stream surgery worth about one document (n33)
+  in the direction the product has refused twice; refusing decorative trees
+  would UN-deliver four documents and conform none. The six blocked documents
+  stay honestly blocked, and this gets revisited when a client engagement
+  makes the trade concrete — not before. Tables and method:
+  `docs/research/document-remediation/mcid-reachability-results.md`; the
+  discarded proxy stays in `tree-coverage-declined.md`.
 
 - **A link description read from the URI covers half the links in a real
   document, and the half it misses is the table of contents.** `Finish` has
@@ -861,6 +873,100 @@ Read this before claiming something works.
   that had no name AND adds a clause. Empty on this corpus — all six documents
   touched declare a language — and right either way, but it is a clause
   appearing because we wrote something.
+
+- **Artifacting decorative figures is DECLINED, and the code for it already
+  exists.** `experiments/document-remediation/Figures.java` (302 lines)
+  implements the whole technique: the two-part edit that PDF/UA requires — the
+  content stream's `/Figure <</MCID n>> BDC` becomes `/Artifact <<>> BDC` *and*
+  the element leaves the tree, because doing only the second orphans the marked
+  content and fails 7.1 — with a thin-band test (`MIN_RULE_RATIO = 20f`) and a
+  byte-identical-repeat test, and area explicitly refused as a criterion.
+  **It stopped as part of a LINE of work rather than on its own defect, and both
+  halves of that are easy to quote wrongly.** `experiment-2-decision.md` STOPPED
+  deterministic-only remediation at a reachable rate of 25% against an 80% gate
+  — and its own header then records that 25% **FALSIFIED**: a later abstention
+  pass took it to 40%, still short of the gate. Quote 40%, not 25%. Artifacting
+  was one of the last two techniques added, and the pair moved holdout 1 from 2
+  deliverable documents to 3.
+
+  Its residue in that comparator is two assertions reading "Figure elements for
+  decorative or repeated graphics" — decorative graphics the pipeline still
+  tagged as **content**. That is the detector UNDER-reaching. Nothing on the
+  record says this technique artifacted something it should not have, and an
+  entry claiming it did would be arguing against the feature with the wrong
+  evidence. The argument below stands on its own.
+
+  The price of leaving it declined is **+2 of 78** real documents. `[V]` `n07`
+  and `r27` are the only two whose residual is `7.3-1` plus `5-1`, and `5-1` is
+  earned rather than failed, so clearing the figures would conform them both.
+
+  **Two blockers, and the first is a safety gate rather than an oversight.**
+  `contentChanges` (`document-structure.ts:289`) compares `structureElements`,
+  `figures` and `order`; artifacting moves all three, so the repair lane refuses
+  the file. The comment above it names this exact scenario — "four meaningful
+  images artifacted out of the structure tree look identical, in the PDF, to
+  four images that were never there" — and `Inspect.java:136-145` records the
+  document that lost all four of its meaningful images and scored DELIVERABLE
+  with zero defects. Shipping this means punching a hole in the check that
+  caught that. Second, `StructText.boxOf` returns **null** for an image-only
+  figure: boxes register only for MCIDs that harvested text glyphs, so a
+  geometry classifier is blind to precisely the population it would target.
+  A probe over the delivered corpus could locate only 109 of 249 undescribed
+  figures for that reason.
+
+  What would reopen it is a **declared-change channel** — a way for a repair to
+  state an intended structural change so `contentChanges` records it instead of
+  refusing — which is architecture, not a fix. Until then the standing rule from
+  `repair-results.md` holds: **a gap a reviewer can see beats a deletion nobody
+  can.** Do not re-measure the spike to reopen the question; the measurement is
+  the thing that already exists.
+
+- **The empty-table-row collapse is PROVEN and DECLINED.** r04 and r05 fail
+  `7.2-43` on one table each: producer-written formatting-only continuation
+  rows — a TR with zero TD/TH children under RowSpan'd cells — which veraPDF
+  scores as spanning 0 columns unconditionally (RowSpan carry is never
+  consulted for the has-cells test; read out of `GFSETable#checkRegular`'s
+  bytecode). `[V]` A deterministic collapse — delete each cell-less TR after
+  asserting the grid fully covers it, decrement crossing RowSpans — was
+  applied to scratch copies and re-checked: `7.2-43` gone on both, **every
+  other clause and check-count byte-identical**. Declined anyway: it deletes
+  structure elements, which is the repair charter's kill criterion, and it
+  buys **zero verdicts** — both documents stay blocked by font shapes the
+  embedding pass correctly refuses (r04: invalid ToUnicode CMaps; r05:
+  descriptor-less Type0). A second charter exception for zero conformance
+  fails the ladder's first rung. What reopens it is the same declared-change
+  channel as figure artifacting — and a document whose residual it would
+  actually finish.
+
+- **The annotation clause family prices at ZERO conformance at any charter
+  level — verified, not assumed.** Every carrier of 7.18.4-1 (7 docs),
+  7.18.5-1 (4), 7.18.1-3 (5), 7.18.3-1 (2), 7.18.4-2, 7.1-1/2, 7.9-1, 7.10-1
+  and 7.1-7 is co-blocked by clauses outside the family, so even fixing all
+  eleven — charter-breaking Form/Link element creation included — conforms
+  nothing. `[V]` The old "7.18.5-1 clears 0" pricing re-verified true on the
+  current corpus. Three fixes are charter-COMPATIBLE and verdict-free, kept
+  on the shelf as punch-list accuracy: `/TU` from the field's own `/T`
+  (every failing field has one, but most are exporter junk — a junk-name
+  predicate is the real work), overwriting a producer's `/Tabs W` (the two
+  failing documents carry that PDF 2.0 value, which Finish's absent-only
+  guard skips), and the OC configuration `/Name`. r04's `7.18.1-2` residue
+  is two drawn Square annotations with nothing stating their meaning — a
+  human item, not a mechanical one.
+
+- **The 7.2 family is TWO families, and the language half is already won
+  everywhere it can be.** Read out of the veraPDF UA-1 profile itself: tests
+  7.2-2/-21/-22/-24/-25/-33/-34 are natural language, and every one accepts
+  catalog `/Lang` — which `Finish` already writes. `[V]` Zero language-test
+  failures exist on any delivered document that declares a language. All 28
+  remaining instances sit on **7 documents that declare none** (n05, n22,
+  n23, n30, r06, r10, r14) — a permanent floor under the never-default rule,
+  and the rule holds: r14 is one `/Lang` plus the declined `7.1-3` from
+  conformant, and supplying it would be asserting a language nobody chose.
+  Tests 7.2-10/-20/-42/-43 are STRUCTURE tests (table/list nesting) wearing
+  the same clause number; pricing them as language work was the error this
+  entry exists to stop. One coupling became live: the described links on one
+  undeclared document now fail `7.2-24` — two checks against 32,399 `7.2-34`
+  failures in the same file; the trade stands and is noted in `Finish`.
 
 - **Route a CLAUSE, never a family — suppression is earned per criterion, so a
   family route lets one item silence everything beside it.** `alreadyVoiced`

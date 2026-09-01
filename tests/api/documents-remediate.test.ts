@@ -36,6 +36,10 @@ vi.mock('../../src/integrations/documents/java-runtime', () => ({
     runtimes.java
       ? { available: true, javaBin: '/usr/bin/java', classpath: '/cp' }
       : { available: false, reason: 'no Java runtime found' },
+  // The repair lane joins this onto its root to point Finish at replacement
+  // font programs; these tests mock the stages, so the value never reaches a
+  // filesystem.
+  DOCUMENT_FONTS_DIR: 'vendor/fonts/liberation',
 }));
 
 const { checkUa1 } = vi.hoisted(() => ({ checkUa1: vi.fn() }));

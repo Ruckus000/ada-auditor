@@ -9,9 +9,18 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
+import java.util.TreeMap;
 
+import org.apache.fontbox.ttf.CmapLookup;
+import org.apache.fontbox.ttf.TTFParser;
+import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSNumber;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
@@ -21,12 +30,18 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.font.PDCIDFont;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
+import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
+import org.apache.pdfbox.pdmodel.font.encoding.MacRomanEncoding;
+import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkInfo;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDObjectReference;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
@@ -46,9 +61,15 @@ import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferenc
  *
  * Each one closes a specific veraPDF ua1 failure that survived OpenDataLoader,
  * listed in docs/research/document-remediation/failure-classification.md. No
- * structure element is created, moved, re-parented or altered — if that ever
- * becomes necessary, the spike's kill criterion has fired and the answer is
- * STOP rather than a bigger version of this file.
+ * structure element is created, moved, re-parented or altered — with ONE
+ * deliberate exception, taken as a standing policy rather than drifted into:
+ * `--renumber-headings` re-ranks H* levels onto a gapless ladder, and only the
+ * CONVERSION lane passes it, where the levels being corrected are an
+ * exporter's mapping of the author's outline rather than a client's own PDF.
+ * See `renumberHeadings` for what it refuses. Everything else in this file
+ * still creates, moves and re-parents nothing — if more than this one
+ * exception ever becomes necessary, the spike's kill criterion has fired and
+ * the answer is STOP rather than a bigger version of this file.
  *
  * Usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]
  *
@@ -77,7 +98,7 @@ public final class Finish {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier]");
+            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier] [--renumber-headings] [--embed-fonts <dir>]");
             System.exit(2);
         }
         String in = args[0], out = args[1];
@@ -91,6 +112,13 @@ public final class Finish {
         // it holds a verdict. Same shape as the MarkInfo gate below, which is
         // already conditional on the document having earned it.
         boolean claimUa1 = true;
+        // Heading re-ranking is OFF unless the caller asks: the repair lane
+        // never asks, because renumbering a client's own PDF is guessing a
+        // heading level, which its charter forbids.
+        boolean renumberHeadings = false;
+        // Font programs to embed from, or null to embed nothing. Only the
+        // repair lane passes it — LibreOffice already embeds on conversion.
+        Path fontDir = null;
         int i = 2;
         // Positional language first, so every existing caller keeps working.
         if (i < args.length && !args[i].startsWith("--")) {
@@ -102,8 +130,12 @@ public final class Finish {
                 givenTitle = Files.readString(Path.of(args[++i]), StandardCharsets.UTF_8);
             } else if ("--no-ua-identifier".equals(args[i])) {
                 claimUa1 = false;
+            } else if ("--renumber-headings".equals(args[i])) {
+                renumberHeadings = true;
+            } else if ("--embed-fonts".equals(args[i]) && i + 1 < args.length) {
+                fontDir = Path.of(args[++i]);
             } else {
-                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier]");
+                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier] [--renumber-headings] [--embed-fonts <dir>]");
                 System.exit(2);
             }
         }
@@ -215,6 +247,14 @@ public final class Finish {
             }
             describeInternalLinks(doc, undescribed);
 
+            if (renumberHeadings) {
+                renumberHeadings(catalog);
+            }
+
+            if (fontDir != null) {
+                embedFonts(doc, fontDir);
+            }
+
             stripCidSets(doc);
 
             doc.save(out);
@@ -247,6 +287,227 @@ public final class Finish {
      * element created, moved, re-parented or altered — still holds, and
      * `contentChanges` still checks it.
      */
+    /**
+     * 7.21.4.1-1 — attach a metric-identical font program to fonts a producer
+     * named but never embedded.
+     *
+     * The population this exists for is measured, not imagined: the real
+     * corpus's non-embedded fonts are overwhelmingly TrueType dictionaries
+     * naming the Windows faces — ArialMT, TimesNewRomanPSMT, CourierNewPSMT
+     * and their bold/italic variants — with WinAnsi encoding and full /Widths
+     * arrays. The Liberation family exists to be metrically identical to
+     * exactly those faces, and GUARD THREE proves it per document rather than
+     * trusting the reputation: every defined, non-zero /Widths entry must
+     * match the replacement's own advance within 0.5/1000 em, or that font is
+     * refused and keeps its punch item.
+     *
+     * Nothing but the descriptor's FontFile2 is written. BaseFont, Encoding,
+     * /Widths and every content stream stay byte-identical, so layout cannot
+     * move: viewers advance simple-font text by /Widths, which this never
+     * touches. What changes is that glyph shapes stop being whatever each
+     * reader substitutes and become one deterministic, licensed face.
+     *
+     * Refusal-first, in order: not simple TrueType; no descriptor; already
+     * embedded; symbolic; an Encoding that is not the WinAnsi or MacRoman
+     * NAME (a dictionary with Differences is a custom mapping this does not
+     * model); a subset-prefixed BaseFont (a full program under a subset name
+     * would trip the subsetting clauses); a face this table does not map; a
+     * width mismatch. Every refusal is silent and leaves the document exactly
+     * as it was — the honest state, still voiced by the 7.21.4 punch item.
+     */
+    private static void embedFonts(PDDocument doc, Path dir) {
+        Map<String, FontProgram> cache = new HashMap<>();
+        Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        try {
+            for (PDPage page : doc.getPages()) {
+                embedFonts(doc, dir, page.getResources(), cache, seen);
+            }
+        } finally {
+            for (FontProgram program : cache.values()) {
+                program.close();
+            }
+        }
+    }
+
+    private static void embedFonts(PDDocument doc, Path dir, PDResources resources,
+            Map<String, FontProgram> cache, Set<Object> seen) {
+        if (resources == null || !seen.add(resources.getCOSObject())) {
+            return;
+        }
+        for (COSName name : resources.getFontNames()) {
+            PDFont font;
+            try {
+                font = resources.getFont(name);
+            } catch (Exception e) {
+                continue;
+            }
+            if (!(font instanceof PDTrueTypeFont trueType)) {
+                continue;
+            }
+            PDFontDescriptor descriptor = trueType.getFontDescriptor();
+            if (descriptor == null || descriptor.getFontFile() != null
+                    || descriptor.getFontFile2() != null || descriptor.getFontFile3() != null
+                    || descriptor.isSymbolic()) {
+                continue;
+            }
+            COSBase encodingName = trueType.getCOSObject().getDictionaryObject(COSName.ENCODING);
+            Encoding encoding;
+            if (COSName.WIN_ANSI_ENCODING.equals(encodingName)) {
+                encoding = WinAnsiEncoding.INSTANCE;
+            } else if (COSName.MAC_ROMAN_ENCODING.equals(encodingName)) {
+                encoding = MacRomanEncoding.INSTANCE;
+            } else {
+                continue;
+            }
+            String base = trueType.getName();
+            if (base == null || base.matches("[A-Z]{6}\\+.*")) {
+                continue;
+            }
+            String face = faceFor(base);
+            if (face == null) {
+                continue;
+            }
+            FontProgram program = cache.computeIfAbsent(face, f -> FontProgram.load(doc, dir, f));
+            if (program == FontProgram.UNAVAILABLE || !widthsMatch(trueType, encoding, program)) {
+                continue;
+            }
+            descriptor.setFontFile2(program.stream);
+        }
+        for (COSName name : resources.getXObjectNames()) {
+            try {
+                if (resources.getXObject(name) instanceof PDFormXObject form) {
+                    embedFonts(doc, dir, form.getResources(), cache, seen);
+                }
+            } catch (Exception e) {
+                continue;
+            }
+        }
+    }
+
+    /**
+     * The Liberation face metrically matching this BaseFont, or null.
+     *
+     * A candidate only — guard three still measures every width. The
+     * exclusions are family members that merely CONTAIN the target name while
+     * carrying different metrics (Arial Narrow, Arial Black, Arial Unicode);
+     * the width guard would refuse them anyway, but a table should not
+     * nominate what it knows is wrong.
+     */
+    private static String faceFor(String baseFont) {
+        String n = baseFont.toLowerCase().replaceAll("[^a-z]", "");
+        String family;
+        if (n.contains("arialunicode") || n.contains("narrow") || n.contains("black")
+                || n.contains("condensed") || n.contains("light") || n.contains("rounded")) {
+            return null;
+        }
+        if (n.contains("arial")) {
+            family = "LiberationSans";
+        } else if (n.contains("timesnewroman")) {
+            family = "LiberationSerif";
+        } else if (n.contains("couriernew")) {
+            family = "LiberationMono";
+        } else {
+            return null;
+        }
+        boolean bold = n.contains("bold");
+        boolean italic = n.contains("italic") || n.contains("oblique");
+        String style = bold && italic ? "BoldItalic" : bold ? "Bold" : italic ? "Italic" : "Regular";
+        return family + "-" + style + ".ttf";
+    }
+
+    /**
+     * Guard three: every defined, non-zero /Widths entry equals the
+     * replacement's own advance within 0.5/1000 em.
+     *
+     * Codes the base encoding leaves undefined are exempt — a producer that
+     * filled the whole FirstChar..LastChar range wrote SOMETHING there, but
+     * no glyph can be selected through the encoding, so no reader can draw
+     * one. Everything else is compared, and one mismatch refuses the font.
+     */
+    private static boolean widthsMatch(PDTrueTypeFont font, Encoding encoding, FontProgram program) {
+        COSDictionary dict = font.getCOSObject();
+        int first = dict.getInt(COSName.FIRST_CHAR, -1);
+        if (first < 0 || !(dict.getDictionaryObject(COSName.WIDTHS) instanceof COSArray widths)) {
+            return false;
+        }
+        GlyphList adobe = GlyphList.getAdobeGlyphList();
+        for (int i = 0; i < widths.size(); i++) {
+            if (!(widths.getObject(i) instanceof COSNumber number)) {
+                return false;
+            }
+            float width = number.floatValue();
+            if (width == 0) {
+                continue;
+            }
+            String glyphName = encoding.getName(first + i);
+            if (glyphName == null || ".notdef".equals(glyphName)) {
+                continue;
+            }
+            String unicode = adobe.toUnicode(glyphName);
+            if (unicode == null || unicode.isEmpty()) {
+                return false;
+            }
+            int glyphId = program.cmap.getGlyphId(unicode.codePointAt(0));
+            if (glyphId == 0) {
+                return false;
+            }
+            float advance;
+            try {
+                advance = program.ttf.getAdvanceWidth(glyphId) * 1000f / program.unitsPerEm;
+            } catch (IOException e) {
+                return false;
+            }
+            if (Math.abs(advance - width) > 0.5f) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** One parsed face: the program bytes as a PDStream, and its own metrics. */
+    private static final class FontProgram {
+        static final FontProgram UNAVAILABLE = new FontProgram(null, null, 1000, null);
+
+        final TrueTypeFont ttf;
+        final CmapLookup cmap;
+        final float unitsPerEm;
+        final PDStream stream;
+
+        private FontProgram(TrueTypeFont ttf, CmapLookup cmap, float unitsPerEm, PDStream stream) {
+            this.ttf = ttf;
+            this.cmap = cmap;
+            this.unitsPerEm = unitsPerEm;
+            this.stream = stream;
+        }
+
+        static FontProgram load(PDDocument doc, Path dir, String face) {
+            try {
+                byte[] bytes = Files.readAllBytes(dir.resolve(face));
+                TrueTypeFont ttf = new TTFParser().parse(new RandomAccessReadBuffer(bytes));
+                PDStream stream = new PDStream(doc, new ByteArrayInputStream(bytes), COSName.FLATE_DECODE);
+                // Length1 is the UNCOMPRESSED program length; readers need it
+                // to slice the program back out of the FLATE stream.
+                stream.getCOSObject().setInt(COSName.LENGTH1, bytes.length);
+                return new FontProgram(ttf, ttf.getUnicodeCmapLookup(), ttf.getUnitsPerEm(), stream);
+            } catch (IOException | RuntimeException e) {
+                // A face that cannot be read embeds nothing — every candidate
+                // font keeps its punch item, which is the state before this
+                // pass existed.
+                return UNAVAILABLE;
+            }
+        }
+
+        void close() {
+            if (ttf != null) {
+                try {
+                    ttf.close();
+                } catch (IOException e) {
+                    // Closing a parsed font failed; nothing depends on it.
+                }
+            }
+        }
+    }
+
     private static void stripCidSets(PDDocument doc) {
         for (PDPage page : doc.getPages()) {
             stripCidSets(page.getResources(), new java.util.HashSet<>());
@@ -279,6 +540,19 @@ public final class Finish {
                     PDFontDescriptor descriptor = descendant.getFontDescriptor();
                     if (descriptor != null) {
                         descriptor.getCOSObject().removeItem(COSName.getPDFName("CIDSet"));
+                    }
+                    // 7.21.3.2-1 — an EMBEDDED CIDFontType2 shall contain a
+                    // CIDToGIDMap entry. Absent, ISO 32000 defines the value
+                    // as Identity, so writing /Identity states the default
+                    // every reader already applies: zero semantic change,
+                    // one clause honestly closed. Never written where a map
+                    // exists, and never onto an unembedded font, whose real
+                    // problem is the missing program.
+                    COSDictionary cid = descendant.getCOSObject();
+                    if (COSName.getPDFName("CIDFontType2").equals(cid.getDictionaryObject(COSName.SUBTYPE))
+                            && descriptor != null && descriptor.getFontFile2() != null
+                            && cid.getDictionaryObject(COSName.CID_TO_GID_MAP) == null) {
+                        cid.setItem(COSName.CID_TO_GID_MAP, COSName.IDENTITY);
                     }
                 }
             }
@@ -374,9 +648,109 @@ public final class Finish {
      * language beats a nameless one, and such a document already fails `7.2-34`
      * on every word it contains — but it is a clause appearing because we
      * wrote something, which is the kind of thing that reads as a regression
-     * later. `[V]` Empty on the current corpus: all six documents this pass
-     * touches declare a language.
+     * later. `[V]` No longer empty on the corpus: one real undeclared document
+     * now carries described links failing `7.2-24` on exactly this coupling
+     * (two checks, against 32,399 `7.2-34` failures in the same file — the
+     * trade stands). An earlier version of this note said the case was empty,
+     * and it was, until the corpus grew.
      */
+    /**
+     * Re-rank heading levels onto a gapless ladder starting at H1 — the
+     * conversion lane's standing policy for PDF/UA 7.4.2.
+     *
+     * RANK-preserving, never merging: the distinct levels the author used map
+     * onto 1..k in first-to-deepest order, so an exporter's flat H2 ladder
+     * becomes H1, and H1-then-H3 becomes H1-then-H2 — but two levels the
+     * author distinguished STAY distinct. A sequence skip across levels that
+     * both survive the re-rank is left exactly as it stands, because clearing
+     * it would mean deciding which of two authored levels was the mistake,
+     * and that is the punch list's question, not this stage's.
+     *
+     * `[V]` Both real Word documents failing 7.4.2-1 are a flat ladder the
+     * exporter parked below H1 — 19×H2 and 49×H3 — which is the case this
+     * exists for: one authored level, wrongly seated.
+     *
+     * REFUSED outright when any heading is reached through the RoleMap: the
+     * element's own /S is then not the name a reader resolves, and rewriting
+     * /S underneath a live mapping trades one lie for another. The punch item
+     * survives, which is the honest outcome.
+     */
+    private static void renumberHeadings(PDDocumentCatalog catalog) {
+        PDStructureTreeRoot root = catalog.getStructureTreeRoot();
+        if (root == null) {
+            return;
+        }
+        List<PDStructureElement> headings = new ArrayList<>();
+        boolean[] roleMapped = { false };
+        collectHeadings(root, headings, roleMapped,
+            Collections.newSetFromMap(new IdentityHashMap<>()));
+        if (roleMapped[0] || headings.isEmpty()) {
+            return;
+        }
+        // TreeMap so iteration order IS rank order.
+        TreeMap<Integer, Integer> rank = new TreeMap<>();
+        for (PDStructureElement el : headings) {
+            rank.put(headingLevel(el.getStructureType()), 0);
+        }
+        int next = 1;
+        boolean identity = true;
+        for (Map.Entry<Integer, Integer> entry : rank.entrySet()) {
+            entry.setValue(next);
+            if (entry.getKey() != next) {
+                identity = false;
+            }
+            next++;
+        }
+        if (identity) {
+            return;
+        }
+        for (PDStructureElement el : headings) {
+            el.setStructureType("H" + rank.get(headingLevel(el.getStructureType())));
+        }
+    }
+
+    /** H1..H9 by the element's OWN /S — a plain "H" is not a numbered level. */
+    private static int headingLevel(String type) {
+        if (type != null && type.length() == 2 && type.charAt(0) == 'H'
+                && type.charAt(1) >= '1' && type.charAt(1) <= '9') {
+            return type.charAt(1) - '0';
+        }
+        return -1;
+    }
+
+    private static void collectHeadings(PDStructureNode node, List<PDStructureElement> out,
+            boolean[] roleMapped, Set<Object> seen) {
+        if (!seen.add(node.getCOSObject())) {
+            return;
+        }
+        for (Object kid : node.getKids()) {
+            if (kid instanceof PDStructureElement el) {
+                String raw = el.getStructureType();
+                String resolved = el.getStandardStructureType();
+                if (headingLevel(raw) > 0) {
+                    if (raw.equals(resolved)) {
+                        out.add(el);
+                    } else {
+                        // An H-named element the RoleMap resolves to something
+                        // ELSE — a real document maps H1 and H3 to P. Re-ranking
+                        // its /S can land on a level the map does not cover,
+                        // which MANUFACTURES a heading the reader never had.
+                        // `[V]` The blind corpus caught exactly that: six
+                        // invented headings on one delivered document, invisible
+                        // to veraPDF because the invented ladder was valid.
+                        roleMapped[0] = true;
+                    }
+                } else if (headingLevel(resolved) > 0) {
+                    // The mirror case: reached only via the RoleMap.
+                    roleMapped[0] = true;
+                }
+            }
+            if (kid instanceof PDStructureNode child) {
+                collectHeadings(child, out, roleMapped, seen);
+            }
+        }
+    }
+
     private static void describeInternalLinks(PDDocument doc, List<PDAnnotationLink> links) {
         if (links.isEmpty()) {
             return;

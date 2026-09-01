@@ -352,7 +352,18 @@ export async function convertSourceToPdf(
     // checker that has not run yet, so this stage is in no position to assert
     // it; the caller writes it back once it holds a verdict for these bytes.
     const finished = await finishDocument(
-      { inputPath: exported, outputPath, language: sourceLanguage, claimUa1: false },
+      {
+        inputPath: exported,
+        outputPath,
+        language: sourceLanguage,
+        claimUa1: false,
+        // Standing policy for 7.4.2: the exporter parks the author's outline
+        // wherever its style mapping lands (a flat H2 or H3 ladder on real
+        // documents), and re-ranking it onto a gapless ladder carries the
+        // author's own level distinctions, never merges them. Conversion lane
+        // only — the repair lane never passes this.
+        renumberHeadings: true,
+      },
       {
         runtime: options.javaRuntime,
         root: options.root,

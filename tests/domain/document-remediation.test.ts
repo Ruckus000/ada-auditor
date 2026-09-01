@@ -10,6 +10,7 @@ import {
   NOT_CHECKED_CRITERIA,
   SUMMARY_HEADER_BUDGET,
   boundSummary,
+  isDeclaredDecorative,
   isPlaceholderAlt,
   undescribedFigures,
   isPlaceholderTitle,
@@ -805,6 +806,52 @@ describe('a description that describes nothing', () => {
   });
 });
 
+describe('a description that only says the graphic is decorative', () => {
+  // The author already answered the question this punch item asks. Telling them
+  // to write a description is the wrong instruction, so the SENTENCE changes and
+  // nothing else does: same criterion, same item, same count.
+  it.each(['Decorative', 'decorative', 'DECORATIVE'])(
+    'reads %s as a declaration, whatever its case',
+    (alt) => {
+      expect(isDeclaredDecorative(alt)).toBe(true);
+    },
+  );
+
+  it('shares one normalisation with the F30 predicate, rather than a copy of it', () => {
+    // Both are extracted onto `normalisedAlt` so they cannot drift. A trailing
+    // NUL is a producer's terminator and `Description:` is an exporter prefix —
+    // if only one predicate stripped them, the same string would be a
+    // declaration to one and junk to the other.
+    expect(isDeclaredDecorative('Decorative\u0000')).toBe(true);
+    expect(isDeclaredDecorative('Description: Decorative')).toBe(true);
+    expect(isDeclaredDecorative('  Decorative  ')).toBe(true);
+  });
+
+  it('refuses spacer and blank, which the evidence refused', () => {
+    // The registered rule admitted them only alongside `decorative` in the same
+    // document. `[V]` Across every delivered real document they occur ZERO
+    // times and `decorative` occurs 153. They stay on the F30 message, and
+    // widening this set needs evidence rather than intuition.
+    expect(isDeclaredDecorative('spacer')).toBe(false);
+    expect(isDeclaredDecorative('blank')).toBe(false);
+  });
+
+  it('is a whole match, so a real description is never eaten', () => {
+    // The same rule that protects "Image of the north pump house at dusk".
+    expect(isDeclaredDecorative('Decorative border around the borough seal')).toBe(false);
+    expect(isDeclaredDecorative('')).toBe(false);
+  });
+
+  it('is a SUBSET of the F30 predicate, never a competitor to it', () => {
+    // "Decorative" is not a description and F30 is right to refuse it. If this
+    // ever accepted something `isPlaceholderAlt` did not, a figure would carry
+    // the new advice while the counts still called it described.
+    for (const alt of ['Decorative', 'decorative', 'Description: Decorative']) {
+      expect(isPlaceholderAlt(alt)).toBe(true);
+    }
+  });
+});
+
 describe('figures a reader learns nothing about', () => {
   const figs = (...alts: Array<string | null>) =>
     alts.map((alt) => ({ type: 'Figure', alt, actualText: null , page: null}));
@@ -839,6 +886,53 @@ describe('figures a reader learns nothing about', () => {
     // A stored baseline taken before this reading must not read as a changed
     // document just because the instrument grew.
     expect(read(null).gaps).toContain('1.1.1: 1 figure with no alt text');
+  });
+
+  it('tells a declared-decorative figure to be artifacted, not described', () => {
+    // The defect this fixes: 153 items across two real documents instructed a
+    // client to write descriptions for images their own source calls
+    // decorative. Both readings of the word are served — if it is decorative
+    // the mechanism is the artifact, and if it was stamped on in bulk to clear
+    // a checker, a person still looks.
+    const item = (read('Decorative').needs ?? []).find((n) => n.criterion === '1.1.1');
+
+    expect(item?.item).toContain('artifact it, or describe it');
+    expect(item?.item).not.toContain('write one');
+  });
+
+  it('changes the sentence and NOTHING else', () => {
+    // A REGRESSION LOCK, not evidence: it passes against the unfixed code too,
+    // because the unfixed code trivially satisfies it. `[V]` Verified — only
+    // the artifact-or-describe test above fails without the branch. What this
+    // is for is the other direction.
+    //
+    // The whole safety of this change. `score.ts` compares criterion multisets,
+    // so it cannot see the item text at all — if a count or a criterion moved
+    // here, the blind run would report every promise held while the punch list
+    // quietly said less.
+    const declared = read('Decorative', 'Decorative');
+
+    expect(undescribedFigures(figs('Decorative', 'Decorative')))
+      .toEqual({ absent: 0, placeholder: 2, total: 2 });
+    expect((declared.needs ?? []).filter((n) => n.criterion === '1.1.1')).toHaveLength(2);
+    expect(declared.gaps.filter((g) => g.startsWith('1.1.1:'))).toHaveLength(1);
+    expect(declared.gaps.find((g) => g.startsWith('1.1.1:')))
+      .toContain('2 figures whose description is a placeholder');
+  });
+
+  it('does not spend header budget to correct an instruction', () => {
+    // Also a REGRESSION LOCK — on the unfixed code both sides are the same
+    // string, so it cannot fail there. It earns its place on the next wording
+    // change, not on this one.
+    //
+    // r05 carries 101 of these and sits ~283 bytes under SUMMARY_HEADER_BUDGET.
+    // The budget is never raised to make wording fit, so the replacement has to
+    // be no longer than what it replaces.
+    const [declared] = (read('Decorative').needs ?? []).filter((n) => n.criterion === '1.1.1');
+    const [placeholder] = (read('image').needs ?? []).filter((n) => n.criterion === '1.1.1');
+
+    expect(Buffer.byteLength(declared.item))
+      .toBeLessThanOrEqual(Buffer.byteLength(placeholder.item));
   });
 
   it('raises one punch item per figure, whichever way it is undescribed', () => {

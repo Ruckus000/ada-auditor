@@ -12,10 +12,16 @@ import { runWritingStage, type StageOptions, type StageOutcome } from './stage';
  * `Lists` removes invalid structure) or invents them (`Tables` promotes cells
  * to headers). `Finish` does neither: it sets `MarkInfo/Marked`, `/Lang`,
  * `ViewerPreferences/DisplayDocTitle` and the XMP packet, and its own header
- * states that no structure element is created, moved, re-parented or altered.
+ * states that no structure element is created, moved, re-parented or altered
+ * — with the single standing-policy exception of `renumberHeadings` below,
+ * which only the conversion lane may invoke.
  *
  * That claim is checkable, and `contentChanges` in
- * `domain/document-structure.ts` is what checks it.
+ * `domain/document-structure.ts` is what checks it — which is also why the
+ * repair lane, which runs behind that gate, can never pass the flag: a
+ * renumbered ladder moves the `headings` content field, and the gate refuses
+ * the file. The conversion lane has no before-PDF to compare against; its
+ * discipline is this type and the tests on it.
  *
  * ## The language is required, and there is no default
  *
@@ -80,6 +86,29 @@ export type FinishRequest = {
    * passes `false` and then earns it back.
    */
   claimUa1?: boolean;
+  /**
+   * Re-rank heading levels onto a gapless ladder starting at H1 — the
+   * standing policy for PDF/UA 7.4.2, and the ONE structural write Finish is
+   * allowed.
+   *
+   * Only the conversion lane may pass this: there the levels are an
+   * exporter's mapping of the author's outline. The repair lane never does —
+   * renumbering a client's own PDF is guessing a heading level, which
+   * `document-repair.ts`'s charter forbids. Defaults to false, so a caller
+   * that says nothing changes nothing.
+   */
+  renumberHeadings?: boolean;
+  /**
+   * Directory of Liberation font programs, when the caller wants 7.21.4.1
+   * closed for fonts that can be replaced METRIC-IDENTICALLY — the stage
+   * proves the widths per document and refuses anything that differs.
+   *
+   * Only the repair lane passes it: LibreOffice embeds everything on
+   * conversion, so there the pass would be a no-op paid for on every run.
+   * Absent (or pointing at nothing), no font is touched and every punch item
+   * stays — the safe direction.
+   */
+  embedFontsDir?: string;
 };
 
 export type FinishOutcome =
@@ -111,6 +140,15 @@ export async function finishDocument(
   // caller changes behaviour by not knowing about this.
   const uaArgs = request.claimUa1 === false ? ['--no-ua-identifier'] : [];
 
+  // Off unless asked, matching the stage's own default — and only the
+  // conversion path asks. See the field's comment for why.
+  const renumberArgs = request.renumberHeadings === true ? ['--renumber-headings'] : [];
+
+  const embedArgs =
+    request.embedFontsDir !== undefined && request.embedFontsDir !== ''
+      ? ['--embed-fonts', request.embedFontsDir]
+      : [];
+
   // Omitting the argument is what tells the stage to remove the claim; three
   // arguments set one. There is no sentinel string, because a sentinel is a
   // value somebody eventually passes by accident.
@@ -118,7 +156,7 @@ export async function finishDocument(
     try {
       return await runWritingStage(
         'Finish',
-        [request.inputPath, request.outputPath, ...titleArgs, ...uaArgs],
+        [request.inputPath, request.outputPath, ...titleArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
         options,
       );
     } finally {
@@ -144,7 +182,7 @@ export async function finishDocument(
   try {
     return await runWritingStage(
       'Finish',
-      [request.inputPath, request.outputPath, language.data, ...titleArgs, ...uaArgs],
+      [request.inputPath, request.outputPath, language.data, ...titleArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
       options,
     );
   } finally {

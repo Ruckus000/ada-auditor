@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { finishDocument } from '../../../../src/integrations/documents/finish';
+import { DOCUMENT_FONTS_DIR } from '../../../../src/integrations/documents/java-runtime';
 import { inspectDocument } from '../../../../src/integrations/documents/inspect';
 import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
 import { contentChanges, type DocumentStructure } from '../../../../src/domain/document-structure';
@@ -393,7 +394,7 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     return parts.join('\n');
   }
 
-  function cidSetPdf(): Buffer {
+  function cidSetPdf(embeddedNoMap = false): Buffer {
     const content = 'BT /F1 12 Tf 20 100 Td <0001> Tj ET';
     const objs = [
       '<< /Type /Catalog /Pages 2 0 R >>',
@@ -405,10 +406,13 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
         + ' /DescendantFonts [6 0 R] >>',
       '<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ABCDEF+TestFont'
         + ' /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >>'
-        + ' /FontDescriptor 7 0 R /CIDToGIDMap /Identity /DW 1000 >>',
+        // The rider's shape drops the map an embedded CIDFontType2 must
+        // carry; the original keeps it, so the CIDSet test proves removal
+        // never touches a map that exists.
+        + ` /FontDescriptor 7 0 R${embeddedNoMap ? '' : ' /CIDToGIDMap /Identity'} /DW 1000 >>`,
       '<< /Type /FontDescriptor /FontName /ABCDEF+TestFont /Flags 4'
         + ' /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 1000 /Descent 0'
-        + ' /CapHeight 1000 /StemV 80 /CIDSet 8 0 R >>',
+        + ` /CapHeight 1000 /StemV 80 /CIDSet 8 0 R${embeddedNoMap ? ' /FontFile2 8 0 R' : ''} >>`,
       '<< /Length 2 >>\nstream\n\xc0\x00\nendstream',
     ];
 
@@ -443,6 +447,20 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
     expect(keys).not.toContain('/CIDSet');
     // The font survives — this removes an index, never a glyph source.
     expect(keys).toContain('/CIDFontType2');
+  });
+
+  it('states the CIDToGIDMap default an embedded CIDFontType2 must carry', async () => {
+    // UA-1 7.21.3.2-1. ISO 32000 defines the absent value as Identity, so
+    // writing /Identity states the default every reader already applies —
+    // zero semantic change, one clause honestly closed. Only onto an EMBEDDED
+    // font: on an unembedded one the map is not the problem.
+    const source = join(dir, 'cidmap-source.pdf');
+    const out = join(dir, 'cidmap-finished.pdf');
+    await writeFile(source, cidSetPdf(true));
+
+    expect(await pdfKeys(source)).not.toContain('/CIDToGIDMap');
+    expect((await finishDocument({ inputPath: source, outputPath: out, language: 'en' })).ok).toBe(true);
+    expect(await pdfKeys(out)).toContain('/CIDToGIDMap /Identity');
   });
 
   it('leaves a document with no CID fonts alone', async () => {
@@ -542,6 +560,209 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
 
     // Exactly one of the two links is described: the one with words.
     expect((await pdfKeys(out)).split('/Contents (').length - 1).toBe(1);
+  });
+
+  /**
+   * A tagged PDF whose headings sit at the given levels, one text run each.
+   *
+   * Hand-built for the same reason as `internallyLinkedPdf`: the shape under
+   * test is the exporter's — a ladder parked below H1, or a skip — and
+   * Chromium normalises headings on its own. `mapVia` swaps the elements'
+   * own /S for a custom name and adds a RoleMap entry resolving it, which is
+   * the shape the re-rank must refuse.
+   */
+  function headingLadderPdf(levels: string[], mapVia?: string): Buffer {
+    const stream = levels
+      .map((level, i) => {
+        const tag = mapVia === 'AWAY' ? level : (mapVia ?? level);
+        return `BT /F1 12 Tf 20 ${160 - i * 20} Td /${tag} <</MCID ${i}>> BDC (Item ${i + 1}) Tj EMC ET`;
+      })
+      .join('\n');
+    const kids = levels.map((_, i) => `${7 + i} 0 R`).join(' ');
+    const roleMap = mapVia === 'AWAY'
+      ? ` /RoleMap << /${levels[levels.length - 1]} /P >>`
+      : mapVia ? ` /RoleMap << /${mapVia} /${levels[0]} >>` : '';
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R'
+        + ' /Resources << /Font << /F1 5 0 R >> >> /StructParents 0 >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      `<< /Type /StructTreeRoot /K [7 0 R]${roleMap} >>`,
+    ];
+    // A Document root would be truer to life, but a flat tree keeps the
+    // object count readable and the walk under test is recursive either way.
+    objs[5] = `<< /Type /StructTreeRoot /K [${kids}]${roleMap} >>`;
+    levels.forEach((level, i) => {
+      const s = mapVia === 'AWAY' ? level : (mapVia ?? level);
+      objs.push(`<< /Type /StructElem /S /${s} /P 6 0 R /Pg 3 0 R /K ${i} >>`);
+    });
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  async function finishedHeadings(name: string, levels: string[], renumber: boolean): Promise<string[]> {
+    const source = join(dir, `${name}.pdf`);
+    await writeFile(source, headingLadderPdf(levels));
+    const out = join(dir, `${name}-finished.pdf`);
+    const finished = await finishDocument(
+      { inputPath: source, outputPath: out, language: 'en', renumberHeadings: renumber },
+    );
+    expect(finished.ok).toBe(true);
+    const after = await inspectDocument(out);
+    if (!after.ok) expect.unreachable('could not read the output');
+    return after.ok ? after.value.headings : [];
+  }
+
+  /**
+   * `[V]` The measured shape the standing policy exists for: both real Word
+   * documents failing 7.4.2-1 are a FLAT ladder the exporter parked below H1
+   * — 19×H2 and 49×H3. One authored level, wrongly seated.
+   */
+  it('re-ranks a flat deep ladder onto H1 under the standing policy', async () => {
+    expect(await finishedHeadings('deep-flat', ['H2', 'H2', 'H2'], true))
+      .toEqual(['H1', 'H1', 'H1']);
+  });
+
+  it('closes a skip while keeping authored levels DISTINCT', async () => {
+    // Rank-preserving, never merging: H1-then-H3 becomes H1-then-H2. If this
+    // ever comes back ['H1','H1'], the policy has started deciding which of
+    // two authored levels was the mistake, which is the punch list's question.
+    expect(await finishedHeadings('skip', ['H1', 'H3'], true)).toEqual(['H1', 'H2']);
+  });
+
+  it('changes no heading without the flag — the repair lane never asks', async () => {
+    expect(await finishedHeadings('untouched', ['H2', 'H2'], false)).toEqual(['H2', 'H2']);
+  });
+
+  it('refuses to renumber a heading reached through the RoleMap', async () => {
+    // The element's own /S is not the name a reader resolves, and rewriting
+    // /S underneath a live mapping trades one lie for another. The punch item
+    // survives instead.
+    const source = join(dir, 'rolemapped.pdf');
+    await writeFile(source, headingLadderPdf(['H2', 'H2'], 'Kop2'));
+    const out = join(dir, 'rolemapped-finished.pdf');
+    expect((await finishDocument(
+      { inputPath: source, outputPath: out, language: 'en', renumberHeadings: true },
+    )).ok).toBe(true);
+
+    const keys = await pdfKeys(out);
+    expect(keys).toContain('/Kop2');
+    expect(keys).not.toContain('/H1');
+  });
+
+  it('refuses to renumber when the RoleMap resolves a heading AWAY', async () => {
+    // r34's shape, and the wave run's one invented claim: elements whose own
+    // /S is H-named while the RoleMap resolves them to P. Re-ranking H3 to H2
+    // — a name the map does not cover — MANUFACTURED six headings the reader
+    // never had, on a delivered document, invisibly to veraPDF because the
+    // invented ladder was valid. The whole remap is refused instead.
+    const source = join(dir, 'mapped-away.pdf');
+    await writeFile(source, headingLadderPdf(['H1', 'H3'], 'AWAY'));
+    const out = join(dir, 'mapped-away-finished.pdf');
+    expect((await finishDocument(
+      { inputPath: source, outputPath: out, language: 'en', renumberHeadings: true },
+    )).ok).toBe(true);
+
+    const keys = await pdfKeys(out);
+    expect(keys).toContain('/S /H3');
+    expect(keys).not.toContain('/S /H2');
+  });
+
+  /**
+   * A TrueType font a producer named and never embedded — the measured shape
+   * carried by 17 of the 19 real documents failing 7.21.4.1-1: a Windows
+   * metric-clone BaseFont, WinAnsi encoding, full /Widths, a descriptor with
+   * no FontFile*.
+   */
+  function unembeddedFontPdf(widths: string, flags: number): Buffer {
+    const stream = 'BT /F1 12 Tf 20 100 Td (AB) Tj ET';
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R'
+        + ' /Resources << /Font << /F1 5 0 R >> >> >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      '<< /Type /Font /Subtype /TrueType /BaseFont /ArialMT /FirstChar 65 /LastChar 66'
+        + ` /Widths [${widths}] /Encoding /WinAnsiEncoding /FontDescriptor 6 0 R >>`,
+      `<< /Type /FontDescriptor /FontName /ArialMT /Flags ${flags} /FontBBox [0 0 1000 1000]`
+        + ' /ItalicAngle 0 /Ascent 728 /Descent -210 /CapHeight 716 /StemV 88 >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  const fontsDir = join(process.cwd(), DOCUMENT_FONTS_DIR);
+
+  async function finishedWithFonts(name: string, fixture: Buffer, embed: boolean): Promise<string> {
+    const source = join(dir, `${name}.pdf`);
+    await writeFile(source, fixture);
+    const out = join(dir, `${name}-finished.pdf`);
+    const finished = await finishDocument({
+      inputPath: source,
+      outputPath: out,
+      language: 'en',
+      ...(embed ? { embedFontsDir: fontsDir } : {}),
+    });
+    expect(finished.ok).toBe(true);
+    return pdfKeys(out);
+  }
+
+  it('embeds a metric-identical program for a font the producer only named', async () => {
+    // Arial 'A' and 'B' are 667/1000 em, and `[V]` Liberation Sans measures
+    // 666.99 for both — inside the guard's 0.5. The write is ONE key: the
+    // descriptor gains a FontFile2 carrying its uncompressed Length1;
+    // BaseFont, Encoding, /Widths and the content stream are untouched, which
+    // is why layout provably cannot move.
+    const keys = await finishedWithFonts('embed-exact', unembeddedFontPdf('667 667', 32), true);
+
+    expect(keys).toContain('/FontFile2');
+    expect(keys).toContain('/Length1');
+  });
+
+  it('refuses the same font over ONE mismatched width', async () => {
+    // 700 where Liberation Sans measures 667. A replacement that changes an
+    // advance moves the client's layout, so the guard refuses the whole font
+    // and the 7.21.4 punch item keeps voicing it — the state before this pass
+    // existed.
+    const keys = await finishedWithFonts('embed-mismatch', unembeddedFontPdf('700 667', 32), true);
+
+    expect(keys).not.toContain('/FontFile2');
+  });
+
+  it('refuses a symbolic font, whatever its widths say', async () => {
+    // Flag bit 3: the encoding is defined by the font program we do not have,
+    // so no width table can prove the replacement draws the same characters.
+    const keys = await finishedWithFonts('embed-symbolic', unembeddedFontPdf('667 667', 4), true);
+
+    expect(keys).not.toContain('/FontFile2');
+  });
+
+  it('embeds nothing without the directory — absence is the safe direction', async () => {
+    const keys = await finishedWithFonts('embed-off', unembeddedFontPdf('667 667', 32), false);
+
+    expect(keys).not.toContain('/FontFile2');
   });
 
   it('fails cleanly on a file that is not a PDF, writing nothing', async () => {
