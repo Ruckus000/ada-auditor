@@ -52,6 +52,32 @@ export const para = (text, style) =>
 
 export const heading = (level, text) => para(text, `Heading${level}`);
 
+/**
+ * A heading declared by DIRECT outline level and nothing else — no `w:pStyle`.
+ *
+ * The shape this corpus could not express, and therefore could not catch. A real
+ * township's minutes declared its entire outline this way: 84 paragraphs with
+ * `w:outlineLvl w:val="2"` and zero `HeadingN` styles anywhere in the body.
+ * Outline level is what OOXML means by a heading; the style name is only the
+ * common route to one.
+ *
+ * `level` is 1-based to match `heading()`; `w:outlineLvl` is 0-based.
+ */
+export const outlinePara = (level, text) =>
+  `<w:p><w:pPr><w:outlineLvl w:val="${level - 1}"/></w:pPr>`
+  + `<w:r><w:t xml:space="preserve">${esc(text)}</w:t></w:r></w:p>`;
+
+/**
+ * An outline-levelled paragraph carrying no text.
+ *
+ * `removeEmptyHeadings` (`flat-odf.ts`) deletes these on the way through, and
+ * that deletion is the difference between a source's heading count and the
+ * delivered document's. Planted so the row proves the deletion happens rather
+ * than assuming it.
+ */
+export const emptyOutlinePara = (level) =>
+  `<w:p><w:pPr><w:outlineLvl w:val="${level - 1}"/></w:pPr><w:r><w:t/></w:r></w:p>`;
+
 /** Bold and large by direct formatting: visually a heading, structurally not. */
 export const fakeHeading = (text) =>
   `<w:p><w:r><w:rPr><w:b/><w:sz w:val="48"/></w:rPr><w:t>${esc(text)}</w:t></w:r></w:p>`;
@@ -116,7 +142,13 @@ export const pageBreak = () => '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
  * script-specific slots Word uses, because a right-to-left document declares
  * its language in a different attribute than a left-to-right one.
  */
-function stylesXml(lang, { rtl = null, eastAsia = null } = {}) {
+/**
+ * @param customHeading - `{ id, basedOn }` for a style that carries NO outline
+ *   level of its own and inherits one through `w:basedOn`. A real university
+ *   policy used `contactheading` based on `Heading2`; it is a heading by OOXML's
+ *   definition and invisible to anything matching on the style NAME.
+ */
+function stylesXml(lang, { rtl = null, eastAsia = null, customHeading = null } = {}) {
   const parts = [];
   if (lang !== null) parts.push(`w:val="${lang}"`);
   if (rtl !== null) parts.push(`w:bidi="${rtl}"`);
@@ -128,7 +160,15 @@ function stylesXml(lang, { rtl = null, eastAsia = null } = {}) {
         `<w:style w:type="paragraph" w:styleId="Heading${n}"><w:name w:val="heading ${n}"/><w:basedOn w:val="Normal"/><w:pPr><w:outlineLvl w:val="${n - 1}"/></w:pPr><w:rPr><w:b/><w:sz w:val="${36 - n * 4}"/></w:rPr></w:style>`,
     )
     .join('');
-  return `${XML}<w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:sz w:val="22"/>${langRun}</w:rPr></w:rPrDefault><w:pPrDefault/></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>${headings}<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/></w:style></w:styles>`;
+  // No `w:outlineLvl` of its own on purpose: the level has to come through
+  // `w:basedOn`, or the fixture does not test inheritance.
+  const custom = customHeading
+    ? `<w:style w:type="paragraph" w:styleId="${customHeading.id}">`
+      + `<w:name w:val="${customHeading.id}"/>`
+      + `<w:basedOn w:val="${customHeading.basedOn}"/>`
+      + `<w:rPr><w:sz w:val="26"/></w:rPr></w:style>`
+    : '';
+  return `${XML}<w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:sz w:val="22"/>${langRun}</w:rPr></w:rPrDefault><w:pPrDefault/></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>${headings}${custom}<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/></w:style></w:styles>`;
 }
 
 const NUMBERING = `${XML}<w:numbering ${W}><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num></w:numbering>`;
@@ -185,6 +225,7 @@ export function writeDocx(workDir, outPath, spec) {
     comments = false,
     macro = false,
     rtl = false,
+    customHeading = null,
   } = spec;
 
   const parts = {
@@ -192,7 +233,7 @@ export function writeDocx(workDir, outPath, spec) {
     '_rels/.rels': ROOT_RELS,
     'docProps/core.xml': coreXml(title),
     'word/document.xml': documentXml(body.join(''), { rtl }),
-    'word/styles.xml': stylesXml(lang, { rtl: rtlLang, eastAsia: eastAsiaLang }),
+    'word/styles.xml': stylesXml(lang, { rtl: rtlLang, eastAsia: eastAsiaLang, customHeading }),
     'word/numbering.xml': NUMBERING,
     'word/_rels/document.xml.rels': docRels({ image, link, comments }),
     ...(comments ? { 'word/comments.xml': COMMENTS } : {}),

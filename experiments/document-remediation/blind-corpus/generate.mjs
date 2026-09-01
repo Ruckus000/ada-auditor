@@ -22,6 +22,8 @@ import {
 import {
   fakeHeading, fakeListItem, figure, foreignRun, heading, listItem, oleContainer, para, table,
   stampTree, trackedPara, writeDocx,
+  outlinePara,
+  emptyOutlinePara,
 } from './docx-builders.mjs';
 import { SPEC, EXPECTED_ROWS } from './spec.mjs';
 
@@ -138,6 +140,20 @@ const SHAPES = {
   ],
   simple: () => [heading(1, 'Program Notice'), para(LEAD)],
   'fake-headings': () => [fakeHeading('Program Notice'), para(LEAD), fakeHeading('Eligibility'), para(FOLLOW)],
+  // Headings declared the two ways that carry no `HeadingN` style: a direct
+  // `w:outlineLvl`, and a custom style inheriting one through `w:basedOn`.
+  // Both are headings by OOXML's definition; neither is visible to anything
+  // matching on the style name. Plus one EMPTY outline-levelled paragraph,
+  // which `removeEmptyHeadings` deletes — so the expected count is 3, not 4,
+  // and the row proves the deletion rather than assuming it.
+  'outline-headings': () => [
+    outlinePara(1, 'Permit Conditions'),
+    para(LEAD),
+    emptyOutlinePara(2),
+    outlinePara(2, 'Inspection Schedule'),
+    para(FOLLOW),
+    para('Contact the Clerk', 'contactheading'),
+  ],
   'typed-list': () => [
     heading(1, 'Typed List'), fakeListItem(1, 'Proof of address'), fakeListItem(2, 'Signed declaration'),
     fakeListItem(3, 'Payment receipt'),
@@ -179,6 +195,11 @@ function buildDocx(id, args, outPath) {
     image: args.shape.startsWith('figure'),
     comments: args.shape === 'tracked',
     macro: args.macro === true,
+    // The custom style only exists for the shape that needs it, so every other
+    // fixture's styles.xml stays byte-identical and the corpus does not churn.
+    ...(args.shape === 'outline-headings'
+      ? { customHeading: { id: 'contactheading', basedOn: 'Heading2' } }
+      : {}),
     ...(DOCX_LANG_SLOTS[args.shape] ?? {}),
   });
 }
