@@ -1,3 +1,5 @@
+import type { DocumentState } from '../../../services/document-state';
+import { documentStateLabel } from '../../../services/presentation/document-verdict';
 import type { VerdictKind } from '../../../services/presentation/verdict';
 import { T } from './tokens';
 
@@ -30,4 +32,28 @@ export const VERDICT_CHIP: Record<VerdictKind, VerdictChip> = {
 /** The badge label as prose, for an accessible name. */
 export function verdictWords(kind: VerdictKind): string {
   return VERDICT_CHIP[kind].label.replace(/[^A-Za-z ]/g, '').trim().toLowerCase();
+}
+
+/**
+ * A document's state, on the five palettes the run chips already use.
+ *
+ * No sixth colour: an operator has learned what each shade means on the
+ * portfolio, and a document row should read the same way. Conformant is a
+ * pass; needs-answers is at-risk work; stale is inconclusive, because the
+ * reading no longer describes the file; everything blocked or unread sits on
+ * the calm scanning palette; closed is inconclusive too — nothing is open and
+ * the file still fails, which is neither a pass nor work.
+ */
+const DOCUMENT_STATE_PALETTE: Record<DocumentState, VerdictKind> = {
+  'not-reviewed': 'scan',
+  stale: 'inconclusive',
+  'needs-answers': 'risk',
+  conformant: 'pass',
+  ready: 'scan',
+  'waiting-on-client': 'scan',
+  closed: 'inconclusive',
+};
+
+export function documentStateChip(state: DocumentState): VerdictChip {
+  return { ...VERDICT_CHIP[DOCUMENT_STATE_PALETTE[state]], label: documentStateLabel(state) };
 }

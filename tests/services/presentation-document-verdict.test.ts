@@ -2,12 +2,43 @@ import { describe, expect, it } from 'vitest';
 
 import {
   conformanceLine,
+  documentStateLabel,
+  documentStateNote,
   scopeLine,
   SCOPE_EXPLAINER,
 } from '../../src/services/presentation/document-verdict';
 import { CHECKED_CRITERIA, NOT_CHECKED_CRITERIA } from '../../src/domain/document-remediation';
+import { DOCUMENT_STATES } from '../../src/services/document-state';
 
 const scoped = { scope: { criteria: [...CHECKED_CRITERIA] } };
+
+describe('documentStateLabel', () => {
+  it('names every state, and never with the word "clean" or "done"', () => {
+    // A state label is the one thing on the row an operator reads first, and
+    // the two words this product refuses are exactly the ones a label would
+    // reach for. `closed` is not done: nothing is open, and the file still
+    // fails the checker.
+    for (const state of DOCUMENT_STATES) {
+      const label = documentStateLabel(state);
+      expect(label.length).toBeGreaterThan(0);
+      expect(label.toLowerCase()).not.toMatch(/\b(clean|done)\b/);
+    }
+    expect(documentStateLabel('needs-answers')).toBe('Needs answers');
+    expect(documentStateLabel('waiting-on-client')).toBe('Waiting on client');
+  });
+
+  it('says in words what each state means for the row, counts included', () => {
+    expect(documentStateNote('needs-answers', { open: 12, waiting: 1, expired: 0 })).toBe(
+      '12 items need an answer, 1 waiting on the client',
+    );
+    expect(documentStateNote('stale', { open: 0, waiting: 0, expired: 3 })).toBe(
+      'the document changed since it was read; 3 answers no longer apply',
+    );
+    expect(documentStateNote('closed', { open: 0, waiting: 0, expired: 0 })).toBe(
+      'every item is decided; the file still does not conform',
+    );
+  });
+});
 
 describe('conformanceLine', () => {
   it('says compliant when the checker did', () => {
