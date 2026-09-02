@@ -1161,7 +1161,13 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
       kind: 'figure',
       criterion: '1.1.1',
       answerable: 'operator',
-      target: { ordinal: index, type: figure.type, page: figure.page, prior },
+      target: {
+        ordinal: index,
+        type: figure.type,
+        page: figure.page,
+        prior,
+        ...(figure.imageDigest ? { imageDigest: figure.imageDigest } : {}),
+      },
     };
     if (prior === 'absent') {
       punch(out, ask, `${at}: no alt text, no caption to transcribe — write a description`);

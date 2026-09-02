@@ -601,6 +601,48 @@ describe('GET /api/documents/remediate', () => {
   });
 });
 
+describe('answers posted with the file', () => {
+  beforeEach(() => {
+    checkUa1.mockReset();
+    runtimes.soffice = true;
+    runtimes.java = true;
+    authorized.ok = true;
+  });
+
+  function withAnswers(answers: unknown): Request {
+    const form = new FormData();
+    form.set('file', new File([pdfBytes() as BlobPart], 'notice.pdf'));
+    form.set('answers', typeof answers === 'string' ? answers : JSON.stringify(answers));
+    return new Request('http://localhost:3000/api/documents/remediate', { method: 'POST', body: form });
+  }
+
+  it('refuses answers given for other bytes, and writes nothing', async () => {
+    // The harness's tamper case: a sidecar keyed to a sha that is not the
+    // file's. The door must not let the pipeline run on it.
+    repairReads({ figures: [{ type: 'Figure', alt: null, actualText: null, page: 1 }], images: 1 });
+    checkUa1.mockResolvedValue({ checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.3-1'] });
+
+    const response = await POST(withAnswers({
+      inputSha256: 'b'.repeat(64),
+      figures: [{ ordinal: 0, type: 'Figure', page: 1, prior: 'absent', alt: 'A map' }],
+    }));
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ error: 'repair_refused', detail: 'answer-mismatch' });
+    expect(finishDocument).not.toHaveBeenCalled();
+  });
+
+  it('refuses a malformed answers part before any stage runs', async () => {
+    repairReads();
+    for (const bad of ['{not json', { inputSha256: 'x', figures: 'no' }]) {
+      const response = await POST(withAnswers(bad));
+      expect(response.status).toBe(400);
+      expect((await response.json()).error).toBe('invalid_answers');
+    }
+    expect(finishDocument).not.toHaveBeenCalled();
+  });
+});
+
 describe('what the header carries', () => {
   beforeEach(() => {
     checkUa1.mockReset();

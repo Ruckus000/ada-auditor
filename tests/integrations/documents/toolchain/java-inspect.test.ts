@@ -367,6 +367,67 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
   });
 
   /**
+   * Two figures drawing ONE image XObject at two places on the page, and a
+   * third figure that draws nothing. The shape page furniture takes: a logo
+   * placed on every page is one XObject drawn many times, and the reading has
+   * to say so — same bytes, same digest — so a person can describe it once.
+   */
+  function drawnFiguresPdf(): Buffer {
+    const image = 'PDF!';
+    const stream = [
+      '/Figure <</MCID 0>> BDC q 50 0 0 30 20 100 cm /Im1 Do Q EMC',
+      '/Figure <</MCID 1>> BDC q 50 0 0 30 120 40 cm /Im1 Do Q EMC',
+      '/Figure <</MCID 2>> BDC EMC',
+    ].join('\n');
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R'
+        + ' /Resources << /XObject << /Im1 5 0 R >> >> /StructParents 0 >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      `<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 8 /Length ${image.length} >>\nstream\n${image}\nendstream`,
+      '<< /Type /StructTreeRoot /K [7 0 R 8 0 R 9 0 R] >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 0 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 1 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 2 >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('reports where each figure is drawn and what image it draws, so repeats can be answered once', async () => {
+    const path = join(dir, 'drawn-figures.pdf');
+    await writeFile(path, drawnFiguresPdf());
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable(`could not read the drawn-figure fixture: ${JSON.stringify(result.failure)}`);
+    else {
+      const [first, second, empty] = result.value.figures;
+      // One XObject, two placements: the same digest, different boxes — in
+      // top-down page points, the way `StructText` reports text.
+      expect(first.imageDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
+      expect(second.imageDigest).toBe(first.imageDigest);
+      expect(first.box).toEqual({ page: 1, x: 20, y: 70, w: 50, h: 30 });
+      expect(second.box).toEqual({ page: 1, x: 120, y: 130, w: 50, h: 30 });
+      expect(first.imageFilter).toBeNull();
+      // A figure that draws nothing has no place and no image — absent, never
+      // invented.
+      expect(empty.box).toBeNull();
+      expect(empty.imageDigest).toBeNull();
+    }
+  });
+
+  /**
    * A document with other documents inside it.
    *
    * `collection: true` makes it a portfolio; without it, the same attachment

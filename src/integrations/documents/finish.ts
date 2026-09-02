@@ -109,6 +109,19 @@ export type FinishRequest = {
    * stays — the safe direction.
    */
   embedFontsDir?: string;
+  /**
+   * Descriptions a NAMED PERSON declared, by figure ordinal — the ordinal
+   * `Inspect` reported, from the walk both stages share. The second standing
+   * exception to "no structure element altered", and like the first it
+   * infers nothing: the text is what a person typed for the figure they were
+   * looking at. The caller has already proved the figure still looks as it
+   * did when they answered, and the pipeline's gate admits exactly these
+   * deltas and nothing else.
+   *
+   * Travels in a sidecar file like the title, never on the command line: a
+   * description is document content.
+   */
+  alt?: Array<{ ordinal: number; text: string }>;
 };
 
 export type FinishOutcome =
@@ -132,8 +145,27 @@ export async function finishDocument(
     titleArgs = ['--title-file', titleFile];
   }
 
+  // The declared descriptions, one per line as `ordinal<TAB>base64(utf8)`.
+  // Base64 so a description may hold any character, a newline included,
+  // without a second escaping scheme; line-oriented because the Java side
+  // carries no JSON parser.
+  let altArgs: string[] = [];
+  let altFile: string | null = null;
+  if (request.alt !== undefined && request.alt.length > 0) {
+    altFile = `${request.outputPath}.alt`;
+    await writeFile(
+      altFile,
+      request.alt
+        .map((entry) => `${entry.ordinal}\t${Buffer.from(entry.text, 'utf8').toString('base64')}`)
+        .join('\n'),
+      'utf8',
+    );
+    altArgs = ['--alt-file', altFile];
+  }
+
   const cleanup = async () => {
     if (titleFile !== null) await rm(titleFile, { force: true });
+    if (altFile !== null) await rm(altFile, { force: true });
   };
 
   // Absence means "claim it", matching the stage's own default, so no existing
@@ -156,7 +188,7 @@ export async function finishDocument(
     try {
       return await runWritingStage(
         'Finish',
-        [request.inputPath, request.outputPath, ...titleArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
+        [request.inputPath, request.outputPath, ...titleArgs, ...altArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
         options,
       );
     } finally {
@@ -182,7 +214,7 @@ export async function finishDocument(
   try {
     return await runWritingStage(
       'Finish',
-      [request.inputPath, request.outputPath, language.data, ...titleArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
+      [request.inputPath, request.outputPath, language.data, ...titleArgs, ...altArgs, ...uaArgs, ...renumberArgs, ...embedArgs],
       options,
     );
   } finally {

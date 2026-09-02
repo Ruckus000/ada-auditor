@@ -1480,6 +1480,67 @@ Read this before claiming something works.
   everything. Losing the key means re-entering credentials — designed
   recovery, no export.
 
+- **The document punch list is a work system, and a person's answer is the
+  only way a claim reaches a delivered file.** (2026-09-01/02, PR #196 and
+  its successor.) Every punch item has an identity: `summary.asks[i]` is
+  emitted positionally beside `needs[i]` from one `punch()` helper
+  (`domain/document-remediation.ts`), so the two cannot disagree; `asks` and
+  the `excerpt` (the document's own words around each open figure, for the
+  operator who will describe it) stay off the response header
+  (`transportSummary`), the public report (`buildDocumentReport` is field by
+  field) and the logs (`logSafe`). Repair blockers — signed, encrypted,
+  untagged — are asks on the inspection's own reading (`withRepairability`),
+  so a refusal is on the record before anybody clicks Repair.
+  **Answers are rows** (`document_answers`): append-only, latest per
+  (document, `input_sha256`, ask), three dispositions kept apart —
+  `declared` (a value written into the file), `decided` (a judgement that
+  changes no bytes), `requested` (asked of the client) — attributed to the
+  principal who made them and keyed to the exact bytes they were given for.
+  Revised bytes at the same address expire every answer loudly: the items
+  come back open. Answers attach to the row that was answered; a paired
+  PDF's state merges its Word source's answers, and converting the source
+  consumes both.
+  **One derived state per document** (`services/document-state.ts`):
+  not-reviewed → stale → needs-answers → conformant → ready →
+  waiting-on-client → closed, first match wins, computed at read time over
+  the 200-row universe the inventory already fetches — no status column
+  until a client exceeds that. `running` is a fact about a browser tab, not
+  a row; `refused` folded into the repair asks. A document whose run is
+  refused is never `ready`. Labels live in `presentation/document-verdict.ts`
+  (never "done": `closed` means nothing is open and the file still fails the
+  checker); chips map onto the five run palettes.
+  **The pipeline writes what a person declared and nothing else.** `Finish
+  --alt-file` writes a description onto the figure at the ordinal `Inspect`
+  reported, from the walk both stages share (`FigureOrder.inOrder`) — the
+  second standing exception to "no structure element altered", and like the
+  first it infers nothing. The fidelity gate became
+  `contentChanges(applyDeclarations(before, answers), after) === []`: the
+  reading plus exactly the declared deltas (a description moves `figures[i].alt`
+  AND that figure's reading-order text, because `StructText.of` reads Alt),
+  so a description on the wrong figure refuses the run. Every declaration is
+  checked against its preimage first — bytes, type, page, the shape of the
+  prior description, and the image digest where both sides know it — and a
+  mismatch refuses the whole run with `answer-mismatch`, records the bytes on
+  the row so the answers read as stale, and delivers nothing.
+  **Decorative is record-only.** Empty `/Alt` passes veraPDF's presence test
+  while saying nothing — the r34 shape — and artifacting is a structural
+  delete that was priced and declined; a decorative decision is `decided`,
+  stays on the punch list, and the UI says so. Acrobat and Equidox artifact
+  in-app; this is the one place v1 is behind the market, on purpose.
+  **Figure geometry was measured and fell short of its prediction**
+  (`figure-geometry-results.md`): the image-only pass locates 44 % of open
+  figures on the real corpus — the same as the probe — because the worst
+  documents have far more `Figure` elements than images (r05: 101 vs 62).
+  Digest grouping stays (r09: 38 → 22 acts); crops stay deferred and now
+  name path geometry as their precondition; the language hint, AI drafts and
+  artifacting on a decision are deferred with triggers in the plan.
+  **The harness holds the channel to the charter:** `keys/<id>.answers.json`
+  sidecars are posted as the `answers` part; every `/Alt` on the delivered
+  bytes is read by qpdf and must be one the source carried or one a person
+  declared, else `invented-claim/invented-alt` (always fatal); the tamper row
+  `p70-answers-old-bytes` must refuse. `verify.mjs` reports a pre-existing
+  `w19` heading-count mismatch untouched here.
+
 ## Agent behavior
 
 - Do not invent Netflix process that isn’t grounded in these rules

@@ -34,6 +34,17 @@ export type RunResult = {
   outputSha256?: string;
   /** An independent veraPDF run over the delivered bytes — the drift guard. */
   independent?: { checked: boolean; compliant?: boolean; clauses?: string[] };
+  /**
+   * What the run POSTED as a person's answers, from the key's sidecar: the
+   * descriptions by text, and the language. What the product may write from
+   * a person, and nothing else.
+   */
+  answered?: { figures: string[]; language?: string };
+  /**
+   * Every `/Alt` on the delivered bytes, read INDEPENDENTLY (qpdf, never the
+   * product's own `Inspect`). Absent when no independent read was possible.
+   */
+  deliveredAlts?: string[];
   wallMs: number;
   /** Set when the request never produced an answer at all. */
   transportError?: string;
@@ -51,6 +62,8 @@ export type DeliverySummary = {
   figures: number;
   gaps: string[];
   needs?: Array<{ criterion: string; item: string }>;
+  /** What the product says it wrote from a person — its own provenance claim. */
+  declared?: { language?: true; figures: number };
   conformance?:
     | { checker: 'verapdf-ua1'; compliant: true }
     | { checker: 'verapdf-ua1'; compliant: false; failingClauses: string[] }
@@ -93,6 +106,13 @@ export type DocKey = {
     needsExact?: boolean;
     gapCriteria?: string[];
     conformance?: 'any' | { compliant: true } | { compliant: false; mustVoice?: string[] };
+    /**
+     * Every `/Alt` the SOURCE carries, read by qpdf when the key was
+     * authored. With this present, every alt on the delivered bytes must be
+     * one of these or one a person declared for the run — the invented-claim
+     * check for descriptions.
+     */
+    sourceAlts?: string[];
   };
 };
 
@@ -101,6 +121,8 @@ export type Disposition =
   | 'refused-signed'
   | 'refused-not-tagged'
   | 'refused-content-changed'
+  /** The answers posted were given for other bytes, or a figure they name changed. */
+  | 'refused-answer-mismatch'
   | 'refused-pipeline'
   | 'door';
 
@@ -154,6 +176,7 @@ export function observedDisposition(result: RunResult): Disposition {
     if (detail === 'signed') return 'refused-signed';
     if (detail === 'not-tagged') return 'refused-not-tagged';
     if (detail === 'content-changed') return 'refused-content-changed';
+    if (detail === 'answer-mismatch') return 'refused-answer-mismatch';
     return 'refused-pipeline';
   }
   return 'door';
@@ -337,6 +360,32 @@ export function scoreDocument(
 
   if (expected.title !== undefined && summary.title !== expected.title) {
     push('claim', 'wrong-title-provenance', `expected ${expected.title}, got ${summary.title}`, key.weight === 'core');
+  }
+
+  // ------------------------------------------------------------ descriptions
+  //
+  // The declared-answers channel writes text into delivered files, which is
+  // the one place this product could invent a claim in bytes rather than in
+  // a report. So every description on the delivered file — read by qpdf, not
+  // by the product — must be one the source carried or one a named person
+  // declared for this run. Only checkable where the key recorded the
+  // source's alts, and only where an independent read was possible.
+  if (result.deliveredAlts !== undefined && expected.sourceAlts !== undefined) {
+    const allowed = new Set([...expected.sourceAlts, ...(result.answered?.figures ?? [])]);
+    for (const alt of result.deliveredAlts) {
+      if (!allowed.has(alt)) {
+        push('invented-claim', 'invented-alt', `the delivered file carries a description nobody supplied: ${JSON.stringify(alt)}`, true);
+      }
+    }
+  }
+  // And the product's own account of what it wrote from a person must match
+  // what it was given: a provenance claim that does not match the run is a
+  // wrong claim about who said what.
+  if (result.answered !== undefined) {
+    const wrote = summary.declared?.figures ?? 0;
+    if (wrote !== result.answered.figures.length) {
+      push('claim', 'declared-count', `posted ${result.answered.figures.length} description(s), the summary says it wrote ${wrote}`, key.weight === 'core');
+    }
   }
 
   // ---------------------------------------------------------------- counts

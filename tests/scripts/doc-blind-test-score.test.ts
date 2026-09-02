@@ -71,6 +71,11 @@ const outcomes = (k: DocKey, r: RunResult, c: Correction[] = []) =>
   scoreDocument(k, r, c).findings.map((f) => f.outcome);
 
 describe('reading what the product did off the response', () => {
+  it('names a refusal over stale answers as its own disposition', () => {
+    expect(observedDisposition({ id: 'x', status: 422, refusal: { detail: 'answer-mismatch' }, wallMs: 1 }))
+      .toBe('refused-answer-mismatch');
+  });
+
   it('maps every refusal the pipeline can produce to its own disposition', () => {
     const at = (status: number, detail?: string): RunResult =>
       ({ id: 'x', status, refusal: { detail }, wallMs: 1 });
@@ -145,6 +150,50 @@ describe('the door', () => {
 });
 
 describe('invented claims', () => {
+  it('fails a delivered description that neither the source nor a person supplied', () => {
+    // The declared-answers channel writes descriptions into files. Every
+    // `/Alt` on the delivered bytes — read independently, by qpdf — must be
+    // one the source already carried or one a named person declared for
+    // this run. Anything else is the invented claim this product exists to
+    // never make, and it is fatal at any weight.
+    const findings = scoreDocument(
+      key({ expected: { disposition: 'delivered', sourceAlts: ['The town seal'] } }),
+      {
+        id: 'p01', status: 200, wallMs: 1,
+        summary: summary(),
+        answered: { figures: ['A map of the town centre'] },
+        deliveredAlts: ['The town seal', 'A map of the town centre', 'A photo nobody described'],
+      },
+    ).findings;
+    const invented = findings.filter((f) => f.facet === 'invented-claim');
+    expect(invented).toHaveLength(1);
+    expect(invented[0]).toMatchObject({ outcome: 'invented-alt', fatal: true });
+    expect(invented[0].detail).toContain('A photo nobody described');
+  });
+
+  it('holds the delivery to the count of answers it was given', () => {
+    // A sidecar with two descriptions and a summary that says it wrote one
+    // is a claim about provenance that does not match the run.
+    const findings = scoreDocument(
+      key({ expected: { disposition: 'delivered', sourceAlts: [] } }),
+      {
+        id: 'p01', status: 200, wallMs: 1,
+        summary: summary({ declared: { figures: 1 } }),
+        answered: { figures: ['one', 'two'] },
+        deliveredAlts: ['one', 'two'],
+      },
+    ).findings;
+    expect(findings).toContainEqual(expect.objectContaining({ facet: 'claim', outcome: 'declared-count', fatal: true }));
+  });
+
+  it('is quiet about descriptions when no independent read was possible', () => {
+    const findings = scoreDocument(
+      key({ expected: { disposition: 'delivered', sourceAlts: ['x'] } }),
+      { id: 'p01', status: 200, wallMs: 1, summary: summary() },
+    ).findings;
+    expect(findings.filter((f) => f.outcome === 'invented-alt')).toHaveLength(0);
+  });
+
   it('fails a title claimed where the key plants none', () => {
     const k = key({ expected: { titleText: null, title: 'no-heading-to-copy' } });
     expect(fatalOutcomes(k, delivered({ title: 'no-heading-to-copy', titleText: 'Invented' })))

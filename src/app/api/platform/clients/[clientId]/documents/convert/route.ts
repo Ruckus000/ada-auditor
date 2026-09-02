@@ -13,6 +13,9 @@ import { resolveLibreOffice } from '../../../../../../../integrations/documents/
 import { resolveJavaRuntime } from '../../../../../../../integrations/documents/java-runtime';
 import { getPlatformStore } from '../../../../../../../integrations/persistence';
 import { getArtifactStore } from '../../../../../../../integrations/artifacts/blob-store';
+import type { DeclaredAnswers } from '../../../../../../../domain/document-answers';
+import type { StoredClientDocument, StoredDocumentAnswer } from '../../../../../../../domain/platform';
+import { pairDocuments } from '../../../../../../../services/document-pairing';
 import { hostnameOf } from '../../../../../../../services/safe-url';
 import { logInfo, logWarn } from '../../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
@@ -144,6 +147,46 @@ async function recordConversionEvent(
   });
 }
 
+/**
+ * The declared answers on record for THESE bytes, shaped for the pipeline.
+ *
+ * Answers attach to the row that was answered. A Word source's conversion is
+ * the remediation of the PDFs paired with it, so those PDFs' answers count
+ * too — and the sha keying decides which apply: only rows keyed to the bytes
+ * about to be run are consumed, never one given for an earlier version.
+ * Returns the ids consumed so the conversion row can record them.
+ */
+async function answersFor(
+  platform: ReturnType<typeof getPlatformStore>,
+  clientId: string,
+  document: StoredClientDocument | undefined,
+  inputSha256: string,
+): Promise<{ answers?: DeclaredAnswers; answerIds: string[] }> {
+  if (document === undefined) return { answerIds: [] };
+  const universe = (await platform.listClientDocuments(clientId)).documents;
+  const pairs = pairDocuments(universe);
+  const ids = [
+    document.id,
+    ...universe.filter((doc) => pairs.get(doc.id)?.id === document.id).map((doc) => doc.id),
+  ];
+  const rows = (await platform.latestDocumentAnswers(clientId, ids)).filter(
+    (row): row is StoredDocumentAnswer & { disposition: 'declared' } =>
+      row.disposition === 'declared' && row.inputSha256 === inputSha256,
+  );
+  if (rows.length === 0) return { answerIds: [] };
+
+  const language = rows.find((row) => row.kind === 'language')?.value;
+  const figures = rows.flatMap((row) =>
+    row.kind === 'figure' && row.target !== undefined && 'ordinal' in row.target && row.value !== undefined
+      ? [{ ...row.target, alt: row.value }]
+      : [],
+  );
+  return {
+    answers: { inputSha256, ...(language === undefined ? {} : { language }), figures },
+    answerIds: rows.map((row) => row.id),
+  };
+}
+
 /** Both halves named separately, because the fixes differ. */
 function refuseWithoutToolchain(requestId: string): Response | null {
   const soffice = resolveLibreOffice();
@@ -210,24 +253,39 @@ export async function POST(
   // stages see is a request id and says nothing.
   const sourceName = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '');
   const repairing = fetched.kind === 'pdf';
+  const inputSha256 = sha256(fetched.bytes);
+
+  // What a person declared for these bytes, if the row is on record. Read
+  // rather than ensured: a failed run must mint nothing.
+  const known = await platform.findClientDocument(clientId, url);
+  const declared = await answersFor(platform, clientId, known ?? undefined, inputSha256);
 
   const outcome = repairing
-    ? await repairPdfBytes(fetched.bytes, requestId, { sourceName })
-    : await remediateWordBytes(fetched.bytes, fetched.kind, requestId, { sourceName });
+    ? await repairPdfBytes(fetched.bytes, requestId, { sourceName, ...declared })
+    : await remediateWordBytes(fetched.bytes, fetched.kind, requestId, { sourceName, ...declared });
   if (!outcome.ok) {
     // Nothing persisted, but the trail says the run was refused and why —
     // a signed PDF an operator keeps clicking on must not stay invisible.
     await recordConversionEvent(
       platform, clientId, principal,
       repairing ? 'document_repair_failed' : 'document_conversion_failed',
-      undefined,
+      known?.id,
       { detail: outcome.refusal.detail ?? outcome.refusal.error },
     );
+    if (outcome.refusal.detail === 'answer-mismatch' && known !== null) {
+      // The bytes just read are recorded on the row it already has, so the
+      // answers read as stale rather than silently unapplied. Nothing is
+      // minted: the row existed.
+      await platform.ensureClientDocument(
+        clientId,
+        { url: known.url, kind: known.kind, source: known.source, contentSha256: inputSha256 },
+        new Date().toISOString(),
+      );
+    }
     return refusalResponse(outcome.refusal, requestId);
   }
 
   const now = new Date().toISOString();
-  const inputSha256 = sha256(fetched.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
     {
@@ -252,6 +310,7 @@ export async function POST(
     ...(repairing ? { kind: 'repair' as const } : {}),
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
+    ...(declared.answerIds.length === 0 ? {} : { answerIds: declared.answerIds }),
     convertedAt: now,
   };
   await platform.saveDocumentConversion(record);
@@ -327,7 +386,7 @@ export async function PUT(
         };
 
   if (upload.kind === 'pdf') {
-    return repairUploadedPdf(upload, clientId, requestId, platform, principal, rowFor);
+    return repairUploadedPdf(upload, clientId, requestId, platform, principal, rowFor, existing);
   }
 
   const soffice = resolveLibreOffice();
@@ -338,20 +397,25 @@ export async function PUT(
     );
   }
 
+  const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.docx';
+  const inputSha256 = sha256(upload.bytes);
+  // The row the answers hang off: the one named, else the one this filename
+  // already has. An upload the inventory has never seen has no answers.
+  const known = existing ?? (await platform.findClientDocument(clientId, name)) ?? undefined;
+  const declared = await answersFor(platform, clientId, known, inputSha256);
+
   const outcome = await remediateWordBytes(upload.bytes, upload.kind, requestId, {
     sourceName: upload.filename,
+    ...declared,
   });
   if (!outcome.ok) {
-    await recordConversionEvent(platform, clientId, principal, 'document_conversion_failed', undefined, {
+    await recordConversionEvent(platform, clientId, principal, 'document_conversion_failed', known?.id, {
       detail: outcome.refusal.detail ?? outcome.refusal.error,
     });
     return refusalResponse(outcome.refusal, requestId);
   }
 
-  const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.docx';
-
   const now = new Date().toISOString();
-  const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
     rowFor({ url: name, kind: upload.kind === 'doc' ? 'doc' : 'docx' }, inputSha256),
@@ -367,6 +431,7 @@ export async function PUT(
     outputSha256: sha256(outcome.pdf),
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
+    ...(declared.answerIds.length === 0 ? {} : { answerIds: declared.answerIds }),
     convertedAt: now,
   };
   await platform.saveDocumentConversion(record);
@@ -403,20 +468,32 @@ async function repairUploadedPdf(
     fallback: { url: string; kind: 'pdf' },
     contentSha256: string,
   ) => Parameters<ReturnType<typeof getPlatformStore>['ensureClientDocument']>[1],
+  existing?: StoredClientDocument,
 ): Promise<Response> {
+  const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.pdf';
+  const inputSha256 = sha256(upload.bytes);
+  const known = existing ?? (await platform.findClientDocument(clientId, name)) ?? undefined;
+  const declared = await answersFor(platform, clientId, known, inputSha256);
+
   const outcome = await repairPdfBytes(upload.bytes, requestId, {
     sourceName: upload.filename,
+    ...declared,
   });
   if (!outcome.ok) {
-    await recordConversionEvent(platform, clientId, principal, 'document_repair_failed', undefined, {
+    await recordConversionEvent(platform, clientId, principal, 'document_repair_failed', known?.id, {
       detail: outcome.refusal.detail ?? outcome.refusal.error,
     });
+    if (outcome.refusal.detail === 'answer-mismatch' && known !== undefined) {
+      await platform.ensureClientDocument(
+        clientId,
+        { url: known.url, kind: known.kind, source: known.source, contentSha256: inputSha256 },
+        new Date().toISOString(),
+      );
+    }
     return refusalResponse(outcome.refusal, requestId);
   }
 
-  const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.pdf';
   const now = new Date().toISOString();
-  const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
     rowFor({ url: name, kind: 'pdf' }, inputSha256),
@@ -433,6 +510,7 @@ async function repairUploadedPdf(
     kind: 'repair',
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
+    ...(declared.answerIds.length === 0 ? {} : { answerIds: declared.answerIds }),
     convertedAt: now,
   };
   await platform.saveDocumentConversion(record);

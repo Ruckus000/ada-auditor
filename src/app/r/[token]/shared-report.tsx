@@ -336,6 +336,34 @@ function DocumentsSection({
                   repairing this PDF, is the path to a conformant replacement.
                 </p>
               ) : null}
+              {entry.declared ? (
+                <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
+                  {/* Counts, never the words: a description is authored text
+                      about the client's document, and this page is public. */}
+                  Supplied by a person and written into the file on{' '}
+                  <time dateTime={entry.readAt}>{entry.readAt.slice(0, 10)}</time>:{' '}
+                  {entry.declared.figures} figure description
+                  {entry.declared.figures === 1 ? '' : 's'}
+                  {entry.declared.language ? ' and the document’s language' : ''}.
+                </p>
+              ) : null}
+              {entry.requested && entry.requested.length > 0 ? (
+                <div style={{ margin: '4px 0 0' }}>
+                  <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: T.inkSoft }}>
+                    Needed from you
+                  </p>
+                  <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>
+                    {/* A list of requests only — items only the document's
+                        owner can act on — so the not-"To do" rule on the punch
+                        list above stays intact. */}
+                    {entry.requested.map((item) => (
+                      <li key={item} style={{ fontSize: 12.5, color: T.inkSoft, lineHeight: 1.5 }}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>

@@ -121,6 +121,23 @@ describe('asks beside needs', () => {
     expect(figures.some((ask) => ask.id === 'figure:3')).toBe(false);
   });
 
+  it('carries the image digest on a figure ask, so repeats of one image can be answered once', () => {
+    const s = structure({
+      figures: [
+        { type: 'Figure', alt: null, actualText: null, page: 1, imageDigest: 'sha256:logo', box: { page: 1, x: 10, y: 10, w: 40, h: 20 } },
+        { type: 'Figure', alt: null, actualText: null, page: 2, imageDigest: 'sha256:logo', box: null },
+        { type: 'Figure', alt: null, actualText: null, page: 2, imageDigest: null },
+      ],
+      images: 3,
+    });
+    const asks = summarise(provenance({ structure: s })).asks!.filter((ask) => ask.kind === 'figure');
+    expect(asks.map((ask) => ask.target)).toEqual([
+      { ordinal: 0, type: 'Figure', page: 1, prior: 'absent', imageDigest: 'sha256:logo' },
+      { ordinal: 1, type: 'Figure', page: 2, prior: 'absent', imageDigest: 'sha256:logo' },
+      { ordinal: 2, type: 'Figure', page: 2, prior: 'absent' },
+    ]);
+  });
+
   it('keys a heading decision by its index in the ladder', () => {
     const headings = everything().asks!.filter((ask) => ask.kind === 'heading');
     expect(headings).toEqual([

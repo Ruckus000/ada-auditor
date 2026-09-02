@@ -60,6 +60,50 @@ function documentPath(key: DocKey): string {
 }
 
 /**
+ * A person's answers for a row, when the key has a sidecar
+ * (`keys/<id>.answers.json`, the product's `DeclaredAnswers` shape). Posted
+ * as the `answers` part; what was posted travels on the result so the scorer
+ * can hold the delivery to it. Authored by qpdf like every key — the figure
+ * ordinal is a position in tree order, which qpdf's `--json` shows.
+ */
+type Sidecar = { inputSha256: string; language?: string; figures: Array<{ ordinal: number; alt: string }> };
+
+function sidecarFor(key: DocKey): Sidecar | undefined {
+  const path = join(KEYS, `${key.id}.answers.json`);
+  return existsSync(path) ? (JSON.parse(readFileSync(path, 'utf8')) as Sidecar) : undefined;
+}
+
+/**
+ * Every `/Alt` on a delivered file, by qpdf — never by the product's own
+ * reading, for the reason every key is authored that way: a description the
+ * product wrote and the product then read back proves only that it agrees
+ * with itself. Absent (not empty) when qpdf is not installed or cannot read
+ * the file, so the scorer stays quiet rather than reporting a clean sweep.
+ */
+async function deliveredAlts(path: string): Promise<string[] | undefined> {
+  try {
+    // JSON v2: the `qpdf` key holds `[header, objects]`; every object's
+    // dictionary is under `value`, strings as `u:` (unicode) or raw text.
+    const { stdout } = await execFileAsync('qpdf', ['--json=2', '--json-key=qpdf', path], {
+      maxBuffer: 256 * 1024 * 1024,
+    });
+    const objects = (JSON.parse(stdout) as { qpdf?: Array<Record<string, unknown>> }).qpdf?.[1] ?? {};
+    const alts: string[] = [];
+    for (const object of Object.values(objects)) {
+      const value = (object as { value?: Record<string, unknown> }).value;
+      if (value && typeof value['/Alt'] === 'string' && (value['/S'] === '/Figure' || value['/S'] === '/Formula')) {
+        // qpdf renders a string as `u:...` for unicode, else raw bytes; keep the text.
+        const raw = value['/Alt'] as string;
+        alts.push(raw.startsWith('u:') ? raw.slice(2) : raw);
+      }
+    }
+    return alts;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * The filename a real document is POSTED under: the basename of its harvest
  * URL, from the tracked provenance manifests.
  *
@@ -183,6 +227,11 @@ async function post(key: DocKey, bytes: Buffer): Promise<RunResult> {
   if (request.auth === 'wrong') headers.authorization = 'Bearer not-the-token-at-all-0123456789';
   else if (request.auth !== 'none') headers.authorization = `Bearer ${TOKEN}`;
 
+  const sidecar = sidecarFor(key);
+  const answered = sidecar === undefined
+    ? undefined
+    : { figures: sidecar.figures.map((f) => f.alt), ...(sidecar.language === undefined ? {} : { language: sidecar.language }) };
+
   let body: BodyInit;
   if (request.body === 'json') {
     headers['content-type'] = 'application/json';
@@ -195,6 +244,7 @@ async function post(key: DocKey, bytes: Buffer): Promise<RunResult> {
       form.append('file', file);
       form.append('file', new File([new Uint8Array(bytes)], `second-${key.file}`));
     } else form.set('file', file);
+    if (sidecar !== undefined) form.set('answers', JSON.stringify(sidecar));
     body = form;
   }
 
@@ -215,7 +265,7 @@ async function post(key: DocKey, bytes: Buffer): Promise<RunResult> {
       } catch {
         refusal = { error: 'unparseable', detail: text.slice(0, 200) };
       }
-      return { id: key.id, status: response.status, refusal, wallMs };
+      return { id: key.id, status: response.status, refusal, wallMs, ...(answered === undefined ? {} : { answered }) };
     }
 
     const header = response.headers.get('x-remediation-summary');
@@ -224,12 +274,19 @@ async function post(key: DocKey, bytes: Buffer): Promise<RunResult> {
     mkdirSync(dirname(outPath), { recursive: true });
     writeFileSync(outPath, delivered);
 
+    // The independent read of descriptions, only where the scorer can use
+    // it: a key that recorded the source's alts, or a row a person answered.
+    const wantsAlts = key.expected.sourceAlts !== undefined || sidecar !== undefined;
+    const alts = wantsAlts ? await deliveredAlts(outPath) : undefined;
+
     return {
       id: key.id,
       status: 200,
       summary: header === null ? undefined : JSON.parse(header),
       outputSha256: sha256(delivered),
       independent: await independentUa1(outPath),
+      ...(answered === undefined ? {} : { answered }),
+      ...(alts === undefined ? {} : { deliveredAlts: alts }),
       wallMs,
     };
   } catch (error) {

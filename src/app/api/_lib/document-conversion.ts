@@ -2,12 +2,16 @@ import { mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { createHash } from 'node:crypto';
+
+import { applyDeclarations, type DeclaredAnswers } from '../../../domain/document-answers';
 import {
   boundSummary,
   summarise,
   transportSummary,
   withConformance,
   withContrast,
+  withDeclarations,
   withExcerpt,
   type Conformance,
   type RemediationSummary,
@@ -138,8 +142,62 @@ async function withMeasuredContrast(
   return withContrast(summary, reading.value);
 }
 
+/**
+ * What a person declared for these bytes, when the caller holds any.
+ *
+ * Consumed by both lanes the same way: the answers must be keyed to the
+ * exact bytes being run (`inputSha256`), every figure they name must still
+ * look as it did when answered, and the fidelity gate is then told to expect
+ * exactly those deltas. A mismatch refuses the whole run with
+ * `answer-mismatch`; nothing is delivered, and the caller records the bytes
+ * so the answers read as stale rather than silently unapplied.
+ */
+type Answered = { answers?: DeclaredAnswers };
+
 /** What `repairPdfBytes` needs: the stage plumbing, plus the client-facing name. */
-export type RepairOptions = Pick<ConvertOptions, 'javaRuntime' | 'root' | 'env' | 'timeoutMs' | 'sourceName'>;
+export type RepairOptions = Pick<ConvertOptions, 'javaRuntime' | 'root' | 'env' | 'timeoutMs' | 'sourceName'> & Answered;
+
+/** What `remediateWordBytes` needs: the converter's options, plus any answers. */
+export type RemediateOptions = ConvertOptions & Answered;
+
+function sha256(bytes: Uint8Array): string {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+/**
+ * The structure a run is allowed to produce, or the reason it may not run.
+ *
+ * `null` answers mean no declaration and the expected structure is the
+ * reading itself. Otherwise the answers must be about THESE bytes and every
+ * target must still match its preimage — both checks refuse the whole run,
+ * because a description written onto a figure that changed since it was
+ * described is a fabricated claim about a client's document.
+ */
+function expectedAfter(
+  before: DocumentStructure,
+  bytes: Uint8Array,
+  answers: DeclaredAnswers | undefined,
+  requestId: string,
+): { ok: true; structure: DocumentStructure } | { ok: false; mismatches: string[] } {
+  if (answers === undefined) return { ok: true, structure: before };
+  if (answers.inputSha256 !== sha256(bytes)) {
+    logWarn('document_answers_mismatched', { requestId, reason: 'bytes' });
+    return { ok: false, mismatches: ['bytes'] };
+  }
+  const applied = applyDeclarations(before, answers);
+  if (!applied.ok) {
+    // Ask ids only, never the text.
+    logWarn('document_answers_mismatched', { requestId, asks: applied.mismatches });
+  }
+  return applied;
+}
+
+function declaredCounts(answers: DeclaredAnswers | undefined, languageUsed: boolean) {
+  return {
+    ...(answers?.language !== undefined && languageUsed ? { language: true as const } : {}),
+    figures: answers?.figures.length ?? 0,
+  };
+}
 
 /**
  * The conversion core two routes share.
@@ -170,16 +228,17 @@ export async function remediateWordBytes(
   bytes: Uint8Array,
   kind: string,
   requestId: string,
-  options: ConvertOptions = {},
+  options: RemediateOptions = {},
 ): Promise<ConversionOutcome> {
   const work = await mkdtemp(join(tmpdir(), 'ada-remediate-'));
   const source = `${work}/${requestId}.${kind}`;
   const output = `${work}/${requestId}.pdf`;
+  const { answers, ...convertOptions } = options;
 
   try {
     await writeFile(source, bytes);
 
-    const result = await convertSourceToPdf(source, output, options);
+    const result = await convertSourceToPdf(source, output, convertOptions);
     if (!result.ok) {
       // The STEP, not just the kind. `converter-failed` covers everything from
       // "LibreOffice could not open this file" to "our own Finish stage refused
@@ -214,18 +273,67 @@ export async function remediateWordBytes(
       ...(options.env === undefined ? {} : { env: options.env }),
       ...(options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs }),
     };
+    // The answers key on the SOURCE bytes — the only bytes the inventory has
+    // for a Word document — and are checked against the converted file's
+    // structure: LibreOffice enumerating figures differently on a re-run is
+    // exactly what the preimage check exists to catch.
+    const { title } = result.provenance;
+    const expected = expectedAfter(result.provenance.structure, bytes, answers, requestId);
+    if (!expected.ok) {
+      return {
+        ok: false,
+        refusal: { status: 422, error: 'remediation_failed', detail: 'answer-mismatch' },
+      };
+    }
+    const languageDeclared =
+      answers?.language !== undefined && result.provenance.sourceLanguage === null;
+    const sourceLanguage = languageDeclared ? answers!.language! : result.provenance.sourceLanguage;
+    let structure = result.provenance.structure;
+
+    const alt = (answers?.figures ?? []).map((figure) => ({ ordinal: figure.ordinal, text: figure.alt }));
+    const finishRequest: FinishRequest = {
+      inputPath: output,
+      outputPath: output,
+      language: sourceLanguage,
+      ...(title.kind === 'no-heading-to-copy' ? {} : { title: title.title }),
+      ...(alt.length === 0 ? {} : { alt }),
+    };
+
+    if (alt.length > 0 || languageDeclared) {
+      // One more pass over the converted file, writing what a person said,
+      // then read back and held to the gate: the declared deltas, nothing else.
+      const declared = await finishDocument({ ...finishRequest, claimUa1: false }, stageOptions);
+      if (!declared.ok) {
+        logWarn('document_remediation_failed', { requestId, failure: declared.failure.kind, step: 'declare' });
+        return {
+          ok: false,
+          refusal: { status: 422, error: 'remediation_failed', detail: `${declared.failure.kind}/declare` },
+        };
+      }
+      const after = await inspectDocument(output, stageOptions);
+      if (!after.ok) {
+        return {
+          ok: false,
+          refusal: { status: 422, error: 'remediation_failed', detail: `${after.failure.kind}/verify` },
+        };
+      }
+      const changed = contentChanges(expected.structure, after.value);
+      if (changed.length > 0) {
+        logWarn('document_repair_altered_content', { requestId, fields: changed });
+        return {
+          ok: false,
+          refusal: { status: 422, error: 'remediation_failed', detail: 'content-changed' },
+        };
+      }
+      structure = after.value;
+    }
+
     // Re-finished from the converted file rather than the source: everything
     // else is already written, and the only thing this pass adds is the claim.
-    const { title, sourceLanguage } = result.provenance;
     const conformance = await earnUaIdentifier(
       await checkUa1(output, checkOptions),
-      {
-        inputPath: output,
-        outputPath: output,
-        language: sourceLanguage,
-        ...(title.kind === 'no-heading-to-copy' ? {} : { title: title.title }),
-      },
-      result.provenance.structure,
+      finishRequest,
+      structure,
       stageOptions,
       checkOptions,
     );
@@ -233,8 +341,11 @@ export async function remediateWordBytes(
     const pdf = await readFile(output);
     const summary = await withMeasuredContrast(
       withExcerpt(
-        withConformance(summarise(result.provenance), conformance),
-        result.provenance.structure,
+        withDeclarations(
+          withConformance(summarise({ title, sourceLanguage, structure }), conformance),
+          declaredCounts(answers, languageDeclared),
+        ),
+        structure,
       ),
       output,
       stageOptions,
@@ -293,7 +404,7 @@ export async function repairPdfBytes(
       };
     }
 
-    const decision = planRepair(before.value, options.sourceName);
+    const decision = planRepair(before.value, options.sourceName, options.answers?.language);
     if (!decision.repairable) {
       // Not an error: a true answer about this document. The operator screen
       // renders the reason, and the punch list is still delivered by the
@@ -310,10 +421,32 @@ export async function repairPdfBytes(
       };
     }
 
+    // What the run is allowed to produce: the reading, plus exactly what a
+    // person declared — checked against these bytes and each figure's
+    // preimage before a stage runs.
+    const expected = expectedAfter(before.value, bytes, options.answers, requestId);
+    if (!expected.ok) {
+      return {
+        ok: false,
+        refusal: {
+          status: 422,
+          error: 'repair_refused',
+          detail: 'answer-mismatch',
+          message:
+            'the answers on record were given for a version of this document that differs from the one just read — the items are open again in the workbench',
+        },
+      };
+    }
+    const alt = (options.answers?.figures ?? []).map((figure) => ({ ordinal: figure.ordinal, text: figure.alt }));
+    const languageDeclared =
+      options.answers?.language !== undefined && decision.plan.language === options.answers.language
+      && before.value.lang !== options.answers.language;
+
     const finishRequest = {
       inputPath: source,
       outputPath: output,
       language: decision.plan.language,
+      ...(alt.length === 0 ? {} : { alt }),
       // Metric-identical replacement programs for fonts the producer named
       // and never embedded. Finish proves the widths per font and refuses on
       // any mismatch; with the directory absent it embeds nothing. The
@@ -345,7 +478,12 @@ export async function repairPdfBytes(
       };
     }
 
-    const changed = contentChanges(before.value, after.value);
+    // Against the EXPECTED structure — the reading plus the declared deltas —
+    // so the pipeline may change exactly what a named person declared and
+    // nothing else. This is also what proves `Finish` wrote each description
+    // onto the ordinal `Inspect` numbered: a description on the wrong figure
+    // moves `figures` away from what was expected, and the run is refused.
+    const changed = contentChanges(expected.structure, after.value);
     if (changed.length > 0) {
       // The claim this stage makes about itself, checked rather than trusted.
       // A metadata pass that moved content is not a repair, and the original
@@ -376,13 +514,16 @@ export async function repairPdfBytes(
     const pdf = await readFile(output);
     const summary = await withMeasuredContrast(
       withExcerpt(
-        withConformance(
-          summarise({
-            title: decision.plan.title,
-            sourceLanguage: decision.plan.language,
-            structure: after.value,
-          }),
-          conformance,
+        withDeclarations(
+          withConformance(
+            summarise({
+              title: decision.plan.title,
+              sourceLanguage: decision.plan.language,
+              structure: after.value,
+            }),
+            conformance,
+          ),
+          declaredCounts(options.answers, languageDeclared),
         ),
         after.value,
       ),

@@ -122,6 +122,13 @@ export async function POST(
   // First page only — the same 200-document bound the inventory has always
   // had; the snapshot inherits it and the totals stay honest about it.
   const { documents } = await platform.listClientDocuments(clientId);
+  // The answers on record for those documents, so the snapshot can say what a
+  // person supplied (as counts) and what was asked of the client. The builder
+  // takes nothing else from them.
+  const answers =
+    documents.length > 0
+      ? await platform.latestDocumentAnswers(clientId, documents.map((doc) => doc.id))
+      : [];
 
   await platform.createReport({
     id,
@@ -129,7 +136,7 @@ export async function POST(
     ...(parsed.audience ? { audience: parsed.audience } : {}),
     ...(parsed.title ? { title: parsed.title } : {}),
     ...(documents.length > 0
-      ? { documents: buildDocumentReport(documents, new Date().toISOString()) }
+      ? { documents: buildDocumentReport(documents, new Date().toISOString(), answers) }
       : {}),
     issuedBy: principal.name,
     shareToken,
