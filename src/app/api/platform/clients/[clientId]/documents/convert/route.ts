@@ -7,6 +7,7 @@ import {
   isWordDocument,
   logSafe,
 } from '../../../../../../../domain/document-remediation';
+import { actorFields, type Principal } from '../../../../../../../domain/operator';
 import type { StoredDocumentConversion } from '../../../../../../../domain/platform';
 import { resolveLibreOffice } from '../../../../../../../integrations/documents/libreoffice-runtime';
 import { resolveJavaRuntime } from '../../../../../../../integrations/documents/java-runtime';
@@ -122,6 +123,27 @@ async function storeConvertedPdf(
   }
 }
 
+/**
+ * The trail, by document id and never by address — a document path
+ * routinely names a person, and the feed is rendered to every operator.
+ */
+async function recordConversionEvent(
+  platform: ReturnType<typeof getPlatformStore>,
+  clientId: string,
+  principal: Principal,
+  action: string,
+  subject: string | undefined,
+  metadata: Record<string, unknown>,
+): Promise<void> {
+  await platform.recordEvent({
+    clientId,
+    ...actorFields(principal),
+    action,
+    ...(subject === undefined ? {} : { subject }),
+    metadata,
+  });
+}
+
 /** Both halves named separately, because the fixes differ. */
 function refuseWithoutToolchain(requestId: string): Response | null {
   const soffice = resolveLibreOffice();
@@ -147,7 +169,8 @@ export async function POST(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorizePrincipal(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -192,10 +215,19 @@ export async function POST(
     ? await repairPdfBytes(fetched.bytes, requestId, { sourceName })
     : await remediateWordBytes(fetched.bytes, fetched.kind, requestId, { sourceName });
   if (!outcome.ok) {
+    // Nothing persisted, but the trail says the run was refused and why —
+    // a signed PDF an operator keeps clicking on must not stay invisible.
+    await recordConversionEvent(
+      platform, clientId, principal,
+      repairing ? 'document_repair_failed' : 'document_conversion_failed',
+      undefined,
+      { detail: outcome.refusal.detail ?? outcome.refusal.error },
+    );
     return refusalResponse(outcome.refusal, requestId);
   }
 
   const now = new Date().toISOString();
+  const inputSha256 = sha256(fetched.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
     {
@@ -205,6 +237,7 @@ export async function POST(
       kind: repairing ? 'pdf' : fetched.kind === 'doc' ? 'doc' : 'docx',
       source: 'crawl',
       ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
+      contentSha256: inputSha256,
     },
     now,
   );
@@ -214,7 +247,7 @@ export async function POST(
     clientId,
     documentId: document.id,
     summary: outcome.summary,
-    inputSha256: sha256(fetched.bytes),
+    inputSha256,
     outputSha256: sha256(outcome.pdf),
     ...(repairing ? { kind: 'repair' as const } : {}),
     instrumentVersion: INSTRUMENT_VERSION,
@@ -230,6 +263,12 @@ export async function POST(
     stored: record.artifactUrl !== undefined,
     ...logSafe(outcome.summary),
   });
+  await recordConversionEvent(
+    platform, clientId, principal,
+    repairing ? 'document_repaired' : 'document_converted',
+    document.id,
+    { conversionId: record.id, gaps: outcome.summary.gaps.length, needs: outcome.summary.needs?.length ?? 0 },
+  );
 
   return remediationResponse({ pdf: outcome.pdf, summary: outcome.summary, requestId });
 }
@@ -240,7 +279,8 @@ export async function PUT(
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorizePrincipal(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -264,7 +304,7 @@ export async function PUT(
   }
 
   if (upload.kind === 'pdf') {
-    return repairUploadedPdf(upload, clientId, requestId, platform);
+    return repairUploadedPdf(upload, clientId, requestId, platform, principal);
   }
 
   const soffice = resolveLibreOffice();
@@ -279,15 +319,24 @@ export async function PUT(
     sourceName: upload.filename,
   });
   if (!outcome.ok) {
+    await recordConversionEvent(platform, clientId, principal, 'document_conversion_failed', undefined, {
+      detail: outcome.refusal.detail ?? outcome.refusal.error,
+    });
     return refusalResponse(outcome.refusal, requestId);
   }
 
   const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.docx';
 
   const now = new Date().toISOString();
+  const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
-    { url: name, kind: upload.kind === 'doc' ? 'doc' : 'docx', source: 'upload' },
+    {
+      url: name,
+      kind: upload.kind === 'doc' ? 'doc' : 'docx',
+      source: 'upload',
+      contentSha256: inputSha256,
+    },
     now,
   );
 
@@ -296,7 +345,7 @@ export async function PUT(
     clientId,
     documentId: document.id,
     summary: outcome.summary,
-    inputSha256: sha256(upload.bytes),
+    inputSha256,
     outputSha256: sha256(outcome.pdf),
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
@@ -311,6 +360,9 @@ export async function PUT(
     clientId,
     stored: record.artifactUrl !== undefined,
     ...logSafe(outcome.summary),
+  });
+  await recordConversionEvent(platform, clientId, principal, 'document_converted', document.id, {
+    conversionId: record.id, gaps: outcome.summary.gaps.length, needs: outcome.summary.needs?.length ?? 0,
   });
 
   return remediationResponse({ pdf: outcome.pdf, summary: outcome.summary, requestId });
@@ -328,19 +380,24 @@ async function repairUploadedPdf(
   clientId: string,
   requestId: string,
   platform: ReturnType<typeof getPlatformStore>,
+  principal: Principal,
 ): Promise<Response> {
   const outcome = await repairPdfBytes(upload.bytes, requestId, {
     sourceName: upload.filename,
   });
   if (!outcome.ok) {
+    await recordConversionEvent(platform, clientId, principal, 'document_repair_failed', undefined, {
+      detail: outcome.refusal.detail ?? outcome.refusal.error,
+    });
     return refusalResponse(outcome.refusal, requestId);
   }
 
   const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.pdf';
   const now = new Date().toISOString();
+  const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
-    { url: name, kind: 'pdf', source: 'upload' },
+    { url: name, kind: 'pdf', source: 'upload', contentSha256: inputSha256 },
     now,
   );
 
@@ -349,7 +406,7 @@ async function repairUploadedPdf(
     clientId,
     documentId: document.id,
     summary: outcome.summary,
-    inputSha256: sha256(upload.bytes),
+    inputSha256,
     outputSha256: sha256(outcome.pdf),
     kind: 'repair',
     instrumentVersion: INSTRUMENT_VERSION,
@@ -363,6 +420,9 @@ async function repairUploadedPdf(
     clientId,
     stored: record.artifactUrl !== undefined,
     ...logSafe(outcome.summary),
+  });
+  await recordConversionEvent(platform, clientId, principal, 'document_repaired', document.id, {
+    conversionId: record.id, gaps: outcome.summary.gaps.length, needs: outcome.summary.needs?.length ?? 0,
   });
 
   return remediationResponse({ pdf: outcome.pdf, summary: outcome.summary, requestId });

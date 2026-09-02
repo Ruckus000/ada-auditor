@@ -188,6 +188,14 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     expect(document.latestConversion?.artifactUrl).toBe(
       'https://blob.example/documents/acme/stored.pdf',
     );
+
+    // The bytes the route had in hand are on the document row — what a later
+    // reading of different bytes is compared against — and the trail says
+    // who converted, by document id, never by path.
+    expect(document.contentSha256).toBe(sha256(docxBytes()));
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event).toMatchObject({ actor: 'CI', action: 'document_converted', subject: document.id });
+    expect(JSON.stringify(event)).not.toContain('jane-doe');
   });
 
   it('records honest absence when no blob store is configured', async () => {
