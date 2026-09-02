@@ -18,6 +18,15 @@ vi.mock('node:dns/promises', () => ({
 const { convertSourceToPdf } = vi.hoisted(() => ({ convertSourceToPdf: vi.fn() }));
 vi.mock('../../src/integrations/documents/convert', () => ({ convertSourceToPdf }));
 
+// The repair lane's two stages, for the answer-consumption cases below; the
+// conversion cases never reach them.
+const { inspectDocument, finishDocument } = vi.hoisted(() => ({
+  inspectDocument: vi.fn(),
+  finishDocument: vi.fn(),
+}));
+vi.mock('../../src/integrations/documents/inspect', () => ({ inspectDocument }));
+vi.mock('../../src/integrations/documents/finish', () => ({ finishDocument }));
+
 const runtimes = vi.hoisted(() => ({ soffice: true, java: true }));
 
 vi.mock('../../src/integrations/documents/libreoffice-runtime', () => ({
@@ -32,6 +41,9 @@ vi.mock('../../src/integrations/documents/java-runtime', () => ({
     runtimes.java
       ? { available: true, javaBin: '/usr/bin/java', classpath: '/cp' }
       : { available: false, reason: 'no Java runtime found' },
+  // The repair lane joins this onto its root; the stages are mocked here, so
+  // the value never reaches a filesystem.
+  DOCUMENT_FONTS_DIR: 'vendor/fonts/liberation',
 }));
 
 const authorized = vi.hoisted(() => ({ ok: true }));
@@ -127,6 +139,152 @@ function conversionSucceeds() {
 
 let platform: InstanceType<typeof MemoryPlatformStore>;
 let fetchSpy: ReturnType<typeof vi.spyOn>;
+
+const PDF_BYTES = new Uint8Array(Buffer.from('%PDF-1.7\nfixture', 'latin1'));
+const PDF_URL = 'https://town.example/minutes/agenda.pdf';
+
+/** A tagged reading with one undescribed figure and no language. */
+function pdfReading(over: Record<string, unknown> = {}) {
+  return documentStructureSchema.parse({
+    marked: true,
+    signed: false,
+    encrypted: false,
+    annotationsNotInStructure: 0,
+    formFields: 0,
+    formFieldsWithoutName: 0,
+    embeddedFiles: 0,
+    structureElements: 12,
+    textChars: 400,
+    images: 1,
+    pages: 1,
+    lang: null,
+    title: 'Agenda',
+    headings: [],
+    headingTexts: [],
+    figures: [{ type: 'Figure', alt: null, actualText: null, page: 1 }],
+    tables: [],
+    lists: [],
+    order: [{ type: 'Figure', text: null }],
+    ...over,
+  });
+}
+
+/** The document, its reading carrying the asks, and answers to both. */
+async function seedAnsweredPdf(figureAltNow: string | null = null) {
+  const doc = await platform.ensureClientDocument(
+    'acme',
+    { url: PDF_URL, kind: 'pdf', source: 'crawl' },
+    '2026-08-26T09:00:00.000Z',
+  );
+  const inputSha256 = sha256(PDF_BYTES);
+  await platform.saveDocumentInspection({
+    id: 'insp-1',
+    clientId: 'acme',
+    documentId: doc.id,
+    url: PDF_URL,
+    source: 'crawl',
+    inputSha256,
+    summary: {
+      title: 'already-titled', titleText: 'Agenda', sourceLanguage: null, tagged: true,
+      pages: 1, headings: 0, tables: 0, lists: 0, figures: 1,
+      gaps: ['3.1.1: the source declares no language, so none is claimed', '1.1.1: 1 figure with no alt text'],
+      needs: [{ criterion: '3.1.1', item: 'x' }, { criterion: '1.1.1', item: 'y' }],
+      asks: [
+        { id: 'language', kind: 'language', criterion: '3.1.1', answerable: 'operator' },
+        { id: 'figure:0', kind: 'figure', criterion: '1.1.1', answerable: 'operator', target: { ordinal: 0, type: 'Figure', page: 1, prior: 'absent' } },
+      ],
+    },
+    inspectedAt: '2026-08-26T09:00:00.000Z',
+  });
+  await platform.saveDocumentAnswers([
+    {
+      id: 'ans-lang', clientId: 'acme', documentId: doc.id, inputSha256, askId: 'language', kind: 'language',
+      disposition: 'declared', value: 'en', actor: 'Sam', declaredAt: '2026-08-26T10:00:00.000Z',
+    },
+    {
+      id: 'ans-fig', clientId: 'acme', documentId: doc.id, inputSha256, askId: 'figure:0', kind: 'figure',
+      target: { ordinal: 0, type: 'Figure', page: 1, prior: 'absent' },
+      disposition: 'declared', value: 'A map of the town centre', actor: 'Sam', declaredAt: '2026-08-26T10:00:00.000Z',
+    },
+  ]);
+  // The reading the run takes BEFORE writing, then the one it takes after.
+  const before = pdfReading({ figures: [{ type: 'Figure', alt: figureAltNow, actualText: null, page: 1 }] });
+  // As a real `Inspect` reads it back: the description is now the figure's
+  // reading-order text too, which is the delta the gate is told to expect.
+  const after = pdfReading({
+    lang: 'en',
+    figures: [{ type: 'Figure', alt: 'A map of the town centre', actualText: null, page: 1 }],
+    order: [{ type: 'Figure', text: 'A map of the town centre' }],
+  });
+  inspectDocument.mockReset();
+  inspectDocument.mockResolvedValueOnce({ ok: true, value: before }).mockResolvedValue({ ok: true, value: after });
+  finishDocument.mockReset();
+  finishDocument.mockImplementation(async (request: { outputPath: string }) => {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(request.outputPath, FAKE_PDF);
+    return { ok: true };
+  });
+  fetchSpy.mockResolvedValue(new Response(new Uint8Array(PDF_BYTES), { status: 200 }));
+  return doc;
+}
+
+describe('consuming the answers on record', () => {
+  beforeEach(async () => {
+    storeBytes.mockReset();
+    storeBytes.mockResolvedValue(null);
+    runtimes.soffice = true;
+    runtimes.java = true;
+    authorized.ok = true;
+    platform = new MemoryPlatformStore();
+    setPlatformStore(platform);
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetPlatformStore();
+  });
+
+  it('writes the declared answers for these bytes, and the row says which', async () => {
+    const doc = await seedAnsweredPdf();
+
+    const response = await POST(request({ url: PDF_URL }), params('acme'));
+
+    expect(response.status).toBe(200);
+    // The stage was told exactly what a person said: the description onto its
+    // ordinal, the language into the catalog.
+    const finishRequest = finishDocument.mock.calls[0]?.[0] as { alt?: unknown; language?: unknown };
+    expect(finishRequest.alt).toEqual([{ ordinal: 0, text: 'A map of the town centre' }]);
+    expect(finishRequest.language).toBe('en');
+
+    const [record] = (await platform.listClientDocuments('acme')).documents;
+    expect(record.id).toBe(doc.id);
+    expect(record.latestConversion?.answerIds?.sort()).toEqual(['ans-fig', 'ans-lang']);
+    expect(record.latestConversion?.summary.declared).toEqual({ language: true, figures: 1 });
+    expect(record.latestConversion?.summary.sourceLanguage).toBe('en');
+    // The header carries the provenance too.
+    const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
+    expect(summary.declared).toEqual({ language: true, figures: 1 });
+  });
+
+  it('refuses an answer whose figure no longer looks as it did when answered', async () => {
+    // The document now carries a description on that figure. Writing a
+    // person's answer over an author's words is not transcription, so the
+    // whole run refuses, nothing is delivered, and the trail says why.
+    await seedAnsweredPdf('The clerk’s own description');
+
+    const response = await POST(request({ url: PDF_URL }), params('acme'));
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ error: 'repair_refused', detail: 'answer-mismatch' });
+    expect(finishDocument).not.toHaveBeenCalled();
+    const [record] = (await platform.listClientDocuments('acme')).documents;
+    expect(record.latestConversion).toBeUndefined();
+    const events = await platform.listEvents({ clientId: 'acme' });
+    expect(events[0]).toMatchObject({ action: 'document_repair_failed', metadata: { detail: 'answer-mismatch' } });
+  });
+});
 
 describe('/api/platform/clients/[clientId]/documents/convert', () => {
   beforeEach(async () => {

@@ -173,8 +173,19 @@ export function applyDeclarations(
   const structure: DocumentStructure = {
     ...before,
     figures: before.figures.map((figure) => ({ ...figure })),
+    order: before.order.map((entry) => ({ ...entry })),
   };
   const mismatches: string[] = [];
+
+  // `Inspect` reports a figure's reading-order text through `StructText.of`
+  // — ActualText, then Alt, then glyphs, cut at 90 characters — and it lists
+  // figures and reading order from one walk, so the k-th Figure|Formula
+  // entry of `order` IS `figures[k]`. A declared description therefore moves
+  // BOTH fields, and the expected structure has to say so or the gate would
+  // refuse every declaration for moving `order`.
+  const orderIndexOfFigure = before.order.flatMap((entry, i) =>
+    entry.type === 'Figure' || entry.type === 'Formula' ? [i] : [],
+  );
 
   if (answers.language !== undefined) {
     // Only where the document declares nothing usable. A declared language is
@@ -196,6 +207,10 @@ export function applyDeclarations(
       continue;
     }
     figure.alt = declared.alt;
+    const at = orderIndexOfFigure[declared.ordinal];
+    if (figure.actualText === null && at !== undefined) {
+      structure.order[at] = { ...structure.order[at], text: declared.alt.trim().slice(0, 90) };
+    }
   }
 
   return mismatches.length === 0 ? { ok: true, structure } : { ok: false, mismatches };

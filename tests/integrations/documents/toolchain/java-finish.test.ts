@@ -9,6 +9,7 @@ import { finishDocument } from '../../../../src/integrations/documents/finish';
 import { DOCUMENT_FONTS_DIR } from '../../../../src/integrations/documents/java-runtime';
 import { inspectDocument } from '../../../../src/integrations/documents/inspect';
 import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
+import { applyDeclarations } from '../../../../src/domain/document-answers';
 import { contentChanges, type DocumentStructure } from '../../../../src/domain/document-structure';
 import { renderPdf } from '../../../../src/integrations/browser/render-pdf';
 
@@ -560,6 +561,104 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
 
     // Exactly one of the two links is described: the one with words.
     expect((await pdfKeys(out)).split('/Contents (').length - 1).toBe(1);
+  });
+
+  /**
+   * A tagged PDF with one Figure per entry, carrying the given /Alt (or none),
+   * in tree order. Hand-built like the ladder below: the thing under test is
+   * WHICH figure a declared description lands on, so the ordinals have to be
+   * known exactly rather than left to an exporter.
+   */
+  function figuresPdf(alts: Array<string | null>): Buffer {
+    const stream = alts
+      .map((_, i) => `/Figure <</MCID ${i}>> BDC 20 ${150 - i * 30} 40 20 re f EMC`)
+      .join('\n');
+    const kids = alts.map((_, i) => `${6 + i} 0 R`).join(' ');
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R /StructParents 0 >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      `<< /Type /StructTreeRoot /K [${kids}] >>`,
+    ];
+    alts.forEach((alt, i) => {
+      objs.push(
+        `<< /Type /StructElem /S /Figure /P 5 0 R /Pg 3 0 R /K ${i}${alt === null ? '' : ` /Alt (${alt})`} >>`,
+      );
+    });
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  /**
+   * The declared-change channel's one write: a person's description, onto
+   * the figure THEY described and no other.
+   *
+   * The ordinal is the position in `Inspect`'s own walk, and both stages
+   * walk through the same `FigureOrder` helper — but the property is asserted
+   * rather than trusted: the alt lands at ordinal n and Inspect reads it back
+   * at n, every other figure is untouched, and an ordinal the document does
+   * not have writes nothing at all.
+   */
+  it('writes a declared description onto the named figure and no other', async () => {
+    const source = join(dir, 'figures.pdf');
+    await writeFile(source, figuresPdf([null, null, 'The town seal']));
+    const out = join(dir, 'figures-declared.pdf');
+
+    const finished = await finishDocument({
+      inputPath: source,
+      outputPath: out,
+      language: 'en',
+      alt: [{ ordinal: 1, text: 'A map of the town centre — café marked' }],
+    });
+    expect(finished.ok).toBe(true);
+
+    const after = await inspectDocument(out);
+    if (!after.ok) expect.unreachable('could not read the output');
+    else {
+      expect(after.value.figures.map((figure) => figure.alt)).toEqual([
+        null,
+        'A map of the town centre — café marked',
+        'The town seal',
+      ]);
+      // Nothing but the declared delta moved — the delta as the pipeline's
+      // gate computes it, through the same function, so this test and the
+      // gate cannot disagree about what a declaration is allowed to change.
+      const read = await inspectDocument(join(dir, 'figures.pdf'));
+      if (read.ok) {
+        const expected = applyDeclarations(read.value, {
+          inputSha256: 'a'.repeat(64),
+          figures: [{ ordinal: 1, type: 'Figure', page: 1, prior: 'absent', alt: 'A map of the town centre — café marked' }],
+        });
+        expect(expected.ok).toBe(true);
+        if (expected.ok) expect(contentChanges(expected.structure, after.value)).toEqual([]);
+      }
+    }
+  });
+
+  it('refuses an ordinal the document does not have, and writes nothing', async () => {
+    const source = join(dir, 'figures-short.pdf');
+    await writeFile(source, figuresPdf([null]));
+    const out = join(dir, 'figures-short-declared.pdf');
+
+    const finished = await finishDocument({
+      inputPath: source,
+      outputPath: out,
+      language: 'en',
+      alt: [{ ordinal: 4, text: 'x' }],
+    });
+    expect(finished.ok).toBe(false);
+    expect(existsSync(out)).toBe(false);
   });
 
   /**

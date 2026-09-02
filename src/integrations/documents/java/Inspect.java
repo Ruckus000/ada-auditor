@@ -401,6 +401,33 @@ public final class Inspect {
             if (root != null) {
                 roleMap = root.getRoleMap();
                 walk(root, null);
+                // The figures come from the SHARED walk, not from the pass
+                // above: their ordinal is what a punch item names and what a
+                // person's description comes back keyed to, so the stage that
+                // numbers them and the stage that writes onto them must
+                // agree by construction. Same pre-order, same identity dedup,
+                // same RoleMap resolution as `walk`, so the k-th Figure in
+                // `order` is `figures[k]`.
+                for (PDStructureElement el : FigureOrder.inOrder(root, roleMap)) {
+                    // `el.getPage()` reads the element's own `/Pg`, and every
+                    // one of the 279 figure elements in the blind corpus
+                    // carries it.
+                    //
+                    // Deliberately NOT `text.boxOf(el).page()`: that registers
+                    // a box only when text was harvested, so an image-only
+                    // figure — the ordinary undescribed one — resolves to
+                    // nothing, and its fallback scans every page's MCID map
+                    // and takes the first hit. MCIDs restart at 0 on each page,
+                    // so that path can return the WRONG page, and a wrong page
+                    // on a client's public report is a fabricated location.
+                    // Absent beats invented.
+                    PDPage page = el.getPage();
+                    Integer number = page == null ? null : pageNumbers.get(page.getCOSObject());
+                    figures.add(new String[] {
+                        standard(el.getStructureType()), el.getAlternateDescription(),
+                        el.getActualText(), number == null ? null : String.valueOf(number),
+                    });
+                }
             }
 
             PDFTextStripper stripper = new PDFTextStripper();
@@ -491,12 +518,7 @@ public final class Inspect {
 
     /** Resolves a structure type through the role map, so custom types are scored as what they map to. */
     private String standard(String type) {
-        if (type == null) return "";
-        if (roleMap != null && roleMap.containsKey(type)) {
-            Object mapped = roleMap.get(type);
-            if (mapped != null) return mapped.toString();
-        }
-        return type;
+        return FigureOrder.standard(type, roleMap);
     }
 
     private void walk(PDStructureNode node, Tbl enclosingTable) {
@@ -535,23 +557,6 @@ public final class Inspect {
                 // Text matters as much as level: knowing a document has one
                 // heading too many says nothing about which one is wrong.
                 headings.add(new String[] { type, text.of(el) });
-            } else if ("Figure".equals(type) || "Formula".equals(type)) {
-                // `el.getPage()` reads the element's own `/Pg`, and every one of
-                // the 279 figure elements in the blind corpus carries it.
-                //
-                // Deliberately NOT `text.boxOf(el).page()`: that registers a box
-                // only when text was harvested, so an image-only figure — the
-                // ordinary undescribed one — resolves to nothing, and its
-                // fallback scans every page's MCID map and takes the first hit.
-                // MCIDs restart at 0 on each page, so that path can return the
-                // WRONG page, and a wrong page on a client's public report is a
-                // fabricated location. Absent beats invented.
-                PDPage page = el.getPage();
-                Integer number = page == null ? null : pageNumbers.get(page.getCOSObject());
-                figures.add(new String[] {
-                    type, el.getAlternateDescription(), el.getActualText(),
-                    number == null ? null : String.valueOf(number),
-                });
             } else if ("Table".equals(type)) {
                 table = new Tbl();
                 tables.add(table);

@@ -61,17 +61,27 @@ import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferenc
  *
  * Each one closes a specific veraPDF ua1 failure that survived OpenDataLoader,
  * listed in docs/research/document-remediation/failure-classification.md. No
- * structure element is created, moved, re-parented or altered — with ONE
- * deliberate exception, taken as a standing policy rather than drifted into:
- * `--renumber-headings` re-ranks H* levels onto a gapless ladder, and only the
- * CONVERSION lane passes it, where the levels being corrected are an
- * exporter's mapping of the author's outline rather than a client's own PDF.
- * See `renumberHeadings` for what it refuses. Everything else in this file
- * still creates, moves and re-parents nothing — if more than this one
- * exception ever becomes necessary, the spike's kill criterion has fired and
- * the answer is STOP rather than a bigger version of this file.
+ * structure element is created, moved, re-parented or altered — with TWO
+ * deliberate exceptions, each taken as a standing policy rather than drifted
+ * into:
  *
- * Usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>]
+ * - `--renumber-headings` re-ranks H* levels onto a gapless ladder, and only
+ *   the CONVERSION lane passes it, where the levels being corrected are an
+ *   exporter's mapping of the author's outline rather than a client's own
+ *   PDF. See `renumberHeadings` for what it refuses.
+ * - `--alt-file` writes a description onto a figure — a description a NAMED
+ *   PERSON declared for that figure, keyed to the exact bytes they saw, and
+ *   nothing this stage ever composes. It is transcription of what they said,
+ *   the same footing as the title and the language, and the pipeline's gate
+ *   admits exactly the declared deltas and nothing else. See `declareAlts`.
+ *
+ * Everything else in this file still creates, moves and re-parents nothing.
+ * Neither exception INFERS: one re-seats levels an author already chose, the
+ * other writes words a person already wrote. If a third exception ever
+ * needs to guess, the spike's kill criterion has fired and the answer is STOP
+ * rather than a bigger version of this file.
+ *
+ * Usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--alt-file <path>]
  *
  * The title arrives in a FILE rather than on the command line, because it is
  * document content: a municipal record's title names the matter and sometimes
@@ -96,15 +106,73 @@ import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferenc
  */
 public final class Finish {
 
+    private static final String USAGE =
+        "usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--alt-file <path>]"
+        + " [--no-ua-identifier] [--renumber-headings] [--embed-fonts <dir>]";
+
+    /**
+     * The alt file: one declaration per line, `ordinal<TAB>base64(utf8 text)`.
+     *
+     * A FILE, for the reason the title travels in one — a description is
+     * document content, and a process argument list is readable by anything
+     * else on the machine. Line-oriented rather than JSON because this
+     * toolchain carries no JSON parser (`Inspect` writes its JSON by hand),
+     * and base64 so a description may hold any character, a newline included,
+     * without a second escaping scheme to get wrong.
+     */
+    private static Map<Integer, String> readAltFile(Path path) throws IOException {
+        Map<Integer, String> alts = new TreeMap<>();
+        for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
+            if (line.isBlank()) continue;
+            int tab = line.indexOf('\t');
+            if (tab <= 0) {
+                System.err.println("alt-file: malformed line");
+                System.exit(2);
+            }
+            int ordinal = Integer.parseInt(line.substring(0, tab).trim());
+            String text = new String(
+                java.util.Base64.getDecoder().decode(line.substring(tab + 1).trim()),
+                StandardCharsets.UTF_8);
+            alts.put(ordinal, text);
+        }
+        return alts;
+    }
+
+    /**
+     * Write each declared description onto the figure at its ordinal — the
+     * ordinal `Inspect` reported, from the walk both stages share.
+     *
+     * Returns false without writing anything when an ordinal is out of range.
+     * Nothing here composes a word: the text is what a person typed for the
+     * figure they were looking at, and the caller has already checked that
+     * the figure still looks as it did when they answered.
+     */
+    private static boolean declareAlts(PDDocumentCatalog catalog, Map<Integer, String> alts) {
+        PDStructureTreeRoot root = catalog.getStructureTreeRoot();
+        List<PDStructureElement> figures = FigureOrder.inOrder(root, root == null ? null : root.getRoleMap());
+        for (int ordinal : alts.keySet()) {
+            if (ordinal < 0 || ordinal >= figures.size()) {
+                return false;
+            }
+        }
+        for (Map.Entry<Integer, String> entry : alts.entrySet()) {
+            figures.get(entry.getKey()).setAlternateDescription(entry.getValue());
+        }
+        return true;
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier] [--renumber-headings] [--embed-fonts <dir>]");
+            System.err.println(USAGE);
             System.exit(2);
         }
         String in = args[0], out = args[1];
         // Absent means "remove the claim", not "leave whatever is there".
         String lang = null;
         String givenTitle = null;
+        // Descriptions a person declared, by figure ordinal. Absent, no
+        // figure is touched.
+        Map<Integer, String> declaredAlts = null;
         // The PDF/UA-1 identifier is a CLAIM, and this stage is the one party
         // that cannot know whether it is true: conformance is decided by
         // veraPDF after the file is written. Default on, so every existing
@@ -134,14 +202,25 @@ public final class Finish {
                 renumberHeadings = true;
             } else if ("--embed-fonts".equals(args[i]) && i + 1 < args.length) {
                 fontDir = Path.of(args[++i]);
+            } else if ("--alt-file".equals(args[i]) && i + 1 < args.length) {
+                declaredAlts = readAltFile(Path.of(args[++i]));
             } else {
-                System.err.println("usage: Finish <in.pdf> <out.pdf> [lang] [--title-file <path>] [--no-ua-identifier] [--renumber-headings] [--embed-fonts <dir>]");
+                System.err.println(USAGE);
                 System.exit(2);
             }
         }
 
         try (PDDocument doc = Loader.loadPDF(new File(in))) {
             PDDocumentCatalog catalog = doc.getDocumentCatalog();
+
+            // First, and before anything is written: a declaration that names
+            // a figure this document does not have is a caller error, and the
+            // right outcome is no output file at all rather than a file with
+            // every other write applied and one description lost.
+            if (declaredAlts != null && !declareAlts(catalog, declaredAlts)) {
+                System.err.println("alt-file names a figure ordinal this document does not have");
+                System.exit(3);
+            }
 
             // 6.2-1 — catalog shall include MarkInfo with Marked true, but
             // ONLY for a document that has structure to be marked about.

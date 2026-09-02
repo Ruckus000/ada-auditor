@@ -69,6 +69,13 @@ export type RepairDecision =
 export function planRepair(
   structure: DocumentStructure,
   sourceName: string | undefined,
+  /**
+   * A language a NAMED PERSON declared for this document — carried only
+   * where the document itself declares nothing usable. A declaration is a
+   * transcription of what they said about a document that says nothing; it
+   * is never a correction of what the document says.
+   */
+  declaredLanguage?: string | null,
 ): RepairDecision {
   if (structure.signed) {
     // Repair rewrites the document catalog, and that invalidates a signature.
@@ -141,7 +148,10 @@ export function planRepair(
 
   return {
     repairable: true,
-    plan: { title: titleFor(structure, sourceName), language: languageToCarry(structure.lang) },
+    plan: {
+      title: titleFor(structure, sourceName),
+      language: languageToCarry(structure.lang) ?? declaredLanguage ?? null,
+    },
   };
 }
 

@@ -37,6 +37,24 @@ function structure(over: Partial<DocumentStructure> = {}): DocumentStructure {
 }
 
 describe('planRepair', () => {
+  it('carries a declared language only where the document declares none usable', () => {
+    // A person's declaration is a transcription of what THEY said about a
+    // document that says nothing. It is never a correction of what the
+    // document says: where the file declares a usable tag, that tag stands.
+    const silent = planRepair(structure({ lang: null }), undefined, 'cy');
+    expect(silent.repairable && silent.plan.language).toBe('cy');
+
+    const unusable = planRepair(structure({ lang: 'en US' }), undefined, 'cy');
+    expect(unusable.repairable && unusable.plan.language).toBe('cy');
+
+    const declared = planRepair(structure({ lang: 'en-US' }), undefined, 'cy');
+    expect(declared.repairable && declared.plan.language).toBe('en-US');
+
+    // No declaration, no language: the omission a reviewer can see.
+    const none = planRepair(structure({ lang: null }), undefined);
+    expect(none.repairable && none.plan.language).toBeNull();
+  });
+
   it('refuses a PDF with no structure tree, and says what would help', () => {
     const decision = planRepair(structure({ structureElements: 0 }), 'Fee_Schedule.pdf');
 
