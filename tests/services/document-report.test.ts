@@ -176,6 +176,51 @@ describe('buildDocumentReport', () => {
     expect(JSON.stringify(section)).not.toContain('Jane Doe');
   });
 
+  it('says what a person supplied, as counts, and what was asked of the client — never the words', () => {
+    // The public page may say that descriptions were written and that the
+    // client has been asked for a source; it may not carry the description a
+    // person typed (content about the client's document) nor an operator's
+    // note. Requests are the punch items' own sentences, which already
+    // render there.
+    const section = buildDocumentReport(
+      [doc({
+        latestInspection: {
+          ...inspection('2026-08-26T09:00:00.000Z'),
+          inputSha256: 'a'.repeat(64),
+          summary: summary({
+            declared: { language: true, figures: 2 },
+            needs: [
+              { criterion: 'PDF/UA 7.21.4', item: 'the fonts were never embedded — supply the Word source' },
+              { criterion: '1.1.1', item: 'Figure 1 (p1): no alt text — write a description' },
+            ],
+            asks: [
+              { id: 'fonts:not-embedded', kind: 'fonts', criterion: 'PDF/UA 7.21.4', answerable: 'client' },
+              { id: 'figure:0', kind: 'figure', criterion: '1.1.1', answerable: 'operator', target: { ordinal: 0, type: 'Figure', page: 1, prior: 'absent' } },
+            ],
+          }),
+        },
+      })],
+      AT,
+      [
+        {
+          id: 'ans-1', clientId: 'acme', documentId: 'doc-1', inputSha256: 'a'.repeat(64),
+          askId: 'fonts:not-embedded', kind: 'fonts', disposition: 'requested',
+          note: 'Asked Jane Doe at the clerk’s office', actor: 'Sam', declaredAt: '2026-08-26T10:00:00.000Z',
+        },
+        {
+          id: 'ans-2', clientId: 'acme', documentId: 'doc-1', inputSha256: 'a'.repeat(64),
+          askId: 'figure:0', kind: 'figure', disposition: 'declared',
+          value: 'A photograph of Jane Doe receiving the award', actor: 'Sam', declaredAt: '2026-08-26T10:00:00.000Z',
+        },
+      ],
+    );
+
+    const [entry] = section.entries;
+    expect(entry.declared).toEqual({ language: true, figures: 2 });
+    expect(entry.requested).toEqual(['the fonts were never embedded — supply the Word source']);
+    expect(JSON.stringify(section)).not.toContain('Jane Doe');
+  });
+
   it('never carries asks or the excerpt — identities and context are for the operator', () => {
     // The excerpt quotes the document around each figure so a person can
     // describe it; that is content, and the public page is public-by-token.

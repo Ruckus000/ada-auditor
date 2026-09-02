@@ -1,3 +1,4 @@
+import { declaredAnswersSchema, type DeclaredAnswers } from '../../../../domain/document-answers';
 import { isPdf, isWordDocument, logSafe } from '../../../../domain/document-remediation';
 import { readDocumentUpload, refusalResponse } from '../../_lib/document-upload';
 import {
@@ -119,6 +120,25 @@ export async function POST(request: Request) {
     return refusalResponse({ status: 503, error: 'document_toolchain_unavailable' }, requestId);
   }
 
+  // A person's answers for these bytes, when the caller sent them — the
+  // blind-test harness does, keyed to the sidecar it authored. Validated to
+  // the pipeline's own shape here, where a refusal has a name; the pipeline
+  // then checks them against the bytes and every figure's preimage.
+  let answers: DeclaredAnswers | undefined;
+  if (upload.answersJson !== undefined) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(upload.answersJson);
+    } catch {
+      return refusalResponse({ status: 400, error: 'invalid_answers', detail: 'not JSON' }, requestId);
+    }
+    const shaped = declaredAnswersSchema.safeParse(parsed);
+    if (!shaped.success) {
+      return refusalResponse({ status: 400, error: 'invalid_answers', detail: 'not the declared-answers shape' }, requestId);
+    }
+    answers = shaped.data;
+  }
+
   if (upload.kind === 'pdf') {
     // Repair, not conversion: the document is already a PDF, and what it gets
     // back is the facts it already stated, written where PDF/UA looks for
@@ -127,6 +147,7 @@ export async function POST(request: Request) {
     const repaired = await repairPdfBytes(upload.bytes, requestId, {
       sourceName: upload.filename,
       javaRuntime: java,
+      ...(answers === undefined ? {} : { answers }),
     });
 
     if (!repaired.ok) {
@@ -156,6 +177,7 @@ export async function POST(request: Request) {
     sourceName: upload.filename,
     javaRuntime: java,
     runtime: soffice,
+    ...(answers === undefined ? {} : { answers }),
   });
 
   if (!outcome.ok) {

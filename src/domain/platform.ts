@@ -233,6 +233,19 @@ export type DocumentReportEntry = {
    */
   sourceAvailable?: true;
   /**
+   * What the reading behind this entry wrote from a person's answers — as
+   * COUNTS. A description is authored text about the client's document, and
+   * the page is public-by-token; the count says work was done and by whom
+   * it was not: the pipeline.
+   */
+  declared?: { language?: true; figures: number };
+  /**
+   * The punch items the operator has asked the client for — the items'
+   * own sentences, which already render on this page. Only requests: never
+   * an operator's note, never a description.
+   */
+  requested?: string[];
+  /**
    * The reference checker's verdict, verbatim from the reading. Absent on
    * entries pinned before the second instrument shipped — rendered as "not
    * checked", never as clean.

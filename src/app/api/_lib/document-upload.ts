@@ -66,8 +66,19 @@ export type ReadUploadResult =
        * belongs to the client.
        */
       documentId?: string;
+      /**
+       * A person's declared answers for these bytes, as the caller sent them
+       * (the `answers` part, JSON text). Unparsed here: the route that runs
+       * the pipeline validates the shape, because that is where the refusal
+       * has a name. Bounded so a hostile part cannot make this hold more
+       * than a page of descriptions.
+       */
+      answersJson?: string;
     }
   | { ok: false; refusal: UploadRefusal };
+
+/** A page of descriptions at most; a sidecar is never larger. */
+const MAX_ANSWERS_BYTES = 64 * 1024;
 
 export type ReadUploadOptions = {
   /**
@@ -147,6 +158,7 @@ export async function readDocumentUpload(
   }
 
   const documentId = form.get('documentId');
+  const answers = form.get('answers');
   return {
     ok: true,
     bytes,
@@ -154,6 +166,9 @@ export async function readDocumentUpload(
     filename: file.name,
     ...(typeof documentId === 'string' && documentId.length > 0 && documentId.length <= 128
       ? { documentId }
+      : {}),
+    ...(typeof answers === 'string' && answers.length > 0 && answers.length <= MAX_ANSWERS_BYTES
+      ? { answersJson: answers }
       : {}),
   };
 }

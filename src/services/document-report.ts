@@ -3,6 +3,7 @@ import type {
   ClientDocumentRecord,
   DocumentReportEntry,
   DocumentReportSection,
+  StoredDocumentAnswer,
 } from '../domain/platform';
 import type { RemediationSummary } from '../domain/document-remediation';
 import { pairDocuments } from './document-pairing';
@@ -38,6 +39,8 @@ function latestReading(record: ClientDocumentRecord):
       summary: RemediationSummary;
       at: string;
       by: 'inspection' | 'conversion';
+      /** The bytes the reading is of; what an answer is matched against. */
+      inputSha256?: string;
       /** Set only when a conversion speaks AND its file is actually stored —
        * a download handle on the public page must never point at nothing. */
       conversionId?: string;
@@ -50,27 +53,57 @@ function latestReading(record: ClientDocumentRecord):
         summary: conversion.summary,
         at: conversion.convertedAt,
         by: 'conversion' as const,
+        inputSha256: conversion.inputSha256,
         ...(conversion.artifactUrl === undefined ? {} : { conversionId: conversion.id }),
       }
     : null;
+  const inspectionReading = inspection
+    ? {
+        summary: inspection.summary,
+        at: inspection.inspectedAt,
+        by: 'inspection' as const,
+        ...(inspection.inputSha256 === undefined ? {} : { inputSha256: inspection.inputSha256 }),
+      }
+    : null;
 
-  if (inspection && conversionReading) {
-    return conversionReading.at > inspection.inspectedAt
-      ? conversionReading
-      : { summary: inspection.summary, at: inspection.inspectedAt, by: 'inspection' };
+  if (inspectionReading && conversionReading) {
+    return conversionReading.at > inspectionReading.at ? conversionReading : inspectionReading;
   }
-  if (conversionReading) return conversionReading;
-  if (inspection) {
-    return { summary: inspection.summary, at: inspection.inspectedAt, by: 'inspection' };
-  }
-  return null;
+  return conversionReading ?? inspectionReading;
+}
+
+/**
+ * The punch items the client has been asked for: client asks whose latest
+ * answer at the reading's own bytes is a request. The items' sentences,
+ * never the operator's note.
+ */
+function requestedItems(
+  reading: NonNullable<ReturnType<typeof latestReading>>,
+  answers: StoredDocumentAnswer[],
+): string[] {
+  const asks = reading.summary.asks ?? [];
+  const needs = reading.summary.needs ?? [];
+  const requested = new Set(
+    answers
+      .filter((a) => a.inputSha256 === reading.inputSha256 && a.disposition === 'requested')
+      .map((a) => a.askId),
+  );
+  return asks.flatMap((ask, index) =>
+    ask.answerable === 'client' && requested.has(ask.id) && needs[index] ? [needs[index].item] : [],
+  );
 }
 
 export function buildDocumentReport(
   documents: ClientDocumentRecord[],
   capturedAt: string,
+  /** Latest answers per (document, bytes, ask), for every document listed. */
+  answers: StoredDocumentAnswer[] = [],
 ): DocumentReportSection {
   const pairs = pairDocuments(documents);
+  const answersByDocument = new Map<string, StoredDocumentAnswer[]>();
+  for (const answer of answers) {
+    answersByDocument.set(answer.documentId, [...(answersByDocument.get(answer.documentId) ?? []), answer]);
+  }
   const byKind: Partial<Record<DocumentLinkKind, number>> = {};
   const entries: DocumentReportEntry[] = [];
   let unread = 0;
@@ -119,6 +152,16 @@ export function buildDocumentReport(
       ...(reading.summary.scope === undefined
         ? {}
         : { scope: { criteria: [...reading.summary.scope.criteria] } }),
+      // Counts of what a person supplied, and the items asked of the client
+      // — field by field, for the same reason as everything above: an
+      // answer's `value` and `note` are content, and neither reaches here.
+      ...(reading.summary.declared === undefined
+        ? {}
+        : { declared: { ...reading.summary.declared } }),
+      ...(() => {
+        const requested = requestedItems(reading, answersByDocument.get(record.id) ?? []);
+        return requested.length === 0 ? {} : { requested };
+      })(),
     });
   }
 
