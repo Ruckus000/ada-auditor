@@ -83,6 +83,35 @@ export const figureSchema = z.object({
    * corpus, but absent beats invented.
    */
   page: z.number().int().positive().nullable(),
+  /**
+   * Where the figure's image is drawn — top-down page points, 1-based page —
+   * and what it draws: a digest of the image's raw bytes, and its filter.
+   *
+   * Null when the figure draws no image (a rule drawn as paths, a figure
+   * that references nothing): absent, never invented, the rule `page`
+   * follows. Optional as well as nullable, because readings stored before
+   * `Inspect` emitted them cannot gain them — and every one of these is a
+   * fact about the same bytes `figures` already describes, so a repair that
+   * moves one has moved content.
+   *
+   * The digest is what lets a person describe page furniture once: `[V]` a
+   * logo on every page is one XObject drawn many times, and repeats of one
+   * image accounted for 25 of the 35 figures shared across the blind
+   * corpus's documents. The filter names JPX, which this toolchain cannot
+   * decode and a later rendering pass must not show as a blank.
+   */
+  box: z
+    .object({
+      page: z.number().int().positive(),
+      x: z.number(),
+      y: z.number(),
+      w: z.number(),
+      h: z.number(),
+    })
+    .nullable()
+    .optional(),
+  imageDigest: z.string().nullable().optional(),
+  imageFilter: z.string().nullable().optional(),
 });
 
 export const documentStructureSchema = z.object({

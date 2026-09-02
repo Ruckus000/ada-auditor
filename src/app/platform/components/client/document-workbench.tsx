@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useId, useState, type KeyboardEvent } from 'react';
-import { MAX_ANSWER_TEXT, type Ask } from '../../../../domain/document-answers';
+import { MAX_ANSWER_TEXT, figureGroups, type Ask } from '../../../../domain/document-answers';
 import type { StoredDocumentAnswer } from '../../../../domain/platform';
 import type { DocumentState } from '../../../../services/document-state';
 import {
@@ -413,12 +413,27 @@ export function DocumentWorkbench({
               an empty description is not the treatment.
             </p>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {byKind('figure').map((ask) => {
+              {/* Repeats of one image are one group: one description, saved as
+                  one attributed row per repeat. Answered figures still list,
+                  singly, with who answered them. */}
+              {[...figureGroups(openFigures).filter((group) => group.length > 1).map((group) => ({ group, lead: group[0] })),
+                ...byKind('figure')
+                  .filter((ask) => !figureGroups(openFigures).some((group) => group.length > 1 && group.includes(ask)))
+                  .map((ask) => ({ group: [ask], lead: ask }))].map(({ group, lead }) => {
+                const ask = lead;
                 const target = ask.target && 'ordinal' in ask.target ? ask.target : null;
                 const context = target ? contextFor(target.ordinal) : {};
                 const href = openAt(target?.page ?? null);
                 const answer = answerLine(ask);
                 const d = drafts[ask.id];
+                const members = group.length > 1 ? group : null;
+                const pages = members
+                  ? [...new Set(members.map((m) => (m.target && 'ordinal' in m.target ? m.target.page : null)))]
+                      .filter((p): p is number => p !== null)
+                  : [];
+                const setAll = (next: Draft | null) => {
+                  for (const member of group) draft(member.id, next);
+                };
                 return (
                   <li key={ask.id} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
@@ -430,7 +445,11 @@ export function DocumentWorkbench({
                           onChange={(event) => setSelected((current) => ({ ...current, [ask.id]: event.target.checked }))}
                         />
                       ) : null}
-                      <span style={{ fontSize: 12.5, color: T.ink }}>{itemFor(summary, ask)}</span>
+                      <span style={{ fontSize: 12.5, color: T.ink }}>
+                        {members
+                          ? `${members.length} figures draw the same image (pages ${pages.join(', ')}) — one description lands on all of them`
+                          : itemFor(summary, ask)}
+                      </span>
                       {href ? (
                         <a href={href} target="_blank" rel="noreferrer" style={{ fontSize: 11 }}>
                           open at page {target?.page ?? '?'}
@@ -449,13 +468,17 @@ export function DocumentWorkbench({
                       <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-start', paddingLeft: 24 }}>
                         <textarea
                           data-figure={ask.id}
-                          aria-label={`Description for ${itemFor(summary, ask).split(':')[0]}`}
+                          aria-label={
+                            members
+                              ? `Description for ${members.length} repeated figures`
+                              : `Description for ${itemFor(summary, ask).split(':')[0]}`
+                          }
                           rows={2}
                           maxLength={MAX_ANSWER_TEXT}
                           value={d?.disposition === 'declared' ? (d.value ?? '') : ''}
                           disabled={d?.disposition === 'decided'}
                           onChange={(event) =>
-                            draft(ask.id, event.target.value === '' ? null : { disposition: 'declared', value: event.target.value })
+                            setAll(event.target.value === '' ? null : { disposition: 'declared', value: event.target.value })
                           }
                           onKeyDown={advance}
                           style={{ ...inputStyle, fontFamily: FONT.sans, flex: '1 1 320px', resize: 'vertical' }}
@@ -464,7 +487,7 @@ export function DocumentWorkbench({
                           type="button"
                           aria-pressed={d?.disposition === 'decided'}
                           onClick={() =>
-                            draft(ask.id, d?.disposition === 'decided' ? null : { disposition: 'decided', note: 'decorative' })
+                            setAll(d?.disposition === 'decided' ? null : { disposition: 'decided', note: 'decorative' })
                           }
                           style={{ ...buttonStyle, fontWeight: d?.disposition === 'decided' ? 700 : 600 }}
                         >

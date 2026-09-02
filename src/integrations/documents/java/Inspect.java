@@ -46,7 +46,7 @@ public final class Inspect {
     private static final List<String> HEADINGS = List.of("H1", "H2", "H3", "H4", "H5", "H6");
 
     private final List<String[]> headings = new ArrayList<>();  // {type, text}
-    private final List<String[]> figures = new ArrayList<>();   // {type, alt, actualText, page}
+    private final List<String[]> figures = new ArrayList<>();   // {type, alt, actualText, page, boxJson, imageDigest, imageFilter}
 
     /**
      * Page object to its 1-based number, built once so a figure can say where
@@ -408,7 +408,18 @@ public final class Inspect {
                 // agree by construction. Same pre-order, same identity dedup,
                 // same RoleMap resolution as `walk`, so the k-th Figure in
                 // `order` is `figures[k]`.
-                for (PDStructureElement el : FigureOrder.inOrder(root, roleMap)) {
+                List<PDStructureElement> ordered = FigureOrder.inOrder(root, roleMap);
+                // Where each is drawn and what it draws. A content stream this
+                // pass cannot parse must not fail a reading that every other
+                // field of is sound: every figure then locates nothing, which
+                // is the honest absence rather than a stage crash.
+                Map<PDStructureElement, FigureOrder.Located> located;
+                try {
+                    located = FigureOrder.locate(doc, ordered);
+                } catch (IOException | RuntimeException e) {
+                    located = Map.of();
+                }
+                for (PDStructureElement el : ordered) {
                     // `el.getPage()` reads the element's own `/Pg`, and every
                     // one of the 279 figure elements in the blind corpus
                     // carries it.
@@ -423,9 +434,14 @@ public final class Inspect {
                     // Absent beats invented.
                     PDPage page = el.getPage();
                     Integer number = page == null ? null : pageNumbers.get(page.getCOSObject());
+                    FigureOrder.Located where = located.getOrDefault(el, FigureOrder.Located.NONE);
                     figures.add(new String[] {
                         standard(el.getStructureType()), el.getAlternateDescription(),
                         el.getActualText(), number == null ? null : String.valueOf(number),
+                        where.box() == null ? null : String.format(java.util.Locale.ROOT,
+                            "{\"page\": %d, \"x\": %s, \"y\": %s, \"w\": %s, \"h\": %s}",
+                            where.box().page(), where.box().x(), where.box().y(), where.box().w(), where.box().h()),
+                        where.digest(), where.filter(),
                     });
                 }
             }
@@ -471,6 +487,10 @@ public final class Inspect {
                     // schema parses `z.number()`. `null` is the honest answer
                     // when the element declares no page.
                     .append(", \"page\": ").append(f[3] == null ? "null" : f[3])
+                    // Already JSON: the box is an object, built above.
+                    .append(", \"box\": ").append(f[4] == null ? "null" : f[4])
+                    .append(", \"imageDigest\": ").append(q(f[5]))
+                    .append(", \"imageFilter\": ").append(q(f[6]))
                     .append("}")
                     .append(i < figures.size() - 1 ? "," : "").append("\n");
             }

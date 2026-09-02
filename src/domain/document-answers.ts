@@ -43,7 +43,19 @@ export type AskKind =
 export type FigurePrior = 'absent' | 'decorative' | 'placeholder';
 
 export type AskTarget =
-  | { ordinal: number; type: string; page: number | null; prior: FigurePrior }
+  | {
+      ordinal: number;
+      type: string;
+      page: number | null;
+      prior: FigurePrior;
+      /**
+       * What the figure draws, when the reading could say. Repeats of one
+       * image — a logo on every page — share it, so the workbench can ask
+       * for one description and land it on every repeat; and it is the
+       * tightest preimage a declaration is checked against.
+       */
+      imageDigest?: string;
+    }
   | { index: number; from: number; to: number };
 
 /**
@@ -97,6 +109,38 @@ export const ACCEPTS: Record<AskKind, ReadonlyArray<AnswerDisposition>> = {
 };
 
 /**
+ * Open figure asks, repeats of one image together.
+ *
+ * Page furniture — a logo on every page — is one image drawn many times, and
+ * `[V]` accounted for 25 of the 35 figures shared across the blind corpus's
+ * documents. A group is answered once and saved as one row per member: one
+ * act, N attributed claims. Figures whose image the reading could not
+ * identify are never grouped, because a guess about sameness is a guess.
+ * Within one document only — cross-document reuse was measured under 3 % and
+ * declined.
+ */
+export function figureGroups(asks: ReadonlyArray<Ask>): Ask[][] {
+  const groups: Ask[][] = [];
+  const byDigest = new Map<string, Ask[]>();
+  for (const ask of asks) {
+    const digest = ask.target && 'ordinal' in ask.target ? ask.target.imageDigest : undefined;
+    if (digest === undefined) {
+      groups.push([ask]);
+      continue;
+    }
+    const held = byDigest.get(digest);
+    if (held) {
+      held.push(ask);
+    } else {
+      const group = [ask];
+      byDigest.set(digest, group);
+      groups.push(group);
+    }
+  }
+  return groups;
+}
+
+/**
  * The most a description may be. Screen readers announce alt text in one
  * breath; a thousand characters is already a paragraph. Exported so the form
  * can share the limit without importing anything heavier, the way
@@ -142,6 +186,7 @@ export const declaredAnswersSchema = z
             type: z.string().min(1),
             page: z.number().int().positive().nullable(),
             prior: figurePriorSchema,
+            imageDigest: z.string().optional(),
             alt: z.string().min(1).max(MAX_ANSWER_TEXT),
           })
           .strict(),
@@ -197,11 +242,20 @@ export function applyDeclarations(
 
   for (const declared of answers.figures) {
     const figure = structure.figures[declared.ordinal];
+    // Both digests known and different means the figure draws a different
+    // picture than the one that was described. Either side unknown — a
+    // reading or an answer from before the field — is checked on the rest.
+    const sameImage =
+      declared.imageDigest === undefined ||
+      figure?.imageDigest === undefined ||
+      figure.imageDigest === null ||
+      figure.imageDigest === declared.imageDigest;
     const matches =
       figure !== undefined &&
       figure.type === declared.type &&
       figure.page === declared.page &&
-      figurePrior(figure.alt) === declared.prior;
+      figurePrior(figure.alt) === declared.prior &&
+      sameImage;
     if (!matches) {
       mismatches.push(`figure:${declared.ordinal}`);
       continue;
