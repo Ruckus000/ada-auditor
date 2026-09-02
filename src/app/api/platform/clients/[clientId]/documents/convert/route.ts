@@ -303,8 +303,31 @@ export async function PUT(
     return refusalResponse(upload.refusal, requestId);
   }
 
+  // A new version of a row already on record lands on that row, under its
+  // own address — see the documents route for the reasoning. Resolved before
+  // any stage runs.
+  const existing =
+    upload.documentId === undefined
+      ? undefined
+      : (await platform.listClientDocuments(clientId)).documents.find(
+          (doc) => doc.id === upload.documentId,
+        );
+  if (upload.documentId !== undefined && existing === undefined) {
+    return Response.json({ error: 'document_not_found', requestId }, { status: 404 });
+  }
+  const rowFor = (fallback: { url: string; kind: 'pdf' | 'docx' | 'doc' }, contentSha256: string) =>
+    existing === undefined
+      ? { ...fallback, source: 'upload' as const, contentSha256 }
+      : {
+          url: existing.url,
+          kind: existing.kind,
+          source: existing.source,
+          ...(existing.foundOn === undefined ? {} : { foundOn: existing.foundOn }),
+          contentSha256,
+        };
+
   if (upload.kind === 'pdf') {
-    return repairUploadedPdf(upload, clientId, requestId, platform, principal);
+    return repairUploadedPdf(upload, clientId, requestId, platform, principal, rowFor);
   }
 
   const soffice = resolveLibreOffice();
@@ -331,12 +354,7 @@ export async function PUT(
   const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
-    {
-      url: name,
-      kind: upload.kind === 'doc' ? 'doc' : 'docx',
-      source: 'upload',
-      contentSha256: inputSha256,
-    },
+    rowFor({ url: name, kind: upload.kind === 'doc' ? 'doc' : 'docx' }, inputSha256),
     now,
   );
 
@@ -381,6 +399,10 @@ async function repairUploadedPdf(
   requestId: string,
   platform: ReturnType<typeof getPlatformStore>,
   principal: Principal,
+  rowFor: (
+    fallback: { url: string; kind: 'pdf' },
+    contentSha256: string,
+  ) => Parameters<ReturnType<typeof getPlatformStore>['ensureClientDocument']>[1],
 ): Promise<Response> {
   const outcome = await repairPdfBytes(upload.bytes, requestId, {
     sourceName: upload.filename,
@@ -397,7 +419,7 @@ async function repairUploadedPdf(
   const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
-    { url: name, kind: 'pdf', source: 'upload', contentSha256: inputSha256 },
+    rowFor({ url: name, kind: 'pdf' }, inputSha256),
     now,
   );
 

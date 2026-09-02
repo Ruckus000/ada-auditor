@@ -125,6 +125,7 @@ export function DocumentInventory({
   onInspect,
   onConvert,
   documentsPath,
+  inventoryHref,
 }: {
   documents: ClientDocument[];
   counts: StateCounts | null;
@@ -136,6 +137,8 @@ export function DocumentInventory({
   onInspect: (doc: ClientDocument) => void;
   onConvert: (doc: Pick<ClientDocument, 'url' | 'foundOn'>) => void;
   documentsPath: string;
+  /** The inventory page's own path — the workbench lives one segment under it. */
+  inventoryHref: string;
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -265,6 +268,23 @@ export function DocumentInventory({
                       </td>
                       <td style={cellStyle}>
                         <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {/* The workbench: every item the reading raised, as a
+                              form. First where there is work to answer, because
+                              that is the operator's next act. */}
+                          {hasRecord ? (
+                            <a
+                              href={`${inventoryHref}/${encodeURIComponent(doc.id)}`}
+                              style={{
+                                ...buttonStyle,
+                                textDecoration: 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontWeight: doc.state === 'needs-answers' ? 700 : 600,
+                              }}
+                            >
+                              {doc.state === 'needs-answers' ? `Answer ${doc.open} item${doc.open === 1 ? '' : 's'}` : 'Open'}
+                            </a>
+                          ) : null}
                           {doc.kind === 'pdf' ? (
                             <button
                               type="button"

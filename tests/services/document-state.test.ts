@@ -144,6 +144,25 @@ describe('documentState', () => {
       'closed',
     ],
     [
+      'a declared answer on a document whose run is refused waits on the client',
+      // An untagged PDF: the language is declared, but no run can consume it
+      // until the client supplies a file that can be run. "Ready" would send
+      // an operator to a button that answers with a refusal.
+      doc({ latestInspection: inspection({
+        tagged: false,
+        asks: [
+          { id: 'language', kind: 'language', criterion: '3.1.1', answerable: 'operator' },
+          { id: 'repair:not-tagged', kind: 'repair', criterion: 'repair', answerable: 'client' },
+        ],
+        needs: [{ criterion: '3.1.1', item: 'x' }, { criterion: 'repair', item: 'y' }],
+      }) }),
+      [
+        answer({ askId: 'language', kind: 'language', value: 'en' }),
+        answer({ id: 'ans-2', askId: 'repair:not-tagged', kind: 'repair', disposition: 'requested', value: undefined }),
+      ],
+      'waiting-on-client',
+    ],
+    [
       'a legacy reading with no asks and no sha is never stale',
       doc({ contentSha256: SHA_B, latestInspection: inspection({}, T0, null) }),
       [answer()],

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react';
 import type { DocumentState } from '../../../../services/document-state';
+import { clientHref } from '../../lib/params';
 import { FONT, T } from '../../lib/tokens';
 import { DocumentIntake } from './document-intake';
 import { DocumentInventory } from './document-inventory';
@@ -326,6 +327,7 @@ export function ClientDocuments({
           onInspect={(doc) => void inspect(doc)}
           onConvert={(doc) => void convert(doc)}
           documentsPath={documentsPath}
+          inventoryHref={clientHref(clientId, 'documents')}
         />
       ) : null}
 

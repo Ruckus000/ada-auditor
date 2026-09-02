@@ -67,6 +67,11 @@ export function DocumentIntake({
   const [addState, setAddState] = useState<AddByUrlState>({ state: 'idle' });
   const [uploadState, setUploadState] = useState<ActionOutcome>({ state: 'idle' });
   const [wordUploadState, setWordUploadState] = useState<ActionOutcome>({ state: 'idle' });
+  // Owned here after mount: a controlled `open` would re-apply the default
+  // on every re-render, and the first upload's re-render — one row where
+  // there were none — closed the disclosure over the result it had just
+  // produced.
+  const [open, setOpen] = useState(openByDefault);
 
   async function scan() {
     setScanning(true);
@@ -179,7 +184,8 @@ export function DocumentIntake({
 
   return (
     <details
-      open={openByDefault}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
       style={{
         border: `1px solid ${T.rule}`,
         borderRadius: 10,

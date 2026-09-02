@@ -126,14 +126,19 @@ export function documentState(
   const declaredSince = current.some(
     (answer) => answer.disposition === 'declared' && answer.declaredAt > reading.at,
   );
-  if (declaredSince) return standing('ready');
+  // A document whose run is refused — signed, encrypted, untagged — is never
+  // "ready": a declared answer waits until the client supplies a file that
+  // can be run, and "ready" would send an operator to a button that answers
+  // with the refusal.
+  const refused = asks.some((ask) => ask.kind === 'repair');
+  if (declaredSince && !refused) return standing('ready');
   if (waiting.length > 0) return standing('waiting-on-client');
   // An inspected, tagged PDF has only been read: a repair transcribes what
   // its tree already says, so a run would advance it even with no answers —
   // unless it is waiting on the client, which is the state that says why the
   // run alone would not finish it.
   const repairable = reading.by === 'inspection' && record.kind === 'pdf' && reading.summary.tagged;
-  return standing(repairable ? 'ready' : 'closed');
+  return standing(repairable && !refused ? 'ready' : 'closed');
 }
 
 export function countByState(states: Iterable<DocumentState>): Record<DocumentState, number> {

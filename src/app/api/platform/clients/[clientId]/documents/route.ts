@@ -216,10 +216,17 @@ export async function GET(
   }
   const standingOf = (record: ClientDocumentRecord) => {
     const source = pairs.get(record.id);
+    // Answers attach to the row that was answered; a paired PDF's reading
+    // may be its source's conversion, so both rows' answers count and the
+    // sha keying decides which apply.
+    const answered = [
+      ...(answersByDocument.get(record.id) ?? []),
+      ...(source === undefined ? [] : (answersByDocument.get(source.id) ?? [])),
+    ];
     return documentState(
       record,
       latestReading(record, source === undefined ? undefined : byId.get(source.id)),
-      answersByDocument.get(record.id) ?? [],
+      answered,
     );
   };
   const standings = new Map([...byId.values()].map((record) => [record.id, standingOf(record)]));
@@ -466,9 +473,23 @@ export async function PUT(
     return refusalResponse(upload.refusal, requestId);
   }
 
+  // A new version of a row already on record — the client sent the file
+  // back — lands on THAT row, under its own address, whatever the upload is
+  // called. Resolved before the JVM runs, so a row that is not this client's
+  // costs no inspection; a refusal here mints nothing, like every other.
+  const existing =
+    upload.documentId === undefined
+      ? undefined
+      : (await platform.listClientDocuments(clientId)).documents.find(
+          (doc) => doc.id === upload.documentId,
+        );
+  if (upload.documentId !== undefined && existing === undefined) {
+    return Response.json({ error: 'document_not_found', requestId }, { status: 404 });
+  }
+
   const outcome = await inspectPdfBytes(upload.bytes, requestId);
   if (!outcome.ok) {
-    await recordDocumentEvent(platform, clientId, principal, 'document_inspection_failed', undefined, {
+    await recordDocumentEvent(platform, clientId, principal, 'document_inspection_failed', existing?.id, {
       detail: outcome.refusal.detail ?? outcome.refusal.error,
     });
     return refusalResponse(outcome.refusal, requestId);
@@ -485,7 +506,15 @@ export async function PUT(
   const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
-    { url: name, kind: 'pdf', source: 'upload', contentSha256: inputSha256 },
+    existing === undefined
+      ? { url: name, kind: 'pdf', source: 'upload', contentSha256: inputSha256 }
+      : {
+          url: existing.url,
+          kind: existing.kind,
+          source: existing.source,
+          ...(existing.foundOn === undefined ? {} : { foundOn: existing.foundOn }),
+          contentSha256: inputSha256,
+        },
     now,
   );
 
@@ -493,8 +522,8 @@ export async function PUT(
     id: requestId,
     clientId,
     documentId: document.id,
-    url: name,
-    source: 'upload',
+    url: document.url,
+    source: document.source,
     summary: outcome.summary,
     instrumentVersion: INSTRUMENT_VERSION,
     inputSha256,

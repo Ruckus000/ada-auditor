@@ -1880,7 +1880,7 @@ describe('platform hydration', () => {
 
       // The doors documents come in through sit in one disclosure beside the
       // heading, closed while there is an inventory to work on.
-      await panel.getByText('Add documents').click();
+      await panel.locator('details').first().evaluate((details) => { (details as HTMLDetailsElement).open = true; });
       await page.getByLabel('Site to scan').fill('https://discovered.invalid/');
       await page.getByRole('button', { name: 'Scan the site' }).click();
 
@@ -2122,16 +2122,18 @@ describe('platform hydration', () => {
         });
         await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
+        // Same locator lesson as the case above: the panel is the only named
+        // region called Documents. The upload door sits in the intake
+        // disclosure, closed while there is an inventory to work on.
+        const panel = page.getByRole('region', { name: 'Documents' });
+        await panel.locator('details').first().evaluate((details) => { (details as HTMLDetailsElement).open = true; });
         await page.getByLabel('Or inspect a PDF you already have').setInputFiles({
           name: 'hydration-agenda.pdf',
           mimeType: 'application/pdf',
           buffer: pdf,
         });
 
-        // Same locator lesson as the case above: the panel is the only named
-        // region called Documents. The JVM answers in a second or two warm;
-        // the poll absorbs a cold start.
-        const panel = page.getByRole('region', { name: 'Documents' });
+        // The JVM answers in a second or two warm; the poll absorbs a cold start.
         await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
 
         // The reload is the assertion. The screen's own state is gone; only
@@ -2161,6 +2163,82 @@ describe('platform hydration', () => {
         expect(await panel.innerText()).toContain(
           '1.3.1: the output carries no structure tree',
         );
+      } finally {
+        await page.close();
+      }
+    },
+    180_000,
+  );
+
+  it.runIf(documentToolchain.available)(
+    'the workbench takes an answer and the row changes state',
+    async () => {
+      requireCurrentStages();
+
+      // End to end and unstubbed: a real PDF read by a real JVM, whose
+      // reading raises a client ask (a Chromium print is untagged, so repair
+      // is refused and the refusal is now an item on the record). The
+      // operator logs the request in the workbench; the row says so.
+      const page = await openAuthenticatedPage();
+      try {
+        const pdf = await renderPdf('<h1>Workbench fixture</h1><p>An untagged print.</p>');
+        await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        const panel = page.getByRole('region', { name: 'Documents' });
+        await panel.locator('details').first().evaluate((details) => { (details as HTMLDetailsElement).open = true; });
+        await page.getByLabel('Or inspect a PDF you already have').setInputFiles({
+          name: 'workbench-fixture.pdf',
+          mimeType: 'application/pdf',
+          buffer: pdf,
+        });
+        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        const row = page.getByRole('row').filter({ hasText: 'workbench-fixture.pdf' }).first();
+        await expect.poll(() => row.innerText(), { timeout: 15_000 }).toContain('Needs answers');
+        await row.getByRole('link', { name: /^Answer \d+ item/ }).click();
+
+        // The workbench: the untagged refusal is an item the client has to
+        // answer, so it sits under "Needed from the client". A Chromium print
+        // raises more than that — no declared language, and whatever the
+        // checker names beyond our vocabulary — so every group is answered
+        // before the row can read as waiting on the client alone.
+        const needed = page.getByRole('region', { name: 'Needed from the client' });
+        await expect.poll(() => needed.innerText(), { timeout: 15_000 }).toContain('no structure tree');
+        for (const button of await needed.getByRole('button', { name: 'Mark requested' }).all()) {
+          await button.click();
+        }
+        for (const button of await page.getByRole('button', { name: 'Reviewed — accepted as is' }).all()) {
+          await button.click();
+        }
+        const language = page.getByRole('region', { name: 'Language' });
+        if ((await language.count()) > 0) {
+          await language.getByRole('combobox').selectOption('en');
+        }
+        for (const button of await page.getByRole('button', { name: 'Keep as the author wrote it' }).all()) {
+          await button.click();
+        }
+        await page.getByRole('button', { name: /^Save \d+ answers?$/ }).click();
+        await expect
+          .poll(() => page.getByRole('status').first().innerText(), { timeout: 15_000 })
+          .toMatch(/Saved \d+ answer/);
+
+        // The decision is on the record with who made it, and the row's state
+        // moved — on this screen after the refresh, and in the inventory.
+        await expect
+          .poll(() => page.getByRole('region', { name: 'Needed from the client' }).innerText(), { timeout: 15_000 })
+          .toContain('requested from the client');
+        await expect
+          .poll(() => axeViolations(page), { ...AXE_SETTLE, message: 'the workbench with an answer on record' })
+          .toBe('');
+
+        await page.getByRole('link', { name: '← Documents' }).click();
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+        await expect
+          .poll(() => page.getByRole('row').filter({ hasText: 'workbench-fixture.pdf' }).first().innerText(), { timeout: 15_000 })
+          .toContain('Waiting on client');
       } finally {
         await page.close();
       }
