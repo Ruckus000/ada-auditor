@@ -600,3 +600,38 @@ describe('GET /api/documents/remediate', () => {
     expect(response.status).toBe(401);
   });
 });
+
+describe('what the header carries', () => {
+  beforeEach(() => {
+    checkUa1.mockReset();
+    runtimes.soffice = true;
+    runtimes.java = true;
+    authorized.ok = true;
+  });
+
+  it('keeps the punch list and leaves its identities and the excerpt behind', async () => {
+    // The excerpt quotes the document around an open figure for the operator
+    // who will describe it. It is the document's own words, and the header
+    // travels further than the persisted row — so it stays off the wire, and
+    // the asks go with it because a bounded list can no longer be indexed.
+    repairReads({
+      figures: [{ type: 'Figure', alt: null, actualText: null, page: 1 }],
+      images: 1,
+      order: [{ type: 'P', text: SECRET_HEADING }, { type: 'Figure', text: null }],
+    });
+    checkUa1.mockResolvedValue({ checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.3-1'] });
+
+    const response = await POST(upload(pdfBytes(), 'notice.pdf'));
+    const header = response.headers.get('x-remediation-summary') ?? '';
+    const summary = JSON.parse(header);
+
+    expect(response.status).toBe(200);
+    expect(summary.needs).toContainEqual({
+      criterion: '1.1.1',
+      item: 'Figure 1 (p1): no alt text, no caption to transcribe — write a description',
+    });
+    expect(summary).not.toHaveProperty('asks');
+    expect(summary).not.toHaveProperty('excerpt');
+    expect(header).not.toContain('Jane Doe');
+  });
+});

@@ -175,6 +175,30 @@ describe('buildDocumentReport', () => {
 
     expect(JSON.stringify(section)).not.toContain('Jane Doe');
   });
+
+  it('never carries asks or the excerpt — identities and context are for the operator', () => {
+    // The excerpt quotes the document around each figure so a person can
+    // describe it; that is content, and the public page is public-by-token.
+    // Asks are ids, but a pinned snapshot that carries them would invite a
+    // surface to render answer state that the snapshot cannot keep current.
+    const section = buildDocumentReport(
+      [doc({
+        latestInspection: {
+          ...inspection('2026-08-26T09:00:00.000Z'),
+          summary: summary({
+            needs: [{ criterion: '1.1.1', item: 'Figure 1 (p1): no alt text, no caption to transcribe — write a description' }],
+            asks: [{ id: 'figure:0', kind: 'figure', criterion: '1.1.1', answerable: 'operator', target: { ordinal: 0, type: 'Figure', page: 1, prior: 'absent' } }],
+            excerpt: { figures: [{ ordinal: 0, context: { heading: 'Objection of Jane Doe' } }] },
+          }),
+        },
+      })],
+      AT,
+    );
+
+    expect(JSON.stringify(section)).not.toContain('Jane Doe');
+    expect(section.entries[0]).not.toHaveProperty('asks');
+    expect(section.entries[0]).not.toHaveProperty('excerpt');
+  });
 });
 
 function inspection(inspectedAt: string) {

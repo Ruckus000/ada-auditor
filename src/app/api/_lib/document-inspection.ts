@@ -8,10 +8,13 @@ import {
   isWordDocument,
   summarise,
   withConformance,
+  withExcerpt,
+  withRepairability,
 } from '../../../domain/document-remediation';
 import type { RemediationSummary } from '../../../domain/document-remediation';
 import { inspectDocument } from '../../../integrations/documents/inspect';
 import { checkUa1 } from '../../../integrations/documents/verapdf';
+import { planRepair } from '../../../services/document-repair';
 import { logWarn } from '../../../services/logger';
 import { fetchDocumentBytes } from './document-fetch';
 import type { UploadRefusal } from './document-upload';
@@ -77,8 +80,20 @@ export async function inspectPdfBytes(
       structure: result.value,
     });
 
-    // The second instrument reads the same temp file the first did.
-    return { ok: true, summary: withConformance(summary, await checkUa1(source)) };
+    // The second instrument reads the same temp file the first did. Then the
+    // repair decision, so a signed or untagged PDF is on the record from its
+    // first reading rather than at the moment somebody clicks Repair — and
+    // the excerpt, so the operator who answers a figure sees its context.
+    return {
+      ok: true,
+      summary: withExcerpt(
+        withRepairability(
+          withConformance(summary, await checkUa1(source)),
+          planRepair(result.value, undefined),
+        ),
+        result.value,
+      ),
+    };
   } finally {
     await rm(work, { recursive: true, force: true });
   }
