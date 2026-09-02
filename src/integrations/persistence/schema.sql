@@ -802,3 +802,69 @@ alter table document_conversions add column if not exists instrument_version int
 -- (`prefix: 'runs/'`) never sweeps: a delivered document is the product, not
 -- evidence with a window, and it lives until its rows do.
 alter table document_conversions add column if not exists artifact_url text;
+
+-- ------------------------------------------------------ document_answers --
+--
+-- What a person said about one punch item of one document, AT ONE SET OF
+-- BYTES. The pipeline never invents a claim; this is the channel through
+-- which a claim arrives from somebody entitled to make it, attributed and
+-- keyed to the bytes it was given for. Revised bytes at the same address
+-- expire every answer, loudly: the items come back open, nothing carries
+-- over in silence.
+--
+-- Append-only: a change of mind is a new row and the latest per
+-- (document, bytes, ask) wins; nothing is updated or deleted. `disposition`
+-- keeps three things apart that must never be confused — `declared` is a
+-- value written into the file, `decided` is a judgement that changes no
+-- bytes, `requested` is something asked of the client. `value` is the
+-- description or the language tag: document content, stored and never
+-- logged, the `document_inspections.summary` stance.
+--
+-- `operator_id` is nullable because the machine principal (a CI token) may
+-- answer too; `actor` keeps the name as it read at the time, the
+-- `activity_events` stance. `on delete set null` for the same reason that
+-- table gives: losing the account link is survivable, losing the claim's
+-- record is not.
+create table if not exists document_answers (
+  id             text primary key,
+  client_id      text not null references clients (id) on delete cascade,
+  document_id    text not null references client_documents (id) on delete cascade,
+  input_sha256   text not null,
+  -- The ask's id: `figure:3`, `language`, `contrast:undetermined`.
+  ask_id         text not null,
+  -- `AskKind`, text rather than a CHECK — the `truncation_reason` stance.
+  kind           text not null,
+  -- The ask's target as it read when answered, for figures and headings.
+  target         jsonb,
+  -- 'declared' | 'decided' | 'requested'.
+  disposition    text not null,
+  value          text,
+  note           text,
+  actor          text not null,
+  operator_id    text,
+  declared_at    timestamptz not null default now()
+);
+
+-- The one query: latest per (document, bytes, ask), for a page of documents.
+create index if not exists document_answers_latest_idx
+  on document_answers (document_id, input_sha256, ask_id, declared_at desc, id desc);
+
+do $$ begin
+  alter table document_answers
+    add constraint document_answers_operator_fk
+    foreign key (operator_id) references operators (id) on delete set null;
+exception when duplicate_object then null; end $$;
+
+-- The bytes an inspection read, so its asks can be keyed to them the way a
+-- conversion's already are. Never backfilled: an older reading's bytes are
+-- unknown, and unknown must not read as "matches".
+alter table document_inspections add column if not exists input_sha256 text;
+
+-- Which answers a run consumed, by id — the row's own account of what it
+-- wrote from a person, beside the summary's `declared` counts.
+alter table document_conversions add column if not exists answer_ids jsonb;
+
+-- The bytes most recently fetched at this address, set only when a route
+-- had them in hand. A later reading of different bytes is what makes the
+-- answers given against these ones `stale` rather than silently unapplied.
+alter table client_documents add column if not exists content_sha256 text;

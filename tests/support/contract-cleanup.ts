@@ -85,7 +85,9 @@ export async function clearPlatformContractRows(sql: SqlClient, prefix: string):
   await sql`delete from client_credentials where client_id like ${own}`;
   await sql`delete from activity_events where client_id like ${own}`;
   await sql`delete from document_inspections where client_id like ${own}`;
-  // Conversions before the documents they reference; both before `clients`.
+  // Answers and conversions before the documents they reference; all before
+  // `clients`, and answers before `operators` too.
+  await sql`delete from document_answers where client_id like ${own}`;
   await sql`delete from document_conversions where client_id like ${own}`;
   await sql`delete from client_documents where client_id like ${own}`;
   await sql`delete from reports where id like ${own}`;
@@ -112,6 +114,7 @@ export async function sweepPlatformContractRows(
   await sql`delete from activity_events where client_id like ${pattern} and created_at < ${cutoffIso}`;
   // Bounded by its own timestamp: `inspected_at` is the row's only one.
   await sql`delete from document_inspections where client_id like ${pattern} and inspected_at < ${cutoffIso}`;
+  await sql`delete from document_answers where client_id like ${pattern} and declared_at < ${cutoffIso}`;
   await sql`delete from document_conversions where client_id like ${pattern} and converted_at < ${cutoffIso}`;
   // Bounded by when the document was last seen, which a live run keeps fresh.
   await sql`delete from client_documents where client_id like ${pattern} and last_seen_at < ${cutoffIso}`;

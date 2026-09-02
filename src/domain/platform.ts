@@ -1,3 +1,4 @@
+import type { AnswerDisposition, AskKind, AskTarget } from './document-answers';
 import type { RemediationSummary } from './document-remediation';
 import type { DocumentLinkKind } from './discovery';
 
@@ -679,6 +680,13 @@ export type StoredDocumentInspection = {
    * vocabulary had not changed while those rows were being written.
    */
   instrumentVersion?: number;
+  /**
+   * SHA-256 of the bytes this reading is of, so its asks can be keyed to them
+   * the way a conversion's already are. Absent on readings made before the
+   * field existed — and absent means "unknown", which must never read as
+   * "matches the answers".
+   */
+  inputSha256?: string;
   inspectedAt: string;
 };
 
@@ -705,6 +713,12 @@ export type StoredClientDocument = {
   source: DocumentInspectionSource;
   /** The page the crawl first saw the link on. An upload has none. */
   foundOn?: string;
+  /**
+   * SHA-256 of the bytes most recently fetched at this address — set only by
+   * a route that had them in hand. What makes answers given against earlier
+   * bytes `stale` rather than silently unapplied.
+   */
+  contentSha256?: string;
   firstSeenAt: string;
   lastSeenAt: string;
 };
@@ -726,6 +740,8 @@ export type DocumentSighting = {
   kind: DocumentLinkKind;
   source: DocumentInspectionSource;
   foundOn?: string;
+  /** Present when the caller fetched the bytes; a crawl sighting has none. */
+  contentSha256?: string;
 };
 
 /**
@@ -771,7 +787,35 @@ export type StoredDocumentConversion = {
    * its rows do.
    */
   artifactUrl?: string;
+  /**
+   * The answers this run consumed, by id — the row's own account of what it
+   * wrote from a person, beside the summary's `declared` counts. Absent when
+   * none were.
+   */
+  answerIds?: string[];
   convertedAt: string;
+};
+
+/**
+ * What a person said about one punch item of one document, at one set of
+ * bytes. See `document_answers` in `schema.sql` for the stance; the shape is
+ * the row's. `value` is document content: store, never log.
+ */
+export type StoredDocumentAnswer = {
+  id: string;
+  clientId: string;
+  documentId: string;
+  inputSha256: string;
+  askId: string;
+  kind: AskKind;
+  target?: AskTarget;
+  disposition: AnswerDisposition;
+  value?: string;
+  note?: string;
+  /** The name as it read at the time — the `activity_events` stance. */
+  actor: string;
+  operatorId?: string;
+  declaredAt: string;
 };
 
 /**
@@ -871,6 +915,29 @@ export interface ClientDocumentStore {
    * just answers.
    */
   getDocumentConversion(id: string): Promise<StoredDocumentConversion | null>;
+  /**
+   * One document by address, or null — and NEVER a new row. The convert path
+   * needs the document's answers before it runs, and a failed conversion must
+   * mint nothing, so the merge (`ensureClientDocument`) is the wrong tool
+   * there.
+   */
+  findClientDocument(clientId: string, url: string): Promise<StoredClientDocument | null>;
+}
+
+export interface DocumentAnswerStore {
+  /**
+   * Append-only; a retried id keeps the first row, the same stance as every
+   * evidence table. Several at once, because the form saves a page of them
+   * and one person's act on a group of figures is N rows.
+   */
+  saveDocumentAnswers(records: StoredDocumentAnswer[]): Promise<void>;
+  /**
+   * The latest row per (document, bytes, ask) for the documents named. Every
+   * sha is returned, not only the current one — the caller keys on the
+   * reading's own `inputSha256`, and rows under any other are what it counts
+   * as expired.
+   */
+  latestDocumentAnswers(clientId: string, documentIds: string[]): Promise<StoredDocumentAnswer[]>;
 }
 
 export type PlatformStore = OperatorStore &
@@ -882,4 +949,5 @@ export type PlatformStore = OperatorStore &
   ReportStore &
   ActivityStore &
   DocumentInspectionStore &
-  ClientDocumentStore;
+  ClientDocumentStore &
+  DocumentAnswerStore;

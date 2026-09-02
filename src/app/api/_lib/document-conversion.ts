@@ -5,8 +5,10 @@ import { join } from 'node:path';
 import {
   boundSummary,
   summarise,
+  transportSummary,
   withConformance,
   withContrast,
+  withExcerpt,
   type Conformance,
   type RemediationSummary,
 } from '../../../domain/document-remediation';
@@ -230,7 +232,10 @@ export async function remediateWordBytes(
     // Read after the decision, so the verdict describes these exact bytes.
     const pdf = await readFile(output);
     const summary = await withMeasuredContrast(
-      withConformance(summarise(result.provenance), conformance),
+      withExcerpt(
+        withConformance(summarise(result.provenance), conformance),
+        result.provenance.structure,
+      ),
       output,
       stageOptions,
     );
@@ -370,13 +375,16 @@ export async function repairPdfBytes(
     // or the report and the document disagree about the same document.
     const pdf = await readFile(output);
     const summary = await withMeasuredContrast(
-      withConformance(
-        summarise({
-          title: decision.plan.title,
-          sourceLanguage: decision.plan.language,
-          structure: after.value,
-        }),
-        conformance,
+      withExcerpt(
+        withConformance(
+          summarise({
+            title: decision.plan.title,
+            sourceLanguage: decision.plan.language,
+            structure: after.value,
+          }),
+          conformance,
+        ),
+        after.value,
       ),
       output,
       stageOptions,
@@ -418,7 +426,12 @@ export function remediationResponse(outcome: {
   // handed to any other consumer should be whole. `asciiJson` is the measure
   // because it is the encoding that actually goes on the wire — a title with an
   // em-dash costs six bytes there and one in `JSON.stringify`.
-  const summary = boundSummary(outcome.summary, (value) => asciiJson(value).length);
+  // Identities and the excerpt stay off the wire: a bounded punch list can no
+  // longer be indexed, and the excerpt is the document's own words.
+  const summary = boundSummary(
+    transportSummary(outcome.summary),
+    (value) => asciiJson(value).length,
+  );
 
   return new Response(new Uint8Array(outcome.pdf), {
     status: 200,

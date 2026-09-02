@@ -22,6 +22,7 @@ import type {
   StoredClient,
   StoredClientDocument,
   StoredDocumentConversion,
+  StoredDocumentAnswer,
   StoredDocumentInspection,
   StoredJourney,
   StoredOperator,
@@ -150,6 +151,7 @@ type DocumentInspectionRow = {
   source: string;
   summary: RemediationSummary;
   instrument_version: number | null;
+  input_sha256: string | null;
   inspected_at: Date | string;
 };
 
@@ -160,6 +162,7 @@ type ClientDocumentRow = {
   kind: string;
   source: string;
   found_on: string | null;
+  content_sha256: string | null;
   first_seen_at: Date | string;
   last_seen_at: Date | string;
 };
@@ -174,7 +177,23 @@ type DocumentConversionRow = {
   kind: string | null;
   instrument_version: number | null;
   artifact_url: string | null;
+  answer_ids: string[] | null;
   converted_at: Date | string;
+};
+type DocumentAnswerRow = {
+  id: string;
+  client_id: string;
+  document_id: string;
+  input_sha256: string;
+  ask_id: string;
+  kind: string;
+  target: StoredDocumentAnswer['target'] | null;
+  disposition: string;
+  value: string | null;
+  note: string | null;
+  actor: string;
+  operator_id: string | null;
+  declared_at: Date | string;
 };
 
 export class PostgresPlatformStore implements PlatformStore {
@@ -845,12 +864,13 @@ export class PostgresPlatformStore implements PlatformStore {
     await this.sql`
       insert into document_inspections
         (id, client_id, document_id, url, found_on, source, summary,
-         instrument_version, inspected_at)
+         instrument_version, input_sha256, inspected_at)
       values (
         ${record.id}, ${record.clientId}, ${record.documentId}, ${record.url},
         ${record.foundOn ?? null},
         ${record.source}, ${JSON.stringify(record.summary)}::jsonb,
-        ${record.instrumentVersion ?? null}, ${record.inspectedAt}
+        ${record.instrumentVersion ?? null}, ${record.inputSha256 ?? null},
+        ${record.inspectedAt}
       )
       on conflict (id) do nothing
     `;
@@ -877,6 +897,7 @@ export class PostgresPlatformStore implements PlatformStore {
       source: row.source as DocumentInspectionSource,
       summary: row.summary,
       ...optional('instrumentVersion', row.instrument_version),
+      ...optional('inputSha256', row.input_sha256),
       inspectedAt: toIso(row.inspected_at),
     } as StoredDocumentInspection;
   }
@@ -891,9 +912,28 @@ export class PostgresPlatformStore implements PlatformStore {
       kind: row.kind as StoredClientDocument['kind'],
       source: row.source as DocumentInspectionSource,
       ...optional('foundOn', row.found_on),
+      ...optional('contentSha256', row.content_sha256),
       firstSeenAt: toIso(row.first_seen_at),
       lastSeenAt: toIso(row.last_seen_at),
     } as StoredClientDocument;
+  }
+
+  private mapAnswer(row: DocumentAnswerRow): StoredDocumentAnswer {
+    return {
+      id: row.id,
+      clientId: row.client_id,
+      documentId: row.document_id,
+      inputSha256: row.input_sha256,
+      askId: row.ask_id,
+      kind: row.kind as StoredDocumentAnswer['kind'],
+      ...optional('target', row.target),
+      disposition: row.disposition as StoredDocumentAnswer['disposition'],
+      ...optional('value', row.value),
+      ...optional('note', row.note),
+      actor: row.actor,
+      ...optional('operatorId', row.operator_id),
+      declaredAt: toIso(row.declared_at),
+    } as StoredDocumentAnswer;
   }
 
   private mapConversion(row: DocumentConversionRow): StoredDocumentConversion {
@@ -907,6 +947,7 @@ export class PostgresPlatformStore implements PlatformStore {
       ...optional('kind', row.kind),
       ...optional('instrumentVersion', row.instrument_version),
       ...optional('artifactUrl', row.artifact_url),
+      ...optional('answerIds', row.answer_ids),
       convertedAt: toIso(row.converted_at),
     } as StoredDocumentConversion;
   }
@@ -926,13 +967,16 @@ export class PostgresPlatformStore implements PlatformStore {
       sightings.map(async (sighting) => {
         const rows = await this.sql<{ inserted: boolean }>`
           insert into client_documents
-            (id, client_id, url, kind, source, found_on, first_seen_at, last_seen_at)
+            (id, client_id, url, kind, source, found_on, content_sha256,
+             first_seen_at, last_seen_at)
           values (
             ${`doc-${clientId}-${randomUUID()}`}, ${clientId}, ${sighting.url},
             ${sighting.kind}, ${sighting.source}, ${sighting.foundOn ?? null},
-            ${seenAt}, ${seenAt}
+            ${sighting.contentSha256 ?? null}, ${seenAt}, ${seenAt}
           )
-          on conflict (client_id, url) do update set last_seen_at = ${seenAt}
+          on conflict (client_id, url) do update set
+            last_seen_at = ${seenAt},
+            content_sha256 = coalesce(excluded.content_sha256, client_documents.content_sha256)
           returning (xmax = 0) as inserted
         `;
         return rows[0]?.inserted === true;
@@ -952,16 +996,28 @@ export class PostgresPlatformStore implements PlatformStore {
   ): Promise<StoredClientDocument> {
     const rows = await this.sql<ClientDocumentRow>`
       insert into client_documents
-        (id, client_id, url, kind, source, found_on, first_seen_at, last_seen_at)
+        (id, client_id, url, kind, source, found_on, content_sha256,
+         first_seen_at, last_seen_at)
       values (
         ${`doc-${clientId}-${randomUUID()}`}, ${clientId}, ${sighting.url},
         ${sighting.kind}, ${sighting.source}, ${sighting.foundOn ?? null},
-        ${seenAt}, ${seenAt}
+        ${sighting.contentSha256 ?? null}, ${seenAt}, ${seenAt}
       )
-      on conflict (client_id, url) do update set last_seen_at = ${seenAt}
+      on conflict (client_id, url) do update set
+        last_seen_at = ${seenAt},
+        -- The bytes only when the caller had them: a crawl re-sighting must
+        -- not erase what a fetch recorded.
+        content_sha256 = coalesce(excluded.content_sha256, client_documents.content_sha256)
       returning *
     `;
     return this.mapClientDocument(rows[0]);
+  }
+
+  async findClientDocument(clientId: string, url: string): Promise<StoredClientDocument | null> {
+    const rows = await this.sql<ClientDocumentRow>`
+      select * from client_documents where client_id = ${clientId} and url = ${url}
+    `;
+    return rows[0] ? this.mapClientDocument(rows[0]) : null;
   }
 
   async listClientDocuments(
@@ -1054,17 +1110,59 @@ export class PostgresPlatformStore implements PlatformStore {
     await this.sql`
       insert into document_conversions
         (id, client_id, document_id, summary, input_sha256, output_sha256,
-         kind, instrument_version, artifact_url, converted_at)
+         kind, instrument_version, artifact_url, answer_ids, converted_at)
       values (
         ${record.id}, ${record.clientId}, ${record.documentId},
         ${JSON.stringify(record.summary)}::jsonb,
         ${record.inputSha256}, ${record.outputSha256},
         ${record.kind ?? null},
         ${record.instrumentVersion ?? null}, ${record.artifactUrl ?? null},
+        ${record.answerIds === undefined ? null : JSON.stringify(record.answerIds)}::jsonb,
         ${record.convertedAt}
       )
       on conflict (id) do nothing
     `;
+  }
+
+  // ----------------------------------------------------- document answers --
+
+  async saveDocumentAnswers(records: StoredDocumentAnswer[]): Promise<void> {
+    // One insert per row, in parallel — a form saves a page of them, and a
+    // group act is N rows. `do nothing`: append-only, a retried id keeps the
+    // first row.
+    await Promise.all(
+      records.map(
+        (record) => this.sql`
+          insert into document_answers
+            (id, client_id, document_id, input_sha256, ask_id, kind, target,
+             disposition, value, note, actor, operator_id, declared_at)
+          values (
+            ${record.id}, ${record.clientId}, ${record.documentId},
+            ${record.inputSha256}, ${record.askId}, ${record.kind},
+            ${record.target === undefined ? null : JSON.stringify(record.target)}::jsonb,
+            ${record.disposition}, ${record.value ?? null}, ${record.note ?? null},
+            ${record.actor}, ${record.operatorId ?? null}, ${record.declaredAt}
+          )
+          on conflict (id) do nothing
+        `,
+      ),
+    );
+  }
+
+  async latestDocumentAnswers(
+    clientId: string,
+    documentIds: string[],
+  ): Promise<StoredDocumentAnswer[]> {
+    if (documentIds.length === 0) return [];
+    // `distinct on` with a total order (`id desc` breaks same-instant ties),
+    // matching the memory double.
+    const rows = await this.sql<DocumentAnswerRow>`
+      select distinct on (document_id, input_sha256, ask_id) *
+      from document_answers
+      where client_id = ${clientId} and document_id = any(${documentIds})
+      order by document_id, input_sha256, ask_id, declared_at desc, id desc
+    `;
+    return rows.map((row) => this.mapAnswer(row));
   }
 
   async getDocumentConversion(id: string): Promise<StoredDocumentConversion | null> {

@@ -8,6 +8,7 @@ import {
 import { DuplicatePasskeyError } from '../../src/domain/platform';
 import type {
   PlatformStore,
+  StoredDocumentAnswer,
   StoredDocumentConversion,
   StoredDocumentInspection,
   StoredOperatorPasskey,
@@ -799,6 +800,182 @@ export function platformStoreContract(
       },
       60_000,
     );
+  });
+
+  describe('document answers', () => {
+    const T0 = '2026-08-26T09:00:00.000Z';
+    const T1 = '2026-08-26T10:00:00.000Z';
+    const SHA_A = 'a'.repeat(64);
+    const SHA_B = 'b'.repeat(64);
+
+    async function seeded(): Promise<{ store: PlatformStore; documentId: string }> {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Contract Client' });
+      const doc = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/minutes/agenda.pdf', kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+      return { store, documentId: doc.id };
+    }
+
+    const answer = (
+      documentId: string,
+      over: Partial<StoredDocumentAnswer> = {},
+    ): StoredDocumentAnswer => ({
+      id: `${PLATFORM_PREFIX}-ans-a`,
+      clientId: CONTRACT_CLIENT,
+      documentId,
+      inputSha256: SHA_A,
+      askId: 'figure:0',
+      kind: 'figure',
+      target: { ordinal: 0, type: 'Figure', page: 1, prior: 'absent' },
+      disposition: 'declared',
+      value: 'A map of the town centre',
+      actor: 'Contract Operator',
+      declaredAt: T0,
+      ...over,
+    });
+
+    it('round-trips an answer verbatim, absent fields staying absent', async () => {
+      const { store, documentId } = await seeded();
+      await store.saveDocumentAnswers([
+        answer(documentId),
+        // A client request carries no value and no target.
+        answer(documentId, {
+          id: `${PLATFORM_PREFIX}-ans-b`,
+          askId: 'repair:signed',
+          kind: 'repair',
+          target: undefined,
+          disposition: 'requested',
+          value: undefined,
+        }),
+      ]);
+
+      const rows = await store.latestDocumentAnswers(CONTRACT_CLIENT, [documentId]);
+      expect(rows).toContainEqual(answer(documentId));
+      const request = rows.find((row) => row.askId === 'repair:signed');
+      expect(request).toBeDefined();
+      expect(request).not.toHaveProperty('value');
+      expect(request).not.toHaveProperty('target');
+      expect(request).not.toHaveProperty('note');
+      expect(request).not.toHaveProperty('operatorId');
+    });
+
+    it('returns the latest per ask, the tie broken by id', async () => {
+      // A change of mind is a new row. The newer stamp wins; two rows at one
+      // instant fall to the id so both stores answer the same way.
+      const { store, documentId } = await seeded();
+      await store.saveDocumentAnswers([
+        answer(documentId, { id: `${PLATFORM_PREFIX}-ans-1`, value: 'first' }),
+        answer(documentId, { id: `${PLATFORM_PREFIX}-ans-2`, value: 'second', declaredAt: T1 }),
+        answer(documentId, { id: `${PLATFORM_PREFIX}-ans-3`, value: 'third', declaredAt: T1 }),
+      ]);
+
+      const rows = await store.latestDocumentAnswers(CONTRACT_CLIENT, [documentId]);
+      expect(rows.filter((row) => row.askId === 'figure:0')).toEqual([
+        answer(documentId, { id: `${PLATFORM_PREFIX}-ans-3`, value: 'third', declaredAt: T1 }),
+      ]);
+    });
+
+    it('keys on the bytes: answers under every sha come back, one latest each', async () => {
+      // The caller filters to the reading's own sha and counts the rest as
+      // expired — so the store must return both, never merge them.
+      const { store, documentId } = await seeded();
+      await store.saveDocumentAnswers([
+        answer(documentId, { id: `${PLATFORM_PREFIX}-ans-old`, inputSha256: SHA_A }),
+        answer(documentId, { id: `${PLATFORM_PREFIX}-ans-new`, inputSha256: SHA_B, declaredAt: T1 }),
+      ]);
+
+      const rows = await store.latestDocumentAnswers(CONTRACT_CLIENT, [documentId]);
+      expect(rows.map((row) => row.inputSha256).sort()).toEqual([SHA_A, SHA_B]);
+    });
+
+    it('keeps the first row when the same id is saved again', async () => {
+      const { store, documentId } = await seeded();
+      await store.saveDocumentAnswers([answer(documentId, { value: 'first' })]);
+      await store.saveDocumentAnswers([answer(documentId, { value: 'second', declaredAt: T1 })]);
+
+      const rows = await store.latestDocumentAnswers(CONTRACT_CLIENT, [documentId]);
+      expect(rows).toEqual([answer(documentId, { value: 'first' })]);
+    });
+
+    it('scopes to the client and the documents asked for', async () => {
+      const { store, documentId } = await seeded();
+      const other = await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/other.pdf', kind: 'pdf', source: 'crawl' },
+        T0,
+      );
+      await store.saveDocumentAnswers([
+        answer(documentId),
+        answer(other.id, { id: `${PLATFORM_PREFIX}-ans-other` }),
+      ]);
+
+      const rows = await store.latestDocumentAnswers(CONTRACT_CLIENT, [documentId]);
+      expect(rows.map((row) => row.id)).toEqual([`${PLATFORM_PREFIX}-ans-a`]);
+      expect(await store.latestDocumentAnswers(CONTRACT_CLIENT, [])).toEqual([]);
+    });
+
+    it('findClientDocument answers by address and never mints a row', async () => {
+      const { store, documentId } = await seeded();
+
+      const found = await store.findClientDocument(
+        CONTRACT_CLIENT,
+        'https://town.example/minutes/agenda.pdf',
+      );
+      expect(found?.id).toBe(documentId);
+      expect(await store.findClientDocument(CONTRACT_CLIENT, 'https://town.example/nope.pdf')).toBeNull();
+      expect((await store.listClientDocuments(CONTRACT_CLIENT)).documents).toHaveLength(1);
+    });
+
+    it('records the bytes a route had in hand, and a later sighting without them leaves it', async () => {
+      const { store } = await seeded();
+      await store.ensureClientDocument(
+        CONTRACT_CLIENT,
+        { url: 'https://town.example/minutes/agenda.pdf', kind: 'pdf', source: 'crawl', contentSha256: SHA_A },
+        T1,
+      );
+      let [doc] = (await store.listClientDocuments(CONTRACT_CLIENT)).documents;
+      expect(doc.contentSha256).toBe(SHA_A);
+
+      // A crawl re-sighting knows nothing about the bytes.
+      await store.recordDocumentSightings(
+        CONTRACT_CLIENT,
+        [{ url: 'https://town.example/minutes/agenda.pdf', kind: 'pdf', source: 'crawl' }],
+        T1,
+      );
+      [doc] = (await store.listClientDocuments(CONTRACT_CLIENT)).documents;
+      expect(doc.contentSha256).toBe(SHA_A);
+    });
+
+    it('round-trips the inspection sha and the conversion answer ids, absence staying absent', async () => {
+      const { store, documentId } = await seeded();
+      await store.saveDocumentInspection(
+        inspectionRecord({ id: `${PLATFORM_PREFIX}-insp-sha`, documentId, inputSha256: SHA_A }),
+      );
+      await store.saveDocumentInspection(
+        inspectionRecord({ id: `${PLATFORM_PREFIX}-insp-bare`, documentId, inspectedAt: T0 }),
+      );
+      await store.saveDocumentConversion(
+        conversionRecord({
+          id: `${PLATFORM_PREFIX}-conv-answered`,
+          documentId,
+          answerIds: [`${PLATFORM_PREFIX}-ans-a`],
+        }),
+      );
+      await store.saveDocumentConversion(
+        conversionRecord({ id: `${PLATFORM_PREFIX}-conv-plain`, documentId, convertedAt: T0 }),
+      );
+
+      const inspections = await store.listDocumentInspections(CONTRACT_CLIENT);
+      expect(inspections.find((r) => r.id === `${PLATFORM_PREFIX}-insp-sha`)?.inputSha256).toBe(SHA_A);
+      expect(inspections.find((r) => r.id === `${PLATFORM_PREFIX}-insp-bare`)).not.toHaveProperty('inputSha256');
+      expect((await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-answered`))?.answerIds).toEqual([
+        `${PLATFORM_PREFIX}-ans-a`,
+      ]);
+      expect(await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-plain`)).not.toHaveProperty('answerIds');
+    });
   });
 
   describe('client documents', () => {

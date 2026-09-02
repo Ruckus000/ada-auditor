@@ -269,6 +269,88 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect(body.documents[1]).not.toHaveProperty('regression');
   });
 
+  it('derives a state per document, counts the whole inventory by it, and filters on it', async () => {
+    const open = await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/open.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T09:00:00.000Z',
+    );
+    await platform.saveDocumentInspection({
+      id: 'insp-open',
+      clientId: 'acme',
+      documentId: open.id,
+      url: open.url,
+      source: 'crawl',
+      inputSha256: 'a'.repeat(64),
+      summary: {
+        title: 'already-titled',
+        sourceLanguage: 'en',
+        tagged: true,
+        pages: 1,
+        headings: 0,
+        tables: 0,
+        lists: 0,
+        figures: 1,
+        gaps: ['1.1.1: 1 figure with no alt text'],
+        needs: [{ criterion: '1.1.1', item: 'Figure 1 (p1): no alt text, no caption to transcribe — write a description' }],
+        asks: [{ id: 'figure:0', kind: 'figure', criterion: '1.1.1', answerable: 'operator', target: { ordinal: 0, type: 'Figure', page: 1, prior: 'absent' } }],
+        conformance: { checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.3-1'] },
+      },
+      inspectedAt: '2026-08-26T09:00:00.000Z',
+    });
+    await platform.ensureClientDocument(
+      'acme',
+      { url: 'https://town.example/never.pdf', kind: 'pdf', source: 'crawl' },
+      '2026-08-26T10:00:00.000Z',
+    );
+
+    const all = await (await GET(jsonRequest(), params('acme'))).json();
+    expect(all.counts).toEqual({
+      'not-reviewed': 1, stale: 0, 'needs-answers': 1, conformant: 0,
+      ready: 0, 'waiting-on-client': 0, closed: 0,
+    });
+    const byUrl = new Map(all.documents.map((d: { url: string }) => [d.url, d]));
+    expect(byUrl.get('https://town.example/open.pdf')).toMatchObject({
+      state: 'needs-answers', open: 1, waiting: 0, expired: 0,
+    });
+    expect(byUrl.get('https://town.example/never.pdf')).toMatchObject({ state: 'not-reviewed', open: 0 });
+
+    // The state filter narrows the page; the counts still cover everything.
+    const filtered = await (
+      await GET(
+        new Request('http://localhost/api/platform/clients/acme/documents?state=needs-answers'),
+        params('acme'),
+      )
+    ).json();
+    expect(filtered.documents.map((d: { url: string }) => d.url)).toEqual(['https://town.example/open.pdf']);
+    expect(filtered.counts['not-reviewed']).toBe(1);
+
+    // A state nobody defined is refused, not silently ignored.
+    expect(
+      (await GET(new Request('http://localhost/api/platform/clients/acme/documents?state=done'), params('acme'))).status,
+    ).toBe(400);
+  });
+
+  it('records who inspected in the activity trail, by document id, never by path', async () => {
+    await POST(jsonRequest({ url: DOC_URL, foundOn: FOUND_ON }), params('acme'));
+
+    const [document] = (await platform.listClientDocuments('acme')).documents;
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event).toMatchObject({ actor: 'CI', action: 'document_inspected', subject: document.id });
+    expect(JSON.stringify(event)).not.toContain('jane-doe');
+  });
+
+  it('records a refused inspection too, so a document that cannot be read is not silent', async () => {
+    inspectDocument.mockResolvedValue({ ok: false, failure: { kind: 'failed' } });
+
+    const response = await POST(jsonRequest({ url: DOC_URL }), params('acme'));
+
+    expect(response.status).toBe(422);
+    const [event] = await platform.listEvents({ clientId: 'acme' });
+    expect(event).toMatchObject({ action: 'document_inspection_failed', metadata: { detail: 'failed' } });
+    expect(JSON.stringify(event)).not.toContain('jane-doe');
+  });
+
   it('pairs a PDF with the Word document sharing its stem, across any filter', async () => {
     await platform.ensureClientDocument(
       'acme',
@@ -460,6 +542,44 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect(stored).not.toHaveProperty('foundOn');
     // No fetch for an upload: the bytes arrived in the request.
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('lands a re-supplied upload on the row it was asked for, whatever the file is called', async () => {
+    // The client sends the new file back with any name; the operator uploads
+    // it against the row that asked for it, and the bytes land there — a
+    // second row named after the upload would leave the first one asking
+    // forever.
+    const existing = await platform.ensureClientDocument(
+      'acme',
+      { url: DOC_URL, kind: 'pdf', source: 'crawl', foundOn: FOUND_ON },
+      '2026-08-26T09:00:00.000Z',
+    );
+
+    const form = new FormData();
+    form.set('file', new File([new Uint8Array(PDF_BYTES)], 'agenda (2).pdf', { type: 'application/pdf' }));
+    form.set('documentId', existing.id);
+    const response = await PUT(
+      new Request('http://localhost/api/platform/clients/acme/documents', { method: 'PUT', body: form }),
+      params('acme'),
+    );
+
+    expect(response.status).toBe(201);
+    const documents = (await platform.listClientDocuments('acme')).documents;
+    expect(documents).toHaveLength(1);
+    expect(documents[0]).toMatchObject({ id: existing.id, url: DOC_URL, source: 'crawl' });
+    expect(documents[0].contentSha256).toBeDefined();
+    expect(documents[0].latestInspection?.documentId).toBe(existing.id);
+
+    // A row that is not this client's is refused, and nothing is minted.
+    const other = new FormData();
+    other.set('file', new File([new Uint8Array(PDF_BYTES)], 'x.pdf', { type: 'application/pdf' }));
+    other.set('documentId', 'doc-somebody-elses');
+    const refused = await PUT(
+      new Request('http://localhost/api/platform/clients/acme/documents', { method: 'PUT', body: other }),
+      params('acme'),
+    );
+    expect(refused.status).toBe(404);
+    expect((await platform.listClientDocuments('acme')).documents).toHaveLength(1);
   });
 
   it('refuses an upload that is not a PDF, and persists nothing', async () => {

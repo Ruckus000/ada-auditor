@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { Ask, FigurePrior } from './document-answers';
 import type { ContrastReading, DocumentStructure } from './document-structure';
 
 /**
@@ -98,6 +99,27 @@ export type RemediationSummary = {
    */
   needs?: Array<{ criterion: string; item: string }>;
   /**
+   * The punch list's identities: `asks[i]` is what a program needs to attach
+   * an answer to `needs[i]`. POSITIONAL — the two are emitted from one loop
+   * through one helper, and present or absent together. Stripped from the
+   * response header (`transportSummary`) because a bounded punch list can no
+   * longer be indexed, and from the public report because a pinned snapshot
+   * cannot keep answer state current.
+   */
+  asks?: Ask[];
+  /**
+   * The document's own words around each open figure, so a person can write
+   * a description from context. CONTENT, and treated as `titleText` is:
+   * stored, never logged, never on the public page, never in the header.
+   */
+  excerpt?: DocumentExcerpt;
+  /**
+   * What this run wrote from a person's declaration, as counts — provenance
+   * of the pipeline's own claims, on the same footing as `title:
+   * 'filename-derived'`. Absent when nothing was declared.
+   */
+  declared?: { language?: true; figures: number };
+  /**
    * What the reference checker said about this exact file.
    *
    * Optional because readings made before the second instrument shipped are
@@ -122,6 +144,34 @@ export type RemediationSummary = {
    */
   contrast?: ContrastReading;
 };
+
+export type DocumentExcerpt = {
+  figures: Array<{
+    ordinal: number;
+    context: { heading?: string; before?: string; after?: string; caption?: string };
+  }>;
+};
+
+/**
+ * The one way a punch item is emitted. The sentence and its identity go in
+ * together, so neither array can gain an entry the other lacks and the
+ * criterion is typed once.
+ */
+type Punch = { needs: Array<{ criterion: string; item: string }>; asks: Ask[] };
+
+function punch(out: Punch, ask: Ask, item: string): void {
+  out.needs.push({ criterion: ask.criterion, item });
+  out.asks.push(ask);
+}
+
+function punchedOnto(summary: RemediationSummary, work: Punch): RemediationSummary {
+  if (work.needs.length === 0) return summary;
+  return {
+    ...summary,
+    needs: [...(summary.needs ?? []), ...work.needs],
+    asks: [...(summary.asks ?? []), ...work.asks],
+  };
+}
 
 /**
  * The most the summary may occupy in the response header, in encoded bytes.
@@ -412,8 +462,11 @@ export function withContrast(
       ? {}
       : { scope: scopeOf(new Set([...summary.scope.criteria, MEASURED_BY_A_SEPARATE_STAGE])) }),
   };
-  const items: Array<{ criterion: string; item: string }> = [];
+  const work: Punch = { needs: [], asks: [] };
   const gapParts: string[] = [];
+  const contrastAsk = (facet: 'failing' | 'undetermined' | 'decorative'): Ask => ({
+    id: `contrast:${facet}`, kind: 'contrast', criterion: '1.4.3', answerable: 'operator',
+  });
 
   if (contrast.failing > 0) {
     const worst = Math.min(...contrast.findings.map((f) => f.ratio));
@@ -422,12 +475,11 @@ export function withContrast(
       `${contrast.failingGlyphs} character${contrast.failingGlyphs === 1 ? '' : 's'}`
       + ` below the minimum contrast ratio, the lowest at ${worst.toFixed(2)}:1`,
     );
-    items.push({
-      criterion: '1.4.3',
-      item: `Contrast: ${contrast.failing} colour combination${contrast.failing === 1 ? '' : 's'}`
+    punch(work, contrastAsk('failing'),
+      `Contrast: ${contrast.failing} colour combination${contrast.failing === 1 ? '' : 's'}`
         + ` on ${pages} fall below the minimum ratio, the lowest at ${worst.toFixed(2)}:1`
         + ' — a person must decide whether to change the colours, because changing them is a design decision',
-    });
+    );
   }
 
   if (contrast.undetermined > 0) {
@@ -435,30 +487,28 @@ export function withContrast(
       `${contrast.undeterminedGlyphs} character${contrast.undeterminedGlyphs === 1 ? '' : 's'}`
       + ' whose contrast could not be measured',
     );
-    items.push({
-      criterion: '1.4.3',
-      item: `Contrast: ${contrast.undeterminedGlyphs} character`
+    punch(work, contrastAsk('undetermined'),
+      `Contrast: ${contrast.undeterminedGlyphs} character`
         + `${contrast.undeterminedGlyphs === 1 ? '' : 's'} sit on an image, a gradient or a`
         + ' mixed background, so no single background colour could be read and no ratio is'
         + ' claimed — a person must check these by eye',
-    });
+    );
   }
 
   if (contrast.decorative > 0) {
-    items.push({
-      criterion: '1.4.3',
-      item: `Contrast: ${contrast.decorativeGlyphs} character`
+    punch(work, contrastAsk('decorative'),
+      `Contrast: ${contrast.decorativeGlyphs} character`
         + `${contrast.decorativeGlyphs === 1 ? '' : 's'} below the minimum ratio are marked as`
         + ' decoration or as part of a figure by the document itself. WCAG exempts decoration'
         + ' but not running heads or page numbers, which carry the same marking — a person must'
         + ' confirm which these are',
-    });
+    );
   }
 
   if (gapParts.length > 0) {
     out.gaps = [...summary.gaps, `1.4.3: ${gapParts.join(', and ')}`];
   }
-  return items.length === 0 ? out : { ...out, needs: [...(summary.needs ?? []), ...items] };
+  return punchedOnto(out, work);
 }
 
 export function withConformance(
@@ -470,7 +520,10 @@ export function withConformance(
     return out;
   }
 
-  const items: Array<{ criterion: string; item: string }> = [];
+  const work: Punch = { needs: [], asks: [] };
+  const client = (id: string, kind: Ask['kind'], criterion: string): Ask => ({
+    id, kind, criterion, answerable: 'client',
+  });
   // `7.21.4` is a FAMILY, and its two members say opposite things about the
   // document. `7.21.4.1` is a font that was never embedded — there is no font
   // data, and the fix is the source. `7.21.4.2` is an embedded font whose
@@ -501,16 +554,14 @@ export function withConformance(
   );
 
   if (notEmbedded.length > 0) {
-    items.push({
-      criterion: 'PDF/UA 7.21.4',
-      item: 'the fonts were never embedded by whatever produced this PDF — supply the Word source it was exported from, or re-export it with fonts embedded',
-    });
+    punch(work, client('fonts:not-embedded', 'fonts', 'PDF/UA 7.21.4'),
+      'the fonts were never embedded by whatever produced this PDF — supply the Word source it was exported from, or re-export it with fonts embedded',
+    );
   }
   if (cidSet.length > 0) {
-    items.push({
-      criterion: 'PDF/UA 7.21.4',
-      item: "an embedded font's character-set table (CIDSet) does not list every character the document uses — the fonts themselves ARE embedded, so re-exporting from the source with fonts fully embedded is what resolves this",
-    });
+    punch(work, client('fonts:cidset', 'fonts', 'PDF/UA 7.21.4'),
+      "an embedded font's character-set table (CIDSet) does not list every character the document uses — the fonts themselves ARE embedded, so re-exporting from the source with fonts fully embedded is what resolves this",
+    );
   }
   // A member of the family that is neither: voiced by id rather than described,
   // so a clause this vocabulary has never seen cannot reach a client in
@@ -519,16 +570,14 @@ export function withConformance(
     (clause) => !clause.startsWith('7.21.4.1') && !clause.startsWith('7.21.4.2'),
   );
   if (otherFonts.length > 0) {
-    items.push({
-      criterion: 'PDF/UA 7.21.4',
-      item: `${otherFonts.length} further font check${otherFonts.length === 1 ? '' : 's'} fail (${otherFonts.join(', ')}) — a person must review`,
-    });
+    punch(work, client('fonts:other', 'fonts', 'PDF/UA 7.21.4'),
+      `${otherFonts.length} further font check${otherFonts.length === 1 ? '' : 's'} fail (${otherFonts.join(', ')}) — a person must review`,
+    );
   }
   if (untagged.length > 0) {
-    items.push({
-      criterion: 'PDF/UA 7.1-3',
-      item: 'page content is neither tagged nor marked as decoration — tagging it needs the source document or a person, because guessing the structure would be inventing it',
-    });
+    punch(work, client('untagged', 'untagged', 'PDF/UA 7.1-3'),
+      'page content is neither tagged nor marked as decoration — tagging it needs the source document or a person, because guessing the structure would be inventing it',
+    );
   }
   if (identifier.length > 0) {
     // Named rather than left to the catch-all, which would have said "a person
@@ -544,27 +593,125 @@ export function withConformance(
     // never wrote an identifier. Saying we withheld it there would be a claim
     // about provenance nobody checked, on a product whose whole position is
     // that it only says what it checked.
-    items.push({
-      criterion: 'PDF/UA 5-1',
+    punch(work, { id: 'identifier', kind: 'identifier', criterion: 'PDF/UA 5-1', answerable: 'none' },
       // Self-contained on purpose. The public report renders punch items
       // WITHOUT their criterion label, so an item written to lean on "PDF/UA
       // 5-1:" trails off mid-sentence there — and this one has to carry the
       // word "correct" itself, because it is the only item in the list that is
       // not work.
-      item: 'No PDF/UA-1 conformance identifier is written on this file, and that is correct while it does not conform — adding one would assert a conformance it does not have. This line needs no action; the other items listed are the work.',
-    });
+      'No PDF/UA-1 conformance identifier is written on this file, and that is correct while it does not conform — adding one would assert a conformance it does not have. This line needs no action; the other items listed are the work.',
+    );
   }
   if (rest.length > 0) {
-    items.push({
-      criterion: 'PDF/UA',
-      item: `${rest.length} further PDF/UA check${rest.length === 1 ? ' fails' : 's fail'} (${rest.join(', ')}) — a person must review`,
-    });
+    punch(work, { id: 'pdfua', kind: 'pdfua', criterion: 'PDF/UA', answerable: 'operator' },
+      `${rest.length} further PDF/UA check${rest.length === 1 ? ' fails' : 's fail'} (${rest.join(', ')}) — a person must review`,
+    );
   }
 
-  if (items.length === 0) {
-    return out;
-  }
-  return { ...out, needs: [...(summary.needs ?? []), ...items] };
+  return punchedOnto(out, work);
+}
+
+/**
+ * Fold the repair decision into an inspection's summary.
+ *
+ * A refusal used to be an HTTP answer and nothing else: an inspected signed
+ * PDF said nothing about its signature until somebody clicked Repair, and
+ * then forgot on navigation. As a punch item it is on the record from the
+ * first reading, and as a `client` ask it lands where the work is — with the
+ * client, who holds the Word source or the signer. Pure, like `withConformance`:
+ * the decision is handed in, never made here.
+ */
+export function withRepairability(
+  summary: RemediationSummary,
+  // The shape of `services/document-repair`'s `RepairDecision`, stated here
+  // rather than imported: domain does not depend on services, even for a type.
+  decision:
+    | { repairable: true }
+    | { repairable: false; refusal: { kind: 'not-tagged' | 'signed' | 'encrypted'; reason: string } },
+): RemediationSummary {
+  if (decision.repairable) return summary;
+  const work: Punch = { needs: [], asks: [] };
+  punch(
+    work,
+    { id: `repair:${decision.refusal.kind}`, kind: 'repair', criterion: 'repair', answerable: 'client' },
+    decision.refusal.reason,
+  );
+  return punchedOnto(summary, work);
+}
+
+/** Record what a run wrote from a person's declaration. Counts only. */
+export function withDeclarations(
+  summary: RemediationSummary,
+  declared: { language?: true; figures: number },
+): RemediationSummary {
+  if (declared.figures === 0 && declared.language === undefined) return summary;
+  return { ...summary, declared };
+}
+
+/**
+ * The document's own words around each open figure.
+ *
+ * `Inspect` visits a figure in `order[]` in the same pre-order pass that adds
+ * it to `figures[]`, so the k-th `Figure|Formula` entry of `order` IS
+ * `figures[k]`. From there the nearest heading before it, the nearest block
+ * of text on either side, and a caption beside it are what a person needs to
+ * describe the figure without opening the file. Only figures with an open
+ * ask get one — a described figure needs no context.
+ */
+export function withExcerpt(
+  summary: RemediationSummary,
+  structure: DocumentStructure,
+): RemediationSummary {
+  const open = (summary.asks ?? []).flatMap((ask) =>
+    ask.kind === 'figure' && ask.target && 'ordinal' in ask.target ? [ask.target.ordinal] : [],
+  );
+  if (open.length === 0) return summary;
+
+  const isFigure = (type: string) => type === 'Figure' || type === 'Formula';
+  const positions = structure.order.flatMap((entry, i) => (isFigure(entry.type) ? [i] : []));
+  const text = (i: number) => structure.order[i]?.text ?? undefined;
+  const isText = (i: number) =>
+    text(i) !== undefined && text(i) !== '' && !isFigure(structure.order[i].type);
+
+  const figures = open.map((ordinal) => {
+    const m = positions[ordinal];
+    const context: DocumentExcerpt['figures'][number]['context'] = {};
+    if (m !== undefined) {
+      for (let i = m - 1; i >= 0; i -= 1) {
+        if (/^H\d/.test(structure.order[i].type) && text(i)) { context.heading = text(i); break; }
+      }
+      for (let i = m - 1; i >= 0; i -= 1) {
+        if (isText(i) && !/^H\d/.test(structure.order[i].type)) { context.before = text(i); break; }
+      }
+      for (let i = m + 1; i < structure.order.length; i += 1) {
+        if (isText(i)) { context.after = text(i); break; }
+      }
+      const caption = [m + 1, m - 1].find((i) => structure.order[i]?.type === 'Caption' && text(i));
+      if (caption !== undefined) context.caption = text(caption);
+    }
+    return { ordinal, context };
+  });
+  return { ...summary, excerpt: { figures } };
+}
+
+/**
+ * The summary as it may travel in the response header: without the identities
+ * a bounded punch list can no longer index, and without the excerpt, which is
+ * document content. The persisted row keeps both.
+ */
+export function transportSummary(
+  summary: RemediationSummary,
+): Omit<RemediationSummary, 'asks' | 'excerpt'> {
+  const { asks: _asks, excerpt: _excerpt, ...rest } = summary;
+  return rest;
+}
+
+/** What a figure's description looked like — the preimage an answer is checked against. */
+export function figurePrior(alt: string | null): FigurePrior | null {
+  if (alt === null) return 'absent';
+  if (isDeclaredDecorative(alt)) return 'decorative';
+  if (isPlaceholderAlt(alt)) return 'placeholder';
+  return null;
 }
 
 /**
@@ -784,7 +931,15 @@ export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string 
  * Same bump reasoning as 10: without it every stored baseline reads `4.1.2` as
  * a new gap the client's document just grew.
  */
-export const INSTRUMENT_VERSION = 11;
+/**
+ * 12 — the punch list gained the repair blocker (`repair`), and every item
+ * gained an identity (`asks`). A signed, encrypted or untagged PDF used to be
+ * refused at the moment somebody clicked Repair and recorded nowhere; it is
+ * now an item on the inspection's own reading, addressed to the client who
+ * holds the source. New vocabulary, so stored baselines read `incomparable`
+ * once rather than reporting our change as the client's document changing.
+ */
+export const INSTRUMENT_VERSION = 12;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
@@ -890,9 +1045,12 @@ export function summarise(provenance: ConversionProvenance): RemediationSummary 
  * renumbering an author's structure would be invention, so the skip is
  * reported where a person can decide what the author meant.
  */
-function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'needs'> {
+function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'needs' | 'asks'> {
   const { structure } = provenance;
-  const needs: Array<{ criterion: string; item: string }> = [];
+  const out: Punch = { needs: [], asks: [] };
+  const client = (id: string, kind: Ask['kind'], criterion: string): Ask => ({
+    id, kind, criterion, answerable: 'client',
+  });
 
   // First, because it is one fact about the whole document and the cheapest
   // thing on the list to supply.
@@ -904,10 +1062,9 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
   // annotation too (7.2-24). The gap string beside this states the fact; the
   // item asks for the work, because nobody can act on "so none is claimed".
   if (provenance.sourceLanguage === null) {
-    needs.push({
-      criterion: '3.1.1',
-      item: 'The document declares no language — name the one it is written in, because a language is never guessed',
-    });
+    punch(out, { id: 'language', kind: 'language', criterion: '3.1.1', answerable: 'operator' },
+      'The document declares no language — name the one it is written in, because a language is never guessed',
+    );
   }
 
   if (structure.annotationsNotInStructure > 0) {
@@ -920,10 +1077,9 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     // element and choosing where it belongs, which is the inference the
     // PDF-repair STOP forbids.
     const n = structure.annotationsNotInStructure;
-    needs.push({
-      criterion: '1.3.1',
-      item: `${n} form field${n === 1 ? '' : 's'} or link${n === 1 ? '' : 's'} sit outside the document's structure — a screen reader cannot reach ${n === 1 ? 'it' : 'them'} in reading order, and tagging ${n === 1 ? 'it' : 'them'} into place is a person's decision`,
-    });
+    punch(out, client('annotations', 'annotations', '1.3.1'),
+      `${n} form field${n === 1 ? '' : 's'} or link${n === 1 ? '' : 's'} sit outside the document's structure — a screen reader cannot reach ${n === 1 ? 'it' : 'them'} in reading order, and tagging ${n === 1 ? 'it' : 'them'} into place is a person's decision`,
+    );
   }
 
   if (structure.formFieldsWithoutName > 0) {
@@ -938,14 +1094,13 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     // other standing.
     const n = structure.formFieldsWithoutName;
     const of = structure.formFields > n ? ` of ${structure.formFields}` : '';
-    needs.push({
-      criterion: '4.1.2',
+    punch(out, client('form-fields', 'form-fields', '4.1.2'),
       // Self-contained: the public report renders items without their criterion
       // label, and says what the name has to be rather than only that it is
       // missing, because the commonest wrong fix is to treat the internal field
       // name as one.
-      item: `${n}${of} form field${n === 1 ? '' : 's'} ${n === 1 ? 'has' : 'have'} no accessible name — label each with what it asks for, because a screen reader speaks the label and never the internal field name`,
-    });
+      `${n}${of} form field${n === 1 ? '' : 's'} ${n === 1 ? 'has' : 'have'} no accessible name — label each with what it asks for, because a screen reader speaks the label and never the internal field name`,
+    );
   }
 
   if (structure.embeddedFiles > 0) {
@@ -962,10 +1117,9 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     // container around it, and the honest instruction is that each attached
     // document goes through this pipeline on its own.
     const n = structure.embeddedFiles;
-    needs.push({
-      criterion: 'PDF/UA 7.11',
-      item: `${n} document${n === 1 ? ' is' : 's are'} attached to this file and ${n === 1 ? 'was' : 'were'} not examined — nothing here reads inside an attachment, so ${n === 1 ? 'it needs' : 'each needs'} remediating on its own`,
-    });
+    punch(out, client('attachments', 'attachments', 'PDF/UA 7.11'),
+      `${n} document${n === 1 ? ' is' : 's are'} attached to this file and ${n === 1 ? 'was' : 'were'} not examined — nothing here reads inside an attachment, so ${n === 1 ? 'it needs' : 'each needs'} remediating on its own`,
+    );
   }
 
   // These two items are deliberately TERSE, and that is a transport constraint
@@ -1000,12 +1154,18 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
     // and find no figure.
     const where = figure.page === null ? '' : ` (p${figure.page})`;
     const at = `${figure.type} ${index + 1}${where}`;
-    if (figure.alt === null) {
-      needs.push({
-        criterion: '1.1.1',
-        item: `${at}: no alt text, no caption to transcribe — write a description`,
-      });
-    } else if (isDeclaredDecorative(figure.alt)) {
+    const prior = figurePrior(figure.alt);
+    if (prior === null) return;
+    const ask: Ask = {
+      id: `figure:${index}`,
+      kind: 'figure',
+      criterion: '1.1.1',
+      answerable: 'operator',
+      target: { ordinal: index, type: figure.type, page: figure.page, prior },
+    };
+    if (prior === 'absent') {
+      punch(out, ask, `${at}: no alt text, no caption to transcribe — write a description`);
+    } else if (prior === 'decorative') {
       // Tested BEFORE the placeholder branch, because it is a subset of it.
       // Same criterion, same one-item-per-figure, so no count moves anywhere —
       // only the instruction, which was wrong. "Write a description" for an
@@ -1020,51 +1180,50 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
       // 13,382 -> 13,079, so headroom goes 618 -> 921. Correcting an
       // instruction is not a licence to spend the budget; see the
       // header-budget note above.
-      needs.push({
-        criterion: '1.1.1',
-        item: `${at}: described only as decorative (F30) — artifact it, or describe it`,
-      });
-    } else if (isPlaceholderAlt(figure.alt)) {
-      needs.push({
-        criterion: '1.1.1',
-        item: `${at}: alt text is a placeholder, not a description (WCAG F30) — write one`,
-      });
+      punch(out, ask, `${at}: described only as decorative (F30) — artifact it, or describe it`);
+    } else {
+      punch(out, ask, `${at}: alt text is a placeholder, not a description (WCAG F30) — write one`);
     }
   });
 
   let previous = 0;
-  for (const heading of structure.headings) {
+  structure.headings.forEach((heading, index) => {
     const level = Number(/^H(\d)/.exec(heading)?.[1] ?? NaN);
-    if (Number.isFinite(level)) {
-      if (previous === 0 && level > 1) {
-        // The first heading is already deep. Not a skip *between* headings,
-        // but the same authorship decision — starting at H1 is theirs to
-        // make, not ours to renumber.
-        needs.push({
-          criterion: '2.4.10',
-          item: `Heading levels start at H${level} — decide whether the document should begin at an H1`,
-        });
-      } else if (previous > 0 && level > previous + 1) {
-        needs.push({
-          criterion: '2.4.10',
-          item: `Heading levels skip from H${previous} to H${level} — decide whether the author meant an H${previous + 1}`,
-        });
-      }
-      previous = level;
+    if (!Number.isFinite(level)) return;
+    // Keyed by the index in the ladder rather than the levels: two skips of
+    // the same shape in one document must not collide.
+    const ask: Ask = {
+      id: `heading:${index}`,
+      kind: 'heading',
+      criterion: '2.4.10',
+      answerable: 'operator',
+      target: { index, from: previous, to: level },
+    };
+    if (previous === 0 && level > 1) {
+      // The first heading is already deep. Not a skip *between* headings,
+      // but the same authorship decision — starting at H1 is theirs to
+      // make, not ours to renumber.
+      punch(out, ask, `Heading levels start at H${level} — decide whether the document should begin at an H1`);
+    } else if (previous > 0 && level > previous + 1) {
+      punch(out, ask, `Heading levels skip from H${previous} to H${level} — decide whether the author meant an H${previous + 1}`);
     }
-  }
+    previous = level;
+  });
 
-  return needs.length > 0 ? { needs } : {};
+  return out.needs.length > 0 ? { needs: out.needs, asks: out.asks } : {};
 }
 
 /**
- * The same summary with the document's title removed.
+ * The same summary with the document's words removed.
  *
- * For logs. Everything else here is a count or an outcome kind, so this is the
- * one field that has to go.
+ * For logs. The title and the excerpt are the two fields that carry document
+ * content; the asks go too, because they only repeat the punch list's shape
+ * and would double the size of every line.
  */
-export function logSafe(summary: RemediationSummary): Omit<RemediationSummary, 'titleText'> {
-  const { titleText: _title, ...rest } = summary;
+export function logSafe(
+  summary: RemediationSummary,
+): Omit<RemediationSummary, 'titleText' | 'excerpt' | 'asks'> {
+  const { titleText: _title, excerpt: _excerpt, asks: _asks, ...rest } = summary;
   return rest;
 }
 

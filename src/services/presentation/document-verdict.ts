@@ -2,6 +2,7 @@ import {
   NOT_CHECKED_CRITERIA,
   type RemediationSummary,
 } from '../../domain/document-remediation';
+import type { DocumentState } from '../document-state';
 
 /**
  * How a document's verdict is said, everywhere one is said.
@@ -71,6 +72,66 @@ export function scopeLine(summary: VerdictSummary): string {
     + `Not checked: ${notChecked}. `
     + SCOPE_EXPLAINER
   );
+}
+
+/**
+ * The one word a row leads with, per state.
+ *
+ * Here rather than beside the chip colours, for the reason this whole file
+ * exists: the label is product semantics — `closed` must never say "done",
+ * because nothing is open AND the file still fails the checker — and a second
+ * surface reaching for its own word is how two screens disagree about one
+ * document.
+ */
+export function documentStateLabel(state: DocumentState): string {
+  switch (state) {
+    case 'not-reviewed':
+      return 'Not reviewed';
+    case 'stale':
+      return 'Changed since read';
+    case 'needs-answers':
+      return 'Needs answers';
+    case 'conformant':
+      return 'Conformant';
+    case 'ready':
+      return 'Ready to run';
+    case 'waiting-on-client':
+      return 'Waiting on client';
+    case 'closed':
+      return 'Nothing left to decide';
+  }
+}
+
+/**
+ * What the state means for THIS row, counts included, in words — the
+ * sentence beside the label. Counts here rather than in the label so the
+ * label stays one stable phrase an operator learns to scan for.
+ */
+export function documentStateNote(
+  state: DocumentState,
+  standing: { open: number; waiting: number; expired: number },
+): string {
+  const items = (n: number) => `${n} item${n === 1 ? '' : 's'}`;
+  const answers = (n: number) => `${n} answer${n === 1 ? '' : 's'}`;
+  switch (state) {
+    case 'not-reviewed':
+      return 'no reading yet';
+    case 'stale':
+      return `the document changed since it was read; ${answers(standing.expired)} no longer apply`;
+    case 'needs-answers':
+      return (
+        `${items(standing.open)} need${standing.open === 1 ? 's' : ''} an answer`
+        + (standing.waiting > 0 ? `, ${standing.waiting} waiting on the client` : '')
+      );
+    case 'conformant':
+      return 'the checker passed and nothing is open';
+    case 'ready':
+      return 'a run would advance it';
+    case 'waiting-on-client':
+      return `${items(standing.waiting)} requested from the client`;
+    case 'closed':
+      return 'every item is decided; the file still does not conform';
+  }
 }
 
 /**

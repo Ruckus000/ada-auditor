@@ -1644,6 +1644,8 @@ describe('platform hydration', () => {
       // their own suites, and this test is about the screen — that it
       // hydrates, renders every source through one summary component, and
       // passes the same axe bar as everything else.
+      // Every row carries the state the route derives; the screen leads with it.
+      const unread = { state: 'not-reviewed', open: 0, waiting: 0, expired: 0 };
       const inventory = [
         {
           id: 'doc-1',
@@ -1653,6 +1655,7 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/meetings',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          ...unread,
         },
         {
           // Paired: the server found a Word document sharing this PDF's stem,
@@ -1664,6 +1667,7 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          ...unread,
           sourceAvailable: {
             id: 'doc-5',
             kind: 'docx',
@@ -1678,6 +1682,7 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/forms',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          ...unread,
         },
         {
           id: 'doc-5',
@@ -1687,6 +1692,7 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          ...unread,
         },
         {
           // Tagged and unpaired: a repair can transcribe what its tree already
@@ -1698,6 +1704,10 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/meetings',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          state: 'ready',
+          open: 0,
+          waiting: 0,
+          expired: 0,
           latestInspection: {
             id: 'insp-tagged',
             summary: {
@@ -1724,6 +1734,10 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/meetings',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          state: 'needs-answers',
+          open: 1,
+          waiting: 0,
+          expired: 0,
           latestInspection: {
             id: 'insp-untagged',
             summary: {
@@ -1750,8 +1764,13 @@ describe('platform hydration', () => {
           foundOn: 'https://discovered.invalid/finance',
           firstSeenAt: '2026-08-26T12:00:00.000Z',
           lastSeenAt: '2026-08-26T12:00:00.000Z',
+          ...unread,
         },
       ];
+      const counts = {
+        'not-reviewed': 5, stale: 0, 'needs-answers': 1, conformant: 0,
+        ready: 1, 'waiting-on-client': 0, closed: 0,
+      };
       await page.route('**/api/platform/clients/*/documents/discover', (route) =>
         route.fulfill({
           status: 200,
@@ -1773,7 +1792,7 @@ describe('platform hydration', () => {
           return route.fulfill({
             status: 200,
             contentType: 'application/json',
-            body: JSON.stringify({ requestId: 'stubbed', documents: inventory, count: 7 }),
+            body: JSON.stringify({ requestId: 'stubbed', documents: inventory, counts, count: 7 }),
           });
         }
         if (route.request().method() !== 'POST') return route.fallback();
@@ -1844,15 +1863,26 @@ describe('platform hydration', () => {
       await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      await page.getByLabel('Site to scan').fill('https://discovered.invalid/');
-      await page.getByRole('button', { name: 'Scan the site' }).click();
-
       // By role, not by text: the shell's own <section> contains the word
       // "Documents" in its tab bar, so a text match finds the wrong element.
       // The panel is the only *named region* called Documents — its
       // `aria-labelledby` is what gives it the role and the name.
       const panel = page.getByRole('region', { name: 'Documents' });
       await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('agenda.pdf');
+
+      // The screen leads with the counts by state — the operator's work
+      // before the work blocked on somebody else — and each count is the
+      // filter for its state.
+      const heading = await panel.innerText();
+      expect(heading).toContain('Needs answers 1');
+      expect(heading).toContain('Not reviewed 5');
+      expect(await panel.getByRole('button', { name: /^Needs answers 1$/, pressed: false }).count()).toBe(1);
+
+      // The doors documents come in through sit in one disclosure beside the
+      // heading, closed while there is an inventory to work on.
+      await panel.locator('details').first().evaluate((details) => { (details as HTMLDetailsElement).open = true; });
+      await page.getByLabel('Site to scan').fill('https://discovered.invalid/');
+      await page.getByRole('button', { name: 'Scan the site' }).click();
 
       // The scan's own report: how the merge fell, and what the cap dropped —
       // per kind, because the caps are.
@@ -1883,53 +1913,44 @@ describe('platform hydration', () => {
       // — the inspection instrument reads PDFs. Its affordance is conversion,
       // exercised below.
       expect(text).toContain('/forms/permit-application.docx');
-      expect(
-        await page
-          .getByRole('listitem')
-          .filter({ hasText: '/forms/permit-application.docx' })
-          .getByRole('button', { name: 'Inspect' })
-          .count(),
-      ).toBe(0);
+      const row = (needle: string) => page.getByRole('row').filter({ hasText: needle }).first();
+      expect(await row('/forms/permit-application.docx').getByRole('button', { name: 'Inspect' }).count()).toBe(0);
 
       // A paired PDF says where its remediation actually lives, and offers
       // the source's conversion — not a repair of the PDF — as the action.
-      const paired = page
-        .getByRole('listitem')
-        .filter({ hasText: '/fees/schedule.pdf' })
-        .first();
+      // Its source folds under it: one row for one remediation.
+      const paired = row('/fees/schedule.pdf');
       expect(await paired.innerText()).toContain(
         'Word source on record — converting the source is this PDF',
       );
       expect(await paired.getByRole('button', { name: 'Convert the Word source' }).count()).toBe(
         1,
       );
+      // Exact: the PDF row's own note names the source's path inside a
+      // longer sentence; only a row OF the source would carry it as a label.
+      expect(
+        await page.getByRole('row').filter({ has: page.getByText('/fees/schedule.docx', { exact: true }) }).count(),
+      ).toBe(0);
+      expect(text).toContain('1 Word source shown with the PDF it produces');
       // Unpaired PDFs carry no such claim.
-      expect(await page.getByRole('listitem').filter({ hasText: '/minutes/agenda.pdf' }).innerText()).not.toContain(
-        'Word source on record',
-      );
+      expect(await row('/minutes/agenda.pdf').innerText()).not.toContain('Word source on record');
 
-      // A tagged, unpaired PDF offers a repair — the transcription path.
-      const tagged = page
-        .getByRole('listitem')
-        .filter({ hasText: '/minutes/tagged-notice.pdf' })
-        .first();
+      // A tagged, unpaired PDF offers a repair — the transcription path — and
+      // its state says a run would advance it.
+      const tagged = row('/minutes/tagged-notice.pdf');
       expect(await tagged.getByRole('button', { name: 'Repair this PDF' }).count()).toBe(1);
+      expect(await tagged.innerText()).toContain('Ready to run');
 
       // An untagged one offers no repair, and says why rather than going
       // quiet: a button here would mean inventing the document's structure.
-      const untagged = page
-        .getByRole('listitem')
-        .filter({ hasText: '/scans/untagged-scan.pdf' })
-        .first();
+      const untagged = row('/scans/untagged-scan.pdf');
       expect(await untagged.getByRole('button', { name: 'Repair this PDF' }).count()).toBe(0);
       expect(await untagged.innerText()).toContain('No structure tree');
+      expect(await untagged.innerText()).toContain('Needs answers');
 
-      // One inspection, rendered inline where its row is.
-      await page
-        .getByRole('listitem')
-        .filter({ hasText: '/minutes/agenda.pdf' })
-        .getByRole('button', { name: 'Inspect' })
-        .click();
+      // One inspection, rendered inline where its row is — as this session's
+      // result, once, never a second box under the stored one.
+      await row('/minutes/agenda.pdf').getByRole('button', { name: 'Inspect' }).click();
       await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Not tagged');
 
       const inspected = await panel.innerText();
@@ -1943,14 +1964,10 @@ describe('platform hydration', () => {
       // capability answer said this host can, and the result is both halves
       // of the response rendered: the pipeline's account, and the file itself
       // as a named download.
-      await page
-        .getByRole('listitem')
-        .filter({ hasText: '/forms/permit-application.docx' })
-        .getByRole('button', { name: 'Convert to tagged PDF' })
-        .click();
+      await row('/forms/permit-application.docx').getByRole('button', { name: 'Convert to tagged PDF' }).click();
       await expect
         .poll(() => panel.innerText(), { timeout: 15_000 })
-        .toContain('Converted to tagged PDF');
+        .toContain('Delivered a tagged PDF');
 
       const converted = await panel.innerText();
       expect(converted).toContain('The title was transcribed from the document’s own first heading.');
@@ -1992,8 +2009,16 @@ describe('platform hydration', () => {
                 foundOn: 'https://discovered.invalid/forms',
                 firstSeenAt: '2026-08-26T12:00:00.000Z',
                 lastSeenAt: '2026-08-26T12:00:00.000Z',
+                state: 'not-reviewed',
+                open: 0,
+                waiting: 0,
+                expired: 0,
               },
             ],
+            counts: {
+              'not-reviewed': 1, stale: 0, 'needs-answers': 0, conformant: 0,
+              ready: 0, 'waiting-on-client': 0, closed: 0,
+            },
             count: 1,
           }),
         });
@@ -2097,16 +2122,18 @@ describe('platform hydration', () => {
         });
         await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
+        // Same locator lesson as the case above: the panel is the only named
+        // region called Documents. The upload door sits in the intake
+        // disclosure, closed while there is an inventory to work on.
+        const panel = page.getByRole('region', { name: 'Documents' });
+        await panel.locator('details').first().evaluate((details) => { (details as HTMLDetailsElement).open = true; });
         await page.getByLabel('Or inspect a PDF you already have').setInputFiles({
           name: 'hydration-agenda.pdf',
           mimeType: 'application/pdf',
           buffer: pdf,
         });
 
-        // Same locator lesson as the case above: the panel is the only named
-        // region called Documents. The JVM answers in a second or two warm;
-        // the poll absorbs a cold start.
-        const panel = page.getByRole('region', { name: 'Documents' });
+        // The JVM answers in a second or two warm; the poll absorbs a cold start.
         await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
 
         // The reload is the assertion. The screen's own state is gone; only
@@ -2127,14 +2154,91 @@ describe('platform hydration', () => {
         // summary — no re-inspection, no server call. A Chromium-printed PDF
         // is untagged, and the gap wording is the server's, verbatim.
         await page
-          .getByRole('listitem')
+          .getByRole('row')
           .filter({ hasText: 'hydration-agenda.pdf' })
+          .first()
           .getByRole('button', { name: 'Details' })
           .click();
         await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Not tagged');
         expect(await panel.innerText()).toContain(
           '1.3.1: the output carries no structure tree',
         );
+      } finally {
+        await page.close();
+      }
+    },
+    180_000,
+  );
+
+  it.runIf(documentToolchain.available)(
+    'the workbench takes an answer and the row changes state',
+    async () => {
+      requireCurrentStages();
+
+      // End to end and unstubbed: a real PDF read by a real JVM, whose
+      // reading raises a client ask (a Chromium print is untagged, so repair
+      // is refused and the refusal is now an item on the record). The
+      // operator logs the request in the workbench; the row says so.
+      const page = await openAuthenticatedPage();
+      try {
+        const pdf = await renderPdf('<h1>Workbench fixture</h1><p>An untagged print.</p>');
+        await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        const panel = page.getByRole('region', { name: 'Documents' });
+        await panel.locator('details').first().evaluate((details) => { (details as HTMLDetailsElement).open = true; });
+        await page.getByLabel('Or inspect a PDF you already have').setInputFiles({
+          name: 'workbench-fixture.pdf',
+          mimeType: 'application/pdf',
+          buffer: pdf,
+        });
+        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        const row = page.getByRole('row').filter({ hasText: 'workbench-fixture.pdf' }).first();
+        await expect.poll(() => row.innerText(), { timeout: 15_000 }).toContain('Needs answers');
+        await row.getByRole('link', { name: /^Answer \d+ item/ }).click();
+
+        // The workbench: the untagged refusal is an item the client has to
+        // answer, so it sits under "Needed from the client". A Chromium print
+        // raises more than that — no declared language, and whatever the
+        // checker names beyond our vocabulary — so every group is answered
+        // before the row can read as waiting on the client alone.
+        const needed = page.getByRole('region', { name: 'Needed from the client' });
+        await expect.poll(() => needed.innerText(), { timeout: 15_000 }).toContain('no structure tree');
+        for (const button of await needed.getByRole('button', { name: 'Mark requested' }).all()) {
+          await button.click();
+        }
+        for (const button of await page.getByRole('button', { name: 'Reviewed — accepted as is' }).all()) {
+          await button.click();
+        }
+        const language = page.getByRole('region', { name: 'Language' });
+        if ((await language.count()) > 0) {
+          await language.getByRole('combobox').selectOption('en');
+        }
+        for (const button of await page.getByRole('button', { name: 'Keep as the author wrote it' }).all()) {
+          await button.click();
+        }
+        await page.getByRole('button', { name: /^Save \d+ answers?$/ }).click();
+        await expect
+          .poll(() => page.getByRole('status').first().innerText(), { timeout: 15_000 })
+          .toMatch(/Saved \d+ answer/);
+
+        // The decision is on the record with who made it, and the row's state
+        // moved — on this screen after the refresh, and in the inventory.
+        await expect
+          .poll(() => page.getByRole('region', { name: 'Needed from the client' }).innerText(), { timeout: 15_000 })
+          .toContain('requested from the client');
+        await expect
+          .poll(() => axeViolations(page), { ...AXE_SETTLE, message: 'the workbench with an answer on record' })
+          .toBe('');
+
+        await page.getByRole('link', { name: '← Documents' }).click();
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+        await expect
+          .poll(() => page.getByRole('row').filter({ hasText: 'workbench-fixture.pdf' }).first().innerText(), { timeout: 15_000 })
+          .toContain('Waiting on client');
       } finally {
         await page.close();
       }

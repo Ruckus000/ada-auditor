@@ -57,6 +57,15 @@ export type ReadUploadResult =
        * files are named by request id) and never reaches a log line.
        */
       filename: string;
+      /**
+       * The inventory row this file is a new version OF, when the operator
+       * said so. A client sends a re-signed or re-exported file back under
+       * any name; without this the upload would mint a second row named
+       * after the file and leave the first one asking forever. Caller-
+       * controlled and unverified here — the persisting route checks it
+       * belongs to the client.
+       */
+      documentId?: string;
     }
   | { ok: false; refusal: UploadRefusal };
 
@@ -137,7 +146,16 @@ export async function readDocumentUpload(
     return refuse(415, 'unsupported_document', check.reason);
   }
 
-  return { ok: true, bytes, kind: check.kind, filename: file.name };
+  const documentId = form.get('documentId');
+  return {
+    ok: true,
+    bytes,
+    kind: check.kind,
+    filename: file.name,
+    ...(typeof documentId === 'string' && documentId.length > 0 && documentId.length <= 128
+      ? { documentId }
+      : {}),
+  };
 }
 
 /** The refusal as a response, so a route does not restate the envelope. */

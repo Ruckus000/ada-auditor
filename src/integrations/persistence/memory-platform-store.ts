@@ -18,6 +18,7 @@ import type {
   ClientDocumentRecord,
   DocumentSighting,
   StoredDocumentConversion,
+  StoredDocumentAnswer,
   StoredDocumentInspection,
   StoredJourney,
   StoredOperator,
@@ -80,6 +81,7 @@ export class MemoryPlatformStore implements PlatformStore {
   /** Keyed like the Postgres unique index: `clientId` + NUL + `url`. */
   private readonly clientDocuments = new Map<string, StoredClientDocument>();
   private readonly documentConversions = new Map<string, StoredConversion>();
+  private readonly documentAnswers = new Map<string, StoredDocumentAnswer>();
   private readonly events: ActivityEvent[] = [];
   private nextEventId = 1;
   private nextTriageSeq = 1;
@@ -490,6 +492,7 @@ export class MemoryPlatformStore implements PlatformStore {
       ...(record.instrumentVersion === undefined
         ? {}
         : { instrumentVersion: record.instrumentVersion }),
+      ...(record.inputSha256 === undefined ? {} : { inputSha256: record.inputSha256 }),
       inspectedAt: record.inspectedAt,
     };
 
@@ -537,9 +540,24 @@ export class MemoryPlatformStore implements PlatformStore {
       kind: sighting.kind,
       source: sighting.source,
       ...(sighting.foundOn === undefined ? {} : { foundOn: sighting.foundOn }),
+      ...(sighting.contentSha256 === undefined ? {} : { contentSha256: sighting.contentSha256 }),
       firstSeenAt: seenAt,
       lastSeenAt: seenAt,
     };
+  }
+
+  /**
+   * A re-sighting refreshes `lastSeenAt`, and the bytes only when the caller
+   * had them: a crawl knows nothing about them and must not erase what a
+   * fetch recorded. Postgres spells it `coalesce(excluded, existing)`.
+   */
+  private static resight(
+    existing: StoredClientDocument,
+    sighting: DocumentSighting,
+    seenAt: string,
+  ): void {
+    existing.lastSeenAt = seenAt;
+    if (sighting.contentSha256 !== undefined) existing.contentSha256 = sighting.contentSha256;
   }
 
   async recordDocumentSightings(
@@ -556,7 +574,7 @@ export class MemoryPlatformStore implements PlatformStore {
       if (existing) {
         // Everything else stands: first sighting won `foundOn`, and `kind`
         // and `source` are facts about that first sighting too.
-        existing.lastSeenAt = seenAt;
+        MemoryPlatformStore.resight(existing, sighting, seenAt);
         seenAgain += 1;
       } else {
         this.clientDocuments.set(key, structuredClone(this.buildDocument(clientId, sighting, seenAt)));
@@ -575,12 +593,17 @@ export class MemoryPlatformStore implements PlatformStore {
     const key = this.documentKey(clientId, sighting.url);
     const existing = this.clientDocuments.get(key);
     if (existing) {
-      existing.lastSeenAt = seenAt;
+      MemoryPlatformStore.resight(existing, sighting, seenAt);
       return structuredClone(existing);
     }
     const row = this.buildDocument(clientId, sighting, seenAt);
     this.clientDocuments.set(key, structuredClone(row));
     return structuredClone(row);
+  }
+
+  async findClientDocument(clientId: string, url: string): Promise<StoredClientDocument | null> {
+    const existing = this.clientDocuments.get(this.documentKey(clientId, url));
+    return existing ? structuredClone(existing) : null;
   }
 
   async listClientDocuments(
@@ -680,6 +703,55 @@ export class MemoryPlatformStore implements PlatformStore {
   async getDocumentConversion(id: string): Promise<StoredDocumentConversion | null> {
     const held = this.documentConversions.get(id);
     return held ? structuredClone(held.record) : null;
+  }
+
+  // ----------------------------------------------------- document answers --
+
+  async saveDocumentAnswers(records: StoredDocumentAnswer[]): Promise<void> {
+    for (const record of records) {
+      // Append-only: a retried id keeps the first row. Field by field, so an
+      // explicitly-passed `value: undefined` stores as absent — the shape
+      // Postgres hands back for a null column.
+      if (this.documentAnswers.has(record.id)) continue;
+      const next: StoredDocumentAnswer = {
+        id: record.id,
+        clientId: record.clientId,
+        documentId: record.documentId,
+        inputSha256: record.inputSha256,
+        askId: record.askId,
+        kind: record.kind,
+        ...(record.target === undefined ? {} : { target: record.target }),
+        disposition: record.disposition,
+        ...(record.value === undefined ? {} : { value: record.value }),
+        ...(record.note === undefined ? {} : { note: record.note }),
+        actor: record.actor,
+        ...(record.operatorId === undefined ? {} : { operatorId: record.operatorId }),
+        declaredAt: record.declaredAt,
+      };
+      this.documentAnswers.set(record.id, structuredClone(next));
+    }
+  }
+
+  async latestDocumentAnswers(
+    clientId: string,
+    documentIds: string[],
+  ): Promise<StoredDocumentAnswer[]> {
+    const wanted = new Set(documentIds);
+    const latest = new Map<string, StoredDocumentAnswer>();
+    for (const record of this.documentAnswers.values()) {
+      if (record.clientId !== clientId || !wanted.has(record.documentId)) continue;
+      const key = `${record.documentId} ${record.inputSha256} ${record.askId}`;
+      const held = latest.get(key);
+      // Newest stamp wins; a tie falls to the id — the same total order the
+      // Postgres `distinct on` spells, so no test can pass against one store
+      // and fail the other.
+      const newer =
+        held === undefined ||
+        record.declaredAt > held.declaredAt ||
+        (record.declaredAt === held.declaredAt && record.id > held.id);
+      if (newer) latest.set(key, record);
+    }
+    return [...latest.values()].map((record) => structuredClone(record));
   }
 
   // ------------------------------------------------------------ activity --

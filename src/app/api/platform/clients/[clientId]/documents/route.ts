@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
 import { INSTRUMENT_VERSION, isPdf, logSafe } from '../../../../../../domain/document-remediation';
+import { actorFields, type Principal } from '../../../../../../domain/operator';
 import type {
   ClientDocumentRecord,
   StoredDocumentConversion,
@@ -10,6 +12,13 @@ import { resolveJavaRuntime } from '../../../../../../integrations/documents/jav
 import { getPlatformStore } from '../../../../../../integrations/persistence';
 import { compareDocumentInspections } from '../../../../../../services/document-regression';
 import { pairDocuments } from '../../../../../../services/document-pairing';
+import {
+  DOCUMENT_STATES,
+  countByState,
+  documentState,
+  latestReading,
+  type DocumentState,
+} from '../../../../../../services/document-state';
 import { hostnameOf } from '../../../../../../services/safe-url';
 import { logInfo } from '../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../_lib/authorize';
@@ -125,6 +134,14 @@ function documentResponse(record: ClientDocumentRecord) {
   };
 }
 
+function sha256(bytes: Uint8Array): string {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+function isDocumentState(value: string): value is DocumentState {
+  return (DOCUMENT_STATES as readonly string[]).includes(value);
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ clientId: string }> },
@@ -150,6 +167,10 @@ export async function GET(
   if (kindParam !== null && !['pdf', 'docx', 'doc'].includes(kindParam)) {
     return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
+  const stateParam = search.get('state');
+  if (stateParam !== null && !isDocumentState(stateParam)) {
+    return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
+  }
   const beforeAt = search.get('beforeLastSeenAt');
   const beforeId = search.get('beforeId');
   if ((beforeAt === null) !== (beforeId === null)) {
@@ -157,7 +178,7 @@ export async function GET(
     return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
 
-  const { documents, hasMore } = await platform.listClientDocuments(clientId, {
+  const page = await platform.listClientDocuments(clientId, {
     ...(kindParam === null ? {} : { kind: kindParam as 'pdf' | 'docx' | 'doc' }),
     ...(search.get('hasGaps') === 'true' ? { hasGaps: true as const } : {}),
     ...(search.get('unreviewed') === 'true' ? { unreviewed: true as const } : {}),
@@ -173,23 +194,70 @@ export async function GET(
   const diffs = compareDocumentInspections(await platform.listDocumentInspections(clientId));
   const diffByDocument = new Map(diffs.map((diff) => [diff.documentId, diff]));
 
-  // Pairing reads the UNFILTERED inventory: a filtered page would miss the
-  // sibling that fell outside it. One page of 200 covers every crawlable
+  // Pairing, state and the counts all read the UNFILTERED inventory: a
+  // filtered page would miss the sibling that fell outside it, and a count
+  // over one page is not a count. One page of 200 covers every crawlable
   // inventory (the per-kind caps top out at 150); an inventory beyond that
-  // pairs within its first page, a bound worth widening only when a real
-  // client exceeds it.
+  // pairs and counts within its first page, a bound worth widening only when
+  // a real client exceeds it.
   const universe = await platform.listClientDocuments(clientId);
   const pairs = pairDocuments(universe.documents);
+  const byId = new Map(universe.documents.map((record) => [record.id, record]));
+  for (const record of page.documents) byId.set(record.id, record);
+
+  // State is derived, never stored, so the filter for it is applied here
+  // over the same universe the counts come from — two queries for 200 rows.
+  const answers = await platform.latestDocumentAnswers(clientId, [...byId.keys()]);
+  const answersByDocument = new Map<string, typeof answers>();
+  for (const answer of answers) {
+    const held = answersByDocument.get(answer.documentId) ?? [];
+    held.push(answer);
+    answersByDocument.set(answer.documentId, held);
+  }
+  const standingOf = (record: ClientDocumentRecord) => {
+    const source = pairs.get(record.id);
+    // Answers attach to the row that was answered; a paired PDF's reading
+    // may be its source's conversion, so both rows' answers count and the
+    // sha keying decides which apply.
+    const answered = [
+      ...(answersByDocument.get(record.id) ?? []),
+      ...(source === undefined ? [] : (answersByDocument.get(source.id) ?? [])),
+    ];
+    return documentState(
+      record,
+      latestReading(record, source === undefined ? undefined : byId.get(source.id)),
+      answered,
+    );
+  };
+  const standings = new Map([...byId.values()].map((record) => [record.id, standingOf(record)]));
+  const counts = countByState(
+    universe.documents.map((record) => standings.get(record.id)!.state),
+  );
+
+  const documents =
+    stateParam === null
+      ? page.documents
+      : universe.documents.filter(
+          (record) =>
+            standings.get(record.id)!.state === stateParam &&
+            (kindParam === null || record.kind === kindParam),
+        );
 
   return Response.json(
     {
       requestId,
-      hasMore,
+      hasMore: stateParam === null ? page.hasMore : false,
+      counts,
       documents: documents.map((record) => {
         const diff = diffByDocument.get(record.id);
         const source = pairs.get(record.id);
+        const standing = standings.get(record.id)!;
         return {
           ...documentResponse(record),
+          state: standing.state,
+          open: standing.open.length,
+          waiting: standing.waiting.length,
+          expired: standing.expired,
           ...(source === undefined ? {} : { sourceAvailable: source }),
           ...(diff === undefined || diff.status === 'first-reading'
             ? {}
@@ -210,13 +278,36 @@ export async function GET(
   );
 }
 
+/**
+ * The trail, by document id and never by address: the feed is rendered to
+ * every operator and a document path routinely names a person. The name
+ * `document_recorded`/`document_inspected` matches the log line beside it.
+ */
+async function recordDocumentEvent(
+  platform: ReturnType<typeof getPlatformStore>,
+  clientId: string,
+  principal: Principal,
+  action: string,
+  subject: string | undefined,
+  metadata: Record<string, unknown>,
+): Promise<void> {
+  await platform.recordEvent({
+    clientId,
+    ...actorFields(principal),
+    action,
+    ...(subject === undefined ? {} : { subject }),
+    metadata,
+  });
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ clientId: string }> },
 ) {
   const requestId = createRequestId();
 
-  if (!(await authorizePrincipal(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -274,6 +365,9 @@ export async function POST(
       host: hostnameOf(parsed.data.url),
       kind: fetched.kind,
     });
+    await recordDocumentEvent(platform, clientId, principal, 'document_recorded', document.id, {
+      kind: fetched.kind,
+    });
 
     return Response.json(
       { requestId, document: documentResponse(document) },
@@ -294,12 +388,20 @@ export async function POST(
 
   const outcome = await inspectPdfBytes(fetched.bytes, requestId, 'ada-inspect-url-');
   if (!outcome.ok) {
-    // Nothing persisted — not even a document row. See the header.
+    // Nothing persisted — not even a document row. See the header. The trail
+    // still says a reading was attempted and refused, or a document nobody
+    // can read stays invisible.
+    await recordDocumentEvent(platform, clientId, principal, 'document_inspection_failed', undefined, {
+      detail: outcome.refusal.detail ?? outcome.refusal.error,
+    });
     return refusalResponse(outcome.refusal, requestId);
   }
 
   // After the inspection succeeded, so a refusal minted nothing. The bytes
-  // proved themselves a PDF, whatever the URL's extension claimed.
+  // proved themselves a PDF, whatever the URL's extension claimed — and they
+  // are recorded on the row, so a later reading of different bytes is known
+  // to be one.
+  const inputSha256 = sha256(fetched.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
     {
@@ -307,6 +409,7 @@ export async function POST(
       kind: 'pdf',
       source: 'crawl',
       ...(parsed.data.foundOn === undefined ? {} : { foundOn: parsed.data.foundOn }),
+      contentSha256: inputSha256,
     },
     now,
   );
@@ -320,6 +423,7 @@ export async function POST(
     source: 'crawl',
     summary: outcome.summary,
     instrumentVersion: INSTRUMENT_VERSION,
+    inputSha256,
     inspectedAt: now,
   };
   await platform.saveDocumentInspection(record);
@@ -329,6 +433,10 @@ export async function POST(
     clientId,
     host: hostnameOf(parsed.data.url),
     ...logSafe(outcome.summary),
+  });
+  await recordDocumentEvent(platform, clientId, principal, 'document_inspected', document.id, {
+    gaps: outcome.summary.gaps.length,
+    needs: outcome.summary.needs?.length ?? 0,
   });
 
   return Response.json({ requestId, inspection: inspectionResponse(record) }, { status: 201 });
@@ -343,7 +451,8 @@ export async function PUT(
   // `readDocumentUpload` authorises too, but the client check has to sit
   // between authorisation and the body — an unknown client must answer 404
   // before this process buffers 25MB for it.
-  if (!(await authorizePrincipal(request))) {
+  const principal = await authorizePrincipal(request);
+  if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
@@ -364,8 +473,25 @@ export async function PUT(
     return refusalResponse(upload.refusal, requestId);
   }
 
+  // A new version of a row already on record — the client sent the file
+  // back — lands on THAT row, under its own address, whatever the upload is
+  // called. Resolved before the JVM runs, so a row that is not this client's
+  // costs no inspection; a refusal here mints nothing, like every other.
+  const existing =
+    upload.documentId === undefined
+      ? undefined
+      : (await platform.listClientDocuments(clientId)).documents.find(
+          (doc) => doc.id === upload.documentId,
+        );
+  if (upload.documentId !== undefined && existing === undefined) {
+    return Response.json({ error: 'document_not_found', requestId }, { status: 404 });
+  }
+
   const outcome = await inspectPdfBytes(upload.bytes, requestId);
   if (!outcome.ok) {
+    await recordDocumentEvent(platform, clientId, principal, 'document_inspection_failed', existing?.id, {
+      detail: outcome.refusal.detail ?? outcome.refusal.error,
+    });
     return refusalResponse(outcome.refusal, requestId);
   }
 
@@ -377,9 +503,18 @@ export async function PUT(
   const name = upload.filename.trim().slice(0, MAX_UPLOAD_NAME) || 'upload.pdf';
 
   const now = new Date().toISOString();
+  const inputSha256 = sha256(upload.bytes);
   const document = await platform.ensureClientDocument(
     clientId,
-    { url: name, kind: 'pdf', source: 'upload' },
+    existing === undefined
+      ? { url: name, kind: 'pdf', source: 'upload', contentSha256: inputSha256 }
+      : {
+          url: existing.url,
+          kind: existing.kind,
+          source: existing.source,
+          ...(existing.foundOn === undefined ? {} : { foundOn: existing.foundOn }),
+          contentSha256: inputSha256,
+        },
     now,
   );
 
@@ -387,10 +522,11 @@ export async function PUT(
     id: requestId,
     clientId,
     documentId: document.id,
-    url: name,
-    source: 'upload',
+    url: document.url,
+    source: document.source,
     summary: outcome.summary,
     instrumentVersion: INSTRUMENT_VERSION,
+    inputSha256,
     inspectedAt: now,
   };
   await platform.saveDocumentInspection(record);
@@ -398,6 +534,10 @@ export async function PUT(
   // No host and no name: an upload has no URL, and the filename is as much a
   // path as a path is.
   logInfo('document_inspected', { requestId, clientId, ...logSafe(outcome.summary) });
+  await recordDocumentEvent(platform, clientId, principal, 'document_inspected', document.id, {
+    gaps: outcome.summary.gaps.length,
+    needs: outcome.summary.needs?.length ?? 0,
+  });
 
   return Response.json({ requestId, inspection: inspectionResponse(record) }, { status: 201 });
 }
