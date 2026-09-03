@@ -22,16 +22,13 @@
       "memory": 2048
     },
     "src/app/api/platform/clients/**/documents/convert/route.ts": {
-      "memory": 3009,
-      "maxDuration": 600
+      "memory": 3009
     },
     "src/app/api/documents/remediate/route.ts": {
-      "memory": 3009,
-      "maxDuration": 600
+      "memory": 3009
     },
     "src/app/api/documents/remediate-url/route.ts": {
-      "memory": 3009,
-      "maxDuration": 600
+      "memory": 3009
     },
     "src/app/api/documents/**/route.ts": {
       "memory": 2048

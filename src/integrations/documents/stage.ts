@@ -54,11 +54,13 @@ const DEFAULT_TIMEOUT_MS = 60_000;
  * The most heap the JVM may take, as an explicit flag rather than a default.
  *
  * Without `-Xmx` a JVM sizes its heap from the memory it can see, which on the
- * document functions is the whole 2048MB `vercel.json` grants them. That is the
- * budget for the Node process, the JVM's own metaspace, thread stacks and
- * native buffers as well — so a heap allowed to grow into all of it can push
- * the container into a platform OOM kill, which takes the request with it and
- * leaves nothing to report.
+ * document functions is everything `vercel.json` grants them — 2048MB on the
+ * routes that only read, 3009MB on the three that convert. That is the budget
+ * for the Node process, the JVM's own metaspace, thread stacks and native
+ * buffers as well — so a heap allowed to grow into all of it can push the
+ * container into a platform OOM kill, which takes the request with it and
+ * leaves nothing to report. The ceiling below is sized against the smaller
+ * grant, because one stage binary runs on both.
  *
  * The input is bounded at 25MB, but that bounds the *compressed* document.
  * `Inspect` calls `PDFTextStripper.getText`, which materialises the whole text

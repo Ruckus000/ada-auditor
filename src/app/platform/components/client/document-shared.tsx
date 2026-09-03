@@ -134,6 +134,40 @@ export async function refusalMessage(response: Response): Promise<string> {
 }
 
 /**
+ * An inspection's answer, and whether a batch may go on past it.
+ *
+ * "Inspect all unreviewed" is sequential and can be two hundred documents
+ * long. A budget refusal is the one answer that will be the same for every
+ * document after it, so the loop stops there rather than painting two
+ * hundred red rows. Every other refusal is about this document — a signed
+ * PDF in position three says nothing about position four — and the loop
+ * carries on.
+ */
+export async function inspectOutcome(
+  response: Response,
+): Promise<{ outcome: ActionOutcome; halts: boolean }> {
+  if (!response.ok) {
+    return {
+      outcome: { state: 'failed', message: await refusalMessage(response) },
+      halts: response.status === 429,
+    };
+  }
+  const payload = (await response.json().catch(() => null)) as
+    | { inspection?: { summary: Summary } }
+    | null;
+  if (!payload?.inspection) {
+    return {
+      outcome: { state: 'failed', message: 'The server answered without a reading.' },
+      halts: false,
+    };
+  }
+  return {
+    outcome: { state: 'done', summary: payload.inspection.summary, converted: false },
+    halts: false,
+  };
+}
+
+/**
  * The conversion response is the PDF itself, with the summary riding in a
  * header — one request, both halves. A refusal is JSON, same as everywhere.
  */

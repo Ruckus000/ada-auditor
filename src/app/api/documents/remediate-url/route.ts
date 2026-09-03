@@ -6,6 +6,7 @@ import { resolveJavaRuntime } from '../../../../integrations/documents/java-runt
 import { hostnameOf } from '../../../../services/safe-url';
 import { logInfo } from '../../../../services/logger';
 import { authorizePrincipal } from '../../_lib/authorize';
+import { documentBudgetRefusal } from '../../_lib/document-budget';
 import { fetchDocumentBytes } from '../../_lib/document-fetch';
 import { remediateWordBytes, remediationResponse } from '../../_lib/document-conversion';
 import { refusalResponse } from '../../_lib/document-upload';
@@ -61,6 +62,11 @@ export async function POST(request: Request) {
   if (!(await authorizePrincipal(request))) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
+
+  // Before the toolchain probe and the fetch: a caller past the ceiling costs
+  // this function nothing but the answer.
+  const capped = await documentBudgetRefusal(requestId);
+  if (capped) return refusalResponse(capped, requestId);
 
   // Both halves named separately, because the fixes differ: install
   // LibreOffice, or install a JDK. Checked before the fetch — no point

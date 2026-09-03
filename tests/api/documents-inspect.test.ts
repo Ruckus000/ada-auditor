@@ -30,6 +30,17 @@ vi.mock('../../src/app/api/_lib/authorize', () => ({
 
 const { POST } = await import('../../src/app/api/documents/inspect/route');
 const { documentStructureSchema } = await import('../../src/domain/document-structure');
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
+
+// The document budget counts in a process-wide singleton; each case starts
+// from an empty one and leaves no ceiling behind for the next file.
+beforeEach(() => setRunCounter(new MemoryRunCounter()));
+afterEach(() => {
+  resetRunCounter();
+  delete process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR;
+});
 
 const SECRET_HEADING = 'Ratepayer Jane Doe of 14 Mill Lane';
 
@@ -107,6 +118,37 @@ describe('POST /api/documents/inspect', () => {
     // JSON, never a document. A reading endpoint that returned bytes would be
     // claiming to have changed something.
     expect(response.headers.get('content-type')).toMatch(/application\/json/);
+  });
+
+  describe('the document budget', () => {
+    // Every JVM, converter and checker launch counts against one ceiling.
+    // Refused before the body is read: a caller past the ceiling must not be
+    // able to make the process buffer 25MB on the way to hearing no.
+    it('refuses the request past the ceiling before reading the body', async () => {
+      process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
+      expect((await POST(upload(pdfBytes()))).status).toBe(200);
+
+      const request = upload(pdfBytes());
+      const formData = vi.spyOn(request, 'formData');
+      const response = await POST(request);
+      const body = await response.json();
+
+      expect(response.status).toBe(429);
+      expect(body.error).toBe('document_budget_exceeded');
+      expect(body.detail).toBe('hour');
+      expect(body.message).toMatch(/resets in/);
+      expect(formData).not.toHaveBeenCalled();
+      expect(inspectDocument).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not spent by an unauthenticated caller', async () => {
+      process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
+      authorized.ok = false;
+      expect((await POST(upload(pdfBytes()))).status).toBe(401);
+
+      authorized.ok = true;
+      expect((await POST(upload(pdfBytes()))).status).toBe(200);
+    });
   });
 
   it('reports a missing title and language as gaps rather than fixing them', async () => {

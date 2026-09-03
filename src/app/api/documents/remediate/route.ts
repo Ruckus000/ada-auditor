@@ -101,6 +101,7 @@ export async function POST(request: Request) {
   // matters: authorise before buffering, cheap length check, toolchain, real
   // size, then container shape.
   const upload = await readDocumentUpload(request, {
+    requestId,
     accept: isWordOrPdf,
     // Only the JVM is required of every caller: a PDF repair reads and writes
     // with the Java stages alone. LibreOffice is checked below, once the

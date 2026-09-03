@@ -60,6 +60,15 @@ const { POST, PUT } = await import(
   '../../src/app/api/platform/clients/[clientId]/documents/convert/route'
 );
 const { documentStructureSchema } = await import('../../src/domain/document-structure');
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
+
+beforeEach(() => setRunCounter(new MemoryRunCounter()));
+afterEach(() => {
+  resetRunCounter();
+  delete process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR;
+});
 const { MemoryPlatformStore, resetPlatformStore, setPlatformStore } = await import(
   '../../src/integrations/persistence'
 );
@@ -306,6 +315,19 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     resetPlatformStore();
+  });
+
+  it('refuses past the document ceiling before fetching or converting', async () => {
+    process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
+    expect((await POST(request({ url: DOC_URL }), params('acme'))).status).toBe(200);
+    fetchSpy.mockClear();
+    convertSourceToPdf.mockClear();
+
+    expect((await POST(request({ url: DOC_URL }), params('acme'))).status).toBe(429);
+    expect((await PUT(uploadRequest(docxBytes()), params('acme'))).status).toBe(429);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(convertSourceToPdf).not.toHaveBeenCalled();
+    expect((await platform.listClientDocuments('acme')).documents).toHaveLength(1);
   });
 
   it('converts by URL, returns the PDF, and records the conversion with its hashes', async () => {

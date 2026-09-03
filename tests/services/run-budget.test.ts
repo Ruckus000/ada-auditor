@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  DEFAULT_MAX_DOCUMENTS_PER_DAY,
+  DEFAULT_MAX_DOCUMENTS_PER_HOUR,
   DEFAULT_MAX_PREVIEWS_PER_HOUR,
   DEFAULT_MAX_RUNS_PER_DAY,
   DEFAULT_MAX_RUNS_PER_HOUR,
+  consumeDocumentBudget,
   consumePreviewBudget,
   consumeRunBudget,
+  documentBudgetLimits,
   runBudgetLimits,
   windowKeys,
   type RunCounter,
@@ -167,5 +171,81 @@ describe('consumePreviewBudget', () => {
     expect(
       (await consumePreviewBudget(counts, NOON, { AUDITOR_MAX_PREVIEWS_PER_HOUR: '1' })).allowed,
     ).toBe(false);
+  });
+});
+
+describe('consumeDocumentBudget', () => {
+  /**
+   * The third counter. Document work — a JVM, LibreOffice, veraPDF — used to
+   * be authenticated and uncounted, so a leaked token or a caller in a loop
+   * had nothing in the way. Same shape as the other two: its own keys, its
+   * own env, the same windows and the same fail-open.
+   */
+  it('touches only its own keys', async () => {
+    const counts = counter();
+
+    await consumeDocumentBudget(counts, NOON, {});
+
+    expect(Object.keys(counts.counts)).toEqual([
+      'documents:hour:2026081012',
+      'documents:day:20260810',
+    ]);
+  });
+
+  it('is not refused by a spent run or preview budget', async () => {
+    const counts = counter({
+      'runs:hour:2026081012': DEFAULT_MAX_RUNS_PER_HOUR,
+      'runs:day:20260810': DEFAULT_MAX_RUNS_PER_DAY,
+      'previews:hour:2026081012': DEFAULT_MAX_PREVIEWS_PER_HOUR,
+    });
+
+    expect(await consumeDocumentBudget(counts, NOON, {})).toEqual({ allowed: true });
+  });
+
+  it('refuses once its own hourly ceiling is reached, and says when it resets', async () => {
+    const counts = counter({ 'documents:hour:2026081012': DEFAULT_MAX_DOCUMENTS_PER_HOUR });
+
+    const verdict = await consumeDocumentBudget(counts, NOON, {});
+
+    expect(verdict).toEqual({ allowed: false, window: 'hour', resetsInSeconds: 1785 });
+  });
+
+  it('takes its ceiling from its own env var, not the run one', async () => {
+    const counts = counter();
+
+    expect(
+      (await consumeDocumentBudget(counts, NOON, { AUDITOR_MAX_RUNS_PER_HOUR: '1' })).allowed,
+    ).toBe(true);
+    expect(
+      (await consumeDocumentBudget(counts, NOON, { AUDITOR_MAX_DOCUMENTS_PER_HOUR: '1' })).allowed,
+    ).toBe(false);
+  });
+
+  // Sized against real use: "Inspect all unreviewed" walks an inventory of up
+  // to 200 documents in one click, and the blind harness posts 150 rows in one
+  // run. A ceiling below either would refuse the product's own workflows.
+  it('defaults above one full inventory sweep per hour', () => {
+    expect(DEFAULT_MAX_DOCUMENTS_PER_HOUR).toBeGreaterThanOrEqual(200);
+    expect(DEFAULT_MAX_DOCUMENTS_PER_DAY).toBeGreaterThan(DEFAULT_MAX_DOCUMENTS_PER_HOUR);
+    expect(documentBudgetLimits({})).toEqual({
+      perHour: DEFAULT_MAX_DOCUMENTS_PER_HOUR,
+      perDay: DEFAULT_MAX_DOCUMENTS_PER_DAY,
+    });
+  });
+
+  it('names its own counter when it degrades', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const broken: RunCounter = {
+      async increment() {
+        throw new Error('ECONNREFUSED');
+      },
+    };
+
+    expect(await consumeDocumentBudget(broken, NOON, {})).toEqual({ allowed: true });
+    const line = JSON.parse(warn.mock.calls[0]![0] as string);
+    expect(line.type).toBe('run_budget_degraded');
+    expect(line.budget).toBe('documents');
+
+    warn.mockRestore();
   });
 });

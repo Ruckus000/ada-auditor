@@ -48,6 +48,16 @@ describe('readDeploymentConfig', () => {
     expect(get({}, 'chaos')?.degraded).toBe(false);
   });
 
+  it('shows the document budget beside the run budget, from its own variables', () => {
+    // The screen's purpose is to show where the truth lives; a ceiling that
+    // exists in code and not on this screen is one an operator learns about
+    // from a 429.
+    expect(get({}, 'documentBudget')).toMatchObject({ value: '500/hour, 2000/day', degraded: true });
+    expect(
+      get({ AUDITOR_MAX_DOCUMENTS_PER_HOUR: '7', KV_REST_API_URL: 'https://kv.example' }, 'documentBudget'),
+    ).toMatchObject({ value: '7/hour, 2000/day', degraded: false });
+  });
+
   it('does not treat a missing advisory key as a degradation', () => {
     // Advisory findings never gate a build, and their absence is never a run
     // failure. Flagging it would train an operator to ignore the warnings.

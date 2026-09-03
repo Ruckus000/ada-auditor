@@ -1,5 +1,6 @@
 import type { UploadCheck } from '../../../domain/document-remediation';
 import { authorizePrincipal } from './authorize';
+import { documentBudgetRefusal } from './document-budget';
 
 /**
  * Everything two document endpoints must agree on before a file is trusted.
@@ -24,11 +25,11 @@ import { authorizePrincipal } from './authorize';
  */
 
 /** 25MB. A municipal agenda is tens of kilobytes; this is a ceiling. */
-const DEFAULT_MAX_BYTES = 25 * 1024 * 1024;
+export const DEFAULT_MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
 
 export function maxDocumentBytes(env: NodeJS.ProcessEnv = process.env): number {
   const raw = Number(env.AUDITOR_MAX_DOCUMENT_BYTES);
-  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_MAX_BYTES;
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_MAX_DOCUMENT_BYTES;
 }
 
 export type UploadRefusal = {
@@ -99,6 +100,8 @@ export type ReadUploadOptions = {
    */
   requires?: { error: string; check: () => { available: true } | { available: false; reason: string } }[];
   env?: NodeJS.ProcessEnv;
+  /** For the budget refusal's log line, so it can be found with the request. */
+  requestId?: string;
 };
 
 export async function readDocumentUpload(
@@ -113,6 +116,13 @@ export async function readDocumentUpload(
   if (!(await authorizePrincipal(request))) {
     return refuse(401, 'unauthorized');
   }
+
+  // Second, and before `Content-Length` is even read: a caller past the
+  // ceiling must not be able to make this process buffer a body on the way
+  // to hearing no. After authorisation, so an unauthenticated caller cannot
+  // spend it.
+  const capped = await documentBudgetRefusal(options.requestId);
+  if (capped) return { ok: false, refusal: capped };
 
   const limit = maxDocumentBytes(options.env);
 

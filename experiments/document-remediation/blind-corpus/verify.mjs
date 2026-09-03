@@ -136,6 +136,65 @@ function verifyPdf(key, bytes, path) {
 
 const OOXML_MAIN = 'word/document.xml';
 
+/**
+ * A heading is a paragraph with an OUTLINE LEVEL. A style called `HeadingN`
+ * is only the commonest way to acquire one.
+ *
+ * This verifier matched on the style name for as long as it existed, and that
+ * was the exact reader `w19-outline-level-headings` was planted to prove
+ * wrong: a direct `w:outlineLvl` on an unstyled paragraph, and a custom style
+ * that inherits its level through `w:basedOn`. The commit that added the row
+ * taught the builders and `author-real-keys.mjs` what a heading is and left
+ * this file reading zero against a key of three — so the corpus was right and
+ * the instrument checking it was the drift.
+ *
+ * The same three shapes as `author-real-keys.mjs` (`styleLevel` and the
+ * paragraph loop), written twice for the reason that file gives: the
+ * independence test keeps these files to their own directory, and one person
+ * writing a rule twice is the price. Two verify-local rules on top, both
+ * because the planted keys were authored with them: only paragraphs that
+ * carry text count (`removeEmptyHeadings` deletes the blank ones on the way
+ * through), and a heading style inside a table cell is a cell, not an outline
+ * entry.
+ */
+function countHeadings(doc, styles) {
+  const own = new Map();
+  const basedOn = new Map();
+  for (const block of styles.matchAll(/<w:style [^>]*w:styleId="([^"]+)"[\s\S]*?<\/w:style>/g)) {
+    const level = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(block[0]);
+    if (level) own.set(block[1], Number(level[1]) + 1);
+    const parent = /<w:basedOn w:val="([^"]+)"\s*\/?>/.exec(block[0]);
+    if (parent) basedOn.set(block[1], parent[1]);
+  }
+  // Depth-bounded rather than cycle-detected: a malformed style graph is a
+  // document defect and must not hang the verifier.
+  const styleLevel = new Map(own);
+  for (const id of basedOn.keys()) {
+    if (styleLevel.has(id)) continue;
+    let cursor = id;
+    for (let hop = 0; hop < 8; hop += 1) {
+      cursor = basedOn.get(cursor);
+      if (cursor === undefined) break;
+      if (own.has(cursor)) { styleLevel.set(id, own.get(cursor)); break; }
+    }
+  }
+
+  const outsideTables = doc.replace(/<w:tc\b[^>]*>[\s\S]*?<\/w:tc>/g, '');
+  let headings = 0;
+  for (const m of outsideTables.matchAll(/<w:p[ >][\s\S]*?<\/w:p>/g)) {
+    const para = m[0];
+    const text = [...para.matchAll(/<w:t(?: [^>]*)?>([\s\S]*?)<\/w:t>/g)].map((t) => t[1]).join('');
+    if (text.trim() === '') continue;
+    const direct = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(para);
+    const style = /w:pStyle w:val="([^"]+)"/.exec(para)?.[1];
+    const fromStyle = style
+      ? styleLevel.get(style) ?? (/^Heading[1-9]$/.test(style) ? Number(style.slice(7)) : null)
+      : null;
+    if (direct || fromStyle !== null) headings += 1;
+  }
+  return headings;
+}
+
 function verifyDocx(key, path) {
   let names;
   try {
@@ -168,15 +227,11 @@ function verifyDocx(key, path) {
   }
 
   const counts = {
-    headings: (doc.match(/w:val="Heading\d"/g) ?? []).length,
+    headings: countHeadings(doc, styles),
     tables: (doc.match(/<w:tbl>/g) ?? []).length,
     lists: (doc.match(/<w:numPr>/g) ?? []).length > 0 ? 1 : 0,
     figures: (doc.match(/<w:drawing>/g) ?? []).length,
   };
-  // Heading styles also appear inside table header cells, which are cells and
-  // not outline headings — subtract what the table planted.
-  const inTableHeaders = (doc.match(/<w:tc>(?:(?!<\/w:tc>).)*w:val="Heading\d"/gs) ?? []).length;
-  counts.headings -= inTableHeaders;
 
   const expected = key.expected?.counts;
   if (expected) {

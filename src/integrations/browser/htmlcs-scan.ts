@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import type { Page } from 'playwright-core';
 import type { AxeScanResult } from '../../services/deterministic-audit';
 import type { HtmlcsLevel, HtmlcsMessage, HtmlcsScanResult } from '../../services/htmlcs-audit';
+import { DEFAULT_HTMLCS_TIMEOUT_MS } from '../../domain/run-limits';
 import { logWarn } from '../../services/logger';
 import { normaliseCriterion } from '../../services/wcag-reference';
 
@@ -48,12 +49,10 @@ const htmlcsVersion: string = (
 /** Named in `RUN_RULESET` beside the axe version — same instrument-change rule. */
 export const HTMLCS_ENGINE = `htmlcs@${htmlcsVersion}:${HTMLCS_STANDARD}`;
 
-const DEFAULT_TIMEOUT_MS = 15_000;
-
 export function resolveHtmlcsTimeoutMs(explicit?: number): number {
   if (typeof explicit === 'number' && Number.isFinite(explicit) && explicit > 0) return explicit;
   const configured = Number(process.env.AUDITOR_HTMLCS_TIMEOUT_MS);
-  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_TIMEOUT_MS;
+  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_HTMLCS_TIMEOUT_MS;
 }
 
 let cachedSource: string | null = null;

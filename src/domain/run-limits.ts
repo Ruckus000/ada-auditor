@@ -33,6 +33,23 @@
 export const DEFAULT_MAX_PAGES_PER_RUN = 20;
 
 /**
+ * How long the HTML_CodeSniffer second opinion may run per page. It shares
+ * the walk budget and can never gate a run, so on expiry the page keeps its
+ * axe results and simply has no second opinion. Read by `htmlcs-scan.ts`;
+ * declared here so the number `.env.example` states is the number the code
+ * uses, checked by `tests/deploy/env-example.test.ts`.
+ */
+export const DEFAULT_HTMLCS_TIMEOUT_MS = 15_000;
+
+/**
+ * Most journeys the hourly tick dispatches. Each is its own invocation with
+ * its own Chromium, so this and the run budget are what stop one tick
+ * launching a fleet. Read by `cron/tick`; declared here for the same reason
+ * as the timeout above.
+ */
+export const DEFAULT_MAX_STARTS_PER_TICK = 3;
+
+/**
  * The ceiling a run has to fit inside, mirroring `maxDuration` on the browser
  * routes. Hobby allows 300s; Pro allows 800s.
  *

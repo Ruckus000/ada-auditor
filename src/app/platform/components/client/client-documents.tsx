@@ -10,14 +10,13 @@ import {
   buttonStyle,
   conversionOutcome,
   disabledStyle,
+  inspectOutcome,
   noteStyle,
   pathOf,
   pdfNameFor,
-  refusalMessage,
   type ActionOutcome,
   type ClientDocument,
   type StateCounts,
-  type Summary,
 } from './document-shared';
 
 /**
@@ -104,6 +103,7 @@ export function ClientDocuments({
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [batch, setBatch] = useState<{ done: number; total: number } | null>(null);
+  const [batchNote, setBatchNote] = useState<string | null>(null);
 
   const documentsPath = `/api/platform/clients/${encodeURIComponent(clientId)}/documents`;
 
@@ -190,7 +190,8 @@ export function ClientDocuments({
     });
   }
 
-  async function inspect(doc: ClientDocument): Promise<void> {
+  /** Resolves to whether a batch should stop here — see `inspectOutcome`. */
+  async function inspect(doc: ClientDocument): Promise<boolean> {
     setOutcome(doc.url, { state: 'running' });
     try {
       const response = await fetch(documentsPath, {
@@ -201,21 +202,13 @@ export function ClientDocuments({
           ...(doc.foundOn === undefined ? {} : { foundOn: doc.foundOn }),
         }),
       });
-      if (!response.ok) {
-        setOutcome(doc.url, { state: 'failed', message: await refusalMessage(response) });
-        return;
-      }
-      const payload = (await response.json().catch(() => null)) as
-        | { inspection?: { summary: Summary } }
-        | null;
-      if (!payload?.inspection) {
-        setOutcome(doc.url, { state: 'failed', message: 'The server answered without a reading.' });
-        return;
-      }
-      setOutcome(doc.url, { state: 'done', summary: payload.inspection.summary, converted: false });
-      void loadInventory();
+      const { outcome, halts } = await inspectOutcome(response);
+      setOutcome(doc.url, outcome);
+      if (outcome.state === 'done') void loadInventory();
+      return halts;
     } catch {
       setOutcome(doc.url, { state: 'failed', message: 'Could not reach the server.' });
+      return false;
     }
   }
 
@@ -243,8 +236,16 @@ export function ClientDocuments({
   async function inspectAllUnreviewed(): Promise<void> {
     const pending = (documents ?? []).filter((doc) => doc.kind === 'pdf' && doc.state === 'not-reviewed');
     setBatch({ done: 0, total: pending.length });
+    setBatchNote(null);
     for (const [index, doc] of pending.entries()) {
-      await inspect(doc);
+      if (await inspect(doc)) {
+        // The document ceiling is spent; every row after this one would say
+        // the same thing. The refused row's own message says when it resets.
+        setBatchNote(
+          `Stopped after ${index} of ${pending.length}: document work is capped for now. The last row says when it resets.`,
+        );
+        break;
+      }
       setBatch({ done: index + 1, total: pending.length });
     }
     setBatch(null);
@@ -296,6 +297,11 @@ export function ClientDocuments({
                 ? `Inspect all unreviewed PDFs (${unreviewedPdfs})`
                 : `Inspecting ${batch.done} of ${batch.total} — keep this tab open`}
             </button>
+          ) : null}
+          {batchNote !== null ? (
+            <p role="status" style={{ ...noteStyle, maxWidth: 360, textAlign: 'right' }}>
+              {batchNote}
+            </p>
           ) : null}
         </span>
       </div>

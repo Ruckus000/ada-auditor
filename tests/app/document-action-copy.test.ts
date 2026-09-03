@@ -34,6 +34,7 @@ const ROUTE_CODES = [
   'repair_refused',
   'conversion_not_found',
   'artifact_not_stored',
+  'document_budget_exceeded',
 ];
 
 describe('describeDocumentRefusal', () => {
@@ -69,6 +70,19 @@ describe('describeDocumentRefusal', () => {
     ).toMatch(/LibreOffice/);
     expect(describeDocumentRefusal({ error: 'remediation_failed', detail: 'not-tagged' })).toMatch(
       /no structure|untagged/i,
+    );
+  });
+
+  it('passes on the budget refusal in the route\'s words, which say when it resets', () => {
+    const copy = describeDocumentRefusal({
+      error: 'document_budget_exceeded',
+      detail: 'hour',
+      message: 'Document work is capped at 500 per hour and this hour is spent. It resets in 12 minutes.',
+    });
+    expect(copy).toContain('12 minutes');
+    // Without the route's sentence there is still a next step, not a code.
+    expect(describeDocumentRefusal({ error: 'document_budget_exceeded', detail: 'day' })).toMatch(
+      /capped|later/i,
     );
   });
 

@@ -71,8 +71,9 @@ describe('runStage', () => {
    * The heap ceiling is on the command line, not left to the JVM's default.
    *
    * A JVM with no `-Xmx` sizes its heap from the memory it can see, which on
-   * the document functions is the whole 2048MB `vercel.json` grants them — the
-   * budget for Node, metaspace, thread stacks and native buffers too. A
+   * the document functions is everything `vercel.json` grants them — 2048MB on
+   * the routes that only read — and that is the budget for Node, metaspace,
+   * thread stacks and native buffers too. A
    * document that expands past that takes the container with it and reports
    * nothing, where a bounded heap reports a stage failure naming the document.
    *

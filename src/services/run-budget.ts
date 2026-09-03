@@ -63,9 +63,39 @@ export const DEFAULT_MAX_RUNS_PER_DAY = 100;
 export const DEFAULT_MAX_PREVIEWS_PER_HOUR = 40;
 export const DEFAULT_MAX_PREVIEWS_PER_DAY = 200;
 
+/**
+ * Document work counts against a third ceiling.
+ *
+ * Every inspection, conversion, repair and intake launches a JVM — and a
+ * converter for Word — on a function that may run five minutes. Until this
+ * counter existed those routes were authenticated and uncounted, so a leaked
+ * machine token or a caller in a loop had nothing in the way at all, and the
+ * two budgets above defended only the audits.
+ *
+ * Its own counter for the reason previews have one: "Inspect all unreviewed"
+ * walks an inventory of up to two hundred documents in one click, and on a
+ * shared counter one sweep would spend every audit a client had bought.
+ *
+ * One counter rather than one per kind. A conversion costs ten times what an
+ * inspection does, but what is being bounded is function time under a caller
+ * that should not be there, and one number bounds it. Sized against real use,
+ * not a guess at abuse: an inventory sweep is two hundred requests, the blind
+ * harness posts a hundred and fifty rows in one run, and at roughly ten
+ * seconds of function time a launch, five hundred an hour is about the same
+ * function-minutes the run ceiling already permits. A starting point, like
+ * the preview defaults; `document_inspected` and `document_converted` carry
+ * the durations that will replace it.
+ */
+export const DEFAULT_MAX_DOCUMENTS_PER_HOUR = 500;
+export const DEFAULT_MAX_DOCUMENTS_PER_DAY = 2000;
+
+type BudgetPrefix = 'runs' | 'previews' | 'documents';
+
 /** What separates one budget from another: its counter keys and its limits. */
 type BudgetSpec = {
-  prefix: 'runs' | 'previews';
+  prefix: BudgetPrefix;
+  /** What one unit of it is called when the degraded log line names it. */
+  noun: string;
   hourEnv: string;
   dayEnv: string;
   hourDefault: number;
@@ -74,6 +104,7 @@ type BudgetSpec = {
 
 const RUNS: BudgetSpec = {
   prefix: 'runs',
+  noun: 'run',
   hourEnv: 'AUDITOR_MAX_RUNS_PER_HOUR',
   dayEnv: 'AUDITOR_MAX_RUNS_PER_DAY',
   hourDefault: DEFAULT_MAX_RUNS_PER_HOUR,
@@ -82,10 +113,20 @@ const RUNS: BudgetSpec = {
 
 const PREVIEWS: BudgetSpec = {
   prefix: 'previews',
+  noun: 'preview',
   hourEnv: 'AUDITOR_MAX_PREVIEWS_PER_HOUR',
   dayEnv: 'AUDITOR_MAX_PREVIEWS_PER_DAY',
   hourDefault: DEFAULT_MAX_PREVIEWS_PER_HOUR,
   dayDefault: DEFAULT_MAX_PREVIEWS_PER_DAY,
+};
+
+const DOCUMENTS: BudgetSpec = {
+  prefix: 'documents',
+  noun: 'document action',
+  hourEnv: 'AUDITOR_MAX_DOCUMENTS_PER_HOUR',
+  dayEnv: 'AUDITOR_MAX_DOCUMENTS_PER_DAY',
+  hourDefault: DEFAULT_MAX_DOCUMENTS_PER_HOUR,
+  dayDefault: DEFAULT_MAX_DOCUMENTS_PER_DAY,
 };
 
 export type Env = Record<string, string | undefined>;
@@ -113,7 +154,7 @@ export type BudgetVerdict = {
  */
 export function windowKeys(
   now: Date,
-  prefix: 'runs' | 'previews' = 'runs',
+  prefix: BudgetPrefix = 'runs',
 ): { hour: string; day: string } {
   const iso = now.toISOString();
   const day = iso.slice(0, 10).replace(/-/g, '');
@@ -159,6 +200,20 @@ export async function consumePreviewBudget(
   return consumeBudget(PREVIEWS, counter, now, env);
 }
 
+/**
+ * The same, spent against the document ceiling — one call per inspection,
+ * conversion, repair or intake, made before the body is buffered or the
+ * document fetched, so a caller past the ceiling costs the function nothing
+ * but the answer.
+ */
+export async function consumeDocumentBudget(
+  counter: RunCounter,
+  now: Date = new Date(),
+  env: Env = process.env,
+): Promise<BudgetVerdict> {
+  return consumeBudget(DOCUMENTS, counter, now, env);
+}
+
 async function consumeBudget(
   spec: BudgetSpec,
   counter: RunCounter,
@@ -176,14 +231,12 @@ async function consumeBudget(
     dayCount = await counter.increment(keys.day, secondsToNextDay(now));
   } catch (error) {
     logWarn('run_budget_degraded', {
-      // Which ceiling stopped being enforced, now that there are two of them.
-      // Without this the line cannot tell "we stopped counting audits" from
-      // "we stopped counting previews", and those are different sizes of
-      // problem — one is the bill, the other is browser time.
+      // Which ceiling stopped being enforced, now that there are three of
+      // them. Without this the line cannot tell "we stopped counting audits"
+      // from "we stopped counting previews", and those are different sizes
+      // of problem — one is the bill, the other is browser time.
       budget: spec.prefix,
-      note: `The ${spec.prefix} counter is unreachable, so this ${
-        spec.prefix === 'runs' ? 'run' : 'preview'
-      } was allowed uncounted.`,
+      note: `The ${spec.prefix} counter is unreachable, so this ${spec.noun} was allowed uncounted.`,
       reason: error instanceof Error ? error.message : 'unknown error',
     });
     return { allowed: true };
@@ -201,8 +254,17 @@ async function consumeBudget(
 
 /** What the settings screen and `/api/ready` report. */
 export function runBudgetLimits(env: Env = process.env): { perHour: number; perDay: number } {
+  return limitsOf(RUNS, env);
+}
+
+/** The document ceiling, for the settings screen and the refusal's sentence. */
+export function documentBudgetLimits(env: Env = process.env): { perHour: number; perDay: number } {
+  return limitsOf(DOCUMENTS, env);
+}
+
+function limitsOf(spec: BudgetSpec, env: Env): { perHour: number; perDay: number } {
   return {
-    perHour: limitFrom(env, 'AUDITOR_MAX_RUNS_PER_HOUR', DEFAULT_MAX_RUNS_PER_HOUR),
-    perDay: limitFrom(env, 'AUDITOR_MAX_RUNS_PER_DAY', DEFAULT_MAX_RUNS_PER_DAY),
+    perHour: limitFrom(env, spec.hourEnv, spec.hourDefault),
+    perDay: limitFrom(env, spec.dayEnv, spec.dayDefault),
   };
 }

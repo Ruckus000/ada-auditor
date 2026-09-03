@@ -5,6 +5,7 @@ import { normalizeAppPath } from 'next/dist/shared/lib/router/utils/app-paths';
 import picomatch from 'picomatch';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import nextConfig from '../../next.config.mjs';
+import { MAX_RUN_DURATION_MS } from '../../src/domain/run-limits';
 
 /**
  * The deployment config knows something the code does not, and nothing checks it.
@@ -226,7 +227,7 @@ function routePath(file: string): string {
 }
 
 const vercelConfig = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
-  functions: Record<string, { memory?: number }>;
+  functions: Record<string, { memory?: number; maxDuration?: number }>;
 };
 
 const tracingIncludes = (nextConfig.outputFileTracingIncludes ?? {}) as Record<string, string[]>;
@@ -271,6 +272,42 @@ const SOFFICE_SPAWN = join(SRC_ROOT, 'integrations', 'documents', 'convert.ts');
 const convertingRoutes = routeFiles(API_DIR).filter((file) =>
   reachesFrom(file, SOFFICE_SPAWN, SRC_ROOT),
 );
+
+/** `export const maxDuration = 300;` in a route file, or `null` when absent. */
+function exportedMaxDuration(file: string): number | null {
+  const match = /export const maxDuration\s*=\s*(\d+)\s*;/.exec(readFileSync(file, 'utf8'));
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * How long a function may run has one home, and it is the route file.
+ *
+ * `vercel.json` can also carry `maxDuration`, and for three weeks it did — 600
+ * on the three converting routes, while those files exported 300. Two sources
+ * for one number is how a document about the ceiling comes to be wrong: every
+ * timeout, stale-run window and reserve in this tree is derived from 300
+ * (`MAX_RUN_DURATION_MS`), and a config file saying otherwise beside them is
+ * either inert or contradicting them, and nothing said which. `docs/env.md`
+ * states the rule; this is what keeps it true.
+ */
+describe('how long a function may run', () => {
+  it('is declared in the route files and never in vercel.json', () => {
+    for (const [key, entry] of Object.entries(vercelConfig.functions)) {
+      expect(entry.maxDuration, `${key} sets maxDuration in vercel.json`).toBeUndefined();
+    }
+  });
+
+  it('never exceeds the ceiling the rest of the tree is derived from', () => {
+    const declared = routeFiles(join(SRC_ROOT, 'app'))
+      .map((file) => [file, exportedMaxDuration(file)] as const)
+      .filter((pair): pair is readonly [string, number] => pair[1] !== null);
+
+    expect(declared.length, 'no route declares a maxDuration').toBeGreaterThan(0);
+    for (const [file, seconds] of declared) {
+      expect(seconds, file).toBeLessThanOrEqual(MAX_RUN_DURATION_MS / 1000);
+    }
+  });
+});
 
 /**
  * The walk itself, against a tree written for the purpose.
@@ -505,6 +542,15 @@ describe('routes that convert with LibreOffice', () => {
     // key carrying one binary and not the other fails at a different step but
     // fails just as completely.
     expect(included, 'the jlink-assembled runtime').toContain('vendor/jre');
+  });
+
+  it('each declares how long it may run, in the route file', () => {
+    // A JVM and a converter are the two things on this tree that take real
+    // wall-clock; a route that spawns one without saying its ceiling gets the
+    // platform default, which has changed twice.
+    for (const file of new Set([...jvmRoutes, ...convertingRoutes])) {
+      expect(exportedMaxDuration(file), `${file} exports no maxDuration`).not.toBeNull();
+    }
   });
 
   it('never carries LibreOffice on a route that only reads', () => {
