@@ -107,6 +107,12 @@ describe('describeDocumentRefusal', () => {
     expect(describeDocumentRefusal({ status: 502 })).toBe('The action stopped: http 502.');
   });
 
+  it('names the platform body cap when a 413 arrives with no code', () => {
+    // The platform refuses a body over 4.5 MB before the route runs, so there
+    // is no JSON and no code — only the status says what happened.
+    expect(describeDocumentRefusal({ status: 413 })).toMatch(/4\.5 ?MB|larger than/i);
+  });
+
   it('does not walk the prototype for a hostile code', () => {
     expect(describeDocumentRefusal({ error: '__proto__' })).toBe('The action stopped: __proto__.');
   });

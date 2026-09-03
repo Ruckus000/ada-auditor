@@ -97,7 +97,10 @@ export function describeDocumentRefusal(refusal: DocumentRefusal): string {
     case 'repair_failed':
       return repairStep(refusal.detail);
     case 'repair_refused':
-      return `${refusal.message ?? 'This PDF cannot be repaired here'}. Mark it requested from the client below, and attach the new file when it arrives.`;
+      // Surface-neutral on purpose: this sentence is read on a client's
+      // inventory, where the request is a click, and on the one-off screen,
+      // where there is no client and nothing below.
+      return `${refusal.message ?? 'This PDF cannot be repaired here'}. This needs the client: a Word source to convert, or a re-issued file — on a client's inventory, mark it requested and attach what arrives.`;
     case 'conversion_not_found':
       return 'That delivered file is no longer on record.';
     case 'artifact_not_stored':
@@ -117,6 +120,11 @@ export function describeDocumentRefusal(refusal: DocumentRefusal): string {
         'Document work is capped for now and this window is spent. Try again later — the hourly ceiling resets on the hour.'
       );
     case undefined:
+      // A 413 with no body is the platform's, not ours: on Vercel a function's
+      // request body is capped at 4.5 MB before any route runs.
+      if (refusal.status === 413) {
+        return 'The file is larger than the platform accepts (4.5 MB on Vercel), so it never reached us. Use a smaller file, or point the inventory at its address instead.';
+      }
       return `The action stopped: http ${refusal.status ?? 0}.`;
     default:
       // A code with no entry here is one the routes grew and this map did not.

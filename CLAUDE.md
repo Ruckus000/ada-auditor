@@ -124,8 +124,9 @@ centre:
   `platforms/` (WordPress/React/generic adapters), `documents/` (the Java/PDFBox
   document stages — see its own README).
 - **`src/app`** — Next.js App Router only: 20 API routes under `api/`, the
-  operator console under `(platform)/`, and `r/[token]/` — the single public
-  report surface outside the auth gate.
+  operator console under `(platform)/` (including `/remediate`, the one-off
+  screen over the stateless `api/documents/*` routes — nothing recorded), and
+  `r/[token]/` — the single public report surface outside the auth gate.
 
 ### How an audit flows
 

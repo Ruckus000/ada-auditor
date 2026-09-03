@@ -296,6 +296,11 @@ export function runBudgetLimits(env: Env = process.env): { perHour: number; perD
   return limitsOf(RUNS, env);
 }
 
+/** The preview ceiling, for the settings screen. */
+export function previewBudgetLimits(env: Env = process.env): { perHour: number; perDay: number } {
+  return limitsOf(PREVIEWS, env);
+}
+
 /** The document ceiling, for the settings screen and the refusal's sentence. */
 export function documentBudgetLimits(env: Env = process.env): { perHour: number; perDay: number } {
   return limitsOf(DOCUMENTS, env);

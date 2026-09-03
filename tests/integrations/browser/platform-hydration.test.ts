@@ -294,6 +294,7 @@ const ROUTES = [
   '/activity',
   '/settings',
   '/reports',
+  '/remediate',
   '/clients/new',
   `/clients/${CLIENT}`,
   `/clients/${CLIENT}/setup`,
@@ -2239,6 +2240,50 @@ describe('platform hydration', () => {
         await expect
           .poll(() => page.getByRole('row').filter({ hasText: 'workbench-fixture.pdf' }).first().innerText(), { timeout: 15_000 })
           .toContain('Waiting on client');
+      } finally {
+        await page.close();
+      }
+    },
+    180_000,
+  );
+
+  it.runIf(documentToolchain.available)(
+    'the one-off screen reads a file, takes a language, and answers honestly',
+    async () => {
+      requireCurrentStages();
+
+      // Nothing recorded: upload, read, declare a language, run. A Chromium
+      // print is untagged, so the honest outcome is a refusal rendered as a
+      // sentence — never a code — and the page stays axe-clean throughout.
+      const page = await openAuthenticatedPage();
+      try {
+        const pdf = await renderPdf('<h1>One-off fixture</h1><p>An untagged print.</p>');
+        await page.goto(`${BASE}/remediate`, { waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'input'), { timeout: 15_000 }).toBe(true);
+
+        await page.getByLabel('The file').setInputFiles({
+          name: 'one-off-fixture.pdf',
+          mimeType: 'application/pdf',
+          buffer: pdf,
+        });
+        await expect.poll(() => page.locator('main').innerText(), { timeout: 60_000 }).toContain('Not tagged');
+
+        const language = page.getByRole('region', { name: 'Language' });
+        if ((await language.count()) > 0) {
+          await language.getByRole('combobox').selectOption('en');
+        }
+        // Exact: the header's "Remediate a file" tab is a button too.
+        await page.getByRole('button', { name: 'Remediate', exact: true }).click();
+
+        const outcome = page.getByRole('alert').or(page.getByRole('status'));
+        await expect.poll(() => outcome.first().innerText(), { timeout: 60_000 }).toMatch(
+          /Download |no structure tree|cannot be repaired/i,
+        );
+        const text = await outcome.first().innerText();
+        expect(text).not.toMatch(/repair_refused|not-tagged/);
+        await expect
+          .poll(() => axeViolations(page), { ...AXE_SETTLE, message: 'the one-off screen after a run' })
+          .toBe('');
       } finally {
         await page.close();
       }

@@ -9,6 +9,7 @@ const WORKSPACE_TABS: Array<[WorkspaceScreen, string]> = [
   ['portfolio', 'Portfolio'],
   ['reports', 'Reports'],
   ['activity', 'Activity'],
+  ['remediate', 'Remediate a file'],
   ['settings', 'Settings'],
 ];
 

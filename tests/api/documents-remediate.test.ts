@@ -625,6 +625,8 @@ describe('GET /api/documents/remediate', () => {
 describe('answers posted with the file', () => {
   beforeEach(() => {
     checkUa1.mockReset();
+    inspectDocument.mockReset();
+    finishDocument.mockReset();
     runtimes.soffice = true;
     runtimes.java = true;
     authorized.ok = true;
@@ -651,6 +653,38 @@ describe('answers posted with the file', () => {
     expect(response.status).toBe(422);
     expect(await response.json()).toMatchObject({ error: 'repair_refused', detail: 'answer-mismatch' });
     expect(finishDocument).not.toHaveBeenCalled();
+  });
+
+  it('writes a description a person declared for these exact bytes, and says so in the header', async () => {
+    // The happy path the one-off screen relies on: the sha of the uploaded
+    // bytes, the figure's target copied from the reading, a description —
+    // and the delivered file's header says one description was written.
+    const { createHash } = await import('node:crypto');
+    const bytes = pdfBytes();
+    const before = repairReads({
+      images: 1,
+      figures: [{ type: 'Figure', alt: null, actualText: null, page: 1 }],
+      order: [{ type: 'Figure', text: null }],
+    });
+    const after = documentStructureSchema.parse({
+      ...before,
+      figures: [{ type: 'Figure', alt: 'A map of the town centre', actualText: null, page: 1 }],
+      order: [{ type: 'Figure', text: 'A map of the town centre' }],
+    });
+    inspectDocument.mockReset();
+    inspectDocument.mockResolvedValueOnce({ ok: true, value: before }).mockResolvedValue({ ok: true, value: after });
+    checkUa1.mockResolvedValue({ checker: 'verapdf-ua1', compliant: true, failingClauses: [] });
+
+    const response = await POST(withAnswers({
+      inputSha256: createHash('sha256').update(bytes).digest('hex'),
+      figures: [{ ordinal: 0, type: 'Figure', page: 1, prior: 'absent', alt: 'A map of the town centre' }],
+    }));
+
+    expect(response.status).toBe(200);
+    const finishRequest = finishDocument.mock.calls[0]?.[0] as { alt?: unknown };
+    expect(finishRequest.alt).toEqual([{ ordinal: 0, text: 'A map of the town centre' }]);
+    const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
+    expect(summary.declared).toEqual({ figures: 1 });
   });
 
   it('refuses a malformed answers part before any stage runs', async () => {

@@ -7,6 +7,7 @@ describe('parseRoute', () => {
     ['/reports', { scope: 'ws', screen: 'reports', clientSlug: null }],
     ['/activity', { scope: 'ws', screen: 'activity', clientSlug: null }],
     ['/settings', { scope: 'ws', screen: 'settings', clientSlug: null }],
+    ['/remediate', { scope: 'ws', screen: 'remediate', clientSlug: null }],
   ])('reads %s', (pathname, expected) => {
     expect(parseRoute(pathname)).toMatchObject(expected);
   });
@@ -88,7 +89,7 @@ describe('href builders', () => {
   it('round-trips every route it can build', () => {
     // The two halves of this module have to agree, or a link goes somewhere
     // the parser reads as a different screen.
-    for (const screen of ['portfolio', 'reports', 'activity', 'settings'] as const) {
+    for (const screen of ['portfolio', 'reports', 'activity', 'settings', 'remediate'] as const) {
       expect(parseRoute(workspaceHref(screen)).screen).toBe(screen);
     }
     for (const tab of ['overview', 'findings', 'journeys'] as const) {
