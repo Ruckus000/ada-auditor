@@ -252,7 +252,11 @@ Memory is only half of what a browser route needs; `next.config.mjs` has to
 name the same route under `outputFileTracingIncludes` or the function deploys
 with no browser binaries at all. Neither file can see the other, and neither
 can see the code, so `tests/deploy/browser-routes-are-packaged.test.ts` holds
-the three together.
+the three together. What a function carries is the one number here that *is*
+enforced, unlike memory: `platform-hydration.test.ts` reads each converting
+function's `.nft.json` from the build and fails on any project directory a
+function has no use for, or on a count past 400 — see "Function traces are
+bounded" in `AGENTS.md`.
 
 ## Scheduling
 

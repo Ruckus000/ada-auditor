@@ -58,6 +58,23 @@ import type { Env } from './java-runtime';
  * what makes the package selection in `prepare-libreoffice.ts` self-verifying:
  * a bundle assembled without `libobasis26.2-writer` is caught here rather than
  * on the first conversion a client waits for.
+ *
+ * ## The tracer is told to look away
+ *
+ * Every filesystem call below that looks for a *host* install carries
+ * `/*turbopackIgnore: true*\/` in its argument list. Turbopack traces a
+ * function's files by static analysis, and a path it cannot resolve — a `PATH`
+ * entry, `SOFFICE_PATH`, a directory reached through `realpathSync`, a target
+ * scraped from a wrapper script — makes it trace the whole project instead,
+ * with a build warning and nothing red. `[V]` Measured on 2026-09-03: each of
+ * the six modules importing this file listed 1,168–1,321 files, 756 of them
+ * under `tests/`, `docs/`, `experiments/`, `fixtures/` and `scripts/`, against
+ * 144 for `/api/health`. Looking away loses nothing: the tracer could never
+ * copy a host's LibreOffice into a function, and the install a function does
+ * carry, `vendor/libreoffice/**`, is named in `outputFileTracingIncludes` for
+ * every route that converts. The bundled check is left alone because the
+ * tracer can scope it. `next.config.mjs` carries the second lever, the
+ * excludes, and `platform-hydration.test.ts` reads the built traces.
  */
 
 /** Where macOS puts it when installed as an application rather than a formula. */
@@ -165,7 +182,7 @@ function moduleDirs(sofficeBin: string): string[] {
  */
 function realpath(path: string): string | null {
   try {
-    return realpathSync(path);
+    return realpathSync(/*turbopackIgnore: true*/ path);
   } catch {
     return null;
   }
@@ -205,15 +222,15 @@ const HANDOFF = /\/(?:[^\s'"]+\/)*soffice[^\s'"]*/g;
  */
 function wrapperTarget(launcher: string): string | null {
   try {
-    if (statSync(launcher).size > WRAPPER_MAX_BYTES) return null;
+    if (statSync(/*turbopackIgnore: true*/ launcher).size > WRAPPER_MAX_BYTES) return null;
 
-    const script = readFileSync(launcher, 'utf8');
+    const script = readFileSync(/*turbopackIgnore: true*/ launcher, 'utf8');
     if (!script.startsWith('#!')) return null;
 
     for (const [handoff] of script.matchAll(HANDOFF)) {
       // Not itself, or a wrapper that names its own path would recurse into
       // the same directory and prove nothing.
-      if (handoff !== launcher && existsSync(handoff)) return handoff;
+      if (handoff !== launcher && existsSync(/*turbopackIgnore: true*/ handoff)) return handoff;
     }
   } catch {
     // Unreadable, or not text at all. Same answer as everything else here.
@@ -237,7 +254,7 @@ function writerModule(sofficeBin: string): 'present' | 'absent' | 'unknown' {
   for (const dir of moduleDirs(sofficeBin)) {
     let entries: string[];
     try {
-      entries = readdirSync(dir);
+      entries = readdirSync(/*turbopackIgnore: true*/ dir);
     } catch {
       continue;
     }
@@ -324,7 +341,7 @@ export function resolveLibreOffice(options: ResolveOptions = {}): LibreOfficeRun
   // `PATH`: a machine with more than one install needs a way to say which.
   const configured = env.SOFFICE_PATH?.trim();
   if (configured) {
-    if (existsSync(configured)) {
+    if (existsSync(/*turbopackIgnore: true*/ configured)) {
       // A configured path that cannot convert is reported as such rather than
       // fallen through: the operator named this install, and quietly using a
       // different one is how a machine comes to convert with a LibreOffice
@@ -352,13 +369,13 @@ export function resolveLibreOffice(options: ResolveOptions = {}): LibreOfficeRun
   for (const dir of (env.PATH ?? '').split(delimiter)) {
     if (!dir) continue;
     const candidate = join(dir, 'soffice');
-    if (existsSync(candidate)) {
+    if (existsSync(/*turbopackIgnore: true*/ candidate)) {
       const found = remember(withWriter(candidate));
       if (found) return found;
     }
   }
 
-  if (existsSync(macosBundle)) {
+  if (existsSync(/*turbopackIgnore: true*/ macosBundle)) {
     const found = remember(withWriter(macosBundle));
     if (found) return found;
   }

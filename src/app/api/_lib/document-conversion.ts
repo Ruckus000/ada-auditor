@@ -453,7 +453,15 @@ export async function repairPdfBytes(
       // identifier re-stamp spreads this request, which is safe: a font that
       // gained its program on the first pass is skipped as embedded on the
       // second.
-      embedFontsDir: join(options.root ?? process.cwd(), DOCUMENT_FONTS_DIR),
+      //
+      // The ignore comment is the one the build asks for: `root` is a caller's
+      // value, so the tracer cannot scope this `join` and would otherwise
+      // trace the whole project into every converting function — the walk the
+      // comment on `remediateWordBytes` records fixing once already. Nothing
+      // is lost by looking away: a JVM stage reads the directory, not this
+      // module, and `vendor/fonts/**` is already named in
+      // `outputFileTracingIncludes` for every route that reaches here.
+      embedFontsDir: join(/*turbopackIgnore: true*/ options.root ?? process.cwd(), DOCUMENT_FONTS_DIR),
       ...(decision.plan.title.kind === 'no-heading-to-copy'
         ? {}
         : { title: decision.plan.title.title }),

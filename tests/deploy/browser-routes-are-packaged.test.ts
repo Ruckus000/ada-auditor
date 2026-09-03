@@ -231,8 +231,44 @@ const vercelConfig = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
 };
 
 const tracingIncludes = (nextConfig.outputFileTracingIncludes ?? {}) as Record<string, string[]>;
+const tracingExcludes = (nextConfig.outputFileTracingExcludes ?? {}) as Record<string, string[]>;
 
 const browserRoutes = routeFiles(API_DIR).filter((file) => reachesFrom(file, LAUNCH, SRC_ROOT));
+
+/**
+ * The other half of tracing: what a function must NOT carry.
+ *
+ * `libreoffice-runtime.ts` reads the host's filesystem at paths it cannot know
+ * until runtime — a `PATH` entry, a wrapper script's target — and Turbopack's
+ * answer to a path it cannot resolve is to trace the whole project. Measured
+ * on 2026-09-03: every function importing it carried the tests, the docs, the
+ * experiments spike and the scripts, ~1,200 entries a function has no use for
+ * — and, on a tree holding the blind corpus, real municipal documents inside
+ * a deployed function. `outputFileTracingExcludes` is the lever that names
+ * those directories as never-a-dependency; `platform-hydration.test.ts` reads
+ * the built traces and holds the result. This case holds the config, so the
+ * cheap suite says so before anyone builds.
+ */
+describe('what the tracer is told to leave out', () => {
+  it('names every directory no function could need', () => {
+    const everywhere = (tracingExcludes['*'] ?? []).join('\n');
+
+    // Each is a distinct way for the whole project to ride along: the spike
+    // and its corpora, the suites, the prose, the fixture sites, the operator
+    // scripts, run output, and blind-test output derived from real documents.
+    for (const junk of [
+      './experiments/**',
+      './tests/**',
+      './docs/**',
+      './fixtures/**',
+      './scripts/**',
+      './artifacts/**',
+      './.doc-blind-test/**',
+    ]) {
+      expect(everywhere, `outputFileTracingExcludes['*'] omits ${junk}`).toContain(junk);
+    }
+  });
+});
 
 /**
  * The same problem, a different binary.

@@ -151,6 +151,43 @@ const nextConfig = {
       './dist/documents/classes/**',
     ],
   },
+  // The other direction. Turbopack traces a function's dependencies by
+  // static analysis, and when a filesystem call's path cannot be known
+  // statically — `libreoffice-runtime.ts` walking `PATH` for a host install,
+  // `readdirSync` of a directory reached through a symlink — its answer is to
+  // trace the whole project. The build says so in a warning that scrolls past
+  // and nothing failed. `[V]` Measured on 2026-09-03: every module importing
+  // that resolver — the three converting routes, the settings and remediate
+  // pages, `/api/ready` — listed 1,168–1,321 files against 144 for `/api/health`,
+  // 756 of them under the five directories below plus every config file at
+  // the root; on a checkout holding the blind corpus, the same trace carried
+  // 166 real municipal PDFs inside a deployed function. The ignore comments at
+  // the calls stop the walk; this list is the second lever, and it says why
+  // each directory is junk to a function so that neither has to be re-derived
+  // when the next unscopeable call appears. `tests/deploy/` holds the list,
+  // and `platform-hydration.test.ts` reads the built traces to hold the result.
+  outputFileTracingExcludes: {
+    '*': [
+      // A feasibility spike outside every gate, with its corpora, keys and
+      // Java sources. Even `inspect`, which never walked the project, listed
+      // seven of its `.java` files.
+      './experiments/**',
+      // The suites, the fixture sites they audit, and the prose. A function
+      // reads none of them.
+      './tests/**',
+      './fixtures/**',
+      './docs/**',
+      // Operator entry points: each calls `main()` at import, which is why no
+      // route imports one either.
+      './scripts/**',
+      // Run output and blind-test output — gitignored, derived from real
+      // documents, present on any tree that has run the product locally. A
+      // Vercel clone never has them; a local build did, and the hydration
+      // suite builds locally.
+      './artifacts/**',
+      './.doc-blind-test/**',
+    ],
+  },
   experimental: {
     useTypeScriptCli: true,
   },
