@@ -1604,13 +1604,25 @@ Read this before claiming something works.
   delete that was priced and declined; a decorative decision is `decided`,
   stays on the punch list, and the UI says so. Acrobat and Equidox artifact
   in-app; this is the one place v1 is behind the market, on purpose.
-  **Figure geometry was measured and fell short of its prediction**
-  (`figure-geometry-results.md`): the image-only pass locates 44 % of open
-  figures on the real corpus — the same as the probe — because the worst
-  documents have far more `Figure` elements than images (r05: 101 vs 62).
-  Digest grouping stays (r09: 38 → 22 acts); crops stay deferred and now
-  name path geometry as their precondition; the language hint, AI drafts and
-  artifacting on a decision are deferred with triggers in the plan.
+  **Figure geometry was measured twice.** The image-only pass located 44 %
+  of open figures on the real corpus — the same as the probe — because the
+  worst documents have far more `Figure` elements than images (r05: 101 vs
+  62) (`figure-geometry-results.md`). The path pass
+  (`figure-geometry-2-results.md`) locates **379 of 380 (99.7 %)**: every
+  path painted under a figure's marked content widens its box, a path has a
+  place and no identity (digest, grouping and the answer preimage are
+  untouched), and the one figure left is a `Figure` wrapped around text.
+  Two rules the pass had to learn from the corpus: a nested marked-content
+  sequence with no MCID of its own (`/PlacedPDF /MC0 BDC`, InDesign) belongs
+  to the enclosing element, and an MCID may arrive by name through
+  `/Resources /Properties`. Twenty image boxes widened to include a border
+  stroke or a rule drawn under the same element; n22's two grew to the page,
+  because a full-page path is under that element — the reading reports what
+  is drawn, and a crop step may prefer the image's own box. Digest grouping
+  stays (r09: 38 → 22 acts); crops now wait only on the pilot's number; the
+  language hint, AI drafts and artifacting on a decision are deferred with
+  triggers in the plan. The measurement script is committed this time
+  (`experiments/document-remediation/measure-figure-geometry.mts`).
   **The harness holds the channel to the charter:** `keys/<id>.answers.json`
   sidecars are posted as the `answers` part (bounded at 2 MiB of UTF-8 —
   `MAX_ANSWERS_BYTES`, sized from the schema's own maximum — and refused as

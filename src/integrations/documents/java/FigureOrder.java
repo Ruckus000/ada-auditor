@@ -24,6 +24,7 @@ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkedCo
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
+import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
@@ -59,9 +60,16 @@ import org.apache.pdfbox.util.Matrix;
  * shared across the blind corpus's documents; the digest is what lets a
  * person describe it once and have the description land on every repeat.
  *
- * Only images. A figure drawn as paths (a rule, a chart) locates nothing
- * here and reports null — absent, never invented — the same rule the page
- * number follows. Path geometry can join this pass when something consumes it.
+ * Images and paths. A figure drawn as paths — a rule, a chart, a box — has a
+ * place and no identity: every path painted inside its marked content widens
+ * its box, and its digest stays null, because a hash of path operators would
+ * be a different identity relation from "the same bytes drawn again" and
+ * would widen every consumer of the digest silently. `[V]` The image-only
+ * pass located 44 % of the real corpus's open figures, and the worst
+ * documents had far more `Figure` elements than images (r05: 101 against
+ * 62); the paths are where the rest of the geometry lives. A figure that
+ * paints nothing at all still reports null — absent, never invented — the
+ * same rule the page number follows.
  */
 public final class FigureOrder {
 
@@ -116,8 +124,12 @@ public final class FigureOrder {
         public static final Located NONE = new Located(null, null, null);
     }
 
-    /** One drawn image, keyed to the marked-content id that encloses it. */
-    private record Draw(int page, int mcid, Box box, String digest, String filter) {}
+    /**
+     * One painting — an image or a path — keyed to the marked-content id that
+     * encloses it. A path's digest and filter are null; `image` is what lets
+     * the identity come from an image even when a path was drawn first.
+     */
+    private record Draw(int page, int mcid, Box box, boolean image, String digest, String filter) {}
 
     /**
      * Where each figure is drawn and what it draws.
@@ -154,9 +166,18 @@ public final class FigureOrder {
                 out.put(figure, Located.NONE);
                 continue;
             }
+            // The box is the union of everything painted; the identity is the
+            // first image's, or nothing — a path-only figure has a place and
+            // no digest.
             Box box = null;
-            for (Draw d : own) box = d.box.union(box);
-            out.put(figure, new Located(box, own.get(0).digest, own.get(0).filter));
+            Draw identity = null;
+            for (Draw d : own) {
+                box = d.box.union(box);
+                if (identity == null && d.image) identity = d;
+            }
+            out.put(figure, new Located(box,
+                identity == null ? null : identity.digest,
+                identity == null ? null : identity.filter));
         }
         return out;
     }
@@ -183,12 +204,33 @@ public final class FigureOrder {
         }
     }
 
-    /** Placed box and content digest of every image drawn inside marked content. */
+    /**
+     * Placed box and content digest of every image, and placed box of every
+     * painted path, drawn inside marked content.
+     *
+     * The path half is an accumulator. PDFBox hands `moveTo`, `lineTo`,
+     * `curveTo` and `appendRectangle` coordinates ALREADY transformed by the
+     * CTM (`PDFStreamEngine.transformedPoint`), so the pending box is the
+     * min/max of what arrives, flipped to top-down at the end exactly as the
+     * image box is — applying the matrix again would place a figure under
+     * `2 0 0 2 0 0 cm` at four times its size. The pending box becomes a
+     * `Draw` only on a PAINTING operator; `endPath` — the `n` that follows a
+     * `W` — discards it, because a clip is not a painting and every figure
+     * that clips before it draws would otherwise report the clip rectangle.
+     */
     private static final class ImageFinder extends PDFGraphicsStreamEngine {
         private final int pageNumber;
         private final float pageHeight;
         private final List<Draw> out;
         private final java.util.ArrayDeque<Integer> mcids = new java.util.ArrayDeque<>();
+
+        // The path under construction: its bounds so far, and the current
+        // point PDFBox asks for when `v`, `y` and `h` need it — real, or the
+        // origin leaks into every box. `startX/Y` is where `h` returns to.
+        private float minX, minY, maxX, maxY;
+        private boolean pending;
+        private Point2D.Float current;
+        private float startX, startY;
 
         ImageFinder(PDPage page, int pageNumber, List<Draw> out) {
             super(page);
@@ -201,9 +243,25 @@ public final class FigureOrder {
         protected void processOperator(Operator op, List<COSBase> operands) throws IOException {
             String name = op.getName();
             if ("BDC".equals(name) || "BMC".equals(name)) {
-                int mcid = -1;
-                if (operands.size() >= 2 && operands.get(1) instanceof COSDictionary props
-                        && props.getDictionaryObject(COSName.MCID) instanceof COSInteger ci) {
+                // A sequence with no id of its own belongs to the element
+                // whose sequence encloses it. `[V]` InDesign wraps a placed
+                // graphic as `/Figure <</MCID n>> BDC /PlacedPDF /MC0 BDC …`,
+                // and treating the inner sequence as unowned hid 22 of r11's
+                // 36 figures from this pass. The id may also arrive by name —
+                // `/Span /P1 BDC` with `/P1 << /MCID 4 >>` under the page's
+                // `/Properties` — which is the same statement spelled through
+                // the resource dictionary.
+                int mcid = mcids.isEmpty() ? -1 : mcids.peek();
+                COSDictionary props = null;
+                if (operands.size() >= 2) {
+                    if (operands.get(1) instanceof COSDictionary inline) {
+                        props = inline;
+                    } else if (operands.get(1) instanceof COSName named && getResources() != null) {
+                        PDPropertyList list = getResources().getProperties(named);
+                        if (list != null) props = list.getCOSObject();
+                    }
+                }
+                if (props != null && props.getDictionaryObject(COSName.MCID) instanceof COSInteger ci) {
                     mcid = ci.intValue();
                 }
                 mcids.push(mcid);
@@ -230,7 +288,119 @@ public final class FigureOrder {
                 y1 = Math.max(y1, (float) p.getY());
             }
             Box box = new Box(pageNumber, x0, pageHeight - y1, x1 - x0, y1 - y0);
-            out.add(new Draw(pageNumber, mcid, box, digest(image), filter(image)));
+            out.add(new Draw(pageNumber, mcid, box, true, digest(image), filter(image)));
+        }
+
+        private void extend(float x, float y) {
+            if (!pending) {
+                minX = maxX = x;
+                minY = maxY = y;
+                pending = true;
+            } else {
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+        }
+
+        /** The pending path was painted: it is where the enclosing figure is. */
+        private void paint() {
+            if (!pending) return;
+            int mcid = mcids.isEmpty() ? -1 : mcids.peek();
+            if (mcid >= 0) {
+                Box box = new Box(pageNumber, minX, pageHeight - maxY, maxX - minX, maxY - minY);
+                out.add(new Draw(pageNumber, mcid, box, false, null, null));
+            }
+            discard();
+        }
+
+        private void discard() {
+            pending = false;
+            current = null;
+        }
+
+        @Override
+        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) {
+            for (Point2D p : new Point2D[] {p0, p1, p2, p3}) extend((float) p.getX(), (float) p.getY());
+            // `re` leaves the current point at its first corner.
+            startX = (float) p0.getX();
+            startY = (float) p0.getY();
+            current = new Point2D.Float(startX, startY);
+        }
+
+        @Override
+        public void moveTo(float x, float y) {
+            extend(x, y);
+            startX = x;
+            startY = y;
+            current = new Point2D.Float(x, y);
+        }
+
+        @Override
+        public void lineTo(float x, float y) {
+            extend(x, y);
+            current = new Point2D.Float(x, y);
+        }
+
+        /**
+         * Bounded by the control points — a superset of the curve, which never
+         * leaves their hull. Wider than the exact bounds by at most the bulge
+         * of the control polygon, and a crop that is slightly too generous
+         * shows the whole figure; one that is exact-but-wrong would not.
+         */
+        @Override
+        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) {
+            extend(x1, y1);
+            extend(x2, y2);
+            extend(x3, y3);
+            current = new Point2D.Float(x3, y3);
+        }
+
+        /** Null before any `m`, which is what PDFBox's own operators test for. */
+        @Override
+        public Point2D getCurrentPoint() {
+            return current;
+        }
+
+        @Override
+        public void closePath() {
+            if (current != null) current = new Point2D.Float(startX, startY);
+        }
+
+        /** `n`: the path ends unpainted — after a `W` it was only ever a clip. */
+        @Override
+        public void endPath() {
+            discard();
+        }
+
+        /** The clip itself is not a painting and contributes no geometry. */
+        @Override
+        public void clip(int windingRule) {}
+
+        @Override
+        public void strokePath() {
+            paint();
+        }
+
+        @Override
+        public void fillPath(int windingRule) {
+            paint();
+        }
+
+        @Override
+        public void fillAndStrokePath(int windingRule) {
+            paint();
+        }
+
+        /**
+         * `sh` paints the current clip, not a path; there is nothing pending
+         * after the `W n` that usually precedes it, and a pending path that
+         * somehow is there was painted where it lies.
+         */
+        @Override
+        public void shadingFill(COSName shadingName) {
+            paint();
         }
 
         /**
@@ -271,18 +441,5 @@ public final class FigureOrder {
             }
             return null;
         }
-
-        @Override public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) {}
-        @Override public void clip(int windingRule) {}
-        @Override public void moveTo(float x, float y) {}
-        @Override public void lineTo(float x, float y) {}
-        @Override public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) {}
-        @Override public Point2D getCurrentPoint() { return new Point2D.Float(); }
-        @Override public void closePath() {}
-        @Override public void endPath() {}
-        @Override public void strokePath() {}
-        @Override public void fillPath(int windingRule) {}
-        @Override public void fillAndStrokePath(int windingRule) {}
-        @Override public void shadingFill(COSName shadingName) {}
     }
 }

@@ -631,11 +631,25 @@ describe.skipIf(!runtime.available)('Finish against a real JVM', () => {
         'A map of the town centre — café marked',
         'The town seal',
       ]);
+      // The fixture's figures are filled rectangles — paths, not images — and
+      // each is located by its own bounds, in top-down page points on the
+      // 200pt-high page, with no identity to report.
+      expect(after.value.figures.map((figure) => figure.box)).toEqual([
+        { page: 1, x: 20, y: 30, w: 40, h: 20 },
+        { page: 1, x: 20, y: 60, w: 40, h: 20 },
+        { page: 1, x: 20, y: 90, w: 40, h: 20 },
+      ]);
+      expect(after.value.figures.map((figure) => figure.imageDigest)).toEqual([null, null, null]);
       // Nothing but the declared delta moved — the delta as the pipeline's
       // gate computes it, through the same function, so this test and the
       // gate cannot disagree about what a declaration is allowed to change.
+      // `figures` is a content field and `box` travels inside it, so this is
+      // also what holds `Finish` to leaving every box where it was.
       const read = await inspectDocument(join(dir, 'figures.pdf'));
       if (read.ok) {
+        expect(read.value.figures.map((figure) => figure.box)).toEqual(
+          after.value.figures.map((figure) => figure.box),
+        );
         const expected = applyDeclarations(read.value, {
           inputSha256: 'a'.repeat(64),
           figures: [{ ordinal: 1, type: 'Figure', page: 1, prior: 'absent', alt: 'A map of the town centre — café marked' }],
