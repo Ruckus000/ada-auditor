@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import type { Ask, FigurePrior } from './document-answers';
 import type { ContrastReading, DocumentStructure } from './document-structure';
+import { languageHint } from './language-hint';
 
 /**
  * What a remediation produced, and where every claim in it came from.
@@ -1062,7 +1063,17 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
   // annotation too (7.2-24). The gap string beside this states the fact; the
   // item asks for the work, because nobody can act on "so none is claimed".
   if (provenance.sourceLanguage === null) {
-    punch(out, { id: 'language', kind: 'language', criterion: '3.1.1', answerable: 'operator' },
+    // The hint rides on the ask's target and nowhere else: what the document's
+    // own text reads as, for the person who has to name it. `asks` are
+    // already off the header, the logs and the public report, so nothing new
+    // leaves. It changes no gap, no item and no `sourceLanguage` — the
+    // instrument version stays where it is — and it is absent when the text
+    // does not support one (`domain/language-hint.ts` names the floor).
+    const hint = languageHint(structure);
+    punch(out, {
+      id: 'language', kind: 'language', criterion: '3.1.1', answerable: 'operator',
+      ...(hint === null ? {} : { target: hint }),
+    },
       'The document declares no language — name the one it is written in, because a language is never guessed',
     );
   }

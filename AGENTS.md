@@ -562,7 +562,10 @@ Read this before claiming something works.
   had already fixed exactly this (blind corpus, `/Lang ()` and `/Lang (en US)`),
   so `languageToCarry` moved to `domain/document-structure.ts` beside the schema
   it asks and both lanes use it. An unusable tag carries nothing and `3.1.1`
-  asks a person to name the language.
+  asks a person to name the language. (Both CONVERSION lanes, that is: the
+  inspection core `api/_lib/document-inspection.ts` still passed `/Lang` raw
+  until 2026-09-03, so `en US` raised the item on repair and not on
+  inspection; it goes through `languageToCarry` now, with a route test.)
 
   **Two things deliberately NOT changed.** The legacy `.doc` fodt fallback still
   carries LibreOffice's inflated reading (declared-nothing arriving as `en-US`),
@@ -1643,10 +1646,32 @@ Read this before claiming something works.
   stroke or a rule drawn under the same element; n22's two grew to the page,
   because a full-page path is under that element — the reading reports what
   is drawn, and a crop step may prefer the image's own box. Digest grouping
-  stays (r09: 38 → 22 acts); crops now wait only on the pilot's number; the
-  language hint, AI drafts and artifacting on a decision are deferred with
-  triggers in the plan. The measurement script is committed this time
+  stays (r09: 38 → 22 acts); crops now wait only on the pilot's number; AI
+  drafts and artifacting on a decision are deferred with triggers in the
+  plan. The measurement script is committed this time
   (`experiments/document-remediation/measure-figure-geometry.mts`).
+  **The language hint is a suggestion on the ask, never a claim.**
+  (2026-09-03.) `[V]` 7 of the 52 real PDFs raise the `language` item —
+  13 %, past the "handful" the deferral was priced on — so
+  `domain/language-hint.ts` reads the text the structure already carries
+  (`title`, `headingTexts`, `order`; nothing new crosses the JVM boundary)
+  against ~20 stopwords per Latin-script language in the vocabulary and the
+  script itself for `zh`/`ko`/`ar`, and puts `{ suggested, evidence }` on
+  the language ask's `target` — the one field already off the header, the
+  logs and the public report. It abstains under a floor of 8 tokens, inside
+  a 2× margin, and on kana (Japanese is not read as Chinese); it hints `en`,
+  never `en-US`. `sourceLanguage`, `gaps`, `needs` and the delivered bytes
+  are untouched, `INSTRUMENT_VERSION` stays 12, and the blind harness's
+  fatal `invented-language` is the guard that it stays that way. On both
+  screens the hint is a sentence beside the empty select ("Its text reads
+  as Spanish (41 matches). A suggestion — nothing is chosen for you.") and
+  never a preselection; whether the person took it is DERIVED on the
+  workbench from the row (`value === target.suggested` → "as suggested" /
+  "not the suggestion"), never written as a note. Measured in
+  `language-hint-results.md` against `language-hint-predictions.md`.
+  Found underneath: the inspect lane passed `/Lang` raw to `summarise`
+  where the repair lane used `languageToCarry`, so a junk tag raised the
+  item on repair and not on inspection — fixed at `document-inspection.ts`.
   **The harness holds the channel to the charter:** `keys/<id>.answers.json`
   sidecars are posted as the `answers` part (bounded at 2 MiB of UTF-8 —
   `MAX_ANSWERS_BYTES`, sized from the schema's own maximum — and refused as

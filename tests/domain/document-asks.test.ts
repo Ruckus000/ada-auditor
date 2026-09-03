@@ -15,6 +15,7 @@ import {
   type RemediationSummary,
 } from '../../src/domain/document-remediation';
 import { documentStructureSchema } from '../../src/domain/document-structure';
+import { buildDocumentReport } from '../../src/services/document-report';
 import { planRepair } from '../../src/services/document-repair';
 
 /**
@@ -138,6 +139,37 @@ describe('asks beside needs', () => {
     ]);
   });
 
+  it('carries what the text reads as on the language ask, when the text says enough', () => {
+    // A document that declares nothing but is plainly written in Spanish —
+    // invented sentences, the way every fixture here is. The ask stays an
+    // ask; the hint rides on its target with the count that backs it.
+    const spanish = structure({
+      lang: null,
+      title: 'Aviso de la reunión de la junta',
+      headingTexts: [{ level: 'H1', text: 'Orden del día para el mes' }],
+      order: [
+        { type: 'H1', text: 'Orden del día para el mes' },
+        { type: 'P', text: 'La junta se reunirá el primer martes de cada mes para revisar las solicitudes.' },
+        { type: 'P', text: 'Los miembros del público pueden asistir y hablar sobre cualquier tema de la agenda.' },
+      ],
+    });
+    const summary = summarise(provenance({ sourceLanguage: null, structure: spanish }));
+    const language = summary.asks!.find((ask) => ask.id === 'language')!;
+    expect(language.target).toEqual({ suggested: 'es', evidence: expect.any(Number) });
+    expect((language.target as { evidence: number }).evidence).toBeGreaterThanOrEqual(8);
+    // Nothing else moved: the item, the gap and the declared language are
+    // exactly what they are without the hint.
+    expect(summary.sourceLanguage).toBeNull();
+    expect(summary.gaps).toContainEqual(expect.stringContaining('3.1.1'));
+    expect(summary.needs![summary.asks!.indexOf(language)].item).toContain('never guessed');
+  });
+
+  it('carries no hint when the text does not support one', () => {
+    // `everything()` has a title and two one-word headings: under the floor.
+    const language = everything().asks!.find((ask) => ask.id === 'language')!;
+    expect(language).toEqual({ id: 'language', kind: 'language', criterion: '3.1.1', answerable: 'operator' });
+  });
+
   it('keys a heading decision by its index in the ladder', () => {
     const headings = everything().asks!.filter((ask) => ask.kind === 'heading');
     expect(headings).toEqual([
@@ -208,6 +240,30 @@ describe('what leaves the vocabulary', () => {
   it('keeps the excerpt out of the logs', () => {
     const summary = { ...summarise(provenance()), excerpt: { figures: [] } };
     expect('excerpt' in logSafe(summary)).toBe(false);
+  });
+
+  it('keeps the language hint out of the header, the logs and the report, because the asks are', () => {
+    const hinted = summarise(provenance({
+      sourceLanguage: null,
+      structure: structure({
+        lang: null,
+        order: [{ type: 'P', text: 'The committee will meet on the first Tuesday of the month to review the applications that were received.' }],
+      }),
+    }));
+    expect(hinted.asks!.find((ask) => ask.id === 'language')!.target).toEqual({ suggested: 'en', evidence: expect.any(Number) });
+
+    expect('asks' in transportSummary(hinted)).toBe(false);
+    expect(JSON.stringify(transportSummary(hinted))).not.toContain('suggested');
+    expect('asks' in logSafe(hinted)).toBe(false);
+    expect(JSON.stringify(logSafe(hinted))).not.toContain('suggested');
+    const at = '2026-09-03T00:00:00.000Z';
+    const report = buildDocumentReport([{
+      id: 'doc-1', clientId: 'acme', url: 'https://town.example/a.pdf', kind: 'pdf', source: 'crawl',
+      firstSeenAt: at, lastSeenAt: at,
+      latestInspection: { id: 'insp-1', clientId: 'acme', documentId: 'doc-1', url: 'https://town.example/a.pdf', source: 'crawl', summary: hinted, inspectedAt: at },
+    }], at);
+    expect(report.entries).toHaveLength(1);
+    expect(JSON.stringify(report)).not.toContain('suggested');
   });
 });
 

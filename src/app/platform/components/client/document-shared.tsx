@@ -2,6 +2,8 @@
 
 import { conformanceLine, scopeLine } from '../../../../services/presentation/document-verdict';
 import type { RemediationSummary } from '../../../../domain/document-remediation';
+import type { LanguageHint } from '../../../../domain/language-hint';
+import { LANGUAGES, languageName } from '../../../../domain/languages';
 import type { DocumentState } from '../../../../services/document-state';
 import { describeDocumentRefusal } from '../../lib/document-action-copy';
 import { FONT, T } from '../../lib/tokens';
@@ -125,37 +127,26 @@ export function pdfNameFor(sourceName: string): string {
   return `${(base.replace(/\.docx?$/i, '') || 'document')}-remediated.pdf`;
 }
 
-/** The languages a municipal document is most often in; anything else is typed as a tag. */
-export const LANGUAGES: Array<[string, string]> = [
-  ['en', 'English'],
-  ['en-US', 'English (US)'],
-  ['es', 'Spanish'],
-  ['fr', 'French'],
-  ['pt', 'Portuguese'],
-  ['zh', 'Chinese'],
-  ['vi', 'Vietnamese'],
-  ['ko', 'Korean'],
-  ['tl', 'Tagalog'],
-  ['ar', 'Arabic'],
-];
-
 /**
  * The language ask, as both the workbench and the one-off screen put it.
  *
  * Nothing is preselected: a language is never guessed. The select carries
  * the common cases and the free field takes any BCP-47 tag; the document's
  * own title sits beside them because it is usually the clearest evidence a
- * person has. `value` is whatever the operator last chose, from either
- * control.
+ * person has, and the hint — what the text reads as, with its count — sits
+ * beside the title as a sentence, never as a selection. `value` is whatever
+ * the operator last chose, from either control.
  */
 export function LanguageChoice({
   value,
   onChange,
   titleText,
+  hint,
 }: {
   value: string;
   onChange: (value: string) => void;
   titleText?: string;
+  hint?: LanguageHint;
 }) {
   const inList = LANGUAGES.some(([tag]) => tag === value);
   return (
@@ -188,6 +179,12 @@ export function LanguageChoice({
       </label>
       {titleText ? (
         <span style={{ fontSize: 11, color: T.inkMuted }}>The document calls itself “{titleText}”.</span>
+      ) : null}
+      {hint ? (
+        <span style={{ fontSize: 11, color: T.inkMuted }}>
+          Its text reads as {languageName(hint.suggested)} ({hint.evidence} match{hint.evidence === 1 ? '' : 'es'}).
+          A suggestion — nothing is chosen for you.
+        </span>
       ) : null}
     </span>
   );

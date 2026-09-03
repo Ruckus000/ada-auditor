@@ -79,6 +79,22 @@ describe('StatelessAnswersForm', () => {
     expect(html).toMatch(/<option[^>]*value=""[^>]*>Choose/);
   });
 
+  it('shows the hint as a sentence beside the empty select, and selects nothing', () => {
+    const hinted = reading(
+      [{ id: 'language', kind: 'language', criterion: '3.1.1', answerable: 'operator', target: { suggested: 'es', evidence: 41 } }],
+      [{ criterion: '3.1.1', item: 'the source declares no language' }],
+    );
+    const html = form(hinted);
+
+    expect(html).toContain('Its text reads as Spanish (41 matches). A suggestion — nothing is chosen for you.');
+    // The one selected option is the empty one; the suggested language's is not.
+    expect(html).toMatch(/<option value="" selected="">Choose/);
+    expect(html.match(/selected=""/g)).toHaveLength(1);
+    expect(html).toMatch(/<option value="es">Spanish/);
+    // The title's evidence still sits beside it.
+    expect(html).toContain('The document calls itself “Permit Conditions”.');
+  });
+
   it('lists what this screen cannot answer rather than hiding it', () => {
     const html = form(FIGURES);
 

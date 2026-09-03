@@ -12,6 +12,7 @@ import {
   withRepairability,
 } from '../../../domain/document-remediation';
 import type { RemediationSummary } from '../../../domain/document-remediation';
+import { languageToCarry } from '../../../domain/document-structure';
 import { inspectDocument } from '../../../integrations/documents/inspect';
 import { checkUa1 } from '../../../integrations/documents/verapdf';
 import { planRepair } from '../../../services/document-repair';
@@ -66,6 +67,12 @@ export async function inspectPdfBytes(
     // A reading has no source document to compare against, so the two fields
     // that describe provenance are answered from the file itself: the title
     // it carries, and the language it declares. Neither is inferred.
+    //
+    // The language goes through `languageToCarry`, as the repair lane's does.
+    // `[V]` This lane once passed `/Lang` raw, so a document declaring `en US`
+    // raised the 3.1.1 item on repair and not on inspection — two surfaces
+    // disagreeing about one document, the failure the title branch below
+    // already guards against.
     const summary = summarise({
       // A placeholder reads as no title here too. An inspection that reported
       // "Microsoft Word - Document1.docx" as `already-titled` would tell an
@@ -76,7 +83,7 @@ export async function inspectPdfBytes(
         result.value.title === null || isPlaceholderTitle(result.value.title)
           ? { kind: 'no-heading-to-copy' }
           : { kind: 'already-titled', title: result.value.title },
-      sourceLanguage: result.value.lang,
+      sourceLanguage: languageToCarry(result.value.lang),
       structure: result.value,
     });
 
