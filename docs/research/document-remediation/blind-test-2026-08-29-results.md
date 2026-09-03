@@ -246,5 +246,13 @@ Unchanged from the predictions, and worth repeating where the results are:
 - Two count disagreements remain (r28, r32: one heading each), both explained
   by headings that do not survive conversion, and both the source-side-predicts-
   output-side category error rather than product defects.
+  - *Correction, 2026-09-03:* that explanation was wrong. Neither heading was
+    lost in conversion; both keys were authored under this campaign's original
+    style-name heading rule and never re-authored when the rule changed
+    (`56a08b2` corrected the `n` cohort only). r32's fifth "heading" is a page
+    break the product rightly deletes; r28's twelfth delivered heading is a
+    described image-only Heading2 the key author could not see. The keys are
+    corrected by overlay in `corrections.json`; the one real conversion loss is
+    a TOC heading on r23 and r30. See `word-keys-2026-09-03.md`.
 - 18 count facets are unverifiable by any third-party instrument and are listed
   as such rather than quietly scored.

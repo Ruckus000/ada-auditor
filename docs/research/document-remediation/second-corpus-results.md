@@ -98,7 +98,16 @@ PDF repair is transcription-only, now measured on documents nobody chose.
   while `author-real-keys.mjs` states in its own comments that predicting output
   structure from input structure is a category error. The non-empty outline rule
   makes the two agree across this corpus, but they remain different quantities.
-  Two rows still differ by one heading and are reported as non-fatal notes.
+  ~~Two rows still differ by one heading and are reported as non-fatal notes.~~
+  **Retracted 2026-09-03.** The two rows (r28, r32) differed because their keys
+  were never re-authored under the rule this document describes: the
+  corrections run here was `--only=n`, and the `r` cohort kept the pre-fix
+  answers from `5ad8352`. Under today's rule r32's key and the delivery agree
+  (4), and r28's delivered twelfth heading is a described image the author's
+  `<w:t>`-only test could not see. The same re-read found r23 and r30 one
+  heading SHORT in delivery — a `TOCHeading` paragraph the import turns into an
+  index title — which is the real loss, and a product finding. See
+  `word-keys-2026-09-03.md`.
 - **Not built:** a detector for headings whose text reads as prose. n50's author
   outline-levelled 49 body sentences, which is a real accessibility problem in
   the source and which the product now faithfully carries. Flagging it means

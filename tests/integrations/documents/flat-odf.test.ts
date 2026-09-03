@@ -50,6 +50,17 @@ describe('firstHeading', () => {
     expect(firstHeading(xml)).toBe('Planning Committee');
   });
 
+  it('does not read an embedded image as heading text', () => {
+    // A flat ODF carries images inline as base64. A first heading that is
+    // only an image has no text to transcribe, and a title made of its bytes
+    // would be a title nobody wrote.
+    const xml = withBody(
+      '',
+      '<text:h text:outline-level="1"><draw:frame><draw:image><office:binary-data>iVBORw0KGgo=</office:binary-data></draw:image></draw:frame></text:h>',
+    );
+    expect(firstHeading(xml)).toBeNull();
+  });
+
   it('returns null when the document marks no heading', () => {
     // The case that blocks four of the nine real municipal documents. It must
     // not fall through to body text.
@@ -148,6 +159,48 @@ describe('removeEmptyHeadings', () => {
   it('touches nothing when every heading speaks', () => {
     const input = '<text:h text:outline-level="1">A</text:h><text:p/>';
     expect(removeEmptyHeadings(input)).toEqual({ xml: input, removed: 0 });
+  });
+
+  it('keeps a heading whose only content is an image the author described', () => {
+    // r28's shape: a Heading2 whose only run is a drawing with a `descr`. The
+    // importer lands the description in `svg:desc`, which reads as text here,
+    // and the export carries it as /H2 over a /Figure with that /Alt. A key
+    // author that tests `<w:t>` alone calls this heading empty; this is the
+    // document that showed the two emptiness tests disagreeing.
+    for (const description of ['<svg:desc>The east basin</svg:desc>', '<svg:title>The east basin</svg:title>']) {
+      const input =
+        '<text:h text:outline-level="2"><draw:frame draw:name="Image 1">'
+        + `<draw:image><office:binary-data>iVBORw0KGgo=</office:binary-data></draw:image>${description}</draw:frame></text:h>`;
+      expect(removeEmptyHeadings(input), description).toEqual({ xml: input, removed: 0 });
+    }
+  });
+
+  it('demotes a heading whose only content is an undescribed image, keeping the image', () => {
+    // The latent shape: strip the tags and this heading reads as empty, but
+    // deleting it deletes the author's figure with it, and an undescribed
+    // figure that no longer exists never reaches the punch list as a 1.1.1
+    // item. The structure goes; the evidence stays. `removed` counts only the
+    // heading that actually left.
+    //
+    // The style name goes with the level: `[V]` a `text:p` still styled
+    // `Heading_20_2` was exported as /H2, because the style carries
+    // `style:default-outline-level="2"`, and w20 delivered three headings
+    // against a key of two. Other attributes stay.
+    //
+    // The image is embedded the way a flat ODF embeds it — base64 inside
+    // `office:binary-data`. `[V]` That payload is what the first version of
+    // this test forgot: strip the tags alone and the "empty" heading is
+    // thousands of characters long, and the planted document was delivered
+    // with three headings.
+    const frame =
+      '<draw:frame draw:name="Image 1"><draw:image><office:binary-data>iVBORw0KGgoAAAANSUhEUg==</office:binary-data></draw:image></draw:frame>';
+    const { xml, removed } = removeEmptyHeadings(
+      `<text:h text:style-name="Heading_20_2" text:outline-level="2" xml:id="h2">${frame}</text:h>` +
+        '<text:h text:outline-level="2"/>',
+    );
+
+    expect(removed).toBe(1);
+    expect(xml).toBe(`<text:p xml:id="h2">${frame}</text:p>`);
   });
 });
 

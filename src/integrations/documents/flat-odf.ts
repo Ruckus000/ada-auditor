@@ -46,9 +46,26 @@ function encodeEntities(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
+/**
+ * What is left of a fragment once its tags are gone — the text a reader
+ * meets, plus an image's `svg:desc` / `svg:title`, which are text to a reader
+ * too.
+ *
+ * A flat ODF embeds every image inline as base64 inside `office:binary-data`,
+ * and that payload is not text: with it left in, a heading holding nothing
+ * but an image read as thousands of characters long, and `[V]` a planted
+ * undescribed image-only heading was delivered as a heading over an
+ * undescribed figure — the exact structure this file exists to keep honest.
+ */
+function readableText(fragment: string): string {
+  return fragment
+    .replace(/<office:binary-data>[\s\S]*?<\/office:binary-data>/g, '')
+    .replace(/<[^>]+>/g, '');
+}
+
 /** Strips tags and collapses whitespace, leaving the readable text. */
 function textOf(fragment: string): string {
-  return decodeEntities(fragment.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+  return decodeEntities(readableText(fragment)).replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -196,6 +213,23 @@ function writeTitle(xml: string, title: string): string | null {
  *
  * Self-closing and empty-paired forms both; whitespace-only content counts
  * as empty (a heading of three spaces announces exactly as much as none).
+ *
+ * "No text" is decided after stripping tags, and an image's description
+ * survives that: the importer lands a Word `descr` in `svg:desc` (and a
+ * `title` in `svg:title`), so a heading whose only run is a described image
+ * says something, stays a heading, and exports as /H over a /Figure carrying
+ * that /Alt — `[V]` r28 delivers exactly that. The key author's emptiness
+ * test must agree with this one; r28 is the document that showed it did not.
+ *
+ * A heading whose only run is an UNDESCRIBED image strips to nothing (once
+ * the image's inline base64 is discounted — see `readableText`; before that
+ * discount the payload read as text and `[V]` w20's undescribed image-only
+ * heading was delivered as a heading, three against a key of two). Deleting
+ * it would delete the author's figure with it — the one figure most in need
+ * of the punch list would be the one that never reached it. So a heading
+ * that holds a `draw:frame` is demoted to a paragraph instead: the structure
+ * it announced goes, the image stays, and the missing description surfaces
+ * as a `1.1.1` item like any other.
  */
 export function removeEmptyHeadings(xml: string): { xml: string; removed: number } {
   let removed = 0;
@@ -204,12 +238,21 @@ export function removeEmptyHeadings(xml: string): { xml: string; removed: number
       removed += 1;
       return '';
     })
-    .replace(/<text:h\b[^>]*>([\s\S]*?)<\/text:h>/g, (whole, inner: string) => {
-      if (inner.replace(/<[^>]+>/g, '').trim() === '') {
-        removed += 1;
-        return '';
+    .replace(/<text:h\b([^>]*)>([\s\S]*?)<\/text:h>/g, (whole, attrs: string, inner: string) => {
+      if (readableText(inner).trim() !== '') return whole;
+      if (/<draw:frame\b/.test(inner)) {
+        // The outline level AND the style name go. `[V]` A `text:p` still
+        // styled `Heading_20_2` is exported as /H2 anyway, because the style
+        // carries `style:default-outline-level="2"` and the importer reads a
+        // paragraph's level from its style when the tag does not say — the
+        // first version of this demotion kept the style and w20 delivered
+        // three headings. With no style the paragraph takes the default one,
+        // which has no level. Nothing visual is lost: the paragraph's only
+        // content is the image.
+        return `<text:p${attrs.replace(/\s+text:(?:outline-level|style-name)="[^"]*"/g, '')}>${inner}</text:p>`;
       }
-      return whole;
+      removed += 1;
+      return '';
     });
   return { xml: cleaned, removed };
 }
