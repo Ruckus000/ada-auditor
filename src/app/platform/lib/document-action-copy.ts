@@ -102,6 +102,14 @@ export function describeDocumentRefusal(refusal: DocumentRefusal): string {
       return 'That delivered file is no longer on record.';
     case 'artifact_not_stored':
       return 'The delivered file was never stored — no file store was configured when it was made. Run it again to store this one.';
+    case 'document_not_found':
+      return 'That inventory row is not this client\'s, or is no longer here. Reload and pick the row again.';
+    case 'invalid_document_id':
+      return 'The row this upload was meant for was named wrongly. Reload and pick the row again.';
+    case 'invalid_answers':
+      return 'The answers sent with the file were not in the declared-answers shape, so nothing ran. Send them again from the workbench.';
+    case 'answers_too_large':
+      return `The answers sent with the file were too large${refusal.detail ? ` (${refusal.detail})` : ''}. Split the descriptions across two saves.`;
     case 'document_budget_exceeded':
       // The route's sentence names the ceiling and says when it resets.
       return (

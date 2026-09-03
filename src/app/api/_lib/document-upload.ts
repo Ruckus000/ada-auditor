@@ -1,6 +1,6 @@
 import type { UploadCheck } from '../../../domain/document-remediation';
 import { authorizePrincipal } from './authorize';
-import { documentBudgetRefusal } from './document-budget';
+import { documentBudgetRefusal } from './budget-refusal';
 
 /**
  * Everything two document endpoints must agree on before a file is trusted.
@@ -78,8 +78,22 @@ export type ReadUploadResult =
     }
   | { ok: false; refusal: UploadRefusal };
 
-/** A page of descriptions at most; a sidecar is never larger. */
-const MAX_ANSWERS_BYTES = 64 * 1024;
+/**
+ * The most an `answers` part may weigh, in UTF-8 bytes.
+ *
+ * Sized from the schema it carries, not from the sidecars seen so far:
+ * `declaredAnswersSchema` allows five hundred figures of a thousand
+ * characters each, which is ~564 KB in ASCII and ~1.5 MB in CJK. The old cap
+ * was 64 KB measured in UTF-16 units — room for fifty-six descriptions, and
+ * over-counting or under-counting by up to three times depending on the
+ * script — and a part over it was dropped silently, so the run delivered a
+ * file as if the person had said nothing. Two mebibytes fits the schema's own
+ * maximum; the platform's 4.5 MB body ceiling sits above it.
+ */
+export const MAX_ANSWERS_BYTES = 2 * 1024 * 1024;
+
+/** Ids are `doc-<clientId>-<uuid>`, under a hundred characters; this is a ceiling. */
+const MAX_DOCUMENT_ID_CHARS = 128;
 
 export type ReadUploadOptions = {
   /**
@@ -167,19 +181,35 @@ export async function readDocumentUpload(
     return refuse(415, 'unsupported_document', check.reason);
   }
 
+  // The two optional parts are refused when out of bounds, never dropped. A
+  // dropped `documentId` made the upload look like one sent without any and
+  // minted a second row, leaving the row that asked forever asking; a dropped
+  // `answers` delivered a file as if the person had said nothing. Absent is
+  // fine; present and wrong is the caller's to hear about.
   const documentId = form.get('documentId');
+  if (documentId !== null) {
+    if (typeof documentId !== 'string' || documentId.length === 0 || documentId.length > MAX_DOCUMENT_ID_CHARS) {
+      return refuse(400, 'invalid_document_id', `expected 1 to ${MAX_DOCUMENT_ID_CHARS} characters`);
+    }
+  }
+
   const answers = form.get('answers');
+  if (answers !== null) {
+    if (typeof answers !== 'string') {
+      return refuse(400, 'invalid_answers', 'expected a text part');
+    }
+    if (Buffer.byteLength(answers, 'utf8') > MAX_ANSWERS_BYTES) {
+      return refuse(413, 'answers_too_large', `limit is ${MAX_ANSWERS_BYTES} bytes`);
+    }
+  }
+
   return {
     ok: true,
     bytes,
     kind: check.kind,
     filename: file.name,
-    ...(typeof documentId === 'string' && documentId.length > 0 && documentId.length <= 128
-      ? { documentId }
-      : {}),
-    ...(typeof answers === 'string' && answers.length > 0 && answers.length <= MAX_ANSWERS_BYTES
-      ? { answersJson: answers }
-      : {}),
+    ...(documentId === null ? {} : { documentId }),
+    ...(answers === null ? {} : { answersJson: answers }),
   };
 }
 

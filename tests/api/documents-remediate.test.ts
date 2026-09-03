@@ -55,6 +55,7 @@ const { documentStructureSchema } = await import('../../src/domain/document-stru
 const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
   '../../src/app/api/_lib/run-counter'
 );
+const { MAX_ANSWERS_BYTES } = await import('../../src/app/api/_lib/document-upload');
 
 beforeEach(() => setRunCounter(new MemoryRunCounter()));
 afterEach(() => {
@@ -660,6 +661,46 @@ describe('answers posted with the file', () => {
       expect((await response.json()).error).toBe('invalid_answers');
     }
     expect(finishDocument).not.toHaveBeenCalled();
+  });
+
+  it('refuses an answers part over its byte cap rather than running without it', async () => {
+    // Dropped silently, an over-cap part delivered a file as if the person
+    // had said nothing — an unrecorded loss of an attributed claim. Refused,
+    // the caller knows.
+    repairReads();
+
+    const response = await POST(withAnswers('x'.repeat(MAX_ANSWERS_BYTES + 1)));
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toMatchObject({
+      error: 'answers_too_large',
+      detail: `limit is ${MAX_ANSWERS_BYTES} bytes`,
+    });
+    expect(finishDocument).not.toHaveBeenCalled();
+  });
+
+  it('measures the cap in bytes, so a CJK part is neither over-counted nor under-counted', async () => {
+    // Seventy descriptions of a thousand CJK characters: 70k UTF-16 units,
+    // which the old cap (64k units) refused, and ~210 KB of UTF-8, well
+    // inside this one. It reaches the route's own checks, which refuse it for
+    // naming other bytes — the proof that the door let it through.
+    repairReads();
+    checkUa1.mockResolvedValue({ checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.3-1'] });
+    const answers = {
+      inputSha256: 'b'.repeat(64),
+      figures: Array.from({ length: 70 }, (_, ordinal) => ({
+        ordinal,
+        type: 'Figure',
+        page: 1,
+        prior: 'absent',
+        alt: '図'.repeat(1000),
+      })),
+    };
+
+    const response = await POST(withAnswers(answers));
+
+    expect(response.status).toBe(422);
+    expect((await response.json()).detail).toBe('answer-mismatch');
   });
 });
 

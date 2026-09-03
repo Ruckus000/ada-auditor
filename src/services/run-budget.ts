@@ -3,14 +3,14 @@ import { logWarn } from './logger';
 /**
  * A ceiling on how many audits this deployment will start.
  *
- * Nothing counted runs. Each one launches Chromium and makes an Opus call, so
- * a loop in a caller, a scheduler misconfigured to fire hourly, or a leaked
- * machine token spends real money with nothing in the way. This is the thing
- * in the way.
+ * Nothing counted runs. Each one launches Chromium and makes a model call
+ * through the gateway, so a loop in a caller, a scheduler misconfigured to
+ * fire hourly, or a leaked machine token spends real money with nothing in
+ * the way. This is the thing in the way.
  *
  * ## Global, not per-operator
  *
- * There is one organisation, and what is being protected — the Anthropic bill,
+ * There is one organisation, and what is being protected — the gateway bill,
  * the function budget — is shared. Per-operator quotas would be a fairness
  * mechanism nobody asked for, and would not stop the actual failure, which is
  * one caller in a loop.
@@ -43,7 +43,7 @@ export const DEFAULT_MAX_RUNS_PER_DAY = 100;
  *
  * A preview is the runner minus the audit: same Chromium, same walk, but no
  * axe scan, no advisory call, and nothing persisted. So it costs browser time
- * and not much else, where a run costs browser time plus an Opus call — which
+ * and not much else, where a run costs browser time plus a model call — which
  * is most of what the audit budget is defending.
  *
  * Sharing one counter made authoring compete with auditing for the same
@@ -89,7 +89,28 @@ export const DEFAULT_MAX_PREVIEWS_PER_DAY = 200;
 export const DEFAULT_MAX_DOCUMENTS_PER_HOUR = 500;
 export const DEFAULT_MAX_DOCUMENTS_PER_DAY = 2000;
 
-type BudgetPrefix = 'runs' | 'previews' | 'documents';
+/**
+ * Discovery crawls count against a fourth ceiling.
+ *
+ * A crawl is Chromium walking up to a hundred pages, bounded at sixty seconds
+ * by `DISCOVERY_BUDGET_MS`, on a five-minute function; the two measured runs
+ * took 15s and 62s. It was the last expensive thing on this tree an
+ * authenticated caller could start uncounted. Its own counter rather than a
+ * share of the runs, for the reason the route always gave: discovery audits
+ * nothing and stores nothing, and an afternoon of picking pages must not
+ * exhaust the audits a client bought.
+ *
+ * Sixty an hour is about the function-hour the run ceiling already permits
+ * (twenty runs of five minutes), sized against the cost rather than against
+ * a measured volume — no measurement of how many discoveries an operator runs
+ * exists; the workflow is one or a few per client at onboarding, not a loop
+ * like previewing. A starting point, like the other three;
+ * `discovery_completed` carries the durations that will replace it.
+ */
+export const DEFAULT_MAX_DISCOVERIES_PER_HOUR = 60;
+export const DEFAULT_MAX_DISCOVERIES_PER_DAY = 300;
+
+type BudgetPrefix = 'runs' | 'previews' | 'documents' | 'discovery';
 
 /** What separates one budget from another: its counter keys and its limits. */
 type BudgetSpec = {
@@ -127,6 +148,15 @@ const DOCUMENTS: BudgetSpec = {
   dayEnv: 'AUDITOR_MAX_DOCUMENTS_PER_DAY',
   hourDefault: DEFAULT_MAX_DOCUMENTS_PER_HOUR,
   dayDefault: DEFAULT_MAX_DOCUMENTS_PER_DAY,
+};
+
+const DISCOVERY: BudgetSpec = {
+  prefix: 'discovery',
+  noun: 'discovery',
+  hourEnv: 'AUDITOR_MAX_DISCOVERIES_PER_HOUR',
+  dayEnv: 'AUDITOR_MAX_DISCOVERIES_PER_DAY',
+  hourDefault: DEFAULT_MAX_DISCOVERIES_PER_HOUR,
+  dayDefault: DEFAULT_MAX_DISCOVERIES_PER_DAY,
 };
 
 export type Env = Record<string, string | undefined>;
@@ -214,6 +244,15 @@ export async function consumeDocumentBudget(
   return consumeBudget(DOCUMENTS, counter, now, env);
 }
 
+/** The same, spent against the discovery ceiling — one call per crawl, before the browser launches. */
+export async function consumeDiscoveryBudget(
+  counter: RunCounter,
+  now: Date = new Date(),
+  env: Env = process.env,
+): Promise<BudgetVerdict> {
+  return consumeBudget(DISCOVERY, counter, now, env);
+}
+
 async function consumeBudget(
   spec: BudgetSpec,
   counter: RunCounter,
@@ -260,6 +299,11 @@ export function runBudgetLimits(env: Env = process.env): { perHour: number; perD
 /** The document ceiling, for the settings screen and the refusal's sentence. */
 export function documentBudgetLimits(env: Env = process.env): { perHour: number; perDay: number } {
   return limitsOf(DOCUMENTS, env);
+}
+
+/** The discovery ceiling, for the same two readers. */
+export function discoveryBudgetLimits(env: Env = process.env): { perHour: number; perDay: number } {
+  return limitsOf(DISCOVERY, env);
 }
 
 function limitsOf(spec: BudgetSpec, env: Env): { perHour: number; perDay: number } {

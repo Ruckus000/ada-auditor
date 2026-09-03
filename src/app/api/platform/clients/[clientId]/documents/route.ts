@@ -22,7 +22,7 @@ import {
 import { hostnameOf } from '../../../../../../services/safe-url';
 import { logInfo } from '../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../_lib/authorize';
-import { documentBudgetRefusal } from '../../../../_lib/document-budget';
+import { documentBudgetRefusal } from '../../../../_lib/budget-refusal';
 import {
   fetchAndClassifyDocumentUrl,
   inspectPdfBytes,

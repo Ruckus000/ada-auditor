@@ -6,7 +6,7 @@ import { resolveJavaRuntime } from '../../../../integrations/documents/java-runt
 import { hostnameOf } from '../../../../services/safe-url';
 import { logInfo } from '../../../../services/logger';
 import { authorizePrincipal } from '../../_lib/authorize';
-import { documentBudgetRefusal } from '../../_lib/document-budget';
+import { documentBudgetRefusal } from '../../_lib/budget-refusal';
 import { fetchDocumentBytes } from '../../_lib/document-fetch';
 import { remediateWordBytes, remediationResponse } from '../../_lib/document-conversion';
 import { refusalResponse } from '../../_lib/document-upload';

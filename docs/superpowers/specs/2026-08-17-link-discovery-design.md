@@ -226,6 +226,12 @@ is not a run, and a shared counter would let an afternoon of picking pages
 exhaust a client's audits. Its bound is its own 60s ceiling and the operator
 gate in front of it.
 
+> Superseded 2026-09-03: discovery now spends its own `discovery` counter
+> (`AUDITOR_MAX_DISCOVERIES_PER_HOUR` / `_PER_DAY`), still never the run
+> budget's. The 60s ceiling bounds one crawl; a leaked machine token could
+> start any number of them on the same 300s function, and every other
+> expensive route had gained a counter by then.
+
 ## Selection, and one rule in one place
 
 The screen lists what was found and warns when a selection exceeds

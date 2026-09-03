@@ -19,7 +19,7 @@ import { pairDocuments } from '../../../../../../../services/document-pairing';
 import { hostnameOf } from '../../../../../../../services/safe-url';
 import { logInfo, logWarn } from '../../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
-import { documentBudgetRefusal } from '../../../../../_lib/document-budget';
+import { documentBudgetRefusal } from '../../../../../_lib/budget-refusal';
 import { fetchDocumentBytes } from '../../../../../_lib/document-fetch';
 import {
   remediateWordBytes,

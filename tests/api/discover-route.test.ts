@@ -36,6 +36,27 @@ const { EntryPointRedirectedError, EntryPointUnreachableError } = await import(
   '../../src/integrations/browser/discover-links'
 );
 const { UnsafeTargetError } = await import('../../src/integrations/browser/target-url');
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
+
+// The discovery budget counts in a process-wide singleton; each case starts
+// from an empty one, and a ceiling set by one case is not left for the next.
+const originalCeilings = {
+  discoveries: process.env.AUDITOR_MAX_DISCOVERIES_PER_HOUR,
+  runs: process.env.AUDITOR_MAX_RUNS_PER_HOUR,
+};
+beforeEach(() => setRunCounter(new MemoryRunCounter()));
+afterEach(() => {
+  resetRunCounter();
+  for (const [name, value] of [
+    ['AUDITOR_MAX_DISCOVERIES_PER_HOUR', originalCeilings.discoveries],
+    ['AUDITOR_MAX_RUNS_PER_HOUR', originalCeilings.runs],
+  ] as const) {
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+  }
+});
 
 const TOKEN = 'test-token-16chars';
 
@@ -85,6 +106,35 @@ describe('/api/platform/discover', () => {
 
     expect(response.status).toBe(401);
     expect(discoverLinks).not.toHaveBeenCalled();
+  });
+
+  describe('the discovery budget', () => {
+    // A crawl is Chromium for up to a minute on a five-minute function, and
+    // was the last expensive thing on this tree a caller could start
+    // uncounted. Refused before the browser launches, with a sentence that
+    // says when the window resets — "try again" is the one thing this
+    // refusal must not say.
+    it('refuses the crawl past the ceiling, and says when it resets', async () => {
+      process.env.AUDITOR_MAX_DISCOVERIES_PER_HOUR = '1';
+      expect((await POST(fromScript({ targetUrl: 'https://acme.test/' }))).status).toBe(200);
+
+      const response = await POST(fromScript({ targetUrl: 'https://acme.test/' }));
+      const body = await response.json();
+
+      expect(response.status).toBe(429);
+      expect(body.error).toBe('discovery_budget_exceeded');
+      expect(body.detail).toBe('hour');
+      expect(body.message).toMatch(/resets in/);
+      expect(discoverLinks).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not spent by a malformed body, and not refused by a spent audit budget', async () => {
+      process.env.AUDITOR_MAX_DISCOVERIES_PER_HOUR = '1';
+      process.env.AUDITOR_MAX_RUNS_PER_HOUR = '1';
+
+      expect((await POST(fromScript({ targetUrl: 'not a url' }))).status).toBe(400);
+      expect((await POST(fromScript({ targetUrl: 'https://acme.test/' }))).status).toBe(200);
+    });
   });
 
   it('refuses a cookie carried cross-origin', async () => {

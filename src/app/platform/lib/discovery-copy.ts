@@ -60,8 +60,19 @@ export function clipHost(host: string): string {
  * live response from a route in this same deployment, and our own bookkeeping
  * on a client's screen is noise they cannot act on.
  */
-export function describeDiscoveryFailure(code: string, details?: { host?: string }): string {
+export function describeDiscoveryFailure(
+  code: string,
+  details?: { host?: string; message?: string },
+): string {
   switch (code) {
+    case 'discovery_budget_exceeded':
+      // The route's own sentence names the ceiling and says when it resets.
+      // Without it there is still a next step — and it is not "try again",
+      // which is the one instruction this refusal makes wrong.
+      return (
+        details?.message ??
+        'Discovery is capped for now and this window is spent. Try again after the hour turns.'
+      );
     case 'entry_point_redirected': {
       const host = details?.host ? clipHost(details.host) : null;
       return host

@@ -317,6 +317,41 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     resetPlatformStore();
   });
 
+  it('lands a re-supplied upload on the row it was asked for, and refuses a row that is not the client\'s', async () => {
+    // The same contract the documents route holds, checked here because this
+    // route implements the same lookup and had no test of it.
+    const existing = await platform.ensureClientDocument(
+      'acme',
+      { url: DOC_URL, kind: 'docx', source: 'crawl', foundOn: 'https://town.example/forms' },
+      '2026-08-26T09:00:00.000Z',
+    );
+
+    const form = new FormData();
+    form.set('file', new File([new Uint8Array(docxBytes())], 'permit (2).docx'));
+    form.set('documentId', existing.id);
+    const landed = await PUT(
+      new Request('http://localhost/api/platform/clients/acme/documents/convert', { method: 'PUT', body: form }),
+      params('acme'),
+    );
+
+    expect(landed.status).toBe(200);
+    const documents = (await platform.listClientDocuments('acme')).documents;
+    expect(documents).toHaveLength(1);
+    expect(documents[0].latestConversion?.documentId).toBe(existing.id);
+
+    const other = new FormData();
+    other.set('file', new File([new Uint8Array(docxBytes())], 'x.docx'));
+    other.set('documentId', 'doc-somebody-elses');
+    const refused = await PUT(
+      new Request('http://localhost/api/platform/clients/acme/documents/convert', { method: 'PUT', body: other }),
+      params('acme'),
+    );
+
+    expect(refused.status).toBe(404);
+    expect((await refused.json()).error).toBe('document_not_found');
+    expect((await platform.listClientDocuments('acme')).documents).toHaveLength(1);
+  });
+
   it('refuses past the document ceiling before fetching or converting', async () => {
     process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
     expect((await POST(request({ url: DOC_URL }), params('acme'))).status).toBe(200);
