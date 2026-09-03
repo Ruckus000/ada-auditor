@@ -1,8 +1,8 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createConnection } from 'node:net';
-import { join } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { AxeBuilder } from '@axe-core/playwright';
 import { ENABLED_BY_US } from '../../../src/integrations/browser/axe-scan';
 
@@ -2817,4 +2817,67 @@ describe('passkey sign-in', () => {
       await page.close();
     }
   }, 60_000);
+});
+
+/**
+ * What each function carries, read from the build rather than the config.
+ *
+ * `next.config.mjs` names what the tracer must add beside a function; nothing
+ * until now said what it must not. Turbopack answers a filesystem call whose
+ * path it cannot resolve — `existsSync` over a `PATH` entry, `readdirSync` of
+ * a directory found through a symlink — by tracing the whole project, and the
+ * build says so in a warning that scrolls past. `[V]` Measured on 2026-09-03
+ * against master: every module importing `libreoffice-runtime.ts` — the three
+ * converting routes, the settings and remediate pages, and `/api/ready` —
+ * listed 1,168–1,321 files, 756 of them under `experiments/`, `tests/`,
+ * `docs/`, `fixtures/` and `scripts/`, beside a health route at 144. On a
+ * tree holding the blind corpus the same trace carried the real municipal
+ * documents. `inspect` spawns the same JVM and needs the same vendor tree, so
+ * it is the honest comparison and is held to the same line.
+ *
+ * Here rather than in the fast suite because this is the one suite that runs
+ * after the build, in both `localci.yml` and `ci.yml`, and a trace is a build
+ * output: the config test in `tests/deploy/` holds what the excludes say, this
+ * holds what the tracer did with them. The ceiling is a round number above the
+ * measured bound and well under the walk (1,168): after the fix the widest of
+ * these, the client-scoped convert route, lists 311 on a tree with no
+ * `vendor/` and 369 once `npm run build:documents` has put the fonts, PDFBox
+ * and the compiled classes there (the rest 156–218; veraPDF adds one jar).
+ * A tripwire for the walk coming back, not a budget to spend up to — the
+ * next thing that legitimately needs to ride along has to raise it on the
+ * record, with the measurement.
+ */
+describe('function traces', () => {
+  // Paths under `.next/server/app`, one per module that imports the
+  // LibreOffice resolver, plus `inspect` as the read-only JVM comparison.
+  const TRACES = [
+    'api/platform/clients/[clientId]/documents/convert/route.js.nft.json',
+    'api/documents/remediate/route.js.nft.json',
+    'api/documents/remediate-url/route.js.nft.json',
+    '(platform)/settings/page.js.nft.json',
+    '(platform)/remediate/page.js.nft.json',
+    'api/ready/route.js.nft.json',
+    'api/documents/inspect/route.js.nft.json',
+  ];
+
+  // Anything a function has no use for at runtime. `artifacts/` is run output
+  // and gitignored, so it only shows on a tree that has run an audit — which
+  // is what makes the assertion worth running here and not only in CI.
+  const NEVER_A_DEPENDENCY = ['experiments/', 'tests/', 'docs/', 'fixtures/', 'scripts/', 'artifacts/'];
+
+  const TRACE_CEILING = 400;
+
+  it('are bounded: no project junk, and a count the walk cannot hide behind', () => {
+    for (const trace of TRACES) {
+      const file = join(process.cwd(), '.next', 'server', 'app', trace);
+      // Entries are relative to the trace's own directory; the prefix check
+      // needs them relative to the project.
+      const { files } = JSON.parse(readFileSync(file, 'utf8')) as { files: string[] };
+      const entries = files.map((entry) => relative(process.cwd(), resolve(dirname(file), entry)));
+
+      const junk = entries.filter((entry) => NEVER_A_DEPENDENCY.some((prefix) => entry.startsWith(prefix)));
+      expect(junk, `${trace} traces ${junk.length} files no function needs`).toEqual([]);
+      expect(files.length, `${trace} lists ${files.length} files`).toBeLessThanOrEqual(TRACE_CEILING);
+    }
+  });
 });

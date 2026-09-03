@@ -67,6 +67,33 @@ Supporting Netflix practices we adopt:
   exists, or half-introducing it — so the run-store contract pins that `getRun`
   takes a request id and nothing else. If this changes, it changes in
   `schema.sql` first, and the contract test is where you will notice
+- **Function traces are bounded.** A deployed function carries what its
+  `.nft.json` lists, and Turbopack's answer to a filesystem call whose path it
+  cannot resolve is to list the whole project — with a build warning
+  ("Dynamic filesystem access causes tracing of the whole project") and
+  nothing red. `[V]` Measured on 2026-09-03 against master: every module
+  importing `libreoffice-runtime.ts` — `documents/convert`, `remediate`,
+  `remediate-url`, the settings and remediate pages, and `/api/ready` — listed
+  1,168–1,321 files, 756 of them under `experiments/`, `tests/`, `docs/`,
+  `fixtures/` and `scripts/` plus sixteen root config files, against 144 for
+  `/api/health`; on the checkout that holds the blind corpus the same walk
+  swept 166 real municipal PDFs and 342 run artifacts into the trace, so
+  until that day every converting function, and the readiness probe, was
+  built with that spike inside it. Two levers, both needed: `/*turbopackIgnore:
+  true*/` in the argument list of each host-discovery call
+  (`libreoffice-runtime.ts`, and `document-conversion.ts`'s fonts `join`),
+  because the tracer could never copy a host's LibreOffice and the bundled
+  one is already in `outputFileTracingIncludes`; and `outputFileTracingExcludes`
+  in `next.config.mjs` naming each directory no function could need. After:
+  156–311 on a tree with no `vendor/`, 194–369 with the fonts, PDFBox and
+  compiled classes on disk (the widest is the client-scoped convert route,
+  which also carries the browser), and the warning gone.
+  `tests/deploy/browser-routes-are-packaged.test.ts`
+  holds the exclude list; `platform-hydration.test.ts` reads the built traces
+  and fails on any entry under those directories or a count past 400. When
+  the warning reappears, the fix is at the call it names, not a silenced
+  issue — `java-runtime.ts` has the same `existsSync`-over-`PATH` shape and
+  does not trigger the walk today
 
 ### Full-cycle expectations
 
