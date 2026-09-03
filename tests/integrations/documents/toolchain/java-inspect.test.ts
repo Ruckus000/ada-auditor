@@ -428,6 +428,100 @@ describe.skipIf(skip)('Inspect against a real JVM', () => {
   });
 
   /**
+   * Figures drawn as PATHS — the rules, charts and boxes that made up the
+   * unlocated 56 % of the real corpus's open figures — plus the two shapes
+   * that would produce a wrong box rather than none.
+   *
+   * The second figure sits under `2 0 0 2 0 0 cm`: PDFBox hands the path
+   * methods coordinates already transformed by the CTM, so a pass that
+   * applied the matrix again would report it at four times its size. The
+   * third paints nothing — `W n` sets a clip and ends the path — and a pass
+   * that recorded every path point would make the clip rectangle the figure's
+   * box. The fifth draws a path AND an image, in that order: the box is the
+   * union, and the identity is the image's.
+   *
+   * The last two are the marked-content shapes real producers use. `[V]`
+   * InDesign nests a `/PlacedPDF /MC0 BDC` sequence — a named property list
+   * with no MCID of its own — inside the figure's, and 22 of r11's 36 figures
+   * were hidden behind it; the content belongs to the enclosing element. And
+   * an id may arrive through `/Resources /Properties` rather than inline,
+   * which is the same statement spelled differently.
+   */
+  function pathFiguresPdf(): Buffer {
+    const image = 'PDF!';
+    const stream = [
+      '/Figure <</MCID 0>> BDC 20 100 50 30 re f EMC',
+      '/Figure <</MCID 1>> BDC q 2 0 0 2 0 0 cm 10 20 m 40 20 l 40 35 l h S Q EMC',
+      '/Figure <</MCID 2>> BDC q 10 10 100 100 re W n Q EMC',
+      '/Figure <</MCID 3>> BDC EMC',
+      '/Figure <</MCID 4>> BDC 100 100 20 20 re f q 50 0 0 30 20 100 cm /Im1 Do Q EMC',
+      '/Figure <</MCID 5>> BDC /PlacedPDF /MC0 BDC 150 150 20 20 re f EMC EMC',
+      '/Figure /MC1 BDC 10 150 20 20 re f EMC',
+    ].join('\n');
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 6 0 R /MarkInfo << /Marked true >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R'
+        + ' /Resources << /XObject << /Im1 5 0 R >>'
+        + ' /Properties << /MC0 << /Type /OCG >> /MC1 << /MCID 6 >> >> >> /StructParents 0 >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+      `<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 8 /Length ${image.length} >>\nstream\n${image}\nendstream`,
+      '<< /Type /StructTreeRoot /K [7 0 R 8 0 R 9 0 R 10 0 R 11 0 R 12 0 R 13 0 R] >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 0 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 1 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 2 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 3 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 4 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 5 >>',
+      '<< /Type /StructElem /S /Figure /P 6 0 R /Pg 3 0 R /K 6 >>',
+    ];
+
+    let out = '%PDF-1.7\n';
+    const offsets: number[] = [];
+    objs.forEach((body, index) => {
+      offsets.push(out.length);
+      out += `${index + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) out += `${String(offset).padStart(10, '0')} 00000 n \n`;
+    out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return Buffer.from(out, 'latin1');
+  }
+
+  it('locates a figure drawn as paths, without inflating it by the CTM or by a clip', async () => {
+    const path = join(dir, 'path-figures.pdf');
+    await writeFile(path, pathFiguresPdf());
+
+    const result = await inspectDocument(path);
+    if (!result.ok) expect.unreachable(`could not read the path-figure fixture: ${JSON.stringify(result.failure)}`);
+    else {
+      const [rect, scaled, clipped, empty, both, nested, named] = result.value.figures;
+      // A filled rectangle: its own bounds, in top-down page points.
+      expect(rect.box).toEqual({ page: 1, x: 20, y: 70, w: 50, h: 30 });
+      // A stroked triangle under a 2× CTM: the bounds of the transformed
+      // points, once — (20,40)–(80,70) in PDF space.
+      expect(scaled.box).toEqual({ page: 1, x: 20, y: 130, w: 60, h: 30 });
+      // A clip is not a painting: the figure has no box rather than a wrong one.
+      expect(clipped.box).toBeNull();
+      expect(empty.box).toBeNull();
+      // A path has a place and no identity.
+      for (const figure of [rect, scaled, clipped, empty]) {
+        expect(figure.imageDigest).toBeNull();
+        expect(figure.imageFilter).toBeNull();
+      }
+      // Path and image together: the union of both, identified by the image
+      // even though the path was drawn first.
+      expect(both.box).toEqual({ page: 1, x: 20, y: 70, w: 100, h: 30 });
+      expect(both.imageDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
+      // A nested sequence with no id of its own belongs to the figure; an id
+      // declared through the resource dictionary is still the figure's id.
+      expect(nested.box).toEqual({ page: 1, x: 150, y: 30, w: 20, h: 20 });
+      expect(named.box).toEqual({ page: 1, x: 10, y: 30, w: 20, h: 20 });
+    }
+  });
+
+  /**
    * A document with other documents inside it.
    *
    * `collection: true` makes it a portfolio; without it, the same attachment
