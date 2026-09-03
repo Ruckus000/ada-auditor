@@ -84,7 +84,10 @@ cost nothing — a key author is not the authority on their own corpus.
 ## Adding a document
 
 Planted: add a row to `spec.mjs`, `node generate.mjs`, `node verify.mjs`, and
-commit the new key and hash. Real: add a line to `real-names.txt`,
+commit the new key and hash. `verify.mjs` is hand-run and nothing else runs
+it, which is how a row that taught the builders a new shape (`w19`, outline
+levels) shipped with the verifier still reading the old one — run it, and
+read what it says. Real: add a line to `real-names.txt`,
 `node harvest.mjs real-names.txt` (it refuses training-set domains and
 byte-identical files), then `node author-real-keys.mjs`.
 

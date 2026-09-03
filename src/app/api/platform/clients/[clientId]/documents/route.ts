@@ -22,6 +22,7 @@ import {
 import { hostnameOf } from '../../../../../../services/safe-url';
 import { logInfo } from '../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../_lib/authorize';
+import { documentBudgetRefusal } from '../../../../_lib/document-budget';
 import {
   fetchAndClassifyDocumentUrl,
   inspectPdfBytes,
@@ -318,6 +319,11 @@ export async function POST(
     return Response.json({ error: 'client_not_found', requestId }, { status: 404 });
   }
 
+  // Before the body and the fetch: a caller past the ceiling costs this
+  // function nothing but the answer, and mints neither a row nor an event.
+  const capped = await documentBudgetRefusal(requestId);
+  if (capped) return refusalResponse(capped, requestId);
+
   let body: unknown;
   try {
     body = await request.json();
@@ -464,6 +470,7 @@ export async function PUT(
   }
 
   const upload = await readDocumentUpload(request, {
+    requestId,
     accept: isPdf,
     // Only the JVM, as in `/api/documents/inspect`: this route never converts.
     requires: [{ error: 'document_toolchain_unavailable', check: () => resolveJavaRuntime() }],

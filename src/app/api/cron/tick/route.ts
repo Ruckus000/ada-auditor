@@ -5,6 +5,7 @@ import {
   type ScheduledRunNotStarted,
   type StoredJourney,
 } from '../../../../domain/platform';
+import { DEFAULT_MAX_STARTS_PER_TICK } from '../../../../domain/run-limits';
 import { staleAfterMs } from '../../../../domain/run-staleness';
 import { getPlatformStore, getRunStore } from '../../../../integrations/persistence';
 import { logInfo, logWarn } from '../../../../services/logger';
@@ -43,11 +44,9 @@ export const runtime = 'nodejs';
 // something has gone wrong with the fan-out.
 export const maxDuration = 60;
 
-const DEFAULT_MAX_STARTS = 3;
-
 function maxStartsPerTick(): number {
   const configured = Number(process.env.CRON_MAX_STARTS_PER_TICK);
-  return Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_MAX_STARTS;
+  return Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_MAX_STARTS_PER_TICK;
 }
 
 /**

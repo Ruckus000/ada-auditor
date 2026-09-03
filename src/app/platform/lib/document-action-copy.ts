@@ -102,6 +102,12 @@ export function describeDocumentRefusal(refusal: DocumentRefusal): string {
       return 'That delivered file is no longer on record.';
     case 'artifact_not_stored':
       return 'The delivered file was never stored — no file store was configured when it was made. Run it again to store this one.';
+    case 'document_budget_exceeded':
+      // The route's sentence names the ceiling and says when it resets.
+      return (
+        refusal.message ??
+        'Document work is capped for now and this window is spent. Try again later — the hourly ceiling resets on the hour.'
+      );
     case undefined:
       return `The action stopped: http ${refusal.status ?? 0}.`;
     default:

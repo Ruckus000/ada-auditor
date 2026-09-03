@@ -1,4 +1,4 @@
-import { runBudgetLimits } from './run-budget';
+import { documentBudgetLimits, runBudgetLimits } from './run-budget';
 import { DEFAULT_RETENTION_DAYS } from '../integrations/artifacts/blob-store';
 import {
   DEFAULT_MAX_PAGES_PER_RUN,
@@ -136,6 +136,7 @@ export function readDeploymentConfig(
   facts: DeploymentFacts = {},
 ): DeploymentConfig {
   const budget = runBudgetLimits(env);
+  const documents = documentBudgetLimits(env);
   const countersDurable = Boolean(env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL);
 
   const settings: ConfigSetting[] = [
@@ -195,6 +196,17 @@ export function readDeploymentConfig(
           ? 'Counted in Redis, so the ceiling holds across instances. '
           : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
         'A run launches a browser and makes a model call; without a ceiling a loop in a caller spends real money unattended. It fails open — a cost control that becomes an outage has made things worse.',
+      degraded: !countersDurable,
+    },
+    {
+      key: 'documentBudget',
+      label: 'Document budget',
+      value: `${documents.perHour}/hour, ${documents.perDay}/day`,
+      detail:
+        (countersDurable
+          ? 'Counted in Redis, so the ceiling holds across instances. '
+          : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
+        'Every inspection, conversion, repair and intake launches a JVM — and a converter for Word — on a function that may run five minutes; this bounds what a looping caller or a leaked token can spend. Its own ceiling, so an inventory sweep cannot spend the audits a client bought. Fails open the same way.',
       degraded: !countersDurable,
     },
     {

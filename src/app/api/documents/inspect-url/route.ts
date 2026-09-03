@@ -5,6 +5,7 @@ import { resolveJavaRuntime } from '../../../../integrations/documents/java-runt
 import { hostnameOf } from '../../../../services/safe-url';
 import { logInfo } from '../../../../services/logger';
 import { authorizePrincipal } from '../../_lib/authorize';
+import { documentBudgetRefusal } from '../../_lib/document-budget';
 import { fetchAndInspectDocumentUrl } from '../../_lib/document-inspection';
 import { refusalResponse } from '../../_lib/document-upload';
 import { createRequestId } from '../../_lib/request-id';
@@ -50,6 +51,11 @@ export async function POST(request: Request) {
   if (!(await authorizePrincipal(request))) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
+
+  // Before the toolchain probe and the fetch: a caller past the ceiling costs
+  // this function nothing but the answer.
+  const capped = await documentBudgetRefusal(requestId);
+  if (capped) return refusalResponse(capped, requestId);
 
   const java = resolveJavaRuntime();
   if (!java.available) {

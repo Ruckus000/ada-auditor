@@ -16,6 +16,7 @@ Required for Phase 1 Vercel control plane operation.
 | `CRON_MAX_STARTS_PER_TICK` | No | Most journeys dispatched per hourly tick. Default 3. Each dispatch is a separate invocation with its own Chromium, so this and the run budget are what stop one tick launching a fleet. When it truncates, the tick logs how many were deferred — they are picked up next hour, not dropped. |
 | `AUDITOR_MAX_RUNS_PER_HOUR` / `_PER_DAY` | No | Ceiling on audits started per window. Defaults 20 and 100. A run launches a browser and makes a model call, so without this a loop in a caller spends real money unattended. Global rather than per operator — the bill is shared. Both windows are counted even when the first already refuses, because the counters describe demand, not permitted demand. Fails **open** if the counter is unreachable: a cost control that becomes an outage has made things worse. |
 | `AUDITOR_MAX_PREVIEWS_PER_HOUR` / `_PER_DAY` | No | Ceiling on journey *previews* — the replay-verify walk behind "Verify so far" — per window. Defaults 40 and 200. Counted separately from audits on purpose: a preview is the runner minus the axe scan, the advisory call and all persistence, so it costs browser time and not the model call the audit budget mainly defends. On one shared counter, authoring competed with auditing for the same twenty — an operator iterating on a stale selector could spend the hour's audits without running one, and the scheduler would then refuse a real client's audit because somebody was typing. Higher than the run ceiling because verifying is a loop and auditing is a decision. Same fixed windows, same fail-open behaviour, same `run_budget_exceeded` code on refusal; the degraded log carries `budget: previews` so a failing counter names which ceiling stopped being enforced. The defaults are a starting point rather than a measurement — `journey_preview`'s `durationMs` across a real authoring session is what should replace them. |
+| `AUDITOR_MAX_DOCUMENTS_PER_HOUR` / `_PER_DAY` | No | Ceiling on document work per window — every inspection, conversion, repair and intake, through the console or the stateless `/api/documents/*` routes. Defaults 500 and 2000. Each launches a JVM, and a converter for Word, on a function that may run five minutes; until this counter existed those routes were authenticated and uncounted, so a leaked machine token or a caller in a loop had nothing in the way. Its own counter for the reason previews have one: "Inspect all unreviewed" walks an inventory of up to two hundred documents in one click, and on a shared counter one sweep would spend every audit a client had bought. One counter for every kind rather than one per kind — a conversion costs ten times an inspection, but what is being bounded is function time under a caller that should not be there, and one number bounds it. Sized against real use: a sweep is two hundred requests and the blind harness posts a hundred and fifty in one run. Consumed after the caller is authorised and before anything is buffered, probed or fetched, so a refused request costs nothing and mints no row and no event. Same fixed windows, same fail-open; refused with 429 `document_budget_exceeded`, whose `message` says when the window resets and whose `detail` names it; the degraded log carries `budget: documents`. The inventory's "Inspect all" stops at the first refusal rather than issuing two hundred more. Discovery crawls are deliberately not counted here — see the note in `platform/discover/route.ts`. |
 | `AUDITOR_MAX_PAGES_PER_RUN` | No | Pages audited per run before the journey is truncated — **the second of two bounds**, and the one that stops a site with many small pages. Default 20 (`DEFAULT_MAX_PAGES_PER_RUN` in `src/domain/run-limits.ts`) — a starting point, not a measurement; `audit_page_cap_reached` records when it bit, and `run_pages.duration_ms` is what will eventually replace the guess with a number. A count cannot bound a duration, which is why `AUDITOR_WALK_BUDGET_MS` exists beside it; a truncated run records `truncation_reason` so an operator can tell which of the two to change. |
 | `AUDITOR_WALK_BUDGET_MS` | No | **The first of two bounds**: how long the walk may spend *starting* new work, measured from before the browser launches. Default 180000 — what is left of the 300s function ceiling after a 120s reserve for upload, advisory, persistence and the page still in flight (`MAX_RUN_DURATION_MS` minus `RUN_RESERVE_MS`). It bounds when work starts, never when work already in flight finishes, so **keep it comfortably above `AUDITOR_EXPECT_TIMEOUT_MS`**: the page being audited when the deadline passes may still take that long, and the reserve is what covers it. A walk always audits at least one page however spent the budget is — a zero-page run is the evidence-free outcome this exists to prevent. When it bites the run logs `audit_time_budget_reached` and stores `truncation_reason = 'budget'`, which means get a container worker rather than raise the page cap. |
 | `AUDITOR_STEP_TIMEOUT_MS` | No | How long one `fill` or `click` may wait for its element. Default 10000. Nothing set a timeout at all before, so Playwright's 30s stood — and because the step loop has no `catch`, the first stale selector ends the run, so this is one wait per run rather than one per step. Ten seconds because a control that has not appeared by then, on a page already navigated to and settled, is stale rather than slow. Raise it for an app that genuinely paints later. |
@@ -185,10 +186,16 @@ prior baseline.
 
 ## Function memory
 
-`vercel.json` sets `memory: 3009` on the routes that launch Chromium and 2048
-on the PDF route. It is the only place memory can be declared — `maxDuration`
-lives in the route files and is deliberately not repeated here, so the number
-has one home.
+`vercel.json` sets `memory: 3009` on the routes that launch Chromium or
+LibreOffice and 2048 on the rest of the document routes and the PDF route. It
+is the only place memory can be declared — `maxDuration` lives in the route
+files and is deliberately not repeated here, so the number has one home.
+`tests/deploy/browser-routes-are-packaged.test.ts` refuses a `maxDuration` in
+`vercel.json`, because for three weeks there was one: 600 on the three
+converting routes, beside route files exporting 300, and nothing said which
+the platform honoured. Every timeout, stale-run window and reserve in the
+tree is derived from 300 (`MAX_RUN_DURATION_MS`), and the same test holds
+every route file to that ceiling.
 
 3009 MB is the smallest Vercel size that reliably fits `@sparticuz/chromium`:
 the binary is unpacked to `/tmp` on first use and a browser plus a page's DOM,
@@ -197,10 +204,16 @@ smaller, and a Chromium that cannot allocate fails at launch rather than
 degrading — so a too-small setting looks like "audits do not work" rather than
 "audits are slow".
 
-Four routes get 3009 and each is named: `/api/audit/run`, `/api/audit/console`,
-the platform run route under `clients/**/runs`, and `/api/platform/discover`,
-which crawls a site to propose its pages. The PDF route drives a browser too,
-but only to print one already-stored report, so 2048 covers it.
+Nine entries get 3009 and each is named. Six launch Chromium: `/api/audit/run`,
+`/api/audit/console`, the platform run and preview routes under
+`clients/**/runs` and `clients/**/preview`, `/api/platform/discover`, which
+crawls a site to propose its pages, and `clients/**/documents/discover`, which
+crawls it for documents. Three launch LibreOffice beside a JVM:
+`clients/**/documents/convert`, `/api/documents/remediate` and
+`/api/documents/remediate-url`. The PDF route drives a browser too, but only
+to print one already-stored report, so 2048 covers it; the remaining document
+routes spawn only a JVM with a 512MB heap ceiling (`stage.ts`) and get 2048
+through the `documents/**` catch-all.
 
 The wildcard patterns are wildcards on purpose: `functions` keys are globs, and
 `[clientId]` in a literal path would be read as a character class and match
@@ -215,9 +228,9 @@ On **Active CPU billing** — which this project is on — Vercel discards the
 
 > Provided `memory` setting in `vercel.json` is ignored on Active CPU billing.
 
-Observed on a preview deploy on 2026-08-17. It applies to all five routes,
-including the three that had carried the setting for weeks before anyone read
-the warning. Under Fluid Compute, memory comes from the plan rather than from
+Observed on a preview deploy on 2026-08-17. It applies to every entry in the
+file, including the three that had carried the setting for weeks before anyone
+read the warning. Under Fluid Compute, memory comes from the plan rather than from
 this file, and what a Fluid instance actually gets is not stated anywhere in the
 documentation we could find — so the paragraphs above describe an intent, not a
 guarantee that is being enforced today.

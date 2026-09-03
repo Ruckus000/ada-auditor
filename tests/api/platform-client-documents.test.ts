@@ -37,6 +37,15 @@ const { GET, POST, PUT } = await import(
   '../../src/app/api/platform/clients/[clientId]/documents/route'
 );
 const { documentStructureSchema } = await import('../../src/domain/document-structure');
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
+
+beforeEach(() => setRunCounter(new MemoryRunCounter()));
+afterEach(() => {
+  resetRunCounter();
+  delete process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR;
+});
 const { MemoryPlatformStore, resetPlatformStore, setPlatformStore } = await import(
   '../../src/integrations/persistence'
 );
@@ -125,6 +134,25 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect((await PUT(uploadRequest(PDF_BYTES), params('acme'))).status).toBe(401);
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(await platform.listDocumentInspections('acme')).toEqual([]);
+  });
+
+  it('refuses past the document ceiling before fetching, and mints nothing', async () => {
+    process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
+    expect((await POST(jsonRequest({ url: DOC_URL }), params('acme'))).status).toBe(201);
+    const eventsBefore = (await platform.listEvents({ clientId: 'acme' })).length;
+    fetchSpy.mockClear();
+
+    const post = await POST(jsonRequest({ url: `${DOC_URL}?v=2` }), params('acme'));
+    const put = await PUT(uploadRequest(PDF_BYTES, 'second.pdf'), params('acme'));
+
+    expect(post.status).toBe(429);
+    expect((await post.json()).error).toBe('document_budget_exceeded');
+    expect(put.status).toBe(429);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    // A request that never started is not a document, and not an event: the
+    // caller was told, which is the same rule a refused audit run follows.
+    expect((await platform.listClientDocuments('acme')).documents).toHaveLength(1);
+    expect(await platform.listEvents({ clientId: 'acme' })).toHaveLength(eventsBefore);
   });
 
   it('answers 404 for a client that does not exist, and persists nothing', async () => {

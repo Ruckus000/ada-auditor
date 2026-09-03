@@ -52,6 +52,15 @@ vi.mock('../../src/app/api/_lib/authorize', () => ({
 
 const { GET, POST } = await import('../../src/app/api/documents/remediate/route');
 const { documentStructureSchema } = await import('../../src/domain/document-structure');
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
+
+beforeEach(() => setRunCounter(new MemoryRunCounter()));
+afterEach(() => {
+  resetRunCounter();
+  delete process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR;
+});
 
 /** A byte sequence `isWordDocument` accepts. */
 function docxBytes(): Uint8Array {
@@ -335,6 +344,17 @@ describe('POST /api/documents/remediate', () => {
     expect(response.status).toBe(401);
     // Nothing was converted, and nothing was buffered on their behalf.
     expect(convertSourceToPdf).not.toHaveBeenCalled();
+  });
+
+  it('refuses the upload past the document ceiling before converting', async () => {
+    process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
+    expect((await POST(upload(docxBytes()))).status).toBe(200);
+
+    const response = await POST(upload(docxBytes()));
+
+    expect(response.status).toBe(429);
+    expect((await response.json()).error).toBe('document_budget_exceeded');
+    expect(convertSourceToPdf).toHaveBeenCalledTimes(1);
   });
 
   it('answers 503, not 500, when the host has no converter', async () => {

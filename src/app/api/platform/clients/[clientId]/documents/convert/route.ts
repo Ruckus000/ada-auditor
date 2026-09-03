@@ -19,6 +19,7 @@ import { pairDocuments } from '../../../../../../../services/document-pairing';
 import { hostnameOf } from '../../../../../../../services/safe-url';
 import { logInfo, logWarn } from '../../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
+import { documentBudgetRefusal } from '../../../../../_lib/document-budget';
 import { fetchDocumentBytes } from '../../../../../_lib/document-fetch';
 import {
   remediateWordBytes,
@@ -217,6 +218,11 @@ export async function POST(
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
   }
 
+  // Before the toolchain probe and the fetch: a caller past the ceiling costs
+  // this function nothing but the answer.
+  const capped = await documentBudgetRefusal(requestId);
+  if (capped) return refusalResponse(capped, requestId);
+
   // Before the fetch — no point pulling a document this host cannot convert.
   const refused = refuseWithoutToolchain(requestId);
   if (refused) return refused;
@@ -351,6 +357,7 @@ export async function PUT(
   }
 
   const upload = await readDocumentUpload(request, {
+    requestId,
     accept: isWordOrPdf,
     // Only the JVM of every caller: a repair needs no LibreOffice, and
     // demanding it here would refuse work this host can do. The converter is

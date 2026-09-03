@@ -49,6 +49,15 @@ vi.mock('../../src/app/api/_lib/authorize', () => ({
 
 const { POST } = await import('../../src/app/api/documents/remediate-url/route');
 const { documentStructureSchema } = await import('../../src/domain/document-structure');
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
+
+beforeEach(() => setRunCounter(new MemoryRunCounter()));
+afterEach(() => {
+  resetRunCounter();
+  delete process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR;
+});
 
 const SECRET_PATH = '/forms/objection-of-jane-doe.docx';
 const DOC_URL = `https://town.example${SECRET_PATH}`;
@@ -157,6 +166,18 @@ describe('POST /api/documents/remediate-url', () => {
 
     expect(response.status).toBe(401);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('refuses the request past the document ceiling before fetching or converting', async () => {
+    process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
+    expect((await POST(request({ url: DOC_URL }))).status).toBe(200);
+
+    const response = await POST(request({ url: DOC_URL }));
+
+    expect(response.status).toBe(429);
+    expect((await response.json()).error).toBe('document_budget_exceeded');
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(convertSourceToPdf).toHaveBeenCalledTimes(1);
   });
 
   it('answers 503 before fetching when the host has no converter', async () => {

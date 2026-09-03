@@ -44,6 +44,7 @@ export async function POST(request: Request) {
   const requestId = createRequestId();
 
   const upload = await readDocumentUpload(request, {
+    requestId,
     accept: isPdf,
     // Only the JVM. This route never converts, so LibreOffice being absent —
     // which it always is on a deployment — must not stop it.

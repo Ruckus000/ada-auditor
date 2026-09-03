@@ -1421,7 +1421,14 @@ Read this before claiming something works.
 - **Runs are capped.** `AUDITOR_MAX_RUNS_PER_HOUR` / `_PER_DAY`, global rather
   than per-operator because the bill is shared, enforced inside `startRun` so
   every caller inherits it. It **fails open**: a cost control that becomes an
-  outage has made things worse.
+  outage has made things worse. **Document work is capped the same way, at
+  its own ceiling** (`AUDITOR_MAX_DOCUMENTS_PER_HOUR` / `_PER_DAY`, default
+  500 / 2000): all eight doors — the four uploads through
+  `readDocumentUpload` and the four URL and intake routes — ask
+  `documentBudgetRefusal` after authorisation and before anything is
+  buffered, probed or fetched, so a refused request mints no row and no
+  event. Discovery crawls are deliberately still uncounted
+  (`platform/discover/route.ts` records why).
 - **A run refused before it is recorded still leaves no row — and the
   scheduler now says so anyway.** `run_budget_exceeded` leaves no run record
   and should not (`audit-run-handler.ts`: "a refused run must leave no row
@@ -1538,8 +1545,11 @@ Read this before claiming something works.
   sidecars are posted as the `answers` part; every `/Alt` on the delivered
   bytes is read by qpdf and must be one the source carried or one a person
   declared, else `invented-claim/invented-alt` (always fatal); the tamper row
-  `p70-answers-old-bytes` must refuse. `verify.mjs` reports a pre-existing
-  `w19` heading-count mismatch untouched here.
+  `p70-answers-old-bytes` must refuse. `verify.mjs` counts headings by
+  outline level now — direct, styled, or inherited through `w:basedOn` — the
+  reading `w19` was planted to demand and the verifier had never learned;
+  it is hand-run (`README.md`, "Adding a document"), which is how that drift
+  survived the commit that introduced it.
 
 ## Agent behavior
 
