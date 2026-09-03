@@ -862,6 +862,24 @@ export function platformStoreContract(
       expect(request).not.toHaveProperty('operatorId');
     });
 
+    it('round-trips the language hint on an answer row, so acceptance can be derived from it', async () => {
+      // The route copies the ask's target onto the row verbatim. For the
+      // language ask that is the hint — and whether the person took it is
+      // `value === target.suggested`, read back from this row, never a note.
+      const { store, documentId } = await seeded();
+      const declared = answer(documentId, {
+        id: `${PLATFORM_PREFIX}-ans-lang`,
+        askId: 'language',
+        kind: 'language',
+        target: { suggested: 'es', evidence: 41 },
+        value: 'es',
+      });
+      await store.saveDocumentAnswers([declared]);
+
+      const rows = await store.latestDocumentAnswers(CONTRACT_CLIENT, [documentId]);
+      expect(rows).toContainEqual(declared);
+    });
+
     it('returns the latest per ask, the tie broken by id', async () => {
       // A change of mind is a new row. The newer stamp wins; two rows at one
       // instant fall to the id so both stores answer the same way.

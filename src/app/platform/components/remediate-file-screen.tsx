@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { MAX_ANSWER_TEXT, figureGroups, type Ask } from '../../../domain/document-answers';
+import { MAX_ANSWER_TEXT, figureGroups, suggestionOn, type Ask } from '../../../domain/document-answers';
 import { languageTagSchema } from '../../../domain/document-structure';
 import { declaredAnswersFrom, figureContextLine } from '../lib/stateless-answers';
 import { FONT, T } from '../lib/tokens';
@@ -123,7 +123,12 @@ export function StatelessAnswersForm({
         <section aria-label="Language" style={sectionStyle}>
           <h2 style={h2Style}>Language</h2>
           <p style={noteStyle}>{itemFor(summary, languageAsk)}. Nothing is preselected: a language is never guessed.</p>
-          <LanguageChoice value={language} onChange={onLanguage} titleText={summary.titleText} />
+          <LanguageChoice
+            value={language}
+            onChange={onLanguage}
+            titleText={summary.titleText}
+            hint={suggestionOn(languageAsk.target)}
+          />
           {languageError ? (
             <p role="alert" style={{ ...noteStyle, color: T.fail }}>
               {languageError}

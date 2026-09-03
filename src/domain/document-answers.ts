@@ -56,7 +56,23 @@ export type AskTarget =
        */
       imageDigest?: string;
     }
-  | { index: number; from: number; to: number };
+  | { index: number; from: number; to: number }
+  /**
+   * The language ask's hint: what the document's own text reads as, and how
+   * many tokens said so (`domain/language-hint.ts`). A suggestion beside the
+   * empty select, never a claim and never preselected. It rides here, on the
+   * one field already stripped from the header, the logs and the report, and
+   * is copied onto the answer row so that whether the person took it can be
+   * derived later from `value === target.suggested` rather than written down.
+   */
+  | { suggested: string; evidence: number };
+
+/** The hint on a language ask's target, or on the answer row that copied it. */
+export function suggestionOn(
+  target: AskTarget | undefined,
+): { suggested: string; evidence: number } | undefined {
+  return target !== undefined && 'suggested' in target ? target : undefined;
+}
 
 /**
  * One punch item's identity.

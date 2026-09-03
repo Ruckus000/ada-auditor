@@ -121,6 +121,21 @@ describe('POST /api/documents/inspect-url', () => {
     expect(body.gaps).not.toContainEqual(expect.stringContaining('3.1.1'));
   });
 
+  it('treats a /Lang nobody could use as no language, the way repair does', async () => {
+    // `en US` is not a BCP-47 tag. The repair lane already reads it as no
+    // declaration (`languageToCarry`); this lane once passed it raw, so the
+    // same document raised the 3.1.1 item on one screen and not the other.
+    inspectDocument.mockResolvedValue({ ok: true, value: structure({ lang: 'en US' }) });
+
+    const response = await POST(request({ url: DOC_URL }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.sourceLanguage).toBeNull();
+    expect(body.gaps).toContainEqual(expect.stringContaining('3.1.1'));
+    expect(body.needs).toContainEqual({ criterion: '3.1.1', item: expect.stringContaining('never guessed') });
+  });
+
   it('refuses an unauthenticated caller before fetching anything', async () => {
     authorized.ok = false;
 

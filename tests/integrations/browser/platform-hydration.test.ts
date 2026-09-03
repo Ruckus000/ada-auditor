@@ -2216,6 +2216,9 @@ describe('platform hydration', () => {
         }
         const language = page.getByRole('region', { name: 'Language' });
         if ((await language.count()) > 0) {
+          // Whatever the text reads as, nothing is chosen for the operator:
+          // the hint is a sentence beside the select, and the select is empty.
+          expect(await language.getByRole('combobox').inputValue()).toBe('');
           await language.getByRole('combobox').selectOption('en');
         }
         for (const button of await page.getByRole('button', { name: 'Keep as the author wrote it' }).all()) {

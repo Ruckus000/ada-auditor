@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useId, useState, type KeyboardEvent } from 'react';
-import { MAX_ANSWER_TEXT, figureGroups, type Ask } from '../../../../domain/document-answers';
+import { MAX_ANSWER_TEXT, figureGroups, suggestionOn, type Ask } from '../../../../domain/document-answers';
 import type { StoredDocumentAnswer } from '../../../../domain/platform';
 import type { DocumentState } from '../../../../services/document-state';
 import {
@@ -229,9 +229,14 @@ export function DocumentWorkbench({
   const answerLine = (ask: Ask) => {
     const answer = answered.get(ask.id);
     if (!answer) return null;
+    // Whether a declared language was the hint's suggestion is derived from
+    // the row — its value against the target it copied — never recorded as
+    // a note, so it cannot drift from what was actually chosen.
+    const suggestion = ask.kind === 'language' ? suggestionOn(answer.target) : undefined;
+    const taken = suggestion === undefined ? '' : answer.value === suggestion.suggested ? ' — as suggested' : ' — not the suggestion';
     const what =
       answer.disposition === 'declared'
-        ? `declared${ask.kind === 'figure' || ask.kind === 'language' ? `: “${answer.value}”` : ''}`
+        ? `declared${ask.kind === 'figure' || ask.kind === 'language' ? `: “${answer.value}”` : ''}${taken}`
         : answer.disposition === 'decided'
           ? `decided${answer.note ? ` — ${answer.note}` : ''}`
           : `requested from the client${answer.note ? ` — ${answer.note}` : ''}`;
@@ -332,6 +337,7 @@ export function DocumentWorkbench({
               value={drafts[ask.id]?.value ?? ''}
               onChange={(value) => draft(ask.id, value === '' ? null : { disposition: 'declared', value })}
               titleText={summary.titleText}
+              hint={suggestionOn(ask.target)}
             />
           ),
           'Nothing is preselected: a language is never guessed.',
