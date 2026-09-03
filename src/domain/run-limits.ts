@@ -50,6 +50,24 @@ export const DEFAULT_HTMLCS_TIMEOUT_MS = 15_000;
 export const DEFAULT_MAX_STARTS_PER_TICK = 3;
 
 /**
+ * How long one `fill` or `click` may wait for its element: ten seconds,
+ * because a control that has not appeared by then on a page already
+ * navigated to and settled is stale rather than slow. `AUDITOR_STEP_TIMEOUT_MS`
+ * overrides it. The reasoning, and the mistake of setting it context-wide,
+ * is documented where it is applied, in `journey-runner.ts`; the number is
+ * here so `.env.example` can be checked against it.
+ */
+export const DEFAULT_STEP_TIMEOUT_MS = 10_000;
+
+/**
+ * How long an `expect` step may wait for the URL or selector it declares —
+ * Playwright's own default for a wait that may span a navigation, deliberately
+ * longer than the step timeout because an expectation usually follows a click
+ * and spans the arrival itself. `AUDITOR_EXPECT_TIMEOUT_MS` overrides it.
+ */
+export const DEFAULT_EXPECT_TIMEOUT_MS = 30_000;
+
+/**
  * The ceiling a run has to fit inside, mirroring `maxDuration` on the browser
  * routes. Hobby allows 300s; Pro allows 800s.
  *

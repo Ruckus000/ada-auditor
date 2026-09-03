@@ -35,6 +35,10 @@ const ROUTE_CODES = [
   'conversion_not_found',
   'artifact_not_stored',
   'document_budget_exceeded',
+  'document_not_found',
+  'invalid_answers',
+  'invalid_document_id',
+  'answers_too_large',
 ];
 
 describe('describeDocumentRefusal', () => {
@@ -84,6 +88,17 @@ describe('describeDocumentRefusal', () => {
     expect(describeDocumentRefusal({ error: 'document_budget_exceeded', detail: 'day' })).toMatch(
       /capped|later/i,
     );
+  });
+
+  it('tells the two out-of-bounds parts apart from a malformed one', () => {
+    // Three refusals a caller can only hear about if the sentence names which
+    // part: the answers were too big, the answers were not answers, or the id
+    // named no row of this client's.
+    expect(describeDocumentRefusal({ error: 'answers_too_large', detail: 'limit is 2097152 bytes' })).toMatch(
+      /descriptions|answers/i,
+    );
+    expect(describeDocumentRefusal({ error: 'invalid_answers', detail: 'not JSON' })).toMatch(/answers/i);
+    expect(describeDocumentRefusal({ error: 'document_not_found' })).toMatch(/row|record|inventory/i);
   });
 
   it('prints an unknown code rather than inventing a sentence for it', () => {

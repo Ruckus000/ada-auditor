@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { describeDiscoveryFailure } from '../../lib/discovery-copy';
 import { FONT, T } from '../../lib/tokens';
 import { DocumentRunResult } from './document-run-result';
 import {
@@ -87,10 +88,20 @@ export function DocumentIntake({
         documentsOmitted?: Partial<Record<'pdf' | 'docx' | 'doc', number>>;
         errors?: unknown[];
         error?: string;
+        host?: string;
+        message?: string;
       } | null;
 
       if (!response.ok) {
-        setScanError(`The scan failed (${payload?.error ?? `http ${response.status}`}).`);
+        // The same crawl as the pages panel, so the same words: this used to
+        // print the raw code, which for a budget refusal read as
+        // "The scan failed (discovery_budget_exceeded)".
+        setScanError(
+          describeDiscoveryFailure(payload?.error ?? `http_${response.status}`, {
+            ...(payload?.host ? { host: payload.host } : {}),
+            ...(payload?.message ? { message: payload.message } : {}),
+          }),
+        );
         return;
       }
 

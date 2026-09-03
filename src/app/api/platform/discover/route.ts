@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { discoveryRequestSchema } from '../../../../domain/discovery';
 import { authorizePrincipal } from '../../_lib/authorize';
+import { discoveryBudgetRefusal } from '../../_lib/budget-refusal';
 import { attemptDiscovery, discoveryResponseBody } from '../../_lib/discovery';
+import { refusalResponse } from '../../_lib/document-upload';
 import { createRequestId } from '../../_lib/request-id';
 
 /** Chromium needs a real Node runtime; the edge runtime cannot spawn it. */
@@ -31,12 +33,15 @@ export const maxDuration = 300;
  * shared with the client-scoped documents crawl — the branch order there is
  * load-bearing and two copies is how one gets "tidied" wrong.
  *
- * **`consumeRunBudget` is deliberately absent.** That counter lives inside
+ * **Its own ceiling, never the run budget's.** That counter lives inside
  * `startRun` and is scoped to audit runs — what a client is paying for.
  * Discovery audits nothing, scores nothing and stores nothing; charging it to
  * the same counter would let an afternoon of picking pages exhaust the runs
- * the client actually bought. If discovery ever needs a ceiling of its own it
- * gets its own counter, not a share of that one.
+ * the client actually bought. So it spends `discovery` instead: a crawl is
+ * still Chromium for up to a minute on a five-minute function, and for a
+ * while it was the last such thing a leaked token could start uncounted.
+ * Consumed after the body is validated and before the browser launches, so
+ * a malformed request spends nothing and a refused one launches nothing.
  */
 export async function POST(request: Request) {
   const requestId = createRequestId();
@@ -52,6 +57,9 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
+
+  const capped = await discoveryBudgetRefusal(requestId);
+  if (capped) return refusalResponse(capped, requestId);
 
   const attempt = await attemptDiscovery(parsed.targetUrl, requestId);
   if (!attempt.ok) {

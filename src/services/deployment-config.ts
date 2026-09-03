@@ -1,4 +1,4 @@
-import { documentBudgetLimits, runBudgetLimits } from './run-budget';
+import { discoveryBudgetLimits, documentBudgetLimits, runBudgetLimits } from './run-budget';
 import { DEFAULT_RETENTION_DAYS } from '../integrations/artifacts/blob-store';
 import {
   DEFAULT_MAX_PAGES_PER_RUN,
@@ -137,6 +137,7 @@ export function readDeploymentConfig(
 ): DeploymentConfig {
   const budget = runBudgetLimits(env);
   const documents = documentBudgetLimits(env);
+  const discovery = discoveryBudgetLimits(env);
   const countersDurable = Boolean(env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL);
 
   const settings: ConfigSetting[] = [
@@ -207,6 +208,17 @@ export function readDeploymentConfig(
           ? 'Counted in Redis, so the ceiling holds across instances. '
           : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
         'Every inspection, conversion, repair and intake launches a JVM — and a converter for Word — on a function that may run five minutes; this bounds what a looping caller or a leaked token can spend. Its own ceiling, so an inventory sweep cannot spend the audits a client bought. Fails open the same way.',
+      degraded: !countersDurable,
+    },
+    {
+      key: 'discoveryBudget',
+      label: 'Discovery budget',
+      value: `${discovery.perHour}/hour, ${discovery.perDay}/day`,
+      detail:
+        (countersDurable
+          ? 'Counted in Redis, so the ceiling holds across instances. '
+          : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
+        'A discovery crawl is a browser walking up to a hundred pages for up to a minute. Its own ceiling rather than a share of the run budget, so picking pages cannot spend the audits a client bought. Fails open the same way.',
       degraded: !countersDurable,
     },
     {

@@ -139,8 +139,11 @@ Worth tracing once, because no single file shows it:
    (screenshot + DOM snapshot) to Blob under `runs/<requestId>/<pageKey>/`.
 4. `services/deterministic-audit` maps axe's **plain-data** output — this is
    the seam that keeps axe out of services.
-5. `services/ai-advisory` makes one `claude-opus-5` call over the **aggregate**
-   (not per page). Always `gateable: false`; absent `ANTHROPIC_API_KEY` the run
+5. `services/ai-advisory` makes one model call through the Vercel AI Gateway
+   over the **aggregate** (not per page) — `AUDITOR_ADVISORY_MODEL`, default
+   `minimax/minimax-m3-free`, `off` to disable; auth is `AI_GATEWAY_API_KEY`
+   or the deployment's own `VERCEL_OIDC_TOKEN`. Always `gateable: false`; with
+   neither credential, or a free model on an authenticated journey, the run
    simply completes without it.
 6. `services/reporting` decides the verdict (`blockingFindings` gates on the
    **WCAG success criterion**, not axe's impact rating), `services/score`

@@ -1427,8 +1427,13 @@ Read this before claiming something works.
   `readDocumentUpload` and the four URL and intake routes — ask
   `documentBudgetRefusal` after authorisation and before anything is
   buffered, probed or fetched, so a refused request mints no row and no
-  event. Discovery crawls are deliberately still uncounted
-  (`platform/discover/route.ts` records why).
+  event. **Discovery crawls are capped at a fourth ceiling**
+  (`AUDITOR_MAX_DISCOVERIES_PER_HOUR` / `_PER_DAY`, default 60 / 300) —
+  never the run budget's, for the reason `platform/discover/route.ts`
+  records — consumed after the body is validated and before the browser
+  launches; both crawl routes answer 429 `discovery_budget_exceeded` with a
+  sentence that says when the window resets, and `describeDiscoveryFailure`
+  prints it rather than "try again".
 - **A run refused before it is recorded still leaves no row — and the
   scheduler now says so anyway.** `run_budget_exceeded` leaves no run record
   and should not (`audit-run-handler.ts`: "a refused run must leave no row
@@ -1542,7 +1547,12 @@ Read this before claiming something works.
   name path geometry as their precondition; the language hint, AI drafts and
   artifacting on a decision are deferred with triggers in the plan.
   **The harness holds the channel to the charter:** `keys/<id>.answers.json`
-  sidecars are posted as the `answers` part; every `/Alt` on the delivered
+  sidecars are posted as the `answers` part (bounded at 2 MiB of UTF-8 —
+  `MAX_ANSWERS_BYTES`, sized from the schema's own maximum — and refused as
+  413 `answers_too_large` when over, never dropped; likewise a `documentId`
+  part that is not a well-formed id is 400 `invalid_document_id` and one
+  that is not the client's row is 404, and neither mints); every `/Alt` on
+  the delivered
   bytes is read by qpdf and must be one the source carried or one a person
   declared, else `invented-claim/invented-alt` (always fatal); the tamper row
   `p70-answers-old-bytes` must refuse. `verify.mjs` counts headings by

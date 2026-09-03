@@ -146,7 +146,7 @@ export async function GET(request: Request) {
 
   if (!checks.unlockThrottleDurable) {
     warnings.push(
-      'counters_in_memory: no Redis configured, so console sign-in attempts and the run and document budgets are counted per instance and reset on cold start. The effective ceilings are the limits times however many instances are warm.',
+      'counters_in_memory: no Redis configured, so console sign-in attempts and the run, document and discovery budgets are counted per instance and reset on cold start. The effective ceilings are the limits times however many instances are warm.',
     );
   }
 

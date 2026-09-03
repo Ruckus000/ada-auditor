@@ -31,6 +31,7 @@ const DISCOVERY_CODES = [
   'entry_point_redirected',
   'entry_point_unreachable',
   'navigation_not_allowed',
+  'discovery_budget_exceeded',
   'discovery_failed',
 ];
 
@@ -57,6 +58,18 @@ describe('describeDiscoveryFailure', () => {
     for (const code of DISCOVERY_CODES.filter((one) => one !== 'discovery_failed')) {
       expect(describeDiscoveryFailure(code), code).not.toBe(fallback);
     }
+  });
+
+  it('passes on the budget refusal in the route\'s words, which say when it resets', () => {
+    // The fallback's "try again" is the one instruction a budget refusal makes
+    // wrong: the crawl will be refused again until the window turns. The route
+    // ships the sentence with the reset time; this prints it.
+    const copy = describeDiscoveryFailure('discovery_budget_exceeded', {
+      message: 'Discovery is capped at 60 per hour and this hour is spent. It resets in 12 minutes.',
+    });
+
+    expect(copy).toContain('12 minutes');
+    expect(describeDiscoveryFailure('discovery_budget_exceeded')).toMatch(/capped/i);
   });
 
   it('names the host a redirect settled on', () => {

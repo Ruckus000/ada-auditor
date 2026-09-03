@@ -610,6 +610,27 @@ describe('/api/platform/clients/[clientId]/documents', () => {
     expect((await platform.listClientDocuments('acme')).documents).toHaveLength(1);
   });
 
+  it('refuses an ill-formed documentId rather than minting a row as if none was sent', async () => {
+    // Dropped silently, an over-long or empty id produced an upload "with no
+    // documentId" — which mints a second row named after the file and leaves
+    // the row that asked forever asking. Ids are `doc-<clientId>-<uuid>`, under
+    // a hundred characters; anything else is a caller's mistake to hear about.
+    for (const bad of ['x'.repeat(129), '']) {
+      const form = new FormData();
+      form.set('file', new File([new Uint8Array(PDF_BYTES)], 'x.pdf', { type: 'application/pdf' }));
+      form.set('documentId', bad);
+      const response = await PUT(
+        new Request('http://localhost/api/platform/clients/acme/documents', { method: 'PUT', body: form }),
+        params('acme'),
+      );
+
+      expect(response.status, JSON.stringify(bad.length)).toBe(400);
+      expect((await response.json()).error).toBe('invalid_document_id');
+    }
+    expect((await platform.listClientDocuments('acme')).documents).toHaveLength(0);
+    expect(inspectDocument).not.toHaveBeenCalled();
+  });
+
   it('refuses an upload that is not a PDF, and persists nothing', async () => {
     const response = await PUT(
       uploadRequest(new Uint8Array(Buffer.from('<html>a page</html>', 'latin1'))),

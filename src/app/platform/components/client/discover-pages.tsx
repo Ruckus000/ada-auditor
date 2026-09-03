@@ -92,6 +92,7 @@ type DiscoveryResponse = {
   errorsOmitted?: number;
   error?: string;
   host?: string;
+  message?: string;
 };
 
 /**
@@ -288,6 +289,8 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
         setCrawlError(
           describeDiscoveryFailure(payload?.error ?? `http_${response.status}`, {
             ...(payload?.host ? { host: payload.host } : {}),
+            // A budget refusal's sentence says when the window resets.
+            ...(payload?.message ? { message: payload.message } : {}),
           }),
         );
         return;

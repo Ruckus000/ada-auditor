@@ -1,13 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  DEFAULT_MAX_DISCOVERIES_PER_DAY,
+  DEFAULT_MAX_DISCOVERIES_PER_HOUR,
   DEFAULT_MAX_DOCUMENTS_PER_DAY,
   DEFAULT_MAX_DOCUMENTS_PER_HOUR,
   DEFAULT_MAX_PREVIEWS_PER_HOUR,
   DEFAULT_MAX_RUNS_PER_DAY,
   DEFAULT_MAX_RUNS_PER_HOUR,
+  consumeDiscoveryBudget,
   consumeDocumentBudget,
   consumePreviewBudget,
   consumeRunBudget,
+  discoveryBudgetLimits,
   documentBudgetLimits,
   runBudgetLimits,
   windowKeys,
@@ -245,6 +249,83 @@ describe('consumeDocumentBudget', () => {
     const line = JSON.parse(warn.mock.calls[0]![0] as string);
     expect(line.type).toBe('run_budget_degraded');
     expect(line.budget).toBe('documents');
+
+    warn.mockRestore();
+  });
+});
+
+describe('consumeDiscoveryBudget', () => {
+  /**
+   * The fourth counter, for the two crawl routes. A discovery is Chromium for
+   * up to a minute on a five-minute function, and it was the last expensive
+   * thing on this tree an authenticated caller could start uncounted. Its own
+   * ceiling, for the reason the route always gave: picking pages must not
+   * spend the audits a client bought.
+   */
+  it('touches only its own keys', async () => {
+    const counts = counter();
+
+    await consumeDiscoveryBudget(counts, NOON, {});
+
+    expect(Object.keys(counts.counts)).toEqual([
+      'discovery:hour:2026081012',
+      'discovery:day:20260810',
+    ]);
+  });
+
+  it('is not refused by a spent run, preview or document budget', async () => {
+    const counts = counter({
+      'runs:hour:2026081012': DEFAULT_MAX_RUNS_PER_HOUR,
+      'runs:day:20260810': DEFAULT_MAX_RUNS_PER_DAY,
+      'previews:hour:2026081012': DEFAULT_MAX_PREVIEWS_PER_HOUR,
+      'documents:hour:2026081012': DEFAULT_MAX_DOCUMENTS_PER_HOUR,
+    });
+
+    expect(await consumeDiscoveryBudget(counts, NOON, {})).toEqual({ allowed: true });
+  });
+
+  it('refuses once its own hourly ceiling is reached, and says when it resets', async () => {
+    const counts = counter({ 'discovery:hour:2026081012': DEFAULT_MAX_DISCOVERIES_PER_HOUR });
+
+    expect(await consumeDiscoveryBudget(counts, NOON, {})).toEqual({
+      allowed: false,
+      window: 'hour',
+      resetsInSeconds: 1785,
+    });
+  });
+
+  it('takes its ceiling from its own env var, not the run one', async () => {
+    const counts = counter();
+
+    expect(
+      (await consumeDiscoveryBudget(counts, NOON, { AUDITOR_MAX_RUNS_PER_HOUR: '1' })).allowed,
+    ).toBe(true);
+    expect(
+      (await consumeDiscoveryBudget(counts, NOON, { AUDITOR_MAX_DISCOVERIES_PER_HOUR: '1' })).allowed,
+    ).toBe(false);
+  });
+
+  it('sits between the run and document ceilings, as its cost does', () => {
+    // A crawl is 15-62s of function time: more than a document action, less
+    // than an audit. The defaults say so, and the limits helper reports them.
+    expect(DEFAULT_MAX_DISCOVERIES_PER_HOUR).toBeGreaterThan(DEFAULT_MAX_RUNS_PER_HOUR);
+    expect(DEFAULT_MAX_DISCOVERIES_PER_HOUR).toBeLessThan(DEFAULT_MAX_DOCUMENTS_PER_HOUR);
+    expect(discoveryBudgetLimits({})).toEqual({
+      perHour: DEFAULT_MAX_DISCOVERIES_PER_HOUR,
+      perDay: DEFAULT_MAX_DISCOVERIES_PER_DAY,
+    });
+  });
+
+  it('names its own counter when it degrades', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const broken: RunCounter = {
+      async increment() {
+        throw new Error('ECONNREFUSED');
+      },
+    };
+
+    expect(await consumeDiscoveryBudget(broken, NOON, {})).toEqual({ allowed: true });
+    expect(JSON.parse(warn.mock.calls[0]![0] as string).budget).toBe('discovery');
 
     warn.mockRestore();
   });

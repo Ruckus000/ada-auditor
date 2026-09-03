@@ -3,6 +3,7 @@ import { dirname, join, resolve, sep } from 'node:path';
 import type { Page } from 'playwright-core';
 import type { Environment } from '../../domain/contracts';
 import { normalizePathname } from '../../domain/discovery';
+import { DEFAULT_EXPECT_TIMEOUT_MS, DEFAULT_STEP_TIMEOUT_MS } from '../../domain/run-limits';
 import {
   resolveMaxPages,
   resolveWalkBudgetMs,
@@ -157,8 +158,11 @@ export {
  * manufactured illegible ones, on precisely the heavy real-world pages this
  * product exists for. The axe scan is unaffected either way — it runs through
  * `page.evaluate`, which passes its own no-timeout.
+ *
+ * The number itself (`DEFAULT_STEP_TIMEOUT_MS`, 10s) lives in `run-limits.ts`
+ * beside the other bounds, so the default `.env.example` states is checked
+ * against it; this file imports Playwright and a test cannot.
  */
-const DEFAULT_STEP_TIMEOUT_MS = 10_000;
 
 /**
  * How long an expectation may wait, and why it is not the number above.
@@ -176,8 +180,9 @@ const DEFAULT_STEP_TIMEOUT_MS = 10_000;
  * Thirty is Playwright's own default for a wait that may span a navigation,
  * which is the conservative choice for the same reason it is theirs. Override
  * with `AUDITOR_EXPECT_TIMEOUT_MS` for an app that genuinely settles slower.
+ * The number (`DEFAULT_EXPECT_TIMEOUT_MS`, 30s) lives in `run-limits.ts` with
+ * the one above.
  */
-const DEFAULT_EXPECT_TIMEOUT_MS = 30_000;
 
 /**
  * How long a click is given to *start* navigating before the walk moves on.

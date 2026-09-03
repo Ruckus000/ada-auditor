@@ -58,6 +58,13 @@ describe('readDeploymentConfig', () => {
     ).toMatchObject({ value: '7/hour, 2000/day', degraded: false });
   });
 
+  it('shows the discovery budget too, from its own variables', () => {
+    expect(get({}, 'discoveryBudget')).toMatchObject({ value: '60/hour, 300/day', degraded: true });
+    expect(
+      get({ AUDITOR_MAX_DISCOVERIES_PER_DAY: '9', KV_REST_API_URL: 'https://kv.example' }, 'discoveryBudget'),
+    ).toMatchObject({ value: '60/hour, 9/day', degraded: false });
+  });
+
   it('does not treat a missing advisory key as a degradation', () => {
     // Advisory findings never gate a build, and their absence is never a run
     // failure. Flagging it would train an operator to ignore the warnings.

@@ -4,7 +4,9 @@ import { discoveryRequestSchema } from '../../../../../../../domain/discovery';
 import { getPlatformStore } from '../../../../../../../integrations/persistence';
 import { logInfo } from '../../../../../../../services/logger';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
+import { discoveryBudgetRefusal } from '../../../../../_lib/budget-refusal';
 import { attemptDiscovery, discoveryResponseBody } from '../../../../../_lib/discovery';
+import { refusalResponse } from '../../../../../_lib/document-upload';
 import { createRequestId } from '../../../../../_lib/request-id';
 
 /**
@@ -49,6 +51,11 @@ export async function POST(
   } catch {
     return Response.json({ error: 'invalid_request_body', requestId }, { status: 400 });
   }
+
+  // The discovery ceiling, as on `/api/platform/discover`: after the body is
+  // validated, before the browser launches, and before anything is merged.
+  const capped = await discoveryBudgetRefusal(requestId);
+  if (capped) return refusalResponse(capped, requestId);
 
   const attempt = await attemptDiscovery(parsed.targetUrl, requestId);
   if (!attempt.ok) {

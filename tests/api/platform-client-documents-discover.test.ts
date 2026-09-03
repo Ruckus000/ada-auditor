@@ -27,6 +27,15 @@ const { UnsafeTargetError } = await import('../../src/integrations/browser/targe
 const { MemoryPlatformStore, resetPlatformStore, setPlatformStore } = await import(
   '../../src/integrations/persistence'
 );
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
+
+beforeEach(() => setRunCounter(new MemoryRunCounter()));
+afterEach(() => {
+  resetRunCounter();
+  delete process.env.AUDITOR_MAX_DISCOVERIES_PER_HOUR;
+});
 
 function params(clientId: string) {
   return { params: Promise.resolve({ clientId }) };
@@ -71,6 +80,23 @@ describe('POST /api/platform/clients/[clientId]/documents/discover', () => {
 
   afterEach(() => {
     resetPlatformStore();
+  });
+
+  it('refuses a scan past the discovery ceiling before crawling, and merges nothing', async () => {
+    process.env.AUDITOR_MAX_DISCOVERIES_PER_HOUR = '1';
+    expect((await POST(request({ targetUrl: TARGET }), params('acme'))).status).toBe(200);
+    discoverLinks.mockClear();
+    crawlFinds([{ url: 'https://town.example/new.pdf', foundOn: TARGET, kind: 'pdf' }]);
+
+    const response = await POST(request({ targetUrl: TARGET }), params('acme'));
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toMatchObject({
+      error: 'discovery_budget_exceeded',
+      message: expect.stringMatching(/resets in/),
+    });
+    expect(discoverLinks).not.toHaveBeenCalled();
+    expect((await platform.listClientDocuments('acme')).documents).toHaveLength(2);
   });
 
   it('merges what the crawl saw into the inventory, and says how the merge fell', async () => {
