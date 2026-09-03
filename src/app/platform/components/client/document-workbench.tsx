@@ -12,6 +12,7 @@ import {
   scopeLine,
 } from '../../../../services/presentation/document-verdict';
 import { documentStateChip } from '../../lib/verdict-chip';
+import { figureContextLine } from '../../lib/stateless-answers';
 import { FONT, T } from '../../lib/tokens';
 import { Pill } from '../ui';
 import { clientHref } from '../../lib/params';
@@ -20,6 +21,7 @@ import {
   conversionOutcome,
   disabledStyle,
   inputStyle,
+  LanguageChoice,
   noteStyle,
   pathOf,
   pdfNameFor,
@@ -46,19 +48,6 @@ import { DocumentRunResult } from './document-run-result';
  */
 
 type Draft = { disposition: 'declared' | 'decided' | 'requested'; value?: string; note?: string };
-
-const LANGUAGES: Array<[string, string]> = [
-  ['en', 'English'],
-  ['en-US', 'English (US)'],
-  ['es', 'Spanish'],
-  ['fr', 'French'],
-  ['pt', 'Portuguese'],
-  ['zh', 'Chinese'],
-  ['vi', 'Vietnamese'],
-  ['ko', 'Korean'],
-  ['tl', 'Tagalog'],
-  ['ar', 'Arabic'],
-];
 
 const groupStyle = {
   display: 'flex',
@@ -339,38 +328,11 @@ export function DocumentWorkbench({
           'Language',
           byKind('language'),
           (ask) => (
-            <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <label style={{ fontSize: 11, color: T.inkMuted }}>
-                The language it is written in{' '}
-                <select
-                  value={drafts[ask.id]?.value ?? ''}
-                  onChange={(event) =>
-                    draft(ask.id, event.target.value === '' ? null : { disposition: 'declared', value: event.target.value })
-                  }
-                  style={{ ...inputStyle, fontFamily: FONT.sans }}
-                >
-                  <option value="">Choose…</option>
-                  {LANGUAGES.map(([tag, name]) => (
-                    <option key={tag} value={tag}>{name} ({tag})</option>
-                  ))}
-                </select>
-              </label>
-              <label style={{ fontSize: 11, color: T.inkMuted }}>
-                or a BCP-47 tag{' '}
-                <input
-                  type="text"
-                  placeholder="cy-GB"
-                  maxLength={35}
-                  onChange={(event) =>
-                    draft(ask.id, event.target.value.trim() === '' ? null : { disposition: 'declared', value: event.target.value.trim() })
-                  }
-                  style={{ ...inputStyle, width: 90 }}
-                />
-              </label>
-              {summary.titleText ? (
-                <span style={{ fontSize: 11, color: T.inkMuted }}>The document calls itself “{summary.titleText}”.</span>
-              ) : null}
-            </span>
+            <LanguageChoice
+              value={drafts[ask.id]?.value ?? ''}
+              onChange={(value) => draft(ask.id, value === '' ? null : { disposition: 'declared', value })}
+              titleText={summary.titleText}
+            />
           ),
           'Nothing is preselected: a language is never guessed.',
         )}
@@ -456,12 +418,9 @@ export function DocumentWorkbench({
                         </a>
                       ) : null}
                     </span>
-                    {context.heading || context.before || context.after || context.caption ? (
+                    {figureContextLine(context) ? (
                       <span style={{ fontSize: 11, color: T.inkMuted, paddingLeft: 24 }}>
-                        {context.caption ? `Caption: “${context.caption}”. ` : ''}
-                        {context.heading ? `Under “${context.heading}”. ` : ''}
-                        {context.before ? `Before it: “${context.before}”. ` : ''}
-                        {context.after && context.after !== context.caption ? `After it: “${context.after}”.` : ''}
+                        {figureContextLine(context)}
                       </span>
                     ) : null}
                     {answer ?? (

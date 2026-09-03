@@ -1,4 +1,9 @@
-import { discoveryBudgetLimits, documentBudgetLimits, runBudgetLimits } from './run-budget';
+import {
+  discoveryBudgetLimits,
+  documentBudgetLimits,
+  previewBudgetLimits,
+  runBudgetLimits,
+} from './run-budget';
 import { DEFAULT_RETENTION_DAYS } from '../integrations/artifacts/blob-store';
 import {
   DEFAULT_MAX_PAGES_PER_RUN,
@@ -136,6 +141,7 @@ export function readDeploymentConfig(
   facts: DeploymentFacts = {},
 ): DeploymentConfig {
   const budget = runBudgetLimits(env);
+  const previews = previewBudgetLimits(env);
   const documents = documentBudgetLimits(env);
   const discovery = discoveryBudgetLimits(env);
   const countersDurable = Boolean(env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL);
@@ -197,6 +203,17 @@ export function readDeploymentConfig(
           ? 'Counted in Redis, so the ceiling holds across instances. '
           : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
         'A run launches a browser and makes a model call; without a ceiling a loop in a caller spends real money unattended. It fails open — a cost control that becomes an outage has made things worse.',
+      degraded: !countersDurable,
+    },
+    {
+      key: 'previewBudget',
+      label: 'Preview budget',
+      value: `${previews.perHour}/hour, ${previews.perDay}/day`,
+      detail:
+        (countersDurable
+          ? 'Counted in Redis, so the ceiling holds across instances. '
+          : 'Counted in process memory, so each serverless instance has its own counter and the effective ceiling is this limit times however many are warm. ') +
+        'A preview is the walk without the audit — browser time, no model call — counted apart from runs so authoring a journey cannot spend the audits a client bought. Fails open the same way.',
       degraded: !countersDurable,
     },
     {

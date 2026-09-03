@@ -125,6 +125,74 @@ export function pdfNameFor(sourceName: string): string {
   return `${(base.replace(/\.docx?$/i, '') || 'document')}-remediated.pdf`;
 }
 
+/** The languages a municipal document is most often in; anything else is typed as a tag. */
+export const LANGUAGES: Array<[string, string]> = [
+  ['en', 'English'],
+  ['en-US', 'English (US)'],
+  ['es', 'Spanish'],
+  ['fr', 'French'],
+  ['pt', 'Portuguese'],
+  ['zh', 'Chinese'],
+  ['vi', 'Vietnamese'],
+  ['ko', 'Korean'],
+  ['tl', 'Tagalog'],
+  ['ar', 'Arabic'],
+];
+
+/**
+ * The language ask, as both the workbench and the one-off screen put it.
+ *
+ * Nothing is preselected: a language is never guessed. The select carries
+ * the common cases and the free field takes any BCP-47 tag; the document's
+ * own title sits beside them because it is usually the clearest evidence a
+ * person has. `value` is whatever the operator last chose, from either
+ * control.
+ */
+export function LanguageChoice({
+  value,
+  onChange,
+  titleText,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  titleText?: string;
+}) {
+  const inList = LANGUAGES.some(([tag]) => tag === value);
+  return (
+    <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+      <label style={{ fontSize: 11, color: T.inkMuted }}>
+        The language it is written in{' '}
+        <select
+          value={inList ? value : ''}
+          onChange={(event) => onChange(event.target.value)}
+          style={{ ...inputStyle, fontFamily: FONT.sans }}
+        >
+          <option value="">Choose…</option>
+          {LANGUAGES.map(([tag, name]) => (
+            <option key={tag} value={tag}>
+              {name} ({tag})
+            </option>
+          ))}
+        </select>
+      </label>
+      <label style={{ fontSize: 11, color: T.inkMuted }}>
+        or a BCP-47 tag{' '}
+        <input
+          type="text"
+          placeholder="cy-GB"
+          maxLength={35}
+          value={inList ? '' : value}
+          onChange={(event) => onChange(event.target.value.trim())}
+          style={{ ...inputStyle, width: 90 }}
+        />
+      </label>
+      {titleText ? (
+        <span style={{ fontSize: 11, color: T.inkMuted }}>The document calls itself “{titleText}”.</span>
+      ) : null}
+    </span>
+  );
+}
+
 /** A refused response, in the words `document-action-copy` chooses. */
 export async function refusalMessage(response: Response): Promise<string> {
   const payload = (await response.json().catch(() => null)) as

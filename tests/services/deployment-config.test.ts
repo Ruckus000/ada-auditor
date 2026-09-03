@@ -58,6 +58,13 @@ describe('readDeploymentConfig', () => {
     ).toMatchObject({ value: '7/hour, 2000/day', degraded: false });
   });
 
+  it('shows the preview budget, the one ceiling the screen had not', () => {
+    expect(get({}, 'previewBudget')).toMatchObject({ value: '40/hour, 200/day', degraded: true });
+    expect(
+      get({ AUDITOR_MAX_PREVIEWS_PER_DAY: '9', KV_REST_API_URL: 'https://kv.example' }, 'previewBudget'),
+    ).toMatchObject({ value: '40/hour, 9/day', degraded: false });
+  });
+
   it('shows the discovery budget too, from its own variables', () => {
     expect(get({}, 'discoveryBudget')).toMatchObject({ value: '60/hour, 300/day', degraded: true });
     expect(

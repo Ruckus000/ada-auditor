@@ -1492,6 +1492,20 @@ Read this before claiming something works.
   everything. Losing the key means re-entering credentials — designed
   recovery, no export.
 
+- **The one-off screen (`/remediate`) is the front of the stateless route,
+  not a second workbench.** (2026-09-03.) A file is read by
+  `/api/documents/inspect` (PDF only — the full summary, `asks` and `excerpt`
+  included), the person describes the figures and picks a language in the
+  browser, and the file goes back to `/api/documents/remediate` with what
+  they wrote as the `answers` part (`declaredAnswersFrom`,
+  `platform/lib/stateless-answers.ts`: every target copied verbatim from the
+  reading, one description fanned out over a repeated image, a language only
+  where the reading asked). The browser hashes the same bytes it posts.
+  Nothing is recorded and no one is attributed — which is why it takes only
+  what the route can write, descriptions and a language, and lists the rest
+  of the punch list as not answerable here; a decision is a record, and a
+  client's document belongs in its inventory. A Word file converts there
+  without answers. Two document-budget units per file (read, then run).
 - **The document punch list is a work system, and a person's answer is the
   only way a claim reaches a delivered file.** (2026-09-01/02, PR #196 and
   its successor.) Every punch item has an identity: `summary.asks[i]` is

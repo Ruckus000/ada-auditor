@@ -17,7 +17,7 @@
 
 export type Scope = 'ws' | 'client';
 
-export type WorkspaceScreen = 'portfolio' | 'reports' | 'activity' | 'settings';
+export type WorkspaceScreen = 'portfolio' | 'reports' | 'activity' | 'settings' | 'remediate';
 
 export type ClientTab = 'overview' | 'findings' | 'journeys' | 'documents';
 
@@ -32,6 +32,8 @@ const WORKSPACE_SCREENS: Record<string, WorkspaceScreen> = {
   reports: 'reports',
   activity: 'activity',
   settings: 'settings',
+  // The one-off remediation screen: a file in, a file out, nothing recorded.
+  remediate: 'remediate',
 };
 
 const CLIENT_TABS: Record<string, ClientTab> = {
