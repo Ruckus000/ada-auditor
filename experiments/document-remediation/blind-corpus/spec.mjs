@@ -608,6 +608,30 @@ wordRow(
 );
 
 wordRow(
+  'w21-toc-title-body',
+  'A table-of-contents title in a style based on Heading1 that declares its own outline level 9: body text by the author\'s word, and not a heading.',
+  { fn: 'docx', args: { title: 'Drainage Assessment', lang: 'en-US', shape: 'toc-title-body' } },
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Drainage Assessment', language: 'en-US',
+    counts: { headings: 2, tables: 0, lists: 0, figures: 0 }, needs: [], gapCriteria: [] },
+  // TWO headings, not three. `w:outlineLvl w:val="9"` is Word's "Body Text"
+  // level — the value written to take a style OUT of the outline — and it is
+  // an explicit override that stops the `w:basedOn` walk. Word's navigation
+  // pane leaves such a paragraph out, Word's own PDF export writes it as
+  // body text, and LibreOffice imports it as a `<text:p>`. Two real documents
+  // (r23, r30) style their TOC title exactly this way, and on 2026-09-03 the
+  // key author read both as one heading MORE than the delivery because its
+  // level range was `[0-8]`: 9 never entered the style map and the walk fell
+  // through to `Heading1`. The corrections that reading produced were
+  // withdrawn the same day; this row keeps both instruments reading the
+  // override. No TOC field is planted — the rule is the level, and the field
+  // shape is covered by the two real documents.
+  //
+  // `core`: three headings means the converter promoted a paragraph its
+  // author declared not to be a heading (`invented-structure`, fatal at any
+  // weight); one means it lost a real one.
+);
+
+wordRow(
   'w09-foreign-runs',
   'An English document quoting two German sentences. A document-level language is not wrong because a run differs.',
   { fn: 'docx', args: { title: 'Quoted Sources', lang: 'en-US', shape: 'foreign-runs' } },

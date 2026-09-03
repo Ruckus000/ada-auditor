@@ -156,13 +156,24 @@ const OOXML_MAIN = 'word/document.xml';
  * say something count (`removeEmptyHeadings` deletes the blank ones on the
  * way through, and a described image is not blank), and a heading style
  * inside a table cell is a cell, not an outline entry.
+ *
+ * Level 9 is "Body Text": the value Word writes to take a style or a
+ * paragraph OUT of the outline, and an explicit override that stops the
+ * `w:basedOn` walk. `[V]` r23 and r30 carry `TOCHeading`, based on
+ * `Heading1` with its own `outlineLvl 9` — the table-of-contents title,
+ * which Word's outline, Word's PDF export and LibreOffice's import all treat
+ * as body text. A `[0-8]` range here could not see the 9 and fell through
+ * to the parent; `w21-toc-title-body` plants that style so this file keeps
+ * reading it right.
  */
+const outlineLevelOf = (val) => (val === '9' ? null : Number(val) + 1);
+
 function countHeadings(doc, styles) {
   const own = new Map();
   const basedOn = new Map();
   for (const block of styles.matchAll(/<w:style [^>]*w:styleId="([^"]+)"[\s\S]*?<\/w:style>/g)) {
-    const level = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(block[0]);
-    if (level) own.set(block[1], Number(level[1]) + 1);
+    const level = /<w:outlineLvl w:val="([0-9])"\s*\/?>/.exec(block[0]);
+    if (level) own.set(block[1], outlineLevelOf(level[1]));
     const parent = /<w:basedOn w:val="([^"]+)"\s*\/?>/.exec(block[0]);
     if (parent) basedOn.set(block[1], parent[1]);
   }
@@ -192,12 +203,15 @@ function countHeadings(doc, styles) {
     // converter's correct delivery as invented structure.
     const text = [...para.matchAll(/<w:t(?: [^>]*)?>([\s\S]*?)<\/w:t>/g)].map((t) => t[1]).join('');
     if (text.trim() === '' && !/<(?:wp:docPr|v:imagedata)\b[^>]*\b(?:descr|title)="[^"]+"/.test(para)) continue;
-    const direct = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(para);
+    const direct = /<w:outlineLvl w:val="([0-9])"\s*\/?>/.exec(para);
     const style = /w:pStyle w:val="([^"]+)"/.exec(para)?.[1];
-    const fromStyle = style
-      ? styleLevel.get(style) ?? (/^Heading[1-9]$/.test(style) ? Number(style.slice(7)) : null)
-      : null;
-    if (direct || fromStyle !== null) headings += 1;
+    const fromStyle = style === undefined
+      ? null
+      : styleLevel.has(style)
+        ? styleLevel.get(style)
+        : (/^Heading[1-9]$/.test(style) ? Number(style.slice(7)) : null);
+    const level = direct ? outlineLevelOf(direct[1]) : fromStyle;
+    if (level !== null) headings += 1;
   }
   return headings;
 }

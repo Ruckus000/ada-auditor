@@ -596,21 +596,35 @@ Read this before claiming something works.
   twelfth is a Heading2 whose only run is a DESCRIBED image — the product
   keeps it (the description survives its tag-strip as `svg:desc`) and the
   author's `<w:t>`-only test did not; the author now mirrors the product's
-  test, and `w20-image-only-heading` plants the shape. r23 and r30 are the
-  one real loss: each has a `TOCHeading` paragraph (based on `Heading1`,
-  outline level 1) that LibreOffice's import turns into `<text:index-title>`
-  — a `<text:p>`, not a `<text:h>` — so the delivery is one heading short
-  of the source. That is a product finding, recorded as such
-  (`docs/research/document-remediation/word-keys-2026-09-03.md`), and it
-  shows up as a non-fatal `counts-off` note on those two probe rows rather
-  than being folded into a key. Corrections carry the evidence in
-  `corrections.json`; the key files and hashes did not change.
+  test, and `w20-image-only-heading` plants the shape. **r23 and r30 were
+  the instrument a second time, the same day.** That pass read each one
+  heading MORE than its delivery (36 / 9 against 35 / 8) and called it a
+  `TOCHeading` paragraph lost to LibreOffice's `<text:index-title>` — a
+  product finding, corrections filed. `[V]` Reading the style instead of the
+  paragraph: `TOCHeading` in both documents is `basedOn Heading1` **and
+  carries its own `<w:outlineLvl w:val="9"/>`** — Word's "Body Text" level,
+  the explicit override that takes a style out of the outline. Word's
+  navigation pane omits it, Word's own PDF export writes it as body text,
+  and LibreOffice's `default-outline-level=""` is the ODF spelling of the
+  same override. The delivered files carry `/Document → /TOC → [/Caption →
+  Contents Heading (RoleMap → /P)], /TOCI × 35 / × 8` and 35 / 8 headings,
+  UA-1 compliant — right. The author's level regex was `[0-8]`, so 9 never
+  entered the style map and the `basedOn` walk fell through to `Heading1`;
+  `verify.mjs` had the same gap. Both now read 9 as "not a heading" and stop
+  the walk there; the two corrections are withdrawn (the overlay records
+  where the instrument disagrees with a locked key, and it no longer does);
+  `w21-toc-title-body` plants the override. **Promoting the title in the
+  product was declined**: tagging as a heading a paragraph its author
+  declared body text is the r34 class of invented structure. The key files
+  and hashes did not change. `docs/research/document-remediation/word-keys-2026-09-03.md`,
+  "Second correction".
 
 - **A partial structure collapse has no guard, and that is a measured choice.**
   `convert.ts` refuses only `structureElements === 0`, so a half-lost structure
   tree would ship. `[V]` Across 148 documents the delivered heading counts track
-  the keys exactly except r23 and r30, each one TOC heading short — no
-  collapse occurs. A source-vs-output bound is also the category error
+  the keys exactly (the r23 / r30 "one short" of 2026-09-03 was the key
+  author's `[0-8]` level range, withdrawn the same day) — no collapse
+  occurs. A source-vs-output bound is also the category error
   `author-real-keys.mjs` names in its own comments. Left unbuilt on the
   evidence rather than on principle; build it when a document shows the shape.
 
@@ -809,6 +823,16 @@ Read this before claiming something works.
   `w:pPr` (a township's minutes declared all 84 of its headings that way, with
   zero `HeadingN` in the body), and a custom style carrying no level of its own
   that inherits one through `w:basedOn` (`contactheading` based on `Heading2`).
+  **And level 9 is not a level: it is "Body Text"**, the value Word writes to
+  take a style or a paragraph OUT of the outline, and it is an explicit
+  override that ends the `w:basedOn` walk — a style that says 9 is not a
+  heading whatever it descends from. Word's `TOC Heading` is the common case
+  (`basedOn Heading1`, own level 9; r23 and r30 carry it), and a level regex
+  written `[0-8]` cannot see it, falls through to the parent, and reports the
+  product one heading short. Word's outline pane, Word's PDF export and
+  LibreOffice's import (`<text:index-title>`, `default-outline-level=""`)
+  all agree it is body text; the product delivers it as `/P` inside
+  `/TOC → /Caption`, which is right, and promoting it would invent structure.
   Count only paragraphs that SAY something — text, or an image the author
   described — because `removeEmptyHeadings` (`flat-odf.ts`) deletes the blank
   ones, and a described image is not blank: its `descr` lands in `svg:desc`,
@@ -822,9 +846,9 @@ Read this before claiming something works.
   that it was delivered as a heading, because a flat ODF's inline base64 read
   as text to the tag-strip. That is what makes a
   source reading agree with the delivered document instead of approximating
-  it. `w19-outline-level-headings` plants the outline shapes and
-  `w20-image-only-heading` the two image ones; before them, the corpus could
-  not express any of it.
+  it. `w19-outline-level-headings` plants the outline shapes,
+  `w20-image-only-heading` the two image ones and `w21-toc-title-body` the
+  level-9 override; before them, the corpus could not express any of it.
 
 - **The second blind corpus's 8 "invented claims" were all instrument, and I
   published the opposite before checking.** 50 real documents from 44 unseen
@@ -1633,7 +1657,8 @@ Read this before claiming something works.
   bytes is read by qpdf and must be one the source carried or one a person
   declared, else `invented-claim/invented-alt` (always fatal); the tamper row
   `p70-answers-old-bytes` must refuse. `verify.mjs` counts headings by
-  outline level now — direct, styled, or inherited through `w:basedOn` — the
+  outline level now — direct, styled, or inherited through `w:basedOn`, with
+  a style's own level 9 ending the walk as "not a heading" — the
   reading `w19` was planted to demand and the verifier had never learned;
   it is hand-run (`README.md`, "Adding a document"), which is how that drift
   survived the commit that introduced it.

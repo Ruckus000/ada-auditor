@@ -154,6 +154,20 @@ const SHAPES = {
     para(FOLLOW),
     para('Contact the Clerk', 'contactheading'),
   ],
+  // A table-of-contents title the way Word's own template styles it: a
+  // paragraph in a style based on `Heading1` that carries its OWN
+  // `w:outlineLvl 9` — Body Text, the override that takes it out of the
+  // outline. Two headings, not three: the title is body text by the author's
+  // own declaration (r23 and r30 are the real shape), and a reader whose
+  // level range stops at 8 falls through to `Heading1` and counts it. No TOC
+  // field is planted — the rule under test is the level override, and the
+  // field shape is covered by the two real documents.
+  'toc-title-body': () => [
+    heading(1, 'Drainage Assessment'),
+    para('Contents', 'TOCHeading'),
+    heading(2, 'Scope of Work'),
+    para(FOLLOW),
+  ],
   'typed-list': () => [
     heading(1, 'Typed List'), fakeListItem(1, 'Proof of address'), fakeListItem(2, 'Signed declaration'),
     fakeListItem(3, 'Payment receipt'),
@@ -212,6 +226,9 @@ function buildDocx(id, args, outPath) {
     // fixture's styles.xml stays byte-identical and the corpus does not churn.
     ...(args.shape === 'outline-headings'
       ? { customHeading: { id: 'contactheading', basedOn: 'Heading2' } }
+      : {}),
+    ...(args.shape === 'toc-title-body'
+      ? { bodyLevelStyle: { id: 'TOCHeading', basedOn: 'Heading1' } }
       : {}),
     ...(DOCX_LANG_SLOTS[args.shape] ?? {}),
   });

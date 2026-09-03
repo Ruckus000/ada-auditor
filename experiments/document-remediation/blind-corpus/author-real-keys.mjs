@@ -383,6 +383,13 @@ const DESCRIPTION_ATTRIBUTE = /\b(?:descr|title)="([^"]+)"/;
 /** A drawing tag with a description, anywhere in the fragment tested. */
 const DESCRIBED_DRAWING = new RegExp(`<(?:wp:docPr|v:imagedata)\\b[^>]*${DESCRIPTION_ATTRIBUTE.source}`);
 
+/**
+ * `w:outlineLvl` as a 1-based heading level, or `null` for 9 — "Body Text",
+ * the value Word writes to take a paragraph or a style OUT of the outline.
+ * Every other value is a heading level; 9 is a declaration that it is not.
+ */
+const outlineLevelOf = (val) => (val === '9' ? null : Number(val) + 1);
+
 function readDocx(path) {
   const names = execFileSync('unzip', ['-Z1', path], { maxBuffer: 16 * 1024 * 1024 }).toString('utf8').split('\n');
   const part = (name) => (names.includes(name)
@@ -424,13 +431,27 @@ function readDocx(path) {
   // directory, and one person writing the rule twice is the price of that.
   // The `w:basedOn` chain is NEW here — that shape defeated the earlier
   // implementation too.
+  //
+  // Level 9 is "Body Text" — the tenth value of `w:outlineLvl`, which Word
+  // writes when an author (or a template) takes a style OUT of the outline.
+  // It is an explicit override, so it STOPS the `w:basedOn` walk: a style
+  // that says 9 is not a heading even when the style it descends from is.
+  // `[V]` r23 and r30 both carry `TOCHeading`, `basedOn Heading1` and its
+  // own `outlineLvl 9` — the table-of-contents title, which Word's
+  // navigation pane leaves out, Word's own PDF export writes as body text,
+  // and LibreOffice imports as `<text:index-title>` with
+  // `default-outline-level=""`. A `[0-8]` range here never let 9 into `own`,
+  // so the walk fell through to `Heading1` and read the title as an H1 —
+  // the 36 / 9 "corrections" of 2026-09-03, retracted the same day once the
+  // style was read. A level-9 style is stored as `null` so `has()` is true
+  // and the walk stops there.
   const styleLevel = (() => {
     const own = new Map();
     const basedOn = new Map();
     for (const block of styles.matchAll(/<w:style [^>]*w:styleId="([^"]+)"[\s\S]*?<\/w:style>/g)) {
       const id = block[1];
-      const level = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(block[0]);
-      if (level) own.set(id, Number(level[1]) + 1);
+      const level = /<w:outlineLvl w:val="([0-9])"\s*\/?>/.exec(block[0]);
+      if (level) own.set(id, outlineLevelOf(level[1]));
       const parent = /<w:basedOn w:val="([^"]+)"\s*\/?>/.exec(block[0]);
       if (parent) basedOn.set(id, parent[1]);
     }
@@ -474,14 +495,16 @@ function readDocx(path) {
     const text = [...para.matchAll(/<w:t(?: [^>]*)?>([\s\S]*?)<\/w:t>/g)].map((t) => t[1]).join('');
     if (text.trim() === '' && !DESCRIBED_DRAWING.test(para)) continue;
     // Direct formatting first: it overrides the style, which is what OOXML says
-    // and what the converter honours.
-    const direct = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(para);
+    // and what the converter honours. A direct 9 is body text too.
+    const direct = /<w:outlineLvl w:val="([0-9])"\s*\/?>/.exec(para);
     const style = /w:pStyle w:val="([^"]+)"/.exec(para)?.[1];
-    const fromStyle = style
-      ? styleLevel.get(style) ?? (/^Heading([1-9])$/.exec(style) ? Number(style.slice(7)) : null)
-      : null;
-    const level = direct ? Number(direct[1]) + 1 : fromStyle;
-    if (level !== null && level !== undefined) headingLevels.push(level);
+    const fromStyle = style === undefined
+      ? null
+      : styleLevel.has(style)
+        ? styleLevel.get(style)
+        : (/^Heading([1-9])$/.exec(style) ? Number(style.slice(7)) : null);
+    const level = direct ? outlineLevelOf(direct[1]) : fromStyle;
+    if (level !== null) headingLevels.push(level);
   }
   // DrawingML images AND the legacy VML ones; see `DRAWING_TAG`.
   const drawings = [...doc.matchAll(DRAWING_TAG)];
@@ -526,12 +549,20 @@ function readDocx(path) {
       // `--only=n`, so the `r` cohort kept its pre-fix answers. r32's fifth
       // "heading" is a page break in a Heading2 paragraph, which the product
       // rightly deletes; r28's twelfth is the described-image heading the
-      // loop above now counts. Under today's rule r23 reads 36 and r30 reads
-      // 9 against deliveries of 35 and 8 — each the document's TOC heading
-      // (`TOCHeading`, based on `Heading1`), which the importer turns into an
-      // index title paragraph. That one IS a heading the conversion drops,
-      // and it is recorded as a product finding rather than folded into a
-      // key. See `docs/research/document-remediation/word-keys-2026-09-03.md`.
+      // loop above now counts.
+      //
+      // RETRACTED THE SAME DAY: that pass also read r23 as 36 and r30 as 9
+      // against deliveries of 35 and 8, and called the difference a TOC
+      // heading the conversion drops. It was this file's `[0-8]` range: each
+      // document's `TOCHeading` style is based on `Heading1` AND carries its
+      // own `outlineLvl 9`, the body-text level, which the range could not
+      // see — so the walk fell through to the parent. The title is not a
+      // heading in Word's outline, in Word's PDF export or in LibreOffice's
+      // import, and the delivered 35 / 8 were right. Promoting it in the
+      // product would tag as a heading something its author declared not to
+      // be one; the decision is to leave the product alone and fix the
+      // instrument. See `docs/research/document-remediation/word-keys-2026-09-03.md`,
+      // "Second correction".
       headings: headingLevels.length,
       tables: (stories.match(/<w:tbl[ >]/g) ?? []).length,
       lists: null,
@@ -675,10 +706,12 @@ const EVIDENCE = {
     + ' w:basedOn and no empty-paragraph skip; the rule changed at 56a08b2, whose corrections run was --only=n,'
     + ' so the r cohort kept its pre-fix answers until 2026-09-03. r32\'s fifth "heading" is a page break in a'
     + ' Heading2 paragraph; r28\'s twelfth is a Heading2 whose only run is a described image, delivered as /H2'
-    + ' over a /Figure; r23 and r30 each gain a TOCHeading paragraph (based on Heading1) that the conversion'
-    + ' turns into an index title — a product finding recorded in word-keys-2026-09-03.md, not a key bent to'
-    + ' match. Figures count DrawingML wp:docPr and VML v:imagedata both (r34 embeds an OLE object as VML);'
-    + ' tables are counted across every story part (n42 carries its only table in word/footnotes.xml).',
+    + ' over a /Figure. A style\'s own outlineLvl 9 (Word\'s body-text level) is an explicit override that'
+    + ' stops the basedOn walk: r23 and r30 carry TOCHeading, based on Heading1 with its own level 9, and a'
+    + ' [0-8] range read that title as an H1 (36 / 9) on 2026-09-03 before the same day\'s second pass read'
+    + ' the style; the deliveries of 35 / 8 were right and those two corrections are withdrawn. Figures count'
+    + ' DrawingML wp:docPr and VML v:imagedata both (r34 embeds an OLE object as VML); tables are counted'
+    + ' across every story part (n42 carries its only table in word/footnotes.xml).',
   needs:
     'qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first'
     + ' pass could not see.',

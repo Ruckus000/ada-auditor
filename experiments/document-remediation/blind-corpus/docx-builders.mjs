@@ -155,8 +155,14 @@ export const pageBreak = () => '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
  *   level of its own and inherits one through `w:basedOn`. A real university
  *   policy used `contactheading` based on `Heading2`; it is a heading by OOXML's
  *   definition and invisible to anything matching on the style NAME.
+ * @param bodyLevelStyle - `{ id, basedOn }` for a style based on a heading
+ *   style that carries its OWN `w:outlineLvl w:val="9"` — Word's "Body Text"
+ *   level, the override an author writes to take a style out of the outline.
+ *   The opposite of `customHeading`, and a separate option on purpose: one
+ *   tests that inheritance happens, the other that an override stops it. Two
+ *   real documents (r23, r30) style their table-of-contents title this way.
  */
-function stylesXml(lang, { rtl = null, eastAsia = null, customHeading = null } = {}) {
+function stylesXml(lang, { rtl = null, eastAsia = null, customHeading = null, bodyLevelStyle = null } = {}) {
   const parts = [];
   if (lang !== null) parts.push(`w:val="${lang}"`);
   if (rtl !== null) parts.push(`w:bidi="${rtl}"`);
@@ -176,7 +182,15 @@ function stylesXml(lang, { rtl = null, eastAsia = null, customHeading = null } =
       + `<w:basedOn w:val="${customHeading.basedOn}"/>`
       + `<w:rPr><w:sz w:val="26"/></w:rPr></w:style>`
     : '';
-  return `${XML}<w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:sz w:val="22"/>${langRun}</w:rPr></w:rPrDefault><w:pPrDefault/></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>${headings}${custom}<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/></w:style></w:styles>`;
+  // The level is written on the style itself, after `w:basedOn`, exactly as
+  // Word writes `TOC Heading` in its own templates.
+  const bodyLevel = bodyLevelStyle
+    ? `<w:style w:type="paragraph" w:styleId="${bodyLevelStyle.id}">`
+      + `<w:name w:val="${bodyLevelStyle.id}"/>`
+      + `<w:basedOn w:val="${bodyLevelStyle.basedOn}"/>`
+      + `<w:pPr><w:outlineLvl w:val="9"/></w:pPr></w:style>`
+    : '';
+  return `${XML}<w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:sz w:val="22"/>${langRun}</w:rPr></w:rPrDefault><w:pPrDefault/></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>${headings}${custom}${bodyLevel}<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/></w:style></w:styles>`;
 }
 
 const NUMBERING = `${XML}<w:numbering ${W}><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num></w:numbering>`;
@@ -234,6 +248,7 @@ export function writeDocx(workDir, outPath, spec) {
     macro = false,
     rtl = false,
     customHeading = null,
+    bodyLevelStyle = null,
   } = spec;
 
   const parts = {
@@ -241,7 +256,7 @@ export function writeDocx(workDir, outPath, spec) {
     '_rels/.rels': ROOT_RELS,
     'docProps/core.xml': coreXml(title),
     'word/document.xml': documentXml(body.join(''), { rtl }),
-    'word/styles.xml': stylesXml(lang, { rtl: rtlLang, eastAsia: eastAsiaLang, customHeading }),
+    'word/styles.xml': stylesXml(lang, { rtl: rtlLang, eastAsia: eastAsiaLang, customHeading, bodyLevelStyle }),
     'word/numbering.xml': NUMBERING,
     'word/_rels/document.xml.rels': docRels({ image, link, comments }),
     ...(comments ? { 'word/comments.xml': COMMENTS } : {}),
