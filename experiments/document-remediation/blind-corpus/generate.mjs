@@ -164,6 +164,19 @@ const SHAPES = {
   ],
   'figure-no-alt': () => [heading(1, 'Undescribed Figure'), para(LEAD), figure(null)],
   'figure-alt': () => [heading(1, 'Described Figure'), para(LEAD), figure('The east basin after the storm')],
+  // Two headings whose only run is an image: one undescribed, one described.
+  // The described one says something (its description reaches `svg:desc` and
+  // then /Alt) and stays a heading; the undescribed one says nothing, and the
+  // product demotes it to a paragraph rather than deleting it — so its figure
+  // survives to be reported as `1.1.1` work instead of vanishing.
+  'figure-only-headings': () => [
+    heading(1, 'Site Photographs'),
+    para(LEAD),
+    figure(null, { style: 'Heading2', id: 1 }),
+    para(FOLLOW),
+    figure('The east basin after the storm', { style: 'Heading2', id: 2 }),
+    para(LEAD),
+  ],
   'foreign-runs': () => [
     heading(1, 'Quoted Sources'), para(LEAD),
     foreignRun('Die Frist endet am Monatsende.', 'de-DE'),

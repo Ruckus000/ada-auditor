@@ -587,6 +587,27 @@ wordRow(
 );
 
 wordRow(
+  'w20-image-only-heading',
+  'Two headings whose only content is an image: the described one stays a heading, the undescribed one becomes a paragraph and its figure reaches the punch list.',
+  { fn: 'docx', args: { title: 'Site Photographs', lang: 'en-US', shape: 'figure-only-headings' } },
+  { disposition: 'delivered', title: 'already-titled', titleText: 'Site Photographs', language: 'en-US',
+    counts: { headings: 2, tables: 0, lists: 0, figures: 2 }, needs: ['1.1.1'], gapCriteria: ['1.1.1'] },
+  // TWO headings, not three and not one. The described image-only heading is
+  // r28's shape: its description lands in `svg:desc`, survives the product's
+  // tag-strip, and is exported as /H2 over a /Figure with that /Alt — a key
+  // author testing `<w:t>` alone called it empty and would have graded the
+  // correct delivery as invented structure. The undescribed one says nothing
+  // — but `[V]` this row's first run delivered it as a heading anyway (three
+  // against two): a flat ODF embeds the image as base64 and the product's
+  // tag-strip read that payload as text. Now it is demoted to a paragraph,
+  // style and all: figures 2, one `1.1.1` item.
+  //
+  // `core`: a third heading means the converter kept an empty heading, one
+  // heading means it dropped a described image, one figure means the demotion
+  // is still a deletion.
+);
+
+wordRow(
   'w09-foreign-runs',
   'An English document quoting two German sentences. A document-level language is not wrong because a run differs.',
   { fn: 'docx', args: { title: 'Quoted Sources', lang: 'en-US', shape: 'foreign-runs' } },

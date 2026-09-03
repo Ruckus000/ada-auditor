@@ -153,9 +153,9 @@ const OOXML_MAIN = 'word/document.xml';
  * independence test keeps these files to their own directory, and one person
  * writing a rule twice is the price. Two verify-local rules on top, both
  * because the planted keys were authored with them: only paragraphs that
- * carry text count (`removeEmptyHeadings` deletes the blank ones on the way
- * through), and a heading style inside a table cell is a cell, not an outline
- * entry.
+ * say something count (`removeEmptyHeadings` deletes the blank ones on the
+ * way through, and a described image is not blank), and a heading style
+ * inside a table cell is a cell, not an outline entry.
  */
 function countHeadings(doc, styles) {
   const own = new Map();
@@ -183,8 +183,15 @@ function countHeadings(doc, styles) {
   let headings = 0;
   for (const m of outsideTables.matchAll(/<w:p[ >][\s\S]*?<\/w:p>/g)) {
     const para = m[0];
+    // A paragraph SAYS something if it carries text, or a drawing the author
+    // described (`descr` or `title` on `wp:docPr` / `v:imagedata`). That is
+    // the product's own emptiness test mirrored — `removeEmptyHeadings` strips
+    // tags and asks what is left, and a description lands in `svg:desc`, which
+    // is left — and it must agree with `author-real-keys.mjs`, whose `<w:t>`-only
+    // version disagreed with the product on r28 and would have scored the
+    // converter's correct delivery as invented structure.
     const text = [...para.matchAll(/<w:t(?: [^>]*)?>([\s\S]*?)<\/w:t>/g)].map((t) => t[1]).join('');
-    if (text.trim() === '') continue;
+    if (text.trim() === '' && !/<(?:wp:docPr|v:imagedata)\b[^>]*\b(?:descr|title)="[^"]+"/.test(para)) continue;
     const direct = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(para);
     const style = /w:pStyle w:val="([^"]+)"/.exec(para)?.[1];
     const fromStyle = style

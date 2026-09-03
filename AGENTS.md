@@ -584,22 +584,35 @@ Read this before claiming something works.
   fabricating structure; **fewer** is a non-fatal note. Do not delete the check
   to silence the notes.
 
-  **The two standing notes are NOT explained.** `second-corpus-results.md` says
-  r28 (key 13, delivered 12) and r32 (key 5, delivered 4) are headings lost in
-  conversion. A crude re-read of the sources counts 11 and 4 — so on r32 the
-  source and the delivery agree with each other and not with the key, which is
-  not "a heading was lost". That re-read is a throwaway script and settles
-  nothing; what it establishes is that the recorded explanation was never
-  verified. Open, and to be answered with the key author rather than another
-  quick probe.
+  **The two standing notes were stale keys, not lost headings.** `[V]` r28
+  (key 13, delivered 12) and r32 (key 5, delivered 4) were reported as
+  headings lost in conversion. Neither was. Both keys were authored at
+  `5ad8352` under the author's FIRST heading rule — `HeadingN` style-name
+  match, no `w:basedOn`, no empty-paragraph skip — and when the rule changed
+  at `56a08b2` its corrections run was `--only=n`, so the `r` cohort kept its
+  pre-fix answers. Four of nine `r*` Word keys were stale: r23 35→36, r28
+  13→12, r30 8→9, r32 5→4. r32's fifth "heading" is a page break in a
+  Heading2 paragraph, which `removeEmptyHeadings` deletes correctly. r28's
+  twelfth is a Heading2 whose only run is a DESCRIBED image — the product
+  keeps it (the description survives its tag-strip as `svg:desc`) and the
+  author's `<w:t>`-only test did not; the author now mirrors the product's
+  test, and `w20-image-only-heading` plants the shape. r23 and r30 are the
+  one real loss: each has a `TOCHeading` paragraph (based on `Heading1`,
+  outline level 1) that LibreOffice's import turns into `<text:index-title>`
+  — a `<text:p>`, not a `<text:h>` — so the delivery is one heading short
+  of the source. That is a product finding, recorded as such
+  (`docs/research/document-remediation/word-keys-2026-09-03.md`), and it
+  shows up as a non-fatal `counts-off` note on those two probe rows rather
+  than being folded into a key. Corrections carry the evidence in
+  `corrections.json`; the key files and hashes did not change.
 
 - **A partial structure collapse has no guard, and that is a measured choice.**
   `convert.ts` refuses only `structureElements === 0`, so a half-lost structure
   tree would ship. `[V]` Across 148 documents the delivered heading counts track
-  the keys exactly except r28 and r32, each off by one — no collapse occurs. A
-  source-vs-output bound is also the category error `author-real-keys.mjs`
-  names in its own comments. Left unbuilt on the evidence rather than on
-  principle; build it when a document shows the shape.
+  the keys exactly except r23 and r30, each one TOC heading short — no
+  collapse occurs. A source-vs-output bound is also the category error
+  `author-real-keys.mjs` names in its own comments. Left unbuilt on the
+  evidence rather than on principle; build it when a document shows the shape.
 
 - **An encrypted PDF is refused BY NAME, and it was never a data-loss bug.**
   A PDF encrypted with an empty user password and an owner password — the
@@ -796,11 +809,22 @@ Read this before claiming something works.
   `w:pPr` (a township's minutes declared all 84 of its headings that way, with
   zero `HeadingN` in the body), and a custom style carrying no level of its own
   that inherits one through `w:basedOn` (`contactheading` based on `Heading2`).
-  Count only paragraphs that carry text, because `removeEmptyHeadings`
-  (`flat-odf.ts:200`) deletes the blank ones — that is what makes a source
-  reading agree with the delivered document instead of approximating it.
-  `w19-outline-level-headings` plants both shapes; before it, the corpus could
-  not express either.
+  Count only paragraphs that SAY something — text, or an image the author
+  described — because `removeEmptyHeadings` (`flat-odf.ts`) deletes the blank
+  ones, and a described image is not blank: its `descr` lands in `svg:desc`,
+  survives the product's tag-strip, and is delivered as /H over a /Figure.
+  The author's emptiness test and the product's must agree; a `<w:t>`-only
+  author read r28's described-image heading as empty and would have graded
+  the converter's correct delivery as invented structure. An UNDESCRIBED
+  image-only heading is empty on both sides — the product demotes it to a
+  paragraph (style name included, or the export re-ranks it from the style's
+  default outline level) and keeps the figure for the punch list; `[V]` before
+  that it was delivered as a heading, because a flat ODF's inline base64 read
+  as text to the tag-strip. That is what makes a
+  source reading agree with the delivered document instead of approximating
+  it. `w19-outline-level-headings` plants the outline shapes and
+  `w20-image-only-heading` the two image ones; before them, the corpus could
+  not express any of it.
 
 - **The second blind corpus's 8 "invented claims" were all instrument, and I
   published the opposite before checking.** 50 real documents from 44 unseen

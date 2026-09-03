@@ -366,6 +366,23 @@ function readPdf(path) {
   };
 }
 
+/**
+ * The tag that carries a Word image's description: DrawingML's `wp:docPr`
+ * and the legacy VML `v:imagedata`. A document that predates the DrawingML
+ * era, or that embeds an OLE object, carries `<v:imagedata>` and no
+ * `<wp:docPr>` — the first pass counted four images in a document with five
+ * and accused the product of inventing the fifth.
+ */
+const DRAWING_TAG = /<(?:wp:docPr|v:imagedata)\b[^>]*>/g;
+/**
+ * `descr` and `title` are both author-supplied descriptions, and the
+ * converter carries either into /Alt. Non-empty on purpose: `descr=""` is
+ * the attribute present and the description absent.
+ */
+const DESCRIPTION_ATTRIBUTE = /\b(?:descr|title)="([^"]+)"/;
+/** A drawing tag with a description, anywhere in the fragment tested. */
+const DESCRIBED_DRAWING = new RegExp(`<(?:wp:docPr|v:imagedata)\\b[^>]*${DESCRIPTION_ATTRIBUTE.source}`);
+
 function readDocx(path) {
   const names = execFileSync('unzip', ['-Z1', path], { maxBuffer: 16 * 1024 * 1024 }).toString('utf8').split('\n');
   const part = (name) => (names.includes(name)
@@ -436,11 +453,26 @@ function readDocx(path) {
   for (const m of doc.matchAll(/<w:p[ >][\s\S]*?<\/w:p>/g)) {
     const para = m[0];
     // Only paragraphs that SAY something. `removeEmptyHeadings`
-    // (`flat-odf.ts:200`) deletes blank headings on the way through, so
-    // counting them here would make the key disagree with the delivered
-    // document by exactly the number of blanks — 35 of them on n50.
+    // (`flat-odf.ts`) deletes blank headings on the way through, so counting
+    // them here would make the key disagree with the delivered document by
+    // exactly the number of blanks — 35 of them on n50.
+    //
+    // "Says something" is the PRODUCT's test, mirrored: it strips the tags
+    // from the heading's flat-ODF form and asks whether anything is left. A
+    // drawing the author described leaves something — the importer lands
+    // `descr` in `svg:desc` and `title` in `svg:title`, both of which read as
+    // text after the strip — so a heading whose only run is a described image
+    // survives and is exported as /H over a /Figure. A `<w:t>`-only test here
+    // calls that heading empty. The two emptiness tests must agree, and r28
+    // is the document that showed they did not: paragraph 47 is a Heading2
+    // holding one described drawing and no text, the product delivered it as
+    // the twelfth heading, and this instrument's `<w:t>` reading said eleven —
+    // which the scorer would have graded as invented structure against a
+    // converter that had carried the author's own image correctly. A drawing
+    // with NO description leaves nothing, on both sides: the product demotes
+    // that heading to a paragraph and keeps the figure for the punch list.
     const text = [...para.matchAll(/<w:t(?: [^>]*)?>([\s\S]*?)<\/w:t>/g)].map((t) => t[1]).join('');
-    if (text.trim() === '') continue;
+    if (text.trim() === '' && !DESCRIBED_DRAWING.test(para)) continue;
     // Direct formatting first: it overrides the style, which is what OOXML says
     // and what the converter honours.
     const direct = /<w:outlineLvl w:val="([0-8])"\s*\/?>/.exec(para);
@@ -451,14 +483,8 @@ function readDocx(path) {
     const level = direct ? Number(direct[1]) + 1 : fromStyle;
     if (level !== null && level !== undefined) headingLevels.push(level);
   }
-  // DrawingML images AND the legacy VML ones. A document that predates the
-  // DrawingML era, or that embeds an OLE object, carries `<v:imagedata>` and
-  // no `<wp:docPr>` — the first pass counted four images in a document with
-  // five and accused the product of inventing the fifth.
-  const drawings = [
-    ...doc.matchAll(/<wp:docPr\b[^>]*>/g),
-    ...doc.matchAll(/<v:imagedata\b[^>]*>/g),
-  ];
+  // DrawingML images AND the legacy VML ones; see `DRAWING_TAG`.
+  const drawings = [...doc.matchAll(DRAWING_TAG)];
 
   return {
     tagged: null,
@@ -492,25 +518,29 @@ function readDocx(path) {
       // that does not survive is a finding to look at rather than a promise
       // broken. Do not delete this check to silence those notes.
       //
-      // UNRESOLVED: r28 (key 13, delivered 12) and r32 (key 5, delivered 4).
-      // `second-corpus-results.md` explained both as headings lost in
-      // conversion. A crude independent re-read of the sources disagrees —
-      // it counts 11 non-empty outline-levelled paragraphs for r28 and 4 for
-      // r32, so for r32 the source and the DELIVERY agree with each other and
-      // not with the key. That re-read is a throwaway script and the least
-      // reliable instrument involved, so it settles nothing; what it does show
-      // is that the recorded explanation has not been verified. Investigate
-      // with this file, not with another quick probe.
+      // RESOLVED (2026-09-03): r28 (key 13, delivered 12) and r32 (key 5,
+      // delivered 4) were never headings lost in conversion. Both keys were
+      // authored under this file's FIRST rule — a `HeadingN` style-name match
+      // with no `w:basedOn` and no empty-paragraph skip — at `5ad8352`, and
+      // when the rule changed at `56a08b2` its corrections run was
+      // `--only=n`, so the `r` cohort kept its pre-fix answers. r32's fifth
+      // "heading" is a page break in a Heading2 paragraph, which the product
+      // rightly deletes; r28's twelfth is the described-image heading the
+      // loop above now counts. Under today's rule r23 reads 36 and r30 reads
+      // 9 against deliveries of 35 and 8 — each the document's TOC heading
+      // (`TOCHeading`, based on `Heading1`), which the importer turns into an
+      // index title paragraph. That one IS a heading the conversion drops,
+      // and it is recorded as a product finding rather than folded into a
+      // key. See `docs/research/document-remediation/word-keys-2026-09-03.md`.
       headings: headingLevels.length,
       tables: (stories.match(/<w:tbl[ >]/g) ?? []).length,
       lists: null,
       figures: drawings.length,
     },
-    // `descr` and `title` are both author-supplied descriptions, and the
-    // converter carries either into /Alt. Counting only `descr` credited a
-    // seal captioned with `title` as undescribed, and then expected a punch
-    // item for work somebody had already done.
-    figuresWithoutAlt: drawings.filter((m) => !/\b(?:descr|title)="[^"]+"/.test(m[0])).length,
+    // Either description attribute counts (`DESCRIPTION_ATTRIBUTE`). Counting
+    // only `descr` credited a seal captioned with `title` as undescribed, and
+    // then expected a punch item for work somebody had already done.
+    figuresWithoutAlt: drawings.filter((m) => !DESCRIPTION_ATTRIBUTE.test(m[0])).length,
     // The same F30 reading as the PDF path. A `descr` the author never wrote —
     // an exporter's file path, a placeholder word — is not a description just
     // because the attribute is populated, and the converter carries it into
@@ -518,7 +548,7 @@ function readDocx(path) {
     // placeholder as described while the PDF half does not, and the key author
     // disagrees with itself about the same string.
     figuresIllegibleAlt: drawings.filter((m) => {
-      const value = /\b(?:descr|title)="([^"]+)"/.exec(m[0])?.[1];
+      const value = DESCRIPTION_ATTRIBUTE.exec(m[0])?.[1];
       return value !== undefined && isPlaceholderAlt(decodeXmlEntities(value));
     }).length,
     annotations: 0,
@@ -618,7 +648,11 @@ function mergeCorrections(fresh) {
   const path = join(HERE, 'corrections.json');
   if (!existsSync(path)) return fresh;
   const prior = JSON.parse(readFileSync(path, 'utf8'));
-  return [...prior.filter((c) => !c.docId.startsWith(ONLY)), ...fresh];
+  // Ordered by document, stably, so re-running one cohort leaves every other
+  // row where it was instead of moving the re-run cohort to the end — a
+  // record whose diff is mostly relocation hides the one line that changed.
+  return [...prior.filter((c) => !c.docId.startsWith(ONLY)), ...fresh]
+    .sort((a, b) => (a.docId < b.docId ? -1 : a.docId > b.docId ? 1 : 0));
 }
 
 const EVIDENCE = {
@@ -633,6 +667,18 @@ const EVIDENCE = {
     + ' counted across every story part (footnotes, endnotes, headers, footers) rather than word/document.xml'
     + ' alone: n42 carries its only table in word/footnotes.xml. Every one of these differences was the product'
     + ' reading the document correctly and this instrument reading it wrongly.',
+  countsWord:
+    'unzip: a Word heading is a paragraph with an outline level — a direct w:outlineLvl, or its style\'s level'
+    + ' resolved through w:basedOn — that SAYS something: text, or a drawing carrying a non-empty descr or title.'
+    + ' That is the product\'s own emptiness test mirrored (removeEmptyHeadings strips tags, and a description'
+    + ' lands in svg:desc). The locked keys were authored at 5ad8352 under a HeadingN style-name match with no'
+    + ' w:basedOn and no empty-paragraph skip; the rule changed at 56a08b2, whose corrections run was --only=n,'
+    + ' so the r cohort kept its pre-fix answers until 2026-09-03. r32\'s fifth "heading" is a page break in a'
+    + ' Heading2 paragraph; r28\'s twelfth is a Heading2 whose only run is a described image, delivered as /H2'
+    + ' over a /Figure; r23 and r30 each gain a TOCHeading paragraph (based on Heading1) that the conversion'
+    + ' turns into an index title — a product finding recorded in word-keys-2026-09-03.md, not a key bent to'
+    + ' match. Figures count DrawingML wp:docPr and VML v:imagedata both (r34 embeds an OLE object as VML);'
+    + ' tables are counted across every story part (n42 carries its only table in word/footnotes.xml).',
   needs:
     'qpdf: derived from the corrected structure-element reading — heading levels and undescribed figures the first'
     + ' pass could not see.',
@@ -750,7 +796,9 @@ for (const file of files) {
         ...(legibilityAdded > 0 ? { legibilityAdded } : {}),
         was,
         now,
-        evidence: kind === 'scope-change' ? EVIDENCE.legibility : (EVIDENCE[field] ?? EVIDENCE.default),
+        evidence: kind === 'scope-change'
+          ? EVIDENCE.legibility
+          : (field === 'counts' && !isPdf ? EVIDENCE.countsWord : (EVIDENCE[field] ?? EVIDENCE.default)),
       });
     }
   } else {
