@@ -2,13 +2,34 @@
 
 **Date:** _(the day the person answered)_. Predictions:
 `answers-pilot-predictions.md`, registered 2026-09-02, before any answer was
-written. **Instrument:** the production alias, verified on 2026-09-04 to be
-serving deployment `dpl_7sAZcBR7tWxTfNLmk4rjqVhobPCF` — the Vercel deployment
-recorded on `18b1a28`, the merge of PR #205 — so the run goes through the
-answers channel (#196, #197), the one-off screen (#200), path geometry (#203)
-and the language hint (#205), not an older build. `/api/ready` answered
-`ready`; `/remediate` answered 200; the document routes answered 401
-unauthenticated; a bogus share token answered 404.
+written.
+
+**Instrument: the app built and served locally, not the deployment.** Corrected
+2026-09-04, before the first answer, when the four documents were looked at
+rather than assumed. Production was verified that day and is sound — the alias
+serves `dpl_7sAZcBR7tWxTfNLmk4rjqVhobPCF`, the deployment Vercel recorded on
+`18b1a28` (the PR #205 merge), `/api/ready` answers `ready`, `/remediate`
+answers 200, the document routes answer 401 unauthenticated and a bogus share
+token answers 404 — and it still cannot host this pilot:
+
+- **Three of the four are Word sources** (n35, n50, r27; only n07 is a PDF).
+  Closing them means converting with the answers, and conversion needs
+  LibreOffice, which a deployment does not carry by design — the split-by-weight
+  decision, 794 MB beside a function. The console says so in its own words on a
+  deployment: *"conversion runs where LibreOffice is installed, and this
+  deployment does not have it."*
+- **n07 is 4.9 MB**, over the 4.5 MB request body a Vercel function accepts,
+  so its upload would never reach a route there. By URL it would, but that
+  changes nothing for the other three.
+
+So the pilot runs against this repository's own build (`npm run build`,
+`npm start`) with LibreOffice and a JDK on the host, writing through the same
+`DATABASE_URL` the deployment uses — the same code at the same commit, with the
+converter present. The one thing the local instrument does not prove is
+reachability, and that is what the production check above is for.
+`CHAOS_ENABLED` is set in the local environment; it is read only by the audit
+run handler (`api/_lib/chaos.ts`, `audit-run-handler.ts`) and reaches no
+document route, so it does not touch these numbers.
 
 **What is recorded here and what is not.** Counts, ordinals, verdicts and
 clause ids. Never a description's text: the descriptions are a person's, they
@@ -40,12 +61,12 @@ One row per document. "Before" and "after" are the inventory's derived state
 and the checker's verdict; "remaining" is the clause list the punch list still
 shows after the re-run, by id only.
 
-| document | descriptions needed | descriptions written | hint / context used | before | after | remaining clauses |
-|---|---:|---:|---|---|---|---|
-| n07 | 5 | | | needs-answers | | |
-| n35 | 1 | | | needs-answers | | |
-| n50 | 1 | | | needs-answers | | |
-| r27 | 1 | | | needs-answers | | |
+| document | source | descriptions needed | descriptions written | hint / context used | before | after | remaining clauses |
+|---|---|---:|---:|---|---|---|---|
+| n07 | PDF (4.9 MB) | 5 | | | needs-answers | | |
+| n35 | Word | 1 | | | needs-answers | | |
+| n50 | Word | 1 | | | needs-answers | | |
+| r27 | Word | 1 | | | needs-answers | | |
 
 What "hint / context used" means: whether the context line (heading and
 neighbouring text) and "open at page" were enough to write the description
