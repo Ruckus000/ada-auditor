@@ -1,0 +1,205 @@
+name: Deploy
+
+# Production builds run HERE, inside an Amazon Linux 2023 container on a GitHub
+# runner, and Vercel receives finished output through `--prebuilt`. Vercel's own
+# builders are switched off in vercel.json's `ignoreCommand`.
+#
+# WHY THIS EXISTS
+#
+# `vercel-build` is not `next build`. It is
+#
+#     prepare-jvm && prepare-verapdf && prepare-libreoffice && next build
+#
+# — a Temurin JDK, a veraPDF install and a ~350 MB LibreOffice tarball fetched
+# and assembled into /vendor. That ran on Vercel's metered builders on EVERY
+# push to EVERY branch, because the project had no ignored build step. This
+# repository is public, so the identical work on a GitHub runner is free and
+# unmetered.
+#
+# WHY A CONTAINER, AND WHY THIS ONE
+#
+# A bare `ubuntu-latest` cannot build this. Two reasons, both in
+# scripts/prepare-libreoffice.ts:
+#
+#   1. It installs BUILD_IMAGE_PACKAGES through `dnf`/`microdnf` only, by RPM
+#      name (nss, libX11, cups-libs, dbus-libs, cairo, ...). On Ubuntu neither
+#      manager exists and none of those names resolve, so the collector's ldd
+#      gate throws: "the build image cannot resolve N of LibreOffice's
+#      libraries". The build fails loudly rather than shipping something
+#      broken, which is the good outcome — but it does not build.
+#
+#   2. The worse failure is the one that would follow from satisfying that gate
+#      with Debian equivalents. The collector copies resolved system libraries
+#      OUT OF THE BUILD HOST and into the function bundle, deliberately
+#      excluding core glibc (NEVER_COPY) so the runtime supplies its own.
+#      Ubuntu 24.04 is glibc 2.39; Vercel's runtime is glibc 2.34. Libraries
+#      collected on Ubuntu can resolve at build time and then die at exec in
+#      production. That is precisely the class the script's header describes as
+#      invisible to build-image verification.
+#
+# amazonlinux:2023 IS the "runtime-faithful sim" that file names. Every
+# BUILD_IMAGE_PACKAGES entry resolves there, and the toolchain was verified in
+# the image before this workflow was written: node 22.23.2, npm 10.9.8,
+# glibc 2.34.
+#
+# Note `nodejs22` does NOT bring npm on Amazon Linux — `nodejs22-npm` is a
+# separate package. Installing only `nodejs22` leaves `npm: command not found`.
+#
+# SECRETS
+#
+# VERCEL_ORG_ID, VERCEL_PROJECT_ID and VERCEL_TOKEN must be set as repository
+# secrets, taken from the Vercel account that owns this project. The token is
+# passed as an environment variable rather than a `--token=` argument, and the
+# container script never runs under `set -x`, so it cannot reach a log line.
+
+on:
+  push:
+    branches: [master]
+    # Paths that cannot change deployable output are excluded: a docs-only
+    # commit that produces an identical bundle is not worth a deploy.
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'next.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vercel.json'
+      - '.github/workflows/deploy.yml'
+  # Preview deployments are on demand rather than per push. Vercel used to
+  # build one for every branch push automatically, which is the cost this
+  # change exists to remove; run this manually with target=preview when a
+  # preview URL is actually wanted.
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deployment target'
+        type: choice
+        options: [production, preview]
+        default: production
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Pinned rather than `latest`: the CLI is what interprets vercel.json and
+  # writes .vercel/output, so an unpinned bump can change build output without
+  # a commit.
+  VERCEL_CLI: vercel@50.23.2
+  BUILD_IMAGE: amazonlinux:2023
+
+jobs:
+  deploy:
+    name: Build on a runner, deploy prebuilt
+    runs-on: ubuntu-latest
+    # The LibreOffice/JDK fetches dominate a cold build; a warm vendor cache
+    # brings this down to roughly the length of `next build`.
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Require Vercel credentials
+        # Fail here, with a name, rather than 20 minutes later inside the
+        # container where the CLI's own error does not say which of the three
+        # is missing.
+        run: |
+          missing=
+          for v in VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_TOKEN; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing. Take them from the Vercel account that owns this project (Settings -> General for the project id, Settings -> Tokens for the token)."
+            exit 1
+          fi
+
+      - name: Resolve target
+        id: target
+        run: |
+          target='${{ inputs.target }}'
+          [ -n "$target" ] || target=production
+          if [ "$target" = production ]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+            echo "flag=--prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "flag=" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Deploying to $target"
+
+      - uses: actions/checkout@v7
+
+      - name: Restore prepared vendor artifacts
+        uses: actions/cache@v6
+        with:
+          path: vendor
+          # The three prepare scripts pin their own versions and checksums, so
+          # their contents ARE the cache identity. The prepare steps skip
+          # themselves when the artifact already exists, so a hit removes the
+          # downloads entirely — including the system-library collection, whose
+          # results are already inside the cached tree.
+          key: vendor-al2023-${{ hashFiles('scripts/prepare-jvm.ts', 'scripts/prepare-verapdf.ts', 'scripts/prepare-libreoffice.ts') }}
+
+      - name: Build in Amazon Linux 2023
+        env:
+          VERCEL_ENVIRONMENT: ${{ steps.target.outputs.environment }}
+          BUILD_FLAG: ${{ steps.target.outputs.flag }}
+        run: |
+          docker run --rm -i \
+            --platform linux/amd64 \
+            -v "$PWD":/work -w /work \
+            -e VERCEL_TOKEN -e VERCEL_ORG_ID -e VERCEL_PROJECT_ID \
+            -e VERCEL_CLI -e VERCEL_ENVIRONMENT -e BUILD_FLAG \
+            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+            "$BUILD_IMAGE" bash -euo pipefail -s <<'CONTAINER'
+          dnf install -y -q --setopt=install_weak_deps=False \
+            nodejs22 nodejs22-npm git tar gzip xz findutils
+          npm ci --no-audit --no-fund
+          # The CLI reads VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID from
+          # the environment. Do not add --token=: it would put the secret in
+          # any command trace.
+          npx --yes "$VERCEL_CLI" pull --yes --environment="$VERCEL_ENVIRONMENT"
+          npx --yes "$VERCEL_CLI" build $BUILD_FLAG
+          # Everything above ran as root on a bind mount. Hand the tree back so
+          # the deploy step and the cache save can read and write it.
+          chown -R "$HOST_UID:$HOST_GID" /work
+          CONTAINER
+
+      - name: Deploy prebuilt output
+        id: deploy
+        env:
+          DEPLOY_FLAG: ${{ steps.target.outputs.flag }}
+        run: |
+          npx --yes "$VERCEL_CLI" deploy --prebuilt $DEPLOY_FLAG > deployment-url.txt
+          url=$(cat deployment-url.txt)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url"
+          rm -f deployment-url.txt
+
+      - name: Smoke test
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          SMOKE_URL="${DEPLOY_URL%/}/api/ready"
+          echo "Verifying $SMOKE_URL"
+          BYPASS=""
+          if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            BYPASS="-H x-vercel-protection-bypass:$VERCEL_AUTOMATION_BYPASS_SECRET"
+          fi
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" $BYPASS "$SMOKE_URL" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Smoke test passed (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS - retrying in 10s"
+            sleep 10
+          done
+          echo "::error::Smoke test failed after 5 attempts; last status HTTP $STATUS"
+          exit 1
