@@ -48,9 +48,14 @@ name: Deploy
 # SECRETS
 #
 # VERCEL_ORG_ID, VERCEL_PROJECT_ID and VERCEL_TOKEN must be set as repository
-# secrets, taken from the Vercel account that owns this project. The token is
-# passed as an environment variable rather than a `--token=` argument, and the
-# container script never runs under `set -x`, so it cannot reach a log line.
+# secrets, taken from the Vercel account that owns this project.
+#
+# The org and project ids are read from the environment. The TOKEN is passed
+# with `--token=` on every CLI call, because the environment variable the docs
+# describe does not authenticate CLI 50.23.2 — run 33975934852 failed on
+# exactly that; see the comment on the pull command below. Nothing here runs
+# under `set -x` and GitHub masks registered secrets, so the flag does not
+# surface the token in logs.
 
 on:
   push:
@@ -160,11 +165,24 @@ jobs:
           dnf install -y -q --setopt=install_weak_deps=False \
             nodejs22 nodejs22-npm git tar gzip xz findutils
           npm ci --no-audit --no-fund
-          # The CLI reads VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID from
-          # the environment. Do not add --token=: it would put the secret in
-          # any command trace.
-          npx --yes "$VERCEL_CLI" pull --yes --environment="$VERCEL_ENVIRONMENT"
-          npx --yes "$VERCEL_CLI" build $BUILD_FLAG
+          # --token is REQUIRED, and the previous revision of this file was
+          # wrong to omit it. https://vercel.com/docs/cli/global-options says a
+          # VERCEL_TOKEN environment variable authenticates the CLI, and on
+          # 50.23.2 it does not: run 33975934852 forwarded VERCEL_TOKEN into
+          # this container and `pull` still died with
+          #
+          #     Error: No existing credentials found.
+          #     Please run `vercel login` or pass "--token"
+          #
+          # Env forwarding itself was fine in that run — $VERCEL_CLI resolved,
+          # the CLI printed its own version — so the variable arrived and the
+          # CLI ignored it. VERCEL_ORG_ID / VERCEL_PROJECT_ID are read from the
+          # environment normally; only the token needs the flag.
+          #
+          # Nothing here runs under `set -x`, and GitHub masks registered
+          # secrets in logs, so the flag does not put the token in the log.
+          npx --yes "$VERCEL_CLI" pull --yes --environment="$VERCEL_ENVIRONMENT" --token="$VERCEL_TOKEN"
+          npx --yes "$VERCEL_CLI" build $BUILD_FLAG --token="$VERCEL_TOKEN"
           # Everything above ran as root on a bind mount. Hand the tree back so
           # the deploy step and the cache save can read and write it.
           chown -R "$HOST_UID:$HOST_GID" /work
@@ -175,7 +193,9 @@ jobs:
         env:
           DEPLOY_FLAG: ${{ steps.target.outputs.flag }}
         run: |
-          npx --yes "$VERCEL_CLI" deploy --prebuilt $DEPLOY_FLAG > deployment-url.txt
+          # Same --token requirement as the build step above; this one runs on
+          # the host rather than in the container, but the CLI is the same.
+          npx --yes "$VERCEL_CLI" deploy --prebuilt $DEPLOY_FLAG --token="$VERCEL_TOKEN" > deployment-url.txt
           url=$(cat deployment-url.txt)
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed to $url"
