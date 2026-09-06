@@ -24,6 +24,7 @@
     "migrate": "tsx scripts/migrate.ts",
     "operator": "tsx scripts/operator.ts",
     "smoke:real": "tsx scripts/smoke-real.ts",
+    "smoke:documents": "tsx scripts/smoke-documents.ts",
     "blind:test": "tsx scripts/blind-test/run.ts",
     "blind:documents": "tsx scripts/doc-blind-test/run.ts",
     "test:db": "vitest run --config vitest.db.config.ts",
