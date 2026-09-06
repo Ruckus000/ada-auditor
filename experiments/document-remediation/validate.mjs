@@ -36,7 +36,7 @@ mkdirSync(outDir, { recursive: true });
 function pageCount(file) {
   const decoded = `${file}.decoded`;
   try {
-    execFileSync(`${JAVA_HOME}/bin/java`, ['-jar', PDFBOX, 'decode', '-skipImages', file, decoded], {
+    execFileSync(`${JAVA_HOME}/bin/java`, ['-Djava.awt.headless=true', '-jar', PDFBOX, 'decode', '-skipImages', file, decoded], {
       stdio: 'ignore',
     });
     const text = readFileSync(decoded).toString('latin1');

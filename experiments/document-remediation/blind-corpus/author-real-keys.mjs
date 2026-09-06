@@ -79,7 +79,7 @@ function qpdfSummary(path) {
 function ua1(path) {
   let raw;
   try {
-    raw = execFileSync('java', ['-Xmx1024m', '-jar', VERAPDF, '-f', 'ua1', '--format', 'json', path], {
+    raw = execFileSync('java', ['-Djava.awt.headless=true', '-Xmx1024m', '-jar', VERAPDF, '-f', 'ua1', '--format', 'json', path], {
       maxBuffer: 128 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 240_000,

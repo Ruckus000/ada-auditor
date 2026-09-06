@@ -61,7 +61,7 @@ const ENDS_SENTENCE = (t) => /[.!?;]\s*$/.test(t.trim());
 
 function inspect(path) {
   try {
-    return JSON.parse(execFileSync('java', ['-cp', CP, 'Inspect', path], {
+    return JSON.parse(execFileSync('java', ['-Djava.awt.headless=true', '-cp', CP, 'Inspect', path], {
       encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'],
     }));
   } catch {

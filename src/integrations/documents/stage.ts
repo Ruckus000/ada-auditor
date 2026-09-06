@@ -80,6 +80,28 @@ const DEFAULT_TIMEOUT_MS = 60_000;
  */
 const MAX_HEAP = '-Xmx512m';
 
+/**
+ * Run the stage without a window server connection.
+ *
+ * PDFBox initialises AWT to rasterise pages, and an AWT-enabled JVM on macOS
+ * registers as a foreground GUI application: it opens a SkyLight/WindowServer
+ * connection and calls BringForward. `[V]` Measured on a developer machine —
+ * 540 java processes producing 102 focus-grabs in one 8-hour window, each one
+ * stealing focus and switching Spaces, with a nameless `java` in the menu bar.
+ * It reads as the screen flickering, and it is alarming enough to look like a
+ * compromised machine.
+ *
+ * On the deployed function there is no display and this changes nothing, which
+ * is exactly why it survived: the fault is invisible everywhere the code is
+ * verified and visible only on the machine of whoever runs the suite.
+ *
+ * On the COMMAND LINE, not through `JAVA_TOOL_OPTIONS` — `childEnv` withholds
+ * that variable (see MAX_HEAP above), so an environment-level workaround, of
+ * the kind a developer reaches for first, cannot reach these children at all.
+ * This is the only place that can fix them.
+ */
+export const HEADLESS = '-Djava.awt.headless=true';
+
 export type StageFailure =
   /** No toolchain here. Expected in production; never an error. */
   | { kind: 'unavailable'; reason: string }
@@ -214,7 +236,7 @@ async function spawnStage(
   try {
     const result = await execute(
       runtime.javaBin,
-      [MAX_HEAP, '-cp', runtime.classpath, stage, ...args],
+      [MAX_HEAP, HEADLESS, '-cp', runtime.classpath, stage, ...args],
       {
         timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
         maxBuffer: options.maxBuffer ?? DEFAULT_MAX_BUFFER,

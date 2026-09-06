@@ -76,7 +76,11 @@ const ALLOWED_PROBES: Array<{ file: string; call: string; why: string }> = [
   },
   {
     file: join('scripts', 'doc-blind-test', 'run.ts'),
-    call: "execFileAsync( 'java', ['-Xmx1024m', '-jar', VERAPDF, '-f', 'ua1', '--format', 'json', path]",
+    // Re-keyed when the headless flag was added to this call. The reverse
+    // assertion below is what forced it: the old key matched nothing, and an
+    // exemption that matches nothing is one still vouching for a call that has
+    // since been rewritten.
+    call: "execFileAsync( 'java',",
     why: 'veraPDF exits 1 on a non-compliant file with its report on stdout; absence is `checked: false`',
   },
 ];

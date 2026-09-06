@@ -60,6 +60,7 @@ describe('runStage', () => {
     expect(calls[0]).toEqual([
       '/nonexistent/java',
       '-Xmx512m',
+      '-Djava.awt.headless=true',
       '-cp',
       '/nonexistent/cp',
       'Inspect',
@@ -247,7 +248,7 @@ describe('finishDocument', () => {
 
     expect(result.ok).toBe(true);
     expect(calls[0]).toEqual([
-      '/nonexistent/java', '-Xmx512m', '-cp', '/nonexistent/cp',
+      '/nonexistent/java', '-Xmx512m', '-Djava.awt.headless=true', '-cp', '/nonexistent/cp',
       'Finish', 'in.pdf', 'out.pdf', 'cy-GB',
     ]);
   });
