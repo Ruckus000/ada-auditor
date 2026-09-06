@@ -277,3 +277,62 @@ jobs:
           done
           echo "::error::Smoke test failed after 5 attempts; last status HTTP $STATUS"
           exit 1
+
+      # The step above proves the app BOOTS. It cannot prove it can convert, and
+      # the difference is not academic: on 2026-09-06 a warm-cache deploy shipped
+      # a build whose Java stages were missing, passed `/api/ready`, and refused
+      # every real conversion. `/api/ready` is also its own Vercel function and
+      # does not carry `vendor/libreoffice` at all, so it answers for an instance
+      # that could never convert regardless.
+      #
+      # This runs the real thing: a synthesised .docx through
+      # `/api/documents/remediate`, asserting the fingerprints only the Word lane
+      # leaves — a heading count that survived the fodt round trip, a
+      # `sourceLanguage` read out of `word/styles.xml`, and
+      # `conformance.checker === 'verapdf-ua1'`, which is what proves veraPDF is
+      # wired up rather than absent. A PDF upload would return an indistinguishable
+      # 200 from a host with no LibreOffice, which is why the fixture is a .docx
+      # and why the script refuses to send anything else.
+      #
+      # PRODUCTION ONLY. Preview deployments can sit behind Vercel protection,
+      # which answers with an HTML 401 the probe would report as an auth failure;
+      # the bypass-header flag was deliberately cut from the script as dead weight
+      # when production turned out to be open. Re-add both together if this is
+      # ever wanted on previews.
+      # Pinned to the container's major, because the probe reuses the
+      # `node_modules` that container installed. `ubuntu-latest` ships whatever
+      # Node its current image happens to carry, and "whatever the runner has"
+      # is not a version this repo has ever tested against.
+      - name: Set up Node for the probe
+        if: steps.target.outputs.environment == 'production'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Smoke test — a real document conversion
+        if: steps.target.outputs.environment == 'production'
+        env:
+          AUDITOR_RUN_TOKEN: ${{ secrets.AUDITOR_RUN_TOKEN }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          # Absent secret SKIPS rather than fails. This step proves a capability;
+          # a deploy that goes red because a probe was never configured teaches
+          # people to ignore red, which is the thing the probe exists to prevent.
+          # A secret that is present but WRONG still fails loudly — the script
+          # names the exact cause, including the sub-16-character case that
+          # `isRunAuthorized` otherwise rejects with an unexplained 401.
+          if [ -z "$AUDITOR_RUN_TOKEN" ]; then
+            echo "::warning::AUDITOR_RUN_TOKEN is not set as a repository secret — skipping the conversion probe. Add it (the value from this project's PRODUCTION Vercel environment) to exercise LibreOffice on every deploy."
+            exit 0
+          fi
+
+          # `node_modules` is already on disk: the build step's container ran
+          # `npm ci` against this same bind-mounted workspace. Reused rather than
+          # reinstalled, with a fallback so a change to that step cannot turn this
+          # one into a confusing module-not-found.
+          if [ ! -x node_modules/.bin/tsx ]; then
+            echo "node_modules is not usable here — installing"
+            npm ci --no-audit --no-fund
+          fi
+
+          npm run smoke:documents -- --base "$DEPLOY_URL"
