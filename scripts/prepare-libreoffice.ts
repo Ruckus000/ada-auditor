@@ -86,7 +86,12 @@ import {
   BUNDLED_SOFFICE_DIR,
   SYSTEM_LIBRARY_DIR,
 } from '../src/integrations/documents/libreoffice-runtime';
+import { run } from './run-command';
 
+// Still here for the three PROBES below — `dnf --version`, `dnf install` and
+// `ldd` — where a failure is an expected answer rather than an error, and each
+// is gated by something downstream that reads the result. Everything whose
+// failure ends the build goes through `run` instead.
 const execFileAsync = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -234,16 +239,36 @@ async function extractRpm(rpm: string, dest: string): Promise<void> {
   const failures: string[] = [];
   for (const attempt of attempts) {
     try {
-      await execFileAsync(attempt.bin, attempt.args, { cwd: dest, maxBuffer: 16 * 1024 * 1024 });
+      // 16MB deliberately: `cpio -idmu` without `--quiet` on the first attempt
+      // would be chatty, and the RPMs are large.
+      await run(`extract with ${attempt.bin}`, attempt.bin, attempt.args, {
+        cwd: dest,
+        maxBuffer: 16 * 1024 * 1024,
+      });
       return;
     } catch (error) {
-      failures.push(`${attempt.bin}: ${String(error).split('\n')[0]}`);
+      // Whole, not the first line. Three tools are tried and all three fail on
+      // an image missing every extractor, so this list IS the diagnosis — and
+      // the reason each one failed is what says whether the tool is absent or
+      // present and refusing. Truncating to one line here is the mistake
+      // `run-command.ts` exists to stop making.
+      failures.push(error instanceof Error ? error.message : String(error));
     }
   }
 
-  throw new Error(
-    `cannot extract ${rpm} — no working extractor on this image.\n  ${failures.join('\n  ')}`,
-  );
+  // Each reason is itself multi-line now, so every line is indented rather
+  // than only the first — otherwise the second attempt's argv reads as if it
+  // were a continuation of the aggregate sentence.
+  const detail = failures
+    .map((failure) =>
+      failure
+        .split('\n')
+        .map((line) => `  ${line}`)
+        .join('\n'),
+    )
+    .join('\n');
+
+  throw new Error(`cannot extract ${rpm} — no working extractor on this image.\n${detail}`);
 }
 
 /**
@@ -496,7 +521,13 @@ async function main(): Promise<void> {
 
     const unpacked = join(work, 'tarball');
     await mkdir(unpacked, { recursive: true });
-    await execFileAsync('tar', ['-xzf', tarball, '-C', unpacked, '--strip-components=1']);
+    await run('unpacking the LibreOffice tarball', 'tar', [
+      '-xzf',
+      tarball,
+      '-C',
+      unpacked,
+      '--strip-components=1',
+    ]);
     // 250MB that nothing reads again. Peak disk here is otherwise the tarball,
     // the RPMs and the installed tree all at once.
     await rm(tarball, { force: true });
@@ -542,9 +573,15 @@ async function main(): Promise<void> {
 
     // Prove the artifact runs before the build moves on. This is the build
     // image, not the runtime — see the header.
-    let version = '';
-    try {
-      const { stdout } = await execFileAsync(join(install, 'program', 'soffice'), ['--version'], {
+    // The handler that used to be written out here — read `stderr`, because
+    // the loader names the missing library there and `execFile`'s own message
+    // does not — is now `run-command.ts`, which reads BOTH streams. Its
+    // docblock carries this comment and what it was missing.
+    const { stdout } = await run(
+      'the installed LibreOffice does not run',
+      join(install, 'program', 'soffice'),
+      ['--version'],
+      {
         timeout: 120_000,
         env: {
           ...process.env,
@@ -553,21 +590,9 @@ async function main(): Promise<void> {
             .filter(Boolean)
             .join(':'),
         },
-      });
-      version = stdout.trim().split('\n')[0] ?? '';
-    } catch (error) {
-      // `stderr`, not the first line of the error. `execFile` puts "Command
-      // failed: <the command>" in the message and the *reason* — the dynamic
-      // loader naming the library it could not find — in `stderr`. The first
-      // version of this handler discarded it and cost a deploy cycle that
-      // reported only that something had failed, which was already obvious.
-      // The same mistake this file's `fetch` handler was fixed for.
-      const e = error as { stderr?: string; code?: number | string };
-      const reason = (e.stderr ?? '').trim() || String(error).split('\n')[0];
-      throw new Error(
-        `the installed LibreOffice does not run (exit ${e.code ?? '?'}):\n${reason}`,
-      );
-    }
+      },
+    );
+    const version = stdout.trim().split('\n')[0] ?? '';
 
     console.log(`bundled LibreOffice ready at ${BUNDLED_SOFFICE_DIR} — ${version}`);
   } finally {

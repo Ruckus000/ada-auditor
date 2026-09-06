@@ -195,6 +195,11 @@ jobs:
           #             exits 1 having printed its error to STDOUT, and
           #             execFile's error message only carries STDERR — so run
           #             34002062130 failed with a completely empty reason.
+          #             That empty reason is no longer a property of the code —
+          #             scripts/run-command.ts reports both streams, and
+          #             prepare-jvm.ts now refuses before the 184MB download
+          #             when objcopy is absent — but binutils is still REQUIRED
+          #             here, because jlink still needs objcopy to run at all.
           #             Verified: with binutils, jlink exits 0 and produces a
           #             54M JRE that runs `java -version`.
           #

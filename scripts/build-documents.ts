@@ -20,14 +20,12 @@
  * and the alternative was editing eight classpath strings in an ungated
  * directory that no gate would catch me breaking.
  */
-import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 
 import {
   DOCUMENT_CLASSES_DIR,
@@ -36,8 +34,7 @@ import {
   PDFBOX_JAR,
   PDFBOX_VERSION,
 } from '../src/integrations/documents/java-runtime';
-
-const execFileAsync = promisify(execFile);
+import { run } from './run-command';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const JAVA_SRC = join(ROOT, DOCUMENT_JAVA_DIR);
@@ -119,7 +116,7 @@ async function ensureFonts(): Promise<void> {
     await writeFile(tarball, bytes);
     // Plain GNU tar output; both darwin's bsdtar and the build image's GNU
     // tar read it — the same pairing prepare-libreoffice.ts relies on.
-    await execFileAsync('tar', ['-xzf', tarball], { cwd: work });
+    await run('unpacking the Liberation fonts', 'tar', ['-xzf', tarball], { cwd: work });
     await mkdir(dest, { recursive: true });
     const unpacked = join(work, 'liberation-fonts-ttf-2.1.5');
     for (const name of LIBERATION_FILES) {
@@ -170,15 +167,13 @@ async function main(): Promise<void> {
   // compiler's own opinion on would carry that forward.
   const args = ['-cp', jar, '-d', outDir, '-encoding', 'UTF-8', '-Xlint:all', ...sources];
 
-  try {
-    const { stderr } = await execFileAsync(javacBinary(), args);
-    if (stderr.trim()) {
-      console.log(stderr.trim());
-    }
-  } catch (error) {
-    const e = error as { stderr?: string; message?: string };
-    console.error(e.stderr?.trim() || e.message || String(error));
-    throw new Error('javac failed');
+  // The thrown message carries javac's own output now, rather than this
+  // printing it and then throwing the two words `javac failed`. `-Xlint:all`
+  // puts the count on the LAST line, which is why the truncation in
+  // `run-command.ts` keeps a tail as well as a head.
+  const { stderr } = await run('javac failed', javacBinary(), args);
+  if (stderr.trim()) {
+    console.log(stderr.trim());
   }
 
   const built = (await readdir(outDir)).filter((n) => n.endsWith('.class'));

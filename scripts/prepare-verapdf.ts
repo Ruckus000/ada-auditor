@@ -38,20 +38,18 @@
  * the installed tree only `bin/cli-<version>.jar` is kept — the GUI jar,
  * config and uninstaller are pruned.
  */
-import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 
 import { zipEntry } from '../src/domain/docx-language';
 import { BUNDLED_JRE_DIR } from '../src/integrations/documents/java-runtime';
 import { BUNDLED_VERAPDF_JAR } from '../src/integrations/documents/verapdf';
+import { run } from './run-command';
 
-const execFileAsync = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const VERAPDF = {
@@ -125,7 +123,12 @@ async function main(): Promise<void> {
     const installDir = join(work, 'installed');
     const autoXml = join(work, 'auto-install.xml');
     await writeFile(autoXml, autoInstallXml(installDir));
-    await execFileAsync(
+    // 16MB deliberately: IzPack narrates every file it unpacks. It also
+    // reports its *failures* on stdout rather than stderr — the same class as
+    // the jlink incident `run-command.ts` records — so the whole of both
+    // streams is what makes a bad install readable.
+    await run(
+      'the headless veraPDF install',
       javaBin,
       ['-Djava.awt.headless=true', '-jar', installerJar, autoXml],
       { maxBuffer: 16 * 1024 * 1024 },
@@ -148,9 +151,11 @@ async function main(): Promise<void> {
 
     // Prove the artifact runs on the runtime that ships, before the build
     // moves on. A missing module fails here, in a log somebody reads.
-    const { stdout } = await execFileAsync(javaBin, ['-jar', jarPath, '--version'], {
-      maxBuffer: 1024 * 1024,
-    });
+    const { stdout } = await run('the installed checker does not run', javaBin, [
+      '-jar',
+      jarPath,
+      '--version',
+    ]);
     const version = stdout.trim().split('\n')[0] ?? '';
     if (!version.includes(VERAPDF.version)) {
       throw new Error(`the installed checker reports "${version}", not ${VERAPDF.version}`);
