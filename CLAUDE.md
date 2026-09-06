@@ -181,6 +181,11 @@ not in one implementation.
   database on every local `npm test`. Extract the pure part.
 - **Structured events go through `services/logger`.** Hand-built JSON envelopes
   drift; `tests/services/log-shape.test.ts` greps the tree for them.
+- **Build-script child processes go through `scripts/run-command.ts`.** A
+  hand-rolled `promisify(execFile)` rejection carries neither `stdout` nor
+  `stderr`, so a `jlink` failure printed to stdout reached the deploy log as a
+  blank reason; `tests/scripts/exec-failures-are-not-swallowed.test.ts` is what
+  catches a new one.
 - **Browser-suite assertions that read live DOM use `expect.poll`**, not a
   single read. Note Vitest takes `interval:`, Playwright takes `intervals: []`.
 - **DB contract tests run against a database holding real rows.** Assert with

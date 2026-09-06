@@ -86,6 +86,79 @@ const eslintConfig = [
       ],
     },
   },
+  {
+    // A child process that fails has to say why, and `promisify(execFile)`
+    // rejects with a message built from the COMMAND LINE alone — `stdout` and
+    // `stderr` ride along as properties nobody is obliged to read.
+    //
+    // `[V]` Vercel run 34002062130: `jlink --strip-debug` could not exec
+    // `objcopy`, printed that to STDOUT, and the build log said only "Command
+    // failed: .../jlink ...". A second handler, in prepare-libreoffice.ts, read
+    // `stderr` and would have discarded the same line just as completely.
+    //
+    // This first block is the half that applies to EVERY script including
+    // `run-command.ts`: never reduce a failure to its first line. The reason a
+    // child failed is on `error.stdout`/`error.stderr`, and the first line of
+    // `String(error)` is the argv, which the reader already has.
+    files: ['scripts/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector:
+            "CallExpression[callee.object.callee.name='String'][callee.property.name='split']",
+          message:
+            'String(error).split() on a child-process failure yields only "Command failed: <argv>" — the reason is on error.stdout/error.stderr. Use run()/describeExecFailure() from scripts/run-command.ts.',
+        },
+      ],
+    },
+  },
+  {
+    // The second half: `scripts/run-command.ts` owns the only formatter, so it
+    // owns the only `promisify(execFile)` — with two exemptions, listed rather
+    // than globbed because each is a deliberate decision that has to survive
+    // being read again.
+    //
+    // Both exempt files keep raw `execFile` for PROBES: calls whose FAILURE IS
+    // AN EXPECTED ANSWER, gated by something downstream that reads the result,
+    // where routing through `run()` would turn a normal outcome into a thrown
+    // build error. `prepare-libreoffice.ts` asks `dnf --version` whether a
+    // package manager exists, installs packages one at a time knowing some are
+    // absent, and runs `ldd` over every ELF — that last one made safe by the
+    // `scanned === 0` and `missing.size > 0` checks that follow it.
+    // `doc-blind-test/run.ts` reads qpdf and veraPDF and reports "not checked"
+    // when they are not installed, on purpose: a blind test that silently
+    // scored itself would be worse than one that says it could not.
+    //
+    // An exemption list rots, so it is not the only guard.
+    // `tests/scripts/exec-failures-are-not-swallowed.test.ts` matches every
+    // surviving `execFileAsync(` CALL in scripts/ against a per-call allowlist
+    // in BOTH directions — a new call is unallowlisted and fails, and a probe
+    // that is deleted or rewritten leaves an entry matching nothing and also
+    // fails. That is what keeps these two entries honest.
+    files: ['scripts/**/*.ts'],
+    ignores: [
+      'scripts/run-command.ts',
+      'scripts/prepare-libreoffice.ts',
+      'scripts/doc-blind-test/run.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector:
+            "CallExpression[callee.object.callee.name='String'][callee.property.name='split']",
+          message:
+            'String(error).split() on a child-process failure yields only "Command failed: <argv>" — the reason is on error.stdout/error.stderr. Use run()/describeExecFailure() from scripts/run-command.ts.',
+        },
+        {
+          selector: "CallExpression[callee.name='promisify'][arguments.0.name='execFile']",
+          message:
+            'Use `run()` from scripts/run-command.ts. A hand-rolled promisify(execFile) rejection carries neither stdout nor stderr, which is how run 34002062130 failed with an empty reason.',
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

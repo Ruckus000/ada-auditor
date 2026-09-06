@@ -25,18 +25,16 @@
  * compared with itself next week — and the checksum is verified because this is
  * now a supply-chain artifact we own and have to be able to reason about.
  */
-import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 
 import { BUNDLED_JRE_DIR, DOCUMENT_CLASSES_DIR } from '../src/integrations/documents/java-runtime';
+import { run } from './run-command';
 
-const execFileAsync = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Eclipse Temurin 17.0.20.1+1, linux x64. */
@@ -82,6 +80,51 @@ async function download(url: string, to: string, expected: string): Promise<void
   await writeFile(to, bytes);
 }
 
+/**
+ * External tools this script's children need, which are not this script's
+ * children — so nothing on the path below fails with their name on it.
+ *
+ * `jlink --strip-debug` execs `objcopy` to strip the native libraries it
+ * copies into the runtime, and `binutils` is not in a bare `amazonlinux:2023`.
+ * `[V]` Without it jlink exits 1 having printed
+ * `Cannot run program "objcopy"` to **stdout**, and run 34002062130 therefore
+ * failed with no reason at all. The reading half of that is fixed in
+ * `run-command.ts`; this is the other half — the tool was never checked for.
+ *
+ * The `ldd` gate in `prepare-libreoffice.ts` is the model: refuse while
+ * something needed is unresolvable, and name the package rather than the
+ * symptom. This one costs a second and runs before the 184MB download, rather
+ * than three minutes later behind it.
+ */
+const REQUIRED_TOOLS = [
+  {
+    program: 'objcopy',
+    reason: 'jlink --strip-debug execs objcopy, which is not on PATH.',
+    fix: 'Install binutils in the build image (.github/workflows/deploy.yml).',
+  },
+];
+
+/**
+ * Whether a program is on `PATH`, without spawning anything.
+ *
+ * `which` is itself a tool that can be absent, and a preflight that needs a
+ * preflight is not one. `PATH` is the only thing `execvp` consults, so reading
+ * it is the same question the loader will ask.
+ */
+function onPath(program: string): boolean {
+  for (const dir of (process.env.PATH ?? '').split(delimiter)) {
+    if (dir && existsSync(join(dir, program))) return true;
+  }
+  return false;
+}
+
+function preflight(): void {
+  const missing = REQUIRED_TOOLS.filter((tool) => !onPath(tool.program));
+  if (missing.length === 0) return;
+
+  throw new Error(missing.map((tool) => `${tool.reason}\n${tool.fix}`).join('\n'));
+}
+
 async function main(): Promise<void> {
   const jreDir = join(ROOT, BUNDLED_JRE_DIR);
 
@@ -109,6 +152,9 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Before the download, not after it. Everything below costs minutes.
+  preflight();
+
   const work = await mkdtemp(join(tmpdir(), 'ada-jdk-'));
   try {
     const tarball = join(work, 'jdk.tar.gz');
@@ -116,7 +162,7 @@ async function main(): Promise<void> {
 
     const jdk = join(work, 'jdk');
     await mkdir(jdk, { recursive: true });
-    await execFileAsync('tar', ['-xzf', tarball, '-C', jdk, '--strip-components=1']);
+    await run('unpacking the JDK', 'tar', ['-xzf', tarball, '-C', jdk, '--strip-components=1']);
 
     // Compilation goes through the existing script rather than being repeated
     // here, pointed at the JDK we just unpacked. It also fetches PDFBox, so
@@ -125,16 +171,17 @@ async function main(): Promise<void> {
     // The local binary, not `npx` — `npx` will reach the network for a package
     // it thinks is missing, and a build step that can silently fetch something
     // is not one you can reason about.
-    const { stdout } = await execFileAsync(
+    const { stdout } = await run(
+      'compiling document stages',
       join(ROOT, 'node_modules', '.bin', 'tsx'),
       [join(ROOT, 'scripts/build-documents.ts')],
-      { cwd: ROOT, env: { ...process.env, JAVA_HOME: jdk }, maxBuffer: 8 * 1024 * 1024 },
+      { cwd: ROOT, env: { ...process.env, JAVA_HOME: jdk } },
     );
     console.log(stdout.trim());
 
     console.log('assembling the minimal runtime');
     await rm(jreDir, { recursive: true, force: true });
-    await execFileAsync(join(jdk, 'bin', 'jlink'), [
+    await run('assembling the minimal runtime', join(jdk, 'bin', 'jlink'), [
       '--add-modules', MODULES,
       '--strip-debug',
       '--no-header-files',
@@ -146,15 +193,10 @@ async function main(): Promise<void> {
     // Prove the artifact runs before the build moves on. A runtime missing a
     // module fails here, where the log is read, rather than on the first
     // production request. `java -version` reports on stderr and exits 0.
-    let version = '';
-    try {
-      const { stderr } = await execFileAsync(join(jreDir, 'bin', 'java'), ['-version']);
-      version = stderr.trim().split('\n')[0] ?? '';
-    } catch (error) {
-      throw new Error(
-        `the assembled runtime does not run: ${String(error).split('\n')[0]}`,
-      );
-    }
+    const { stderr } = await run('the assembled runtime does not run', join(jreDir, 'bin', 'java'), [
+      '-version',
+    ]);
+    const version = stderr.trim().split('\n')[0] ?? '';
 
     console.log(`bundled runtime ready at ${BUNDLED_JRE_DIR} — ${version}`);
   } finally {
