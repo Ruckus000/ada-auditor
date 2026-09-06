@@ -139,16 +139,39 @@ jobs:
 
       - uses: actions/checkout@v7
 
-      - name: Restore prepared vendor artifacts
+      - name: Restore prepared build artifacts
         uses: actions/cache@v6
         with:
-          path: vendor
-          # The three prepare scripts pin their own versions and checksums, so
-          # their contents ARE the cache identity. The prepare steps skip
-          # themselves when the artifact already exists, so a hit removes the
-          # downloads entirely — including the system-library collection, whose
-          # results are already inside the cached tree.
-          key: vendor-al2023-${{ hashFiles('scripts/prepare-jvm.ts', 'scripts/prepare-verapdf.ts', 'scripts/prepare-libreoffice.ts') }}
+          # BOTH directories, and the second one is not optional.
+          #
+          # `prepare-jvm.ts` returns early when `vendor/jre/bin/java` exists,
+          # and that return sits ABOVE its call to `build-documents.ts`. So a
+          # restored `vendor/` skips the class compilation as well as the JDK
+          # download — and `build-documents.ts` writes to TWO places:
+          # `vendor/fonts/liberation`, which was cached, and
+          # `dist/documents/classes`, which was not.
+          #
+          # Caching only `vendor` therefore produced a deployment whose JRE and
+          # LibreOffice were present and whose Java stages were absent. The
+          # conversion routes deploy clean and refuse every request with
+          # `document stages are not compiled at dist/documents/classes`, which
+          # is what `npm run smoke:documents` found against production on
+          # 2026-09-06 — the first warm-cache deploy after the cache landed in
+          # #208. The cold deploy before it converted fine, which is exactly
+          # why nothing caught this: the bug needs a SECOND deploy to appear.
+          #
+          # Recompiling instead of caching is not a drop-in alternative:
+          # `build-documents.ts` needs `javac` from the full JDK, and on the
+          # early-return path the JDK was never downloaded — `vendor/jre` is a
+          # jlink'd runtime with no compiler in it.
+          path: |
+            vendor
+            dist/documents
+          # The prepare scripts pin their own versions and checksums, so their
+          # contents ARE the cache identity. `build-documents.ts` joins them
+          # now that its output is cached too — without it, editing the Java
+          # stages would restore stale classes over the new sources.
+          key: vendor-al2023-${{ hashFiles('scripts/prepare-jvm.ts', 'scripts/prepare-verapdf.ts', 'scripts/prepare-libreoffice.ts', 'scripts/build-documents.ts') }}
 
       - name: Build in Amazon Linux 2023
         env:
