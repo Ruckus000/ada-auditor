@@ -34,7 +34,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { BUNDLED_JRE_DIR } from '../src/integrations/documents/java-runtime';
+import { BUNDLED_JRE_DIR, DOCUMENT_CLASSES_DIR } from '../src/integrations/documents/java-runtime';
 
 const execFileAsync = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -86,6 +86,25 @@ async function main(): Promise<void> {
   const jreDir = join(ROOT, BUNDLED_JRE_DIR);
 
   if (existsSync(join(jreDir, 'bin', 'java'))) {
+    // This early return skips `build-documents.ts` below as well as the JDK
+    // download, and that script writes to two places — `vendor/fonts` (which
+    // travels with the JRE in the deploy cache) and `dist/documents/classes`
+    // (which did not, until the cache was widened to carry both). A restore
+    // that brings one without the other is not a usable build: the conversion
+    // routes deploy clean and then refuse every request with `document stages
+    // are not compiled`, which is a runtime symptom of a build-time fault and
+    // took a production probe to find.
+    //
+    // Refuse here instead. Recompiling is not an option on this path — javac
+    // lives in the full JDK, and `vendor/jre` is a jlink'd runtime without it.
+    if (!existsSync(join(ROOT, DOCUMENT_CLASSES_DIR))) {
+      throw new Error(
+        `${BUNDLED_JRE_DIR} was restored without ${DOCUMENT_CLASSES_DIR}. `
+        + 'The build cache is carrying half of what build-documents.ts produces. '
+        + 'Check the `path:` of the cache step in .github/workflows/deploy.yml — it '
+        + 'must list dist/documents alongside vendor.',
+      );
+    }
     console.log('bundled runtime already present');
     return;
   }
