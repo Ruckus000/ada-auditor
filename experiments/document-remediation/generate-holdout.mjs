@@ -13,7 +13,7 @@ const PDFBOX = 'vendor/pdfbox-app-3.0.8.jar';
 // Third caller now (holdout, holdout2, and re-runs of either), so the
 // directories are arguments rather than another copy of the file.
 const [SRC = 'holdout', OUT = 'out/holdout'] = process.argv.slice(2);
-const pdfbox = (...args) => execFileSync(`${JAVA_HOME}/bin/java`, ['-jar', PDFBOX, ...args], { stdio: 'ignore' });
+const pdfbox = (...args) => execFileSync(`${JAVA_HOME}/bin/java`, ['-Djava.awt.headless=true', '-jar', PDFBOX, ...args], { stdio: 'ignore' });
 
 mkdirSync(OUT, { recursive: true });
 

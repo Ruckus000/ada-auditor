@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { conformanceSchema, type Conformance } from '../../domain/document-remediation';
-import { childEnv } from './stage';
+import { childEnv, HEADLESS } from './stage';
 import { resolveJavaRuntime, type JavaRuntime } from './java-runtime';
 import { logWarn } from '../../services/logger';
 
@@ -83,7 +83,7 @@ export async function checkUa1(pdfPath: string, options: VeraPdfOptions = {}): P
   const execute = options.executor ?? execFileAsync;
   let raw = '';
   try {
-    const result = await execute(runtime.javaBin, [MAX_HEAP, '-jar', jar, '-f', 'ua1', '--format', 'json', pdfPath], {
+    const result = await execute(runtime.javaBin, [MAX_HEAP, HEADLESS, '-jar', jar, '-f', 'ua1', '--format', 'json', pdfPath], {
       timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
       maxBuffer: 64 * 1024 * 1024,
       env: childEnv(options.env ?? process.env),

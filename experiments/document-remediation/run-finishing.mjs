@@ -22,7 +22,7 @@ for (const f of files) {
   let error = null;
   try {
     execFileSync(`${JAVA_HOME}/bin/java`,
-      ['-cp', `vendor/pdfbox-app-3.0.8.jar:out/classes`, 'Finish', join(IN, f), outPath, LANG],
+      ['-Djava.awt.headless=true', '-cp', `vendor/pdfbox-app-3.0.8.jar:out/classes`, 'Finish', join(IN, f), outPath, LANG],
       { stdio: ['ignore', 'ignore', 'pipe'] });
   } catch (e) {
     error = (e.stderr?.toString() || String(e)).split('\n')[0];

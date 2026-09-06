@@ -312,7 +312,11 @@ async function independentUa1(path: string): Promise<RunResult['independent']> {
   try {
     const { stdout } = await execFileAsync(
       'java',
-      ['-Xmx1024m', '-jar', VERAPDF, '-f', 'ua1', '--format', 'json', path],
+      // `-Djava.awt.headless=true` because veraPDF pulls in PDFBox, which
+      // initialises AWT — and an AWT-enabled JVM on macOS grabs focus and
+      // switches Spaces on every invocation. This harness runs one per
+      // document over a whole corpus.
+      ['-Xmx1024m', '-Djava.awt.headless=true', '-jar', VERAPDF, '-f', 'ua1', '--format', 'json', path],
       { maxBuffer: 128 * 1024 * 1024, timeout: 300_000 },
     );
     raw = stdout;

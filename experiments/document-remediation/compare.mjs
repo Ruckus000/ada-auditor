@@ -54,7 +54,7 @@ const significant = (s) =>
   new Set((s ?? '').toLowerCase().match(/[a-z]{3,}/g)?.filter((w) => !STOP.has(w)) ?? []);
 
 function inspect(file) {
-  return JSON.parse(execFileSync(`${JAVA_HOME}/bin/java`, ['-cp', CP, 'Inspect', file], {
+  return JSON.parse(execFileSync(`${JAVA_HOME}/bin/java`, ['-Djava.awt.headless=true', '-cp', CP, 'Inspect', file], {
     maxBuffer: 32 * 1024 * 1024,
   }).toString());
 }

@@ -49,7 +49,7 @@ for (const file of docs) {
   if (name === SCANNED) {
     const pngPath = `${OUT}/${name}.png`;
     await page.screenshot({ path: pngPath, fullPage: true });
-    execFileSync(`${JAVA_HOME}/bin/java`, [
+    execFileSync(`${JAVA_HOME}/bin/java`, ['-Djava.awt.headless=true',
       '-jar', PDFBOX, 'fromimage',
       '-i', pngPath, '-o', pdfPath, '-pageSize', 'A4', '-resize',
     ]);

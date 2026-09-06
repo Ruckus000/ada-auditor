@@ -29,7 +29,7 @@ for (const f of readdirSync(IN).filter((x) => x.endsWith('.pdf')).sort()) {
   const started = Date.now();
   try {
     const out = execFileSync(`${JAVA_HOME}/bin/java`,
-      ['-cp', 'vendor/pdfbox-app-3.0.8.jar:out/classes', 'Contrast', join(IN, f)],
+      ['-Djava.awt.headless=true', '-cp', 'vendor/pdfbox-app-3.0.8.jar:out/classes', 'Contrast', join(IN, f)],
       { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }).toString().trim();
     report = JSON.parse(out.split('\n').at(-1));
   } catch (e) { error = (e.stderr?.toString() || String(e)).split('\n')[0]; }
