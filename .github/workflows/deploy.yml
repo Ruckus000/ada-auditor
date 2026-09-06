@@ -162,8 +162,34 @@ jobs:
             -e VERCEL_CLI -e VERCEL_ENVIRONMENT -e BUILD_FLAG \
             -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
             "$BUILD_IMAGE" bash -euo pipefail -s <<'CONTAINER'
+          # amazonlinux:2023 is the right ABI, but it is BARE — Vercel's build
+          # image is the same distro plus a toolchain, and three of the
+          # binaries the prepare scripts shell out to are in that difference.
+          # Each was measured in the image, not guessed:
+          #
+          #   binutils  provides objcopy. `jlink --strip-debug` (prepare-jvm)
+          #             execs it to strip native libraries. Without it jlink
+          #             exits 1 having printed its error to STDOUT, and
+          #             execFile's error message only carries STDERR — so run
+          #             34002062130 failed with a completely empty reason.
+          #             Verified: with binutils, jlink exits 0 and produces a
+          #             54M JRE that runs `java -version`.
+          #
+          #   cpio      prepare-libreoffice extracts an RPM, and its first and
+          #             preferred attempt is `rpm2cpio | cpio -idmu`. rpm2cpio
+          #             ships with the base image; cpio does NOT.
+          #
+          #   bsdtar    that extractor's second attempt. Worth having as well
+          #             as cpio because the third and last fallback is GNU tar,
+          #             which cannot read RPM at all — so without both of these
+          #             every attempt fails and the build dies at "cannot
+          #             extract ... no working extractor on this image".
+          #
+          # ldd and rpm2cpio, which these scripts also use, ARE in the base
+          # image; adding packages for them would be noise.
           dnf install -y -q --setopt=install_weak_deps=False \
-            nodejs22 nodejs22-npm git tar gzip xz findutils
+            nodejs22 nodejs22-npm git tar gzip xz findutils \
+            binutils cpio bsdtar
           npm ci --no-audit --no-fund
           # --token is REQUIRED, and the previous revision of this file was
           # wrong to omit it. https://vercel.com/docs/cli/global-options says a
