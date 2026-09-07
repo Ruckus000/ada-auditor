@@ -230,6 +230,19 @@ export function execFailureStatus(error: unknown, timeoutMs?: number): string {
     return timeoutMs === undefined ? 'timed out' : `timed out after ${timeoutMs}ms`;
   }
 
+  // `.code`, because everything here spawns through `execFile`, where that is
+  // where a numeric exit code lands. **`execFileSync` puts it on `.status`**
+  // and leaves `.code` undefined for an ordinary non-zero exit, so a sync
+  // failure would fall past every branch below and be reported as the bare
+  // `failed` — losing exactly the ran-and-refused vs never-started distinction
+  // this function exists to draw. ENOENT and EACCES survive either way; only
+  // the number is lost.
+  //
+  // Not a live defect: `exec-failures-are-not-swallowed.test.ts` keeps
+  // `scripts/` on the async path, so nothing reaches this synchronously. Read
+  // `.status` here as well the moment that stops being true — see #218, and
+  // `blind-corpus/verify.mjs`, which already depends on `.status` to read
+  // qpdf's exit 3 as a warning rather than a refusal.
   if (typeof e.code === 'number') return `exit ${e.code}`;
   if (signal) return `killed by ${signal}`;
   if (typeof e.code === 'string' && e.code) return e.code;
