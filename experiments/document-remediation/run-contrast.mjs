@@ -13,6 +13,7 @@
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
+import { describeExecFailure, summariseExecFailure } from './exec-failure.mjs';
 
 const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const [IN, OUT] = process.argv.slice(2);
@@ -25,17 +26,17 @@ mkdirSync(OUT, { recursive: true });
 const rows = [];
 for (const f of readdirSync(IN).filter((x) => x.endsWith('.pdf')).sort()) {
   const name = basename(f, '.pdf');
-  let report = null, error = null;
+  let report = null, error = null, errorLine = null;
   const started = Date.now();
   try {
     const out = execFileSync(`${JAVA_HOME}/bin/java`,
       ['-Djava.awt.headless=true', '-cp', 'vendor/pdfbox-app-3.0.8.jar:out/classes', 'Contrast', join(IN, f)],
       { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }).toString().trim();
     report = JSON.parse(out.split('\n').at(-1));
-  } catch (e) { error = (e.stderr?.toString() || String(e)).split('\n')[0]; }
+  } catch (e) { error = describeExecFailure(e); errorLine = summariseExecFailure(e); }
   rows.push({ document: name, ms: Date.now() - started, error, ...report });
   const r = rows.at(-1);
-  console.log(name.padEnd(30), error ? `ERROR ${error}`
+  console.log(name.padEnd(30), error ? `ERROR ${errorLine}`
     : `pairs=${String(r.pairs).padStart(3)} failing=${String(r.failing).padStart(2)} glyphs=${String(r.failingGlyphs).padStart(5)} undet=${String(r.undetermined).padStart(2)} ${r.failing ? '<-- 1.4.3' : ''}`);
   for (const d of r.findings ?? []) {
     console.log(`     ${d.fg} on ${d.bg}  ${d.ratio.toFixed(2)}:1 needs ${d.required}  ${d.glyphs} glyphs  "${d.sample.slice(0, 24)}"`);

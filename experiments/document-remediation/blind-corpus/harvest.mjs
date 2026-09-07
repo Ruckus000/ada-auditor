@@ -21,6 +21,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { failureLine } from './failure-line.mjs';
 
 const HERE = import.meta.dirname;
 const REAL = join(HERE, 'real');
@@ -77,9 +78,9 @@ for (const { id, url } of rows) {
       '-sSL', '--max-time', '90', '--retry', '2', '--fail',
       '-A', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
       '-o', target, url,
-    ], { stdio: ['ignore', 'ignore', 'pipe'] });
+    ], { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 });
   } catch (error) {
-    rejected.push(`${id}: download failed (${String(error.stderr ?? '').trim().split('\n').pop() || 'no response'})`);
+    rejected.push(`${id}: download failed (${failureLine(error, { prefer: 'last' })})`);
     continue;
   }
 
