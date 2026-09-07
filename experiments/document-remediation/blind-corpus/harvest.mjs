@@ -75,7 +75,10 @@ for (const { id, url } of rows) {
     // rate-limit and occasionally answer HTML with a PDF content type, and
     // curl reports all of that in one exit code.
     execFileSync('curl', [
-      '-sSL', '--max-time', '90', '--retry', '2', '--fail',
+      // `--remove-on-error` because `-o` truncates the output file before curl
+      // knows the request will succeed: without it a failed RE-download destroys
+      // the good document already on disk, and the same run drops its hash.
+      '-sSL', '--max-time', '90', '--retry', '2', '--fail', '--remove-on-error',
       '-A', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
       '-o', target, url,
     ], { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 });
@@ -117,6 +120,31 @@ if (rejected.length > 0) {
 
 const hosts = new Set(kept.map((r) => r.host));
 console.log(`\nkept ${kept.length} of ${rows.length}, from ${hosts.size} hosts, none shared with the training set`);
-writeFileSync(join(HERE, 'real-manifest.json'), `${JSON.stringify(
-  { documents: Object.fromEntries(kept.map((r) => [r.id, r.hash])) }, null, 2,
+/**
+ * Merged, never rewritten from a partial pass.
+ *
+ * The names-map is ONE COHORT — `real-names.txt` is 34 `r*` ids, `new-names.txt`
+ * is 50 `n*` — so a write built from `kept` alone erases every cohort this run
+ * did not look at. `[V]` That is how 28 `r*` hashes were lost while all 28
+ * documents sat in `real/`, unverifiable, and why the second cohort had to be
+ * merged into this file by hand. `author-real-keys.mjs` states the rule and
+ * guards `corrections.json` with it; this is the file that taught it.
+ *
+ * Spread order is load-bearing: `recorded` first holds the existing ids in
+ * place, this run's hashes second refresh those it re-harvested and append
+ * genuinely new ones — a record whose diff is mostly relocation hides the one
+ * line that changed. (`prior` above is the prior-HASHES set; different thing,
+ * hence the name.)
+ *
+ * The manifest is therefore everything ever successfully harvested, which is
+ * the useful reading — `real/` is gitignored, so nothing else records what the
+ * corpus is supposed to contain. A stale id can only leave by being harvested
+ * again and rejected, or by hand.
+ */
+const manifestPath = join(HERE, 'real-manifest.json');
+const recorded = existsSync(manifestPath)
+  ? JSON.parse(readFileSync(manifestPath, 'utf8')).documents
+  : {};
+writeFileSync(manifestPath, `${JSON.stringify(
+  { documents: { ...recorded, ...Object.fromEntries(kept.map((r) => [r.id, r.hash])) } }, null, 2,
 )}\n`, 'utf8');

@@ -671,8 +671,9 @@ const ONLY = (process.argv.find((a) => a.startsWith('--only=')) ?? '').slice('--
  * `corrections.json` is rebuilt from the rows this run processed, so running a
  * single cohort would drop every correction belonging to the others — 42 of
  * them, the whole record of where this instrument has been wrong before. The
- * same shape overwrote `real-manifest.json` during the harvest. A file that is
- * a RECORD must be merged, never rewritten from a partial pass.
+ * same shape overwrote `real-manifest.json` during the harvest — `harvest.mjs`
+ * merges it now, so that one is closed rather than still waiting. A file that
+ * is a RECORD must be merged, never rewritten from a partial pass.
  */
 function mergeCorrections(fresh) {
   if (!ONLY) return fresh;
