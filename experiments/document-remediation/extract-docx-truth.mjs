@@ -9,7 +9,14 @@
 // Legacy .doc is OLE, not ZIP, and is out of scope here by documented
 // limitation — those documents get outcome-level checks only.
 //
-// Usage: node extract-docx-truth.mjs <file.docx|dir> [outDir]
+// Usage: npx tsx extract-docx-truth.mjs <file.docx|dir> [outDir]
+//
+// `npx tsx`, not `node`. This reads `readLanguage` from `src/` rather than
+// keeping a second parser of the same fact, and plain `node` cannot load a
+// `.ts` module: it exits with ERR_UNKNOWN_FILE_EXTENSION before doing any
+// work. `[V]` Confirmed on Node v20.20.2; type stripping lands in 22.6.
+// `tests/scripts/experiments-ts-imports-need-tsx.test.ts` keeps this line
+// honest, because it was wrong for as long as the import has existed.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
