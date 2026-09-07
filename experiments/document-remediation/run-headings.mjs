@@ -2,6 +2,7 @@
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
+import { describeExecFailure, summariseExecFailure } from './exec-failure.mjs';
 
 const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const [IN = 'out/e2-captioned', OUT = 'out/e2-headings'] = process.argv.slice(2);
@@ -10,16 +11,16 @@ mkdirSync(OUT, { recursive: true });
 const rows = [];
 for (const f of readdirSync(IN).filter((x) => x.endsWith('.pdf')).sort()) {
   const name = basename(f, '.pdf');
-  let report = null, error = null;
+  let report = null, error = null, errorLine = null;
   try {
     const out = execFileSync(`${JAVA_HOME}/bin/java`,
       ['-Djava.awt.headless=true', '-cp', 'vendor/pdfbox-app-3.0.8.jar:out/classes', 'Headings', join(IN, f), join(OUT, f)],
       { stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
     report = JSON.parse(out.split('\n').at(-1));
-  } catch (e) { error = (e.stderr?.toString() || String(e)).split('\n')[0]; }
+  } catch (e) { error = describeExecFailure(e); errorLine = summariseExecFailure(e); }
   rows.push({ document: name, error, ...report });
   const r = rows.at(-1);
-  console.log(name.padEnd(30), error ? `ERROR ${error}`
+  console.log(name.padEnd(30), error ? `ERROR ${errorLine}`
     : `headings=${String(r.headings).padStart(2)} length=${r.length} noLetters=${r.noLetters} pageMarker=${r.pageMarker} captionText=${r.captionText} inTable=${r.inTable} kept=${r.kept}`);
 }
 writeFileSync(join(OUT, 'run.json'), JSON.stringify(rows, null, 2));

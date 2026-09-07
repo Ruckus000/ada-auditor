@@ -17,6 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { failureLine } from './failure-line.mjs';
 
 const HERE = import.meta.dirname;
 const DOCS = join(HERE, 'docs');
@@ -81,7 +82,7 @@ function verifyPdf(key, bytes, path) {
   } catch (error) {
     // Only the rows that are supposed to be unreadable may be unreadable.
     if (['p13-encrypted', 'p17-shifted-xref', 'p34-no-pages'].includes(key.id)) return;
-    complain(key.id, `qpdf could not read it: ${String(error.stderr ?? error.message).trim().split('\n')[0]}`);
+    complain(key.id, `qpdf could not read it: ${failureLine(error)}`);
     return;
   }
 
