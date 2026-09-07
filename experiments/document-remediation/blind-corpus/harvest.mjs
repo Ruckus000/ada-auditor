@@ -12,6 +12,18 @@
  *  - the source domain must not appear in the training manifests. Catches the
  *    same document re-exported, which a hash never will.
  *
+ * Both guards stop at the TRAINING corpora. Neither sees a previous blind
+ * cohort: `prior-hashes.txt` holds no `r*` or `n*` hash, and `trainedDomains`
+ * is built from `pdf-harvest.txt` and `real-word-names.txt` — not from the
+ * cohort name-maps. So a cohort-2 document reused from cohort 1 passes both.
+ *
+ * Cohort-to-cohort disjointness is therefore CURATED, not enforced: it is
+ * checked by whoever assembles the names-map. It has held so far — cohorts 1
+ * and 2 share no hash and no host — and #221 records why enforcing it was left
+ * alone, the short version being that appending a cohort's own hashes makes
+ * re-harvesting that cohort reject every document as a duplicate of itself.
+ * Adding a third cohort means checking it against the others by hand.
+ *
  * Bytes land in `real/`, which was gitignored before this file was written.
  * The names map is tracked: URLs and ids, never content.
  *
