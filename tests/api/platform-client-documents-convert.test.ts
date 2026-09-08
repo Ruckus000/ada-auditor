@@ -178,6 +178,93 @@ function pdfReading(over: Record<string, unknown> = {}) {
   });
 }
 
+/** A converted reading with one undescribed figure, as the Word lane sees it. */
+function convertedReading(over: Record<string, unknown> = {}) {
+  return documentStructureSchema.parse({
+    marked: true,
+    signed: false,
+    encrypted: false,
+    annotationsNotInStructure: 0,
+    formFields: 0,
+    formFieldsWithoutName: 0,
+    embeddedFiles: 0,
+    structureElements: 40,
+    textChars: 900,
+    images: 1,
+    pages: 1,
+    lang: 'en-GB',
+    title: 'Planning Committee Agenda',
+    headings: ['H1'],
+    headingTexts: [{ level: 'H1', text: SECRET_HEADING }],
+    figures: [{ type: 'Figure', alt: null, actualText: null, page: 1 }],
+    tables: [],
+    lists: [],
+    order: [{ type: 'H1', text: SECRET_HEADING }, { type: 'Figure', text: null }],
+    ...over,
+  });
+}
+
+/**
+ * A Word source with a description on record — the shape the pilot ran.
+ *
+ * The lane this exercises had no test at all: every answers case in this file
+ * and in `documents-remediate.test.ts` supplied a PDF, and every Word case
+ * supplied no answers, so the two never met and the conversion lane's
+ * declaration pass was never run by anything.
+ */
+async function seedAnsweredDocx() {
+  const bytes = docxBytes();
+  const inputSha256 = sha256(bytes);
+  const doc = await platform.ensureClientDocument(
+    'acme',
+    { url: DOC_URL, kind: 'docx', source: 'crawl' },
+    '2026-08-26T09:00:00.000Z',
+  );
+  await platform.saveDocumentAnswers([
+    {
+      id: 'ans-word-fig', clientId: 'acme', documentId: doc.id, inputSha256,
+      askId: 'figure:0', kind: 'figure',
+      target: { ordinal: 0, type: 'Figure', page: 1, prior: 'absent' },
+      disposition: 'declared', value: 'A map of the town centre', actor: 'Sam',
+      declaredAt: '2026-08-26T10:00:00.000Z',
+    },
+  ]);
+
+  convertSourceToPdf.mockImplementation(async (_source: string, output: string) => {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(output, FAKE_PDF);
+    return {
+      ok: true,
+      pdfPath: output,
+      provenance: {
+        title: { kind: 'transcribed', title: 'Planning Committee Agenda' },
+        sourceLanguage: 'en-GB',
+        structure: convertedReading(),
+      },
+    };
+  });
+
+  // What a real `Inspect` reads back off the staged file: the description on
+  // the figure, and as that figure's reading-order text. Exactly the two
+  // fields `applyDeclarations` models, and nothing else.
+  inspectDocument.mockReset();
+  inspectDocument.mockResolvedValue({
+    ok: true,
+    value: convertedReading({
+      figures: [{ type: 'Figure', alt: 'A map of the town centre', actualText: null, page: 1 }],
+      order: [{ type: 'H1', text: SECRET_HEADING }, { type: 'Figure', text: 'A map of the town centre' }],
+    }),
+  });
+  finishDocument.mockReset();
+  finishDocument.mockImplementation(async (request: { outputPath: string }) => {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(request.outputPath, FAKE_PDF);
+    return { ok: true };
+  });
+  fetchSpy.mockResolvedValue(new Response(new Uint8Array(bytes), { status: 200 }));
+  return doc;
+}
+
 /** The document, its reading carrying the asks, and answers to both. */
 async function seedAnsweredPdf(figureAltNow: string | null = null) {
   const doc = await platform.ensureClientDocument(
@@ -292,6 +379,55 @@ describe('consuming the answers on record', () => {
     expect(record.latestConversion).toBeUndefined();
     const events = await platform.listEvents({ clientId: 'acme' });
     expect(events[0]).toMatchObject({ action: 'document_repair_failed', metadata: { detail: 'answer-mismatch' } });
+  });
+
+  it('writes a description onto a converted Word document, never over its own input', async () => {
+    // The declaration pass used to read and write one path. `Finish` holds its
+    // input open while PDFBox resolves objects lazily, so the save truncated
+    // the file being read: exit 0, a file that still parses, and a reading
+    // degraded in whatever had not been resolved yet. Every Word document a
+    // person described was refused `content-changed` for it.
+    const doc = await seedAnsweredDocx();
+
+    const response = await POST(request({ url: DOC_URL }), params('acme'));
+
+    expect(response.status).toBe(200);
+
+    const declaring = finishDocument.mock.calls
+      .map(([call]) => call as { inputPath: string; outputPath: string; alt?: unknown })
+      .find((call) => call.alt !== undefined);
+    expect(declaring?.alt).toEqual([{ ordinal: 0, text: 'A map of the town centre' }]);
+    // The assertion the whole change exists for.
+    expect(declaring?.inputPath).not.toBe(declaring?.outputPath);
+
+    const [record] = (await platform.listClientDocuments('acme')).documents;
+    expect(record.id).toBe(doc.id);
+    expect(record.latestConversion?.answerIds).toEqual(['ans-word-fig']);
+    // No language answer was consumed: the conversion read one off the source.
+    expect(record.latestConversion?.summary.declared).toEqual({ figures: 1 });
+  });
+
+  it('leaves the converted file intact when the gate refuses the declaration', async () => {
+    // A refusal used to destroy its own input, because the pass it refused had
+    // already written over it. Nothing is delivered either way; the difference
+    // is whether anything survives to explain what happened.
+    await seedAnsweredDocx();
+    // A reading that moved a content field nobody declared.
+    inspectDocument.mockResolvedValue({
+      ok: true,
+      value: convertedReading({
+        textChars: 12,
+        figures: [{ type: 'Figure', alt: 'A map of the town centre', actualText: null, page: 1 }],
+        order: [{ type: 'H1', text: SECRET_HEADING }, { type: 'Figure', text: 'A map of the town centre' }],
+      }),
+    });
+
+    const response = await POST(request({ url: DOC_URL }), params('acme'));
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ error: 'remediation_failed', detail: 'content-changed' });
+    const [record] = (await platform.listClientDocuments('acme')).documents;
+    expect(record.latestConversion).toBeUndefined();
   });
 });
 

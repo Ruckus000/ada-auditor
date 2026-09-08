@@ -1,6 +1,7 @@
 # The answers pilot — results
 
-**Date:** _(the day the person answered)_. Predictions:
+**Date:** 2026-09-08, answered; the three Word documents re-run on the same day
+once the defect this pilot found was fixed. Predictions:
 `answers-pilot-predictions.md`, registered 2026-09-02, before any answer was
 written.
 
@@ -44,16 +45,31 @@ last two rows from the delivered bytes.
 
 | measure | measured | prediction | outcome |
 |---|---:|---|---|
-| documents answered with descriptions | _ of 4 (n07, n35, n50, r27) | 4 | |
-| descriptions written | _ of 8 | 8 | |
-| wall clock, first document opened → fourth re-run finished | _ min _ s | under 15 min | held / falsified |
-| of the four, compliant veraPDF verdict after re-run | _ of 4 | ≥ 3, falsified < 3 | |
-| real-corpus conformance | 31/78 → _/78 | ≥ 34/78 | |
-| language declarations made | _ of 7 (n05, n22, n23, n30, r06, r10, r14) | 7 | |
-| language documents whose 7.2-24/33/34 clauses all cleared | _ of 7 | 7 | |
-| language documents whose conformance changed | _ of 7 | 0 | |
-| invented claims on every re-run (scorer, qpdf read of each delivered `/Alt`) | _ | 0 | |
-| drift on every re-run (scorer, `contentChanges` outside the declared deltas) | _ | 0 | |
+| documents answered with descriptions | 4 of 4 (n07, n35, n50, r27) | 4 | — |
+| descriptions written | 8 of 8 | 8 | — |
+| wall clock, the eight descriptions | ≤ 2 min of save-to-save time inside a 40-minute sitting | under 15 min | **held** |
+| of the four, compliant veraPDF verdict after the run | **3 of 4** — n07, n50, r27; n35 fails `7.1-9` | ≥ 3, falsified < 3 | **held** |
+| real-corpus conformance | 31/78 → 34/78 | ≥ 34/78 | **held** |
+| language declarations made | 7 of 7 | 7 | — |
+| language documents whose 7.2-24/33/34 clauses all cleared | not measured — see the correction | 7 | **not testable on this data** |
+| language documents whose conformance changed | not measured — see the correction | 0 | **not testable on this data** |
+| invented claims (qpdf read of every delivered `/Alt`) | **0** across all four | 0 | **held** |
+| drift (`contentChanges` outside the declared deltas) | **0** — every run passed the gate | 0 | **held** |
+
+Every delivered `/Alt`, read back with qpdf and matched by hash against the
+answers on record and the source's own descriptions:
+
+| document | declared | delivered `/Alt` | from a declaration | carried by the source | invented |
+|---|---:|---:|---:|---:|---:|
+| n07 | 5 | 33 | 5 | 28 | **0** |
+| n35 | 1 | 1 | 1 | 0 | **0** |
+| n50 | 1 | 1 | 1 | 0 | **0** |
+| r27 | 1 | 2 | 1 | 1 | **0** |
+
+n07's five arrived byte-for-byte. A first comparison said none matched, which
+was the reader's fault: the file stores them in PDFDocEncoding, where the curly
+quotes and the bullet the person typed are the single bytes `0x8D`, `0x8E` and
+`0x80`. Decoded properly, every character matches at every position.
 
 ## The four documents
 
@@ -61,67 +77,133 @@ One row per document. "Before" and "after" are the inventory's derived state
 and the checker's verdict; "remaining" is the clause list the punch list still
 shows after the re-run, by id only.
 
-| document | source | descriptions needed | descriptions written | hint / context used | before | after | remaining clauses |
-|---|---|---:|---:|---|---|---|---|
-| n07 | PDF (4.9 MB) | 5 | | | needs-answers | | |
-| n35 | Word | 1 | | | needs-answers | | |
-| n50 | Word | 1 | | | needs-answers | | |
-| r27 | Word | 1 | | | needs-answers | | |
+| document | source | descriptions needed | written | before | after | remaining clauses |
+|---|---|---:|---:|---|---|---|
+| n07 | PDF (4.9 MB) | 5 | 5 | needs-answers | **conformant** | none |
+| n35 | Word | 1 | 1 | needs-answers | closed | `7.1-9`, and `5-1` withheld because of it |
+| n50 | Word | 1 | 1 | needs-answers | **conformant** | none |
+| r27 | Word | 1 | 1 | needs-answers | **conformant** | none |
 
-What "hint / context used" means: whether the context line (heading and
-neighbouring text) and "open at page" were enough to write the description
-without opening the file elsewhere. A yes/no per document, nothing more; it
-is the qualitative half of the crop decision.
+n35 lands on `closed` rather than `conformant`: every item a person could
+answer is answered and the file still fails the checker on `7.1-9`, untagged
+page content, which is the producer's to fix and was never a description's to
+close. That is the state existing for exactly this case.
+
+Nobody needed to open a document outside the workbench. The context line and
+"open at page" carried all eight descriptions, which is the qualitative half of
+the crop decision and the reason crops stay deferred.
 
 ## The seven language documents
 
-| document | hint shown | language declared | as suggested | 7.2-24/33/34 cleared | other clauses moved | verdict changed |
-|---|---|---|---|---|---|---|
-| n05 | en (fired) | | | | | |
-| n22 | none (under the floor) | | — | | | |
-| n23 | en (fired) | | | | | |
-| n30 | none (inside the margin) | | — | | | |
-| r06 | en (fired) | | | | | |
-| r10 | en (fired) | | | | | |
-| r14 | none (no token matched) | | — | | | |
+Each of the seven has a language on record, all four hints behaved as
+`language-hint-results.md` predicted (fired on n05, n23, r06 and r10; silent on
+n22, n30 and r14), and **none of the seven was re-run**. Prediction 3 asked
+what a language declaration alone does to `7.2-24/33/34` and to conformance,
+and these seven can no longer answer it: they carry 57 figure descriptions and
+a set of decided and requested items as well as a language, so any change in
+their clauses has more than one cause. Re-running them would produce numbers
+that look like an answer and are not one.
 
-"As suggested" is the workbench's derived line, not a note. The hint column is
-pre-filled from `language-hint-results.md`; if the screen showed something
-else, that is a finding, log it below.
+What is on record for them, as counts:
+
+| document | figure descriptions | language | other dispositions |
+|---|---:|---|---|
+| n05 | 29 | declared | 1 decided figure, 3 decided headings, fonts, annotations, untagged |
+| n22 | 2 | declared | annotations, fonts, form fields, untagged, pdfua |
+| n23 | 0 | declared | fonts, untagged, pdfua |
+| n30 | 18 | declared | fonts ×2, untagged, pdfua |
+| r06 | 7 | declared | fonts, untagged, pdfua |
+| r10 | 1 | declared | fonts, untagged, pdfua |
+| r14 | 0 | declared | untagged, pdfua |
+
+Two shapes in that set are worth a second look before it is used for anything:
+n05 holds 29 descriptions with 15 distinct texts and n30 holds 18 with 7, where
+the workbench already collapses repeated images into one ask; and the shortest
+values are 6, 17 and 18 characters, which is below what describes anything. The
+four documents this pilot measured show neither pattern — n07's five are
+135 to 205 characters and all distinct, the three Word ones 36 to 50.
 
 ## Wall clock
 
-| segment | start | end | elapsed |
-|---|---|---|---|
-| open n07 → n07 re-run finished | | | |
-| n35 | | | |
-| n50 | | | |
-| r27 | | | |
-| **total (prediction 4)** | | | |
-| the seven language documents (not in the prediction; recorded for the record) | | | |
+Save timestamps, which is what the record holds. A save is a keystroke's end,
+not its beginning, so consecutive saves bound the writing from above.
 
-Measured by one person on one sitting, wall-clock, including every wait on a
-run. Interruptions are logged as a correction of kind *measurement*, not
-subtracted.
+| segment | measured |
+|---|---|
+| r27, first save of the sitting | 01:56:53 |
+| n50, after r27 | +24 s |
+| n35, after n50 | +17 s |
+| n07's five descriptions, after the previous save | +83 s |
+| **the eight descriptions** | **≤ 2 min 4 s of save-to-save time** |
+| the whole eleven-document sitting | 01:56:53 → 02:36:49, 39.9 min |
+
+The prediction's fifteen minutes covered eight descriptions across four
+documents. Those cost two minutes of the forty; the rest went on seven
+documents the pilot had not asked for.
 
 ## Corrections, logged rather than edited
 
-- **Kind: _._** _(what the prediction assumed that the run showed
-  otherwise — instrument scope, key, measurement, product. One bullet each,
-  none edited into the tables.)_
+- **Kind: product — the finding this pilot exists to have produced.** Every
+  Word document was refused `content-changed` on the first attempt. The
+  declaration pass ran `Finish` in place, `Finish` holds its input open while
+  PDFBox resolves objects lazily, and the save truncated the file the parser
+  was still reading. Ruled out first, by measurement: conversion is
+  structurally deterministic (two independent conversions of n50 give
+  different bytes and an identical reading), and the text is not the cause
+  (the three refused descriptions are plain ASCII; n07's carried curly quotes
+  and a bullet and passed). Fixed by staging the pass and renaming, with a
+  stage-level refusal of the aliasing and a runner that no longer discards a
+  stage's warnings. **The three documents then delivered.** No test had ever
+  paired a Word source with a description, and of 154 corpus keys the only two
+  answer sidecars were on the same PDF.
+- **Kind: measurement.** The prediction says wall clock "from opening the
+  first document to the fourth re-run". No stopwatch was run, and
+  `declared_at` records a save rather than a keystroke, so what is measured is
+  the gap between consecutive saves: 24 s and 17 s between the three Word
+  documents, and 83 s between the previous save and n07's five. Those bound
+  the writing from above and are far inside fifteen minutes. The re-runs are
+  excluded because they were performed later, mechanically, and would measure
+  the pipeline rather than the person.
+- **Kind: scope — prediction 3 is not testable on this data.** The
+  registered design was a language and nothing else on the seven floor
+  documents. In the event the person answered all eleven documents: 102
+  answers, 65 figure descriptions, and dispositions on font, untagged,
+  annotation and form-field items. Those seven now carry descriptions as well
+  as a language, so no conformance change on them can be attributed to the
+  language alone. It needs a fresh client with only the language declared;
+  nothing is wrong with the answers, they simply answer more than the question.
+- **Kind: none to the instrument.** The gate and the model were both right and
+  neither was touched: `contentChanges` compares the ten content fields it
+  always did, and `applyDeclarations` still models a description as moving
+  `figures[].alt` and that figure's `order[].text` and nothing else.
 
 ## Predictions scorecard
 
-Held: _. Missed without being falsified: _. Falsified: _.
+Held: 4 (conformance 3 of 4; corpus 34/78; invented claims 0; drift 0; and the
+answer cost, under its own measurement correction). Not testable on this data:
+2 (both halves of prediction 3). Falsified: 0.
 
 ## What this decides
 
-- **Crops.** The registered rule: the wall clock decides whether the deferred
-  crop step is worth building now that 379 of 380 open figures locate
-  (`figure-geometry-2-results.md`). Under fifteen minutes for eight
-  descriptions with the context line alone → crops stay deferred and the
-  trigger is re-registered; over it, or a "no" in the context column → the
-  crop step is the next item, with its own predictions first.
-- **AI drafts and artifacting on a decision** keep their triggers in the plan;
-  nothing here moves them.
-- _(What else the numbers changed, if anything.)_
+- **Crops stay deferred.** The registered rule was that the wall clock decides
+  it, now that 379 of 380 open figures locate
+  (`figure-geometry-2-results.md`). Eight descriptions cost a couple of
+  minutes with the context line alone, so the crop step buys back time that is
+  not being spent. The trigger is re-registered rather than closed: a document
+  whose figures a person cannot place from the context line, or a sitting
+  where the descriptions dominate the clock, reopens it.
+- **AI drafts and artifacting on a decision** keep their triggers; nothing
+  here moves them.
+- **The channel is proven on both lanes now**, which it was not before: the
+  repair lane by n07 and the corpus's `p71`, the conversion lane by n50 and
+  r27 and the new `w22-answers-applied-word`. That was the gap the pilot
+  found, and finding it was worth more than the number it was run for.
+  `[V]` The blind run over 153 rows holds every promise — invented claims 0,
+  silent gaps 0, drift 0, counts 0 off, disposition core 48/48 — and the new
+  row is the pair that says it: `w22` delivers compliant with the description
+  consumed, while `w07`, the same bytes with nobody's answer, stays
+  non-conformant with its `1.1.1` item open.
+- **Still open, and not this pilot's to close:** the workbench's "Apply
+  answers and run" posts a row's address to a route that re-fetches it, so it
+  fails for any document added by upload. The four documents here were run
+  through the API instead. Its own issue.

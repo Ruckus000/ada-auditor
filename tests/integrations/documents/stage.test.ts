@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { runStage, type StageExecutor } from '../../../src/integrations/documents/stage';
+import {
+  runStage,
+  runWritingStage,
+  type StageExecutor,
+} from '../../../src/integrations/documents/stage';
 import { credentialEnvKey } from '../../../src/domain/credential-ref';
 import { finishDocument } from '../../../src/integrations/documents/finish';
 import { resolveJavaRuntime } from '../../../src/integrations/documents/java-runtime';
@@ -274,6 +278,88 @@ describe('finishDocument', () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.failure.kind).toBe('unavailable');
+  });
+
+  it('refuses to write over the file it is reading', async () => {
+    // PDFBox loads a File lazily and keeps it open; saving to the same path
+    // truncates the source underneath the parser, and the stage still exits 0.
+    // The conversion lane did exactly this for every declared description, and
+    // the damage arrived as a `content-changed` refusal three layers away. The
+    // guard belongs here because no caller can see the hazard from where it
+    // spells the two paths.
+    const { executor, calls } = fakeExecutor('');
+    const result = await finishDocument(
+      { inputPath: 'same.pdf', outputPath: 'same.pdf', language: 'en' },
+      { runtime: RUNTIME, executor },
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.failure.kind).toBe('in-place');
+    expect(calls).toEqual([]);
+  });
+
+  it('sees through a path spelled two different ways', async () => {
+    // `./a/../same.pdf` and `same.pdf` are one file. A guard that compared the
+    // strings would pass this and corrupt the document anyway.
+    const { executor, calls } = fakeExecutor('');
+    const result = await finishDocument(
+      { inputPath: 'a/../same.pdf', outputPath: './same.pdf', language: 'en' },
+      { runtime: RUNTIME, executor },
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.failure.kind).toBe('in-place');
+    expect(calls).toEqual([]);
+  });
+});
+
+describe('runWritingStage', () => {
+  it('reports what a stage warned about even when it exits 0', async () => {
+    // A writing stage prints nothing on success, so its stderr was dropped.
+    // PDFBox spent this whole pilot printing "you are overwriting the existing
+    // file … this will produce a corrupted file if you're also reading from
+    // it" into a stream nobody read. Exit 0 is the weakest guarantee a writing
+    // stage gives; what it said about its own output is the next weakest, and
+    // throwing it away costs nothing until it costs a week.
+    const lines: string[] = [];
+    const warn = vi.spyOn(console, 'warn').mockImplementation((line: unknown) => {
+      lines.push(String(line));
+    });
+
+    const executor: StageExecutor = async () => ({
+      stdout: '',
+      stderr: 'WARN: You are overwriting the existing file same.pdf\n',
+    });
+
+    try {
+      const result = await runWritingStage('Finish', ['a.pdf', 'b.pdf'], {
+        runtime: RUNTIME,
+        executor,
+      });
+
+      expect(result.ok).toBe(true);
+      const logged = lines.join('\n');
+      expect(logged).toContain('document_stage_warned');
+      expect(logged).toContain('Finish');
+      expect(logged).toContain('overwriting the existing file');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('says nothing when a stage warned about nothing', async () => {
+    const lines: string[] = [];
+    const warn = vi.spyOn(console, 'warn').mockImplementation((line: unknown) => {
+      lines.push(String(line));
+    });
+
+    try {
+      const { executor } = fakeExecutor('');
+      expect((await runWritingStage('Finish', ['a.pdf', 'b.pdf'], { runtime: RUNTIME, executor })).ok).toBe(true);
+      expect(lines).toEqual([]);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 
