@@ -10,19 +10,19 @@ import { classifyRunFailure } from '../../src/app/api/_lib/run-failure';
  * exist, and a lookup that turned an unrecognised code into a 500.
  */
 describe('describeRunFailure', () => {
-  it('says something specific for a stale selector', () => {
+  it('gives a clear next step for a failed step', () => {
     // The likeliest real failure, and the one the whole phase was about
     // stopping from reading as "we do not know".
     const copy = describeRunFailure('journey_step_failed');
 
-    expect(copy).toMatch(/selector/i);
+    expect(copy).toMatch(/check the page and step settings/i);
     expect(copy).not.toMatch(/could not categorise/i);
   });
 
   it('tells an operator what to do about a refused navigation', () => {
     const copy = describeRunFailure('navigation_not_allowed');
 
-    expect(copy).toMatch(/allowed hosts/i);
+    expect(copy).toMatch(/address it is not allowed to visit/i);
   });
 
   it('prints an unknown code rather than inventing a sentence for it', () => {

@@ -35,6 +35,20 @@ export type ActivityOptions = {
   limit?: number;
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  'delivery.revoked': 'turned off a document sharing link',
+  'document.exclusion-reversed': 'included a document again',
+  'document.excluded': 'excluded a document from delivery',
+  document_answered: 'answered a document review question',
+  'delivery.prepared': 'prepared a document delivery',
+  'delivery.issued': 'created a document sharing link',
+  'document.signed-off': 'approved a document for sharing',
+};
+
+export function activityActionLabel(action: string): string {
+  return ACTION_LABELS[action] ?? action;
+}
+
 export async function buildActivity(
   deps: ActivityDeps,
   options: ActivityOptions = {},
@@ -62,7 +76,7 @@ function toRow(
     // collides silently reorders the list.
     id: String(event.id ?? `${event.createdAt ?? ''}-${index}`),
     actor: event.actor,
-    action: event.action,
+    action: activityActionLabel(event.action),
     ...(event.subject === undefined ? {} : { subject: event.subject }),
     ...(event.clientId === undefined ? {} : { clientId: event.clientId }),
     ...(clientName === undefined ? {} : { clientName }),

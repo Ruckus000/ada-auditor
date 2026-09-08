@@ -9,12 +9,14 @@ import {
   type AuditResult,
   type Finding,
   type Severity,
+  isBlockingFinding,
 } from './audit-types';
 
 const SEVERITY_COPY: Record<Severity, { label: string; mark: string; note: string }> = {
-  critical: { label: 'Critical', mark: '▲', note: 'Serious barrier. Fails the build.' },
-  major: { label: 'Major', mark: '◆', note: 'Significant problem worth prioritising.' },
-  minor: { label: 'Minor', mark: '●', note: 'Small problem. Fix when convenient.' },
+  critical: { label: 'High priority', mark: '▲', note: 'A confirmed accessibility issue.' },
+  major: { label: 'Priority', mark: '◆', note: 'A confirmed accessibility issue.' },
+  minor: { label: 'Recommendation', mark: '●', note: 'A smaller improvement to consider.' },
+  'needs-review': { label: 'Check this item', mark: '?', note: 'The checker needs a person to decide.' },
   advisory: { label: 'Advisory', mark: '◌', note: 'A suggestion to check by hand.' },
 };
 
@@ -25,7 +27,7 @@ const SEVERITY_COPY: Record<Severity, { label: string; mark: string; note: strin
  */
 function FindingCard({ finding, showPage }: { finding: Finding; showPage?: boolean }) {
   const severity = SEVERITY_COPY[finding.severity];
-  const blocks = finding.source === 'deterministic' && finding.severity === 'critical';
+  const blocks = isBlockingFinding(finding);
 
   return (
     <li className={`finding finding-${finding.severity}`}>
@@ -52,8 +54,8 @@ function FindingCard({ finding, showPage }: { finding: Finding; showPage?: boole
             </span>
           )}
           <span className={blocks ? 'gate-flag gate-blocks' : 'gate-flag gate-advisory'}>
-            {blocks ? 'Blocks release' : 'Does not block release'}
-            <InfoTip termKey={blocks ? 'blocksCi' : 'advisory'} />
+            {blocks ? 'Confirmed A/AA issue' : finding.severity === 'needs-review' ? 'Needs a person to check' : 'Does not decide the result'}
+            <InfoTip termKey={blocks ? 'blocksCi' : finding.severity === 'needs-review' ? 'needsReview' : 'advisory'} />
           </span>
         </p>
         <p className="finding-note">{severity.note}</p>
@@ -293,7 +295,7 @@ function RegressionBlock({ result }: { result: AuditResult }) {
 
   const headline =
     regression.status === 'fail'
-      ? 'Worse than last time — a new critical issue appeared.'
+      ? 'Worse than last time — a new high-priority issue appeared.'
       : regression.status === 'warn'
         ? 'Slightly worse than last time — new issues appeared.'
         : regression.resolvedFindings.length > 0

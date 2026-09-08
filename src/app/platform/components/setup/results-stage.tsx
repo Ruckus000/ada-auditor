@@ -25,10 +25,10 @@ export function ResultsStage({ detail }: { detail: ClientDetail }) {
       {run ? (
         <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, margin: 0 }}>
           <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(run.score)} />
-          <Stat label="Must fix" value={String(run.mustFix)} tone={run.mustFix > 0} />
-          <Stat label="Should fix" value={String(run.shouldFix)} />
-          <Stat label="Needs review" value={String(run.needsReview)} />
-          <Stat label="Pages audited" value={String(run.pagesAudited)} />
+          <Stat label="Confirmed issues" value={String(run.mustFix + run.shouldFix)} tone={run.mustFix + run.shouldFix > 0} />
+          <Stat label="Recommendations" value={String(run.recommendations)} />
+          <Stat label="Need a person to check" value={String(run.needsReview)} />
+          <Stat label="Pages checked" value={String(run.pagesAudited)} />
         </dl>
       ) : null}
 

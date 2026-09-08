@@ -415,7 +415,7 @@ describe('POST /api/documents/remediate', () => {
     expect(body.error).toBe('repair_refused');
     expect(body.detail).toBe('not-tagged');
     // The operator gets an action, not just a kind.
-    expect(body.message).toContain('Word source');
+    expect(body.message).toContain('original Word document');
     expect(finishDocument).not.toHaveBeenCalled();
   });
 

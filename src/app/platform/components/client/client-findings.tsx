@@ -30,8 +30,8 @@ export function ClientFindings({ view }: { view: FindingsView }) {
         <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>Findings</h2>
         <Empty
           title="Nothing audited yet"
-          body="Findings appear here after the first run against one of this client's journeys."
-          action={{ href: `/clients/${view.clientId}/journeys`, label: 'See the journeys' }}
+          body="Results appear here after the first audit against one of this client's audit plans."
+          action={{ href: `/clients/${view.clientId}/journeys`, label: 'See the audit plans' }}
         />
       </div>
     );
@@ -62,9 +62,8 @@ export function ClientFindings({ view }: { view: FindingsView }) {
             color: T.inkSoft,
           }}
         >
-          Evidence for this run was <strong>{view.run.evidenceStatus}</strong>. This list covers
-          only what we could actually see, so it is not a clean bill of health for anything missing
-          from it.
+          Some pages could not be fully checked. These results cover only what the auditor could
+          see, so this is not a complete result for anything missing from the run.
           {/* Same reason the overview shows it: the list is short because the
               run stopped, and that is the thing worth knowing about it. */}
           {view.run.failureReason ? <> {describeRunFailure(view.run.failureReason)}</> : null}
@@ -75,8 +74,9 @@ export function ClientFindings({ view }: { view: FindingsView }) {
         {total === 0
           ? 'Nothing found on any page walked.'
           : `${total} across ${view.pages.length} ${view.pages.length === 1 ? 'page' : 'pages'} — ` +
-            `${view.counts.must} must fix, ${view.counts.should} should fix, ` +
-            `${view.counts.nice} nice to fix, ${view.counts.review} to review.`}
+            `${view.counts.must + view.counts.should} confirmed issue${view.counts.must + view.counts.should === 1 ? '' : 's'}, ` +
+            `${view.counts.nice} recommendation${view.counts.nice === 1 ? '' : 's'}, and ` +
+            `${view.counts.review} ${view.counts.review === 1 ? 'item needs' : 'items need'} a person to check.`}
       </p>
 
       <IssueReport clientId={view.clientId} requestId={view.run.requestId} />
@@ -163,11 +163,11 @@ function PageSection({ page, clientId }: { page: PageFindings; clientId: string 
 }
 
 const SEVERITY_LABEL: Record<DisplaySeverity, string> = {
-  must: 'MUST FIX',
-  should: 'SHOULD FIX',
-  nice: 'NICE TO FIX',
-  review: 'REVIEW',
-  advisory: 'ADVISORY',
+  must: 'HIGH PRIORITY',
+  should: 'PRIORITY',
+  nice: 'RECOMMENDATION',
+  review: 'CHECK THIS ITEM',
+  advisory: 'AI SUGGESTION',
 };
 
 const SEVERITY_COLOR: Record<DisplaySeverity, string> = {
@@ -252,8 +252,14 @@ function FindingRow({
           right. */}
       {finding.fixAnyOf.length > 0 || finding.fixAllOf.length > 0 ? (
         <>
-          <FixList label="Fix any one of these" items={finding.fixAnyOf} />
-          <FixList label="Fix all of these" items={finding.fixAllOf} />
+          {finding.severity === 'review' ? (
+            <FixList label="What to check" items={finding.fixAnyOf.length > 0 ? finding.fixAnyOf : finding.fixAllOf} />
+          ) : (
+            <>
+              <FixList label="Fix any one of these" items={finding.fixAnyOf} />
+              <FixList label="Fix all of these" items={finding.fixAllOf} />
+            </>
+          )}
         </>
       ) : finding.message ? (
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, color: T.inkSoft }}>

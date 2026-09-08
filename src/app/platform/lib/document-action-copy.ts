@@ -40,9 +40,9 @@ function remediationStep(detail: string | undefined): string {
           return `The converter stopped. ${TRY_AGAIN}`;
       }
     case 'not-tagged':
-      return 'The conversion produced no structure tree — an untagged file, which nothing here would deliver. Check the source opens as a real Word document.';
+      return 'The converted file has no structure for assistive technology. Check that the source opens as a real Word document, then convert it again.';
     case 'unavailable':
-      return 'This deployment has no converter. Nothing here is wrong with the document.';
+      return 'Document conversion is unavailable. Ask your administrator to restore it, then try again.';
     default:
       return `The conversion stopped. ${TRY_AGAIN}`;
   }
@@ -55,7 +55,7 @@ function repairStep(detail: string | undefined): string {
     case 'invalid-language':
       return 'The language this document declares is not a usable tag, and nothing here guesses one. Name the language in its answers and run it again.';
     case 'unavailable':
-      return 'This deployment has no document toolchain. Nothing here is wrong with the document.';
+      return 'PDF processing is unavailable. Ask your administrator to restore it, then try again.';
     case 'failed':
     case 'invalid-output':
     default:
@@ -87,9 +87,9 @@ export function describeDocumentRefusal(refusal: DocumentRefusal): string {
     case 'redirected':
       return 'That address redirects elsewhere, and redirects are not followed. Paste the address it redirects to.';
     case 'document_toolchain_unavailable':
-      return 'This deployment has no document toolchain, so nothing here can read a PDF. Nothing is wrong with the document.';
+      return 'PDF processing is unavailable. Ask your administrator to restore it, then try again.';
     case 'converter_unavailable':
-      return 'This deployment has no LibreOffice, so Word documents cannot be converted here. Nothing is wrong with the document.';
+      return 'Word conversion is unavailable. Ask your administrator to restore it, then try again.';
     case 'inspect_failed':
       return repairStep(refusal.detail);
     case 'remediation_failed':

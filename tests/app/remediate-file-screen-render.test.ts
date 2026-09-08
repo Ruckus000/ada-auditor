@@ -98,7 +98,7 @@ describe('StatelessAnswersForm', () => {
   it('lists what this screen cannot answer rather than hiding it', () => {
     const html = form(FIGURES);
 
-    expect(html).toContain('Not answerable on this screen');
+    expect(html).toContain('Needs someone else');
     expect(html).toContain('fonts are not embedded');
   });
 

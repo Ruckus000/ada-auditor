@@ -117,6 +117,7 @@ describe('buildPortfolio', () => {
       score: 72,
       mustFix: 1,
       shouldFix: 1,
+      recommendations: 1,
       // The row used to stop at the two counts above. A second engine emits
       // everything as needs-review, so a portfolio that omits this one shows a
       // fraction of the run and calls it the run.

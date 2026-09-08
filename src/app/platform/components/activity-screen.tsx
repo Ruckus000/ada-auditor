@@ -40,7 +40,7 @@ export function ActivityScreen({ rows }: { rows: ActivityRow[] }) {
             textWrap: 'pretty',
           }}
         >
-          Nothing yet. Adding a client, recording a journey or dismissing a finding all land here,
+          Nothing yet. Adding a client, adding an audit plan or dismissing a finding all land here,
           with who did it and when.
         </div>
       ) : (

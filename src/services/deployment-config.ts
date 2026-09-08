@@ -101,7 +101,7 @@ function documentDetail(facts: DeploymentFacts): string {
     return 'A Java runtime and LibreOffice are both present, so Word sources can be converted and PDFs inspected on this host.';
   }
 
-  return `Document stages run on a JVM and the source path needs LibreOffice; a serverless function has neither, so this is expected on a deployed environment rather than a fault, and nothing else is affected by it. Where it is wanted, install: ${missing.join(' and ')}.`;
+  return `Document processing is missing ${missing.join(' and ')}. Ask your administrator to restore the missing capability, then try again.`;
 }
 
 /**
@@ -262,7 +262,7 @@ export function readDeploymentConfig(
             ? 'on'
             : 'off (unreachable)',
       detail:
-        'Judges what a rule engine cannot — alt text that says nothing, headings used for size. Runs through the Vercel AI Gateway, so the model is the `AUDITOR_ADVISORY_MODEL` string rather than a vendor SDK, and a Vercel deployment authenticates with the OIDC token it mints for itself; setting the model to `off` disables the pass outright. Advisory findings never gate a build, and their absence is never a run failure.',
+        'AI suggestions can identify problems automated checks cannot. A person must review them, and they never decide the audit result. Ask an administrator about availability or privacy settings.',
       degraded: false,
     },
     {

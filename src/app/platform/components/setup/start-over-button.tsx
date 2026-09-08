@@ -78,7 +78,7 @@ export function StartOverButton({ clientId, journeyId }: { clientId: string; jou
           cursor: busy ? 'default' : 'pointer',
         }}
       >
-        {busy ? 'Archiving…' : 'Archive this journey and start over with a different URL'}
+        {busy ? 'Archiving…' : 'Archive this audit plan and start over with a different URL'}
       </button>
     </span>
   );

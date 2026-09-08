@@ -275,8 +275,8 @@ export function ClientDocuments({
             Documents
           </h2>
           <p style={noteStyle}>
-            Every document on record for this client, with one state each: what a person still
-            has to answer, what is waiting on the client, and what conforms.
+            Every document on record for this client, with one state each: what still needs an
+            answer, what is waiting on the client, and what passed automated checks.
           </p>
         </span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
@@ -297,8 +297,8 @@ export function ClientDocuments({
               style={{ ...buttonStyle, ...disabledStyle(batch !== null) }}
             >
               {batch === null
-                ? `Inspect all unreviewed PDFs (${unreviewedPdfs})`
-                : `Inspecting ${batch.done} of ${batch.total} — keep this tab open`}
+                ? `Check PDFs not checked yet (${unreviewedPdfs})`
+                : `Checking ${batch.done} of ${batch.total} — keep this tab open`}
             </button>
           ) : null}
           {batchNote !== null ? (
@@ -322,8 +322,8 @@ export function ClientDocuments({
           {/* Stated rather than implied by a missing button, and stated where
               the rows are: the absence is a capability fact about this
               deployment, not a defect in the row. */}
-          Word documents are recorded without a Convert button — conversion runs where LibreOffice
-          is installed, and this deployment does not have it. Inspection reads PDFs.
+          Word documents are recorded without a Convert button — this deployment cannot create PDFs
+          from Word files. It can still check PDFs.
         </p>
       ) : null}
 

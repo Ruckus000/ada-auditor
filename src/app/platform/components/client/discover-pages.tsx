@@ -350,7 +350,7 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
    */
   const createBlockedBy =
     chosen.length === 0
-      ? 'Tick at least one page before creating a journey.'
+      ? 'Tick at least one page before creating an audit plan.'
       : chosen.length > MAX_STEPS_PER_JOURNEY
         ? // Hard, not advisory, and the distinction is where the rule is
           // decided: `authoredStepsSchema` caps the array at
@@ -359,9 +359,9 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
           // neither the field nor the number. A url-capped crawl returns
           // exactly 100 pages, so this was one click of "Select every page"
           // away on any large site.
-          `A journey holds at most ${MAX_STEPS_PER_JOURNEY} steps, and ${chosen.length} pages are picked. Untick ${chosen.length - MAX_STEPS_PER_JOURNEY}, or split this crawl across more than one journey.`
+          `An audit plan holds at most ${MAX_STEPS_PER_JOURNEY} steps, and ${chosen.length} pages are picked. Untick ${chosen.length - MAX_STEPS_PER_JOURNEY}, or split this crawl across more than one audit plan.`
         : name.trim() === ''
-          ? 'Give the journey a name before creating it.'
+          ? 'Give the audit plan a name before creating it.'
           : null;
 
   async function create() {
@@ -488,12 +488,11 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
       }}
     >
       <h3 id={headingId} style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>
-        Discover pages
+        Find pages to audit
       </h3>
 
       <p style={noteStyle}>
-        Give a site address and this walks it, then turn the pages you pick into a journey that
-        visits each one.
+        Enter the website address, then choose the pages to check.
       </p>
 
       <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 8 }}>
@@ -851,10 +850,10 @@ export function DiscoverPages({ clientId }: { clientId: string }) {
               // spends most of its life inert because `createBlockedBy` is
               // set, and the sentence explaining why is the live region
               // immediately below it.
-              aria-label="Create journey"
+              aria-label="Create audit plan"
               style={{ ...buttonStyle, ...disabledStyle(creating || createBlockedBy !== null) }}
             >
-              {creating ? 'Creating…' : 'Create journey'}
+              {creating ? 'Creating…' : 'Create audit plan'}
             </button>
           </span>
 

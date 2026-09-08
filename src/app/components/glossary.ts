@@ -97,14 +97,14 @@ export const GLOSSARY = {
 
   pass: {
     term: 'Pass',
-    short: 'Evidence was complete and no critical rule-based issues were found.',
-    detail: 'Nothing found here should block a release. It does not mean the site is free of accessibility problems.',
+    short: 'Evidence was complete and no confirmed Level A or AA issues were found.',
+    detail: 'Review items marked for a person before treating the result as complete. A pass does not mean the site is free of accessibility problems.',
   },
 
   fail: {
     term: 'Fail',
-    short: 'Evidence was complete and at least one critical rule-based issue was found.',
-    detail: 'Only critical issues from fixed rules cause a fail. Advisory notes never do.',
+    short: 'Evidence was complete and at least one confirmed Level A or AA issue was found.',
+    detail: 'The accessibility requirement involved decides whether an issue fails the audit. Advisory notes and items needing human review do not.',
   },
 
   inconclusive: {
@@ -157,15 +157,22 @@ export const GLOSSARY = {
       'Advisory notes carry a confidence score and are shown only above a threshold. Treat them as leads to investigate, not as confirmed defects.',
   },
 
+  needsReview: {
+    term: 'Needs a person to check',
+    short: 'The automated check could not decide whether this is a problem.',
+    detail:
+      'Review the page and evidence before deciding what to do. This item does not fail the audit by itself.',
+  },
+
   severity: {
     term: 'Severity',
-    short: 'How serious a finding is: critical, major, or minor.',
-    detail: 'Only critical rule-based findings cause a fail. Major and minor are reported for you to triage.',
+    short: 'How the system prioritises a finding for follow-up.',
+    detail: 'Priority and the accessibility level involved are separate. A high-priority recommendation without a Level A or AA criterion does not decide the verdict.',
   },
 
   blocksCi: {
-    term: 'Blocks release',
-    short: 'This finding is critical and rule-based, so it is what turned the verdict to fail.',
+    term: 'Changes the audit result',
+    short: 'This confirmed finding cites a Level A or AA requirement, so the audit result is fail.',
   },
 
   // --- Comparison & tracing ----------------------------------------------
@@ -174,7 +181,7 @@ export const GLOSSARY = {
     term: 'Compared to last run',
     short: 'How this run differs from the previous run of the same journey in the same environment.',
     detail:
-      'Only rule-based findings are compared. A newly appearing critical issue is reported as a failure; any other new issue is reported as a warning.',
+      'Only rule-based findings are compared. A new high-priority issue is reported as a failure; other new issues are reported as warnings.',
   },
 
   traceId: {

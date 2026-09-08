@@ -268,7 +268,7 @@ export function SummaryView({ summary }: { summary: Summary }) {
       }}
     >
       <p style={{ ...noteStyle, color: T.ink }}>
-        {summary.tagged ? 'Tagged' : 'Not tagged'} · {summary.pages}{' '}
+        {summary.tagged ? 'Has reading structure' : 'No reading structure'} · {summary.pages}{' '}
         {summary.pages === 1 ? 'page' : 'pages'} · {summary.headings} headings ·{' '}
         {summary.tables} tables · {summary.figures} figures
         {summary.titleText ? ` · “${summary.titleText}”` : ' · no title'}
@@ -276,7 +276,7 @@ export function SummaryView({ summary }: { summary: Summary }) {
       <p style={noteStyle}>{conformanceLine(summary)}</p>
       <p style={noteStyle}>{scopeLine(summary)}</p>
       {summary.gaps.length === 0 ? (
-        <p style={noteStyle}>No machine-detectable gaps.</p>
+        <p style={noteStyle}>No gaps found by automated checks.</p>
       ) : (
         <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {summary.gaps.map((gap) => (

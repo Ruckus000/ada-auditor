@@ -16,24 +16,24 @@ const VERDICTS: Array<{
     key: 'pass',
     glossaryKey: 'pass',
     label: 'Pass',
-    meaning: 'Evidence was complete, and no critical rule-based issues were found.',
-    nextStep: 'Nothing here blocks a release.',
+    meaning: 'Evidence was complete, and no confirmed Level A or AA issues were found.',
+    nextStep: 'Review any items marked “Needs a person to check” below.',
     mark: '✓',
   },
   {
     key: 'fail',
     glossaryKey: 'fail',
     label: 'Fail',
-    meaning: 'Evidence was complete, and at least one critical rule-based issue was found.',
-    nextStep: 'Fix the issues marked "Blocks release" below, then run again.',
+    meaning: 'Evidence was complete, and at least one confirmed Level A or AA issue was found.',
+    nextStep: 'Fix the confirmed issues below, then run the audit again.',
     mark: '✕',
   },
   {
     key: 'inconclusive',
     glossaryKey: 'inconclusive',
     label: 'Inconclusive',
-    meaning: 'Not enough evidence was captured to judge, so no verdict was issued.',
-    nextStep: 'Run again using the demo journey, which captures full evidence.',
+    meaning: 'The auditor could not capture enough evidence to judge this run.',
+    nextStep: 'Check the evidence message below, fix the setup if needed, then run again.',
     mark: '—',
   },
 ];
@@ -123,14 +123,14 @@ export function VerdictPanel({ result }: { result: AuditResult }) {
       <p className="verdict-next">
         <span className="next-label">What to do</span>
         {verdict.key === 'fail' && counts.blocking.length > 0
-          ? `Fix the ${counts.blocking.length} issue${counts.blocking.length === 1 ? '' : 's'} marked “Blocks release” below, then run again.`
+          ? `Fix the ${counts.blocking.length} confirmed issue${counts.blocking.length === 1 ? '' : 's'} below, then run the audit again.`
           : verdict.nextStep}
       </p>
 
       {verdict.key === 'pass' && (
         <p className="verdict-caveat">
-          A pass means nothing blocking was detected by the rules that ran — not that the page is
-          free of accessibility problems.
+          A pass means no confirmed Level A or AA issues were found by the checks that ran. Review
+          items marked “Needs a person to check” before treating the result as complete.
         </p>
       )}
     </section>

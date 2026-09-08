@@ -124,9 +124,9 @@ const MAX_SNIPPET_LENGTH = 512;
 
 /**
  * axe impact is a 4-point scale; ours is 3 plus a manual-review bucket.
- * `serious` collapsing to `major` matters: it keeps high-volume rules like
- * color-contrast out of the CI-blocking set, preserving the existing
- * steady-state rule that only `critical` fails a run.
+ * `serious` collapsing to `major` keeps the impact label useful for triage.
+ * The conformance gate is separate: `services/reporting.ts` checks the
+ * finding's Level A or AA criterion, not this impact-derived severity.
  */
 const SEVERITY_BY_IMPACT: Record<AxeImpact, FindingSeverity> = {
   critical: 'critical',

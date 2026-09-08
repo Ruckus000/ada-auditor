@@ -20,10 +20,9 @@ import type { VerdictFinding } from './verdict';
 export type DisplaySeverity = 'must' | 'should' | 'nice' | 'review' | 'advisory';
 
 /**
- * `critical` is the only severity that blocks a run, which is why it is the
- * only one that maps to `must`. `serious` already collapses to `major` further
- * upstream (see `SEVERITY_BY_IMPACT` in `deterministic-audit.ts`) so that
- * high-volume rules like colour-contrast cannot gate CI.
+ * Severity is an operator-priority label, not the conformance gate. A finding
+ * can be `major` and still fail the audit when it cites a Level A or AA
+ * criterion; `services/reporting.ts` owns that separate decision.
  */
 const DISPLAY_BY_SEVERITY: Record<string, DisplaySeverity> = {
   critical: 'must',
@@ -156,9 +155,10 @@ export function isDeterministic(finding: Pick<DeterministicFinding, 'source'>): 
 export function severityCounts(findings: readonly VerdictFinding[]): {
   mustFix: number;
   shouldFix: number;
+  recommendations: number;
   needsReview: number;
 } {
-  const counted = { mustFix: 0, shouldFix: 0, needsReview: 0 };
+  const counted = { mustFix: 0, shouldFix: 0, recommendations: 0, needsReview: 0 };
 
   for (const finding of findings) {
     if (finding.source !== 'deterministic') continue;
@@ -173,8 +173,9 @@ export function severityCounts(findings: readonly VerdictFinding[]): {
       case 'review':
         counted.needsReview += 1;
         break;
-      // `nice` is deliberately uncounted: it has never had a tile, and adding
-      // one here would be a screen change wearing a bug fix's clothes.
+      case 'nice':
+        counted.recommendations += 1;
+        break;
       default:
         break;
     }

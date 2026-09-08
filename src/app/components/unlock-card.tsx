@@ -136,8 +136,7 @@ export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
         Sign in
       </h1>
       <p className="console-sub">
-        Running an audit uses the server&rsquo;s credentials, so the console asks who you are once
-        per browser. After that it stays signed in for 30 days.
+        Sign in to use ADA Auditor. Your session lasts up to 30 days.
       </p>
 
       {passkeysOffered && (
@@ -188,7 +187,7 @@ export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
             aria-invalid={error ? true : undefined}
           />
           <p className="field-help" id="operator-help">
-            Operator accounts are created with <code>npm run operator -- add</code>.
+            Need an account? Ask your administrator.
           </p>
         </div>
 

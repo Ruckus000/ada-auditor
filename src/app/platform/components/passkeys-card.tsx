@@ -166,8 +166,8 @@ export function PasskeysCard({
 
       {!configured ? (
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.inkSoft }}>
-          Passkeys are off on this deployment. Set <code>AUDITOR_RP_ID</code> and{' '}
-          <code>AUDITOR_RP_ORIGIN</code> to turn them on.
+          Passkey sign-in is unavailable. Use your password, or ask your administrator to enable
+          passkeys.
         </p>
       ) : !supported ? (
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.inkSoft }}>

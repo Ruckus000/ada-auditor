@@ -44,19 +44,19 @@ const SEVERITY_LABEL: Record<string, string> = {
  */
 const VERDICT_COPY: Record<string, { title: string; detail: string }> = {
   fail: {
-    title: 'Does not conform',
+    title: 'Confirmed accessibility issues found',
     detail:
-      'Blocking issues were found against the WCAG success criteria checked automatically.',
+      'The automated checks confirmed at least one Level A or AA issue. Fix the confirmed issues below, then run the audit again.',
   },
   risk: {
-    title: 'Issues found, none blocking',
+    title: 'Items need attention, none blocking',
     detail:
-      'Automated checks found failures against the WCAG success criteria checked here. None is classed as blocking, and every one is listed below. Automated testing cannot establish full conformance on its own.',
+      'The automated checks found items that need attention, but none met the criteria for an audit failure. Items needing a person to check are listed below. Automated testing cannot establish full conformance on its own.',
   },
   pass: {
-    title: 'No blocking issues found',
+    title: 'No confirmed Level A or AA issues found',
     detail:
-      'Automated checks found no blocking issues. Automated testing cannot establish full conformance on its own.',
+      'The automated checks found no confirmed Level A or AA issues. Items needing a person to check may still be listed below, and automated testing cannot establish full conformance on its own.',
   },
   inconclusive: {
     title: 'Inconclusive',
@@ -120,10 +120,16 @@ function renderRemediation(finding: StoredFinding): string {
           .join('')}</ul>`
       : '';
 
-  return (
-    group('Fix any one of these', finding.remediationAnyOf) +
-    group('Fix all of these', finding.remediationAllOf)
-  );
+  if (finding.severity === 'needs-review') {
+    return group(
+      'What to check',
+      (finding.remediationAnyOf?.length ?? 0) > 0
+        ? finding.remediationAnyOf
+        : finding.remediationAllOf,
+    );
+  }
+
+  return group('Fix any one of these', finding.remediationAnyOf) + group('Fix all of these', finding.remediationAllOf);
 }
 
 function renderMessage(message: string): string {
@@ -265,9 +271,12 @@ export function renderRunReport(run: StoredRunRecord): string {
   const findings = sortBySeverity(run.findings);
   const groups = groupByPage(run);
 
-  const blocking = findings.filter(
-    (f) => f.source === 'deterministic' && f.severity === 'critical',
-  ).length;
+  const blocking = verdictKind === 'fail' ? findings.filter(
+    (finding) =>
+      finding.source === 'deterministic' &&
+      finding.severity !== 'needs-review' &&
+      (finding.conformanceLevel === 'A' || finding.conformanceLevel === 'AA'),
+  ).length : 0;
 
   const counts = SEVERITY_ORDER.map((severity) => ({
     severity,
@@ -349,7 +358,7 @@ export function renderRunReport(run: StoredRunRecord): string {
             } audited</li>`
           : ''
       }
-      <li><strong>${blocking}</strong> blocking</li>
+      <li><strong>${blocking}</strong> confirmed Level A/AA</li>
       ${counts
         .map(
           (entry) =>

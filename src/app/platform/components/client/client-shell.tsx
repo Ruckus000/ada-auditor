@@ -37,7 +37,7 @@ export function ClientShell({
     ...(detail.contractType === 'remediation-only' ? [] : [
       ['Overview', clientHref(detail.id)] as [string, string],
       ['Findings', clientHref(detail.id, 'findings')] as [string, string],
-      ['Journeys', clientHref(detail.id, 'journeys')] as [string, string],
+      ['Audit plans', clientHref(detail.id, 'journeys')] as [string, string],
     ]),
     ...(detail.contractType === 'audit' ? [] : [['Documents', clientHref(detail.id, 'documents')] as [string, string]]),
   ];
@@ -89,7 +89,7 @@ export function ClientShell({
               textDecoration: 'none',
             }}
           >
-            ← Portfolio
+            ← Clients
           </Link>
 
           <span

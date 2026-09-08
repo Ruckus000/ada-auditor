@@ -48,7 +48,7 @@ describe('document verdict rendering', () => {
     // no antecedent is silently true, so the scope check below needs at least
     // one surface still making the claim it qualifies.
     expect(files.length).toBeGreaterThan(10);
-    expect(files.filter((f) => /machine-detectable/i.test(f.source)).length).toBeGreaterThan(0);
+    expect(files.filter((f) => /gaps found by automated checks/i.test(f.source)).length).toBeGreaterThan(0);
   });
 
   it('never hand-builds a PDF/UA verdict in a component', () => {
@@ -64,7 +64,7 @@ describe('document verdict rendering', () => {
   it('never states a gap verdict without the scope beside it', () => {
     // The claim and its qualification travel together, or the claim overstates.
     for (const { file, source } of files) {
-      if (!/machine-detectable/i.test(source)) continue;
+      if (!/gaps found by automated checks/i.test(source)) continue;
       expect(
         source.includes('scopeLine'),
         `${file} says "machine-detectable gaps" without scopeLine from services/${SEAM}`,

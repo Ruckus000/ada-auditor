@@ -27,8 +27,8 @@ export function FirstRunStage({
       <StageHeading>{runningRequestId ? 'First audit running…' : 'Run the first audit'}</StageHeading>
       <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, color: T.inkSoft, maxWidth: 480, textWrap: 'pretty' }}>
         {runningRequestId
-          ? 'A real browser is walking the path and evaluating every page it reaches. This page will show the results when it finishes — usually under a minute.'
-          : `This walks “${journey.name}” in a real browser, evaluates every page it reaches against ~100 accessibility rules, and saves the results — scored, on the record.`}
+          ? 'The auditor is checking the pages in this task. This page will show the results when it finishes.'
+          : `Check the pages in “${journey.name}” for accessibility issues and save the results.`}
       </p>
       <FirstRunControl
         clientId={detail.id}

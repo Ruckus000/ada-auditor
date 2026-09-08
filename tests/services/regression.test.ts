@@ -328,8 +328,8 @@ describe('compareToBaseline, when the two runs used different rule sets', () => 
       withRuleset(makeRecord('baseline', []), 'axe-core@4.12.1+target-size'),
     );
 
-    // Not `incomparable`, which is the whole point; `warn` rather than `fail`
-    // because the finding is `serious` and only `critical` fails a run.
+    // Not `incomparable`, which is the whole point. Regression severity is an
+    // impact comparison, separate from the run's conformance gate.
     expect(summary.status).toBe('warn');
     expect(summary.newFindings).toHaveLength(1);
   });

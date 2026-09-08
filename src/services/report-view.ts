@@ -143,6 +143,7 @@ export type SharedReport = {
       code: string;
       title?: string;
       severity: string;
+      conformanceLevel?: string;
       wcagCriteria: string[];
       selector?: string;
       /** Any one of these clears it. */
@@ -186,6 +187,7 @@ export async function buildSharedReport(
       code: finding.code,
       ...(finding.title === undefined ? {} : { title: finding.title }),
       severity: finding.severity,
+      ...(finding.conformanceLevel == null ? {} : { conformanceLevel: finding.conformanceLevel }),
       wcagCriteria: finding.wcagCriteria ?? [],
       // The shared report carries the fix, not just the failure: the people
       // who open this link are usually the ones who have to act on it.

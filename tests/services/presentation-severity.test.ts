@@ -138,7 +138,7 @@ describe('severityCounts', () => {
       finding('needs-review'),
     ]);
 
-    expect(counts).toEqual({ mustFix: 1, shouldFix: 2, needsReview: 3 });
+    expect(counts).toEqual({ mustFix: 1, shouldFix: 2, recommendations: 0, needsReview: 3 });
   });
 
   /**
@@ -165,7 +165,7 @@ describe('severityCounts', () => {
   it('excludes advisory findings from every bucket', () => {
     const counts = severityCounts([finding('advisory', 'ai-advisory')]);
 
-    expect(counts).toEqual({ mustFix: 0, shouldFix: 0, needsReview: 0 });
+    expect(counts).toEqual({ mustFix: 0, shouldFix: 0, recommendations: 0, needsReview: 0 });
   });
 
   /**
@@ -178,6 +178,6 @@ describe('severityCounts', () => {
   });
 
   it('counts nothing for an empty run', () => {
-    expect(severityCounts([])).toEqual({ mustFix: 0, shouldFix: 0, needsReview: 0 });
+    expect(severityCounts([])).toEqual({ mustFix: 0, shouldFix: 0, recommendations: 0, needsReview: 0 });
   });
 });

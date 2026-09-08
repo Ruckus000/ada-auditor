@@ -34,8 +34,8 @@ export function SettingsScreen({
           Settings
         </h1>
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.inkMuted }}>
-          Configured where the app is deployed, not here. Change these with environment variables
-          and redeploy.
+          These settings are managed by your administrator. They show which features are available
+          and what each limitation means.
         </p>
       </div>
 
@@ -54,9 +54,9 @@ export function SettingsScreen({
           }}
         >
           {config.degradedCount === 1
-            ? 'One setting below is running degraded.'
-            : `${config.degradedCount} settings below are running degraded.`}{' '}
-          None of them stops an audit; each one costs something, and the row says what.
+            ? 'One feature below is limited.'
+            : `${config.degradedCount} features below are limited.`}{' '}
+          Website audits can still run. See each affected feature below.
         </p>
       ) : null}
 

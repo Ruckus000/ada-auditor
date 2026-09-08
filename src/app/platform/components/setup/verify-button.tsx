@@ -206,7 +206,9 @@ export function VerifyButton({
   const lastPage = outcome && outcome.pages.length > 0 ? outcome.pages[outcome.pages.length - 1] : undefined;
   const successSentence =
     outcome?.kind === 'ok'
-      ? `The path works — walked ${outcome.pages.length} ${outcome.pages.length === 1 ? 'page' : 'pages'}, ended on “${lastPage?.title || 'an untitled page'}”.`
+      ? outcome.truncatedPages > 0
+        ? `Test incomplete — checked ${outcome.pages.length} ${outcome.pages.length === 1 ? 'page' : 'pages'} and skipped ${outcome.truncatedPages} more.`
+        : `The saved steps work — checked ${outcome.pages.length} ${outcome.pages.length === 1 ? 'page' : 'pages'}, ending on “${lastPage?.title || 'an untitled page'}”.`
       : '';
 
   return (
@@ -228,7 +230,7 @@ export function VerifyButton({
             cursor: busy ? 'default' : 'pointer',
           }}
         >
-          {busy ? 'Walking the path…' : 'Verify so far'}
+          {busy ? 'Testing saved steps…' : 'Test saved steps'}
         </button>
 
         {/*

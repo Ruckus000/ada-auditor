@@ -21,7 +21,7 @@ export function deliveryError(code: string, requestId?: string): string {
     document_changed: 'The documents changed. Refresh and review the current evidence before trying again.',
     signoff_not_eligible: 'This output is not eligible. Apply outstanding answers and verify the remediated file first.',
     artifact_not_stored: 'An evidence file is unavailable. Remediate again to retain the output and verification.',
-    artifact_hash_mismatch: 'An evidence file does not match its recorded identity. Read and remediate it again.',
+    artifact_hash_mismatch: 'A saved file does not match our records. Run the document again to create a new copy.',
     bundle_too_large: 'This selection exceeds the bundle limit. Split it into smaller deliveries.',
     bundle_selection_invalid: 'Choose between 1 and 100 signed-off documents.',
     verification_unavailable: 'Verification could not establish eligibility. Try verification again before signing off.',

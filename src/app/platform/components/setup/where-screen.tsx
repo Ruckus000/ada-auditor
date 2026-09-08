@@ -185,9 +185,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
           textWrap: 'pretty',
         }}
       >
-        Every audit walks a recorded path through the client&rsquo;s site and reports what a real
-        user would hit. Start with their homepage — you can record deeper paths after the first
-        result.
+        Enter the page you want to check. You can add more pages and tasks after the first result.
       </p>
 
       <form
@@ -236,7 +234,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
               checked={mode === 'homepage'}
               onChange={() => setMode('homepage')}
             />
-            Start with the homepage (recommended) — one page, audited now.
+            Check this page only (recommended).
           </label>
 
           <label style={radioLabelStyle}>
@@ -247,7 +245,7 @@ export function WhereScreen({ clientId }: { clientId: string }) {
               checked={mode === 'journey'}
               onChange={() => setMode('journey')}
             />
-            Record a multi-page journey — a checkout, a booking, a sign-in. You&rsquo;ll add the
+            Check a task with several steps, such as signing in or booking an appointment. Add the
             steps next.
           </label>
         </fieldset>

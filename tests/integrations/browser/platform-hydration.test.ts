@@ -473,7 +473,7 @@ describe('platform hydration', () => {
       await page.getByRole('button', { name: 'Edit steps for Homepage' }).click();
       await page.getByRole('button', { name: 'Add a step' }).click();
       const newStep = page.locator('fieldset').nth(1);
-      await newStep.getByLabel('Does').selectOption('expect');
+      await newStep.getByLabel('Step', { exact: true }).selectOption('expect');
       await newStep.getByLabel('URL contains (optional)').fill('/shop');
       await page.getByRole('button', { name: 'Save steps' }).click();
 
@@ -495,7 +495,7 @@ describe('platform hydration', () => {
 
       const failed = await page.innerText('body');
       expect(failed).toContain('Stopped:'); // the classified reason
-      expect(failed).toContain('Verify so far'); // the editor's way back
+      expect(failed).toContain('Test saved steps'); // the editor's way back
       expect(failed).toContain('start over'); // the URL's way back
 
       // The failed stage is the richest composite state the wizard renders —
@@ -677,7 +677,7 @@ describe('platform hydration', () => {
       expect(issued).toBe(false);
       await expect.poll(() => page.getByRole('dialog').innerText()).toContain('Needs a description');
       await expect.poll(() => axeViolations(page), AXE_SETTLE).toBe('');
-      await page.getByRole('button', { name: 'Issue delivery link', exact: true }).click();
+      await page.getByRole('button', { name: 'Create delivery link', exact: true }).click();
       await expect.poll(() => issued).toBe(true);
       await expect.poll(() => page.getByRole('dialog').isVisible()).toBe(false);
       await expect.poll(() => page.evaluate(() => document.activeElement?.textContent)).toContain('Prepare bundle');
@@ -737,7 +737,7 @@ describe('platform hydration', () => {
       // is exactly the bug that made a run report only its last page.
       expect(body).toContain('violations.html');
       expect(body).toContain('button-name');
-      expect(body).toContain('MUST FIX');
+      expect(body).toContain('HIGH PRIORITY');
       // axe's own sentence for the rule, carried from the engine through the
       // store to the screen. Nothing in this string was written by us.
       expect(body).toContain('Buttons must have discernible text');
@@ -886,7 +886,7 @@ describe('platform hydration', () => {
       // The criterion by name, not just its number: this is the page read by
       // people who do not know what 4.1.2 is.
       expect(body).toContain('Name, Role, Value');
-      expect(body).toContain('Success criteria not met');
+      expect(body).toContain('Confirmed requirements not met');
       expect(body).toContain('Buttons must have discernible text');
       // The people who open this link are usually the ones who have to act on
       // it, so it carries the fix and not just the failure.
@@ -904,7 +904,7 @@ describe('platform hydration', () => {
       // what to do, never a claim that the criterion is met — `buildSharedReport`
       // is not given the triage store at all, and this is what that guarantee
       // looks like from outside.
-      expect(body).toContain('Success criteria not met');
+      expect(body).toContain('Confirmed requirements not met');
 
       // The shared page is the audit and nothing else: no way into the console
       // from it, and no other client's name on it.
@@ -1039,7 +1039,7 @@ describe('platform hydration', () => {
       await page.goto(`${BASE}/clients/${CLIENT}`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      await page.getByRole('link', { name: 'Journeys', exact: true }).click();
+      await page.getByRole('link', { name: 'Audit plans', exact: true }).click();
       await page.waitForURL(`**/clients/${CLIENT}/journeys`, { timeout: 15_000 });
 
       expect(new URL(page.url()).pathname).toBe(`/clients/${CLIENT}/journeys`);
@@ -1149,7 +1149,7 @@ describe('platform hydration', () => {
       // on a run result — a warning attached to an audit fires on healthy runs
       // and teaches an operator to dismiss the one that matters.
       const row = page.locator('li', { hasText: 'Editable Journey' }).first();
-      await expect.poll(() => row.innerText()).toContain('never says it arrived');
+      await expect.poll(() => row.innerText()).toContain('Add a success check to confirm sign-in worked');
 
       await row.getByRole('button', { name: 'Add a step' }).click();
 
@@ -1172,7 +1172,7 @@ describe('platform hydration', () => {
         .toBe('');
 
       const added = row.locator('fieldset').nth(1);
-      await added.getByLabel('Does').selectOption('expect');
+      await added.getByLabel('Step', { exact: true }).selectOption('expect');
       await added.getByLabel('URL contains (optional)').fill('/dashboard');
 
       // Cleared by the edit, so the nudge is a live reading of the form and
@@ -1258,7 +1258,7 @@ describe('platform hydration', () => {
         .poll(() => row.innerText(), { timeout: 15_000 })
         .toContain('nothing stored for this client');
 
-      await row.getByRole('button', { name: 'Set values for portal' }).click();
+      await row.getByRole('button', { name: 'Add login details for portal' }).click();
 
       // Zero violations with the disclosure open: the password input, its
       // labels and the inert save button are the newest controls in the
@@ -1272,13 +1272,13 @@ describe('platform hydration', () => {
 
       await row.getByLabel('Username').fill('hydration-user-sentinel');
       await row.getByLabel('Password').fill('hydration-pass-sentinel');
-      await row.getByRole('button', { name: 'Save values' }).click();
+      await row.getByRole('button', { name: 'Save login details' }).click();
 
       // The badge refresh comes from the server's own presence listing, so
       // this is the PUT landing, not the component being optimistic.
       await expect
         .poll(() => row.innerText(), { timeout: 15_000 })
-        .toContain('stored for this client');
+        .toContain('Saved login: portal — ready');
 
       // Inputs cleared and closed on success: a write-only surface holds a
       // value for exactly as long as the write takes.
@@ -1303,7 +1303,7 @@ describe('platform hydration', () => {
       await rowAfter.getByRole('button', { name: 'Edit steps for Credential Journey' }).click();
       await expect
         .poll(() => rowAfter.innerText(), { timeout: 15_000 })
-        .toContain('stored for this client');
+        .toContain('Saved login: portal — ready');
     } finally {
       await page.close();
     }
@@ -1372,7 +1372,7 @@ describe('platform hydration', () => {
       // Waited on the label, which changes either way — polling the fix's own
       // attribute would make the wait part of what is being tested, and the
       // assertion that matters is the focus.
-      await expect.poll(() => run.innerText(), { timeout: 15_000 }).not.toBe('Run now');
+      await expect.poll(() => run.innerText(), { timeout: 15_000 }).not.toBe('Run audit now');
       expect(await focused()).toBe('Run Focus Journey now');
       // And how. `disabled` is what dropped focus, so its absence is the other
       // half: a future edit that reinstates it fails here rather than quietly
@@ -1434,7 +1434,7 @@ describe('platform hydration', () => {
       // unmounts the form, so the focused button disappears with it. Closing
       // hands focus back to the control that opened the editor.
       const added = row.locator('fieldset').nth(1);
-      await added.getByLabel('Does').selectOption('expect');
+      await added.getByLabel('Step', { exact: true }).selectOption('expect');
       await added.getByLabel('URL contains (optional)').fill('/done');
       await save.click();
 
@@ -1588,7 +1588,7 @@ describe('platform hydration', () => {
 
       // The panel is a client component talking to a route, so wait for the
       // markup rather than assuming the fetch resolved within a tick.
-      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      const panel = page.locator('section', { hasText: 'Find pages to audit' }).first();
       await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
 
       // All three shapes really are on screen. Without this the axe run below
@@ -1648,7 +1648,7 @@ describe('platform hydration', () => {
 
       // With the name still empty, so the sentence explaining the disabled
       // Create button is on the page when axe looks.
-      await expect.poll(() => panel.innerText()).toContain('Give the journey a name');
+      await expect.poll(() => panel.innerText()).toContain('Give the audit plan a name');
 
       // The selection count is a live region as well as a describedby target.
       // Both bulk controls leave focus on themselves, so as a describedby
@@ -2010,8 +2010,8 @@ describe('platform hydration', () => {
 
       // One inspection, rendered inline where its row is — as this session's
       // result, once, never a second box under the stored one.
-      await row('/minutes/agenda.pdf').getByRole('button', { name: 'Inspect' }).click();
-      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Not tagged');
+      await row('/minutes/agenda.pdf').getByRole('button', { name: 'Check PDF' }).click();
+      await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('No reading structure');
 
       const inspected = await panel.innerText();
       // The gaps verbatim — the words were chosen server-side, beside the
@@ -2027,7 +2027,7 @@ describe('platform hydration', () => {
       await row('/forms/permit-application.docx').getByRole('button', { name: 'Convert to tagged PDF' }).click();
       await expect
         .poll(() => panel.innerText(), { timeout: 15_000 })
-        .toContain('Delivered a tagged PDF');
+        .toContain('Created a new PDF');
 
       const converted = await panel.innerText();
       expect(converted).toContain('The title was transcribed from the document’s own first heading.');
@@ -2194,7 +2194,7 @@ describe('platform hydration', () => {
         });
 
         // The JVM answers in a second or two warm; the poll absorbs a cold start.
-        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
+        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('No reading structure');
 
         // The reload is the assertion. The screen's own state is gone; only
         // the store can put the row and its record back.
@@ -2219,7 +2219,7 @@ describe('platform hydration', () => {
           .first()
           .getByRole('button', { name: 'Details' })
           .click();
-        await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Not tagged');
+        await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('No reading structure');
         expect(await panel.innerText()).toContain(
           '1.3.1: the output carries no structure tree',
         );
@@ -2252,7 +2252,7 @@ describe('platform hydration', () => {
           mimeType: 'application/pdf',
           buffer: pdf,
         });
-        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
+        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('No reading structure');
         await page.reload({ waitUntil: 'domcontentloaded' });
         await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
@@ -2266,7 +2266,7 @@ describe('platform hydration', () => {
         // checker names beyond our vocabulary — so every group is answered
         // before the row can read as waiting on the client alone.
         const needed = page.getByRole('region', { name: 'Needed from the client' });
-        await expect.poll(() => needed.innerText(), { timeout: 15_000 }).toContain('no structure tree');
+        await expect.poll(() => needed.innerText(), { timeout: 15_000 }).toContain('We cannot repair this PDF automatically');
         for (const button of await needed.getByRole('button', { name: 'Mark requested' }).all()) {
           await button.click();
         }
@@ -2328,18 +2328,17 @@ describe('platform hydration', () => {
           mimeType: 'application/pdf',
           buffer: pdf,
         });
-        await expect.poll(() => page.locator('main').innerText(), { timeout: 60_000 }).toContain('Not tagged');
+        await expect.poll(() => page.locator('main').innerText(), { timeout: 60_000 }).toContain('No reading structure');
 
         const language = page.getByRole('region', { name: 'Language' });
         if ((await language.count()) > 0) {
           await language.getByRole('combobox').selectOption('en');
         }
-        // Exact: the header's "Remediate a file" tab is a button too.
-        await page.getByRole('button', { name: 'Remediate', exact: true }).click();
+        await page.getByRole('button', { name: 'Create improved file', exact: true }).click();
 
         const outcome = page.getByRole('alert').or(page.getByRole('status'));
         await expect.poll(() => outcome.first().innerText(), { timeout: 60_000 }).toMatch(
-          /Download |no structure tree|cannot be repaired/i,
+          /Download |no structure tree|cannot be repaired|cannot repair|No reading structure/i,
         );
         const text = await outcome.first().innerText();
         expect(text).not.toMatch(/repair_refused|not-tagged/);
@@ -2451,7 +2450,7 @@ describe('platform hydration', () => {
       await page.getByLabel('Site address').fill('https://picked.invalid/');
       await page.getByRole('button', { name: 'Find pages' }).click();
 
-      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      const panel = page.locator('section', { hasText: 'Find pages to audit' }).first();
       await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Front door');
 
       await page.getByRole('checkbox', { name: 'Teams /pricing/teams' }).check();
@@ -2472,7 +2471,7 @@ describe('platform hydration', () => {
 
       // Neither substring of the two journey names the tests above locate by.
       await page.getByLabel('Journey name').fill('Picked Pages');
-      await page.getByRole('button', { name: 'Create journey' }).click();
+      await page.getByRole('button', { name: 'Create audit plan' }).click();
 
       // Server truth.
       await expect
@@ -2560,7 +2559,7 @@ describe('platform hydration', () => {
       await page.getByLabel('Site address').fill('https://sixty.invalid/');
       await page.getByRole('button', { name: 'Find pages' }).click();
 
-      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      const panel = page.locator('section', { hasText: 'Find pages to audit' }).first();
       await expect.poll(() => panel.innerText(), { timeout: 15_000 }).toContain('Page 00');
 
       // Said before the click, so an operator is not left thinking the bulk
@@ -2571,7 +2570,7 @@ describe('platform hydration', () => {
       // count and not to an empty name field.
       await page.getByLabel('Journey name').fill('Boundary Check');
 
-      const create = page.getByRole('button', { name: 'Create journey' });
+      const create = page.getByRole('button', { name: 'Create audit plan' });
 
       // Select-all takes a storeable prefix rather than all 60 — the same move
       // as skipping a `tooLong` row: a state the operator could have reached
@@ -2588,7 +2587,7 @@ describe('platform hydration', () => {
       expect(await create.isDisabled()).toBe(true);
 
       const text = await panel.innerText();
-      expect(text).toContain('A journey holds at most 50 steps, and 51 pages are picked.');
+      expect(text).toContain('An audit plan holds at most 50 steps, and 51 pages are picked.');
       expect(text).toContain('Untick 1');
 
       // And inside the announced region, not merely on the page. The count
@@ -2604,7 +2603,7 @@ describe('platform hydration', () => {
       // blocked has learned nothing, so the more structural problem wins.
       await page.getByLabel('Journey name').fill('');
       await expect.poll(() => panel.innerText()).toContain('Untick 1');
-      expect(await panel.innerText()).not.toContain('Give the journey a name');
+      expect(await panel.innerText()).not.toContain('Give the audit plan a name');
     } finally {
       await page.close();
     }
@@ -2669,7 +2668,7 @@ describe('platform hydration', () => {
       await page.goto(`${BASE}/clients/${CLIENT}/journeys`, { waitUntil: 'domcontentloaded' });
       await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
 
-      const panel = page.locator('section', { hasText: 'Discover pages' }).first();
+      const panel = page.locator('section', { hasText: 'Find pages to audit' }).first();
       await page.getByLabel('Site address').fill('https://inert.invalid/');
 
       // 1. Find pages, mid-crawl. The panel's own copy says a crawl "takes
@@ -2717,11 +2716,11 @@ describe('platform hydration', () => {
 
       // 2. Create journey, inert because nothing is ticked — the state the
       // panel spends most of its life in, and the one an operator meets first.
-      const create = page.getByRole('button', { name: 'Create journey' });
+      const create = page.getByRole('button', { name: 'Create audit plan' });
       expect(await create.getAttribute('aria-disabled')).toBe('true');
       await create.focus();
       await page.keyboard.press('Enter');
-      expect(await focused()).toBe('Create journey');
+      expect(await focused()).toBe('Create audit plan');
       // Still refusing, and still saying why in the live region beside it —
       // which a `disabled` button could never be reached to be told about.
       //

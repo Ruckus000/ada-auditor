@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FONT, T } from '../../lib/tokens';
+import { describePlatformError } from '../../lib/api-error-copy';
 
 /**
  * Assign a finding to somebody.
@@ -79,7 +80,7 @@ export function AssignControl({
 
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(parsed?.error ?? `That did not save (${response.status}).`);
+        setError(describePlatformError(parsed?.error, response.status));
         return;
       }
 

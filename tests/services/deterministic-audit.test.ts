@@ -156,9 +156,9 @@ describe('runDeterministicAudit', () => {
     expect(severities).toEqual(['critical', 'major', 'minor', 'minor']);
   });
 
-  it('keeps serious findings out of the CI-blocking set', () => {
+  it('keeps impact severity separate from the conformance gate', () => {
     // color-contrast is `serious` and extremely common. Mapping it to `major`
-    // preserves the steady-state rule that only `critical` fails a run.
+    // preserves the impact label; the conformance gate uses the WCAG level.
     const [finding] = runDeterministicAudit({
       violations: [
         rule({ id: 'color-contrast', impact: 'serious', tags: ['cat.color', 'wcag2aa', 'wcag143'] }),

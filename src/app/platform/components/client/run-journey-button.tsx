@@ -206,7 +206,7 @@ export function RunJourneyButton({
         }}
       >
         {/* The label changes, not just the colour. */}
-        {phase === 'starting' ? 'Starting…' : phase === 'running' ? 'Running…' : 'Run now'}
+        {phase === 'starting' ? 'Starting…' : phase === 'running' ? 'Running…' : 'Run audit now'}
       </button>
     </span>
   );

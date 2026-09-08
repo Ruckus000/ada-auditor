@@ -1,4 +1,8 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import type { ReportRow } from '../../../services/report-view';
 import { FONT, T } from '../lib/tokens';
 import { scoreLine } from '../../../services/presentation/verdict';
@@ -16,6 +20,33 @@ import { scoreLine } from '../../../services/presentation/verdict';
  * already answered.
  */
 export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function revoke(report: ReportRow) {
+    if (!report.clientId || busy) return;
+    setBusy(report.id);
+    setError(null);
+    try {
+      const response = await fetch(`/api/platform/clients/${encodeURIComponent(report.clientId)}/reports`, {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: report.id }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setError(payload?.error === 'unauthorized' ? 'Your session expired. Sign in again.' : 'The report link could not be turned off. Try again.');
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -79,7 +110,7 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
               <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
                 run {report.requestId}
                 {report.run
-                  ? ` · ${report.run.mustFix} must fix · ${report.run.needsReview} to review · ${scoreLine(report.run.score)}`
+                  ? ` · ${report.run.mustFix + report.run.shouldFix} confirmed issues · ${report.run.recommendations} recommendations · ${report.run.needsReview} need a person to check · ${scoreLine(report.run.score)}`
                   : ' · run no longer stored'}
                 {report.documents
                   ? ` · ${report.documents.documents} document${
@@ -90,15 +121,25 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
 
               <span style={{ fontSize: 12.5 }}>
                 {report.shareToken ? (
-                  <a href={`/r/${report.shareToken}`} style={{ color: T.accent }}>
-                    Open the shared link ↗
-                  </a>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+                    <a href={`/r/${report.shareToken}`} style={{ color: T.accent }}>
+                      Open the shared link ↗
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => void revoke(report)}
+                      disabled={busy === report.id}
+                      style={{ border: 0, background: 'none', padding: 0, color: T.failDeep, cursor: 'pointer', font: 'inherit' }}
+                    >
+                      {busy === report.id ? 'Turning off…' : 'Turn off link'}
+                    </button>
+                  </span>
                 ) : (
                   // The row stays after revocation rather than disappearing:
                   // "this link was issued and then withdrawn" is part of the
                   // record an auditor may have to account for.
                   <span style={{ color: T.inkMuted }}>
-                    Link revoked{report.revokedAt ? ` ${report.revokedAt.slice(0, 10)}` : ''}
+                    Link turned off{report.revokedAt ? ` ${report.revokedAt.slice(0, 10)}` : ''}
                   </span>
                 )}
               </span>
@@ -106,6 +147,7 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
           ))}
         </ul>
       )}
+      {error ? <p role="alert" style={{ margin: 0, color: T.failDeep, fontFamily: FONT.sans, fontSize: 12.5 }}>{error}</p> : null}
     </div>
   );
 }

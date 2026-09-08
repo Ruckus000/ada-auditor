@@ -117,6 +117,7 @@ describe('buildClientDetail', () => {
       score: 72,
       mustFix: 1,
       shouldFix: 1,
+      recommendations: 0,
       // `summariseRun` is what the client's shared report renders, so this
       // assertion is the one standing between a 130-item review queue and a
       // document that says "1 must fix, 1 should fix" and stops.

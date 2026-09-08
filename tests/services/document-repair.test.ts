@@ -63,8 +63,8 @@ describe('planRepair', () => {
     expect(decision.refusal.kind).toBe('not-tagged');
     // The refusal has to name the two real routes. "Cannot repair" alone
     // leaves an operator with a dead end rather than a next action.
-    expect(decision.refusal.reason).toContain('Word source');
-    expect(decision.refusal.reason).toContain('tagged by a person');
+    expect(decision.refusal.reason).toContain('original Word document');
+    expect(decision.refusal.reason).toContain('accessibility specialist');
   });
 
   it('refuses a signed PDF, because repair would invalidate the signature', () => {

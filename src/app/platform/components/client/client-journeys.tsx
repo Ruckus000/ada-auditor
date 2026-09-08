@@ -41,7 +41,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em' }}>
-        Journeys
+        Audit plans
       </h2>
 
       {/*
@@ -53,8 +53,8 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
 
       {detail.journeys.length === 0 ? (
         <Empty
-          title="No journeys yet"
-          body="A journey is the path we re-walk on every run — a checkout, a booking, a sign-in. Give the panel above a site address and tick the pages that matter, or finish this client's setup to record the first one and run it."
+          title="No audit plans yet"
+          body="Choose the pages or tasks to check for this client. Find pages above, or finish setup to run the first audit."
           action={{ href: `/clients/${detail.id}/setup`, label: 'Finish setup' }}
         />
       ) : (
@@ -107,8 +107,8 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                         {badge.label}
                       </Pill>
                       <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-                        {journey.lastRun.mustFix} must fix ·{' '}
-                        {journey.lastRun.needsReview} to review ·{' '}
+                        {journey.lastRun.mustFix + journey.lastRun.shouldFix} confirmed issues ·{' '}
+                        {journey.lastRun.needsReview} need a person to check ·{' '}
                         {new Date(journey.lastRun.createdAt).toISOString().slice(0, 10)}
                       </span>
                     </>

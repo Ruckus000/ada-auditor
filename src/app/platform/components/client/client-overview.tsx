@@ -33,10 +33,10 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
             }}
           >
             <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(lastRun.score)} />
-            <Stat label="Must fix" value={String(lastRun.mustFix)} tone={lastRun.mustFix > 0} />
-            <Stat label="Should fix" value={String(lastRun.shouldFix)} />
-            <Stat label="Needs review" value={String(lastRun.needsReview)} />
-            <Stat label="Pages audited" value={String(lastRun.pagesAudited)} />
+            <Stat label="Confirmed issues" value={String(lastRun.mustFix + lastRun.shouldFix)} tone={lastRun.mustFix + lastRun.shouldFix > 0} />
+            <Stat label="Recommendations" value={String(lastRun.recommendations)} />
+            <Stat label="Need a person to check" value={String(lastRun.needsReview)} />
+            <Stat label="Pages checked" value={String(lastRun.pagesAudited)} />
           </dl>
 
           {lastRun.evidenceStatus !== 'complete' ? (
@@ -110,16 +110,16 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
         </>
       ) : (
         <Empty
-          title={detail.journeys.length === 0 ? 'No journeys yet' : 'No runs yet'}
+          title={detail.journeys.length === 0 ? 'No audit plans yet' : 'No audits yet'}
           body={
             detail.journeys.length === 0
-              ? 'A journey is the path through their site we re-walk on every run — a checkout, a booking, a sign-in. Finish setup to say where we audit and run the first audit.'
-              : 'The journeys are recorded. Nothing has been audited against them yet.'
+              ? 'An audit plan is the path through their site we check each time — a checkout, a booking, a sign-in. Finish setup to choose the path and run the first audit.'
+              : 'The audit plans are saved. Nothing has been checked against them yet.'
           }
           action={
             detail.journeys.length === 0
               ? { href: `/clients/${detail.id}/setup`, label: 'Finish setup' }
-              : { href: `/clients/${detail.id}/journeys`, label: 'See the journeys' }
+              : { href: `/clients/${detail.id}/journeys`, label: 'See the audit plans' }
           }
         />
       )}

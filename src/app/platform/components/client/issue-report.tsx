@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { FONT, T } from '../../lib/tokens';
+import { describePlatformError } from '../../lib/api-error-copy';
 
 /**
  * Issuing a report from the run on screen.
@@ -34,7 +35,7 @@ export function IssueReport({ clientId, requestId }: { clientId: string; request
 
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(parsed?.error ?? `That did not save (${response.status}).`);
+        setError(describePlatformError(parsed?.error, response.status));
         return;
       }
 
@@ -62,9 +63,9 @@ export function IssueReport({ clientId, requestId }: { clientId: string; request
           color: T.inkSoft,
         }}
       >
-        Issued. <a href={link} style={{ color: T.accent, fontFamily: FONT.mono }}>{link}</a> — anyone
-        with this link can read this audit, and it will keep reporting this run and no later one.
-        Revoke it from Reports.
+        Report link created. <a href={link} style={{ color: T.accent, fontFamily: FONT.mono }}>{link}</a> — anyone
+        with this link can read this audit, and later audits will not change these results. Turn it
+        off from Reports.
       </p>
     );
   }

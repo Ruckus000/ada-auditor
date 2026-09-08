@@ -36,7 +36,7 @@ type VerdictSummary = Pick<RemediationSummary, 'conformance' | 'scope'>;
 export function conformanceLine(summary: VerdictSummary): string {
   const c = summary.conformance;
   if (c === undefined || c.checker === 'none') return 'PDF/UA: not checked for this reading';
-  if (c.compliant) return 'PDF/UA: compliant (veraPDF)';
+  if (c.compliant) return 'Passed automated PDF checks (veraPDF)';
   return `PDF/UA: ${c.failingClauses.length} check${c.failingClauses.length === 1 ? '' : 's'} failing (veraPDF)`;
 }
 
@@ -92,7 +92,7 @@ export function documentStateLabel(state: DocumentState): string {
     case 'needs-answers':
       return 'Needs answers';
     case 'conformant':
-      return 'Conformant';
+      return 'Passed automated checks';
     case 'ready':
       return 'Ready to run';
     case 'waiting-on-client':
@@ -124,7 +124,7 @@ export function documentStateNote(
         + (standing.waiting > 0 ? `, ${standing.waiting} waiting on the client` : '')
       );
     case 'conformant':
-      return 'the checker passed and nothing is open';
+      return 'automated checks passed and nothing is open';
     case 'ready':
       return 'a run would advance it';
     case 'waiting-on-client':

@@ -26,17 +26,17 @@ import type { RunFailureCode } from '../../api/_lib/run-failure';
  */
 const COPY: Record<RunFailureCode, string> = {
   journey_step_failed:
-    'A step could not be performed — usually a selector that no longer matches the page. Record the journey again against the current site.',
+    'A step could not be performed. Check the page and step settings, then test the saved steps again.',
   journey_has_no_steps:
-    'This run named a site but no path through it, so there was nothing to walk.',
-  journey_not_in_scope: 'This journey is not in the run contract’s scope, so the run was refused.',
+    'This audit has no steps to check. Add at least one page or action, then try again.',
+  journey_not_in_scope: 'This audit is not allowed with the current settings. Ask your administrator to check its permissions.',
   action_not_allowed:
     'A step asked for something this environment forbids. Production is read-only.',
-  invalid_step_id: 'The run’s step name was not usable as an evidence filename.',
+  invalid_step_id: 'The audit could not save evidence for a step. Ask your administrator to check the step settings.',
   navigation_not_allowed:
-    'The run refused to follow a navigation: somewhere outside this journey’s allowed hosts, or a private address. If the destination is legitimate, the journey’s allowed hosts have to be widened deliberately.',
+    'The audit stopped at an address it is not allowed to visit. Ask your administrator to check whether that address should be allowed.',
   run_timed_out:
-    'The run never reported back and was closed out. Usually the journey outlived the function’s time limit.',
+    'The audit did not finish in time. Try checking fewer pages at once.',
   audit_run_failed: 'The run stopped for a reason it could not categorise. Running it again will say whether it repeats.',
 };
 

@@ -141,7 +141,7 @@ export function planRepair(
       refusal: {
         kind: 'not-tagged',
         reason:
-          'this PDF has no structure tree, so there is nothing to transcribe — supply the Word source it was exported from, or have it tagged by a person',
+          'We cannot repair this PDF automatically. Upload the original Word document, or ask an accessibility specialist to add the reading structure.',
       },
     };
   }

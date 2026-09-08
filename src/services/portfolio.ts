@@ -35,6 +35,7 @@ export type PortfolioRow = {
     score: number | null;
     mustFix: number;
     shouldFix: number;
+    recommendations: number;
     /**
      * The human-review queue. Since HTML_CodeSniffer joined axe this is
      * routinely the largest of the three, so a row showing only the first two

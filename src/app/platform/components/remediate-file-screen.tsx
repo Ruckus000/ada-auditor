@@ -188,8 +188,8 @@ export function StatelessAnswersForm({
       ) : null}
 
       {elsewhere.length > 0 ? (
-        <section aria-label="Not answerable on this screen" style={sectionStyle}>
-          <h2 style={h2Style}>Not answerable on this screen</h2>
+        <section aria-label="Needs someone else" style={sectionStyle}>
+          <h2 style={h2Style}>Needs someone else</h2>
           <p style={noteStyle}>
             These are decisions or the client&rsquo;s to supply, and a decision is a record. On a
             client&rsquo;s inventory they are answered and kept; here they are only listed.
@@ -206,7 +206,7 @@ export function StatelessAnswersForm({
 
       <span>
         <button type="submit" disabled={busy} style={{ ...buttonStyle, ...disabledStyle(busy) }}>
-          {busy ? 'Remediating… (up to 5 minutes)' : 'Remediate'}
+          {busy ? 'Creating improved file… (up to 5 minutes)' : 'Create improved file'}
         </button>
       </span>
     </form>
@@ -294,7 +294,7 @@ export function RemediateFileScreen({ toolchain, converter }: { toolchain: Toolc
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1500 }}>
       <ScreenHeading
-        title="Remediate a file"
+        title="Improve a document"
         lede="One file in, one file out. Nothing is recorded here and no one is attributed — for a client's document use its inventory, where every answer is kept, keyed to the bytes it was given for."
       />
 
@@ -339,8 +339,8 @@ export function RemediateFileScreen({ toolchain, converter }: { toolchain: Toolc
           </section>
 
           {reading ? (
-            <section aria-label="The reading" style={sectionStyle}>
-              <h2 style={h2Style}>What the reading found</h2>
+            <section aria-label="Automated check" style={sectionStyle}>
+              <h2 style={h2Style}>What the automated check found</h2>
               <SummaryView summary={reading} />
             </section>
           ) : null}

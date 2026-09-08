@@ -31,8 +31,13 @@ export function SharedReportPage({
   token: string;
 }) {
   const total = report.pages.reduce((sum, page) => sum + page.findings.length, 0);
+  const confirmed = report.run.mustFix + report.run.shouldFix;
+  const recommendations = report.run.recommendations;
+  const needsReview = report.run.needsReview;
   const failed = summariseCriteria(
-    report.pages.flatMap((page) => page.findings.flatMap((finding) => finding.wcagCriteria)),
+    report.pages.flatMap((page) =>
+      page.findings.filter(isBlockingFinding).flatMap((finding) => finding.wcagCriteria),
+    ),
   );
 
   return (
@@ -90,9 +95,9 @@ export function SharedReportPage({
           }}
         >
           <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(report.run.score)} />
-          <Stat label="Must fix" value={String(report.run.mustFix)} />
-          <Stat label="Should fix" value={String(report.run.shouldFix)} />
-          <Stat label="Needs review" value={String(report.run.needsReview)} />
+          <Stat label="Confirmed issues" value={String(report.run.mustFix + report.run.shouldFix)} />
+          <Stat label="Recommendations" value={String(report.run.recommendations)} />
+          <Stat label="Need a person to check" value={String(report.run.needsReview)} />
           <Stat label="Pages audited" value={String(report.run.pagesAudited)} />
         </dl>
 
@@ -102,22 +107,24 @@ export function SharedReportPage({
 
         <p style={{ margin: 0, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.55 }}>
           {total === 0
-            ? 'No barriers were found on any page we walked.'
-            : `${total} ${total === 1 ? 'barrier' : 'barriers'} across ${report.pages.length} ${
-                report.pages.length === 1 ? 'page' : 'pages'
-              }, listed below with the WCAG success criterion each one fails.`}
+            ? 'No issues were recorded on any page we checked.'
+            : `${confirmed} confirmed ${confirmed === 1 ? 'issue' : 'issues'}, ${recommendations} ${
+                recommendations === 1 ? 'recommendation' : 'recommendations'
+              }, and ${needsReview} ${needsReview === 1 ? 'item needs' : 'items need'} a person to check across ${
+                report.pages.length
+              } ${report.pages.length === 1 ? 'page' : 'pages'}.`}
         </p>
       </section>
 
       {failed.length > 0 ? (
         <section style={{ marginTop: 24 }}>
           <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>
-            Success criteria not met
+            Confirmed requirements not met
           </h2>
           <p style={{ margin: '0 0 10px', fontSize: 13, color: T.inkMuted, lineHeight: 1.55 }}>
-            A conformance claim is made against criteria, not against rule names, so these are the
-            ones this audit found failing. Criteria not listed were not necessarily met — only
-            those we could test automatically appear here.
+            These are the Level A and AA requirements that the automated checks confirmed as
+            failing. Requirements not listed were not necessarily met — only those we could test
+            automatically appear here.
           </p>
           <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {failed.map((criterion) => (
@@ -188,8 +195,14 @@ export function SharedReportPage({
                       </code>
                     </>
                   ) : null}
-                  <Fix label="Fix any one of these" items={finding.fixAnyOf} />
-                  <Fix label="Fix all of these" items={finding.fixAllOf} />
+                  {finding.severity === 'needs-review' ? (
+                    <Fix label="What to check" items={finding.fixAnyOf.length > 0 ? finding.fixAnyOf : finding.fixAllOf} />
+                  ) : (
+                    <>
+                      <Fix label="Fix any one of these" items={finding.fixAnyOf} />
+                      <Fix label="Fix all of these" items={finding.fixAllOf} />
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
@@ -213,6 +226,13 @@ export function SharedReportPage({
         link to it still means what it meant when it was sent.
       </footer>
     </main>
+  );
+}
+
+function isBlockingFinding(finding: { severity: string; conformanceLevel?: string }): boolean {
+  return (
+    finding.severity !== 'needs-review' &&
+    (finding.conformanceLevel === 'A' || finding.conformanceLevel === 'AA')
   );
 }
 
@@ -285,7 +305,7 @@ function DocumentsSection({
                 · {entry.kind === 'pdf' ? 'PDF' : 'Word'} ·{' '}
                 {entry.readBy === 'conversion' ? 'converted' : 'reviewed'}{' '}
                 <time dateTime={entry.readAt}>{entry.readAt.slice(0, 10)}</time> ·{' '}
-                {entry.tagged ? 'tagged' : 'not tagged'} · {entry.pages}{' '}
+                {entry.tagged ? 'has reading structure' : 'no reading structure'} · {entry.pages}{' '}
                 {entry.pages === 1 ? 'page' : 'pages'}
               </span>
               {entry.conversionId ? (
@@ -304,7 +324,7 @@ function DocumentsSection({
               </p>
               {entry.gaps.length === 0 ? (
                 <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
-                  No machine-detectable gaps.
+                  No gaps found by automated checks.
                 </p>
               ) : (
                 <ul style={{ margin: '2px 0 0', paddingLeft: 18 }}>

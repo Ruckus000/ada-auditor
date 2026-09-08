@@ -35,12 +35,12 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
 
   return (
     <div
-      data-screen-label="Portfolio"
+      data-screen-label="Clients"
       style={{ display: 'flex', flexDirection: 'column', gap: 18 }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <ScreenHeading
-          title="Portfolio"
+          title="Clients"
           lede={
             hasClients
               ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}, newest run first.`
@@ -65,7 +65,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
               columns={[
                 'CLIENT',
                 'VERDICT',
-                'MUST FIX',
+                'CONFIRMED ISSUES',
                 'CHECKS PASSED',
                 'PAGES',
                 'LAST RUN',
@@ -75,7 +75,9 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
             />
             {visibleClients.map((client) => {
               const badge = VERDICT_CHIP[client.lastRun?.verdict ?? 'scan'];
-              const mustFix = client.lastRun?.mustFix ?? 0;
+              const confirmedIssues = client.lastRun
+                ? client.lastRun.mustFix + client.lastRun.shouldFix
+                : 0;
 
               return (
                 <button
@@ -86,7 +88,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                   // button's name would be every cell run together.
                   aria-label={`${client.name} — ${
                     client.contractType === 'remediation-only' ? 'remediation only' : client.lastRun ? verdictWords(client.lastRun.verdict) : 'never audited'
-                  }, ${mustFix} must fix${client.setupIncomplete ? ', setup incomplete' : ''}`}
+                    }, ${confirmedIssues} confirmed issues${client.setupIncomplete ? ', setup incomplete' : ''}`}
                   className="ph-row"
                   style={{
                     display: 'grid',
@@ -108,7 +110,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                     <span style={{ fontSize: 13.5, fontWeight: 650 }}>{client.name}</span>
                     <span style={{ fontFamily: FONT.mono, fontSize: 11, color: T.inkMuted }}>
                       {CLIENT_CONTRACT_LABELS[client.contractType]}
-                      {client.contractType !== 'remediation-only' ? ` · ${client.journeyCount} journeys` : ''}
+                      {client.contractType !== 'remediation-only' ? ` · ${client.journeyCount} audit plans` : ''}
                       {client.deliveredDocumentCount === undefined ? '' : ` · ${client.deliveredDocumentCount} documents delivered`}
                     </span>
                     {client.setupIncomplete ? (
@@ -134,8 +136,8 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                     )}
                   </span>
 
-                  <span style={{ fontSize: 14, fontWeight: 700, color: mustFix > 0 ? T.fail : T.inkMuted }}>
-                    {client.lastRun ? mustFix : '—'}
+                  <span style={{ fontSize: 14, fontWeight: 700, color: confirmedIssues > 0 ? T.fail : T.inkMuted }}>
+                    {client.lastRun ? confirmedIssues : '—'}
                   </span>
 
                   {/* An em dash, not a zero: a run we could not score is not a

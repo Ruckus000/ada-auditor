@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   countBySource,
   groupFindingsByPage,
+  isBlockingFinding,
   parseAuditResponse,
   parseFindings,
   parsePages,
@@ -294,7 +295,7 @@ describe('countBySource', () => {
   it('counts blocking findings as critical deterministic ones only', () => {
     const counts = countBySource(
       parseFindings([
-        { code: 'a', severity: 'critical', message: 'a', source: 'deterministic' },
+        { code: 'a', severity: 'critical', message: 'a', source: 'deterministic', conformanceLevel: 'A' },
         { code: 'b', severity: 'major', message: 'b', source: 'deterministic' },
         { code: 'ai-advisory', severity: 'advisory', message: 'c', source: 'ai-advisory' },
       ]),
@@ -304,6 +305,14 @@ describe('countBySource', () => {
     expect(counts.deterministic).toHaveLength(2);
     expect(counts.advisory).toHaveLength(1);
     expect(counts.blocking).toHaveLength(1);
+  });
+});
+
+describe('isBlockingFinding', () => {
+  it('uses the accessibility level, not impact severity, to decide the gate', () => {
+    expect(isBlockingFinding({ code: 'best-practice', severity: 'critical', source: 'deterministic' })).toBe(false);
+    expect(isBlockingFinding({ code: 'contrast', severity: 'minor', source: 'deterministic', conformanceLevel: 'AA' })).toBe(true);
+    expect(isBlockingFinding({ code: 'review', severity: 'needs-review', source: 'deterministic', conformanceLevel: 'AA' })).toBe(false);
   });
 });
 

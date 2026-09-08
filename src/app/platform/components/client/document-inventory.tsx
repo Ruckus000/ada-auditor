@@ -193,7 +193,7 @@ export function DocumentInventory({
               <tr>
                 <th scope="col" style={headStyle}>DOCUMENT</th>
                 <th scope="col" style={headStyle}>STATE</th>
-                <th scope="col" style={headStyle}>READING</th>
+                <th scope="col" style={headStyle}>AUTOMATED CHECK</th>
                 <th scope="col" style={headStyle}>ACTION</th>
               </tr>
             </thead>
@@ -292,7 +292,7 @@ export function DocumentInventory({
                               disabled={running}
                               style={{ ...buttonStyle, ...disabledStyle(running) }}
                             >
-                              {own.state === 'running' ? 'Inspecting…' : hasRecord ? 'Inspect again' : 'Inspect'}
+                              {own.state === 'running' ? 'Checking…' : hasRecord ? 'Check again' : 'Check PDF'}
                             </button>
                           ) : null}
                           {doc.sourceAvailable && converterAvailable ? (

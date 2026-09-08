@@ -10,6 +10,7 @@ import {
   type TriageDecisionState,
 } from '../../../../services/presentation/triage';
 import { FONT, T } from '../../lib/tokens';
+import { describePlatformError } from '../../lib/api-error-copy';
 
 /**
  * Deciding what happens to a finding, and undoing it.
@@ -74,7 +75,7 @@ export function TriageControl({
 
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(parsed?.error ?? `That did not save (${response.status}).`);
+        setError(describePlatformError(parsed?.error, response.status));
         return;
       }
 

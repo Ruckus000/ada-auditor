@@ -43,7 +43,7 @@ describe('documentStateLabel', () => {
 describe('conformanceLine', () => {
   it('says compliant when the checker did', () => {
     expect(conformanceLine({ conformance: { checker: 'verapdf-ua1', compliant: true } }))
-      .toBe('PDF/UA: compliant (veraPDF)');
+      .toBe('Passed automated PDF checks (veraPDF)');
   });
 
   it('counts the failing checks', () => {

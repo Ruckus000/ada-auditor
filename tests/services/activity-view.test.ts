@@ -67,4 +67,14 @@ describe('buildActivity', () => {
     const ids = (await buildActivity(deps())).map((row) => row.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
+
+  it('translates machine event names for operators', async () => {
+    await platform.recordEvent({
+      clientId: 'acme',
+      actor: 'Alex Reed',
+      action: 'document_answered',
+    });
+
+    expect((await buildActivity(deps()))[0].action).toBe('answered a document review question');
+  });
 });

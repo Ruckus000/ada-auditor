@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { JourneyRunRefusal } from '../../../../domain/platform';
 import { FONT, T } from '../../lib/tokens';
+import { describePlatformError } from '../../lib/api-error-copy';
 
 /**
  * How often a journey re-runs.
@@ -74,11 +75,7 @@ export function JourneySchedule({
 
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(
-          (parsed?.error && MESSAGES[parsed.error]) ??
-            parsed?.error ??
-            `That did not save (${response.status}).`,
-        );
+        setError(MESSAGES[parsed?.error ?? ''] ?? describePlatformError(parsed?.error, response.status));
         return;
       }
 
@@ -116,7 +113,7 @@ export function JourneySchedule({
         htmlFor={selectId}
         style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}
       >
-        Schedule for {journeyName}
+          Schedule audit for {journeyName}
       </label>
       <select
         id={selectId}

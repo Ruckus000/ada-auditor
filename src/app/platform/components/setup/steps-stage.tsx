@@ -14,11 +14,10 @@ import { VerifyButton } from './verify-button';
 export function StepsStage({ detail, journey }: { detail: ClientDetail; journey: JourneySummary }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <StageHeading>Record the path</StageHeading>
+      <StageHeading>Add the steps to check</StageHeading>
       <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, color: T.inkSoft, maxWidth: 480, textWrap: 'pretty' }}>
-        Add the steps a real user takes — go to a page, click, fill, then say what &ldquo;arrived&rdquo; looks
-        like. Save them and we walk the path in a real browser straight away, showing you where it
-        ends up. Nothing is audited or saved by a verify, and you can walk it again any time.
+        Add each page, click, and form entry. Add a final check to confirm the task worked. Saving
+        the steps also tests them; it does not run an accessibility audit.
       </p>
 
       <JourneyStepsEditor

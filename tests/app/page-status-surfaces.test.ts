@@ -41,6 +41,7 @@ const RUN = {
   score: null,
   mustFix: 0,
   shouldFix: 0,
+  recommendations: 0,
   pagesAudited: 1,
   evidenceStatus: 'degraded',
   durationMs: 1000,
@@ -86,5 +87,25 @@ describe('the public share page', () => {
     const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
 
     expect(html).toContain('served 503 — not usable as evidence');
+  });
+
+  it('includes recommendations in the plain-English summary', () => {
+    const report = {
+      title: 'Acme accessibility audit',
+      clientName: 'Acme',
+      createdAt: '2026-08-16T00:00:00.000Z',
+      run: { ...RUN, verdict: 'risk' as const, evidenceStatus: 'complete', recommendations: 1, needsReview: 0 },
+      pages: [{ ...ERROR_PAGE, evidenceStatus: 'complete', statusCode: undefined, findings: [{
+        code: 'landmark-one-main',
+        severity: 'minor',
+        wcagCriteria: [],
+        fixAnyOf: [],
+        fixAllOf: [],
+      }] }],
+    } as unknown as SharedReport;
+
+    const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
+
+    expect(html).toContain('0 confirmed issues, 1 recommendation, and 0 items need a person to check');
   });
 });

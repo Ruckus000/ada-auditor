@@ -18,6 +18,7 @@ import { isActionAllowed } from '../../../../domain/policy';
 import { inertWhen } from '../../lib/inert-button';
 import { JOURNEY_STEPS_SAVED } from '../../lib/journey-events';
 import { FONT, T } from '../../lib/tokens';
+import { describePlatformError } from '../../lib/api-error-copy';
 
 /**
  * Correct what a journey walks, from the screen that shows it.
@@ -266,11 +267,7 @@ export function JourneyStepsEditor({
 
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(
-          (parsed?.error && MESSAGES[parsed.error]) ??
-            parsed?.error ??
-            `That did not save (${response.status}).`,
-        );
+        setError(MESSAGES[parsed?.error ?? ''] ?? describePlatformError(parsed?.error, response.status));
         return;
       }
 
@@ -357,7 +354,7 @@ export function JourneyStepsEditor({
                   Step {index + 1}
                 </legend>
 
-                <Field id={id('type')} label="Does">
+                <Field id={id('type')} label="Step">
                   <select
                     id={id('type')}
                     value={draft.type}
@@ -381,7 +378,7 @@ export function JourneyStepsEditor({
                   </select>
                 </Field>
 
-                <Field id={id('action')} label="Action">
+                <Field id={id('action')} label="What this action does">
                   <select
                     id={id('action')}
                     value={draft.action}
@@ -398,7 +395,7 @@ export function JourneyStepsEditor({
                 </Field>
 
                 {draft.type === 'goto' ? (
-                  <Field id={id('path')} label="Path">
+                  <Field id={id('path')} label="Page address">
                     <input
                       id={id('path')}
                       value={draft.path}
@@ -411,7 +408,7 @@ export function JourneyStepsEditor({
                 {draft.type === 'click' || draft.type === 'fill' || draft.type === 'expect' ? (
                   <Field
                     id={id('selector')}
-                    label={draft.type === 'expect' ? 'Selector (optional)' : 'Selector'}
+                    label={draft.type === 'expect' ? 'Element selector (optional, advanced)' : 'Element selector (advanced)'}
                   >
                     <input
                       id={id('selector')}
@@ -446,8 +443,8 @@ export function JourneyStepsEditor({
                         }
                         style={inputStyle}
                       >
-                        <option value="value">A plain value</option>
-                        <option value="credential">A stored credential</option>
+                        <option value="value">Text</option>
+                        <option value="credential">Saved login details</option>
                       </select>
                     </Field>
 
@@ -611,8 +608,8 @@ export function JourneyStepsEditor({
 
       {noArrivalCheck ? (
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-          This journey never says it arrived. Without a “check it arrived” step, a login that
-          silently fails is audited as though it worked — and a login page scores well.
+          Add a success check to confirm sign-in worked. Otherwise, the audit may check the
+          sign-in page instead.
         </p>
       ) : null}
 
@@ -739,10 +736,7 @@ function CredentialValues({
 
       if (!response.ok) {
         const parsed = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(
-          (parsed?.error && CREDENTIAL_MESSAGES[parsed.error]) ??
-            `That did not save (${response.status}).`,
-        );
+        setError(CREDENTIAL_MESSAGES[parsed?.error ?? ''] ?? describePlatformError(parsed?.error, response.status));
         return;
       }
 
@@ -765,19 +759,19 @@ function CredentialValues({
       <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
           {presence === undefined
-            ? `credential ${credentialRef}`
+            ? `Saved login: ${credentialRef} — status not checked`
             : presence === null
-              ? `credential ${credentialRef} — nothing stored for this client`
-              : `credential ${credentialRef} — stored for this client · updated ${presence.updatedAt.slice(0, 10)}`}
+            ? `Saved login: ${credentialRef} — nothing stored for this client`
+              : `Saved login: ${credentialRef} — ready · updated ${presence.updatedAt.slice(0, 10)}`}
         </span>
         <button
           type="button"
           onClick={toggle}
           aria-expanded={open}
-          aria-label={`${open ? 'Close values' : 'Set values'} for ${credentialRef}`}
+          aria-label={`${open ? 'Close login details' : 'Add login details'} for ${credentialRef}`}
           style={smallButtonStyle}
         >
-          {open ? 'Close values' : 'Set values'}
+          {open ? 'Close login details' : 'Add login details'}
         </button>
       </span>
 
@@ -817,7 +811,7 @@ function CredentialValues({
             aria-describedby={!user || !pass ? `${idPrefix}-needs-both` : undefined}
             style={busy || !user || !pass ? inertSmallButtonStyle : smallButtonStyle}
           >
-            {busy ? 'Saving…' : 'Save values'}
+            {busy ? 'Saving…' : 'Save login details'}
           </button>
           {!user || !pass ? (
             <span

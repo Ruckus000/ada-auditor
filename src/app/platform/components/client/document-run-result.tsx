@@ -27,7 +27,7 @@ export function DocumentRunResult({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }} role="status">
       <p style={{ ...noteStyle, color: T.ink }}>
-        {outcome.converted ? 'Delivered a tagged PDF.' : 'Read the document.'}
+        {outcome.converted ? 'Created a new PDF.' : 'Document checked.'}
         {outcome.summary.title === 'transcribed'
           ? ' The title was transcribed from the document’s own first heading.'
           : ''}

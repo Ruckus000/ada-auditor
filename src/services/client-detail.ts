@@ -107,6 +107,7 @@ export type RunSummary = {
   score: number | null;
   mustFix: number;
   shouldFix: number;
+  recommendations: number;
   /**
    * The human-review queue. Rendered on the client's shared report as well as
    * the operator's screens, which is why it is counted once, in

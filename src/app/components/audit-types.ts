@@ -2,7 +2,7 @@
 import type { JourneyTruncationReason } from '../../domain/run-limits';
 
 export type Verdict = 'pass' | 'fail' | 'inconclusive';
-export type Severity = 'critical' | 'major' | 'minor' | 'advisory';
+export type Severity = 'critical' | 'major' | 'minor' | 'needs-review' | 'advisory';
 
 export interface Finding {
   code: string;
@@ -12,6 +12,9 @@ export interface Finding {
    * `StoredFinding` records, which persist only code/severity/source.
    */
   message?: string;
+  title?: string;
+  wcagCriteria?: string[];
+  conformanceLevel?: string;
   source: 'deterministic' | 'ai-advisory';
   gateable?: boolean;
   confidence?: number;
@@ -97,7 +100,7 @@ export interface AuditResult {
   simulated?: boolean;
 }
 
-const SEVERITIES: Severity[] = ['critical', 'major', 'minor', 'advisory'];
+const SEVERITIES: Severity[] = ['critical', 'major', 'minor', 'needs-review', 'advisory'];
 
 function toFinding(value: unknown): Finding | null {
   if (!value || typeof value !== 'object') return null;
@@ -113,6 +116,11 @@ function toFinding(value: unknown): Finding | null {
   return {
     code: raw.code,
     message: typeof raw.message === 'string' ? raw.message : undefined,
+    title: typeof raw.title === 'string' ? raw.title : undefined,
+    wcagCriteria: Array.isArray(raw.wcagCriteria)
+      ? raw.wcagCriteria.filter((criterion): criterion is string => typeof criterion === 'string')
+      : undefined,
+    conformanceLevel: typeof raw.conformanceLevel === 'string' ? raw.conformanceLevel : undefined,
     severity,
     source,
     gateable: typeof raw.gateable === 'boolean' ? raw.gateable : source === 'deterministic',
@@ -291,7 +299,17 @@ export function countBySource(findings: Finding[]) {
   return {
     deterministic,
     advisory,
-    blocking: deterministic.filter((f) => f.severity === 'critical'),
+    blocking: deterministic.filter(isBlockingFinding),
+    needsReview: deterministic.filter((f) => f.severity === 'needs-review'),
     total: findings.length,
   };
+}
+
+/** The same conformance-based gate the API uses; impact labels never decide it. */
+export function isBlockingFinding(finding: Finding): boolean {
+  return (
+    finding.source === 'deterministic' &&
+    finding.severity !== 'needs-review' &&
+    (finding.conformanceLevel === 'A' || finding.conformanceLevel === 'AA')
+  );
 }

@@ -107,9 +107,9 @@ describe('renderRunReport — untrusted content', () => {
 
 describe('renderRunReport — content', () => {
   it('states the verdict in language a client can act on', () => {
-    expect(renderRunReport(run({ ciStatus: 'fail' }))).toContain('Does not conform');
+    expect(renderRunReport(run({ ciStatus: 'fail' }))).toContain('Confirmed accessibility issues found');
     expect(renderRunReport(run({ ciStatus: 'pass', findings: [] }))).toContain(
-      'No blocking issues found',
+      'No confirmed Level A or AA issues found',
     );
     expect(renderRunReport(run({ ciStatus: 'inconclusive', findings: [] }))).toContain(
       'Inconclusive',
@@ -132,14 +132,14 @@ describe('renderRunReport — content', () => {
     );
 
     expect(html).not.toContain('No blocking issues found');
-    expect(html).toContain('Issues found, none blocking');
+    expect(html).toContain('Items need attention, none blocking');
   });
 
   it('still reads clean when a run really did find nothing', () => {
     // The other half, so the fix above cannot be "always say issues were
     // found" — a genuinely clean run must keep saying so.
     expect(renderRunReport(run({ ciStatus: 'pass', findings: [] }))).toContain(
-      'No blocking issues found',
+      'No confirmed Level A or AA issues found',
     );
   });
 
@@ -174,7 +174,7 @@ describe('renderRunReport — content', () => {
     expect(html.indexOf('major-rule')).toBeLessThan(html.indexOf('minor-rule'));
   });
 
-  it('counts only deterministic criticals as blocking', () => {
+  it('counts only deterministic Level A/AA findings as blocking', () => {
     const html = renderRunReport(
       run({
         findings: [
@@ -184,7 +184,7 @@ describe('renderRunReport — content', () => {
       }),
     );
 
-    expect(html).toContain('<strong>1</strong> blocking');
+    expect(html).toContain('<strong>1</strong> confirmed Level A/AA');
   });
 
   it('says plainly that automated testing is not a conformance claim', () => {
