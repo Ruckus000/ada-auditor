@@ -2310,6 +2310,79 @@ describe('platform hydration', () => {
   );
 
   it.runIf(documentToolchain.available)(
+    'runs a document that was uploaded, by asking for it again',
+    async () => {
+      requireCurrentStages();
+
+      /**
+       * The defect this closes cost a real pilot its afternoon.
+       *
+       * An uploaded document records the filename it arrived under as its
+       * address, and every run control posted that address to a route that
+       * fetches. The zod URL pipe refused it before any fetch, and the screen
+       * said "the request was not in the shape the server accepts, reload the
+       * page and try again" — advice that reproduces it exactly. Three
+       * documents a person had spent a morning describing had to be run
+       * through the API by hand.
+       *
+       * The proof is not that a file dialog opens. It is that the run reaches
+       * the pipeline and comes back with a verdict ABOUT THE DOCUMENT — this
+       * fixture is a Chromium print, so the honest answer is that it has no
+       * structure tree — rather than a complaint about the request's shape.
+       */
+      const page = await openAuthenticatedPage();
+      try {
+        const pdf = await renderPdf('<h1>Re-supplied fixture</h1><p>An untagged print.</p>');
+        await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        const panel = page.getByRole('region', { name: 'Documents' });
+        await panel.locator('details').first().evaluate((details) => { (details as HTMLDetailsElement).open = true; });
+        await page.getByLabel('Or inspect a PDF you already have').setInputFiles({
+          name: 'resupplied-fixture.pdf',
+          mimeType: 'application/pdf',
+          buffer: pdf,
+        });
+        await expect.poll(() => panel.innerText(), { timeout: 60_000 }).toContain('Not tagged');
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        const row = page.getByRole('row').filter({ hasText: 'resupplied-fixture.pdf' }).first();
+        await row.getByRole('link', { name: /^(Answer \d+ item|Open)/ }).click();
+        await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+
+        // Said before the button is pressed, and it names the file, so the
+        // dialog is expected rather than a surprise.
+        await expect
+          .poll(() => page.locator('main').innerText(), { timeout: 15_000 })
+          .toContain('asks for resupplied-fixture.pdf again');
+
+        // The dialog belongs to the click. The input is never in the page —
+        // nothing is rendered per row — so this is the event, not a locator.
+        const chooser = page.waitForEvent('filechooser');
+        await page.getByRole('button', { name: 'Apply answers and run' }).click();
+        await (await chooser).setFiles({
+          name: 'resupplied-fixture.pdf',
+          mimeType: 'application/pdf',
+          buffer: pdf,
+        });
+
+        await expect
+          .poll(() => page.locator('main').innerText(), { timeout: 120_000 })
+          .toMatch(/structure tree|Delivered a tagged PDF/);
+        // The sentence that used to be the only answer this screen could give.
+        expect(await page.locator('main').innerText()).not.toContain('not in the shape the server accepts');
+        await expect
+          .poll(() => axeViolations(page), { ...AXE_SETTLE, message: 'the workbench after running an upload' })
+          .toBe('');
+      } finally {
+        await page.close();
+      }
+    },
+    180_000,
+  );
+
+  it.runIf(documentToolchain.available)(
     'the one-off screen reads a file, takes a language, and answers honestly',
     async () => {
       requireCurrentStages();

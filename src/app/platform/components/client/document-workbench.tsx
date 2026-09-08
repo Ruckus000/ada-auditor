@@ -17,15 +17,20 @@ import { FONT, T } from '../../lib/tokens';
 import { Pill } from '../ui';
 import { clientHref } from '../../lib/params';
 import {
+  ACCEPT_PDF,
+  ACCEPT_WORD,
   buttonStyle,
   conversionOutcome,
   disabledStyle,
   inputStyle,
+  isFetchable,
   LanguageChoice,
   noteStyle,
   pathOf,
   pdfNameFor,
+  pickFile,
   refusalMessage,
+  uploadForConversion,
   type ActionOutcome,
   type Summary,
 } from './document-shared';
@@ -188,12 +193,42 @@ export function DocumentWorkbench({
 
   async function applyAndRun(): Promise<void> {
     if (!(await save())) return;
+
+    // The ordinary run: a paired PDF converts its source; anything else
+    // repairs or converts itself. Declared answers on record for these
+    // bytes are what the run consumes, either way.
+    const url = document.sourceUrl ?? document.url;
+
+    // A document nobody can fetch has to be handed over. Asked for BEFORE the
+    // busy state, so a person who closes the dialog leaves the screen as they
+    // found it rather than looking at a button stuck on "Running…".
+    //
+    // The bytes are not checked against the reading here. A file that is not
+    // the one that was answered carries no answers to this run — the route
+    // matches them to the bytes it receives — and the row then reads `stale`,
+    // in those words, on this screen and in the inventory. Re-running with the
+    // right file brings the answers back, because they are keyed to their own
+    // hash and nothing is deleted. If that ever bites in practice, the check
+    // is `sha256Hex` against `reading.inputSha256`, which this screen already
+    // has.
+    let file: File | null = null;
+    if (!isFetchable(url)) {
+      file = await pickFile(document.kind === 'pdf' ? ACCEPT_PDF : ACCEPT_WORD);
+      if (file === null) return;
+    }
+
+    // The last run's download is about to be replaced; without this its blob
+    // is held until the tab closes.
+    if (run.state === 'done' && run.href) URL.revokeObjectURL(run.href);
     setRun({ state: 'running' });
+
+    if (file !== null) {
+      setRun(await uploadForConversion(documentsPath, file, document.id));
+      router.refresh();
+      return;
+    }
+
     try {
-      // The ordinary run: a paired PDF converts its source; anything else
-      // repairs or converts itself. Declared answers on record for these
-      // bytes are what the run consumes.
-      const url = document.sourceUrl ?? document.url;
       const response = await fetch(`${documentsPath}/convert`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -510,6 +545,17 @@ export function DocumentWorkbench({
           {saved ? <span role="status" style={{ ...noteStyle, color: T.accent }}>{saved}</span> : null}
           {saveError ? <span role="alert" style={{ ...noteStyle, color: T.fail }}>{saveError}</span> : null}
         </div>
+
+        {/* Said before the button is pressed, because a file dialog that
+            arrives unannounced reads as a bug. Named, because a person with a
+            folder of these needs to know which one this row is. */}
+        {isFetchable(document.sourceUrl ?? document.url) ? null : (
+          <p style={noteStyle}>
+            This document was uploaded, so running it asks for{' '}
+            {pathOf(document.sourceUrl ?? document.url)} again. Nothing is kept between runs —
+            the file stays yours.
+          </p>
+        )}
       </form>
       </DocumentReader>
 
