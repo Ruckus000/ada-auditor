@@ -293,8 +293,20 @@ export function DocumentWorkbench({
       aria-labelledby={headingId}
       style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 'clamp(14px,1.8vw,28px)', fontFamily: FONT.sans }}
     >
+      {/* A pointer target of its own, rather than bare text at 12.5px.
+          Measured, not guessed: axe reported this link as 82.4 × 20 of
+          UNOBSCURED space — it sits under the sticky header, which clips the
+          top of it, so a box that is nominally tall enough still is not. The
+          padding buys back more than the header takes, and the paragraph keeps
+          its own margin so the link starts below the overlap rather than
+          inside it. */}
       <p style={noteStyle}>
-        <a href={inventoryHref}>← Documents</a>
+        <a
+          href={inventoryHref}
+          style={{ display: 'inline-flex', alignItems: 'center', minHeight: 24, padding: '8px 0' }}
+        >
+          ← Documents
+        </a>
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
         <h2 id={headingId} style={{ margin: 0, fontSize: 15, fontWeight: 700, fontFamily: FONT.mono, color: T.ink }}>
