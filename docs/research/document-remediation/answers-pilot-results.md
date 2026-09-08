@@ -51,8 +51,9 @@ last two rows from the delivered bytes.
 | of the four, compliant veraPDF verdict after the run | **3 of 4** — n07, n50, r27; n35 fails `7.1-9` | ≥ 3, falsified < 3 | **held** |
 | real-corpus conformance | 31/78 → 34/78 | ≥ 34/78 | **held** |
 | language declarations made | 7 of 7 | 7 | — |
-| language documents whose 7.2-24/33/34 clauses all cleared | not measured — see the correction | 7 | **not testable on this data** |
-| language documents whose conformance changed | not measured — see the correction | 0 | **not testable on this data** |
+| language documents whose 7.2-24/33/34 clauses all cleared | **7 of 7** (re-run clean, 2026-09-08) | 7 | **held** |
+| … and no other clause moved | **1 of 7** — six also lost other natural-language clauses | 7 | **falsified** |
+| language documents whose conformance changed | **0 of 7** | 0 | **held** |
 | invented claims (qpdf read of every delivered `/Alt`) | **0** across all four | 0 | **held** |
 | drift (`contentChanges` outside the declared deltas) | **0** — every run passed the gate | 0 | **held** |
 
@@ -95,16 +96,13 @@ the crop decision and the reason crops stay deferred.
 
 ## The seven language documents
 
-Each of the seven has a language on record, all four hints behaved as
-`language-hint-results.md` predicted (fired on n05, n23, r06 and r10; silent on
-n22, n30 and r14), and **none of the seven was re-run**. Prediction 3 asked
-what a language declaration alone does to `7.2-24/33/34` and to conformance,
-and these seven can no longer answer it: they carry 57 figure descriptions and
-a set of decided and requested items as well as a language, so any change in
-their clauses has more than one cause. Re-running them would produce numbers
-that look like an answer and are not one.
-
-What is on record for them, as counts:
+On the first sitting each of the seven got a language, and all four hints
+behaved as `language-hint-results.md` predicted (fired on n05, n23, r06 and
+r10; silent on n22, n30 and r14). But they also got 57 figure descriptions and
+a set of decided and requested items, so no clause that moved on them would
+have had a single cause. **Prediction 3 was re-run on a clean client instead** —
+see the next section; the counts below are the first sitting's, kept because
+they are why it had to be.
 
 | document | figure descriptions | language | other dispositions |
 |---|---:|---|---|
@@ -115,6 +113,59 @@ What is on record for them, as counts:
 | r06 | 7 | declared | fonts, untagged, pdfua |
 | r10 | 1 | declared | fonts, untagged, pdfua |
 | r14 | 0 | declared | untagged, pdfua |
+
+## Prediction 3, measured clean (2026-09-08)
+
+Client `language-only-2026-09-08`: the same seven PDFs, **nothing declared but
+a language**. Seven answers on record, all `language`, all `en`, all attributed
+to one operator — nothing else, which is the whole point of the second client.
+
+Each document was repaired once with nothing declared, and that delivery is the
+baseline (`prediction-3-baseline.json`); then repaired again with the language
+on record (`prediction-3-after.json`). Same bytes, same build, same route, one
+form field different — so whatever moved, the declaration moved it.
+
+| document | failing clauses | clauses removed | conformance |
+|---|---|---|---|
+| n05 | 15 → 9 | `7.2-2 7.2-21 7.2-22 7.2-24 7.2-33 7.2-34` | false → false |
+| n22 | 9 → 6 | `7.2-25 7.2-33 7.2-34` | false → false |
+| n23 | 6 → 3 | `7.2-2 7.2-33 7.2-34` | false → false |
+| n30 | 6 → 3 | `7.2-24 7.2-33 7.2-34` | false → false |
+| r06 | 12 → 7 | `7.2-2 7.2-22 7.2-24 7.2-33 7.2-34` | false → false |
+| r10 | 8 → 3 | `7.2-2 7.2-22 7.2-24 7.2-33 7.2-34` | false → false |
+| r14 | 5 → 2 | `7.2-2 7.2-33 7.2-34` | false → false |
+
+**61 failing clauses became 33.** Nothing was added anywhere, and no document
+changed verdict — every one still fails on things a language was never going to
+touch, `7.1-3` untagged content above all.
+
+**Every clause that moved is the same sentence about a different carrier.**
+Read from veraPDF's own rule descriptions on an un-languaged delivery, not from
+memory:
+
+| clause | veraPDF's words |
+|---|---|
+| `7.2-2` | Natural language in the Outline entries shall be determined |
+| `7.2-21` | Natural language for text in ActualText attribute shall be determined |
+| `7.2-22` | Natural language for text in Alt attribute shall be determined |
+| `7.2-24` | Natural language in the Contents entry for annotations shall be determined |
+| `7.2-25` | Natural language in the TU key for form fields shall be determined |
+| `7.2-33` | Natural language for document metadata shall be determined |
+| `7.2-34` | Natural language for text in page content shall be determined |
+
+So the prediction's three were not wrong, they were a sample of one: the `[V]`
+note they came from recorded a single document that happened to carry only
+those three carriers. A document with an outline fails `7.2-2` as well; one
+with alt text fails `7.2-22`; one with a form fails `7.2-25`. **The failed
+check counts are the scale of it** — on n05 the page-content clause alone
+failed 32,399 times, and the outline clause 380, all cleared by one two-letter
+answer.
+
+What this is worth saying plainly: **the cheapest answer in the product is also
+its largest single lever on clause count**, and it still greens nothing. Both
+halves matter. A person types two letters and 28 of 61 clause failures go; the
+seven documents remain non-conformant, because untagged page content is the
+producer's to fix and no answer in this system invents it.
 
 Two shapes in that set are worth a second look before it is used for anything:
 n05 holds 29 descriptions with 15 distinct texts and n30 holds 18 with 7, where
@@ -164,7 +215,14 @@ documents the pilot had not asked for.
   the writing from above and are far inside fifteen minutes. The re-runs are
   excluded because they were performed later, mechanically, and would measure
   the pipeline rather than the person.
-- **Kind: scope — prediction 3 is not testable on this data.** The
+- **Kind: key — prediction 3 named three clauses and there are seven.** Its
+  three came from the `[V]` note in `document-remediation.ts`, which recorded
+  one real municipal PDF failing exactly `7.2-24`, `7.2-33` and `7.2-34` for
+  want of a language. That was one document, and the enumeration generalised
+  from it. Measured over seven, a declaration clears **seven distinct
+  natural-language clauses** — the full family below. The prediction's
+  direction and its safety half were right; its list was short.
+- **Kind: scope — prediction 3 was not testable on the FIRST sitting.** The
   registered design was a language and nothing else on the seven floor
   documents. In the event the person answered all eleven documents: 102
   answers, 65 figure descriptions, and dispositions on font, untagged,
@@ -179,9 +237,13 @@ documents the pilot had not asked for.
 
 ## Predictions scorecard
 
-Held: 4 (conformance 3 of 4; corpus 34/78; invented claims 0; drift 0; and the
-answer cost, under its own measurement correction). Not testable on this data:
-2 (both halves of prediction 3). Falsified: 0.
+Held: 6 (conformance 3 of 4; corpus 34/78; invented claims 0; drift 0; the
+answer cost, under its own measurement correction; and both halves of
+prediction 3 that were about effect and safety — every `7.2-24/33/34` cleared
+on all seven, no verdict changed). **Falsified: 1** — prediction 3's "and no
+other clause", which held on one document of seven. It was falsified by the
+declaration doing MORE than was claimed for it, entirely within the
+natural-language family, with nothing added anywhere.
 
 ## What this decides
 
