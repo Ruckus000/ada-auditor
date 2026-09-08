@@ -84,11 +84,12 @@ async function earnUaIdentifier(
     return verdict;
   }
 
-  // The stamped file is a SECOND Finish pass, and it is the one that ships. The
+  // The stamped file is a LATER Finish pass, and it is the one that ships. The
   // content gate that ran on the unstamped file proves nothing about it, so it
   // is proven here instead — otherwise the only documents delivered without a
   // fidelity check would be the ones certified as conformant. Applies to both
-  // lanes: the Word path has no `contentChanges` gate of its own at all.
+  // lanes: the Word path gates only when a person declared something, so a
+  // conversion nobody answered reaches this with no other gate behind it.
   const restamped = await inspectDocument(staged, stageOptions);
   const moved = restamped.ok ? contentChanges(unstamped, restamped.value) : ['unreadable'];
   if (moved.length > 0) {
@@ -306,16 +307,35 @@ export async function remediateWordBytes(
     if (alt.length > 0 || languageDeclared) {
       // One more pass over the converted file, writing what a person said,
       // then read back and held to the gate: the declared deltas, nothing else.
-      const declared = await finishDocument({ ...finishRequest, claimUa1: false }, stageOptions);
+      //
+      // **Staged, never in place.** This pass used to read and write `output`,
+      // and `Finish` holds its input open while PDFBox resolves objects lazily,
+      // so the save truncated the file it was still reading: the stage exited
+      // 0, the result still parsed, and the reading came back degraded in
+      // whichever fields happened to be resolved after the truncation. Every
+      // declared description on a Word document was refused that way, with a
+      // `content-changed` verdict that described the damage and not the cause.
+      // `finishDocument` now refuses the aliasing outright; this is the caller
+      // holding up its end. Same shape as the identifier pass below.
+      const declaredPath = `${output.replace(/\.pdf$/i, '')}-declared.pdf`;
+      const declared = await finishDocument(
+        { ...finishRequest, outputPath: declaredPath, claimUa1: false },
+        stageOptions,
+      );
       if (!declared.ok) {
         logWarn('document_remediation_failed', { requestId, failure: declared.failure.kind, step: 'declare' });
+        await rm(declaredPath, { force: true });
         return {
           ok: false,
           refusal: { status: 422, error: 'remediation_failed', detail: `${declared.failure.kind}/declare` },
         };
       }
-      const after = await inspectDocument(output, stageOptions);
+      // The staged file is what the gate judges and what would ship, so it is
+      // also what is read. Reading `output` here would have gated the file
+      // this pass replaced rather than the one it wrote.
+      const after = await inspectDocument(declaredPath, stageOptions);
       if (!after.ok) {
+        await rm(declaredPath, { force: true });
         return {
           ok: false,
           refusal: { status: 422, error: 'remediation_failed', detail: `${after.failure.kind}/verify` },
@@ -324,11 +344,15 @@ export async function remediateWordBytes(
       const changed = contentChanges(expected.structure, after.value);
       if (changed.length > 0) {
         logWarn('document_repair_altered_content', { requestId, fields: changed });
+        // The converted file is still intact, which is the other half of what
+        // staging buys: a refusal here used to destroy its own input.
+        await rm(declaredPath, { force: true });
         return {
           ok: false,
           refusal: { status: 422, error: 'remediation_failed', detail: 'content-changed' },
         };
       }
+      await rename(declaredPath, output);
       structure = after.value;
     }
 

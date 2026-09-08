@@ -1,4 +1,5 @@
 import { rm, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 import { languageTagSchema } from '../../domain/document-structure';
 import { runWritingStage, type StageOptions, type StageOutcome } from './stage';
@@ -133,6 +134,25 @@ export async function finishDocument(
   request: FinishRequest,
   options: StageOptions = {},
 ): Promise<FinishOutcome> {
+  // Refused before anything is written, including the sidecars.
+  //
+  // `Finish` opens its input with PDFBox's `Loader.loadPDF(File)`, which keeps
+  // the file open and resolves indirect objects lazily, and saves inside that
+  // same scope. Given one path for both, the save truncates the file the parser
+  // is still reading: the JVM exits 0, the result still parses, and the content
+  // comes back quietly degraded — which is how the conversion lane refused
+  // every declared description a person ever wrote for a Word document, with a
+  // `content-changed` verdict that named the symptom three layers from here.
+  //
+  // Resolved rather than compared as strings, because `a/../same.pdf` and
+  // `./same.pdf` are one file and the string form is the caller's convenience.
+  if (resolve(request.inputPath) === resolve(request.outputPath)) {
+    return {
+      ok: false,
+      failure: { kind: 'in-place', stage: 'Finish', path: resolve(request.outputPath) },
+    };
+  }
+
   // The title travels in a file, never on the command line: it is document
   // content, and a process argument list is readable by anything else on the
   // machine. Written beside the document it describes, in a directory the

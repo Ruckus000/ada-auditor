@@ -1687,6 +1687,32 @@ Read this before claiming something works.
   reading `w19` was planted to demand and the verifier had never learned;
   it is hand-run (`README.md`, "Adding a document"), which is how that drift
   survived the commit that introduced it.
+  **No writing stage may write over the file it reads.** (2026-09-08.)
+  `finishDocument` refuses `resolve(inputPath) === resolve(outputPath)` with
+  `kind: 'in-place'`, before the sidecars are written and before the JVM
+  starts, and `runWritingStage` now logs a non-empty `stderr` even on a zero
+  exit (`document_stage_warned`). Both exist because the conversion lane ran
+  its declaration pass in place: `Finish` holds its input open while PDFBox
+  resolves objects lazily, so `save` truncated the file the parser was still
+  reading — the stage exited 0, the result still parsed, and the reading came
+  back degraded in whatever had not been resolved yet. Every Word document a
+  person described was refused `content-changed`, a verdict naming the damage
+  and not the cause, while PDFBox printed "you are overwriting the existing
+  file … this will produce a corrupted file if you're also reading from it"
+  into a stream the runner discarded. The lane now stages to
+  `<output>-declared.pdf` and renames on success, so a refusal also stops
+  destroying its own input. `[V]` The pilot's three Word documents, refused
+  before, deliver after: n50 and r27 conformant, n35 closed on `7.1-9`, every
+  delivered `/Alt` one the person declared or the source carried, none
+  invented. **The gate and the model were both right** — `textChars` is page
+  text (`Inspect.java:449-453`) and `StructText.of`'s Alt short-circuit
+  applies only to the element itself, so an Alt write reaches exactly the two
+  fields `applyDeclarations` models. The reason this lived for a week is that
+  **no test paired a Word source with a description**: every answers case
+  supplied a PDF, every Word case supplied no answers, and of 154 corpus keys
+  the only two answer sidecars were both on the same PDF. `w22-answers-applied-word`
+  is the Word half, and `soffice-remediate-route.test.ts` now drives a real
+  conversion with a real description.
 
 ## Agent behavior
 

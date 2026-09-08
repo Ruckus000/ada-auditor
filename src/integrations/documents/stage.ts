@@ -108,7 +108,15 @@ export type StageFailure =
   /** The JVM ran and the stage refused, crashed, or was killed on timeout. */
   | { kind: 'failed'; stage: string; exitCode: number | null; stderr: string; timedOut: boolean }
   /** The stage exited 0 and printed something this contract does not accept. */
-  | { kind: 'invalid-output'; stage: string; detail: string };
+  | { kind: 'invalid-output'; stage: string; detail: string }
+  /**
+   * A writing stage was asked to write over the file it reads. Refused before
+   * the JVM starts, because the damage is silent: PDFBox holds the input open
+   * and resolves objects lazily, so saving to the same path truncates the
+   * source under the parser, and the stage still exits 0 with a plausible
+   * file. See `runWritingStage`.
+   */
+  | { kind: 'in-place'; stage: string; path: string };
 
 export type StageResult<T> = { ok: true; value: T } | { ok: false; failure: StageFailure };
 
@@ -224,7 +232,7 @@ async function spawnStage(
   stage: string,
   args: string[],
   options: StageOptions,
-): Promise<{ ok: true; stdout: string } | { ok: false; failure: StageFailure }> {
+): Promise<{ ok: true; stdout: string; stderr: string } | { ok: false; failure: StageFailure }> {
   const runtime = options.runtime ?? resolveJavaRuntime({ root: options.root, env: options.env });
 
   if (!runtime.available) {
@@ -243,7 +251,7 @@ async function spawnStage(
         env: childEnv(options.env ?? process.env),
       },
     );
-    return { ok: true, stdout: result.stdout };
+    return { ok: true, stdout: result.stdout, stderr: result.stderr };
   } catch (error) {
     // `execFile` rejects with the exit code, the signal, and whatever the
     // process managed to write. A timeout arrives as a kill signal rather than
@@ -332,6 +340,15 @@ export async function runStage<T>(
  * image dropped out of the structure tree. `inspectDocument` before and after,
  * compared with `structuralChanges` in `domain/document-structure.ts`, is what
  * turns "exited 0" into "changed only what it said it would".
+ *
+ * **A stage's warnings are kept even on success.** A writing stage prints
+ * nothing when it works, so stderr used to be dropped along with stdout on a
+ * zero exit. PDFBox spends that stream saying things like "you are overwriting
+ * the existing file … this will produce a corrupted file if you're also reading
+ * from it" — which it printed on every answered Word conversion for a week
+ * while the damage surfaced as an unexplained fidelity refusal three layers
+ * away. Exit 0 is the weakest guarantee this kind of stage gives; what it said
+ * about its own output is the next one, and it costs a log line.
  */
 export async function runWritingStage(
   stage: string,
@@ -339,5 +356,16 @@ export async function runWritingStage(
   options: StageOptions = {},
 ): Promise<StageOutcome> {
   const spawned = await spawnStage(stage, args, options);
-  return spawned.ok ? { ok: true } : { ok: false, failure: spawned.failure };
+  if (!spawned.ok) return { ok: false, failure: spawned.failure };
+
+  // The FIRST line, capped. Two reasons, and the second is the important one:
+  // a stage that warns per page would otherwise put a document's worth of text
+  // in the log, and a warning is written by a library that has the document
+  // open — a font name, an object, sometimes a string out of the file. This log
+  // exists to name a defect in the pipeline, never to describe the document, so
+  // it takes the one line that carries the diagnosis and leaves the rest.
+  const warned = spawned.stderr.trim().split('\n')[0]?.trim() ?? '';
+  if (warned !== '') logWarn('document_stage_warned', { stage, detail: warned.slice(0, 200) });
+
+  return { ok: true };
 }

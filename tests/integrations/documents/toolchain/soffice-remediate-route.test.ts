@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,12 +55,24 @@ if (!java.available) {
  * preserve, and a test asserting preservation against it passes while proving
  * nothing. That mistake has been made twice in this project.
  */
+/**
+ * One pixel, so the seed carries a figure with nothing to describe it.
+ *
+ * The image needs no caption and no `svg:desc`: an undescribed figure is the
+ * whole point, because it is what raises the ask a person answers. A caption
+ * would let `deriveAltFromCaptions` transcribe one and the figure would arrive
+ * already described.
+ */
+const PIXEL_PNG =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
 const SEED = `<?xml version="1.0" encoding="UTF-8"?>
-<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">
 <office:meta><dc:title>Planning Committee Agenda</dc:title></office:meta>
 <office:body><office:text>
 <text:h text:outline-level="1">Planning Committee Agenda</text:h>
 <text:p>Apologies for absence were received.</text:p>
+<text:p><draw:frame draw:name="plan" svg:width="2cm" svg:height="2cm" text:anchor-type="as-char"><draw:image><office:binary-data>${PIXEL_PNG}</office:binary-data></draw:image></draw:frame></text:p>
 <text:h text:outline-level="2">Declarations of Interest</text:h>
 </office:text></office:body></office:document>`;
 
@@ -89,9 +102,10 @@ describe.skipIf(skip)('POST /api/documents/remediate, end to end', () => {
     if (dir) await rm(dir, { recursive: true, force: true });
   });
 
-  function upload(bytes: Uint8Array, filename = 'agenda.docx'): Request {
+  function upload(bytes: Uint8Array, filename = 'agenda.docx', answers?: unknown): Request {
     const form = new FormData();
     form.set('file', new File([bytes as BlobPart], filename));
+    if (answers !== undefined) form.set('answers', JSON.stringify(answers));
     return new Request('http://localhost:3000/api/documents/remediate', {
       method: 'POST',
       body: form,
@@ -159,6 +173,64 @@ describe.skipIf(skip)('POST /api/documents/remediate, end to end', () => {
     const claimsUa1 = readable.includes('pdfuaid:part');
 
     expect(claimsUa1).toBe(summary.conformance.compliant === true);
+  }, 180_000);
+
+  /**
+   * The case the answers channel never had.
+   *
+   * Every declared-answers test in this repository supplied a PDF, and every
+   * Word test supplied no answers, so the conversion lane's declaration pass
+   * was run by nothing. It wrote over the file it was reading, and PDFBox
+   * resolves objects lazily, so the save truncated its own source: exit 0, a
+   * file that still parsed, a reading quietly degraded, and a `content-changed`
+   * refusal describing the damage rather than the cause. Three real documents
+   * a person had described were refused that way before anyone looked.
+   *
+   * A real conversion, a real JVM, and a real description — the only shape that
+   * could have caught it.
+   */
+  it('writes a description a person declared onto a converted Word document', async () => {
+    const answers = {
+      inputSha256: createHash('sha256').update(docx).digest('hex'),
+      figures: [
+        { ordinal: 0, type: 'Figure', page: 1, prior: 'absent', alt: 'A site plan of the mill' },
+      ],
+    };
+
+    const response = await POST(upload(docx, 'agenda.docx', answers));
+    expect(response.status).toBe(200);
+
+    const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
+    expect(summary.declared).toEqual({ figures: 1 });
+
+    // The delivered bytes, read back independently: the description is on the
+    // figure, and the document the author wrote is still the document.
+    const out = join(dir, 'declared.pdf');
+    await writeFile(out, Buffer.from(await response.arrayBuffer()));
+
+    const read = await inspectDocument(out);
+    expect(read.ok).toBe(true);
+    if (read.ok) {
+      expect(read.value.figures.map((figure) => figure.alt)).toEqual(['A site plan of the mill']);
+      expect(read.value.headings).toEqual(['H1', 'H2']);
+      expect(read.value.title).toBe('Planning Committee Agenda');
+    }
+  }, 180_000);
+
+  it('refuses a description for bytes it was not given', async () => {
+    // The preimage check, end to end: answers key to the bytes they were
+    // written for, and these are not those bytes.
+    const response = await POST(
+      upload(docx, 'agenda.docx', {
+        inputSha256: 'f'.repeat(64),
+        figures: [
+          { ordinal: 0, type: 'Figure', page: 1, prior: 'absent', alt: 'A site plan of the mill' },
+        ],
+      }),
+    );
+
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ detail: 'answer-mismatch' });
   }, 180_000);
 
   it('refuses a text file named .docx rather than converting it', async () => {
