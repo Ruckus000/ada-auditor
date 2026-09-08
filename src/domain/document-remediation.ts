@@ -1062,6 +1062,16 @@ function needsIn(provenance: ConversionProvenance): Pick<RemediationSummary, 'ne
   // transcribed a link's destination into its Contents entry, that
   // annotation too (7.2-24). The gap string beside this states the fact; the
   // item asks for the work, because nobody can act on "so none is claimed".
+  //
+  // `[V]` Three was one document's worth. Measured over seven real PDFs with
+  // a language declared and nothing else (`answers-pilot-results.md`), the
+  // same declaration clears SEVEN clauses — the four above plus the outline
+  // (7.2-2), ActualText (7.2-21), Alt (7.2-22) and form-field TU (7.2-25)
+  // carriers — because each is the same requirement about a different place
+  // text can live, and a document only fails the ones it has. Across those
+  // seven, 61 failing clauses became 33 and not one changed verdict: the
+  // cheapest answer in the product is its largest lever on clause count and
+  // still greens nothing, which is the honest shape of both facts.
   if (provenance.sourceLanguage === null) {
     // The hint rides on the ask's target and nowhere else: what the document's
     // own text reads as, for the person who has to name it. `asks` are
