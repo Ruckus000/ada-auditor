@@ -187,6 +187,30 @@ describe('renderRunReport — content', () => {
     expect(html).toContain('<strong>1</strong> confirmed Level A/AA');
   });
 
+  it('keeps both remediation lists on an item a person has to check', () => {
+    // axe's `incomplete` results become `needs-review` findings carrying BOTH
+    // lists — `anyOf` from `node.any`, `allOf` from `node.all` and `node.none`.
+    // Rendering one of them dropped the rest of what the engine said from the
+    // one artifact a client actually receives, with nothing to say anything
+    // was withheld.
+    const html = renderRunReport(
+      run({
+        findings: [
+          finding({
+            code: 'color-contrast',
+            severity: 'needs-review',
+            remediationAnyOf: ['Element has insufficient colour contrast'],
+            remediationAllOf: ['Element must have a background colour'],
+          }),
+        ],
+      }),
+    );
+
+    expect(html).toContain('What to check');
+    expect(html).toContain('Element has insufficient colour contrast');
+    expect(html).toContain('Element must have a background colour');
+  });
+
   it('says plainly that automated testing is not a conformance claim', () => {
     const html = renderRunReport(run());
 

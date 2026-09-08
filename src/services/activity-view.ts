@@ -46,7 +46,10 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export function activityActionLabel(action: string): string {
-  return ACTION_LABELS[action] ?? action;
+  // `Object.hasOwn`, not a bare lookup: `toString` and `constructor` are on
+  // every object literal's prototype, and either would put a function where
+  // this row promises a string.
+  return Object.hasOwn(ACTION_LABELS, action) ? ACTION_LABELS[action] : action;
 }
 
 export async function buildActivity(

@@ -77,4 +77,16 @@ describe('buildActivity', () => {
 
     expect((await buildActivity(deps()))[0].action).toBe('answered a document review question');
   });
+
+  it('does not read a translation off the prototype', async () => {
+    // The same rule `document-action-copy` states and tests: a lookup table
+    // written as an object literal answers `toString` with a function and
+    // `__proto__` with an object, and this row promises a string. An audit log
+    // rendering "[object Object]" where an action should be is worse than one
+    // rendering a name nobody translated.
+    for (const action of ['toString', 'constructor', '__proto__']) {
+      await platform.recordEvent({ clientId: 'acme', actor: 'Alex Reed', action });
+      expect((await buildActivity(deps()))[0].action).toBe(action);
+    }
+  });
 });

@@ -1,5 +1,6 @@
 /** Shapes the console reads back from POST /api/audit/console. */
 import type { JourneyTruncationReason } from '../../domain/run-limits';
+import { failsConformance } from '../../services/reporting';
 
 export type Verdict = 'pass' | 'fail' | 'inconclusive';
 export type Severity = 'critical' | 'major' | 'minor' | 'needs-review' | 'advisory';
@@ -305,11 +306,12 @@ export function countBySource(findings: Finding[]) {
   };
 }
 
-/** The same conformance-based gate the API uses; impact labels never decide it. */
+/**
+ * The same conformance-based gate the API uses; impact labels never decide it.
+ * Literally the same function, not a copy of it: this screen's count and the
+ * run's own verdict have to agree, and two spellings of one rule is how they
+ * stop agreeing.
+ */
 export function isBlockingFinding(finding: Finding): boolean {
-  return (
-    finding.source === 'deterministic' &&
-    finding.severity !== 'needs-review' &&
-    (finding.conformanceLevel === 'A' || finding.conformanceLevel === 'AA')
-  );
+  return failsConformance(finding);
 }
