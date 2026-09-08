@@ -39,13 +39,81 @@ const RUN = {
   createdAt: '2026-08-16T00:00:00.000Z',
   verdict: 'inconclusive' as const,
   score: null,
-  mustFix: 0,
-  shouldFix: 0,
+  // The gate makes no claim on an inconclusive run, so neither does the page.
+  confirmed: null,
+  recommendations: null,
+  needsReview: 0,
   pagesAudited: 1,
   evidenceStatus: 'degraded',
   durationMs: 1000,
   slowestPageMs: 800,
 };
+
+/**
+ * A decided run carrying the three findings that tell a count by the gate
+ * from a count by impact: `meta-viewport` (impact moderate → minor, cites
+ * wcag2aa — fails the audit), `region` (impact critical, cites nothing — a
+ * recommendation) and `color-contrast` as axe's *incomplete* result
+ * (needs-review, cites 1.4.3 — undecided, so not a failure).
+ */
+const GATED_RUN = {
+  ...RUN,
+  verdict: 'fail' as const,
+  score: 72,
+  confirmed: 1,
+  recommendations: 1,
+  needsReview: 1,
+  evidenceStatus: 'complete',
+};
+
+const GATED_PAGE = {
+  url: 'https://acme.test/',
+  route: '/',
+  title: 'Home',
+  evidenceStatus: 'complete',
+  findings: [
+    {
+      code: 'meta-viewport',
+      severity: 'minor',
+      conformanceLevel: 'AA',
+      wcagCriteria: ['1.4.4'],
+      fixAnyOf: ['Remove user-scalable=no from the viewport meta'],
+      fixAllOf: [],
+    },
+    {
+      code: 'region',
+      severity: 'critical',
+      conformanceLevel: null,
+      wcagCriteria: [],
+      fixAnyOf: ['Wrap page content in landmark regions'],
+      fixAllOf: [],
+    },
+    {
+      code: 'color-contrast',
+      severity: 'needs-review',
+      conformanceLevel: 'AA',
+      wcagCriteria: ['1.4.3'],
+      fixAnyOf: ['Check the background image behind the text'],
+      fixAllOf: ['Confirm the computed foreground colour'],
+    },
+  ],
+};
+
+/** The value under one `<dt>` label on a stats list. */
+function stat(html: string, label: string): string | undefined {
+  return html.match(new RegExp(`${label}</dt><dd[^>]*>([^<]*)</dd>`))?.[1];
+}
+
+/** The markup of one section, from its heading to the section's end. */
+function section(html: string, heading: string): string {
+  const start = html.indexOf(heading);
+  return start === -1 ? '' : html.slice(start, html.indexOf('</section>', start));
+}
+
+/** The markup of one finding's list item, by rule code. */
+function item(html: string, code: string): string {
+  return html.split('<li style="font-size:13.5px">').find((chunk) => chunk.includes(`>${code}</span>`)) ?? '';
+}
 
 const ERROR_PAGE = {
   url: 'https://acme.test/dashboard',
@@ -64,7 +132,6 @@ describe('the platform client screen', () => {
       journeyName: 'Login',
       pages: [{ ...ERROR_PAGE, findings: [] }],
       advisory: [],
-      counts: { must: 0, should: 0, nice: 0, review: 0, advisory: 0 },
     } as unknown as FindingsView;
 
     const html = renderToStaticMarkup(createElement(ClientFindings, { view }));
@@ -86,5 +153,88 @@ describe('the public share page', () => {
     const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
 
     expect(html).toContain('served 503 — not usable as evidence');
+  });
+
+  /**
+   * The count a client reads under "Must fix" is the gate's count. It was once
+   * the impact count — critical + major — and on a real document that put "0"
+   * beside a list of failed criteria: `meta-viewport` is impact moderate and
+   * cites wcag2aa.
+   */
+  it('counts through the gate, not by impact', () => {
+    const report = {
+      title: 'Acme accessibility audit',
+      clientName: 'Acme',
+      createdAt: '2026-08-16T00:00:00.000Z',
+      run: GATED_RUN,
+      pages: [GATED_PAGE],
+    } as unknown as SharedReport;
+
+    const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
+
+    expect(stat(html, 'MUST FIX')).toBe('1');
+    expect(stat(html, 'SHOULD FIX')).toBe('1');
+    expect(stat(html, 'NEEDS REVIEW')).toBe('1');
+  });
+
+  it('lists only the criteria the gate failed, not those an undecided check cites', () => {
+    const report = {
+      title: 'Acme accessibility audit',
+      clientName: 'Acme',
+      createdAt: '2026-08-16T00:00:00.000Z',
+      run: GATED_RUN,
+      pages: [GATED_PAGE],
+    } as unknown as SharedReport;
+
+    const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
+    const criteria = section(html, 'Success criteria not met');
+
+    expect(criteria).toContain('1.4.4');
+    expect(criteria).not.toContain('1.4.3');
+  });
+
+  it('does not tell the client every finding fails a criterion when one is undecided', () => {
+    const report = {
+      title: 'Acme accessibility audit',
+      clientName: 'Acme',
+      createdAt: '2026-08-16T00:00:00.000Z',
+      run: GATED_RUN,
+      pages: [GATED_PAGE],
+    } as unknown as SharedReport;
+
+    const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
+
+    expect(html).not.toContain('criterion each one fails');
+    // The undecided item is marked as such where it is listed, in the same
+    // words as the tile above it, so the reader can find which one it is.
+    expect(item(html, 'color-contrast')).toContain('needs review');
+    expect(item(html, 'meta-viewport')).not.toContain('needs review');
+    // Both remediation lists still render for it: the branch that first
+    // separated review items dropped one of the two.
+    expect(html).toContain('Fix any one of these');
+    expect(html).toContain('Fix all of these');
+  });
+
+  it('shows a dash, not a zero, where the gate made no claim', () => {
+    const report = {
+      title: 'Acme accessibility audit',
+      clientName: 'Acme',
+      createdAt: '2026-08-16T00:00:00.000Z',
+      run: RUN,
+      pages: [{ ...GATED_PAGE, evidenceStatus: 'degraded' }],
+    } as unknown as SharedReport;
+
+    const html = renderToStaticMarkup(createElement(SharedReportPage, { report, token: 'test-token' }));
+
+    expect(stat(html, 'MUST FIX')).toBe('—');
+    expect(stat(html, 'SHOULD FIX')).toBe('—');
+    expect(html).not.toContain('0 confirmed');
+    // "Success criteria not met" is the same claim as the count, in words.
+    // Listing criteria by today's rule beside a dash that says the gate made
+    // no claim is the recount the dash exists to refuse — seen on a real
+    // gate-1 report, which read "—" above five criteria. The findings below
+    // still show the criteria they cite; nothing is asserted about them.
+    expect(html).not.toContain('Success criteria not met');
+    expect(html).toContain('1.4.4');
   });
 });

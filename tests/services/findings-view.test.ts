@@ -3,6 +3,7 @@ import type { StoredFinding, StoredRunRecord } from '../../src/domain/persistenc
 import { MemoryPlatformStore } from '../../src/integrations/persistence/memory-platform-store';
 import { MemoryRunStore } from '../../src/integrations/persistence/memory-run-store';
 import { buildFindingsView } from '../../src/services/findings-view';
+import { GATE_VERSION } from '../../src/services/reporting';
 
 let platform: MemoryPlatformStore;
 let runs: MemoryRunStore;
@@ -23,6 +24,8 @@ function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
     code: 'image-alt',
     severity: 'critical',
     source: 'deterministic',
+    // 1.1.1, Level A — the shape the gate fails.
+    conformanceLevel: 'A',
     title: 'Images must have alternate text',
     remediationAnyOf: ['Element does not have an alt attribute'],
     remediationAllOf: [],
@@ -39,6 +42,7 @@ function run(overrides: Partial<StoredRunRecord> & Pick<StoredRunRecord, 'reques
     platform: 'generic',
     evidenceStatus: 'complete',
     ciStatus: 'fail',
+    gateVersion: GATE_VERSION,
     findings: [],
     durationMs: 10,
     createdAt: '2026-08-10T10:00:00.000Z',
@@ -60,7 +64,6 @@ describe('buildFindingsView', () => {
     const view = await buildFindingsView('acme', deps());
 
     expect(view).toMatchObject({ run: null, pages: [], advisory: [] });
-    expect(view?.counts.must).toBe(0);
   });
 
   it('groups findings by the page they were found on', async () => {
@@ -251,7 +254,9 @@ describe('buildFindingsView', () => {
 
   it('still counts an accepted risk, because it is still a barrier', async () => {
     // Dropping it would buy a better number with a note, and would put these
-    // screens at odds with `/r/<token>`, which applies no triage at all.
+    // screens at odds with `/r/<token>`, which applies no triage at all. The
+    // number is the run's own, counted through the gate before triage is
+    // read, so this holds by construction — and stays asserted.
     await runs.saveRun(run({ requestId: 'r1', findings: [finding()] }));
     await platform.setTriage({
       clientId: 'acme',
@@ -263,7 +268,7 @@ describe('buildFindingsView', () => {
       actor: 'Alex Reed',
     });
 
-    expect((await buildFindingsView('acme', deps()))?.counts.must).toBe(1);
+    expect((await buildFindingsView('acme', deps()))?.run?.confirmed).toBe(1);
   });
 
   it('names who an assigned finding went to', async () => {
@@ -334,27 +339,6 @@ describe('buildFindingsView', () => {
 
     expect(view?.run?.requestId).toBe('new');
     expect(view?.journeyName).toBe('Login');
-  });
-
-  it('counts findings by display severity', async () => {
-    await runs.saveRun(
-      run({
-        requestId: 'r1',
-        findings: [
-          finding(),
-          finding({ severity: 'major', selector: '#a' }),
-          finding({ severity: 'minor', selector: '#b' }),
-          finding({ severity: 'who-knows', selector: '#c' }),
-        ],
-      }),
-    );
-
-    expect((await buildFindingsView('acme', deps()))?.counts).toMatchObject({
-      must: 1,
-      should: 1,
-      nice: 1,
-      review: 1,
-    });
   });
 
   it('keeps a finding whose page is not in the run’s page list', async () => {

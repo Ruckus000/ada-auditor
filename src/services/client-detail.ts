@@ -105,8 +105,16 @@ export type RunSummary = {
   verdict: VerdictKind;
   /** Null when the run could not be scored — never 0, which is a real score. */
   score: number | null;
-  mustFix: number;
-  shouldFix: number;
+  /**
+   * Findings the gate failed the run on, counted through the gate itself
+   * (`failsConformance`). Null where the gate made no claim — an inconclusive
+   * run, or one an earlier gate decided — and rendered as a dash there, like
+   * `score`. Never a count by impact: that is the second definition that once
+   * put "0" on a client page above a list of failed criteria.
+   */
+  confirmed: number | null;
+  /** Decided deterministic findings that did not fail the run. Null with `confirmed`. */
+  recommendations: number | null;
   /**
    * The human-review queue. Rendered on the client's shared report as well as
    * the operator's screens, which is why it is counted once, in
@@ -165,7 +173,7 @@ export function summariseRun(run: StoredRunRecord): RunSummary {
     createdAt: run.createdAt,
     verdict: runVerdict({ status: run.status, ciStatus: run.ciStatus, findings: run.findings }),
     score: run.score ?? null,
-    ...severityCounts(run.findings),
+    ...severityCounts(run),
     pagesAudited: run.pages?.length ?? 0,
     evidenceStatus: run.evidenceStatus,
     durationMs: run.durationMs || null,

@@ -15,15 +15,19 @@
 
 import type { TriageState } from '../../domain/platform';
 import type { DeterministicFinding } from '../deterministic-audit';
+import { GATE_VERSION, failsConformance } from '../reporting';
 import type { VerdictFinding } from './verdict';
 
 export type DisplaySeverity = 'must' | 'should' | 'nice' | 'review' | 'advisory';
 
 /**
- * `critical` is the only severity that blocks a run, which is why it is the
- * only one that maps to `must`. `serious` already collapses to `major` further
- * upstream (see `SEVERITY_BY_IMPACT` in `deterministic-audit.ts`) so that
- * high-volume rules like colour-contrast cannot gate CI.
+ * Display buckets by axe impact — how bad a finding is to hit, which is the
+ * order a remediation list is worked in. This is not the gate: whether a
+ * finding fails the audit is decided by the success criterion it cites
+ * (`failsConformance` in `reporting.ts`), and a `minor` finding can fail it
+ * while a `critical` best-practice rule cannot. `serious` already collapses
+ * to `major` further upstream (see `SEVERITY_BY_IMPACT` in
+ * `deterministic-audit.ts`).
  */
 const DISPLAY_BY_SEVERITY: Record<string, DisplaySeverity> = {
   critical: 'must',
@@ -136,49 +140,72 @@ export function isDeterministic(finding: Pick<DeterministicFinding, 'source'>): 
  * What a run's findings amount to, in the words the screens use.
  *
  * One helper rather than the filter each screen used to write for itself.
- * `portfolio.ts` and `client-detail.ts` both counted `must` and `should` with
- * identical inline predicates, and `client-detail`'s copy is what the client's
- * shared report renders — so the two could drift and the divergence would show
- * up on the document sent outside, which is the one place this repo has
- * already been bitten (see `report-html.ts` keying its copy on `ciStatus`).
+ * `portfolio.ts` and `client-detail.ts` both counted with identical inline
+ * predicates, and `client-detail`'s copy is what the client's shared report
+ * renders — so the two could drift and the divergence would show up on the
+ * document sent outside, which is the one place this repo has already been
+ * bitten (see `report-html.ts` keying its copy on `ciStatus`).
  *
- * **`needsReview` is the number that was missing.** Both callers reported
- * `must` and `should` and stopped, which was tolerable while the only source of
+ * **`confirmed` is a claim the gate made, counted through the gate.** It was
+ * once counted by impact (critical + major) here while the printable report
+ * and the verdict counted by criterion, and the two disagree on real
+ * documents: `meta-viewport` is impact moderate and cites wcag2aa, so a client
+ * page read "0" directly above a list of failed criteria. Where the gate made
+ * no claim there is nothing to count, and `confirmed` is **null**, rendered as
+ * a dash the way `scoreStatValue` renders an unscored run:
+ *
+ * - an **inconclusive** run — `summarizeRun` reports `blockingFindings: 0`
+ *   there by design, and a number here would be the second definition again;
+ * - a run **an earlier gate decided**, or one from before `gate_version` was
+ *   stored — recounting it with today's rule puts a number beside a verdict
+ *   that number did not produce.
+ *
+ * `recommendations` is the complement — deterministic, decided, and not a
+ * conformance failure — so a critical best-practice rule and an AAA finding
+ * land there, honestly. It is null whenever `confirmed` is, for the same
+ * reason.
+ *
+ * **`needsReview` is the number that was missing.** Both callers reported the
+ * decided buckets and stopped, which was tolerable while the only source of
  * `needs-review` was axe's handful of undecided checks. HTML_CodeSniffer made
  * it the largest bucket by an order of magnitude — 130 of 139 findings on a
  * fixture site — and a summary that omits it describes a different audit from
- * the one that ran.
+ * the one that ran. It is counted on every run, because a review queue is
+ * work whether or not the gate reached a verdict.
  *
  * Advisory findings are excluded here, as they are from every count that could
  * be read as work owed: they are `gateable: false`, and `advisoryFindings` in
  * `summarizeRun` already reports them under their own name.
  */
-export function severityCounts(findings: readonly VerdictFinding[]): {
-  mustFix: number;
-  shouldFix: number;
+export function severityCounts(run: {
+  /** `pass | fail | inconclusive` from `summarizeRun`. */
+  ciStatus: string;
+  /** Absent on rows written before the column existed. */
+  gateVersion?: number | null;
+  findings: readonly VerdictFinding[];
+}): {
+  confirmed: number | null;
+  recommendations: number | null;
   needsReview: number;
 } {
-  const counted = { mustFix: 0, shouldFix: 0, needsReview: 0 };
+  const decided = run.ciStatus !== 'inconclusive' && run.gateVersion === GATE_VERSION;
+  let confirmed = 0;
+  let recommendations = 0;
+  let needsReview = 0;
 
-  for (const finding of findings) {
+  for (const finding of run.findings) {
     if (finding.source !== 'deterministic') continue;
 
-    switch (displaySeverity(finding.severity)) {
-      case 'must':
-        counted.mustFix += 1;
-        break;
-      case 'should':
-        counted.shouldFix += 1;
-        break;
-      case 'review':
-        counted.needsReview += 1;
-        break;
-      // `nice` is deliberately uncounted: it has never had a tile, and adding
-      // one here would be a screen change wearing a bug fix's clothes.
-      default:
-        break;
+    if (displaySeverity(finding.severity) === 'review') {
+      needsReview += 1;
+    } else if (failsConformance(finding)) {
+      confirmed += 1;
+    } else {
+      recommendations += 1;
     }
   }
 
-  return counted;
+  return decided
+    ? { confirmed, recommendations, needsReview }
+    : { confirmed: null, recommendations: null, needsReview };
 }

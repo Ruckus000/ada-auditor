@@ -1,6 +1,7 @@
 'use client';
 
 import { describePageEvidence } from '../../services/presentation/page-evidence';
+import { failsConformance } from '../../services/reporting';
 import { InfoTip, TermLabel } from './info-tip';
 import {
   countBySource,
@@ -11,12 +12,34 @@ import {
   type Severity,
 } from './audit-types';
 
+/**
+ * The badge: axe's impact rating, in words. It says how bad the barrier is
+ * to hit, and nothing about the verdict — that is the gate flag beside it,
+ * which asks `failsConformance`. The critical note once ended "Fails the
+ * build", which was true only while the gate keyed on impact.
+ */
 const SEVERITY_COPY: Record<Severity, { label: string; mark: string; note: string }> = {
-  critical: { label: 'Critical', mark: '▲', note: 'Serious barrier. Fails the build.' },
+  critical: { label: 'Critical', mark: '▲', note: 'Serious barrier.' },
   major: { label: 'Major', mark: '◆', note: 'Significant problem worth prioritising.' },
   minor: { label: 'Minor', mark: '●', note: 'Small problem. Fix when convenient.' },
+  'needs-review': {
+    label: 'Needs review',
+    mark: '?',
+    note: 'An automated check could not decide this. Look at it by hand.',
+  },
   advisory: { label: 'Advisory', mark: '◌', note: 'A suggestion to check by hand.' },
 };
+
+/**
+ * Which glossary entry explains the gate flag. One classification for the
+ * flag, its explanation and nothing else: a non-blocking finding from a
+ * fixed rule is not an "Advisory note" — that entry says "An AI suggestion",
+ * and axe produced the finding.
+ */
+function gateTerm(finding: Finding, blocks: boolean): 'blocksCi' | 'advisory' | 'deterministic' {
+  if (blocks) return 'blocksCi';
+  return finding.source === 'ai-advisory' ? 'advisory' : 'deterministic';
+}
 
 /**
  * `showPage` is for lists that are not already grouped by page — the
@@ -25,7 +48,10 @@ const SEVERITY_COPY: Record<Severity, { label: string; mark: string; note: strin
  */
 function FindingCard({ finding, showPage }: { finding: Finding; showPage?: boolean }) {
   const severity = SEVERITY_COPY[finding.severity];
-  const blocks = finding.source === 'deterministic' && finding.severity === 'critical';
+  // The gate's rule, not `severity === 'critical'`. A `minor` finding that
+  // fails a Level AA criterion is what turned the verdict; a `critical`
+  // best-practice rule never could.
+  const blocks = failsConformance(finding);
 
   return (
     <li className={`finding finding-${finding.severity}`}>
@@ -53,7 +79,7 @@ function FindingCard({ finding, showPage }: { finding: Finding; showPage?: boole
           )}
           <span className={blocks ? 'gate-flag gate-blocks' : 'gate-flag gate-advisory'}>
             {blocks ? 'Blocks release' : 'Does not block release'}
-            <InfoTip termKey={blocks ? 'blocksCi' : 'advisory'} />
+            <InfoTip termKey={gateTerm(finding, blocks)} />
           </span>
         </p>
         <p className="finding-note">{severity.note}</p>

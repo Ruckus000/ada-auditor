@@ -1150,6 +1150,7 @@ code {
 .finding-critical { border-left-color: var(--fail); }
 .finding-major { border-left-color: var(--caution); }
 .finding-minor { border-left-color: var(--ink-muted); }
+.finding-needs-review { border-left-color: var(--accent); }
 .finding-advisory { border-left-color: var(--incon); border-style: dashed; border-left-style: solid; }
 
 .sev-badge {
@@ -1170,6 +1171,7 @@ code {
 .sev-critical { color: var(--fail); }
 .sev-major { color: var(--caution); }
 .sev-minor { color: var(--ink-muted); }
+.sev-needs-review { color: var(--accent); }
 .sev-advisory { color: var(--incon); }
 
 .sev-mark { font-size: 0.6rem; }

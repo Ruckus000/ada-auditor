@@ -4,7 +4,7 @@ import { FONT, T } from '../../lib/tokens';
 import { Stat } from '../client/client-overview';
 import { JourneySchedule } from '../client/journey-schedule';
 import { StageHeading } from './stage-heading';
-import { SCORE_STAT_LABEL, scoreStatValue } from '../../../../services/presentation/verdict';
+import { SCORE_STAT_LABEL, countStatValue, scoreStatValue } from '../../../../services/presentation/verdict';
 
 /**
  * Stage 5, and the page a finished client keeps: the first audit's numbers,
@@ -25,8 +25,8 @@ export function ResultsStage({ detail }: { detail: ClientDetail }) {
       {run ? (
         <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, margin: 0 }}>
           <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(run.score)} />
-          <Stat label="Must fix" value={String(run.mustFix)} tone={run.mustFix > 0} />
-          <Stat label="Should fix" value={String(run.shouldFix)} />
+          <Stat label="Must fix" value={countStatValue(run.confirmed)} tone={(run.confirmed ?? 0) > 0} />
+          <Stat label="Should fix" value={countStatValue(run.recommendations)} />
           <Stat label="Needs review" value={String(run.needsReview)} />
           <Stat label="Pages audited" value={String(run.pagesAudited)} />
         </dl>

@@ -88,15 +88,6 @@ export type FindingsView = {
    * mixing them into a page's list would put opinions beside measurements.
    */
   advisory: FindingView[];
-  counts: Record<DisplaySeverity, number>;
-};
-
-const EMPTY_COUNTS: Record<DisplaySeverity, number> = {
-  must: 0,
-  should: 0,
-  nice: 0,
-  review: 0,
-  advisory: 0,
 };
 
 export type FindingsDeps = {
@@ -137,7 +128,6 @@ export async function buildFindingsView(
       journeyName: null,
       pages: [],
       advisory: [],
-      counts: { ...EMPTY_COUNTS },
     };
   }
 
@@ -231,13 +221,9 @@ export async function buildFindingsView(
     }
   }
 
-  const counts = { ...EMPTY_COUNTS };
-  for (const page of pages) {
-    for (const finding of page.findings) {
-      counts[finding.severity] += 1;
-    }
-  }
-
+  // No recount of the list by display severity here. The screen's numbers
+  // are `run`'s — counted once, through the gate, in `presentation/severity`
+  // — and a second tally by impact was the second definition of "must fix".
   return {
     clientId: client.id,
     clientName: client.name,
@@ -245,7 +231,6 @@ export async function buildFindingsView(
     journeyName: journey.name,
     pages,
     advisory: advisory.map(toView),
-    counts,
   };
 }
 

@@ -4,6 +4,7 @@ import {
   findingDisplayStatus,
   severityCounts,
 } from '../../src/services/presentation/severity';
+import { GATE_VERSION } from '../../src/services/reporting';
 
 describe('displaySeverity', () => {
   it.each([
@@ -126,35 +127,61 @@ describe('findingDisplayStatus', () => {
 });
 
 describe('severityCounts', () => {
-  const finding = (severity: string, source = 'deterministic') => ({ severity, source });
+  const finding = (
+    severity: string,
+    over: { source?: string; conformanceLevel?: string | null } = {},
+  ) => ({
+    severity,
+    source: over.source ?? 'deterministic',
+    ...(over.conformanceLevel === undefined ? {} : { conformanceLevel: over.conformanceLevel }),
+  });
+  const run = (
+    findings: ReturnType<typeof finding>[],
+    over: { ciStatus?: string; gateVersion?: number } = {},
+  ) => ({ ciStatus: 'fail', gateVersion: GATE_VERSION, findings, ...over });
 
-  it('counts the three buckets the screens show', () => {
-    const counts = severityCounts([
-      finding('critical'),
-      finding('major'),
-      finding('major'),
-      finding('needs-review'),
-      finding('needs-review'),
-      finding('needs-review'),
-    ]);
+  /**
+   * The count a client reads as "confirmed" is the gate's count, not a
+   * severity table's. `meta-viewport` is impact moderate (→ minor) and cites
+   * wcag2aa, so it fails the audit; `region` is impact critical and cites
+   * nothing, so it is a recommendation. A count by impact puts "0" beside a
+   * list of failed criteria — which is the incident this shape replaces.
+   */
+  it('counts confirmed by the criterion the gate used, not by impact', () => {
+    const counts = severityCounts(
+      run([
+        finding('minor', { conformanceLevel: 'AA' }),
+        finding('critical', { conformanceLevel: null }),
+        // A record written before conformance levels were stored.
+        finding('major'),
+      ]),
+    );
 
-    expect(counts).toEqual({ mustFix: 1, shouldFix: 2, needsReview: 3 });
+    expect(counts).toEqual({ confirmed: 1, recommendations: 2, needsReview: 0 });
+  });
+
+  it('keeps a needs-review finding in the review queue whatever it cites', () => {
+    const counts = severityCounts(run([finding('needs-review', { conformanceLevel: 'AA' })]));
+
+    expect(counts).toEqual({ confirmed: 0, recommendations: 0, needsReview: 1 });
   });
 
   /**
    * The reason this helper exists. Everything HTML_CodeSniffer emits is
    * `needs-review` by design, and on a real fixture run that was 130 findings
-   * of 139 — so a summary counting only `must` and `should` described nine of
+   * of 139 — so a summary counting only the decided ones described nine of
    * them and called it the audit.
    */
   it('counts a second engine\'s findings, which are all needs-review', () => {
-    const counts = severityCounts([
-      finding('critical'),
-      ...Array.from({ length: 130 }, () => finding('needs-review')),
-    ]);
+    const counts = severityCounts(
+      run([
+        finding('critical', { conformanceLevel: 'A' }),
+        ...Array.from({ length: 130 }, () => finding('needs-review')),
+      ]),
+    );
 
     expect(counts.needsReview).toBe(130);
-    expect(counts.mustFix).toBe(1);
+    expect(counts.confirmed).toBe(1);
   });
 
   /**
@@ -163,9 +190,9 @@ describe('severityCounts', () => {
    * as outstanding work.
    */
   it('excludes advisory findings from every bucket', () => {
-    const counts = severityCounts([finding('advisory', 'ai-advisory')]);
+    const counts = severityCounts(run([finding('advisory', { source: 'ai-advisory', conformanceLevel: 'A' })]));
 
-    expect(counts).toEqual({ mustFix: 0, shouldFix: 0, needsReview: 0 });
+    expect(counts).toEqual({ confirmed: 0, recommendations: 0, needsReview: 0 });
   });
 
   /**
@@ -174,10 +201,40 @@ describe('severityCounts', () => {
    * nobody can categorise is precisely one a human should see.
    */
   it('counts an unknown severity as needing review, as displaySeverity does', () => {
-    expect(severityCounts([finding('bizarre')]).needsReview).toBe(1);
+    expect(severityCounts(run([finding('bizarre')])).needsReview).toBe(1);
   });
 
   it('counts nothing for an empty run', () => {
-    expect(severityCounts([])).toEqual({ mustFix: 0, shouldFix: 0, needsReview: 0 });
+    expect(severityCounts(run([]))).toEqual({ confirmed: 0, recommendations: 0, needsReview: 0 });
+  });
+
+  /**
+   * `summarizeRun` reports `blockingFindings: 0` on an inconclusive run by
+   * design — a verdict it could not reach is not a verdict of zero. A count
+   * here would be a second definition of the same number, one that says "1
+   * confirmed" beside the gate's 0. The review queue is still work, so it is
+   * still counted.
+   */
+  it('makes no confirmed claim on an inconclusive run', () => {
+    const counts = severityCounts(
+      run([finding('minor', { conformanceLevel: 'AA' }), finding('needs-review')], {
+        ciStatus: 'inconclusive',
+      }),
+    );
+
+    expect(counts).toEqual({ confirmed: null, recommendations: null, needsReview: 1 });
+  });
+
+  /**
+   * Gate 1 decided by impact. Recounting its findings with today's gate would
+   * put a number beside a verdict that number did not produce — and rows from
+   * before `gate_version` was stored carry no version at all.
+   */
+  it('makes no confirmed claim for a run an earlier gate decided', () => {
+    const findings = [finding('critical', { conformanceLevel: 'A' })];
+
+    expect(severityCounts(run(findings, { gateVersion: 1 })).confirmed).toBeNull();
+    expect(severityCounts({ ciStatus: 'fail', findings }).confirmed).toBeNull();
+    expect(severityCounts({ ciStatus: 'fail', findings }).recommendations).toBeNull();
   });
 });

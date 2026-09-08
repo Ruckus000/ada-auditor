@@ -1,4 +1,5 @@
 import type { StoredFinding, StoredRunRecord } from '../domain/persistence';
+import { severityCounts } from './presentation/severity';
 import { runVerdict } from './presentation/verdict';
 
 /**
@@ -17,14 +18,23 @@ import { runVerdict } from './presentation/verdict';
  * interpolation bypasses it.
  */
 
-const SEVERITY_ORDER = ['critical', 'major', 'minor', 'needs-review', 'advisory'];
+/**
+ * Impact order, for reading: the worst barrier to hit comes first. This is
+ * not the gate — a `minor` finding fails the run when it fails a Level A or
+ * AA criterion, and a `critical` best-practice rule never does — so nothing
+ * below counts "blocking" from it. That number is asked of `severityCounts`,
+ * which asks the gate.
+ *
+ * `advisory` is absent because advisory findings do not appear on this
+ * document at all (see `renderRunReport`).
+ */
+const SEVERITY_ORDER = ['critical', 'major', 'minor', 'needs-review'];
 
 const SEVERITY_LABEL: Record<string, string> = {
   critical: 'Critical',
   major: 'Major',
   minor: 'Minor',
   'needs-review': 'Needs manual review',
-  advisory: 'Advisory',
 };
 
 /**
@@ -50,8 +60,12 @@ const VERDICT_COPY: Record<string, { title: string; detail: string }> = {
   },
   risk: {
     title: 'Issues found, none blocking',
+    // "Items that need attention", not "failures": `risk` is reached by a
+    // needs-review finding as much as by a major one, and a needs-review
+    // finding is a check axe could not decide — calling it a failure here
+    // claimed something nobody observed.
     detail:
-      'Automated checks found failures against the WCAG success criteria checked here. None is classed as blocking, and every one is listed below. Automated testing cannot establish full conformance on its own.',
+      'Automated checks found items that need attention. None is classed as blocking, and every one is listed below. Automated testing cannot establish full conformance on its own.',
   },
   pass: {
     title: 'No blocking issues found',
@@ -186,18 +200,18 @@ function renderFinding(finding: StoredFinding): string {
  * Groups findings by the page they were found on, preserving visit order.
  *
  * A run audits every page its journey walks through, so a flat list forces the
- * reader to work out which of five screens each finding belongs to. Advisory
- * findings carry no page — they are produced once over the whole journey — and
- * collect in a trailing group of their own rather than being attributed to a
- * page they were not derived from.
+ * reader to work out which of five screens each finding belongs to. A finding
+ * with no page — a record from before findings carried one — collects in a
+ * trailing group of its own rather than being attributed to a page it was not
+ * derived from.
  */
 type PageGroup = { pageUrl: string | null; title?: string; findings: StoredFinding[] };
 
-function groupByPage(run: StoredRunRecord): PageGroup[] {
+function groupByPage(run: StoredRunRecord, findings: readonly StoredFinding[]): PageGroup[] {
   const byUrl = new Map<string, StoredFinding[]>();
   const unattributed: StoredFinding[] = [];
 
-  for (const finding of run.findings) {
+  for (const finding of findings) {
     if (!finding.pageUrl) {
       unattributed.push(finding);
       continue;
@@ -229,7 +243,7 @@ function groupByPage(run: StoredRunRecord): PageGroup[] {
   return groups;
 }
 
-function sortBySeverity(findings: StoredFinding[]): StoredFinding[] {
+function sortBySeverity(findings: readonly StoredFinding[]): StoredFinding[] {
   return [...findings].sort((a, b) => severityRank(a.severity) - severityRank(b.severity));
 }
 
@@ -262,12 +276,20 @@ export function renderRunReport(run: StoredRunRecord): string {
     detail: '',
   };
 
-  const findings = sortBySeverity(run.findings);
-  const groups = groupByPage(run);
+  // Deterministic findings only, as on the public share page. An advisory
+  // finding is a model's judgement — `gateable: false` — shown to an operator
+  // as a lead. On the document a client's counsel reads it is a claim we
+  // cannot stand behind and one they cannot act on, and the two things a
+  // client can be sent must not disagree about what was found.
+  const findings = sortBySeverity(run.findings.filter((f) => f.source === 'deterministic'));
+  const groups = groupByPage(run, findings);
 
-  const blocking = findings.filter(
-    (f) => f.source === 'deterministic' && f.severity === 'critical',
-  ).length;
+  // The gate's own count — the same one every operator screen and the share
+  // page show — and no line at all where the gate made none: an inconclusive
+  // run, or one an earlier gate decided. This once counted `critical` here,
+  // which is impact, not conformance; `meta-viewport` is impact moderate and
+  // cites wcag2aa, so the document said "0 blocking" above a run it failed.
+  const { confirmed } = severityCounts(run);
 
   const counts = SEVERITY_ORDER.map((severity) => ({
     severity,
@@ -349,7 +371,7 @@ export function renderRunReport(run: StoredRunRecord): string {
             } audited</li>`
           : ''
       }
-      <li><strong>${blocking}</strong> blocking</li>
+      ${confirmed === null ? '' : `<li><strong>${confirmed}</strong> blocking</li>`}
       ${counts
         .map(
           (entry) =>
