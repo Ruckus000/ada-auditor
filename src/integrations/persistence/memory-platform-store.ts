@@ -1,3 +1,4 @@
+import type { DocumentSignoff, DocumentExclusion, DeliveryBundle, DocumentWorkEvent } from '../../domain/document-delivery';
 import {
   clampEventListLimit,
   CLIENT_DOCUMENT_LIST_MAX,
@@ -13,6 +14,7 @@ import type {
   ListEventsOptions,
   PlatformStore,
   StoredClient,
+  ClientWrite,
   StoredClientDocument,
   ClientDocumentQuery,
   ClientDocumentRecord,
@@ -226,13 +228,14 @@ export class MemoryPlatformStore implements PlatformStore {
     return client ? structuredClone(client) : null;
   }
 
-  async upsertClient(client: Omit<StoredClient, 'createdAt'>): Promise<void> {
+  async upsertClient(client: ClientWrite): Promise<void> {
     const existing = this.clients.get(client.id);
     // Falls back to the stored owner rather than dropping it, matching the
     // `coalesce` in the Postgres store: an omitted optional field must not
     // erase a value nobody asked to change.
     const owner = client.owner ?? existing?.owner;
     const next: StoredClient = {
+      contractType: client.contractType ?? existing?.contractType ?? 'audit-and-remediate',
       id: client.id,
       name: client.name,
       ...(owner === undefined ? {} : { owner }),
@@ -477,6 +480,7 @@ export class MemoryPlatformStore implements PlatformStore {
     // retry, not a revision, so the first record stands. Postgres spells the
     // same rule `on conflict (id) do nothing`.
     if (this.documentInspections.has(record.id)) return;
+    this.bumpDocumentRevision(record.clientId);
 
     // Built field by field rather than cloned whole, so an explicitly-passed
     // `foundOn: undefined` stores as *absent* — the shape Postgres hands back
@@ -565,6 +569,7 @@ export class MemoryPlatformStore implements PlatformStore {
     sightings: DocumentSighting[],
     seenAt: string,
   ): Promise<{ added: number; seenAgain: number }> {
+    if (sightings.length) this.bumpDocumentRevision(clientId);
     let added = 0;
     let seenAgain = 0;
 
@@ -590,6 +595,7 @@ export class MemoryPlatformStore implements PlatformStore {
     sighting: DocumentSighting,
     seenAt: string,
   ): Promise<StoredClientDocument> {
+    this.bumpDocumentRevision(clientId);
     const key = this.documentKey(clientId, sighting.url);
     const existing = this.clientDocuments.get(key);
     if (existing) {
@@ -694,6 +700,7 @@ export class MemoryPlatformStore implements PlatformStore {
     // Immutable evidence, like an inspection: a retried save keeps the first
     // record. Postgres spells it `on conflict (id) do nothing`.
     if (this.documentConversions.has(record.id)) return;
+    this.bumpDocumentRevision(record.clientId);
     this.documentConversions.set(record.id, {
       seq: this.nextConversionSeq++,
       record: structuredClone(record),
@@ -713,6 +720,7 @@ export class MemoryPlatformStore implements PlatformStore {
       // explicitly-passed `value: undefined` stores as absent — the shape
       // Postgres hands back for a null column.
       if (this.documentAnswers.has(record.id)) continue;
+      this.bumpDocumentRevision(record.clientId);
       const next: StoredDocumentAnswer = {
         id: record.id,
         clientId: record.clientId,
@@ -790,4 +798,66 @@ export class MemoryPlatformStore implements PlatformStore {
       .slice(0, limit)
       .map((event) => structuredClone(event));
   }
+  private readonly deliveryRevisions = new Map<string, number>();
+  private readonly signoffs = new Map<string, DocumentSignoff>();
+  private readonly exclusions = new Map<string, DocumentExclusion>();
+  private readonly bundles = new Map<string, DeliveryBundle>();
+
+  private bumpDocumentRevision(clientId: string): void {
+    this.deliveryRevisions.set(clientId, (this.deliveryRevisions.get(clientId) ?? 0) + 1);
+  }
+  async documentRevision(clientId: string): Promise<string> {
+    return String(this.deliveryRevisions.get(clientId) ?? 0);
+  }
+  async listDocumentSignoffs(clientId: string): Promise<DocumentSignoff[]> {
+    return structuredClone([...this.signoffs.values()].filter(r => r.clientId === clientId));
+  }
+  async saveDocumentSignoff(record: DocumentSignoff, expectedRevision: string): Promise<boolean> {
+    if (String(this.deliveryRevisions.get(record.clientId) ?? 0) !== expectedRevision) return false;
+    if (!this.signoffs.has(record.id)) {
+      this.signoffs.set(record.id, structuredClone(record));
+      this.bumpDocumentRevision(record.clientId);
+    }
+    return true;
+  }
+  async listDocumentExclusions(clientId: string): Promise<DocumentExclusion[]> {
+    return structuredClone([...this.exclusions.entries()].filter(([key]) => key.startsWith(clientId + ':')).map(([,r]) => r));
+  }
+  async saveDocumentExclusion(clientId: string, record: DocumentExclusion, expectedRevision: string): Promise<boolean> {
+    if (String(this.deliveryRevisions.get(clientId) ?? 0) !== expectedRevision) return false;
+    this.exclusions.set(clientId + ':' + record.documentId, structuredClone(record));
+    this.bumpDocumentRevision(clientId);
+    return true;
+  }
+  async saveDeliveryBundle(record: DeliveryBundle, expectedRevision: string): Promise<boolean> {
+    if (String(this.deliveryRevisions.get(record.clientId) ?? 0) !== expectedRevision) return false;
+    if (!this.bundles.has(record.id)) this.bundles.set(record.id, structuredClone(record));
+    return true;
+  }
+  async listDeliveryBundles(clientId: string): Promise<DeliveryBundle[]> {
+    return structuredClone([...this.bundles.values()].filter(r => r.clientId === clientId).sort((a,b) => b.preparedAt.localeCompare(a.preparedAt)));
+  }
+  async getDeliveryBundle(id: string): Promise<DeliveryBundle | null> {
+    return structuredClone(this.bundles.get(id) ?? null);
+  }
+  async getDeliveryByToken(token: string): Promise<DeliveryBundle | null> {
+    return structuredClone([...this.bundles.values()].find(r => r.token === token && r.issuedAt && !r.revokedAt) ?? null);
+  }
+  async issueDeliveryBundle(id: string, expectedRevision: string, token: string, actor: string, at: string): Promise<boolean> {
+    const r = this.bundles.get(id);
+    if (!r || r.revokedAt || String(this.deliveryRevisions.get(r.clientId) ?? 0) !== expectedRevision) return false;
+    if (!r.issuedAt) Object.assign(r, { token, issuedAt: at, issuedBy: actor });
+    return true;
+  }
+  async revokeDeliveryBundle(id: string, at: string): Promise<void> {
+    const r = this.bundles.get(id);
+    if (r?.issuedAt && !r.revokedAt) { r.revokedAt = at; delete r.token; }
+  }
+
+  async documentWorkLog(clientId: string, documentIds: string[]): Promise<DocumentWorkEvent[]> {
+    return this.events.filter(e => e.clientId === clientId && e.subject && documentIds.includes(e.subject))
+      .slice(0, 10001).map(e => ({documentId: e.subject!, action: e.action, actor: e.actor, at: e.createdAt!,
+        ...(typeof e.metadata?.conversionId === 'string' ? {conversionId: e.metadata.conversionId} : {})}));
+  }
+
 }

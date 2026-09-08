@@ -1,6 +1,8 @@
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
 
 import { conformanceSchema, type Conformance } from '../../domain/document-remediation';
@@ -41,6 +43,8 @@ const execFileAsync = promisify(execFile);
 export const BUNDLED_VERAPDF_JAR = join('vendor', 'verapdf', 'cli.jar');
 
 export type VeraPdfOptions = {
+  /** Internal evidence sink: never forward raw reports to headers or logs. */
+  onReport?: (report: string) => void;
   root?: string;
   env?: Record<string, string | undefined>;
   timeoutMs?: number;
@@ -113,6 +117,7 @@ export async function checkUa1(pdfPath: string, options: VeraPdfOptions = {}): P
       return { checker: 'none', reason: 'unavailable' };
     }
     if (result.compliant === true) {
+      options.onReport?.(raw);
       return conformanceSchema.parse({ checker: 'verapdf-ua1', compliant: true });
     }
     const failingClauses = (result.details?.ruleSummaries ?? [])
@@ -136,9 +141,27 @@ export async function checkUa1(pdfPath: string, options: VeraPdfOptions = {}): P
       logWarn('document_conformance_unexplained', { bytes: raw.length });
       return { checker: 'none', reason: 'unavailable' };
     }
+    options.onReport?.(raw);
     return conformanceSchema.parse({ checker: 'verapdf-ua1', compliant: false, failingClauses });
   } catch {
     logWarn('document_conformance_unparseable', { bytes: raw.length });
     return { checker: 'none', reason: 'unavailable' };
+  }
+}
+
+/** Revalidate exact stored bytes, including legacy deliveries without retained evidence. */
+export async function verifyPdfBytes(
+  bytes: Uint8Array,
+  options: Omit<VeraPdfOptions, 'onReport'> = {},
+): Promise<{ conformance: Conformance; verificationReport?: string }> {
+  const work = await mkdtemp(join(tmpdir(), 'auditor-verification-'));
+  try {
+    const path = join(work, 'document.pdf');
+    await writeFile(path, bytes);
+    let verificationReport: string | undefined;
+    const conformance = await checkUa1(path, { ...options, onReport: (raw) => { verificationReport = raw; } });
+    return { conformance, ...(verificationReport === undefined ? {} : { verificationReport }) };
+  } finally {
+    await rm(work, { recursive: true, force: true });
   }
 }

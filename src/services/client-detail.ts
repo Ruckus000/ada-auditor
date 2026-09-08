@@ -1,3 +1,4 @@
+import type { ClientContractType } from '../domain/platform';
 import { environmentSchema, type Environment } from '../domain/contracts';
 import { slowestPageMs } from './run-timing';
 import { toStepViews, type JourneyStepView } from '../domain/journey-step';
@@ -141,6 +142,7 @@ export type RunSummary = {
 };
 
 export type ClientDetail = {
+  contractType: ClientContractType;
   id: string;
   name: string;
   owner?: string;
@@ -282,6 +284,7 @@ export async function buildClientDetail(
   return {
     id: client.id,
     name: client.name,
+    contractType: client.contractType,
     ...(client.owner === undefined ? {} : { owner: client.owner }),
     createdAt: client.createdAt,
     journeys: summaries,

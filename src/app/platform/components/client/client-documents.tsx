@@ -6,6 +6,7 @@ import { clientHref } from '../../lib/params';
 import { FONT, T } from '../../lib/tokens';
 import { DocumentIntake } from './document-intake';
 import { DocumentInventory } from './document-inventory';
+import { DocumentDeliveryPanel } from './document-delivery-panel';
 import {
   buttonStyle,
   conversionOutcome,
@@ -93,6 +94,7 @@ export function ClientDocuments({
   clientId: string;
   initialTargetUrl: string;
 }) {
+  const [deliveryRevision, setDeliveryRevision] = useState(0);
   const headingId = `${useId()}-heading`;
   const [documents, setDocuments] = useState<ClientDocument[] | null>(null);
   const [counts, setCounts] = useState<StateCounts | null>(null);
@@ -113,6 +115,7 @@ export function ClientDocuments({
       setDocuments(result.documents);
       setHasMore(result.hasMore);
       setCounts(result.counts);
+      setDeliveryRevision(current => current + 1);
     } else {
       setInventoryError(result.message);
     }
@@ -305,6 +308,8 @@ export function ClientDocuments({
           ) : null}
         </span>
       </div>
+
+      <DocumentDeliveryPanel clientId={clientId} revision={deliveryRevision} />
 
       {inventoryError ? (
         <p role="alert" style={{ ...noteStyle, color: T.fail }}>

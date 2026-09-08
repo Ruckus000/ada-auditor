@@ -1,3 +1,4 @@
+import type { ClientContractType } from '../domain/platform';
 import type { RunStore, StoredRunRecord } from '../domain/persistence';
 import type { ClientStore, JourneyStore } from '../domain/platform';
 import { severityCounts } from './presentation/severity';
@@ -19,9 +20,11 @@ import { runVerdict, type VerdictKind } from './presentation/verdict';
  */
 
 export type PortfolioRow = {
+  contractType: ClientContractType;
   id: string;
   name: string;
   owner?: string;
+  deliveredDocumentCount?: number;
   journeyCount: number;
   /** Null until the client's first run finishes. */
   lastRun: {
@@ -116,10 +119,11 @@ export async function buildPortfolio(deps: PortfolioDeps): Promise<PortfolioRow[
       return {
         id: client.id,
         name: client.name,
+        contractType: client.contractType,
         ...(client.owner === undefined ? {} : { owner: client.owner }),
         journeyCount: journeys.length,
         lastRun: latest ? summarise(latest) : null,
-        setupIncomplete: !completedFlags.some(Boolean),
+        setupIncomplete: client.contractType !== 'remediation-only' && !completedFlags.some(Boolean),
       } as PortfolioRow;
     }),
   );

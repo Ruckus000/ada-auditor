@@ -1,3 +1,4 @@
+import type { DocumentSignoff, DocumentExclusion, DeliveryBundle, DocumentWorkEvent } from '../../domain/document-delivery';
 import { randomUUID } from 'node:crypto';
 import {
   clampEventListLimit,
@@ -20,6 +21,7 @@ import type {
   PlatformStore,
   ReportAudience,
   StoredClient,
+  ClientWrite,
   StoredClientDocument,
   StoredDocumentConversion,
   StoredDocumentAnswer,
@@ -68,6 +70,26 @@ function optional<T extends object, K extends string, V>(
   value: V | null | undefined,
 ): T | Record<K, V> {
   return (value === null || value === undefined ? {} : { [key]: value }) as Record<K, V>;
+}
+
+async function withConcurrency<T, R>(
+  values: T[],
+  limit: number,
+  operation: (value: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(values.length);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (true) {
+      const index = next++;
+      if (index >= values.length) return;
+      results[index] = await operation(values[index]);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, values.length) }, () => worker()),
+  );
+  return results;
 }
 
 /**
@@ -177,6 +199,8 @@ type DocumentConversionRow = {
   kind: string | null;
   instrument_version: number | null;
   artifact_url: string | null;
+  verification_artifact_url: string | null;
+  verification_sha256: string | null;
   answer_ids: string[] | null;
   converted_at: Date | string;
 };
@@ -197,7 +221,23 @@ type DocumentAnswerRow = {
 };
 
 export class PostgresPlatformStore implements PlatformStore {
+  private documentInspectionWriteTail = Promise.resolve();
+
   constructor(private readonly sql: SqlClient) {}
+
+  private async serializeDocumentInspectionWrite<T>(operation: () => Promise<T>): Promise<T> {
+    const previous = this.documentInspectionWriteTail;
+    let release!: () => void;
+    this.documentInspectionWriteTail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+    }
+  }
 
   // ----------------------------------------------------------- operators --
 
@@ -387,10 +427,11 @@ export class PostgresPlatformStore implements PlatformStore {
     const rows = await this.sql<{
       id: string;
       name: string;
+      contract_type: StoredClient['contractType'];
       owner: string | null;
       created_at: Date | string;
     }>`
-      select id, name, owner, created_at from clients
+      select id, name, owner, contract_type, created_at from clients
       where id <> ${UNASSIGNED_CLIENT_ID}
       order by name asc
     `;
@@ -398,6 +439,7 @@ export class PostgresPlatformStore implements PlatformStore {
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
+      contractType: row.contract_type,
       ...optional('owner', row.owner),
       createdAt: toIso(row.created_at),
     })) as StoredClient[];
@@ -407,9 +449,10 @@ export class PostgresPlatformStore implements PlatformStore {
     const rows = await this.sql<{
       id: string;
       name: string;
+      contract_type: StoredClient['contractType'];
       owner: string | null;
       created_at: Date | string;
-    }>`select id, name, owner, created_at from clients where id = ${id}`;
+    }>`select id, name, owner, contract_type, created_at from clients where id = ${id}`;
 
     if (rows.length === 0) return null;
     const row = rows[0];
@@ -417,6 +460,7 @@ export class PostgresPlatformStore implements PlatformStore {
     return {
       id: row.id,
       name: row.name,
+      contractType: row.contract_type,
       ...optional('owner', row.owner),
       createdAt: toIso(row.created_at),
     } as StoredClient;
@@ -431,13 +475,14 @@ export class PostgresPlatformStore implements PlatformStore {
    * *cleared* through this method; clearing needs its own call rather than
    * falling out of an omitted field.
    */
-  async upsertClient(client: Omit<StoredClient, 'createdAt'>): Promise<void> {
+  async upsertClient(client: ClientWrite): Promise<void> {
     await this.sql`
-      insert into clients (id, name, owner)
-      values (${client.id}, ${client.name}, ${client.owner ?? null})
+      insert into clients (id, name, owner, contract_type)
+      values (${client.id}, ${client.name}, ${client.owner ?? null}, ${client.contractType ?? 'audit-and-remediate'})
       on conflict (id) do update set
         name = excluded.name,
-        owner = coalesce(excluded.owner, clients.owner)
+        owner = coalesce(excluded.owner, clients.owner),
+        contract_type = coalesce(${client.contractType ?? null}, clients.contract_type)
     `;
   }
 
@@ -861,19 +906,19 @@ export class PostgresPlatformStore implements PlatformStore {
     // instrument said. `inspected_at` is the caller's stamp, held verbatim —
     // a store that invents a timestamp is a store that has drifted from the
     // memory double, which holds what it was handed.
-    await this.sql`
-      insert into document_inspections
-        (id, client_id, document_id, url, found_on, source, summary,
-         instrument_version, input_sha256, inspected_at)
-      values (
-        ${record.id}, ${record.clientId}, ${record.documentId}, ${record.url},
-        ${record.foundOn ?? null},
-        ${record.source}, ${JSON.stringify(record.summary)}::jsonb,
-        ${record.instrumentVersion ?? null}, ${record.inputSha256 ?? null},
-        ${record.inspectedAt}
-      )
-      on conflict (id) do nothing
-    `;
+    await this.serializeDocumentInspectionWrite(() => this.sql`
+        insert into document_inspections
+          (id, client_id, document_id, url, found_on, source, summary,
+           instrument_version, input_sha256, inspected_at)
+        values (
+          ${record.id}, ${record.clientId}, ${record.documentId}, ${record.url},
+          ${record.foundOn ?? null},
+          ${record.source}, ${JSON.stringify(record.summary)}::jsonb,
+          ${record.instrumentVersion ?? null}, ${record.inputSha256 ?? null},
+          ${record.inspectedAt}
+        )
+        on conflict (id) do nothing
+      `);
   }
 
   async listDocumentInspections(clientId: string): Promise<StoredDocumentInspection[]> {
@@ -947,6 +992,8 @@ export class PostgresPlatformStore implements PlatformStore {
       ...optional('kind', row.kind),
       ...optional('instrumentVersion', row.instrument_version),
       ...optional('artifactUrl', row.artifact_url),
+      ...optional('verificationArtifactUrl', row.verification_artifact_url),
+      ...optional('verificationSha256', row.verification_sha256),
       ...optional('answerIds', row.answer_ids),
       convertedAt: toIso(row.converted_at),
     } as StoredDocumentConversion;
@@ -963,8 +1010,7 @@ export class PostgresPlatformStore implements PlatformStore {
     // URLs (discovery deduped them) and serially this is a couple hundred
     // network round trips. `xmax = 0` is the standard witness for "this row
     // was inserted, not updated" on an upsert.
-    const outcomes = await Promise.all(
-      sightings.map(async (sighting) => {
+    const outcomes = await withConcurrency(sightings, 8, async (sighting) => {
         const rows = await this.sql<{ inserted: boolean }>`
           insert into client_documents
             (id, client_id, url, kind, source, found_on, content_sha256,
@@ -980,8 +1026,7 @@ export class PostgresPlatformStore implements PlatformStore {
           returning (xmax = 0) as inserted
         `;
         return rows[0]?.inserted === true;
-      }),
-    );
+      });
 
     return {
       added: outcomes.filter(Boolean).length,
@@ -1110,13 +1155,14 @@ export class PostgresPlatformStore implements PlatformStore {
     await this.sql`
       insert into document_conversions
         (id, client_id, document_id, summary, input_sha256, output_sha256,
-         kind, instrument_version, artifact_url, answer_ids, converted_at)
+         kind, instrument_version, artifact_url, verification_artifact_url, verification_sha256, answer_ids, converted_at)
       values (
         ${record.id}, ${record.clientId}, ${record.documentId},
         ${JSON.stringify(record.summary)}::jsonb,
         ${record.inputSha256}, ${record.outputSha256},
         ${record.kind ?? null},
         ${record.instrumentVersion ?? null}, ${record.artifactUrl ?? null},
+        ${record.verificationArtifactUrl ?? null}, ${record.verificationSha256 ?? null},
         ${record.answerIds === undefined ? null : JSON.stringify(record.answerIds)}::jsonb,
         ${record.convertedAt}
       )
@@ -1228,4 +1274,76 @@ export class PostgresPlatformStore implements PlatformStore {
       createdAt: toIso(row.created_at),
     })) as ActivityEvent[];
   }
+  async documentRevision(clientId: string): Promise<string> {
+    const rows = await this.sql<{revision: string}>`select document_revision::text as revision from clients where id = ${clientId}`;
+    return rows[0]?.revision ?? '0';
+  }
+  async listDocumentSignoffs(clientId: string): Promise<DocumentSignoff[]> {
+    return (await this.sql<{data: DocumentSignoff}>`select data from document_signoffs where client_id = ${clientId}`).map(r => r.data);
+  }
+  async saveDocumentSignoff(record: DocumentSignoff, expectedRevision: string): Promise<boolean> {
+    const rows = await this.sql`
+      with locked as (select id from clients
+        where id = ${record.clientId} and document_revision = ${expectedRevision}::bigint for update)
+      , saved as (insert into document_signoffs (id, client_id, data)
+      select ${record.id}, id, ${JSON.stringify(record)}::jsonb from locked
+      on conflict (id) do nothing returning id)
+      select id from saved union all select id from document_signoffs where id = ${record.id} and exists (select 1 from locked)`;
+    return rows.length > 0;
+  }
+  async listDocumentExclusions(clientId: string): Promise<DocumentExclusion[]> {
+    return (await this.sql<{data: DocumentExclusion}>`select data from document_exclusions where client_id = ${clientId}`).map(r => r.data);
+  }
+  async saveDocumentExclusion(clientId: string, record: DocumentExclusion, expectedRevision: string): Promise<boolean> {
+    const rows = await this.sql`
+      with locked as (select id from clients
+        where id = ${clientId} and document_revision = ${expectedRevision}::bigint for update)
+      insert into document_exclusions (client_id, document_id, data)
+      select id, ${record.documentId}, ${JSON.stringify(record)}::jsonb from locked
+      on conflict (client_id, document_id) do update set data = excluded.data returning document_id`;
+    return rows.length > 0;
+  }
+  async saveDeliveryBundle(record: DeliveryBundle, expectedRevision: string): Promise<boolean> {
+    const rows = await this.sql`
+      with locked as (select id from clients
+        where id = ${record.clientId} and document_revision = ${expectedRevision}::bigint for update)
+      insert into delivery_bundles (id, client_id, data)
+      select ${record.id}, id, ${JSON.stringify(record)}::jsonb from locked
+      on conflict (id) do update set data = delivery_bundles.data returning id`;
+    return rows.length > 0;
+  }
+  async listDeliveryBundles(clientId: string): Promise<DeliveryBundle[]> {
+    return (await this.sql<{data: DeliveryBundle}>`select data from delivery_bundles where client_id = ${clientId} order by data->>'preparedAt' desc`).map(r => r.data);
+  }
+  async getDeliveryBundle(id: string): Promise<DeliveryBundle | null> {
+    return (await this.sql<{data: DeliveryBundle}>`select data from delivery_bundles where id = ${id}`)[0]?.data ?? null;
+  }
+  async getDeliveryByToken(token: string): Promise<DeliveryBundle | null> {
+    return (await this.sql<{data: DeliveryBundle}>`select data from delivery_bundles where token = ${token} and data ? 'issuedAt' and not data ? 'revokedAt'`)[0]?.data ?? null;
+  }
+  async issueDeliveryBundle(id: string, expectedRevision: string, token: string, actor: string, at: string): Promise<boolean> {
+    const rows = await this.sql`
+      with locked as (select id from clients
+        where id = (select client_id from delivery_bundles where id = ${id})
+          and document_revision = ${expectedRevision}::bigint for update)
+      update delivery_bundles set
+        data = case when data ? 'issuedAt' then data else data || ${JSON.stringify({token, issuedAt: at, issuedBy: actor})}::jsonb end,
+        token = coalesce(delivery_bundles.token, ${token})
+      where delivery_bundles.id = ${id} and client_id in (select id from locked)
+        and not data ? 'revokedAt' returning delivery_bundles.id`;
+    return rows.length > 0;
+  }
+  async revokeDeliveryBundle(id: string, at: string): Promise<void> {
+    await this.sql`update delivery_bundles set token = null, data = (data - 'token') || ${JSON.stringify({revokedAt: at})}::jsonb
+      where id = ${id} and data ? 'issuedAt' and not data ? 'revokedAt'`;
+  }
+
+  async documentWorkLog(clientId: string, documentIds: string[]): Promise<DocumentWorkEvent[]> {
+    const rows = await this.sql<{subject: string; action: string; actor: string; created_at: string | Date; conversion_id: string | null}>`
+      select subject, action, actor, created_at, metadata->>'conversionId' as conversion_id from activity_events
+      where client_id = ${clientId} and subject = any(${documentIds}) order by created_at, id limit 10001`;
+    return rows.map(e => ({documentId: e.subject, action: e.action, actor: e.actor, at: toIso(e.created_at),
+      ...(e.conversion_id === null ? {} : {conversionId: e.conversion_id})}));
+  }
+
 }

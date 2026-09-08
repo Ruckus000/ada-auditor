@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CLIENT_CONTRACT_TYPES } from '../../../../domain/platform';
 import { actorFields } from '../../../../domain/operator';
 import { getPlatformStore, getRunStore } from '../../../../integrations/persistence';
 import { buildPortfolio, clientIdFromName } from '../../../../services/portfolio';
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
 }
 
 const createClientSchema = z.object({
+  contractType: z.enum(CLIENT_CONTRACT_TYPES),
   name: z.string().trim().min(1).max(120),
   // A free-text name. There is no per-user identity to point at — see the
   // Phase 2 auth decision.
@@ -68,6 +70,7 @@ export async function POST(request: Request) {
   await platform.upsertClient({
     id,
     name: parsed.name,
+    contractType: parsed.contractType,
     ...(parsed.owner ? { owner: parsed.owner } : {}),
   });
 
@@ -78,5 +81,5 @@ export async function POST(request: Request) {
     subject: parsed.name,
   });
 
-  return Response.json({ requestId, client: { id, name: parsed.name } }, { status: 201 });
+  return Response.json({ requestId, client: { id, name: parsed.name, contractType: parsed.contractType } }, { status: 201 });
 }

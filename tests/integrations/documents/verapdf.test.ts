@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { checkUa1 } from '../../../src/integrations/documents/verapdf';
+import { checkUa1, verifyPdfBytes } from '../../../src/integrations/documents/verapdf';
 
 /**
  * The wrapper around the reference checker, held to its one honesty rule:
@@ -122,5 +122,18 @@ describe('checkUa1', () => {
     });
     expect(result).toEqual({ checker: 'none', reason: 'unavailable' });
     expect(executor).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('retained final verification evidence', () => {
+  it('preserves original report bytes rather than regenerating JSON', async () => {
+    const raw = '  ' + report(true) + '\n';
+    const result = await verifyPdfBytes(Buffer.from('%PDF-exact'), { runtime, executor: async () => ({ stdout: raw }) });
+    expect(result).toEqual({ conformance: { checker: 'verapdf-ua1', compliant: true }, verificationReport: raw });
+  });
+  it('does not retain malformed checker output as verification evidence', async () => {
+    const result = await verifyPdfBytes(Buffer.from('%PDF-exact'), { runtime, executor: async () => ({ stdout: 'garbage' }) });
+    expect(result).toEqual({ conformance: { checker: 'none', reason: 'unavailable' } });
   });
 });

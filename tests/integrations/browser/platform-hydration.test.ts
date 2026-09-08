@@ -370,6 +370,7 @@ describe('platform hydration', () => {
       await page.getByRole('button', { name: 'Add the first client', exact: true }).click();
       await expect.poll(() => page.url(), { timeout: 15_000 }).toContain('/clients/new');
       await page.getByLabel('Client name').fill('Harness Client');
+      await page.getByRole('radio', { name: 'Audit and remediate', exact: true }).check();
       await page.getByLabel('Owner').fill('Alex Reed');
       await page.getByRole('button', { name: 'Add client', exact: true }).click();
 
@@ -624,6 +625,64 @@ describe('platform hydration', () => {
     }
   }, 240_000);
 
+
+  it('opens remediation-only onboarding directly in Documents without starting an audit', async () => {
+    const page = await openAuthenticatedPage();
+    const auditRequests: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'POST' && /\/(journeys|run|runs)(?:\?|$)/.test(request.url())) auditRequests.push(request.url());
+    });
+    try {
+      await page.goto(`${BASE}/clients/new`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(page, 'button'), { timeout: 15_000 }).toBe(true);
+      await page.getByLabel('Client name').fill('Harness Documents');
+      await page.getByRole('radio', { name: 'Remediation only', exact: true }).check();
+      await page.getByRole('button', { name: 'Add client', exact: true }).click();
+      await expect.poll(() => page.url(), { timeout: 15_000 }).toContain('/clients/harness-documents/documents');
+      await expect.poll(() => page.getByRole('link', { name: 'Documents', exact: true }).getAttribute('aria-current')).toBe('page');
+      expect(auditRequests).toEqual([]);
+      await page.goto(`${BASE}/clients/harness-documents/setup`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => page.url(), { timeout: 15_000 }).toContain('/clients/harness-documents/documents');
+      expect(auditRequests).toEqual([]);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it('reviews a prepared delivery before issuance and restores dialog focus', async () => {
+    const page = await openAuthenticatedPage();
+    let issued = false;
+    let prepared = false;
+    const bundle = { id: 'test-review', preparedAt: '2026-09-07T12:00:00Z', bytes: 1024,
+      entries: [{ documentId: 'review-doc', source: 'https://example.test/review.pdf' }],
+      omissions: [{ documentId: 'omitted-doc', source: 'https://example.test/omitted.pdf', reason: 'Needs a description' }] };
+    await page.route(`**/api/platform/clients/${CLIENT}/delivery`, async route => {
+      if (route.request().method() === 'POST') {
+        prepared = true;
+        await route.fulfill({ json: { bundle } });
+      } else await route.fulfill({ json: {
+        rows: [{ documentId: 'review-doc', url: 'https://example.test/review.pdf', reason: null, excluded: false, signedOff: true, delivered: issued, eligible: true }],
+        counts: { signedOff: 1, delivered: issued ? 1 : 0, eligible: 1, excluded: 0 }, bundles: prepared ? [{ ...bundle, ...(issued ? { issuedAt: '2026-09-07T12:01:00Z' } : {}) }] : [],
+      } });
+    });
+    await page.route(`**/api/platform/clients/${CLIENT}/delivery/test-review`, async route => {
+      if (route.request().method() === 'POST') issued = true;
+      await route.fulfill({ json: { bundle: { ...bundle, issuedAt: '2026-09-07T12:01:00Z' } } });
+    });
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('checkbox', { name: 'Include /review.pdf in delivery', exact: true }).check();
+      await page.getByRole('button', { name: 'Prepare bundle (1)', exact: true }).click();
+      await expect.poll(() => page.getByRole('dialog').isVisible()).toBe(true);
+      expect(issued).toBe(false);
+      await expect.poll(() => page.getByRole('dialog').innerText()).toContain('Needs a description');
+      await expect.poll(() => axeViolations(page), AXE_SETTLE).toBe('');
+      await page.getByRole('button', { name: 'Issue delivery link', exact: true }).click();
+      await expect.poll(() => issued).toBe(true);
+      await expect.poll(() => page.getByRole('dialog').isVisible()).toBe(false);
+      await expect.poll(() => page.evaluate(() => document.activeElement?.textContent)).toContain('Prepare bundle');
+    } finally { await page.close(); }
+  });
 
   it('shows the findings a real run produced', async () => {
     // The check this whole phase is judged on. A client, a journey, an audit

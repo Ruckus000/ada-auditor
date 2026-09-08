@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { CLIENT_CONTRACT_TYPES, CLIENT_CONTRACT_LABELS, type ClientContractType } from '../../../domain/platform';
 import { useRouter } from 'next/navigation';
 import type { PortfolioRow } from '../../../services/portfolio';
 import { VERDICT_CHIP, verdictWords } from '../lib/verdict-chip';
@@ -27,6 +29,8 @@ function runDate(iso: string): string {
 
 export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
   const router = useRouter();
+  const [contractFilter, setContractFilter] = useState<ClientContractType | ''>('');
+  const visibleClients = clients.filter((client) => !contractFilter || client.contractType === contractFilter);
   const hasClients = clients.length > 0;
 
   return (
@@ -47,6 +51,14 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
 
       {hasClients ? (
         <>
+          <label style={{ fontSize: 13, color: T.inkSoft }}>Contract{' '}
+            <select value={contractFilter} onChange={(event) => setContractFilter(event.target.value as ClientContractType | '')}
+              style={{ padding: 8, border: `1px solid ${T.rule}`, borderRadius: 8, background: T.surface, color: T.ink }}>
+              <option value="">All contracts</option>
+              {CLIENT_CONTRACT_TYPES.map((value) => <option key={value} value={value}>{CLIENT_CONTRACT_LABELS[value]}</option>)}
+            </select>
+          </label>
+          {visibleClients.length === 0 ? <p role="status">No clients with this contract.</p> : null}
           <TableShell>
             <TableHead
               template={COLUMNS}
@@ -61,7 +73,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                 '',
               ]}
             />
-            {clients.map((client) => {
+            {visibleClients.map((client) => {
               const badge = VERDICT_CHIP[client.lastRun?.verdict ?? 'scan'];
               const mustFix = client.lastRun?.mustFix ?? 0;
 
@@ -69,11 +81,11 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                 <button
                   key={client.id}
                   type="button"
-                  onClick={() => router.push(`/clients/${client.id}`)}
+                  onClick={() => router.push(`/clients/${client.id}${client.contractType === 'remediation-only' ? '/documents' : ''}`)}
                   // The visible row is a grid of cells; without this the
                   // button's name would be every cell run together.
                   aria-label={`${client.name} — ${
-                    client.lastRun ? verdictWords(client.lastRun.verdict) : 'never audited'
+                    client.contractType === 'remediation-only' ? 'remediation only' : client.lastRun ? verdictWords(client.lastRun.verdict) : 'never audited'
                   }, ${mustFix} must fix${client.setupIncomplete ? ', setup incomplete' : ''}`}
                   className="ph-row"
                   style={{
@@ -95,7 +107,9 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                   <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                     <span style={{ fontSize: 13.5, fontWeight: 650 }}>{client.name}</span>
                     <span style={{ fontFamily: FONT.mono, fontSize: 11, color: T.inkMuted }}>
-                      {client.journeyCount === 1 ? '1 journey' : `${client.journeyCount} journeys`}
+                      {CLIENT_CONTRACT_LABELS[client.contractType]}
+                      {client.contractType !== 'remediation-only' ? ` · ${client.journeyCount} journeys` : ''}
+                      {client.deliveredDocumentCount === undefined ? '' : ` · ${client.deliveredDocumentCount} documents delivered`}
                     </span>
                     {client.setupIncomplete ? (
                       /* Text, not a link — the row is already a <button>, and a
@@ -109,7 +123,9 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                   </span>
 
                   <span>
-                    {client.lastRun ? (
+                    {client.contractType === 'remediation-only' ? (
+                      <span style={{ fontSize: 12.5, color: T.inkMuted }}>Document work</span>
+                    ) : client.lastRun ? (
                       <Pill bg={badge.bg} color={badge.color} border={badge.border}>
                         {badge.label}
                       </Pill>
@@ -188,8 +204,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
               textWrap: 'pretty',
             }}
           >
-            Add the first one. Then record a journey through their site — a checkout, a booking, a
-            sign-in — and every run walks it and reports what a real user would hit.
+            Add the first client and choose website audits, document remediation, or both.
           </span>
           <button
             type="button"

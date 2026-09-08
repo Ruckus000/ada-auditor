@@ -30,6 +30,7 @@ import {
   type Summary,
 } from './document-shared';
 import { DocumentRunResult } from './document-run-result';
+import { DocumentReader } from '../document-reader';
 
 /**
  * The punch list as a form.
@@ -278,7 +279,7 @@ export function DocumentWorkbench({
         {lede ? <p style={noteStyle}>{lede}</p> : null}
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {kindAsks.map((ask) => (
-            <li key={ask.id} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <li key={ask.id} data-reader-ask={ask.id} tabIndex={-1} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <span style={{ fontSize: 12.5, color: T.ink }}>{itemFor(summary, ask)}</span>
               {answerLine(ask) ?? render(ask)}
             </li>
@@ -328,6 +329,7 @@ export function DocumentWorkbench({
         <p style={noteStyle}>Nothing here needs a person.</p>
       ) : null}
 
+      <DocumentReader key={reading.at} summary={summary} endpoint={`${documentsPath}/${encodeURIComponent(document.id)}/preview?reading=${encodeURIComponent(reading.at)}`}>
       <form onSubmit={(event) => { event.preventDefault(); void save(); }} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {group(
           'Language',
@@ -403,7 +405,7 @@ export function DocumentWorkbench({
                   for (const member of group) draft(member.id, next);
                 };
                 return (
-                  <li key={ask.id} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <li key={ask.id} data-reader-ask={ask.id} tabIndex={-1} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
                       {answer === null ? (
                         <input
@@ -509,6 +511,7 @@ export function DocumentWorkbench({
           {saveError ? <span role="alert" style={{ ...noteStyle, color: T.fail }}>{saveError}</span> : null}
         </div>
       </form>
+      </DocumentReader>
 
       {run.state === 'done' ? <DocumentRunResult outcome={run} previous={summary} /> : null}
       {run.state === 'failed' ? (

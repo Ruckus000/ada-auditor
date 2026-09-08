@@ -1,0 +1,14 @@
+.reader { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+.canvas { background: #eeeae1; border: 1px solid #ddd6c8; border-radius: 12px; padding: 12px; min-width: 0; position: sticky; top: 12px; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.paper { position: relative; margin: 0 auto; background: white; box-shadow: 0 3px 14px #131a1f15; }
+.paper img { width: 100%; height: auto; display: block; }
+.mark { position: absolute; border: 2px solid #906009; background: #eaba3430; min-width: 24px; min-height: 24px; padding: 0; cursor: pointer; color: #fff; }
+.mark[aria-pressed='true'] { border: 3px solid #0b5f58; background: #0b5f5820; }
+.number { display: block; background: #694307; width: 24px; height: 24px; line-height: 24px; font-weight: 700; border-radius: 50%; position: absolute; top: 0; left: 0; }
+.reader button:focus-visible, .reader input:focus-visible { outline: 3px solid #37507e; outline-offset: 3px; }
+.strip { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.issues { margin: 10px 0; padding-left: 24px; }
+.issues li { margin-bottom: 6px; }
+.panel { min-width: 0; }
+@media (max-width: 900px) { .reader { grid-template-columns: minmax(0,1fr); } .canvas { position: static; } }

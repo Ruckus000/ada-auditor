@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { setupStage } from '../../../../../services/setup-state';
 import { SetupScreen } from '../../../../platform/components/setup/setup-screen';
 import { loadClient } from '../load';
@@ -19,6 +19,7 @@ export default guarded(async function ClientSetupPage({
   const detail = await loadClient(clientId);
 
   if (!detail) notFound();
+  if (detail.contractType === 'remediation-only') redirect(`/clients/${clientId}/documents`);
 
   return <SetupScreen detail={detail} stage={setupStage(detail)} />;
 });

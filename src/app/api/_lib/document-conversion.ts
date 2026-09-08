@@ -97,7 +97,8 @@ async function earnUaIdentifier(
     return verdict;
   }
 
-  const rechecked = await checkUa1(staged, checkOptions);
+  let stagedReport: string | undefined;
+  const rechecked = await checkUa1(staged, { ...checkOptions, onReport: (raw) => { stagedReport = raw; } });
   if (rechecked.checker !== 'verapdf-ua1' || !rechecked.compliant) {
     // The identifier did not do what the clause said it would. Keep the file we
     // can defend, and report what it actually is — loudly, because this means a
@@ -114,6 +115,7 @@ async function earnUaIdentifier(
   }
 
   await rename(staged, request.outputPath);
+  if (stagedReport !== undefined) checkOptions?.onReport?.(stagedReport);
   return rechecked;
 }
 
@@ -209,7 +211,7 @@ function declaredCounts(answers: DeclaredAnswers | undefined, languageUsed: bool
  */
 
 export type ConversionOutcome =
-  | { ok: true; pdf: Buffer; summary: RemediationSummary }
+  | { ok: true; pdf: Buffer; summary: RemediationSummary; verificationReport?: string }
   | { ok: false; refusal: UploadRefusal };
 
 /**
@@ -262,7 +264,9 @@ export async function remediateWordBytes(
 
     // The second instrument, on the delivered bytes. `checker: 'none'` on a
     // host without it — visible as "not checked", never as clean.
+    let verificationReport: string | undefined;
     const checkOptions = {
+      onReport: (raw: string) => { verificationReport = raw; },
       ...(options.root === undefined ? {} : { root: options.root }),
       ...(options.env === undefined ? {} : { env: options.env }),
       ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
@@ -350,7 +354,7 @@ export async function remediateWordBytes(
       output,
       stageOptions,
     );
-    return { ok: true, pdf, summary };
+    return { ok: true, pdf, summary, ...(verificationReport === undefined ? {} : { verificationReport }) };
   } finally {
     // Every path, including a throw inside the conversion. `convertSourceToPdf`
     // cleans its own working directory; this is ours.
@@ -503,7 +507,9 @@ export async function repairPdfBytes(
       };
     }
 
+    let verificationReport: string | undefined;
     const checkOptions = {
+      onReport: (raw: string) => { verificationReport = raw; },
       ...(options.root === undefined ? {} : { root: options.root }),
       ...(options.env === undefined ? {} : { env: options.env }),
       ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
@@ -538,7 +544,7 @@ export async function repairPdfBytes(
       output,
       stageOptions,
     );
-    return { ok: true, pdf, summary };
+    return { ok: true, pdf, summary, ...(verificationReport === undefined ? {} : { verificationReport }) };
   } finally {
     await rm(work, { recursive: true, force: true });
   }

@@ -127,6 +127,18 @@ async function storeConvertedPdf(
   }
 }
 
+async function storeVerificationReport(clientId: string, requestId: string, report: string | undefined) {
+  if (report === undefined) return {};
+  try {
+    const bytes = Buffer.from(report, 'utf8');
+    const stored = await getArtifactStore().storeBytes(`documents/${clientId}/${requestId}-verification.json`, bytes, 'application/json');
+    return stored === null ? {} : { verificationArtifactUrl: stored.url, verificationSha256: sha256(bytes) };
+  } catch {
+    logWarn('document_verification_store_failed', { requestId, clientId });
+    return {};
+  }
+}
+
 /**
  * The trail, by document id and never by address — a document path
  * routinely names a person, and the feed is rendered to every operator.
@@ -316,6 +328,7 @@ export async function POST(
     ...(repairing ? { kind: 'repair' as const } : {}),
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
+    ...(await storeVerificationReport(clientId, requestId, outcome.verificationReport)),
     ...(declared.answerIds.length === 0 ? {} : { answerIds: declared.answerIds }),
     convertedAt: now,
   };
@@ -438,6 +451,7 @@ export async function PUT(
     outputSha256: sha256(outcome.pdf),
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
+    ...(await storeVerificationReport(clientId, requestId, outcome.verificationReport)),
     ...(declared.answerIds.length === 0 ? {} : { answerIds: declared.answerIds }),
     convertedAt: now,
   };
@@ -517,6 +531,7 @@ async function repairUploadedPdf(
     kind: 'repair',
     instrumentVersion: INSTRUMENT_VERSION,
     ...(await storeConvertedPdf(clientId, requestId, outcome.pdf)),
+    ...(await storeVerificationReport(clientId, requestId, outcome.verificationReport)),
     ...(declared.answerIds.length === 0 ? {} : { answerIds: declared.answerIds }),
     convertedAt: now,
   };

@@ -266,6 +266,11 @@ alter table findings alter column wcag_criteria drop default;
 
 alter table clients add column if not exists owner text;
 
+-- Existing accounts retain both capabilities; new UI/API callers choose explicitly.
+alter table clients add column if not exists contract_type text not null
+  default 'audit-and-remediate'
+  check (contract_type in ('audit', 'audit-and-remediate', 'remediation-only'));
+
 -- Existing rows keep a null title. Not backfilled: the sentence belongs to the
 -- rule version that produced the finding, and axe's wording changes between
 -- releases — writing today's text onto last month's audit would put words in
@@ -868,3 +873,46 @@ alter table document_conversions add column if not exists answer_ids jsonb;
 -- had them in hand. A later reading of different bytes is what makes the
 -- answers given against these ones `stale` rather than silently unapplied.
 alter table client_documents add column if not exists content_sha256 text;
+
+-- Final verification evidence, absent honestly on historical conversions.
+alter table document_conversions add column if not exists verification_artifact_url text;
+alter table document_conversions add column if not exists verification_sha256 text;
+
+-- Delivery is separate from audit reports: a remediation-only client has no run.
+alter table clients add column if not exists document_revision bigint not null default 0;
+create table if not exists document_signoffs (
+  id text primary key,
+  client_id text not null references clients(id) on delete cascade,
+  data jsonb not null
+);
+create index if not exists document_signoffs_client on document_signoffs(client_id);
+create table if not exists document_exclusions (
+  client_id text not null references clients(id) on delete cascade,
+  document_id text not null references client_documents(id) on delete cascade,
+  data jsonb not null,
+  primary key (client_id, document_id)
+);
+create table if not exists delivery_bundles (
+  id text primary key,
+  client_id text not null references clients(id) on delete cascade,
+  data jsonb not null,
+  token text unique
+);
+create index if not exists delivery_bundles_client on delivery_bundles(client_id);
+
+-- Dependency writes and eligibility commits serialize on the same client row.
+create or replace function bump_document_revision() returns trigger language plpgsql as $$
+begin
+  update clients set document_revision = document_revision + 1 where id = new.client_id;
+  return new;
+end;
+$$;
+do $$
+declare t text;
+begin
+  foreach t in array array['client_documents', 'document_inspections', 'document_conversions', 'document_answers', 'document_signoffs', 'document_exclusions'] loop
+    execute format('drop trigger if exists document_revision_changed on %I', t);
+    execute format('create trigger document_revision_changed after insert or update on %I for each row execute function bump_document_revision()', t);
+  end loop;
+end;
+$$;

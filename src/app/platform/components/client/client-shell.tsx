@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { CLIENT_CONTRACT_LABELS } from '../../../../domain/platform';
 import { usePathname } from 'next/navigation';
 import type { ClientDetail } from '../../../../services/client-detail';
 import { clientHref } from '../../lib/params';
@@ -33,10 +34,12 @@ export function ClientShell({
   // route grammar and its round-trip test proves the builder and the parser
   // agree; a second copy in this file would be free to drift from both.
   const tabs: Array<[label: string, href: string]> = [
-    ['Overview', clientHref(detail.id)],
-    ['Findings', clientHref(detail.id, 'findings')],
-    ['Journeys', clientHref(detail.id, 'journeys')],
-    ['Documents', clientHref(detail.id, 'documents')],
+    ...(detail.contractType === 'remediation-only' ? [] : [
+      ['Overview', clientHref(detail.id)] as [string, string],
+      ['Findings', clientHref(detail.id, 'findings')] as [string, string],
+      ['Journeys', clientHref(detail.id, 'journeys')] as [string, string],
+    ]),
+    ...(detail.contractType === 'audit' ? [] : [['Documents', clientHref(detail.id, 'documents')] as [string, string]]),
   ];
 
   const badge = VERDICT_CHIP[detail.lastRun?.verdict ?? 'scan'];
@@ -96,7 +99,9 @@ export function ClientShell({
               {detail.name}
             </h1>
 
-            {detail.lastRun ? (
+            {detail.contractType === 'remediation-only' ? (
+              <span style={{ fontSize: 12.5, color: T.inkMuted }}>{CLIENT_CONTRACT_LABELS[detail.contractType]}</span>
+            ) : detail.lastRun ? (
               <>
                 <Pill bg={badge.bg} color={badge.color} border={badge.border}>
                   {badge.label}

@@ -1,3 +1,4 @@
+import type { DocumentDeliveryStore } from './document-delivery';
 import type { AnswerDisposition, AskKind, AskTarget } from './document-answers';
 import type { RemediationSummary } from './document-remediation';
 import type { DocumentLinkKind } from './discovery';
@@ -29,7 +30,20 @@ import type { DocumentLinkKind } from './discovery';
  */
 export const UNASSIGNED_CLIENT_ID = 'client-unassigned';
 
+export const CLIENT_CONTRACT_TYPES = ['audit', 'audit-and-remediate', 'remediation-only'] as const;
+export type ClientContractType = (typeof CLIENT_CONTRACT_TYPES)[number];
+export const CLIENT_CONTRACT_LABELS: Record<ClientContractType, string> = {
+  audit: 'Run audits',
+  'audit-and-remediate': 'Audit and remediate',
+  'remediation-only': 'Remediation only',
+};
+export type ClientWrite = Omit<StoredClient, 'createdAt' | 'contractType'> & {
+  /** Omission preserves an existing choice; legacy new records receive the migration default. */
+  contractType?: ClientContractType;
+};
+
 export type StoredClient = {
+  contractType: ClientContractType;
   id: string;
   name: string;
   /** A free-text name. There is no per-user identity to point at. */
@@ -467,7 +481,7 @@ export interface OperatorPasskeyStore {
 export interface ClientStore {
   listClients(): Promise<StoredClient[]>;
   getClient(id: string): Promise<StoredClient | null>;
-  upsertClient(client: Omit<StoredClient, 'createdAt'>): Promise<void>;
+  upsertClient(client: ClientWrite): Promise<void>;
   getClientConfig(clientId: string): Promise<Record<string, unknown> | null>;
   setClientConfig(clientId: string, data: Record<string, unknown>): Promise<void>;
 }
@@ -800,6 +814,9 @@ export type StoredDocumentConversion = {
    * its rows do.
    */
   artifactUrl?: string;
+  /** Private original final veraPDF JSON report and its content hash. */
+  verificationArtifactUrl?: string;
+  verificationSha256?: string;
   /**
    * The answers this run consumed, by id — the row's own account of what it
    * wrote from a person, beside the summary's `declared` counts. Absent when
@@ -953,7 +970,7 @@ export interface DocumentAnswerStore {
   latestDocumentAnswers(clientId: string, documentIds: string[]): Promise<StoredDocumentAnswer[]>;
 }
 
-export type PlatformStore = OperatorStore &
+export type PlatformStore = DocumentDeliveryStore & OperatorStore &
   OperatorPasskeyStore &
   ClientStore &
   JourneyStore &

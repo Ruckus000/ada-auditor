@@ -49,6 +49,8 @@ const eslintConfig = [
       // the trade a spike is allowed to make and production code is not. If
       // anything here graduates into src/, it gets linted like everything else.
       "experiments/**",
+      // Design prototypes are source material, not application code.
+      "Remediation-Design/**",
       "next-env.d.ts",
     ],
   },

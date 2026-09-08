@@ -71,6 +71,7 @@ describe('buildPortfolio', () => {
     expect(await buildPortfolio(deps())).toEqual([
       {
         id: 'acme',
+        contractType: 'audit-and-remediate',
         name: 'Acme Outfitters',
         owner: 'Alex Reed',
         journeyCount: 0,

@@ -196,6 +196,21 @@ describe('earning the PDF/UA identifier', () => {
     };
   }
 
+  it.each([true, false])('retains the report for the accepted bytes (stamp accepted: %s)', async (accepted) => {
+    repairReads();
+    checkUa1.mockImplementationOnce(async (_path, options) => {
+      options.onReport('original-report');
+      return ONLY_IDENTIFIER;
+    }).mockImplementationOnce(async (_path, options) => {
+      options.onReport('stamped-report');
+      return accepted ? { checker: 'verapdf-ua1', compliant: true } : ONLY_IDENTIFIER;
+    });
+    const { repairPdfBytes } = await import('../../src/app/api/_lib/document-conversion');
+    const outcome = await repairPdfBytes(pdfBytes(), 'retained-report');
+    expect(outcome.ok).toBe(true);
+    if (outcome.ok) expect(outcome.verificationReport).toBe(accepted ? 'stamped-report' : 'original-report');
+  });
+
   it('stamps the file when the second pass earns it', async () => {
     repairReads();
     checkUa1

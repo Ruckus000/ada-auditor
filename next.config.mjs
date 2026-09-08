@@ -98,6 +98,23 @@ const nextConfig = {
       './vendor/fonts/**',
       './dist/documents/classes/**',
     ],
+    // Delivery creation and review build a ZIP through the same bounded JVM
+    // stage as the document pipeline. Keep both route depths on the first
+    // matching key so they do not inherit the browser-only client bundle.
+    '/api/platform/clients/**/delivery': [
+      './vendor/jre/**',
+      './vendor/verapdf/**',
+      './vendor/pdfbox-app-3.0.8.jar',
+      './vendor/fonts/**',
+      './dist/documents/classes/**',
+    ],
+    '/api/platform/clients/**/delivery/**': [
+      './vendor/jre/**',
+      './vendor/verapdf/**',
+      './vendor/pdfbox-app-3.0.8.jar',
+      './vendor/fonts/**',
+      './dist/documents/classes/**',
+    ],
     '/api/platform/clients/**': [
       './node_modules/playwright-core/**',
       './node_modules/@sparticuz/chromium/**',

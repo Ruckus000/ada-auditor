@@ -1,4 +1,5 @@
 import { getPlatformStore, getRunStore } from '../../integrations/persistence';
+import { deliveryOverview } from '../../services/document-delivery';
 import { buildPortfolio } from '../../services/portfolio';
 import { PortfolioRoute } from '../platform/components/routes/portfolio-route';
 import { guarded } from './guard';
@@ -18,5 +19,6 @@ export default guarded(async function PortfolioPage() {
     runs: getRunStore(),
   });
 
-  return <PortfolioRoute clients={clients} />;
+  const rows = await Promise.all(clients.map(async client => client.contractType === 'audit' ? client : { ...client, deliveredDocumentCount: (await deliveryOverview(platform, client.id)).delivered }));
+  return <PortfolioRoute clients={rows} />;
 });

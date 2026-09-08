@@ -20,6 +20,7 @@ import {
   type Summary,
 } from './client/document-shared';
 import { ScreenHeading } from './ui';
+import { DocumentReader } from './document-reader';
 
 /**
  * One file in, one file out, nothing recorded.
@@ -120,7 +121,7 @@ export function StatelessAnswersForm({
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {languageAsk ? (
-        <section aria-label="Language" style={sectionStyle}>
+        <section aria-label="Language" data-reader-ask="language" style={sectionStyle}>
           <h2 style={h2Style}>Language</h2>
           <p style={noteStyle}>{itemFor(summary, languageAsk)}. Nothing is preselected: a language is never guessed.</p>
           <LanguageChoice
@@ -161,7 +162,7 @@ export function StatelessAnswersForm({
                   ? `${group.length} figures draw the same image (pages ${pages.join(', ')}) — one description lands on all of them`
                   : itemFor(summary, lead);
               return (
-                <li key={lead.id} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <li key={lead.id} data-reader-ask={lead.id} tabIndex={-1} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <span style={{ fontSize: 12.5, color: T.ink }}>{label}</span>
                   {context ? <span style={{ fontSize: 11, color: T.inkMuted }}>{context}</span> : null}
                   <textarea
@@ -291,7 +292,7 @@ export function RemediateFileScreen({ toolchain, converter }: { toolchain: Toolc
     : 'application/pdf,.pdf';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 860 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1500 }}>
       <ScreenHeading
         title="Remediate a file"
         lede="One file in, one file out. Nothing is recorded here and no one is attributed — for a client's document use its inventory, where every answer is kept, keyed to the bytes it was given for."
@@ -346,6 +347,7 @@ export function RemediateFileScreen({ toolchain, converter }: { toolchain: Toolc
 
           {file && (reading || !isPdf(file)) ? (
             reading ? (
+              <DocumentReader key={sha} summary={reading} endpoint="/api/documents/preview" file={file} expectedSha={sha}>
               <StatelessAnswersForm
                 summary={reading}
                 descriptions={descriptions}
@@ -356,6 +358,7 @@ export function RemediateFileScreen({ toolchain, converter }: { toolchain: Toolc
                 busy={busy}
                 languageError={languageError}
               />
+              </DocumentReader>
             ) : (
               <span>
                 <button

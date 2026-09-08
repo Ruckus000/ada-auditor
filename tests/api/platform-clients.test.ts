@@ -87,7 +87,7 @@ describe('/api/platform/clients', () => {
   });
 
   it('adds a client and gives it a readable id', async () => {
-    const response = await POST(fromBrowser({ name: 'Acme Outfitters', owner: 'Alex Reed' }));
+    const response = await POST(fromBrowser({ contractType: 'audit-and-remediate', name: 'Acme Outfitters', owner: 'Alex Reed' }));
 
     expect(response.status).toBe(201);
     expect((await response.json()).client).toMatchObject({
@@ -102,8 +102,8 @@ describe('/api/platform/clients', () => {
   it('suffixes a duplicate name rather than overwriting the first client', async () => {
     // The id is the URL. Reusing it would silently show one client's findings
     // under the other's name.
-    await POST(fromBrowser({ name: 'Acme' }));
-    const second = await POST(fromBrowser({ name: 'Acme' }));
+    await POST(fromBrowser({ contractType: 'audit-and-remediate', name: 'Acme' }));
+    const second = await POST(fromBrowser({ contractType: 'audit-and-remediate', name: 'Acme' }));
 
     expect((await second.json()).client.id).toBe('acme-2');
     expect((await platform.listClients()).map((c) => c.id)).toEqual(['acme', 'acme-2']);
@@ -112,7 +112,7 @@ describe('/api/platform/clients', () => {
   it('records who added the client', async () => {
     // Activity is attributed to the configured operator name; there is no
     // per-user identity to attribute it to.
-    await POST(fromBrowser({ name: 'Acme' }));
+    await POST(fromBrowser({ contractType: 'audit-and-remediate', name: 'Acme' }));
 
     const [event] = await platform.listEvents({ clientId: 'acme' });
     expect(event).toMatchObject({ actor: 'Alex Reed', action: 'added a client', subject: 'Acme' });
@@ -120,6 +120,8 @@ describe('/api/platform/clients', () => {
 
   it.each([
     ['no name', {}],
+    ['missing contract', { name: 'Acme' }],
+    ['unknown contract', { name: 'Acme', contractType: 'unknown' }],
     ['blank name', { name: '   ' }],
     ['a name that is not a string', { name: 42 }],
     ['an over-long name', { name: 'x'.repeat(200) }],
@@ -128,8 +130,16 @@ describe('/api/platform/clients', () => {
     expect(await platform.listClients()).toEqual([]);
   });
 
+  it('creates remediation-only clients without a journey or incomplete audit setup', async () => {
+    const response = await POST(fromBrowser({ name: 'Documents', contractType: 'remediation-only' }));
+    expect(response.status).toBe(201);
+    expect(await platform.listJourneys('documents')).toEqual([]);
+    const body = await (await GET(fromScript())).json();
+    expect(body.clients[0]).toMatchObject({ contractType: 'remediation-only', setupIncomplete: false });
+  });
+
   it('lists a client it just added', async () => {
-    await POST(fromBrowser({ name: 'Acme' }));
+    await POST(fromBrowser({ contractType: 'audit-and-remediate', name: 'Acme' }));
 
     const body = await (await GET(fromScript())).json();
     expect(body.count).toBe(1);

@@ -1,3 +1,4 @@
+import { documentDeliveryStoreContract } from './document-delivery-store-contract';
 import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -148,7 +149,18 @@ export function platformStoreContract(
   makeStore: () => Promise<PlatformStore> | PlatformStore,
   options: PlatformContractOptions = {},
 ): void {
+  documentDeliveryStoreContract(makeStore, PLATFORM_PREFIX);
   describe('clients', () => {
+    it('defaults legacy writes and preserves explicit contracts when renaming', async () => {
+      const store = await makeStore();
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Legacy' });
+      expect(await store.getClient(CONTRACT_CLIENT)).toMatchObject({ contractType: 'audit-and-remediate' });
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Documents', contractType: 'remediation-only' });
+      await store.upsertClient({ id: CONTRACT_CLIENT, name: 'Renamed' });
+      expect(await store.getClient(CONTRACT_CLIENT)).toMatchObject({ name: 'Renamed', contractType: 'remediation-only' });
+      expect(await store.listClients()).toContainEqual(expect.objectContaining({ id: CONTRACT_CLIENT, contractType: 'remediation-only' }));
+    });
+
     it('round-trips a client', async () => {
       const store = await makeStore();
       await store.upsertClient({
@@ -1166,6 +1178,8 @@ export function platformStoreContract(
           documentId: doc.id,
           instrumentVersion: 1,
           artifactUrl: `https://blob.example/documents/${PLATFORM_PREFIX}/a-random-suffix.pdf`,
+        verificationArtifactUrl: `https://blob.example/documents/${PLATFORM_PREFIX}/verification.json`,
+        verificationSha256: 'a'.repeat(64),
         }),
       );
       await store.saveDocumentConversion(
@@ -1180,6 +1194,8 @@ export function platformStoreContract(
       expect(stored).toMatchObject({
         instrumentVersion: 1,
         artifactUrl: `https://blob.example/documents/${PLATFORM_PREFIX}/a-random-suffix.pdf`,
+        verificationArtifactUrl: `https://blob.example/documents/${PLATFORM_PREFIX}/verification.json`,
+        verificationSha256: 'a'.repeat(64),
       });
 
       // A conversion made with no blob store reads back with the fields
@@ -1187,6 +1203,8 @@ export function platformStoreContract(
       // refusal both key on.
       const bare = await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-bare`);
       expect(bare).not.toHaveProperty('artifactUrl');
+      expect(bare).not.toHaveProperty('verificationArtifactUrl');
+      expect(bare).not.toHaveProperty('verificationSha256');
       expect(bare).not.toHaveProperty('instrumentVersion');
 
       expect(await store.getDocumentConversion(`${PLATFORM_PREFIX}-conv-nope`)).toBeNull();

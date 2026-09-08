@@ -13,7 +13,7 @@ const run = (over: Partial<RunSummary> = {}): RunSummary => ({
   durationMs: 1000, slowestPageMs: 500, ...over,
 });
 const detail = (over: Partial<ClientDetail>): ClientDetail => ({
-  id: 'c1', name: 'Acme', createdAt: '2026-08-19T00:00:00.000Z',
+  contractType: 'audit-and-remediate', id: 'c1', name: 'Acme', createdAt: '2026-08-19T00:00:00.000Z',
   journeys: [], lastRun: null, hasCompletedRun: false, ...over,
 });
 

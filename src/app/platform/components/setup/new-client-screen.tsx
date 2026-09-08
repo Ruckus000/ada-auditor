@@ -1,5 +1,6 @@
 'use client';
 
+import { CLIENT_CONTRACT_TYPES, CLIENT_CONTRACT_LABELS, type ClientContractType } from '../../../../domain/platform';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { usePlatform } from '../../lib/state';
@@ -14,7 +15,7 @@ import { StageIndicator } from './stage-indicator';
  * hint — because this is now the front door of a flow, not a detour.
  */
 const MESSAGES: Record<string, string> = {
-  invalid_request_body: 'Check the client’s name — it needs 1 to 120 characters.',
+  invalid_request_body: 'Enter a client name of 1 to 120 characters and choose a contract.',
   unauthorized: 'Your session expired. Reload and sign in again.',
 };
 
@@ -27,6 +28,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
   const nameId = useId();
   const ownerId = useId();
 
+  const [contractType, setContractType] = useState<ClientContractType | ''>('');
   const [name, setName] = useState('');
   const [owner, setOwner] = useState('');
   const [saving, setSaving] = useState(false);
@@ -48,7 +50,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
         ? 'Could not reach the server. Check your connection and try again.'
         : (MESSAGES[errorCode] ?? `Could not add the client (${errorStatus}). Try again.`);
 
-  const blocked = saving || name.trim() === '';
+  const blocked = saving || name.trim() === '' || !contractType;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -57,7 +59,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
     // `disabled`, so Enter typed into the name field can still reach the
     // form's submit event directly. This is the guard `disabled` used to
     // provide.
-    if (name.trim() === '') return;
+    if (name.trim() === '' || !contractType) return;
 
     setSaving(true);
     setErrorCode(null);
@@ -67,7 +69,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
       const response = await fetch('/api/platform/clients', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name, ...(owner.trim() ? { owner: owner.trim() } : {}) }),
+        body: JSON.stringify({ name, contractType, ...(owner.trim() ? { owner: owner.trim() } : {}) }),
       });
 
       const body = (await response.json().catch(() => null)) as
@@ -84,7 +86,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
       actions.flash(`${name.trim()} added.`);
       // `replace`, not `push`: browser-back from the setup stages must land on
       // the portfolio, not on an empty create form that reads as "edit".
-      router.replace(`/clients/${body.client.id}/setup`);
+      router.replace(`/clients/${body.client.id}/${contractType === 'remediation-only' ? 'documents' : 'setup'}`);
     } catch {
       setErrorCode(NETWORK_ERROR_CODE);
       setSaving(false);
@@ -99,7 +101,7 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
       <div style={{ marginBottom: 18 }}>
         <ScreenHeading
           title="Add a client"
-          lede="Then say where we audit, and run their first audit — about two minutes end to end."
+          lede="Choose the work this client needs, then set up their account."
         />
       </div>
 
@@ -172,6 +174,18 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
             Who at your agency answers for this account.
           </span>
         </span>
+
+        <fieldset style={{ border: `1px solid ${T.rule}`, borderRadius: 9, padding: 14 }}>
+          <legend style={labelStyle}>Contract</legend>
+          {CLIENT_CONTRACT_TYPES.map((value) => (
+            <label key={value} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 0', fontSize: 13 }}>
+              <input type="radio" name="contractType" value={value} required
+                checked={contractType === value} onChange={() => setContractType(value)} />
+              {CLIENT_CONTRACT_LABELS[value]}
+            </label>
+          ))}
+          <p style={noteStyle}>Remediation only opens the document inventory without running a website audit.</p>
+        </fieldset>
 
         {errorMessage ? (
           <p id={`${nameId}-error`} role="alert" style={errorStyle}>
