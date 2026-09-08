@@ -125,14 +125,25 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
                     <a href={`/r/${report.shareToken}`} style={{ color: T.accent }}>
                       Open the shared link ↗
                     </a>
-                    <button
-                      type="button"
-                      onClick={() => void revoke(report)}
-                      disabled={busy === report.id}
-                      style={{ border: 0, background: 'none', padding: 0, color: T.failDeep, cursor: 'pointer', font: 'inherit' }}
-                    >
-                      {busy === report.id ? 'Turning off…' : 'Turn off link'}
-                    </button>
+                    {/* Only where the link can actually be turned off. A row
+                        whose run is no longer stored has no `clientId` (see
+                        `report-view.ts`), and the route needs the run to prove
+                        the report is this client's — so the button would do
+                        nothing at all, and silence here reads as "revoked". */}
+                    {report.clientId ? (
+                      <button
+                        type="button"
+                        onClick={() => void revoke(report)}
+                        disabled={busy === report.id}
+                        style={{ border: 0, background: 'none', padding: 0, color: T.failDeep, cursor: 'pointer', font: 'inherit' }}
+                      >
+                        {busy === report.id ? 'Turning off…' : 'Turn off link'}
+                      </button>
+                    ) : (
+                      <span style={{ color: T.inkMuted }}>
+                        This link cannot be turned off here — its run is no longer stored.
+                      </span>
+                    )}
                   </span>
                 ) : (
                   // The row stays after revocation rather than disappearing:

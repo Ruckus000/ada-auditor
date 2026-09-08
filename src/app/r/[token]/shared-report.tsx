@@ -7,6 +7,7 @@ import {
   scoreStatValue,
 } from '../../../services/presentation/verdict';
 import { describeCriterion, summariseCriteria } from '../../../services/wcag-reference';
+import { failsConformance } from '../../../services/reporting';
 import { documentGapKey } from '../../../services/document-regression';
 import { FONT, T } from '../../platform/lib/tokens';
 
@@ -34,9 +35,15 @@ export function SharedReportPage({
   const confirmed = report.run.mustFix + report.run.shouldFix;
   const recommendations = report.run.recommendations;
   const needsReview = report.run.needsReview;
+  // The gate itself, not a local restatement of it — this is the client's own
+  // copy of the verdict, and it must count what the run counted. Every finding
+  // here is deterministic already: `buildSharedReport` filters on source before
+  // it maps, which is the half of the gate this data can no longer express.
   const failed = summariseCriteria(
     report.pages.flatMap((page) =>
-      page.findings.filter(isBlockingFinding).flatMap((finding) => finding.wcagCriteria),
+      page.findings
+        .filter((finding) => failsConformance({ ...finding, source: 'deterministic' }))
+        .flatMap((finding) => finding.wcagCriteria),
     ),
   );
 
@@ -226,13 +233,6 @@ export function SharedReportPage({
         link to it still means what it meant when it was sent.
       </footer>
     </main>
-  );
-}
-
-function isBlockingFinding(finding: { severity: string; conformanceLevel?: string }): boolean {
-  return (
-    finding.severity !== 'needs-review' &&
-    (finding.conformanceLevel === 'A' || finding.conformanceLevel === 'AA')
   );
 }
 

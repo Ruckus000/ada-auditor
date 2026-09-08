@@ -53,8 +53,19 @@ const GATING_LEVELS: ReadonlySet<string> = new Set(['A', 'AA']);
  *   could not reach a verdict on these, so they are never a failure."
  * - **No criterion, no gate.** A best-practice rule is a recommendation, and
  *   `conformanceLevelFromTags` answers `null` for one.
+ *
+ * Exported because it is the ONE definition of the gate. Every surface that
+ * says how many issues decide the result — the client's HTML report, the
+ * shared report, the console's verdict panel — has to answer the same way as
+ * the run that produced the verdict, and a second copy of these four lines is
+ * how that stops being true. Typed structurally so a stored finding and a
+ * parsed one both fit.
  */
-function failsConformance(finding: AuditFinding): boolean {
+export function failsConformance(finding: {
+  source: string;
+  severity: string;
+  conformanceLevel?: string | null;
+}): boolean {
   return (
     finding.source === 'deterministic' &&
     finding.severity !== 'needs-review' &&

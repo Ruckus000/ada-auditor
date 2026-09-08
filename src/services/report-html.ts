@@ -1,5 +1,6 @@
 import type { StoredFinding, StoredRunRecord } from '../domain/persistence';
 import { runVerdict } from './presentation/verdict';
+import { failsConformance } from './reporting';
 
 /**
  * Renders a stored run as a print-ready HTML report.
@@ -121,12 +122,15 @@ function renderRemediation(finding: StoredFinding): string {
       : '';
 
   if (finding.severity === 'needs-review') {
-    return group(
-      'What to check',
-      (finding.remediationAnyOf?.length ?? 0) > 0
-        ? finding.remediationAnyOf
-        : finding.remediationAllOf,
-    );
+    // Both lists under one heading, never one of them. An axe `incomplete`
+    // result carries `anyOf` AND `allOf` (`deterministic-audit.ts`), and
+    // choosing between them dropped whichever came second from the one
+    // artifact a client actually receives. The any/all distinction is about
+    // what CLEARS a finding, and nothing clears this one automatically — a
+    // person decides — so here they are all simply things to look at.
+    return group('What to check', [
+      ...new Set([...(finding.remediationAnyOf ?? []), ...(finding.remediationAllOf ?? [])]),
+    ]);
   }
 
   return group('Fix any one of these', finding.remediationAnyOf) + group('Fix all of these', finding.remediationAllOf);
@@ -271,12 +275,7 @@ export function renderRunReport(run: StoredRunRecord): string {
   const findings = sortBySeverity(run.findings);
   const groups = groupByPage(run);
 
-  const blocking = verdictKind === 'fail' ? findings.filter(
-    (finding) =>
-      finding.source === 'deterministic' &&
-      finding.severity !== 'needs-review' &&
-      (finding.conformanceLevel === 'A' || finding.conformanceLevel === 'AA'),
-  ).length : 0;
+  const blocking = verdictKind === 'fail' ? findings.filter(failsConformance).length : 0;
 
   const counts = SEVERITY_ORDER.map((severity) => ({
     severity,

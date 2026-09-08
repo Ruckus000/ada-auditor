@@ -253,7 +253,13 @@ function FindingRow({
       {finding.fixAnyOf.length > 0 || finding.fixAllOf.length > 0 ? (
         <>
           {finding.severity === 'review' ? (
-            <FixList label="What to check" items={finding.fixAnyOf.length > 0 ? finding.fixAnyOf : finding.fixAllOf} />
+            // Both lists, never one of them: an axe `incomplete` result carries
+            // `anyOf` AND `allOf`, and choosing between them withheld half of
+            // what the engine said from the person triaging it.
+            <FixList
+              label="What to check"
+              items={[...new Set([...finding.fixAnyOf, ...finding.fixAllOf])]}
+            />
           ) : (
             <>
               <FixList label="Fix any one of these" items={finding.fixAnyOf} />
