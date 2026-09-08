@@ -135,7 +135,12 @@ export function DocumentInventory({
   /** Keyed by the URL the action ran on — a paired PDF reads its source's. */
   outcomes: Record<string, ActionOutcome>;
   onInspect: (doc: ClientDocument) => void;
-  onConvert: (doc: Pick<ClientDocument, 'url' | 'foundOn'>) => void;
+  /**
+   * `id` and `kind` are needed as well as the address: a document with no
+   * fetchable address is re-supplied as a file, and the file lands on the row
+   * `id` names rather than minting a new one. `sourceAvailable` carries both.
+   */
+  onConvert: (doc: Pick<ClientDocument, 'id' | 'url' | 'kind' | 'foundOn'>) => void;
   documentsPath: string;
   /** The inventory page's own path — the workbench lives one segment under it. */
   inventoryHref: string;

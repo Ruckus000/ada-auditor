@@ -8,13 +8,19 @@ import { DocumentIntake } from './document-intake';
 import { DocumentInventory } from './document-inventory';
 import { DocumentDeliveryPanel } from './document-delivery-panel';
 import {
+  ACCEPT_PDF,
+  ACCEPT_WORD,
   buttonStyle,
   conversionOutcome,
   disabledStyle,
   inspectOutcome,
+  isFetchable,
   noteStyle,
   pathOf,
   pdfNameFor,
+  pickFile,
+  uploadForConversion,
+  uploadForInspection,
   type ActionOutcome,
   type ClientDocument,
   type StateCounts,
@@ -193,9 +199,33 @@ export function ClientDocuments({
     });
   }
 
+  /**
+   * A document nobody can fetch is handed over instead.
+   *
+   * An upload's `url` is the filename it arrived under, and the by-URL routes
+   * refuse that before they fetch anything — so every action on an uploaded
+   * row used to answer "reload the page and try again", which reproduced it.
+   * Asked for before the row goes busy, so closing the dialog leaves the row
+   * as it was. `null` means the person changed their mind; `undefined` means
+   * this document has an address and none is needed.
+   */
+  async function fileFor(doc: Pick<ClientDocument, 'url' | 'kind'>): Promise<File | null | undefined> {
+    if (isFetchable(doc.url)) return undefined;
+    return pickFile(doc.kind === 'pdf' ? ACCEPT_PDF : ACCEPT_WORD);
+  }
+
   /** Resolves to whether a batch should stop here — see `inspectOutcome`. */
   async function inspect(doc: ClientDocument): Promise<boolean> {
+    const file = await fileFor(doc);
+    if (file === null) return false;
+
     setOutcome(doc.url, { state: 'running' });
+    if (file !== undefined) {
+      setOutcome(doc.url, await uploadForInspection(documentsPath, file, doc.id));
+      void loadInventory();
+      return false;
+    }
+
     try {
       const response = await fetch(documentsPath, {
         method: 'POST',
@@ -215,8 +245,17 @@ export function ClientDocuments({
     }
   }
 
-  async function convert(doc: Pick<ClientDocument, 'url' | 'foundOn'>): Promise<void> {
+  async function convert(doc: Pick<ClientDocument, 'id' | 'url' | 'kind' | 'foundOn'>): Promise<void> {
+    const file = await fileFor(doc);
+    if (file === null) return;
+
     setOutcome(doc.url, { state: 'running' });
+    if (file !== undefined) {
+      setOutcome(doc.url, await uploadForConversion(documentsPath, file, doc.id));
+      void loadInventory();
+      return;
+    }
+
     try {
       const response = await fetch(`${documentsPath}/convert`, {
         method: 'POST',
@@ -237,9 +276,19 @@ export function ClientDocuments({
    * on purpose: each is a fetch plus a JVM, and two at once on a shared host
    * is how a run gets a timeout nobody can explain. */
   async function inspectAllUnreviewed(): Promise<void> {
-    const pending = (documents ?? []).filter((doc) => doc.kind === 'pdf' && doc.state === 'not-reviewed');
+    const unreviewed = (documents ?? []).filter((doc) => doc.kind === 'pdf' && doc.state === 'not-reviewed');
+    // Uploads are left out rather than walked: a batch that stopped at every
+    // one of them to open a file dialog would be worse than not offering it.
+    // Said, not silently skipped — a count that does not match the button's
+    // is the kind of small discrepancy nobody investigates.
+    const pending = unreviewed.filter((doc) => isFetchable(doc.url));
+    const handedOver = unreviewed.length - pending.length;
     setBatch({ done: 0, total: pending.length });
-    setBatchNote(null);
+    setBatchNote(
+      handedOver === 0
+        ? null
+        : `${handedOver} uploaded ${handedOver === 1 ? 'document is' : 'documents are'} not included: run ${handedOver === 1 ? 'it' : 'them'} from ${handedOver === 1 ? 'its' : 'their'} own row, which asks for the file.`,
+    );
     for (const [index, doc] of pending.entries()) {
       if (await inspect(doc)) {
         // The document ceiling is spent; every row after this one would say
@@ -254,8 +303,11 @@ export function ClientDocuments({
     setBatch(null);
   }
 
+  // Counts what the button will actually walk. Uploads are inspected from
+  // their own row, which asks for the file; including them here would put a
+  // number on the button that the batch then does not reach.
   const unreviewedPdfs = (documents ?? []).filter(
-    (doc) => doc.kind === 'pdf' && doc.state === 'not-reviewed',
+    (doc) => doc.kind === 'pdf' && doc.state === 'not-reviewed' && isFetchable(doc.url),
   ).length;
 
   return (

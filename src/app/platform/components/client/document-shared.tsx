@@ -119,6 +119,91 @@ export function pathOf(url: string): string {
   }
 }
 
+/**
+ * Whether the server can go and get this document itself.
+ *
+ * A crawled row's `url` is an address; an upload's is the filename it arrived
+ * under (`documents/route.ts`), and the by-URL routes refuse that with
+ * `invalid_request_body` before they fetch anything. Written as the same
+ * http(s) test their schema applies, so a screen and a route agree on what
+ * counts as an address rather than agreeing by luck.
+ */
+export function isFetchable(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
+
+/** The file dialog, opened from the click the person already made. */
+export function pickFile(accept: string): Promise<File | null> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    // Never attached to the document: there is nothing to lay out, nothing for
+    // a screen reader to meet, and nothing to render once per row of a two
+    // hundred row table. The button stays the only control.
+    input.addEventListener('change', () => resolve(input.files?.[0] ?? null), { once: true });
+    // A dialog the person closes fires no `change` in most browsers, so the
+    // promise would hang and leave a button disabled forever. `cancel` is the
+    // event for that, and browsers without it simply never resolve a promise
+    // whose caller has already stopped waiting on a busy flag.
+    input.addEventListener('cancel', () => resolve(null), { once: true });
+    input.click();
+  });
+}
+
+/** What each kind of document may be re-supplied as. */
+export const ACCEPT_PDF = 'application/pdf,.pdf';
+export const ACCEPT_WORD =
+  '.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword';
+
+/**
+ * A file, sent to a route that reads documents rather than fetches them.
+ *
+ * The intake has always uploaded this way; the only thing the other surfaces
+ * needed was `documentId`, which lands the bytes on a row already on record
+ * instead of minting a new one — and which is how the answers a person already
+ * saved get picked up, since the route matches them to the bytes it receives.
+ *
+ * The network failure is caught here rather than at each call site, because
+ * every caller was writing the same sentence.
+ */
+export async function uploadForInspection(
+  documentsPath: string,
+  file: File,
+  documentId?: string,
+): Promise<ActionOutcome> {
+  try {
+    const response = await fetch(documentsPath, { method: 'PUT', body: filePart(file, documentId) });
+    return (await inspectOutcome(response)).outcome;
+  } catch {
+    return { state: 'failed', message: 'Could not reach the server.' };
+  }
+}
+
+/** The same, for the route that repairs a PDF or converts a Word source. */
+export async function uploadForConversion(
+  documentsPath: string,
+  file: File,
+  documentId?: string,
+): Promise<ActionOutcome> {
+  try {
+    const response = await fetch(`${documentsPath}/convert`, {
+      method: 'PUT',
+      body: filePart(file, documentId),
+    });
+    return await conversionOutcome(response, pdfNameFor(file.name));
+  } catch {
+    return { state: 'failed', message: 'Could not reach the server.' };
+  }
+}
+
+function filePart(file: File, documentId?: string): FormData {
+  const form = new FormData();
+  form.set('file', file);
+  if (documentId !== undefined) form.set('documentId', documentId);
+  return form;
+}
+
 /** `agenda.docx` → `agenda-remediated.pdf`, purely for the download's name. */
 export function pdfNameFor(sourceName: string): string {
   // CDN-hosted documents routinely carry a query (`/blob.docx?ver=2`); the

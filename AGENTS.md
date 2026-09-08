@@ -1713,6 +1713,21 @@ Read this before claiming something works.
   the only two answer sidecars were both on the same PDF. `w22-answers-applied-word`
   is the Word half, and `soffice-remediate-route.test.ts` now drives a real
   conversion with a real description.
+  **A document with no fetchable address is run by handing the file over.**
+  (2026-09-08.) An upload's `url` is the filename it arrived under, so the
+  by-URL routes refused every action on one with `invalid_request_body` — six
+  controls, all answering "reload the page and try again", which reproduced it.
+  `isFetchable` (`document-shared.tsx`) is the same http(s) test the routes'
+  schema applies, and where it fails the control opens a file dialog and PUTs
+  the bytes with `documentId`, which is how the answers already on record get
+  picked up. **The server was already able to do this** — `PUT …/documents` and
+  `…/convert` have taken `file` + `documentId` since the channel shipped — and
+  the intake had both browser halves; they were lifted into `document-shared.tsx`
+  and given the one field they lacked. Nothing is stored: the client's original
+  is input, and only the delivered document is kept. A file that is not the one
+  that was answered carries no answers to that run and the row then reads
+  `stale`, which is the existing rule doing its job rather than a check on the
+  screen. `Inspect all` walks only what it can fetch and says how many it left.
 
 ## Agent behavior
 

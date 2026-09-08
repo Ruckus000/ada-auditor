@@ -5,13 +5,15 @@ import { describeDiscoveryFailure } from '../../lib/discovery-copy';
 import { FONT, T } from '../../lib/tokens';
 import { DocumentRunResult } from './document-run-result';
 import {
+  ACCEPT_PDF,
+  ACCEPT_WORD,
   buttonStyle,
-  conversionOutcome,
   disabledStyle,
   inputStyle,
   noteStyle,
-  pdfNameFor,
   refusalMessage,
+  uploadForConversion,
+  uploadForInspection,
   type ActionOutcome,
   type Summary,
 } from './document-shared';
@@ -148,39 +150,18 @@ export function DocumentIntake({
 
   async function inspectUpload(file: File) {
     setUploadState({ state: 'running' });
-    try {
-      const form = new FormData();
-      form.set('file', file);
-      const response = await fetch(documentsPath, { method: 'PUT', body: form });
-      if (!response.ok) {
-        setUploadState({ state: 'failed', message: await refusalMessage(response) });
-        return;
-      }
-      const payload = (await response.json().catch(() => null)) as
-        | { inspection?: { summary: Summary } }
-        | null;
-      if (!payload?.inspection) {
-        setUploadState({ state: 'failed', message: 'The server answered without a reading.' });
-        return;
-      }
-      setUploadState({ state: 'done', summary: payload.inspection.summary, converted: false });
-      onChanged();
-    } catch {
-      setUploadState({ state: 'failed', message: 'Could not reach the server.' });
-    }
+    const outcome = await uploadForInspection(documentsPath, file);
+    setUploadState(outcome);
+    if (outcome.state === 'done') onChanged();
   }
 
   async function convertUpload(file: File) {
     setWordUploadState({ state: 'running' });
-    try {
-      const form = new FormData();
-      form.set('file', file);
-      const response = await fetch(`${documentsPath}/convert`, { method: 'PUT', body: form });
-      setWordUploadState(await conversionOutcome(response, pdfNameFor(file.name)));
-      onChanged();
-    } catch {
-      setWordUploadState({ state: 'failed', message: 'Could not reach the server.' });
-    }
+    setWordUploadState(await uploadForConversion(documentsPath, file));
+    // Unconditional, unlike the inspection above: a refused run still records
+    // the bytes it was given, so the row's answers may have gone stale even
+    // though nothing was delivered.
+    onChanged();
   }
 
   const omittedEntries = scanReport
@@ -310,7 +291,7 @@ export function DocumentIntake({
           <input
             id={uploadId}
             type="file"
-            accept="application/pdf,.pdf"
+            accept={ACCEPT_PDF}
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) void inspectUpload(file);
@@ -336,7 +317,7 @@ export function DocumentIntake({
             <input
               id={wordUploadId}
               type="file"
-              accept=".docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+              accept={ACCEPT_WORD}
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 if (file) void convertUpload(file);
