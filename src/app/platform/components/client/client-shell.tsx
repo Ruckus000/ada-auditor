@@ -89,7 +89,7 @@ export function ClientShell({
               textDecoration: 'none',
             }}
           >
-            ← Portfolio
+            ← Clients
           </Link>
 
           <span

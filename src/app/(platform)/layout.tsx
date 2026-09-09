@@ -8,7 +8,7 @@ import { PlatformLocked, PlatformShell } from '../platform/components/platform-s
 export const metadata: Metadata = {
   title: 'ADA Auditor',
   description:
-    'The agency worklist: a portfolio of client sites, their verdicts, findings, journeys and reports.',
+    'The agency worklist: client sites, their verdicts, findings, journeys and reports.',
 };
 
 /**

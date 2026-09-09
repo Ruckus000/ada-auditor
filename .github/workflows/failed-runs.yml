@@ -8,8 +8,8 @@ name: Failed runs
 # and never learns the outcome. Nothing on the journey row records one either:
 # "dispatched" and "audited successfully" are the same state there.
 #
-# The screens do not close the gap. The portfolio is the only view spanning
-# clients and its rows carry no `failureReason` at all, and both the portfolio
+# The screens do not close the gap. The Clients screen is the only view
+# spanning clients and its rows carry no `failureReason` at all, and both it
 # and the client detail read one run per journey — so last night's failure is
 # erased by tonight's success before anyone opens the page.
 #
