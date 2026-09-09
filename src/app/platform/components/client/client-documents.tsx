@@ -372,10 +372,21 @@ export function ClientDocuments({
       {converter.checked && !converter.available && documents?.some((doc) => doc.kind !== 'pdf') ? (
         <p style={noteStyle}>
           {/* Stated rather than implied by a missing button, and stated where
-              the rows are: the absence is a capability fact about this
-              deployment, not a defect in the row. */}
+              the rows are: the absence is a capability fact about this host,
+              not a defect in the row.
+
+              It said "Inspection reads PDFs", and that was false on every
+              deployment. The probe above answers one boolean for two
+              capabilities — `available: true` needs LibreOffice AND a Java
+              runtime — so `false` means "one of the two is missing" and this
+              screen cannot tell which. A serverless function has neither, so
+              the banner rendered there and promised an inspection that
+              answers `document_toolchain_unavailable` on the first click.
+              For the same reason it no longer says the host "does not have"
+              LibreOffice: the flag carries "could not", and a core-only
+              install with no Writer module is not an absent one. */}
           Word documents are recorded without a Convert button — conversion runs where LibreOffice
-          is installed, and this deployment does not have it. Inspection reads PDFs.
+          is installed, and this host cannot run it.
         </p>
       ) : null}
 

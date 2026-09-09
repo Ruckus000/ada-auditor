@@ -101,6 +101,50 @@ describe('describeDocumentRefusal', () => {
     expect(describeDocumentRefusal({ error: 'document_not_found' })).toMatch(/row|record|inventory/i);
   });
 
+  /**
+   * The four ways an operator is told a stage did not run here.
+   *
+   * Two of these ended "Nothing is wrong with the document" and two "Nothing
+   * here is wrong with the document" — one idea, two wordings, and the
+   * unqualified pair says something nobody measured: the stage did not run, so
+   * the file may be fine or may be the worst in the inventory.
+   *
+   * They also named a cause the refusal does not carry. `resolveLibreOffice`
+   * and `resolveJavaRuntime` tell "nothing is installed" from "installed and
+   * incomplete" — a core-only LibreOffice with no Writer module is a real
+   * observed production failure — but `document-conversion.ts` and
+   * `document-inspection.ts` reduce the failure to its `kind` before it leaves
+   * the server. So "this deployment has no LibreOffice" is asserted from a flag
+   * that only means "could not". "Not available" is true either way.
+   */
+  it.each([
+    ['converter, through the conversion lane', { error: 'remediation_failed', detail: 'unavailable' }],
+    ['converter, refused up front', { error: 'converter_unavailable' }],
+    ['toolchain, through the reading lane', { error: 'inspect_failed', detail: 'unavailable' }],
+    ['toolchain, refused up front', { error: 'document_toolchain_unavailable' }],
+  ])('says a stage did not run without judging the document: %s', (_name, refusal) => {
+    const copy = describeDocumentRefusal(refusal);
+
+    expect(copy).not.toMatch(/wrong with the document/i);
+    expect(copy).toMatch(/not available/i);
+    // The document is named as unread, so nobody reads the refusal as a verdict.
+    expect(copy).toMatch(/not read/i);
+    // And no cause is asserted from a flag that only means "could not".
+    expect(copy).not.toMatch(/has no|does not have/i);
+  });
+
+  it('sends the converter refusals somewhere the work can actually be done', () => {
+    // The toolchain has no equivalent — an operator cannot install a JVM from
+    // this screen either, but a Word source really can be converted elsewhere,
+    // which is how the pilot's three Word documents were delivered.
+    for (const refusal of [
+      { error: 'remediation_failed', detail: 'unavailable' },
+      { error: 'converter_unavailable' },
+    ]) {
+      expect(describeDocumentRefusal(refusal)).toMatch(/LibreOffice/);
+    }
+  });
+
   it('prints an unknown code rather than inventing a sentence for it', () => {
     expect(describeDocumentRefusal({ error: 'something_new' })).toBe('The action stopped: something_new.');
     // A missing code — a body that was not JSON — says so.

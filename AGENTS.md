@@ -406,6 +406,35 @@ Chromium launches on a Vercel function:
   reads `pass`; `services/regression.ts` decides "worse" by impact; and the
   printable PDF now lists deterministic findings only, like the shared page,
   and is still linked from no screen.
+- **A capability message says a stage did not run and that nothing was read.
+  It does not say why, because by then nobody knows.** `resolveLibreOffice`
+  and `resolveJavaRuntime` tell "nothing is installed" apart from "installed
+  and incomplete" — a LibreOffice with no Writer module is a real observed
+  production failure, and a Java runtime with `dist/documents/classes`
+  uncompiled is another — but `document-conversion.ts` and
+  `document-inspection.ts` reduce the failure to its `kind` before it leaves
+  the server, so `describeDocumentRefusal` receives "could not" and nothing
+  more. Four sentences asserted the cause anyway ("This deployment has no
+  LibreOffice") and then absolved the file ("Nothing is wrong with the
+  document") — a verdict on a document nothing had read. Both halves are gone:
+  `NO_CONVERTER` and `NO_TOOLCHAIN` in `document-action-copy.ts` say what is
+  not available and that the document was not read, which is true whether the
+  install is absent or broken. **"Ask your administrator" is right for a broken
+  install and wrong for an absence by design, and until the resolver's reason
+  survives to the point of rendering, no sentence may choose between them** —
+  which is why the blanket version of it, on a branch, was wrong.
+  The same rule caught a live falsehood one screen over: the client documents
+  banner claimed "Inspection reads PDFs" from a probe that cannot answer it.
+  `GET /api/documents/remediate` returns one boolean for two capabilities
+  (`available` is LibreOffice **and** a Java runtime), so on a deployment,
+  which has neither, the banner promised an inspection that refuses on the
+  first click. A screen may say what it cannot do; it may not say what it can
+  do from a flag that only measures the pair. `tests/app/capability-banner-copy.test.ts`
+  guards it by reading the source with comments stripped — the banner sits
+  behind state fetched in an effect, the fast suite is node-only, and the
+  hydration suite runs on a machine where the banner correctly never renders,
+  so a render test cannot reach it and the limitation is written down rather
+  than papered over.
 - **Triage is keyed on finding identity, per client** (`finding_triage`), never
   on the per-run `findings` row: `saveRun` deletes and reinserts a run's
   children on every write — inside one transaction, so a reader never sees the
