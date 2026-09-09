@@ -139,6 +139,15 @@ describe('readDeploymentConfig', () => {
     expect(find(true, false)?.detail).toMatch(/LibreOffice/);
     expect(find(false, true)?.value).toBe('converter only');
     expect(find(false, true)?.detail).toMatch(/JDK/);
+    // And it does not claim a deployment lacks them. `vercel-build` runs
+    // `prepare-jvm.ts` and `prepare-libreoffice.ts`, so a host missing a half
+    // is a local one or a build that skipped that step — the sentence said
+    // "a serverless function has neither" long after that stopped being true,
+    // on the screen an operator opens to learn what this deployment does.
+    for (const detail of [find(false, false)?.detail, find(true, false)?.detail]) {
+      expect(detail).not.toMatch(/serverless function has neither/i);
+      expect(detail).not.toMatch(/expected on a deployed environment/i);
+    }
 
     // Never degraded, in any combination: absence is the design of this slice.
     for (const [j, s2] of [[true, true], [true, false], [false, true], [false, false]] as const) {

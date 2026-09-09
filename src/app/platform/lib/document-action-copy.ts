@@ -23,6 +23,53 @@ export type DocumentRefusal = {
 
 const TRY_AGAIN = 'Run it again; if it repeats, this document needs a person.';
 
+/**
+ * The two ways to say a stage did not run here.
+ *
+ * **Neither asserts why.** `resolveLibreOffice` and `resolveJavaRuntime` tell
+ * "nothing is installed" apart from "installed and incomplete" — a LibreOffice
+ * with no Writer module is a real observed production failure, and a Java
+ * runtime with the stages uncompiled is another — but that reason is reduced
+ * to its `kind` before it leaves the server (`document-conversion.ts`,
+ * `document-inspection.ts`), so all that reaches this file is "could not".
+ * These said "This deployment has no LibreOffice", which is false in both of
+ * those states and points at the wrong fix. "Not available" is true in all of
+ * them.
+ *
+ * **Neither absolves the document either.** They ended "Nothing is wrong with
+ * the document" — in two wordings, for one idea — and nothing was read, so
+ * nothing is known: the file may be fine or may be the worst in the inventory.
+ * Saying it was not read is the fact; saying it is fine is a verdict nobody
+ * reached.
+ *
+ * The converter sentence carries a next step and the toolchain one does not,
+ * and that asymmetry is real rather than an omission: a Word source really can
+ * be converted on another computer — that is how the pilot delivered its three
+ * Word documents — and there is no equivalent move for a PDF whose reading
+ * stages are absent.
+ */
+const NOT_AVAILABLE = 'so the document was not read. This says nothing about the document itself.';
+
+/**
+ * The conversion lane, which knows the document is a Word source —
+ * `convertSourceToPdf` is the only producer of this failure — so it can name
+ * the move that works. That move is real: it is how the pilot delivered its
+ * three Word documents.
+ */
+const NO_CONVERTER = `Word conversion is not available on this host, ${NOT_AVAILABLE} Convert it on a computer that has LibreOffice.`;
+
+/**
+ * The refusal raised before the route has fetched anything, so it does NOT
+ * know what the document is — `refuseWithoutToolchain` probes LibreOffice
+ * first and answers this for a PDF repair as readily as for a Word
+ * conversion, and the "Repair this PDF" button is not gated on the converter
+ * at all. Naming Word here, or sending the reader to convert somewhere else,
+ * hands an operator repairing a PDF an errand with no Word source to run it
+ * on. It says only what was refused.
+ */
+const NO_CONVERTER_YET = `This host cannot run the converter, ${NOT_AVAILABLE}`;
+const NO_TOOLCHAIN = `The PDF stages are not available on this host, ${NOT_AVAILABLE}`;
+
 function remediationStep(detail: string | undefined): string {
   const [kind, step] = (detail ?? '').split('/');
   switch (kind) {
@@ -42,7 +89,7 @@ function remediationStep(detail: string | undefined): string {
     case 'not-tagged':
       return 'The conversion produced no structure tree — an untagged file, which nothing here would deliver. Check the source opens as a real Word document.';
     case 'unavailable':
-      return 'This deployment has no converter. Nothing here is wrong with the document.';
+      return NO_CONVERTER;
     default:
       return `The conversion stopped. ${TRY_AGAIN}`;
   }
@@ -55,7 +102,7 @@ function repairStep(detail: string | undefined): string {
     case 'invalid-language':
       return 'The language this document declares is not a usable tag, and nothing here guesses one. Name the language in its answers and run it again.';
     case 'unavailable':
-      return 'This deployment has no document toolchain. Nothing here is wrong with the document.';
+      return NO_TOOLCHAIN;
     case 'failed':
     case 'invalid-output':
     default:
@@ -87,9 +134,9 @@ export function describeDocumentRefusal(refusal: DocumentRefusal): string {
     case 'redirected':
       return 'That address redirects elsewhere, and redirects are not followed. Paste the address it redirects to.';
     case 'document_toolchain_unavailable':
-      return 'This deployment has no document toolchain, so nothing here can read a PDF. Nothing is wrong with the document.';
+      return NO_TOOLCHAIN;
     case 'converter_unavailable':
-      return 'This deployment has no LibreOffice, so Word documents cannot be converted here. Nothing is wrong with the document.';
+      return NO_CONVERTER_YET;
     case 'inspect_failed':
       return repairStep(refusal.detail);
     case 'remediation_failed':

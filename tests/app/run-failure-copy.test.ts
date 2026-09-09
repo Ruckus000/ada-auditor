@@ -39,6 +39,65 @@ describe('describeRunFailure', () => {
     }
   });
 
+  it('gives an operator something to do where there is something to do', () => {
+    // The file's own promise: "each says the one thing that *is* doable from
+    // here". Both of these stated a cause and stopped — a run with no steps,
+    // and a run the sweep closed out — leaving a screen that explains and then
+    // asks nothing.
+    for (const code of ['journey_has_no_steps', 'run_timed_out']) {
+      expect(describeRunFailure(code), code).toMatch(/again|add /i);
+    }
+  });
+
+  it('says whose a failure is when it is not the reader\'s, instead of inventing a step', () => {
+    // Neither of these is reachable from a screen. `allowedJourneyIds` is
+    // populated by no production caller, so the contract check always passes;
+    // `stepId` is defaulted by the run handler and rejected at the API
+    // boundary when malformed, so no operator ever named the value in it.
+    // A draft of this file told the reader to rename that step — an
+    // instruction for something they had not authored and could not see,
+    // which is the whole defect this pass exists to remove.
+    expect(describeRunFailure('invalid_step_id')).toMatch(/api/i);
+    expect(describeRunFailure('invalid_step_id')).not.toMatch(/rename/i);
+    expect(describeRunFailure('journey_not_in_scope')).toMatch(/contract/i);
+  });
+
+  it('does not send anyone to a person or a lever they do not have', () => {
+    // Every sentence in the map, against the three instructions a rewrite of
+    // this file introduced elsewhere and must never acquire here. There is no
+    // administrator role in this product; the page cap is a deployment
+    // variable, not a control on any screen; and nothing here is "restored".
+    const codes = [
+      'journey_step_failed',
+      'journey_has_no_steps',
+      'journey_not_in_scope',
+      'action_not_allowed',
+      'invalid_step_id',
+      'navigation_not_allowed',
+      'run_timed_out',
+      'audit_run_failed',
+    ];
+
+    for (const code of codes) {
+      const copy = describeRunFailure(code);
+      expect(copy, code).not.toMatch(/^The run stopped: /);
+      expect(copy, code).not.toMatch(/ask your administrator/i);
+      expect(copy, code).not.toMatch(/restore it/i);
+      expect(copy, code).not.toMatch(/check fewer/i);
+    }
+  });
+
+  it('says where a journey\'s allowed hosts are set, because no screen shows them', () => {
+    // `allowedHosts` is a per-journey column reachable only through the
+    // journeys API — `docs/env.md` says it exists for third-party sign-in and
+    // nothing else. Told to widen it, an operator goes looking for a field
+    // that is not on any screen.
+    const copy = describeRunFailure('navigation_not_allowed');
+
+    expect(copy).toMatch(/allowed hosts/i);
+    expect(copy).toMatch(/api/i);
+  });
+
   it('has copy for every code the classifier can actually produce', () => {
     // The map is keyed by `RunFailureCode`, so the compiler already forces an
     // entry per member. What it cannot check is the other direction: that a
@@ -56,6 +115,15 @@ describe('describeRunFailure', () => {
     for (const code of produced) {
       expect(code).not.toBe('audit_run_failed');
       expect(describeRunFailure(code)).not.toMatch(/^The run stopped: /);
+    }
+
+    // The two the probe array cannot reach, asserted directly rather than left
+    // to the compiler. `run_timed_out` is written by the staleness sweep, never
+    // thrown, so `classifyRunFailure` cannot produce it; `audit_run_failed` is
+    // the fallback the loop above excludes by construction. Both are real
+    // things an operator reads.
+    for (const code of ['run_timed_out', 'audit_run_failed']) {
+      expect(describeRunFailure(code), code).not.toMatch(/^The run stopped: /);
     }
   });
 });

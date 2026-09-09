@@ -406,6 +406,59 @@ Chromium launches on a Vercel function:
   reads `pass`; `services/regression.ts` decides "worse" by impact; and the
   printable PDF now lists deterministic findings only, like the shared page,
   and is still linked from no screen.
+- **A capability message says a stage did not run and that nothing was read.
+  It does not say why, because by then nobody knows.** `resolveLibreOffice`
+  and `resolveJavaRuntime` tell "nothing is installed" apart from "installed
+  and incomplete" — a LibreOffice with no Writer module is a real observed
+  production failure, and a Java runtime with `dist/documents/classes`
+  uncompiled is another — but `document-conversion.ts` and
+  `document-inspection.ts` reduce the failure to its `kind` before it leaves
+  the server, so `describeDocumentRefusal` receives "could not" and nothing
+  more. Four sentences asserted the cause anyway ("This deployment has no
+  LibreOffice") and then absolved the file ("Nothing is wrong with the
+  document") — a verdict on a document nothing had read. Both halves are gone:
+  `NO_CONVERTER` and `NO_TOOLCHAIN` in `document-action-copy.ts` say what is
+  not available and that the document was not read, which is true whether the
+  install is absent or broken. **"Ask your administrator" is right for a broken
+  install and wrong for an absence by design, and until the resolver's reason
+  survives to the point of rendering, no sentence may choose between them** —
+  which is why the blanket version of it, on a branch, was wrong.
+  The same rule caught a falsehood one screen over: the client documents
+  banner claimed "Inspection reads PDFs" from a probe that cannot answer it.
+  `GET /api/documents/remediate` returns one boolean for two capabilities
+  (`available` is LibreOffice **and** a Java runtime), so `false` means one of
+  the two is missing and the screen cannot tell which — where the missing half
+  is the Java runtime, the banner promised an inspection that refuses on the
+  first click. It also named LibreOffice as the missing half, which sends an
+  operator whose stages are merely uncompiled to reinstall software they have.
+  **A screen may say what it cannot do; it may not name which half from a flag
+  that measures the pair.** The banner now says neither and points at Settings,
+  which reports the two separately.
+  **A first version of this bullet said the banner was false "on every
+  deployment", and that was itself an unsupported claim** — the exact defect
+  the entry is about. `vercel-build` runs `prepare-jvm.ts` and
+  `prepare-libreoffice.ts`, `next.config.mjs` traces both into
+  `/api/documents/remediate/**`, and `libreoffice-runtime.ts` retired that
+  sentence under "The deployed runtime is no longer absent". A deployment
+  answers `available: true` and never renders the banner; a developer machine
+  without LibreOffice, or any host with `dist/documents/classes` uncompiled,
+  does. **`api/documents/remediate/route.ts` still carried the retired
+  sentence in its own docblock, which is where the mistake came from** — one
+  stale comment cost a wrong claim in three files, so it is corrected rather
+  than left for the next reader.
+  `tests/app/capability-banner-copy.test.ts`
+  guards it by reading the source with comments stripped — the banner sits
+  behind state fetched in an effect, the fast suite is node-only, and the
+  hydration suite runs on a machine where the banner correctly never renders,
+  so a render test cannot reach it and the limitation is written down rather
+  than papered over.
+  **Recorded, not fixed here:** `documents/convert`'s POST calls
+  `refuseWithoutToolchain` before it fetches, so it probes LibreOffice for a
+  **PDF repair**, which needs none — the sibling upload path in the same file
+  says so outright — and the "Repair this PDF" button is not gated on the
+  converter. On a converter-less host that repair is refused with
+  `converter_unavailable`. The copy for that code is lane-neutral for exactly
+  this reason (`NO_CONVERTER_YET`), but the refusal itself is a route bug.
 - **Triage is keyed on finding identity, per client** (`finding_triage`), never
   on the per-run `findings` row: `saveRun` deletes and reinserts a run's
   children on every write — inside one transaction, so a reader never sees the

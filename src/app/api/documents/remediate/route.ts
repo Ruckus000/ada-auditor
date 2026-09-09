@@ -27,9 +27,19 @@ import { createRequestId } from '../../_lib/request-id';
  *
  * ## Where this runs
  *
- * Where the toolchain is: a JVM and LibreOffice. A serverless function has
- * neither, so this route answers **503** there — not 500. A deployment without
- * LibreOffice is not broken; it cannot do this one thing.
+ * Where the toolchain is: a JVM and LibreOffice. This route answers **503**
+ * where either is missing — not 500. A host without LibreOffice is not
+ * broken; it cannot do this one thing.
+ *
+ * It used to say a serverless function "has neither", and that has been false
+ * since `vercel-build` began assembling both: `prepare-jvm.ts` produces the
+ * JRE and the compiled stages, `prepare-libreoffice.ts` a 440MB headless
+ * install, and `next.config.mjs` traces all three into this route.
+ * `libreoffice-runtime.ts` retired the same sentence under "The deployed
+ * runtime is no longer absent"; this copy of it survived and was read as
+ * current, which put an unsupported claim into three other files before
+ * anyone checked. 503 is now the answer for a host that lacks a half, which
+ * is a developer machine or a build that skipped the prepare steps.
  *
  * ## GET: can this host convert at all?
  *
