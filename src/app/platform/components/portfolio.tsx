@@ -8,7 +8,7 @@ import { VERDICT_CHIP, verdictWords } from '../lib/verdict-chip';
 import { T } from '../lib/tokens';
 import { FONT } from '../lib/tokens';
 import { Avatar, ChevronRight, Pill, ScreenHeading, TableHead, TableShell } from './ui';
-import { countStatValue, scoreStatValue } from '../../../services/presentation/verdict';
+import { countLine, countStatValue, scoreStatValue } from '../../../services/presentation/verdict';
 
 const COLUMNS =
   'minmax(160px,2.4fr) minmax(96px,1fr) minmax(64px,0.7fr) minmax(56px,0.7fr) minmax(70px,0.8fr) minmax(90px,1.1fr) minmax(56px,0.8fr) 44px';
@@ -76,8 +76,12 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
             {visibleClients.map((client) => {
               const badge = VERDICT_CHIP[client.lastRun?.verdict ?? 'scan'];
               // The gate's own count, or a dash where it made none — the
-              // same dash the score shows for an unscored run.
+              // same dash the score shows for an unscored run. The visible
+              // cell sits under the MUST FIX column header; the accessible
+              // name has no header, so it says it in words: a dash is not
+              // spoken, and "— must fix" would be announced as an order.
               const confirmed = client.lastRun ? countStatValue(client.lastRun.confirmed) : '—';
+              const confirmedWords = countLine(client.lastRun?.confirmed, 'must fix');
 
               return (
                 <button
@@ -88,7 +92,7 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                   // button's name would be every cell run together.
                   aria-label={`${client.name} — ${
                     client.contractType === 'remediation-only' ? 'remediation only' : client.lastRun ? verdictWords(client.lastRun.verdict) : 'never audited'
-                  }, ${confirmed} must fix${client.setupIncomplete ? ', setup incomplete' : ''}`}
+                  }, ${confirmedWords}${client.setupIncomplete ? ', setup incomplete' : ''}`}
                   className="ph-row"
                   style={{
                     display: 'grid',

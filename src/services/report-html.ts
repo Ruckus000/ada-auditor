@@ -78,8 +78,12 @@ const VERDICT_COPY: Record<string, { title: string; detail: string }> = {
     // served as an error, at which point the word named the wrong problem in a
     // document a client's counsel may read: nothing was incomplete, the site
     // returned 500. Both reasons are stated rather than the narrower one.
+    // Rejection is per page: the findings from pages whose evidence was
+    // usable are kept and listed below, and nothing is asserted about the
+    // pages whose evidence was not. This said "Deterministic findings are
+    // withheld", directly above a list of them.
     detail:
-      'Evidence for this run was not usable — an artifact was missing, or a page was served as an error — so no conformance judgement is made. Deterministic findings are withheld rather than reported from partial evidence.',
+      'Evidence for this run was not usable — an artifact was missing, or a page was served as an error — so no conformance judgement is made. Findings from the pages whose evidence was usable are listed below; nothing is claimed about the pages whose evidence was not.',
   },
 };
 

@@ -119,7 +119,39 @@ const META_VIEWPORT: StoredFinding = {
   selector: 'meta[name="viewport"]',
 };
 
-/** A best-practice rule: `critical` impact, no criterion, so it gates nothing. */
+/**
+ * Two more Level A/AA failures, both minor, so that the gate's number (3)
+ * differs from a count of criticals (1) and from criticals + majors (2). With
+ * one gate failure and one critical finding every surface answered 1 under
+ * both rules, and a reviewer proved it: the old impact rule passed this file.
+ */
+const HTML_HAS_LANG: StoredFinding = {
+  code: 'html-has-lang',
+  severity: 'minor',
+  source: 'deterministic',
+  message: 'The html element has no lang attribute.',
+  conformanceLevel: 'A',
+  wcagCriteria: ['3.1.1'],
+  remediationAnyOf: ['Add a lang attribute'],
+  remediationAllOf: [],
+  pageUrl: PAGE_URL,
+  selector: 'html',
+};
+
+const LINK_NAME: StoredFinding = {
+  code: 'link-name',
+  severity: 'minor',
+  source: 'deterministic',
+  message: 'A link has no discernible text.',
+  conformanceLevel: 'A',
+  wcagCriteria: ['2.4.4'],
+  remediationAnyOf: ['Give the link text'],
+  remediationAllOf: [],
+  pageUrl: PAGE_URL,
+  selector: 'a.icon',
+};
+
+/** A best-practice rule rated `critical` here, citing no criterion, so it gates nothing. */
 const REGION: StoredFinding = {
   code: 'region',
   severity: 'critical',
@@ -172,7 +204,15 @@ const LEGACY_RULE: StoredFinding = {
   selector: '#legacy',
 };
 
-const FINDINGS: StoredFinding[] = [META_VIEWPORT, REGION, COLOR_CONTRAST, ADVISORY, LEGACY_RULE];
+const FINDINGS: StoredFinding[] = [
+  META_VIEWPORT,
+  HTML_HAS_LANG,
+  LINK_NAME,
+  REGION,
+  COLOR_CONTRAST,
+  ADVISORY,
+  LEGACY_RULE,
+];
 
 /**
  * The gate, run over the stored findings.
@@ -378,20 +418,38 @@ function tile(html: string, label: string, surface: string): string {
 
 /**
  * The portfolio's number, from the row's accessible name — the one place that
- * screen says it in words (`"Acme — fail, 1 must fix"`). The visible cell is
- * the same variable rendered without a label.
+ * screen says it in words (`"Acme — fail, 3 must fix"`, or `"…, must fix not
+ * counted"`). The visible cell is the same variable rendered without a label.
  */
 function portfolioMustFix(html: string): string {
+  if (/aria-label="[^"]*must fix not counted/.test(html)) return '—';
   const match = html.match(/aria-label="[^"]*?([^\s,"]+) must fix/);
   if (!match) throw new Error('the portfolio row names no must-fix count');
   return match[1];
 }
 
-/** The findings screen's summary line: `4 across 1 page — 1 must fix, …`. */
+/**
+ * The findings screen's summary line: `6 across 1 page — 3 must fix, …`, or
+ * `… — must fix not counted, …` where the gate made no claim. The words, not
+ * a dash: inline, "— must fix" is spoken as the instruction "must fix".
+ */
 function findingsMustFix(html: string): string {
+  if (/ — must fix not counted,/.test(html)) return '—';
   const match = html.match(/ — (\S+) must fix,/);
   if (!match) throw new Error('the findings screen has no summary line');
   return match[1];
+}
+
+/** The badge on one row of the findings screen, by rule code. */
+function findingsRowBadge(html: string, code: string): string {
+  const row = html
+    .split('<article')
+    .slice(1)
+    .find((one) => one.includes(`>${code}<`));
+  if (!row) throw new Error(`the findings screen has no row for ${code}`);
+  const badge = row.match(/(MUST FIX|SHOULD FIX|NICE TO FIX|REVIEW|ADVISORY)/);
+  if (!badge) throw new Error(`the ${code} row has no badge`);
+  return badge[1];
 }
 
 /** `<strong>N</strong> blocking` on the printable report, or null when the line is absent. */
@@ -496,30 +554,30 @@ describe('one failing run, on every surface', () => {
   const FAILING = record({ requestId: 'run-fail', findings: FINDINGS, evidenceStatus: 'complete' });
   const surfaces = once(() => renderSurfaces(FAILING.record, FAILING.gate));
 
-  it('is a fail by the gate, on one confirmed finding', () => {
+  it('is a fail by the gate, on three confirmed findings', () => {
     // The precondition, stated so a change to the gate reads as one rather
     // than as six surfaces going wrong at once.
     expect(FAILING.gate.ciStatus).toBe('fail');
-    expect(FAILING.gate.executiveSummary.blockingFindings).toBe(1);
+    expect(FAILING.gate.executiveSummary.blockingFindings).toBe(3);
     expect(FAILING.record.gateVersion).toBe(GATE_VERSION);
   });
 
-  it('says 1 beside "Must fix" on every surface', async () => {
+  it("says 3 beside \"Must fix\" on every surface — the gate's number, not an impact count", async () => {
     const s = await surfaces();
 
     expect(mustFixOf(s)).toEqual({
-      printable: '1',
-      shared: '1',
-      findings: '1',
-      overview: '1',
-      results: '1',
-      portfolio: '1',
+      printable: '3',
+      shared: '3',
+      findings: '3',
+      overview: '3',
+      results: '3',
+      portfolio: '3',
     });
 
     // The console has no tile; its number is the count the panel's sentence
     // is built from, and the sentence itself.
-    expect(countBySource(s.console!.result.findings).blocking).toHaveLength(1);
-    expect(s.console!.html).toContain('Fix the 1 issue marked');
+    expect(countBySource(s.console!.result.findings).blocking).toHaveLength(3);
+    expect(s.console!.html).toContain('Fix the 3 issues marked');
 
     for (const [surface, html] of Object.entries({
       printable: s.printable,
@@ -571,6 +629,17 @@ describe('one failing run, on every surface', () => {
     expect(consoleCard(s.console!.html, 'region')).toContain('Does not block release');
   });
 
+  it('badges the findings row by the criterion, in the words of the summary above it', async () => {
+    // The row badge once read `critical → MUST FIX` beneath a summary that
+    // counted through the gate: `region` wore MUST FIX and `meta-viewport`,
+    // the finding that failed the run, wore NICE TO FIX.
+    const s = await surfaces();
+
+    expect(findingsRowBadge(s.findings, 'meta-viewport')).toBe('MUST FIX');
+    expect(findingsRowBadge(s.findings, 'region')).toBe('SHOULD FIX');
+    expect(findingsRowBadge(s.findings, 'color-contrast')).toBe('REVIEW');
+  });
+
   it('prints both remediation lines for color-contrast wherever it is listed', async () => {
     // "Any one of these" and "all of these" are different instructions, and
     // the second list is the one a surface drops when it flattens them.
@@ -598,13 +667,15 @@ describe('one failing run, on every surface', () => {
     // these, the surface is wrong; if these disagree with the gate, the seam
     // is.
     expect(severityCounts(FAILING.record)).toEqual({
-      confirmed: 1,
+      confirmed: 3,
       recommendations: 2,
       needsReview: 1,
     });
 
     expect(FINDINGS.filter(failsConformance).map((finding) => finding.code)).toEqual([
       'meta-viewport',
+      'html-has-lang',
+      'link-name',
     ]);
   });
 });
@@ -649,6 +720,13 @@ describe('a run recorded under an older gate', () => {
     const s = await surfaces();
 
     expect(criteriaSection(s.shared)).toBe('');
+  });
+
+  it('badges no findings row as must fix', async () => {
+    const s = await surfaces();
+
+    expect(s.findings).not.toContain('MUST FIX');
+    expect(findingsRowBadge(s.findings, 'meta-viewport')).toBe('NICE TO FIX');
   });
 });
 
@@ -700,6 +778,15 @@ describe('a run whose evidence was incomplete', () => {
 
     expect(criteriaSection(s.shared)).toBe('');
   });
+
+  it('flags no console card and badges no findings row as blocking', async () => {
+    // The panel says no verdict was issued; a card beneath it saying "Blocks
+    // release — it is what turned the verdict to fail" contradicts it.
+    const s = await surfaces();
+
+    expect(s.console!.html).not.toContain('Blocks release');
+    expect(s.findings).not.toContain('MUST FIX');
+  });
 });
 
 describe('a critical best-practice finding under a passing gate', () => {
@@ -722,9 +809,14 @@ describe('a critical best-practice finding under a passing gate', () => {
     expectAllEqual(verdictsOf(s), 'verdict');
   });
 
-  it('says the same number beside "Must fix" on every surface', async () => {
+  it("says 0 beside \"Must fix\" on every surface — the gate's number, not the critical count", async () => {
+    // Agreement alone is not enough here: six surfaces saying "1 must fix"
+    // beside PASS would agree with each other and disagree with the gate.
     const s = await surfaces();
 
     expectAllEqual(mustFixOf(s), 'must fix');
+    expect(mustFixOf(s).shared).toBe(String(PASSING.gate.executiveSummary.blockingFindings));
+    expect(mustFixOf(s).shared).toBe('0');
+    expect(findingsRowBadge(s.findings, 'region')).toBe('SHOULD FIX');
   });
 });

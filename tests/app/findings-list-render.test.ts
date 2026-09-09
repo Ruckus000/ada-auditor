@@ -13,13 +13,13 @@ import { FindingsList } from '../../src/app/components/findings-list';
  * axe's impact rating, not the gate. The gate fails a run on the success
  * criterion a finding cites: `meta-viewport` is impact moderate and cites
  * wcag2aa, so it is what turned a verdict to FAIL while its card said it did
- * not block; `region` is impact critical and cites nothing, so its card said
+ * not block; `region` (rated critical here) cites nothing, so its card said
  * it blocked a release it could not have. The flag now asks the gate.
  */
 
 const PAGE = { url: 'https://acme.test/', route: '/', title: 'Home', evidenceStatus: 'complete' };
 
-function result(findings: unknown[]) {
+function result(findings: unknown[], over: { ciStatus?: string; evidenceStatus?: string } = {}) {
   return parseAuditResponse(
     {
       requestId: 'req-cards',
@@ -28,12 +28,48 @@ function result(findings: unknown[]) {
       evidenceStatus: 'complete',
       findings,
       pages: [PAGE],
+      ...over,
     },
     200,
     true,
     false,
   );
 }
+
+const CARDS = [
+  {
+    code: 'meta-viewport',
+    severity: 'minor',
+    source: 'deterministic',
+    message: 'Zooming and scaling must not be disabled',
+    conformanceLevel: 'AA',
+    pageUrl: PAGE.url,
+  },
+  {
+    code: 'region',
+    severity: 'critical',
+    source: 'deterministic',
+    message: 'All page content should be contained by landmarks',
+    conformanceLevel: null,
+    pageUrl: PAGE.url,
+  },
+  {
+    code: 'color-contrast',
+    severity: 'needs-review',
+    source: 'deterministic',
+    message: 'Elements must meet minimum color contrast ratio thresholds',
+    conformanceLevel: 'AA',
+    pageUrl: PAGE.url,
+  },
+  {
+    code: 'ai-advisory',
+    severity: 'advisory',
+    source: 'ai-advisory',
+    message: 'Heading used for size',
+    confidence: 0.8,
+    gateable: false,
+  },
+];
 
 /** One card's markup, found by the rule code it prints. */
 function card(html: string, code: string): string {
@@ -46,44 +82,7 @@ function card(html: string, code: string): string {
 }
 
 describe('the console finding card', () => {
-  const html = renderToStaticMarkup(
-    createElement(FindingsList, {
-      result: result([
-        {
-          code: 'meta-viewport',
-          severity: 'minor',
-          source: 'deterministic',
-          message: 'Zooming and scaling must not be disabled',
-          conformanceLevel: 'AA',
-          pageUrl: PAGE.url,
-        },
-        {
-          code: 'region',
-          severity: 'critical',
-          source: 'deterministic',
-          message: 'All page content should be contained by landmarks',
-          conformanceLevel: null,
-          pageUrl: PAGE.url,
-        },
-        {
-          code: 'color-contrast',
-          severity: 'needs-review',
-          source: 'deterministic',
-          message: 'Elements must meet minimum color contrast ratio thresholds',
-          conformanceLevel: 'AA',
-          pageUrl: PAGE.url,
-        },
-        {
-          code: 'ai-advisory',
-          severity: 'advisory',
-          source: 'ai-advisory',
-          message: 'Heading used for size',
-          confidence: 0.8,
-          gateable: false,
-        },
-      ]),
-    }),
-  );
+  const html = renderToStaticMarkup(createElement(FindingsList, { result: result(CARDS) }));
 
   it('flags a minor finding against a Level AA criterion as blocking', () => {
     expect(card(html, 'meta-viewport')).toContain('Blocks release');
@@ -110,6 +109,27 @@ describe('the console finding card', () => {
     expect(card(html, 'region')).not.toContain('Explain: Advisory note');
     expect(card(html, 'ai-advisory')).toContain('Explain: Advisory note');
     expect(card(html, 'meta-viewport')).toContain('Explain: Blocks release');
+  });
+});
+
+describe('the console finding card on an inconclusive run', () => {
+  // The gate declined to judge. The verdict panel says so; a card beneath it
+  // reading "Blocks release" — whose tooltip says "it is what turned the
+  // verdict to fail" — makes the claim the panel just withheld. Every stored
+  // surface shows a dash for this run.
+  const html = renderToStaticMarkup(
+    createElement(FindingsList, {
+      result: result(CARDS, { ciStatus: 'inconclusive', evidenceStatus: 'degraded' }),
+    }),
+  );
+
+  it('flags no card as blocking, and none as not blocking either', () => {
+    expect(html).not.toContain('Blocks release');
+    expect(html).not.toContain('Does not block release');
+  });
+
+  it('still lists the cards', () => {
+    expect(card(html, 'meta-viewport')).toContain('Zooming and scaling');
   });
 });
 

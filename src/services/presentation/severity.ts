@@ -21,27 +21,57 @@ import type { VerdictFinding } from './verdict';
 export type DisplaySeverity = 'must' | 'should' | 'nice' | 'review' | 'advisory';
 
 /**
- * Display buckets by axe impact — how bad a finding is to hit, which is the
- * order a remediation list is worked in. This is not the gate: whether a
- * finding fails the audit is decided by the success criterion it cites
- * (`failsConformance` in `reporting.ts`), and a `minor` finding can fail it
- * while a `critical` best-practice rule cannot. `serious` already collapses
- * to `major` further upstream (see `SEVERITY_BY_IMPACT` in
+ * Whether the gate reached a verdict on this run with the rule in force
+ * today. False for an inconclusive run (`summarizeRun` reports
+ * `blockingFindings: 0` there by design — it declined to count) and for a run
+ * an earlier gate decided, or one from before `gate_version` was stored:
+ * recounting those with today's rule would put a number beside a verdict
+ * that number did not produce. The one predicate behind every "—" on a
+ * screen, and behind every row that does not wear MUST FIX.
+ */
+export function gateDecided(run: { ciStatus: string; gateVersion?: number | null }): boolean {
+  return run.ciStatus !== 'inconclusive' && run.gateVersion === GATE_VERSION;
+}
+
+/**
+ * Impact order, for the recommendations. `serious` already collapses to
+ * `major` further upstream (see `SEVERITY_BY_IMPACT` in
  * `deterministic-audit.ts`).
  */
-const DISPLAY_BY_SEVERITY: Record<string, DisplaySeverity> = {
-  critical: 'must',
+const RECOMMENDATION_BY_SEVERITY: Record<string, DisplaySeverity> = {
+  critical: 'should',
   major: 'should',
   minor: 'nice',
-  'needs-review': 'review',
-  advisory: 'advisory',
 };
 
-export function displaySeverity(severity: string): DisplaySeverity {
-  // An unknown severity becomes `review` rather than `nice`: a finding we
-  // cannot categorise needs a human to look at it, and quietly filing it as
-  // low-priority is how it never gets looked at.
-  return DISPLAY_BY_SEVERITY[severity] ?? 'review';
+/**
+ * The bucket a finding is shown in, in the words the screens use.
+ *
+ * **`must` is the gate's word, so it is the gate's decision** — a finding is
+ * `must` when `failsConformance` says it failed the run, and only on a run
+ * the gate decided. It was once `critical → must`: the row badge on the
+ * findings screen read MUST FIX on a critical best-practice rule and NICE TO
+ * FIX on `meta-viewport` (impact moderate, wcag2aa), the one finding that had
+ * failed the run — directly beneath a summary line that counted "must fix"
+ * through the gate. Same word, two definitions, ninety lines apart.
+ *
+ * Everything else the gate did not fail is a recommendation, ordered by
+ * impact (`should`, then `nice`) because that is the order a remediation list
+ * is worked in. Where the gate made no claim (`decided` false) nothing is
+ * `must`; the rows keep their impact order under tiles that read "—".
+ *
+ * `needs-review` and `advisory` keep their own buckets whatever they cite:
+ * the review queue is the entire point of axe's `incomplete` results, and an
+ * advisory finding is `gateable: false`. An unknown severity goes to review
+ * rather than to `nice` — a finding we cannot categorise needs a human, and
+ * filing it as low-priority is how it never gets looked at.
+ */
+export function displayBucket(finding: VerdictFinding, decided: boolean): DisplaySeverity {
+  if (finding.source !== 'deterministic') return 'advisory';
+  if (finding.severity === 'needs-review') return 'review';
+  const recommendation = RECOMMENDATION_BY_SEVERITY[finding.severity];
+  if (recommendation === undefined) return 'review';
+  return decided && failsConformance(finding) ? 'must' : recommendation;
 }
 
 /**
@@ -150,15 +180,12 @@ export function isDeterministic(finding: Pick<DeterministicFinding, 'source'>): 
  * once counted by impact (critical + major) here while the printable report
  * and the verdict counted by criterion, and the two disagree on real
  * documents: `meta-viewport` is impact moderate and cites wcag2aa, so a client
- * page read "0" directly above a list of failed criteria. Where the gate made
- * no claim there is nothing to count, and `confirmed` is **null**, rendered as
- * a dash the way `scoreStatValue` renders an unscored run:
- *
- * - an **inconclusive** run — `summarizeRun` reports `blockingFindings: 0`
- *   there by design, and a number here would be the second definition again;
- * - a run **an earlier gate decided**, or one from before `gate_version` was
- *   stored — recounting it with today's rule puts a number beside a verdict
- *   that number did not produce.
+ * page read "0" directly above a list of failed criteria. The count is the
+ * `must` bucket of `displayBucket`, so the number in the tile and the badge on
+ * each row beneath it are one rule. Where the gate made no claim
+ * (`gateDecided` false) there is nothing to count, and `confirmed` is
+ * **null**, rendered as a dash the way `scoreStatValue` renders an unscored
+ * run — and as words inline, where a dash is not spoken.
  *
  * `recommendations` is the complement — deterministic, decided, and not a
  * conformance failure — so a critical best-practice rule and an AAA finding
@@ -188,20 +215,25 @@ export function severityCounts(run: {
   recommendations: number | null;
   needsReview: number;
 } {
-  const decided = run.ciStatus !== 'inconclusive' && run.gateVersion === GATE_VERSION;
+  const decided = gateDecided(run);
   let confirmed = 0;
   let recommendations = 0;
   let needsReview = 0;
 
   for (const finding of run.findings) {
-    if (finding.source !== 'deterministic') continue;
-
-    if (displaySeverity(finding.severity) === 'review') {
-      needsReview += 1;
-    } else if (failsConformance(finding)) {
-      confirmed += 1;
-    } else {
-      recommendations += 1;
+    switch (displayBucket(finding, decided)) {
+      case 'must':
+        confirmed += 1;
+        break;
+      case 'should':
+      case 'nice':
+        recommendations += 1;
+        break;
+      case 'review':
+        needsReview += 1;
+        break;
+      default:
+        break;
     }
   }
 

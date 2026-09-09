@@ -104,7 +104,7 @@ describe('buildPortfolio', () => {
         findings: [
           finding(),
           // `meta-viewport`: impact moderate, cites wcag2aa — it fails the
-          // audit. `region`: impact critical, cites nothing — it does not.
+          // audit. `region`: rated critical here, cites nothing — it does not.
           finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA' }),
           finding({ code: 'region', severity: 'critical', conformanceLevel: null }),
           finding({ code: 'htmlcs:notice:1_3_2.G57', severity: 'needs-review' }),

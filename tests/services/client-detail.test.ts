@@ -95,7 +95,7 @@ describe('buildClientDetail', () => {
         score: 72,
         findings: [
           finding(),
-          // `region`: impact critical, cites no criterion — a recommendation.
+          // `region`: rated critical here, cites no criterion — a recommendation.
           finding({ code: 'region', severity: 'critical', conformanceLevel: null }),
           finding({ code: 'htmlcs:notice:2_5_1', severity: 'needs-review' }),
         ],

@@ -1,33 +1,77 @@
 import { describe, expect, it } from 'vitest';
 import {
-  displaySeverity,
+  displayBucket,
   findingDisplayStatus,
+  gateDecided,
   severityCounts,
 } from '../../src/services/presentation/severity';
 import { GATE_VERSION } from '../../src/services/reporting';
 
-describe('displaySeverity', () => {
-  it.each([
-    ['critical', 'must'],
-    ['major', 'should'],
-    ['minor', 'nice'],
-    ['needs-review', 'review'],
-    ['advisory', 'advisory'],
-  ])('maps %s to %s', (engine, display) => {
-    expect(displaySeverity(engine)).toBe(display);
+describe('displayBucket', () => {
+  const finding = (
+    severity: string,
+    over: { source?: string; conformanceLevel?: string | null } = {},
+  ) => ({
+    severity,
+    source: over.source ?? 'deterministic',
+    ...(over.conformanceLevel === undefined ? {} : { conformanceLevel: over.conformanceLevel }),
   });
 
-  it('keeps needs-review out of the low-priority bucket', () => {
+  /**
+   * `must` is the gate's word, so it is the gate's decision. The row badge
+   * on the findings screen once read `critical → must`, directly beneath a
+   * summary line that counted "must fix" through the gate — the same word
+   * with two definitions, ninety lines apart. `meta-viewport` (minor, wcag2aa)
+   * wore NICE TO FIX while being the one finding that failed the run.
+   */
+  it('puts a minor finding that fails a Level AA criterion in must', () => {
+    expect(displayBucket(finding('minor', { conformanceLevel: 'AA' }), true)).toBe('must');
+  });
+
+  it('puts a critical best-practice finding in should, not must', () => {
+    expect(displayBucket(finding('critical', { conformanceLevel: null }), true)).toBe('should');
+  });
+
+  it('orders the recommendations by impact', () => {
+    expect(displayBucket(finding('major', { conformanceLevel: null }), true)).toBe('should');
+    expect(displayBucket(finding('minor', { conformanceLevel: null }), true)).toBe('nice');
+    expect(displayBucket(finding('critical', { conformanceLevel: 'AAA' }), true)).toBe('should');
+  });
+
+  it('keeps needs-review in the review bucket whatever it cites', () => {
     // The prototype collapsed five severities into three, which put the human
     // review worklist into `nice` — a bucket nobody works. That queue is the
     // entire point of axe's `incomplete` results.
-    expect(displaySeverity('needs-review')).not.toBe('nice');
+    expect(displayBucket(finding('needs-review', { conformanceLevel: 'AA' }), true)).toBe('review');
+  });
+
+  it('keeps advisory findings in their own bucket', () => {
+    expect(displayBucket(finding('advisory', { source: 'ai-advisory', conformanceLevel: 'A' }), true)).toBe('advisory');
   });
 
   it('sends an unrecognised severity to review rather than to nice', () => {
     // A finding we cannot categorise needs a human. Filing it as low-priority
     // is how it never gets looked at.
-    expect(displaySeverity('some-future-severity')).toBe('review');
+    expect(displayBucket(finding('some-future-severity'), true)).toBe('review');
+  });
+
+  it('puts nothing in must where the gate made no claim', () => {
+    // An inconclusive run's tiles read "—" for must fix; a row badged MUST
+    // FIX beneath them is the claim the dash refuses. The row keeps its
+    // impact order instead.
+    expect(displayBucket(finding('minor', { conformanceLevel: 'AA' }), false)).toBe('nice');
+    expect(displayBucket(finding('critical', { conformanceLevel: 'A' }), false)).toBe('should');
+    expect(displayBucket(finding('needs-review'), false)).toBe('review');
+  });
+});
+
+describe('gateDecided', () => {
+  it('is true only for a decided run judged by the current gate', () => {
+    expect(gateDecided({ ciStatus: 'fail', gateVersion: GATE_VERSION })).toBe(true);
+    expect(gateDecided({ ciStatus: 'pass', gateVersion: GATE_VERSION })).toBe(true);
+    expect(gateDecided({ ciStatus: 'inconclusive', gateVersion: GATE_VERSION })).toBe(false);
+    expect(gateDecided({ ciStatus: 'fail', gateVersion: 1 })).toBe(false);
+    expect(gateDecided({ ciStatus: 'fail' })).toBe(false);
   });
 });
 
@@ -143,13 +187,20 @@ describe('severityCounts', () => {
   /**
    * The count a client reads as "confirmed" is the gate's count, not a
    * severity table's. `meta-viewport` is impact moderate (→ minor) and cites
-   * wcag2aa, so it fails the audit; `region` is impact critical and cites
+   * wcag2aa, so it fails the audit; `region` (rated critical here) cites
    * nothing, so it is a recommendation. A count by impact puts "0" beside a
    * list of failed criteria — which is the incident this shape replaces.
    */
   it('counts confirmed by the criterion the gate used, not by impact', () => {
+    // Unbalanced on purpose: three gate failures, none of them critical, and
+    // two recommendations, one critical and one major. The gate answers 3;
+    // counting critical answers 1; counting critical + major answers 2. A
+    // fixture with one critical and one gate failure let the old rule pass
+    // this test's own name.
     const counts = severityCounts(
       run([
+        finding('minor', { conformanceLevel: 'AA' }),
+        finding('minor', { conformanceLevel: 'A' }),
         finding('minor', { conformanceLevel: 'AA' }),
         finding('critical', { conformanceLevel: null }),
         // A record written before conformance levels were stored.
@@ -157,7 +208,7 @@ describe('severityCounts', () => {
       ]),
     );
 
-    expect(counts).toEqual({ confirmed: 1, recommendations: 2, needsReview: 0 });
+    expect(counts).toEqual({ confirmed: 3, recommendations: 2, needsReview: 0 });
   });
 
   it('keeps a needs-review finding in the review queue whatever it cites', () => {
@@ -196,11 +247,11 @@ describe('severityCounts', () => {
   });
 
   /**
-   * `displaySeverity` sends an unrecognised severity to `review` rather than
+   * `displayBucket` sends an unrecognised severity to `review` rather than
    * to a low-priority bucket, and the counts have to agree with it — a finding
    * nobody can categorise is precisely one a human should see.
    */
-  it('counts an unknown severity as needing review, as displaySeverity does', () => {
+  it('counts an unknown severity as needing review, as displayBucket does', () => {
     expect(severityCounts(run([finding('bizarre')])).needsReview).toBe(1);
   });
 

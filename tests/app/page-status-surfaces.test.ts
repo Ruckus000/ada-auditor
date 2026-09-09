@@ -52,7 +52,7 @@ const RUN = {
 /**
  * A decided run carrying the three findings that tell a count by the gate
  * from a count by impact: `meta-viewport` (impact moderate → minor, cites
- * wcag2aa — fails the audit), `region` (impact critical, cites nothing — a
+ * wcag2aa — fails the audit), `region` (rated critical here, cites nothing — a
  * recommendation) and `color-contrast` as axe's *incomplete* result
  * (needs-review, cites 1.4.3 — undecided, so not a failure).
  */
@@ -161,7 +161,11 @@ describe('the public share page', () => {
    * beside a list of failed criteria: `meta-viewport` is impact moderate and
    * cites wcag2aa.
    */
-  it('counts through the gate, not by impact', () => {
+  it('renders the run’s own counts under Must fix, Should fix and Needs review', () => {
+    // A rendering pass-through, not a test of the count: `GATED_RUN` carries
+    // the numbers already. The count itself is pinned at the seam
+    // (`presentation-severity.test.ts`) and end to end over a stored run
+    // (`uniform-run-surfaces.test.ts`).
     const report = {
       title: 'Acme accessibility audit',
       clientName: 'Acme',

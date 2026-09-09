@@ -330,7 +330,7 @@ describe('summarizeRun', () => {
  * major) while the printable report and the verdict counted by criterion. The
  * six shapes below are the ones that tell the two apart — `meta-viewport` is
  * impact moderate (→ minor) and cites wcag2aa, so it fails the audit as a
- * "minor"; `region` is impact critical and cites nothing, so it never does.
+ * "minor"; `region` (rated critical here) cites nothing, so it never does.
  */
 describe('failsConformance', () => {
   it('fails a minor-impact finding that cites a Level AA criterion', () => {

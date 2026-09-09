@@ -190,13 +190,15 @@ describe('renderRunReport — content', () => {
   });
 
   it('counts blocking through the gate, not by impact', () => {
-    // `meta-viewport` is impact moderate and cites wcag2aa, so it failed the
-    // run; `region` is impact critical and cites nothing, so it did not. A
-    // count by impact printed "1 blocking" for the wrong one of the two.
+    // Two gate failures, neither critical (`meta-viewport` is impact moderate
+    // and cites wcag2aa); one critical finding that cites nothing. The gate
+    // answers 2. A count of criticals answers 1 — and a fixture with one of
+    // each let that count pass this test's own name.
     const html = renderRunReport(
       run({
         findings: [
           finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA' }),
+          finding({ code: 'html-has-lang', severity: 'minor', conformanceLevel: 'A' }),
           finding({ code: 'region', severity: 'critical', conformanceLevel: null }),
           finding({ code: 'color-contrast', severity: 'needs-review', conformanceLevel: 'AA' }),
           { code: 'ai-advisory', severity: 'advisory', source: 'ai-advisory', message: 'x' },
@@ -204,7 +206,17 @@ describe('renderRunReport — content', () => {
       }),
     );
 
-    expect(html).toContain('<strong>1</strong> blocking');
+    expect(html).toContain('<strong>2</strong> blocking');
+  });
+
+  it('does not say findings are withheld on an inconclusive run that lists them', () => {
+    // Rejection is per page: a run with one page served as an error keeps
+    // the deterministic findings from the pages that were usable, and they
+    // are listed on this document. The verdict copy said they were withheld.
+    const html = renderRunReport(run({ ciStatus: 'inconclusive', evidenceStatus: 'degraded' }));
+
+    expect(html).toContain('image-alt');
+    expect(html).not.toContain('are withheld');
   });
 
   it('omits the blocking count on an inconclusive run rather than printing 0 or 1', () => {

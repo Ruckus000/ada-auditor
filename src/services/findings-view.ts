@@ -1,8 +1,9 @@
 import type { RunStore, StoredFinding } from '../domain/persistence';
 import type { ClientStore, JourneyStore, TriageStore, TriageState } from '../domain/platform';
 import {
-  displaySeverity,
+  displayBucket,
   findingDisplayStatus,
+  gateDecided,
   type DisplaySeverity,
   type FindingDisplayStatus,
 } from './presentation/severity';
@@ -144,6 +145,10 @@ export async function buildFindingsView(
     (await deps.triage.listTriage(client.id)).map((entry) => [entry.findingKey, entry]),
   );
 
+  // The one predicate the tiles use, so a row wears MUST FIX exactly when the
+  // tile above it counts it — and never where the tile reads "—".
+  const decided = gateDecided(run);
+
   const toView = (finding: StoredFinding): FindingView => {
     const key = findingKey(finding);
     const entry = triageByKey.get(key);
@@ -155,7 +160,7 @@ export async function buildFindingsView(
       ...(finding.message === undefined ? {} : { message: finding.message }),
       fixAnyOf: finding.remediationAnyOf ?? [],
       fixAllOf: finding.remediationAllOf ?? [],
-      severity: displaySeverity(finding.severity),
+      severity: displayBucket(finding, decided),
       wcagCriteria: finding.wcagCriteria ?? [],
       ...(finding.conformanceLevel ? { conformanceLevel: finding.conformanceLevel } : {}),
       ...(finding.selector === undefined ? {} : { selector: finding.selector }),

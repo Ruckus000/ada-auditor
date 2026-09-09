@@ -341,6 +341,56 @@ describe('buildFindingsView', () => {
     expect(view?.journeyName).toBe('Login');
   });
 
+  it('badges each row by the gate, in the same words as the summary above it', async () => {
+    // The row badge read `critical → MUST FIX` while the summary line counted
+    // "must fix" through the gate, so `region` (rated critical here, no
+    // criterion) wore MUST FIX and `meta-viewport` (minor, wcag2aa) — the one
+    // finding that failed the run — wore NICE TO FIX. Same word, two
+    // definitions, on one screen.
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        findings: [
+          finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA', selector: '#a' }),
+          finding({ code: 'region', severity: 'critical', conformanceLevel: null, selector: '#b' }),
+          finding({ code: 'color-contrast', severity: 'needs-review', conformanceLevel: 'AA', selector: '#c' }),
+        ],
+      }),
+    );
+
+    const rows = (await buildFindingsView('acme', deps()))?.pages[0].findings ?? [];
+
+    expect(rows.map((row) => [row.code, row.severity])).toEqual([
+      ['meta-viewport', 'must'],
+      ['region', 'should'],
+      ['color-contrast', 'review'],
+    ]);
+  });
+
+  it('badges no row as must fix where the gate made no claim', async () => {
+    // The tiles read "—" for this run; a MUST FIX row beneath them would be
+    // the claim the dash refuses.
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        evidenceStatus: 'degraded',
+        ciStatus: 'inconclusive',
+        findings: [
+          finding({ code: 'image-alt', severity: 'critical', conformanceLevel: 'A', selector: '#a' }),
+          finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA', selector: '#b' }),
+        ],
+      }),
+    );
+
+    const rows = (await buildFindingsView('acme', deps()))?.pages[0].findings ?? [];
+
+    // Impact order still, so the list is still worked worst-first.
+    expect(rows.map((row) => [row.code, row.severity])).toEqual([
+      ['image-alt', 'should'],
+      ['meta-viewport', 'nice'],
+    ]);
+  });
+
   it('keeps a finding whose page is not in the run’s page list', async () => {
     // Runs stored before per-page evidence existed. A finding that has lost
     // its page is still a barrier somebody hit.

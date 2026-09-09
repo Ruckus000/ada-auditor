@@ -125,6 +125,19 @@ export function countStatValue(count: number | null | undefined): string {
   return count === null || count === undefined ? '—' : String(count);
 }
 
+/**
+ * The inline form of a count: `3 must fix` / `must fix not counted`.
+ *
+ * Words, not the dash, because inline text is what a screen reader speaks:
+ * at NVDA's default punctuation level an em dash is silent, so "— must fix"
+ * is announced as the instruction "must fix" with no number. A tile keeps
+ * the dash under its label; a sentence says it the way `scoreLine` says
+ * "not scored".
+ */
+export function countLine(count: number | null | undefined, label: string): string {
+  return count === null || count === undefined ? `${label} not counted` : `${count} ${label}`;
+}
+
 /** The inline form, for status lines: `98% checks passed` / `not scored`. */
 export function scoreLine(score: number | null | undefined): string {
   return score === null || score === undefined ? 'not scored' : `${score}% checks passed`;

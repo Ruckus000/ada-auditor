@@ -386,6 +386,19 @@ Chromium launches on a Vercel function:
   landing and gate 2). Null renders as the dash `scoreStatValue` uses for an
   unscored run; a recount of an old row with today's rule would put a number
   beside a verdict that number did not produce.
+  The same rule reaches every row: `displayBucket` in `presentation/severity`
+  is the one function behind the count in a tile and the badge on the row
+  beneath it, so a finding wears MUST FIX exactly when the tile counts it
+  and never where the tile reads "—" (the findings screen once badged
+  `critical → MUST FIX` under a gate-counted header — the same word with two
+  definitions ninety lines apart — and the console card flagged "Blocks
+  release" on runs the gate had declined to judge). Inline, a withheld count
+  is words (`countLine`: "must fix not counted"), not the dash: at a screen
+  reader's default punctuation the dash is silent and "— must fix" is spoken
+  as an order. Test fixtures that separate the two definitions must do so in
+  **number**, not only in identity: one critical finding beside one gate
+  failure answers 1 under both rules, and a reviewer proved the impact rule
+  passed every such test.
   `tests/app/uniform-run-surfaces.test.ts` renders one stored run on all six
   surfaces and asserts the one number. Recorded, not changed, in the same
   pass: `runVerdict`'s `risk` predicate is impact-keyed (`major ||

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReportRow } from '../../../services/report-view';
 import { FONT, T } from '../lib/tokens';
-import { countStatValue, scoreLine } from '../../../services/presentation/verdict';
+import { countLine, scoreLine } from '../../../services/presentation/verdict';
 
 /**
  * Reports that have been issued.
@@ -79,7 +79,7 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
               <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: T.inkMuted }}>
                 run {report.requestId}
                 {report.run
-                  ? ` · ${countStatValue(report.run.confirmed)} must fix · ${report.run.needsReview} to review · ${scoreLine(report.run.score)}`
+                  ? ` · ${countLine(report.run.confirmed, 'must fix')} · ${report.run.needsReview} to review · ${scoreLine(report.run.score)}`
                   : ' · run no longer stored'}
                 {report.documents
                   ? ` · ${report.documents.documents} document${
