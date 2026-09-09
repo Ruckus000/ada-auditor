@@ -1,12 +1,25 @@
 /** Shapes the console reads back from POST /api/audit/console. */
 import type { JourneyTruncationReason } from '../../domain/run-limits';
+import { failsConformance } from '../../services/reporting';
 
 export type Verdict = 'pass' | 'fail' | 'inconclusive';
-export type Severity = 'critical' | 'major' | 'minor' | 'advisory';
+/**
+ * axe's impact rating, plus the two states that are not impacts: an
+ * undecided check (`needs-review`) and a model's suggestion (`advisory`).
+ * None of these decides the verdict — `conformanceLevel` does.
+ */
+export type Severity = 'critical' | 'major' | 'minor' | 'needs-review' | 'advisory';
 
 export interface Finding {
   code: string;
   severity: Severity;
+  /**
+   * The level of the success criterion the finding cites: what the gate
+   * reads, and so what "Blocks release" is decided by. Null for a
+   * best-practice rule, which cites none; absent on records from before the
+   * level was stored.
+   */
+  conformanceLevel?: string | null;
   /**
    * Absent on findings that come back inside `regression`: those are
    * `StoredFinding` records, which persist only code/severity/source.
@@ -97,7 +110,7 @@ export interface AuditResult {
   simulated?: boolean;
 }
 
-const SEVERITIES: Severity[] = ['critical', 'major', 'minor', 'advisory'];
+const SEVERITIES: Severity[] = ['critical', 'major', 'minor', 'needs-review', 'advisory'];
 
 function toFinding(value: unknown): Finding | null {
   if (!value || typeof value !== 'object') return null;
@@ -105,9 +118,13 @@ function toFinding(value: unknown): Finding | null {
   // `message` is deliberately not required — regression entries omit it.
   if (typeof raw.code !== 'string') return null;
 
+  // An unknown severity becomes `needs-review`, not `minor`: a finding the
+  // console cannot categorise needs a person to look at it, and "fix when
+  // convenient" is how it never gets looked at. `presentation/severity`
+  // makes the same choice for the platform screens.
   const severity = SEVERITIES.includes(raw.severity as Severity)
     ? (raw.severity as Severity)
-    : 'minor';
+    : 'needs-review';
   const source = raw.source === 'ai-advisory' ? 'ai-advisory' : 'deterministic';
 
   return {
@@ -115,6 +132,9 @@ function toFinding(value: unknown): Finding | null {
     message: typeof raw.message === 'string' ? raw.message : undefined,
     severity,
     source,
+    ...(raw.conformanceLevel === null || typeof raw.conformanceLevel === 'string'
+      ? { conformanceLevel: raw.conformanceLevel }
+      : {}),
     gateable: typeof raw.gateable === 'boolean' ? raw.gateable : source === 'deterministic',
     confidence: typeof raw.confidence === 'number' ? raw.confidence : undefined,
     pageUrl: typeof raw.pageUrl === 'string' ? raw.pageUrl : undefined,
@@ -291,7 +311,11 @@ export function countBySource(findings: Finding[]) {
   return {
     deterministic,
     advisory,
-    blocking: deterministic.filter((f) => f.severity === 'critical'),
+    // The gate's own rule, not `severity === 'critical'`: the verdict panel
+    // says "Fix the N issues marked Blocks release", and N has to be the
+    // number that turned the verdict — a `minor` finding against a Level AA
+    // criterion, not a `critical` best-practice rule.
+    blocking: deterministic.filter(failsConformance),
     total: findings.length,
   };
 }

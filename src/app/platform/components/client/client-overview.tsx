@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ClientDetail } from '../../../../services/client-detail';
 import { describeRunFailure } from '../../lib/run-failure-copy';
 import { FONT, T } from '../../lib/tokens';
-import { SCORE_STAT_LABEL, scoreStatValue } from '../../../../services/presentation/verdict';
+import { SCORE_STAT_LABEL, countStatValue, scoreStatValue } from '../../../../services/presentation/verdict';
 
 /**
  * What we know about one client.
@@ -33,8 +33,9 @@ export function ClientOverview({ detail }: { detail: ClientDetail }) {
             }}
           >
             <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(lastRun.score)} />
-            <Stat label="Must fix" value={String(lastRun.mustFix)} tone={lastRun.mustFix > 0} />
-            <Stat label="Should fix" value={String(lastRun.shouldFix)} />
+            {/* The gate's own count; a dash where it made none, like the score. */}
+            <Stat label="Must fix" value={countStatValue(lastRun.confirmed)} tone={(lastRun.confirmed ?? 0) > 0} />
+            <Stat label="Should fix" value={countStatValue(lastRun.recommendations)} />
             <Stat label="Needs review" value={String(lastRun.needsReview)} />
             <Stat label="Pages audited" value={String(lastRun.pagesAudited)} />
           </dl>

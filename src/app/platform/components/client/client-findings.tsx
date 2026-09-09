@@ -1,6 +1,7 @@
 import type { DisplaySeverity } from '../../../../services/presentation/severity';
 import type { FindingView, FindingsView, PageFindings } from '../../../../services/findings-view';
 import { describePageEvidence } from '../../../../services/presentation/page-evidence';
+import { countLine } from '../../../../services/presentation/verdict';
 import { triageStateLabel } from '../../../../services/presentation/triage';
 import { describeCriterion } from '../../../../services/wcag-reference';
 import { describeRunFailure } from '../../lib/run-failure-copy';
@@ -74,9 +75,14 @@ export function ClientFindings({ view }: { view: FindingsView }) {
       <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.inkSoft }}>
         {total === 0
           ? 'Nothing found on any page walked.'
-          : `${total} across ${view.pages.length} ${view.pages.length === 1 ? 'page' : 'pages'} — ` +
-            `${view.counts.must} must fix, ${view.counts.should} should fix, ` +
-            `${view.counts.nice} nice to fix, ${view.counts.review} to review.`}
+          : // The run's own three numbers — the ones the overview tiles and the
+            // client's shared page show — not a recount of this list by impact.
+            // A count by impact here is the second definition of "must fix".
+            // In words where the gate made no claim: inline, a dash is not
+            // spoken, and "— must fix" reads as an instruction.
+            `${total} across ${view.pages.length} ${view.pages.length === 1 ? 'page' : 'pages'} — ` +
+            `${countLine(view.run.confirmed, 'must fix')}, ${countLine(view.run.recommendations, 'should fix')}, ` +
+            `${view.run.needsReview} to review.`}
       </p>
 
       <IssueReport clientId={view.clientId} requestId={view.run.requestId} />

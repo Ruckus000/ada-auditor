@@ -3,6 +3,7 @@ import type { StoredFinding, StoredRunRecord } from '../../src/domain/persistenc
 import { MemoryPlatformStore } from '../../src/integrations/persistence/memory-platform-store';
 import { MemoryRunStore } from '../../src/integrations/persistence/memory-run-store';
 import { buildFindingsView } from '../../src/services/findings-view';
+import { GATE_VERSION } from '../../src/services/reporting';
 
 let platform: MemoryPlatformStore;
 let runs: MemoryRunStore;
@@ -23,6 +24,8 @@ function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
     code: 'image-alt',
     severity: 'critical',
     source: 'deterministic',
+    // 1.1.1, Level A — the shape the gate fails.
+    conformanceLevel: 'A',
     title: 'Images must have alternate text',
     remediationAnyOf: ['Element does not have an alt attribute'],
     remediationAllOf: [],
@@ -39,6 +42,7 @@ function run(overrides: Partial<StoredRunRecord> & Pick<StoredRunRecord, 'reques
     platform: 'generic',
     evidenceStatus: 'complete',
     ciStatus: 'fail',
+    gateVersion: GATE_VERSION,
     findings: [],
     durationMs: 10,
     createdAt: '2026-08-10T10:00:00.000Z',
@@ -60,7 +64,6 @@ describe('buildFindingsView', () => {
     const view = await buildFindingsView('acme', deps());
 
     expect(view).toMatchObject({ run: null, pages: [], advisory: [] });
-    expect(view?.counts.must).toBe(0);
   });
 
   it('groups findings by the page they were found on', async () => {
@@ -251,7 +254,9 @@ describe('buildFindingsView', () => {
 
   it('still counts an accepted risk, because it is still a barrier', async () => {
     // Dropping it would buy a better number with a note, and would put these
-    // screens at odds with `/r/<token>`, which applies no triage at all.
+    // screens at odds with `/r/<token>`, which applies no triage at all. The
+    // number is the run's own, counted through the gate before triage is
+    // read, so this holds by construction — and stays asserted.
     await runs.saveRun(run({ requestId: 'r1', findings: [finding()] }));
     await platform.setTriage({
       clientId: 'acme',
@@ -263,7 +268,7 @@ describe('buildFindingsView', () => {
       actor: 'Alex Reed',
     });
 
-    expect((await buildFindingsView('acme', deps()))?.counts.must).toBe(1);
+    expect((await buildFindingsView('acme', deps()))?.run?.confirmed).toBe(1);
   });
 
   it('names who an assigned finding went to', async () => {
@@ -336,25 +341,54 @@ describe('buildFindingsView', () => {
     expect(view?.journeyName).toBe('Login');
   });
 
-  it('counts findings by display severity', async () => {
+  it('badges each row by the gate, in the same words as the summary above it', async () => {
+    // The row badge read `critical → MUST FIX` while the summary line counted
+    // "must fix" through the gate, so `region` (rated critical here, no
+    // criterion) wore MUST FIX and `meta-viewport` (minor, wcag2aa) — the one
+    // finding that failed the run — wore NICE TO FIX. Same word, two
+    // definitions, on one screen.
     await runs.saveRun(
       run({
         requestId: 'r1',
         findings: [
-          finding(),
-          finding({ severity: 'major', selector: '#a' }),
-          finding({ severity: 'minor', selector: '#b' }),
-          finding({ severity: 'who-knows', selector: '#c' }),
+          finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA', selector: '#a' }),
+          finding({ code: 'region', severity: 'critical', conformanceLevel: null, selector: '#b' }),
+          finding({ code: 'color-contrast', severity: 'needs-review', conformanceLevel: 'AA', selector: '#c' }),
         ],
       }),
     );
 
-    expect((await buildFindingsView('acme', deps()))?.counts).toMatchObject({
-      must: 1,
-      should: 1,
-      nice: 1,
-      review: 1,
-    });
+    const rows = (await buildFindingsView('acme', deps()))?.pages[0].findings ?? [];
+
+    expect(rows.map((row) => [row.code, row.severity])).toEqual([
+      ['meta-viewport', 'must'],
+      ['region', 'should'],
+      ['color-contrast', 'review'],
+    ]);
+  });
+
+  it('badges no row as must fix where the gate made no claim', async () => {
+    // The tiles read "—" for this run; a MUST FIX row beneath them would be
+    // the claim the dash refuses.
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        evidenceStatus: 'degraded',
+        ciStatus: 'inconclusive',
+        findings: [
+          finding({ code: 'image-alt', severity: 'critical', conformanceLevel: 'A', selector: '#a' }),
+          finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA', selector: '#b' }),
+        ],
+      }),
+    );
+
+    const rows = (await buildFindingsView('acme', deps()))?.pages[0].findings ?? [];
+
+    // Impact order still, so the list is still worked worst-first.
+    expect(rows.map((row) => [row.code, row.severity])).toEqual([
+      ['image-alt', 'should'],
+      ['meta-viewport', 'nice'],
+    ]);
   });
 
   it('keeps a finding whose page is not in the run’s page list', async () => {

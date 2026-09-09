@@ -3,6 +3,7 @@ import { buildPortfolio, clientIdFromName } from '../../src/services/portfolio';
 import { MemoryPlatformStore } from '../../src/integrations/persistence/memory-platform-store';
 import { MemoryRunStore } from '../../src/integrations/persistence/memory-run-store';
 import type { StoredFinding, StoredRunRecord } from '../../src/domain/persistence';
+import { GATE_VERSION } from '../../src/services/reporting';
 
 let platform: MemoryPlatformStore;
 let runs: MemoryRunStore;
@@ -16,8 +17,9 @@ function deps() {
   return { clients: platform, journeys: platform, runs };
 }
 
+/** `image-alt` cites 1.1.1, Level A — the shape the gate fails. */
 function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
-  return { code: 'image-alt', severity: 'critical', source: 'deterministic', ...overrides };
+  return { code: 'image-alt', severity: 'critical', source: 'deterministic', conformanceLevel: 'A', ...overrides };
 }
 
 function run(overrides: Partial<StoredRunRecord> & Pick<StoredRunRecord, 'requestId'>) {
@@ -27,6 +29,7 @@ function run(overrides: Partial<StoredRunRecord> & Pick<StoredRunRecord, 'reques
     platform: 'generic',
     evidenceStatus: 'complete',
     ciStatus: 'pass',
+    gateVersion: GATE_VERSION,
     findings: [],
     durationMs: 10,
     createdAt: '2026-08-10T10:00:00.000Z',
@@ -100,8 +103,10 @@ describe('buildPortfolio', () => {
         ],
         findings: [
           finding(),
-          finding({ severity: 'major' }),
-          finding({ severity: 'minor' }),
+          // `meta-viewport`: impact moderate, cites wcag2aa — it fails the
+          // audit. `region`: rated critical here, cites nothing — it does not.
+          finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA' }),
+          finding({ code: 'region', severity: 'critical', conformanceLevel: null }),
           finding({ code: 'htmlcs:notice:1_3_2.G57', severity: 'needs-review' }),
           finding({ code: 'htmlcs:1_3_1.H48', severity: 'needs-review' }),
         ],
@@ -115,8 +120,8 @@ describe('buildPortfolio', () => {
       requestId: 'new',
       verdict: 'fail',
       score: 72,
-      mustFix: 1,
-      shouldFix: 1,
+      confirmed: 2,
+      recommendations: 1,
       // The row used to stop at the two counts above. A second engine emits
       // everything as needs-review, so a portfolio that omits this one shows a
       // fraction of the run and calls it the run.
@@ -198,7 +203,16 @@ describe('buildPortfolio', () => {
       }),
     );
 
-    expect((await buildPortfolio(deps()))[0].lastRun?.mustFix).toBe(1);
+    expect((await buildPortfolio(deps()))[0].lastRun?.confirmed).toBe(1);
+  });
+
+  it('makes no confirmed claim for a run an earlier gate decided', async () => {
+    // The row renders a dash for this, as it does for an unscored run.
+    await seedClient('acme', 'Acme');
+    await platform.upsertJourney({ id: 'j1', clientId: 'acme', name: 'Checkout', steps: [] });
+    await runs.saveRun(run({ requestId: 'r1', ciStatus: 'fail', gateVersion: 1, findings: [finding()] }));
+
+    expect((await buildPortfolio(deps()))[0].lastRun?.confirmed).toBeNull();
   });
 
   it("does not attribute one client's runs to another", async () => {

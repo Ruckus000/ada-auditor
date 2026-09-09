@@ -1,4 +1,5 @@
 import type { ClientDetail } from '../../../../services/client-detail';
+import { countLine } from '../../../../services/presentation/verdict';
 import type { JourneyStepView } from '../../../../domain/journey-step';
 import type { CredentialPresence } from '../../../../services/credential-presence';
 import { describeRunFailure } from '../../lib/run-failure-copy';
@@ -107,7 +108,7 @@ export function ClientJourneys({ detail }: { detail: ClientDetail }) {
                         {badge.label}
                       </Pill>
                       <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-                        {journey.lastRun.mustFix} must fix ·{' '}
+                        {countLine(journey.lastRun.confirmed, 'must fix')} ·{' '}
                         {journey.lastRun.needsReview} to review ·{' '}
                         {new Date(journey.lastRun.createdAt).toISOString().slice(0, 10)}
                       </span>

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   SCORE_EXPLAINER,
   SCORE_STAT_LABEL,
+  countLine,
+  countStatValue,
   scoreLine,
   scoreStatValue,
   runVerdict,
@@ -126,5 +128,24 @@ describe('score copy', () => {
     // planted blind-test site, correct by definition and quoted as a grade.
     expect(SCORE_EXPLAINER).toContain('automated checks');
     expect(SCORE_EXPLAINER).toContain('blocking findings');
+  });
+});
+
+describe('count copy', () => {
+  it('renders a count the gate made as the number', () => {
+    expect(countStatValue(3)).toBe('3');
+    expect(countStatValue(0)).toBe('0');
+    expect(countLine(3, 'must fix')).toBe('3 must fix');
+    expect(countLine(0, 'must fix')).toBe('0 must fix');
+  });
+
+  it('renders a count the gate did not make as a dash in a tile and as words inline', () => {
+    // A tile's dash sits under its label. Inline, "— must fix" loses the dash
+    // to a screen reader's default punctuation level and is spoken as the
+    // instruction "must fix" — so the inline form says it in words, the way
+    // `scoreLine` says "not scored".
+    expect(countStatValue(null)).toBe('—');
+    expect(countLine(null, 'must fix')).toBe('must fix not counted');
+    expect(countLine(undefined, 'should fix')).toBe('should fix not counted');
   });
 });

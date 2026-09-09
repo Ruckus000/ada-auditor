@@ -15,29 +15,63 @@
 
 import type { TriageState } from '../../domain/platform';
 import type { DeterministicFinding } from '../deterministic-audit';
+import { GATE_VERSION, failsConformance } from '../reporting';
 import type { VerdictFinding } from './verdict';
 
 export type DisplaySeverity = 'must' | 'should' | 'nice' | 'review' | 'advisory';
 
 /**
- * `critical` is the only severity that blocks a run, which is why it is the
- * only one that maps to `must`. `serious` already collapses to `major` further
- * upstream (see `SEVERITY_BY_IMPACT` in `deterministic-audit.ts`) so that
- * high-volume rules like colour-contrast cannot gate CI.
+ * Whether the gate reached a verdict on this run with the rule in force
+ * today. False for an inconclusive run (`summarizeRun` reports
+ * `blockingFindings: 0` there by design — it declined to count) and for a run
+ * an earlier gate decided, or one from before `gate_version` was stored:
+ * recounting those with today's rule would put a number beside a verdict
+ * that number did not produce. The one predicate behind every "—" on a
+ * screen, and behind every row that does not wear MUST FIX.
  */
-const DISPLAY_BY_SEVERITY: Record<string, DisplaySeverity> = {
-  critical: 'must',
+export function gateDecided(run: { ciStatus: string; gateVersion?: number | null }): boolean {
+  return run.ciStatus !== 'inconclusive' && run.gateVersion === GATE_VERSION;
+}
+
+/**
+ * Impact order, for the recommendations. `serious` already collapses to
+ * `major` further upstream (see `SEVERITY_BY_IMPACT` in
+ * `deterministic-audit.ts`).
+ */
+const RECOMMENDATION_BY_SEVERITY: Record<string, DisplaySeverity> = {
+  critical: 'should',
   major: 'should',
   minor: 'nice',
-  'needs-review': 'review',
-  advisory: 'advisory',
 };
 
-export function displaySeverity(severity: string): DisplaySeverity {
-  // An unknown severity becomes `review` rather than `nice`: a finding we
-  // cannot categorise needs a human to look at it, and quietly filing it as
-  // low-priority is how it never gets looked at.
-  return DISPLAY_BY_SEVERITY[severity] ?? 'review';
+/**
+ * The bucket a finding is shown in, in the words the screens use.
+ *
+ * **`must` is the gate's word, so it is the gate's decision** — a finding is
+ * `must` when `failsConformance` says it failed the run, and only on a run
+ * the gate decided. It was once `critical → must`: the row badge on the
+ * findings screen read MUST FIX on a critical best-practice rule and NICE TO
+ * FIX on `meta-viewport` (impact moderate, wcag2aa), the one finding that had
+ * failed the run — directly beneath a summary line that counted "must fix"
+ * through the gate. Same word, two definitions, ninety lines apart.
+ *
+ * Everything else the gate did not fail is a recommendation, ordered by
+ * impact (`should`, then `nice`) because that is the order a remediation list
+ * is worked in. Where the gate made no claim (`decided` false) nothing is
+ * `must`; the rows keep their impact order under tiles that read "—".
+ *
+ * `needs-review` and `advisory` keep their own buckets whatever they cite:
+ * the review queue is the entire point of axe's `incomplete` results, and an
+ * advisory finding is `gateable: false`. An unknown severity goes to review
+ * rather than to `nice` — a finding we cannot categorise needs a human, and
+ * filing it as low-priority is how it never gets looked at.
+ */
+export function displayBucket(finding: VerdictFinding, decided: boolean): DisplaySeverity {
+  if (finding.source !== 'deterministic') return 'advisory';
+  if (finding.severity === 'needs-review') return 'review';
+  const recommendation = RECOMMENDATION_BY_SEVERITY[finding.severity];
+  if (recommendation === undefined) return 'review';
+  return decided && failsConformance(finding) ? 'must' : recommendation;
 }
 
 /**
@@ -136,49 +170,74 @@ export function isDeterministic(finding: Pick<DeterministicFinding, 'source'>): 
  * What a run's findings amount to, in the words the screens use.
  *
  * One helper rather than the filter each screen used to write for itself.
- * `portfolio.ts` and `client-detail.ts` both counted `must` and `should` with
- * identical inline predicates, and `client-detail`'s copy is what the client's
- * shared report renders — so the two could drift and the divergence would show
- * up on the document sent outside, which is the one place this repo has
- * already been bitten (see `report-html.ts` keying its copy on `ciStatus`).
+ * `portfolio.ts` and `client-detail.ts` both counted with identical inline
+ * predicates, and `client-detail`'s copy is what the client's shared report
+ * renders — so the two could drift and the divergence would show up on the
+ * document sent outside, which is the one place this repo has already been
+ * bitten (see `report-html.ts` keying its copy on `ciStatus`).
  *
- * **`needsReview` is the number that was missing.** Both callers reported
- * `must` and `should` and stopped, which was tolerable while the only source of
+ * **`confirmed` is a claim the gate made, counted through the gate.** It was
+ * once counted by impact (critical + major) here while the printable report
+ * and the verdict counted by criterion, and the two disagree on real
+ * documents: `meta-viewport` is impact moderate and cites wcag2aa, so a client
+ * page read "0" directly above a list of failed criteria. The count is the
+ * `must` bucket of `displayBucket`, so the number in the tile and the badge on
+ * each row beneath it are one rule. Where the gate made no claim
+ * (`gateDecided` false) there is nothing to count, and `confirmed` is
+ * **null**, rendered as a dash the way `scoreStatValue` renders an unscored
+ * run — and as words inline, where a dash is not spoken.
+ *
+ * `recommendations` is the complement — deterministic, decided, and not a
+ * conformance failure — so a critical best-practice rule and an AAA finding
+ * land there, honestly. It is null whenever `confirmed` is, for the same
+ * reason.
+ *
+ * **`needsReview` is the number that was missing.** Both callers reported the
+ * decided buckets and stopped, which was tolerable while the only source of
  * `needs-review` was axe's handful of undecided checks. HTML_CodeSniffer made
  * it the largest bucket by an order of magnitude — 130 of 139 findings on a
  * fixture site — and a summary that omits it describes a different audit from
- * the one that ran.
+ * the one that ran. It is counted on every run, because a review queue is
+ * work whether or not the gate reached a verdict.
  *
  * Advisory findings are excluded here, as they are from every count that could
  * be read as work owed: they are `gateable: false`, and `advisoryFindings` in
  * `summarizeRun` already reports them under their own name.
  */
-export function severityCounts(findings: readonly VerdictFinding[]): {
-  mustFix: number;
-  shouldFix: number;
+export function severityCounts(run: {
+  /** `pass | fail | inconclusive` from `summarizeRun`. */
+  ciStatus: string;
+  /** Absent on rows written before the column existed. */
+  gateVersion?: number | null;
+  findings: readonly VerdictFinding[];
+}): {
+  confirmed: number | null;
+  recommendations: number | null;
   needsReview: number;
 } {
-  const counted = { mustFix: 0, shouldFix: 0, needsReview: 0 };
+  const decided = gateDecided(run);
+  let confirmed = 0;
+  let recommendations = 0;
+  let needsReview = 0;
 
-  for (const finding of findings) {
-    if (finding.source !== 'deterministic') continue;
-
-    switch (displaySeverity(finding.severity)) {
+  for (const finding of run.findings) {
+    switch (displayBucket(finding, decided)) {
       case 'must':
-        counted.mustFix += 1;
+        confirmed += 1;
         break;
       case 'should':
-        counted.shouldFix += 1;
+      case 'nice':
+        recommendations += 1;
         break;
       case 'review':
-        counted.needsReview += 1;
+        needsReview += 1;
         break;
-      // `nice` is deliberately uncounted: it has never had a tile, and adding
-      // one here would be a screen change wearing a bug fix's clothes.
       default:
         break;
     }
   }
 
-  return counted;
+  return decided
+    ? { confirmed, recommendations, needsReview }
+    : { confirmed: null, recommendations: null, needsReview };
 }

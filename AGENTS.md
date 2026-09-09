@@ -370,6 +370,42 @@ Chromium launches on a Vercel function:
   unresolved findings read "No blocking issues found" on the document a
   client's counsel reads while every operator screen said `risk`. Two
   definitions of one rule, and the softer one was on the copy that mattered.
+  **The count beside "Must fix" is the gate's count, or a dash.** The same
+  defect one step down the page: the shared report, portfolio, overview,
+  results stage and reports list counted "must fix" by axe impact
+  (`critical`, later `critical + major`) while the printable report, the
+  console card and the verdict counted by success criterion
+  (`failsConformance`: deterministic, not `needs-review`, Level A/AA). The two
+  disagree on real documents — `meta-viewport` is impact *moderate* and cites
+  *wcag2aa* — so a client page read "0" directly above a list of failed
+  criteria. `severityCounts(run)` in `presentation/severity` now asks the
+  gate, and answers `confirmed: null` where the gate made no claim: an
+  `inconclusive` run (`summarizeRun` reports `blockingFindings: 0` there *by
+  design*) and any run whose `gateVersion` is not `GATE_VERSION` (gate-1 rows
+  exist in production, from the twelve days between `conformance_level`
+  landing and gate 2). Null renders as the dash `scoreStatValue` uses for an
+  unscored run; a recount of an old row with today's rule would put a number
+  beside a verdict that number did not produce.
+  The same rule reaches every row: `displayBucket` in `presentation/severity`
+  is the one function behind the count in a tile and the badge on the row
+  beneath it, so a finding wears MUST FIX exactly when the tile counts it
+  and never where the tile reads "—" (the findings screen once badged
+  `critical → MUST FIX` under a gate-counted header — the same word with two
+  definitions ninety lines apart — and the console card flagged "Blocks
+  release" on runs the gate had declined to judge). Inline, a withheld count
+  is words (`countLine`: "must fix not counted"), not the dash: at a screen
+  reader's default punctuation the dash is silent and "— must fix" is spoken
+  as an order. Test fixtures that separate the two definitions must do so in
+  **number**, not only in identity: one critical finding beside one gate
+  failure answers 1 under both rules, and a reviewer proved the impact rule
+  passed every such test.
+  `tests/app/uniform-run-surfaces.test.ts` renders one stored run on all six
+  surfaces and asserts the one number. Recorded, not changed, in the same
+  pass: `runVerdict`'s `risk` predicate is impact-keyed (`major ||
+  needs-review`), so a `critical` best-practice finding under a passing gate
+  reads `pass`; `services/regression.ts` decides "worse" by impact; and the
+  printable PDF now lists deterministic findings only, like the shared page,
+  and is still linked from no screen.
 - **Triage is keyed on finding identity, per client** (`finding_triage`), never
   on the per-run `findings` row: `saveRun` deletes and reinserts a run's
   children on every write — inside one transaction, so a reader never sees the

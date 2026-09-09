@@ -33,8 +33,13 @@ export type PortfolioRow = {
     verdict: VerdictKind;
     /** Null when the run could not be scored — never 0, which is a real score. */
     score: number | null;
-    mustFix: number;
-    shouldFix: number;
+    /**
+     * The gate's own count of what failed the run; null where it made no
+     * claim (inconclusive, or an earlier gate) and shown as a dash, like
+     * `score`. See `RunSummary.confirmed`.
+     */
+    confirmed: number | null;
+    recommendations: number | null;
     /**
      * The human-review queue. Since HTML_CodeSniffer joined axe this is
      * routinely the largest of the three, so a row showing only the first two
@@ -61,7 +66,7 @@ function summarise(run: StoredRunRecord): NonNullable<PortfolioRow['lastRun']> {
     // detail screen held one inline copy of the filter each, and the second of
     // those is what the client's shared report renders — two copies of a rule
     // that has to agree, on the two documents that must not disagree.
-    ...severityCounts(run.findings),
+    ...severityCounts(run),
     pagesAudited: run.pages?.length ?? 0,
   };
 }

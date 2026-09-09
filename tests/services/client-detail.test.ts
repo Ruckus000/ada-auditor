@@ -3,6 +3,7 @@ import type { StoredFinding, StoredRunRecord } from '../../src/domain/persistenc
 import { MemoryPlatformStore } from '../../src/integrations/persistence/memory-platform-store';
 import { MemoryRunStore } from '../../src/integrations/persistence/memory-run-store';
 import { buildClientDetail } from '../../src/services/client-detail';
+import { GATE_VERSION } from '../../src/services/reporting';
 
 let platform: MemoryPlatformStore;
 let runs: MemoryRunStore;
@@ -27,8 +28,9 @@ async function loginJourney(clientId: string, ref: string) {
   });
 }
 
+/** `image-alt` cites 1.1.1, Level A — the shape the gate fails. */
 function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
-  return { code: 'image-alt', severity: 'critical', source: 'deterministic', ...overrides };
+  return { code: 'image-alt', severity: 'critical', source: 'deterministic', conformanceLevel: 'A', ...overrides };
 }
 
 function run(overrides: Partial<StoredRunRecord> & Pick<StoredRunRecord, 'requestId'>) {
@@ -38,6 +40,7 @@ function run(overrides: Partial<StoredRunRecord> & Pick<StoredRunRecord, 'reques
     platform: 'generic',
     evidenceStatus: 'complete',
     ciStatus: 'pass',
+    gateVersion: GATE_VERSION,
     findings: [],
     durationMs: 10,
     createdAt: '2026-08-10T10:00:00.000Z',
@@ -92,7 +95,8 @@ describe('buildClientDetail', () => {
         score: 72,
         findings: [
           finding(),
-          finding({ severity: 'major' }),
+          // `region`: rated critical here, cites no criterion — a recommendation.
+          finding({ code: 'region', severity: 'critical', conformanceLevel: null }),
           finding({ code: 'htmlcs:notice:2_5_1', severity: 'needs-review' }),
         ],
         pages: [{ url: 'https://a/1', route: '/1', title: 'One', evidenceStatus: 'complete' }],
@@ -115,13 +119,71 @@ describe('buildClientDetail', () => {
       requestId: 'new',
       verdict: 'fail',
       score: 72,
-      mustFix: 1,
-      shouldFix: 1,
+      confirmed: 1,
+      recommendations: 1,
       // `summariseRun` is what the client's shared report renders, so this
       // assertion is the one standing between a 130-item review queue and a
       // document that says "1 must fix, 1 should fix" and stops.
       needsReview: 1,
       pagesAudited: 1,
+    });
+  });
+
+  /**
+   * The count the shared report shows as confirmed is the gate's count. It
+   * was once counted by impact here, and `meta-viewport` — impact moderate,
+   * cites wcag2aa — put "0" on a client page four lines above the criterion
+   * it failed.
+   */
+  it('counts confirmed by the criterion, not the impact', async () => {
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({ id: 'j1', clientId: 'acme', name: 'Checkout', steps: [] });
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        ciStatus: 'fail',
+        findings: [
+          finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA' }),
+          finding({ code: 'region', severity: 'critical', conformanceLevel: null }),
+        ],
+      }),
+    );
+
+    expect(detailRun(await buildClientDetail('acme', deps()))).toMatchObject({
+      confirmed: 1,
+      recommendations: 1,
+    });
+  });
+
+  it('makes no confirmed claim for a run an earlier gate decided', async () => {
+    // Gate 1 decided by impact; recounting its findings with today's rule puts
+    // a number beside a verdict that number did not produce. Rows from before
+    // `gate_version` was stored carry no version at all.
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({ id: 'j1', clientId: 'acme', name: 'Checkout', steps: [] });
+    await runs.saveRun(run({ requestId: 'r1', ciStatus: 'fail', gateVersion: 1, findings: [finding()] }));
+
+    expect(detailRun(await buildClientDetail('acme', deps()))?.confirmed).toBeNull();
+  });
+
+  it('makes no confirmed claim on an inconclusive run, but still counts the review queue', async () => {
+    // `summarizeRun` reports `blockingFindings: 0` there by design. A count
+    // here would be a second definition of the same number.
+    await platform.upsertClient({ id: 'acme', name: 'Acme' });
+    await platform.upsertJourney({ id: 'j1', clientId: 'acme', name: 'Checkout', steps: [] });
+    await runs.saveRun(
+      run({
+        requestId: 'r1',
+        evidenceStatus: 'degraded',
+        ciStatus: 'inconclusive',
+        findings: [finding(), finding({ code: 'htmlcs:notice:2_5_1', severity: 'needs-review' })],
+      }),
+    );
+
+    expect(detailRun(await buildClientDetail('acme', deps()))).toMatchObject({
+      confirmed: null,
+      recommendations: null,
+      needsReview: 1,
     });
   });
 
@@ -148,7 +210,7 @@ describe('buildClientDetail', () => {
       }),
     );
 
-    expect(detailRun(await buildClientDetail('acme', deps()))?.mustFix).toBe(1);
+    expect(detailRun(await buildClientDetail('acme', deps()))?.confirmed).toBe(1);
   });
 
   it("does not show another client's journeys", async () => {

@@ -143,6 +143,13 @@ export type SharedReport = {
       code: string;
       title?: string;
       severity: string;
+      /**
+       * The cited criterion's level, so the page can ask the gate which of
+       * these failed the run rather than listing every criterion any finding
+       * cites — an undecided check cites 1.4.3 without failing it. Null for a
+       * best-practice rule; absent on runs stored before levels were.
+       */
+      conformanceLevel?: string | null;
       wcagCriteria: string[];
       selector?: string;
       /** Any one of these clears it. */
@@ -186,6 +193,7 @@ export async function buildSharedReport(
       code: finding.code,
       ...(finding.title === undefined ? {} : { title: finding.title }),
       severity: finding.severity,
+      ...(finding.conformanceLevel === undefined ? {} : { conformanceLevel: finding.conformanceLevel }),
       wcagCriteria: finding.wcagCriteria ?? [],
       // The shared report carries the fix, not just the failure: the people
       // who open this link are usually the ones who have to act on it.

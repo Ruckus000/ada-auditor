@@ -1,8 +1,9 @@
 import type { RunStore, StoredFinding } from '../domain/persistence';
 import type { ClientStore, JourneyStore, TriageStore, TriageState } from '../domain/platform';
 import {
-  displaySeverity,
+  displayBucket,
   findingDisplayStatus,
+  gateDecided,
   type DisplaySeverity,
   type FindingDisplayStatus,
 } from './presentation/severity';
@@ -88,15 +89,6 @@ export type FindingsView = {
    * mixing them into a page's list would put opinions beside measurements.
    */
   advisory: FindingView[];
-  counts: Record<DisplaySeverity, number>;
-};
-
-const EMPTY_COUNTS: Record<DisplaySeverity, number> = {
-  must: 0,
-  should: 0,
-  nice: 0,
-  review: 0,
-  advisory: 0,
 };
 
 export type FindingsDeps = {
@@ -137,7 +129,6 @@ export async function buildFindingsView(
       journeyName: null,
       pages: [],
       advisory: [],
-      counts: { ...EMPTY_COUNTS },
     };
   }
 
@@ -154,6 +145,10 @@ export async function buildFindingsView(
     (await deps.triage.listTriage(client.id)).map((entry) => [entry.findingKey, entry]),
   );
 
+  // The one predicate the tiles use, so a row wears MUST FIX exactly when the
+  // tile above it counts it — and never where the tile reads "—".
+  const decided = gateDecided(run);
+
   const toView = (finding: StoredFinding): FindingView => {
     const key = findingKey(finding);
     const entry = triageByKey.get(key);
@@ -165,7 +160,7 @@ export async function buildFindingsView(
       ...(finding.message === undefined ? {} : { message: finding.message }),
       fixAnyOf: finding.remediationAnyOf ?? [],
       fixAllOf: finding.remediationAllOf ?? [],
-      severity: displaySeverity(finding.severity),
+      severity: displayBucket(finding, decided),
       wcagCriteria: finding.wcagCriteria ?? [],
       ...(finding.conformanceLevel ? { conformanceLevel: finding.conformanceLevel } : {}),
       ...(finding.selector === undefined ? {} : { selector: finding.selector }),
@@ -231,13 +226,9 @@ export async function buildFindingsView(
     }
   }
 
-  const counts = { ...EMPTY_COUNTS };
-  for (const page of pages) {
-    for (const finding of page.findings) {
-      counts[finding.severity] += 1;
-    }
-  }
-
+  // No recount of the list by display severity here. The screen's numbers
+  // are `run`'s — counted once, through the gate, in `presentation/severity`
+  // — and a second tally by impact was the second definition of "must fix".
   return {
     clientId: client.id,
     clientName: client.name,
@@ -245,7 +236,6 @@ export async function buildFindingsView(
     journeyName: journey.name,
     pages,
     advisory: advisory.map(toView),
-    counts,
   };
 }
 

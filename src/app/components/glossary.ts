@@ -97,14 +97,15 @@ export const GLOSSARY = {
 
   pass: {
     term: 'Pass',
-    short: 'Evidence was complete and no critical rule-based issues were found.',
+    short: 'Evidence was complete and no rule-based finding failed a Level A or AA success criterion.',
     detail: 'Nothing found here should block a release. It does not mean the site is free of accessibility problems.',
   },
 
   fail: {
     term: 'Fail',
-    short: 'Evidence was complete and at least one critical rule-based issue was found.',
-    detail: 'Only critical issues from fixed rules cause a fail. Advisory notes never do.',
+    short: 'Evidence was complete and at least one rule-based finding failed a Level A or AA success criterion.',
+    detail:
+      'The success criterion decides, not the severity: a minor finding against a Level AA criterion fails the run, and a critical best-practice finding does not. Findings that need review, and advisory notes, never do.',
   },
 
   inconclusive: {
@@ -159,13 +160,14 @@ export const GLOSSARY = {
 
   severity: {
     term: 'Severity',
-    short: 'How serious a finding is: critical, major, or minor.',
-    detail: 'Only critical rule-based findings cause a fail. Major and minor are reported for you to triage.',
+    short: 'How serious a finding is to hit: critical, major, or minor — or needs review, when a check could not decide.',
+    detail:
+      'Severity is the rule engine’s rating of the barrier. It does not decide the verdict: a finding fails the run when it fails a Level A or AA success criterion, whatever its severity. Use it to order the work.',
   },
 
   blocksCi: {
     term: 'Blocks release',
-    short: 'This finding is critical and rule-based, so it is what turned the verdict to fail.',
+    short: 'This finding is rule-based and fails a Level A or AA success criterion, so it is what turned the verdict to fail.',
   },
 
   // --- Comparison & tracing ----------------------------------------------

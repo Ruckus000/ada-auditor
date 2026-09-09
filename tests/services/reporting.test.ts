@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeRun } from '../../src/services/reporting';
+import { failsConformance, summarizeRun } from '../../src/services/reporting';
 import type { DeterministicFinding } from '../../src/services/deterministic-audit';
 
 describe('summarizeRun', () => {
@@ -318,6 +318,40 @@ describe('summarizeRun', () => {
     expect(report.ciStatus).toBe('inconclusive');
     expect(report.executiveSummary.blockingFindings).toBe(0);
     expect(report.executiveSummary.needsReviewFindings).toBe(1);
+  });
+});
+
+/**
+ * The gate, exported, so every surface that says how many issues decide the
+ * result asks the same function the run's verdict asked.
+ *
+ * A second spelling of this rule is how one client document said "0" beside
+ * a list of failed criteria: the shared page counted by impact (critical +
+ * major) while the printable report and the verdict counted by criterion. The
+ * six shapes below are the ones that tell the two apart — `meta-viewport` is
+ * impact moderate (→ minor) and cites wcag2aa, so it fails the audit as a
+ * "minor"; `region` (rated critical here) cites nothing, so it never does.
+ */
+describe('failsConformance', () => {
+  it('fails a minor-impact finding that cites a Level AA criterion', () => {
+    expect(failsConformance({ source: 'deterministic', severity: 'minor', conformanceLevel: 'AA' })).toBe(true);
+  });
+
+  it('does not fail a critical-impact finding that cites no criterion', () => {
+    expect(failsConformance({ source: 'deterministic', severity: 'critical', conformanceLevel: null })).toBe(false);
+    expect(failsConformance({ source: 'deterministic', severity: 'critical' })).toBe(false);
+  });
+
+  it('never fails a needs-review finding, whatever it cites', () => {
+    expect(failsConformance({ source: 'deterministic', severity: 'needs-review', conformanceLevel: 'AA' })).toBe(false);
+  });
+
+  it('never fails an advisory finding', () => {
+    expect(failsConformance({ source: 'ai-advisory', severity: 'advisory', conformanceLevel: 'A' })).toBe(false);
+  });
+
+  it('does not gate on Level AAA', () => {
+    expect(failsConformance({ source: 'deterministic', severity: 'critical', conformanceLevel: 'AAA' })).toBe(false);
   });
 });
 

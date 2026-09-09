@@ -24,10 +24,12 @@ import type { RunStatus } from '../../domain/persistence';
  */
 export type VerdictKind = 'fail' | 'risk' | 'pass' | 'scan' | 'inconclusive';
 
-/** Just enough of a finding to reach a verdict. */
+/** Just enough of a finding to reach a verdict, and to count what decided it. */
 export type VerdictFinding = {
   severity: string;
   source: string;
+  /** The success criterion's level, when the finding cites one; what the gate reads. */
+  conformanceLevel?: string | null;
 };
 
 export type VerdictInput = {
@@ -111,6 +113,29 @@ export const SCORE_STAT_LABEL = 'Checks passed';
 /** `98` → `98%`; null → an em dash, because an unscored run did not score badly. */
 export function scoreStatValue(score: number | null | undefined): string {
   return score === null || score === undefined ? '—' : `${score}%`;
+}
+
+/**
+ * A count the gate may not have made. `severityCounts` answers null for
+ * `confirmed` on an inconclusive run and on one an earlier gate decided; the
+ * dash is the same one an unscored run shows, for the same reason — nothing
+ * was measured, and 0 would say something was.
+ */
+export function countStatValue(count: number | null | undefined): string {
+  return count === null || count === undefined ? '—' : String(count);
+}
+
+/**
+ * The inline form of a count: `3 must fix` / `must fix not counted`.
+ *
+ * Words, not the dash, because inline text is what a screen reader speaks:
+ * at NVDA's default punctuation level an em dash is silent, so "— must fix"
+ * is announced as the instruction "must fix" with no number. A tile keeps
+ * the dash under its label; a sentence says it the way `scoreLine` says
+ * "not scored".
+ */
+export function countLine(count: number | null | undefined, label: string): string {
+  return count === null || count === undefined ? `${label} not counted` : `${count} ${label}`;
 }
 
 /** The inline form, for status lines: `98% checks passed` / `not scored`. */

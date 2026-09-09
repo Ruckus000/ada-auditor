@@ -4,8 +4,10 @@ import { describePageEvidence } from '../../../services/presentation/page-eviden
 import {
   SCORE_EXPLAINER,
   SCORE_STAT_LABEL,
+  countStatValue,
   scoreStatValue,
 } from '../../../services/presentation/verdict';
+import { failsConformance } from '../../../services/reporting';
 import { describeCriterion, summariseCriteria } from '../../../services/wcag-reference';
 import { documentGapKey } from '../../../services/document-regression';
 import { FONT, T } from '../../platform/lib/tokens';
@@ -31,9 +33,28 @@ export function SharedReportPage({
   token: string;
 }) {
   const total = report.pages.reduce((sum, page) => sum + page.findings.length, 0);
-  const failed = summariseCriteria(
-    report.pages.flatMap((page) => page.findings.flatMap((finding) => finding.wcagCriteria)),
-  );
+  // The criteria the gate failed the run on — asked of the gate, not read off
+  // every finding. A check axe could not decide cites its criterion like any
+  // other, and listing it under "not met" told a client that an undecided
+  // check was a failure. Every finding on this page is deterministic
+  // (`buildSharedReport` filters advisory out), which is what `source` says.
+  //
+  // And none at all where the gate made no claim (`confirmed` is null: an
+  // inconclusive run, or one an earlier gate decided). "Not met" is the count
+  // in words; listing criteria by today's rule beside a dash that says the
+  // gate made no claim is the recount the dash refuses. A real gate-1 report
+  // read "—" above five criteria before this guard. The findings below still
+  // show what they cite.
+  const failed =
+    report.run.confirmed === null
+      ? []
+      : summariseCriteria(
+          report.pages.flatMap((page) =>
+            page.findings
+              .filter((finding) => failsConformance({ ...finding, source: 'deterministic' }))
+              .flatMap((finding) => finding.wcagCriteria),
+          ),
+        );
 
   return (
     <main
@@ -90,8 +111,13 @@ export function SharedReportPage({
           }}
         >
           <Stat label={SCORE_STAT_LABEL} value={scoreStatValue(report.run.score)} />
-          <Stat label="Must fix" value={String(report.run.mustFix)} />
-          <Stat label="Should fix" value={String(report.run.shouldFix)} />
+          {/* The gate's own count, and a dash where it made none — an
+              inconclusive run, or one an earlier gate decided. Never a count
+              by impact: that once put "0" here above a list of failed
+              criteria, because `meta-viewport` is impact moderate and cites
+              wcag2aa. */}
+          <Stat label="Must fix" value={countStatValue(report.run.confirmed)} />
+          <Stat label="Should fix" value={countStatValue(report.run.recommendations)} />
           <Stat label="Needs review" value={String(report.run.needsReview)} />
           <Stat label="Pages audited" value={String(report.run.pagesAudited)} />
         </dl>
@@ -101,11 +127,21 @@ export function SharedReportPage({
         </p>
 
         <p style={{ margin: 0, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.55 }}>
+          {/* "Findings", not "barriers", and the criteria they cite, not the
+              ones "each one fails": a review item is listed here too, and it
+              is neither a barrier nor a failure until a person decides it. */}
           {total === 0
             ? 'No barriers were found on any page we walked.'
-            : `${total} ${total === 1 ? 'barrier' : 'barriers'} across ${report.pages.length} ${
+            : `${total} ${total === 1 ? 'finding' : 'findings'} across ${report.pages.length} ${
                 report.pages.length === 1 ? 'page' : 'pages'
-              }, listed below with the WCAG success criterion each one fails.`}
+              }, listed below with the WCAG success criteria they cite.` +
+              (report.run.needsReview > 0
+                ? ` ${report.run.needsReview === 1 ? 'One is' : `${report.run.needsReview} are`} marked "needs review": an automated check could not decide ${
+                    report.run.needsReview === 1 ? 'it' : 'them'
+                  }, so ${report.run.needsReview === 1 ? 'it is' : 'they are'} not counted as ${
+                    report.run.needsReview === 1 ? 'a failure' : 'failures'
+                  }.`
+                : '')}
         </p>
       </section>
 
@@ -179,6 +215,11 @@ export function SharedReportPage({
                       {' '}
                       · WCAG {finding.wcagCriteria.map(describeCriterion).join(' · ')}
                     </span>
+                  ) : null}
+                  {/* The same words as the tile above, so the reader can find
+                      which items the "needs review" count refers to. */}
+                  {finding.severity === 'needs-review' ? (
+                    <span style={{ color: T.inkMuted }}> · needs review</span>
                   ) : null}
                   {finding.selector ? (
                     <>

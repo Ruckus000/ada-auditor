@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { escapeHtml, renderRunReport } from '../../src/services/report-html';
+import { GATE_VERSION } from '../../src/services/reporting';
 import type { StoredFinding, StoredRunRecord } from '../../src/domain/persistence';
 
 function finding(overrides: Partial<StoredFinding> = {}): StoredFinding {
@@ -25,6 +26,7 @@ function run(overrides: Partial<StoredRunRecord> = {}): StoredRunRecord {
     platform: 'generic',
     evidenceStatus: 'complete',
     ciStatus: 'fail',
+    gateVersion: GATE_VERSION,
     findings: [finding()],
     durationMs: 1234,
     createdAt: '2026-08-07T00:00:00.000Z',
@@ -128,11 +130,24 @@ describe('renderRunReport — content', () => {
     // The first real client audit produced exactly this run: 86 findings,
     // none critical, `ciStatus: pass`.
     const html = renderRunReport(
-      run({ ciStatus: 'pass', findings: [finding({ severity: 'major' })] }),
+      run({ ciStatus: 'pass', findings: [finding({ severity: 'major', conformanceLevel: null })] }),
     );
 
     expect(html).not.toContain('No blocking issues found');
     expect(html).toContain('Issues found, none blocking');
+  });
+
+  it('does not call a review item a failure in the at-risk copy', () => {
+    // `risk` is reached by a needs-review finding as much as by a major one,
+    // and axe could not decide a needs-review finding — so a sentence that
+    // says "failures against the WCAG success criteria" claims something
+    // nobody observed, on the document a client's counsel reads.
+    const html = renderRunReport(
+      run({ ciStatus: 'pass', findings: [finding({ severity: 'needs-review' })] }),
+    );
+
+    expect(html).toContain('Issues found, none blocking');
+    expect(html).not.toContain('found failures against');
   });
 
   it('still reads clean when a run really did find nothing', () => {
@@ -174,17 +189,50 @@ describe('renderRunReport — content', () => {
     expect(html.indexOf('major-rule')).toBeLessThan(html.indexOf('minor-rule'));
   });
 
-  it('counts only deterministic criticals as blocking', () => {
+  it('counts blocking through the gate, not by impact', () => {
+    // Two gate failures, neither critical (`meta-viewport` is impact moderate
+    // and cites wcag2aa); one critical finding that cites nothing. The gate
+    // answers 2. A count of criticals answers 1 — and a fixture with one of
+    // each let that count pass this test's own name.
     const html = renderRunReport(
       run({
         findings: [
-          finding(),
+          finding({ code: 'meta-viewport', severity: 'minor', conformanceLevel: 'AA' }),
+          finding({ code: 'html-has-lang', severity: 'minor', conformanceLevel: 'A' }),
+          finding({ code: 'region', severity: 'critical', conformanceLevel: null }),
+          finding({ code: 'color-contrast', severity: 'needs-review', conformanceLevel: 'AA' }),
           { code: 'ai-advisory', severity: 'advisory', source: 'ai-advisory', message: 'x' },
         ],
       }),
     );
 
-    expect(html).toContain('<strong>1</strong> blocking');
+    expect(html).toContain('<strong>2</strong> blocking');
+  });
+
+  it('does not say findings are withheld on an inconclusive run that lists them', () => {
+    // Rejection is per page: a run with one page served as an error keeps
+    // the deterministic findings from the pages that were usable, and they
+    // are listed on this document. The verdict copy said they were withheld.
+    const html = renderRunReport(run({ ciStatus: 'inconclusive', evidenceStatus: 'degraded' }));
+
+    expect(html).toContain('image-alt');
+    expect(html).not.toContain('are withheld');
+  });
+
+  it('omits the blocking count on an inconclusive run rather than printing 0 or 1', () => {
+    // The gate reports `blockingFindings: 0` there by design — it declined to
+    // count, it did not count zero — and a Level A finding is still in the
+    // list below. Either number beside that list is a claim the gate did not
+    // make.
+    const html = renderRunReport(run({ ciStatus: 'inconclusive', evidenceStatus: 'degraded' }));
+
+    expect(html).not.toMatch(/<\/strong> blocking/);
+  });
+
+  it('omits the blocking count for a run an earlier gate decided', () => {
+    const html = renderRunReport(run({ gateVersion: 1 }));
+
+    expect(html).not.toMatch(/<\/strong> blocking/);
   });
 
   it('says plainly that automated testing is not a conformance claim', () => {
@@ -263,7 +311,12 @@ describe('renderRunReport — content', () => {
     expect(html).toContain('<strong>2</strong> pages audited');
   });
 
-  it('collects advisory findings under the journey rather than a page they did not come from', () => {
+  it('withholds advisory findings, as the shared page does', () => {
+    // A model's judgement is `gateable: false` — a lead for an operator, not
+    // a finding a client can act on or one we can stand behind on the
+    // document their counsel reads. The public share page already filters to
+    // deterministic findings; this document follows the same rule, so the two
+    // things a client can be sent do not disagree about what was found.
     const html = renderRunReport(
       run({
         pages: [
@@ -283,6 +336,23 @@ describe('renderRunReport — content', () => {
             message: 'Navigation is labelled differently on two pages.',
           },
         ],
+      }),
+    );
+
+    expect(html).not.toContain('Navigation is labelled differently');
+    expect(html).not.toContain('Across the journey');
+    expect(html).not.toContain('advisory</li>');
+  });
+
+  it('still files an older record’s unattributed findings under the journey', () => {
+    // Runs recorded before findings carried a page have deterministic
+    // findings with no `pageUrl`; those still need somewhere to go.
+    const html = renderRunReport(
+      run({
+        pages: [
+          { url: 'https://app.example.com/login', route: '/login', title: 'Login', evidenceStatus: 'complete' },
+        ],
+        findings: [finding()],
       }),
     );
 

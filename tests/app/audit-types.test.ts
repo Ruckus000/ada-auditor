@@ -27,10 +27,29 @@ describe('parseFindings', () => {
     expect(parseFindings([{ severity: 'critical' }, null, 'nope'])).toEqual([]);
   });
 
-  it('defaults an unknown severity to minor and an unknown source to deterministic', () => {
+  it('sends an unknown severity to needs-review, and an unknown source to deterministic', () => {
+    // A finding the console cannot categorise is one a person should look
+    // at. Filing it as `minor` — "fix when convenient" — is how it never gets
+    // looked at, and `presentation/severity` already makes the same choice.
     const [finding] = parseFindings([{ code: 'x', severity: 'catastrophic', source: 'psychic' }]);
-    expect(finding.severity).toBe('minor');
+    expect(finding.severity).toBe('needs-review');
     expect(finding.source).toBe('deterministic');
+  });
+
+  it('keeps needs-review, which is what axe’s undecided checks arrive as', () => {
+    const [finding] = parseFindings([{ code: 'x', severity: 'needs-review', source: 'deterministic' }]);
+    expect(finding.severity).toBe('needs-review');
+  });
+
+  it('carries the conformance level the gate reads, null for a best-practice rule', () => {
+    const [aa, none, absent] = parseFindings([
+      { code: 'a', severity: 'minor', source: 'deterministic', conformanceLevel: 'AA' },
+      { code: 'b', severity: 'critical', source: 'deterministic', conformanceLevel: null },
+      { code: 'c', severity: 'major', source: 'deterministic' },
+    ]);
+    expect(aa.conformanceLevel).toBe('AA');
+    expect(none.conformanceLevel).toBeNull();
+    expect(absent.conformanceLevel).toBeUndefined();
   });
 
   it('returns an empty list for a non-array', () => {
@@ -291,19 +310,24 @@ describe('groupFindingsByPage', () => {
 });
 
 describe('countBySource', () => {
-  it('counts blocking findings as critical deterministic ones only', () => {
+  it('counts blocking through the gate, not by impact', () => {
+    // The verdict panel builds "Fix the N issues marked Blocks release" from
+    // this, so it has to agree with the gate that produced the verdict:
+    // `meta-viewport` (impact moderate, wcag2aa) blocks; `region` (impact
+    // critical, no criterion) does not; an undecided check never does.
     const counts = countBySource(
       parseFindings([
-        { code: 'a', severity: 'critical', message: 'a', source: 'deterministic' },
-        { code: 'b', severity: 'major', message: 'b', source: 'deterministic' },
-        { code: 'ai-advisory', severity: 'advisory', message: 'c', source: 'ai-advisory' },
+        { code: 'meta-viewport', severity: 'minor', message: 'a', source: 'deterministic', conformanceLevel: 'AA' },
+        { code: 'region', severity: 'critical', message: 'b', source: 'deterministic', conformanceLevel: null },
+        { code: 'color-contrast', severity: 'needs-review', message: 'c', source: 'deterministic', conformanceLevel: 'AA' },
+        { code: 'ai-advisory', severity: 'advisory', message: 'd', source: 'ai-advisory' },
       ]),
     );
 
-    expect(counts.total).toBe(3);
-    expect(counts.deterministic).toHaveLength(2);
+    expect(counts.total).toBe(4);
+    expect(counts.deterministic).toHaveLength(3);
     expect(counts.advisory).toHaveLength(1);
-    expect(counts.blocking).toHaveLength(1);
+    expect(counts.blocking.map((f) => f.code)).toEqual(['meta-viewport']);
   });
 });
 
