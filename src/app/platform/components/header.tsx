@@ -6,7 +6,9 @@ import { usePlatform, type WorkspaceScreen } from '../lib/state';
 
 
 const WORKSPACE_TABS: Array<[WorkspaceScreen, string]> = [
-  ['portfolio', 'Portfolio'],
+  // The screen's label is Clients; its code name stays `portfolio`
+  // (see `params.ts`), so this row is the seam between the two.
+  ['portfolio', 'Clients'],
   ['reports', 'Reports'],
   ['activity', 'Activity'],
   ['remediate', 'Remediate a file'],
@@ -42,8 +44,8 @@ export function PlatformHeader() {
       <button
         type="button"
         onClick={() => actions.goWorkspace('portfolio')}
-        title="ADA Auditor — back to Portfolio"
-        aria-label="ADA Auditor — back to Portfolio"
+        title="ADA Auditor — back to Clients"
+        aria-label="ADA Auditor — back to Clients"
         style={{
           display: 'flex',
           alignItems: 'baseline',

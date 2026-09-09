@@ -35,12 +35,12 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
 
   return (
     <div
-      data-screen-label="Portfolio"
+      data-screen-label="Clients"
       style={{ display: 'flex', flexDirection: 'column', gap: 18 }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <ScreenHeading
-          title="Portfolio"
+          title="Clients"
           lede={
             hasClients
               ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}, newest run first.`

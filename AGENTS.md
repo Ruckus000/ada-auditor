@@ -171,7 +171,7 @@ Follow `YAGNI → KISS → SRP → DRY`.
 - `AUDITOR_STORE=memory` is the only way to run the built server without a
   database, and exists for the hydration suite in CI. It is an explicit opt-in,
   never a fallback for a missing `DATABASE_URL` — a fallback would let a
-  misconfigured deploy serve an empty portfolio and discard runs in silence.
+  misconfigured deploy serve an empty client list and discard runs in silence.
   The ephemeral stores hang off `globalThis`, because Next bundles route
   handlers and pages separately and a module-level singleton would give each
   its own store
@@ -459,6 +459,35 @@ Chromium launches on a Vercel function:
   converter. On a converter-less host that repair is refused with
   `converter_unavailable`. The copy for that code is lane-neutral for exactly
   this reason (`NO_CONVERTER_YET`), but the refusal itself is a route bug.
+- **The screen that lists clients is labelled Clients; its code is called
+  `portfolio`.** The label was Portfolio — agency jargon for a book of
+  accounts, on a screen that lists clients — and it is retired from the tab,
+  the heading, the logo's accessible name and both back links.
+  `services/portfolio.ts`, `PortfolioRow`, `buildPortfolio`, `PortfolioScreen`
+  and the `'portfolio'` member of `WorkspaceScreen` keep the old name
+  deliberately, so every comment beside them still describes the code it names;
+  the seam is written down at the type (`platform/lib/params.ts`). That member
+  is the sentinel for the root screen and reaches no URL — renaming it to
+  `'clients'` would put it one edit away from `/clients/<id>`, which
+  `parseRoute` handles by an explicit branch.
+  **A rename is complete or not attempted**, and
+  `tests/app/workspace-vocabulary.test.ts` is what makes that enforceable: no
+  file under `src/app` may render the old word **in any case**, and the tab,
+  the heading and the way back must all carry the new one. The case matters,
+  and a first version of that guard got it wrong — it matched `Portfolio`
+  only, so "a portfolio of client sites" in the page description, which a
+  browser tab and a search snippet show, sat inside its own walked roots and
+  passed. A person caught it. Sentence-case prose is exactly where jargon
+  comes back, so the guard removes what is entitled to keep the word —
+  comments, module paths, and the `'portfolio'` sentinel literal — and then
+  matches without regard to case. Two hydration guards asserted
+  `not.toContain('Portfolio')`, which this rename would have left passing
+  because nothing says it any more — green for the opposite of the reason they
+  were written. They now name every workspace tab. **The word survives on
+  purpose in three places:** the PDF sense (a portfolio is a cover sheet with
+  documents attached — `document-structure.ts`, `Inspect.java`), dated
+  research and plan documents under `docs/`, which record what was true when
+  written, and the code names above.
 - **Triage is keyed on finding identity, per client** (`finding_triage`), never
   on the per-run `findings` row: `saveRun` deletes and reinserts a run's
   children on every write — inside one transaction, so a reader never sees the
@@ -496,12 +525,12 @@ own definition of done — `data.ts` deleted wholesale — is met** (the known-g
 entry below records what that deletion cost). The onboarding wizard
 (`docs/superpowers/plans/2026-08-19-onboarding-wizard.md`) closed the last
 slices, and the hydration suite walks the whole chain through screens against
-the built app: empty portfolio → add the first client → setup wizard →
+the built app: an empty client list → add the first client → setup wizard →
 discovery → journey from ticked pages → first run → findings and triage →
 issue a shareable report → read it anonymously → revoke it.
 
-The product decision that unblocked it, kept for the record: **the portfolio
-starts empty and an operator adds clients.** The alternative — seeding the
+The product decision that unblocked it, kept for the record: **the client
+list starts empty and an operator adds to it.** The alternative — seeding the
 eight fixture clients as real rows — was a faster demo that put invented
 client names in a real database, the exact thing this phase existed to remove.
 Starting empty also made the first-run state the normal state rather than a
@@ -1464,14 +1493,14 @@ Read this before claiming something works.
 - **`client-unassigned` is a foreign-key anchor, not a client.** `saveRun`
   materialises a journey for any `journeyId` it has never seen, and
   `journeys.client_id` is a foreign key, so the row has to exist. It is left
-  out of `listClients()` in both stores — it was appearing on the portfolio as
+  out of `listClients()` in both stores — it was appearing on the Clients screen as
   a client called "Unassigned" that nobody had added, on a screen whose whole
   premise is that it starts empty. `getClient()` still resolves it, so
   `/clients/client-unassigned` stays reachable for an operator who knows the
   id: hidden from the catalog, not from the product. The store contract tests
   both halves; do not "fix" one without the other.
 - **A run not attached to a client is still visible, just not in the
-  portfolio.** `/console` and `/api/audit/runs` report it. Registering the
+  Clients screen.** `/console` and `/api/audit/runs` report it. Registering the
   journey against a client first (`POST /api/platform/clients/<id>/journeys`)
   is what puts a run on a client's screens.
 - **Two bounds on a walk: 20 pages and 180 seconds.** A count cap cannot bound

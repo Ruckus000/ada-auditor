@@ -301,7 +301,14 @@ describe('platform hydration', () => {
       await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
       const text = await page.innerText('body');
       expect(text).toContain('Sign in');
-      expect(text).not.toContain('Portfolio');
+      // The workspace nav, by the tab a signed-in operator lands on. Named
+      // rather than spelled out as one absent word: this asserted
+      // `not.toContain('Portfolio')`, and renaming that tab to Clients would
+      // have left it passing because nothing says Portfolio any more —
+      // green for the opposite of the reason it was written.
+      for (const tab of ['Clients', 'Reports', 'Activity', 'Settings']) {
+        expect(text, `the sign-in page shows the ${tab} tab`).not.toContain(tab);
+      }
     } finally {
       await page.close();
     }
@@ -888,8 +895,12 @@ describe('platform hydration', () => {
       expect(body).toContain('Success criteria not met');
 
       // The shared page is the audit and nothing else: no way into the console
-      // from it, and no other client's name on it.
-      expect(body).not.toContain('Portfolio');
+      // from it, and no other client's name on it. Every workspace tab, for
+      // the reason the sign-in case records — one absent word survives its own
+      // rename and asserts nothing.
+      for (const tab of ['Clients', 'Reports', 'Activity', 'Settings']) {
+        expect(body, `the shared report shows the ${tab} tab`).not.toContain(tab);
+      }
     } finally {
       await anonymous.close();
     }
@@ -1481,9 +1492,9 @@ describe('platform hydration', () => {
   }, 60_000);
 
   it('marks no workspace tab as current while on a client screen', async () => {
-    // `parseRoute` resolves anything that is not a workspace path to the
-    // portfolio, so this said `aria-current="page"` on Portfolio — and painted
-    // it accented — while the operator was looking at a client.
+    // `parseRoute` resolves anything that is not a workspace path to the root
+    // screen, so this marked that screen's tab `aria-current="page"` — and
+    // painted it accented — while the operator was looking at a client.
     const page = await openAuthenticatedPage();
     try {
       await page.goto(`${BASE}/clients/${CLIENT}`, { waitUntil: 'domcontentloaded' });
@@ -1496,6 +1507,15 @@ describe('platform hydration', () => {
       expect(
         await page.locator('nav[aria-label="Workspace"] [aria-current="page"]').innerText(),
       ).toBe('Activity');
+
+      // The root screen names itself, in a browser, which is the half a
+      // source grep cannot reach: `workspace-vocabulary.test.ts` proves the
+      // label was changed in the file, and this proves the file is what
+      // renders.
+      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+      expect(
+        await page.locator('nav[aria-label="Workspace"] [aria-current="page"]').innerText(),
+      ).toBe('Clients');
     } finally {
       await page.close();
     }

@@ -220,7 +220,7 @@ export function ControlPlane() {
         </div>
         <nav className="topbar-links" aria-label="Sections">
           <Link className="skip-to-glossary" href="/">
-            ← Portfolio
+            ← Clients
           </Link>
           <a className="skip-to-glossary" href="#glossary">
             Glossary

@@ -17,6 +17,26 @@
 
 export type Scope = 'ws' | 'client';
 
+/**
+ * `'portfolio'` is this screen's code name and `Clients` is its label, and the
+ * two are deliberately different.
+ *
+ * The screen was called Portfolio everywhere until the word was retired from
+ * what a person reads: agency jargon for a book of accounts, describing a list
+ * of clients. The module, the row type, the builder and this member kept the
+ * old name, so every comment beside them still describes the code it names.
+ *
+ * Nothing here reaches a URL. `'portfolio'` is the sentinel for the root
+ * screen — `workspaceHref` maps it to `/`, and `WORKSPACE_SCREENS` has no such
+ * key, so a path never resolves to it by name. Renaming the member to
+ * `'clients'` would put it one careless edit away from `/clients/<id>`, which
+ * `parseRoute` handles above by an explicit branch and which
+ * `tests/app/platform-params.test.ts` pins.
+ *
+ * `tests/app/workspace-vocabulary.test.ts` holds the label side: no file under
+ * `src/app` may render the old word, and the tab, the heading and the way back
+ * must all say the new one.
+ */
 export type WorkspaceScreen = 'portfolio' | 'reports' | 'activity' | 'settings' | 'remediate';
 
 export type ClientTab = 'overview' | 'findings' | 'journeys' | 'documents';
