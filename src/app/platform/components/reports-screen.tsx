@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReportRow } from '../../../services/report-view';
+import { RevokeReportButton } from './revoke-report-button';
 import { FONT, T } from '../lib/tokens';
 import { countLine, scoreLine } from '../../../services/presentation/verdict';
 
@@ -90,9 +91,29 @@ export function ReportsScreen({ reports }: { reports: ReportRow[] }) {
 
               <span style={{ fontSize: 12.5 }}>
                 {report.shareToken ? (
-                  <a href={`/r/${report.shareToken}`} style={{ color: T.accent }}>
-                    Open the shared link ↗
-                  </a>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                    {/* The same 24px target as the button beside it, and the
+                        16px gap keeps their centres well past that — two
+                        controls this close is how `triage-control.tsx`'s
+                        radios failed `target-size`, and one of these two
+                        revokes something a client is holding. */}
+                    <a
+                      href={`/r/${report.shareToken}`}
+                      style={{
+                        color: T.accent,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: 24,
+                        padding: '4px 0',
+                      }}
+                    >
+                      Open the shared link ↗
+                    </a>
+                    {/* A client component of its own, so this screen stays a
+                        Server Component: a `useState` here would ship every
+                        row's title, run line and counts to the browser. */}
+                    <RevokeReportButton report={report} />
+                  </span>
                 ) : (
                   // The row stays after revocation rather than disappearing:
                   // "this link was issued and then withdrawn" is part of the

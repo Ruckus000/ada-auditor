@@ -62,6 +62,16 @@ export async function buildReports(deps: ReportDeps): Promise<ReportRow[]> {
   const runsByClient = await Promise.all(
     clients.map(async (client) => {
       const journeys = await deps.journeys.listJourneys(client.id);
+      // **This bound decides which reports can be revoked, and that is a
+      // recorded gap.** Reports are found through their runs, so a report
+      // whose run has fallen past the newest 50 of its journey — about seven
+      // weeks of nightly audits — has no row on the Reports screen, and the
+      // Reports screen is the only surface that offers `RevokeReportButton`.
+      // `buildSharedReport` fetches a run by id with no such bound and nothing
+      // deletes run rows, so `/r/<token>` keeps serving that report for good.
+      // Raising or removing the bound is a product decision about how much of
+      // the history that screen holds; until then, an operator who needs an
+      // old link revoked has the API and nothing else.
       const runs = await Promise.all(
         journeys.map((journey) => deps.runs.list({ journeyId: journey.id, limit: 50 })),
       );
