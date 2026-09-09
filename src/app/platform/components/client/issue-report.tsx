@@ -64,10 +64,11 @@ export function IssueReport({ clientId, requestId }: { clientId: string; request
       >
         Issued. <a href={link} style={{ color: T.accent, fontFamily: FONT.mono }}>{link}</a> — anyone
         with this link can read this audit, and it will keep reporting this run and no later one.
-        {/* No "revoke it from Reports" here: that screen has no such control
-            yet. The API can revoke a token (`DELETE .../reports`, through
-            `revokeShareToken`); no screen offers it. Naming a control that
-            does not exist sends an operator looking for it. */}
+        {/* Restored once Reports grew the control. This sentence was deleted
+            when the screen it names had no way to revoke anything — naming a
+            control that does not exist sends an operator looking for it —
+            and it says "Revoke" because that is what the button there says. */}
+        {' '}Revoke it from Reports.
       </p>
     );
   }

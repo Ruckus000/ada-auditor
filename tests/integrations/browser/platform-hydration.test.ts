@@ -269,25 +269,6 @@ afterAll(async () => {
 
 const CLIENT = 'harness-client';
 
-/**
- * The report id behind a share URL.
- *
- * The share link deliberately carries only the token — the id is an internal
- * handle and putting it in a public URL would hand a holder of the link a
- * second thing to guess with.
- */
-async function reportIdFor(shareUrl: string): Promise<string> {
-  const token = shareUrl.replace('/r/', '');
-  const response = await fetch(`${BASE}/api/platform/clients/${CLIENT}/reports`, {
-    headers: { authorization: `Bearer ${TOKEN}` },
-  });
-  const { reports } = (await response.json()) as {
-    reports: Array<{ id: string; shareToken?: string }>;
-  };
-  const match = reports.find((report) => report.shareToken === token);
-  if (!match) throw new Error(`No report found for ${shareUrl}`);
-  return match.id;
-}
 
 const ROUTES = [
   '/',
@@ -913,12 +894,27 @@ describe('platform hydration', () => {
       await anonymous.close();
     }
 
-    const reports = await fetch(`${BASE}/api/platform/clients/${CLIENT}/reports`, {
-      method: 'DELETE',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
-      body: JSON.stringify({ id: await reportIdFor(shareUrl) }),
-    });
-    expect(reports.status, await reports.clone().text()).toBe(200);
+    // Revoked through the screen, not through the API. The API could always do
+    // this; until the Reports screen grew the control, an operator could not,
+    // and `issue-report.tsx` had to delete the sentence telling them where to
+    // go. Driving the button is what proves that sentence true again.
+    const operator = await openAuthenticatedPage();
+    try {
+      await operator.goto(`${BASE}/reports`, { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => isHydrated(operator, 'button'), { timeout: 15_000 }).toBe(true);
+
+      // By its accessible name, which carries the report's own title — the
+      // screen lists every client's reports, so "Revoke link" alone would not
+      // say which.
+      await operator.getByRole('button', { name: /^Revoke link for / }).first().click();
+
+      // The row stays and its link line changes; it does not disappear.
+      await expect
+        .poll(() => operator.innerText('body'), { timeout: 15_000 })
+        .toContain('Link revoked');
+    } finally {
+      await operator.close();
+    }
 
     const afterRevoke = await browser.newPage();
     try {
