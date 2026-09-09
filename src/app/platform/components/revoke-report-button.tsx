@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { inertWhen } from '../lib/inert-button';
 import { FONT, T } from '../lib/tokens';
 
 /**
@@ -120,8 +121,15 @@ export function RevokeReportButton({ report }: { report: RevokableReport }) {
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
       <button
         type="button"
-        onClick={() => void revoke()}
-        disabled={busy}
+        /*
+         * `aria-disabled` and an early return, never `disabled`. A control
+         * that its own click disables takes focus off itself mid-interaction,
+         * dropping the operator at `<body>` to tab back through the whole
+         * workspace nav to reach the row they were on. `inert-button.ts`
+         * records the finding and why axe cannot see it. Eight other controls
+         * in this workspace do the same; this is the ninth.
+         */
+        {...inertWhen(busy, () => void revoke())}
         /*
          * Named for its row. Every one of these is otherwise another
          * identically-named control in a screen reader's list — the reasoning
@@ -150,6 +158,9 @@ export function RevokeReportButton({ report }: { report: RevokableReport }) {
           display: 'inline-flex',
           alignItems: 'center',
           cursor: busy ? 'default' : 'pointer',
+          // An inert control that still looks live is its own defect, which is
+          // the pairing `inert-button.ts` asks every call site for.
+          opacity: busy ? 0.6 : 1,
         }}
       >
         {busy ? 'Revoking…' : 'Revoke link'}

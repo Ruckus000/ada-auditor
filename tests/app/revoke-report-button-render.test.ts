@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -60,11 +61,31 @@ describe('RevokeReportButton', () => {
     expect(render()).toMatch(/min-height:24px/);
   });
 
-  it('renders no button where the run behind the report is gone', () => {
-    // `clientId` is absent exactly when `buildReports` could not find the run
-    // (`report-view.ts`), and the route needs that run to prove the report is
-    // this client's — so the button would 404 every time. The row says why
-    // instead, because a missing control reads as "already revoked".
+  it('stays in the tab order while the request is in flight', () => {
+    // `disabled` on a control that its own click disables takes focus off it
+    // mid-interaction, dropping the operator at `<body>` to tab back through
+    // the whole workspace nav. `inert-button.ts` exists for exactly this, was
+    // found by reading the flow as a keyboard user, and axe cannot see it —
+    // the markup is valid either way. Eight call sites use it; this is the
+    // ninth.
+    const source = readFileSync('src/app/platform/components/revoke-report-button.tsx', 'utf8');
+
+    expect(source).toMatch(/inertWhen\(/);
+    expect(source).not.toMatch(/\bdisabled=\{/);
+  });
+
+  it('renders no button where the report carries no client', () => {
+    // `ReportRow.clientId` is optional, and the route proves ownership by
+    // walking run → journey → client, so without one the request would answer
+    // `report_not_found` every time. Defensive rather than reachable: today
+    // `buildReports` only asks for reports whose runs it already resolved, so
+    // every row it returns has a client.
+    //
+    // **This is not the aged-out case, and reading it as such is the mistake
+    // worth naming.** A report whose run has fallen past the newest 50 of its
+    // journey produces no row at all — see the note at that bound in
+    // `report-view.ts` — so nothing on the screen explains it and nothing
+    // here covers it.
     const html = render({ clientId: undefined });
 
     expect(html).not.toContain('<button');
