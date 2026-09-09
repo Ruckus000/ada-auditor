@@ -49,7 +49,25 @@ const TRY_AGAIN = 'Run it again; if it repeats, this document needs a person.';
  * stages are absent.
  */
 const NOT_AVAILABLE = 'so the document was not read. This says nothing about the document itself.';
+
+/**
+ * The conversion lane, which knows the document is a Word source —
+ * `convertSourceToPdf` is the only producer of this failure — so it can name
+ * the move that works. That move is real: it is how the pilot delivered its
+ * three Word documents.
+ */
 const NO_CONVERTER = `Word conversion is not available on this host, ${NOT_AVAILABLE} Convert it on a computer that has LibreOffice.`;
+
+/**
+ * The refusal raised before the route has fetched anything, so it does NOT
+ * know what the document is — `refuseWithoutToolchain` probes LibreOffice
+ * first and answers this for a PDF repair as readily as for a Word
+ * conversion, and the "Repair this PDF" button is not gated on the converter
+ * at all. Naming Word here, or sending the reader to convert somewhere else,
+ * hands an operator repairing a PDF an errand with no Word source to run it
+ * on. It says only what was refused.
+ */
+const NO_CONVERTER_YET = `This host cannot run the converter, ${NOT_AVAILABLE}`;
 const NO_TOOLCHAIN = `The PDF stages are not available on this host, ${NOT_AVAILABLE}`;
 
 function remediationStep(detail: string | undefined): string {
@@ -118,7 +136,7 @@ export function describeDocumentRefusal(refusal: DocumentRefusal): string {
     case 'document_toolchain_unavailable':
       return NO_TOOLCHAIN;
     case 'converter_unavailable':
-      return NO_CONVERTER;
+      return NO_CONVERTER_YET;
     case 'inspect_failed':
       return repairStep(refusal.detail);
     case 'remediation_failed':

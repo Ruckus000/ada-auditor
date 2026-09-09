@@ -375,18 +375,23 @@ export function ClientDocuments({
               the rows are: the absence is a capability fact about this host,
               not a defect in the row.
 
-              It said "Inspection reads PDFs", and that was false on every
-              deployment. The probe above answers one boolean for two
-              capabilities — `available: true` needs LibreOffice AND a Java
-              runtime — so `false` means "one of the two is missing" and this
-              screen cannot tell which. A serverless function has neither, so
-              the banner rendered there and promised an inspection that
-              answers `document_toolchain_unavailable` on the first click.
-              For the same reason it no longer says the host "does not have"
-              LibreOffice: the flag carries "could not", and a core-only
-              install with no Writer module is not an absent one. */}
-          Word documents are recorded without a Convert button — conversion runs where LibreOffice
-          is installed, and this host cannot run it.
+              It said "Inspection reads PDFs", which the probe above cannot
+              answer: `available: true` needs LibreOffice AND a Java runtime,
+              so `false` means one of the two is missing and this screen
+              cannot tell which. Where the missing half is the Java runtime,
+              that clause promised an inspection that refuses on the first
+              click.
+
+              And it named LibreOffice as the missing half — first as "this
+              deployment does not have it", then as "cannot run it", which is
+              the same attribution with a different verb. From a flag that
+              measures the pair, that sends an operator whose LibreOffice is
+              installed and whose stages are uncompiled to reinstall software
+              they already have. Settings reports the two halves separately,
+              so the pointer goes there rather than a guess made here. */}
+          Word documents are recorded without a Convert button: this host cannot convert them right
+          now. Conversion needs both LibreOffice and the PDF stages, and this screen cannot tell
+          which is missing — Settings reports them separately.
         </p>
       ) : null}
 

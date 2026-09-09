@@ -101,7 +101,14 @@ function documentDetail(facts: DeploymentFacts): string {
     return 'A Java runtime and LibreOffice are both present, so Word sources can be converted and PDFs inspected on this host.';
   }
 
-  return `Document stages run on a JVM and the source path needs LibreOffice; a serverless function has neither, so this is expected on a deployed environment rather than a fault, and nothing else is affected by it. Where it is wanted, install: ${missing.join(' and ')}.`;
+  // Not "a serverless function has neither", which this said for as long as it
+  // was true and then a while longer. `vercel-build` runs `prepare-jvm.ts` and
+  // `prepare-libreoffice.ts`, so a deployment has both and a host missing one
+  // is a local machine or a build that skipped that step — the opposite of
+  // what the sentence told an operator on the screen they open to find out
+  // what this deployment does. `libreoffice-runtime.ts` retired the same
+  // claim; this copy of it outlived that.
+  return `Document stages run on a JVM and the source path needs LibreOffice. A Vercel build assembles both, so a host without them is a local one, or a build that skipped that step; nothing else is affected by it. Where it is wanted, install: ${missing.join(' and ')}.`;
 }
 
 /**

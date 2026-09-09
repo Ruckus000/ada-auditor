@@ -126,23 +126,33 @@ describe('describeDocumentRefusal', () => {
     const copy = describeDocumentRefusal(refusal);
 
     expect(copy).not.toMatch(/wrong with the document/i);
-    expect(copy).toMatch(/not available/i);
+    expect(copy).toMatch(/not available|cannot run/i);
     // The document is named as unread, so nobody reads the refusal as a verdict.
     expect(copy).toMatch(/not read/i);
     // And no cause is asserted from a flag that only means "could not".
     expect(copy).not.toMatch(/has no|does not have/i);
   });
 
-  it('sends the converter refusals somewhere the work can actually be done', () => {
-    // The toolchain has no equivalent — an operator cannot install a JVM from
-    // this screen either, but a Word source really can be converted elsewhere,
-    // which is how the pilot's three Word documents were delivered.
-    for (const refusal of [
-      { error: 'remediation_failed', detail: 'unavailable' },
-      { error: 'converter_unavailable' },
-    ]) {
-      expect(describeDocumentRefusal(refusal)).toMatch(/LibreOffice/);
-    }
+  it('sends the conversion lane somewhere the work can actually be done', () => {
+    // `convertSourceToPdf` is the Word-source path, so this refusal knows what
+    // the document is: a Word source really can be converted on another
+    // computer, which is how the pilot's three Word documents were delivered.
+    expect(describeDocumentRefusal({ error: 'remediation_failed', detail: 'unavailable' })).toMatch(
+      /LibreOffice/,
+    );
+  });
+
+  it('offers no errand on the refusal that does not know what the document is', () => {
+    // `converter_unavailable` is raised by `refuseWithoutToolchain` before the
+    // route fetches anything, so it fires for a PDF repair as readily as for a
+    // Word conversion — and the Repair button is not gated on the converter at
+    // all. Told to "convert it on a computer that has LibreOffice", an operator
+    // repairing a PDF has no Word source to take anywhere and no errand to run.
+    const copy = describeDocumentRefusal({ error: 'converter_unavailable' });
+
+    expect(copy).not.toMatch(/Convert it on/i);
+    expect(copy).not.toMatch(/Word/);
+    expect(copy).toMatch(/not read/i);
   });
 
   it('prints an unknown code rather than inventing a sentence for it', () => {

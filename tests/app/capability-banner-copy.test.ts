@@ -4,18 +4,28 @@ import { describe, expect, it } from 'vitest';
 /**
  * The sentence a client's document screen shows when this host cannot convert.
  *
- * It said "Inspection reads PDFs", and that was false on every deployment.
- * The screen learns what it can do from `GET /api/documents/remediate`, which
- * answers `available: true` only when LibreOffice **and** a Java runtime both
- * resolve — so `available: false` means "one of the two is missing" and the
- * screen cannot tell which. A serverless function has neither, so the banner
- * rendered there and promised an inspection that answers
+ * It said "Inspection reads PDFs", and its own probe cannot answer that.
+ * `GET /api/documents/remediate` returns `available: true` only when
+ * LibreOffice **and** a Java runtime both resolve, so `available: false` means
+ * "one of the two is missing" and this screen cannot tell which. Where the
+ * missing half is the Java runtime — `dist/documents/classes` is gitignored
+ * and nothing rebuilds it — the banner promised an inspection that answers
  * `document_toolchain_unavailable` on the first click.
  *
- * The same clause asserted a cause from the same flag — "this deployment does
- * not have it" — when what the flag carries is "could not". A LibreOffice
- * installed core-only, with no Writer module, is a real observed production
- * failure and is not an absent one.
+ * **Not "on every deployment", which a first version of this said.**
+ * `vercel-build` runs `prepare-jvm.ts` and `prepare-libreoffice.ts`, and
+ * `next.config.mjs` traces both into `/api/documents/remediate/**`, so a
+ * current deployment answers `available: true` and never renders this banner
+ * at all; `libreoffice-runtime.ts` retired that exact sentence under "The
+ * deployed runtime is no longer absent". Getting that wrong in a change about
+ * unsupported claims is the joke telling itself, and it is written here so the
+ * next reader does not inherit it.
+ *
+ * For the same reason the sentence attributes nothing. Saying the host "does
+ * not have" LibreOffice, or "cannot run it", names one half from a flag that
+ * measures the pair — and on a host with LibreOffice installed and the stages
+ * uncompiled it sends someone to reinstall software they already have. The
+ * screen that does know is Settings, which reports the two halves separately.
  *
  * **Read from the source, not from a render, and that is a limitation stated
  * rather than hidden.** The banner is behind two pieces of state this screen
@@ -59,8 +69,18 @@ describe('the client documents capability banner', () => {
     expect(source).not.toMatch(/can still (check|inspect|read) PDFs/i);
   });
 
-  it('does not assert what this host has, only what it cannot do', () => {
+  it('does not attribute the failure to one half of a flag that measures both', () => {
     expect(source).not.toMatch(/deployment does not have it/i);
     expect(source).not.toMatch(/has no LibreOffice/i);
+    // "…and this host cannot run it" named LibreOffice by its pronoun, which
+    // is the same attribution with a different verb.
+    expect(source).not.toMatch(/cannot run it/i);
+  });
+
+  it('sends the reader to the screen that does know which half is missing', () => {
+    // Settings reports the two capabilities separately — "PDF stages only",
+    // "converter only", "not available here" — so there is a real next step,
+    // and it is not a guess made on this screen.
+    expect(source).toMatch(/Settings/);
   });
 });

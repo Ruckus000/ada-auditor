@@ -423,18 +423,42 @@ Chromium launches on a Vercel function:
   install and wrong for an absence by design, and until the resolver's reason
   survives to the point of rendering, no sentence may choose between them** —
   which is why the blanket version of it, on a branch, was wrong.
-  The same rule caught a live falsehood one screen over: the client documents
+  The same rule caught a falsehood one screen over: the client documents
   banner claimed "Inspection reads PDFs" from a probe that cannot answer it.
   `GET /api/documents/remediate` returns one boolean for two capabilities
-  (`available` is LibreOffice **and** a Java runtime), so on a deployment,
-  which has neither, the banner promised an inspection that refuses on the
-  first click. A screen may say what it cannot do; it may not say what it can
-  do from a flag that only measures the pair. `tests/app/capability-banner-copy.test.ts`
+  (`available` is LibreOffice **and** a Java runtime), so `false` means one of
+  the two is missing and the screen cannot tell which — where the missing half
+  is the Java runtime, the banner promised an inspection that refuses on the
+  first click. It also named LibreOffice as the missing half, which sends an
+  operator whose stages are merely uncompiled to reinstall software they have.
+  **A screen may say what it cannot do; it may not name which half from a flag
+  that measures the pair.** The banner now says neither and points at Settings,
+  which reports the two separately.
+  **A first version of this bullet said the banner was false "on every
+  deployment", and that was itself an unsupported claim** — the exact defect
+  the entry is about. `vercel-build` runs `prepare-jvm.ts` and
+  `prepare-libreoffice.ts`, `next.config.mjs` traces both into
+  `/api/documents/remediate/**`, and `libreoffice-runtime.ts` retired that
+  sentence under "The deployed runtime is no longer absent". A deployment
+  answers `available: true` and never renders the banner; a developer machine
+  without LibreOffice, or any host with `dist/documents/classes` uncompiled,
+  does. **`api/documents/remediate/route.ts` still carried the retired
+  sentence in its own docblock, which is where the mistake came from** — one
+  stale comment cost a wrong claim in three files, so it is corrected rather
+  than left for the next reader.
+  `tests/app/capability-banner-copy.test.ts`
   guards it by reading the source with comments stripped — the banner sits
   behind state fetched in an effect, the fast suite is node-only, and the
   hydration suite runs on a machine where the banner correctly never renders,
   so a render test cannot reach it and the limitation is written down rather
   than papered over.
+  **Recorded, not fixed here:** `documents/convert`'s POST calls
+  `refuseWithoutToolchain` before it fetches, so it probes LibreOffice for a
+  **PDF repair**, which needs none — the sibling upload path in the same file
+  says so outright — and the "Repair this PDF" button is not gated on the
+  converter. On a converter-less host that repair is refused with
+  `converter_unavailable`. The copy for that code is lane-neutral for exactly
+  this reason (`NO_CONVERTER_YET`), but the refusal itself is a route bug.
 - **Triage is keyed on finding identity, per client** (`finding_triage`), never
   on the per-run `findings` row: `saveRun` deletes and reinserts a run's
   children on every write — inside one transaction, so a reader never sees the
