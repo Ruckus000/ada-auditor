@@ -472,8 +472,15 @@ Chromium launches on a Vercel function:
   `parseRoute` handles by an explicit branch.
   **A rename is complete or not attempted**, and
   `tests/app/workspace-vocabulary.test.ts` is what makes that enforceable: no
-  file under `src/app` may render the old word, and the tab, the heading and
-  the way back must all carry the new one. Two hydration guards asserted
+  file under `src/app` may render the old word **in any case**, and the tab,
+  the heading and the way back must all carry the new one. The case matters,
+  and a first version of that guard got it wrong — it matched `Portfolio`
+  only, so "a portfolio of client sites" in the page description, which a
+  browser tab and a search snippet show, sat inside its own walked roots and
+  passed. A person caught it. Sentence-case prose is exactly where jargon
+  comes back, so the guard removes what is entitled to keep the word —
+  comments, module paths, and the `'portfolio'` sentinel literal — and then
+  matches without regard to case. Two hydration guards asserted
   `not.toContain('Portfolio')`, which this rename would have left passing
   because nothing says it any more — green for the opposite of the reason they
   were written. They now name every workspace tab. **The word survives on

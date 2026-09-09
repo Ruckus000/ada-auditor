@@ -39,21 +39,41 @@ function sourceFiles(dir: string): string[] {
 }
 
 /**
- * Comments stripped, for the reason `capability-banner-copy.test.ts` records:
- * a comment explaining what the old word was reads to a plain grep as the old
+ * What is left after removing everything that is allowed to say the old word.
+ *
+ * Three removals, each for a different reason.
+ *
+ * **Comments**, for the reason `capability-banner-copy.test.ts` records: a
+ * comment explaining what the old word was reads to a plain grep as the old
  * word still being there, and this repo's comments do explain such things.
+ *
+ * **Module paths**, because the files are still named for the code —
+ * `services/portfolio`, `portfolio-route` — and an import is not copy.
+ *
+ * **The sentinel literal `'portfolio'`**, which is the code's name for the
+ * root screen (`WorkspaceScreen`). Removing exactly that spelling, rather
+ * than matching case, is what lets the check below be case-INSENSITIVE — and
+ * that matters more than it looks. The first version of this guard matched
+ * `/\bPortfolio\b/`, and the one lowercase person-perceivable occurrence in
+ * the change that introduced it — "a portfolio of client sites", the page
+ * description a browser tab and a search snippet show — sat inside these
+ * roots and passed. A person caught it. Sentence-case prose is where jargon
+ * comes back: a lede, a toast, an empty state, an `aria-label`.
  */
-function withoutComments(source: string): string {
+function strippedOfWhatMayKeepTheWord(source: string): string {
   return source
     .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '');
+    .replace(/^\s*\/\/.*$/gm, '')
+    .replace(/from\s+'[^']*'/g, '')
+    .replace(/import\([^)]*\)/g, '')
+    .replace(/'portfolio'/g, '');
 }
 
 describe('the screen that lists clients', () => {
   const files = ROOTS.flatMap(sourceFiles).map((file) => ({
     file,
-    source: withoutComments(readFileSync(file, 'utf8')),
+    source: strippedOfWhatMayKeepTheWord(readFileSync(file, 'utf8')),
   }));
 
   it('is looked at by this test at all', () => {
@@ -62,12 +82,16 @@ describe('the screen that lists clients', () => {
     expect(files.length).toBeGreaterThan(40);
   });
 
-  it('never renders the word Portfolio', () => {
+  it('never renders the old word, in any case', () => {
     // Word-boundary, so `PortfolioRow` and `buildPortfolio` — the code's own
     // name for this screen, deliberately unchanged — do not trip it, while
     // `title="Portfolio"` and `← Portfolio` do.
+    //
+    // Case-insensitive, because the occurrence this guard failed to catch on
+    // its first outing was lowercase and mid-sentence. Everything entitled to
+    // keep the word has been removed above, so what reaches here is copy.
     for (const { file, source } of files) {
-      expect(source, `${file} still renders the old name`).not.toMatch(/\bPortfolio\b/);
+      expect(source, `${file} still renders the old name`).not.toMatch(/\bportfolio\b/i);
     }
   });
 
