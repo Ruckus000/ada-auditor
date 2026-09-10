@@ -5,6 +5,7 @@ import { journeyRunRefusal } from '../../../../../../../../domain/platform';
 import { getPlatformStore } from '../../../../../../../../integrations/persistence';
 import {
   journeyStepSchema,
+  readIdempotencyKey,
   startRun,
 } from '../../../../../../_lib/audit-run-handler';
 import { authorizePrincipal } from '../../../../../../_lib/authorize';
@@ -38,6 +39,11 @@ export async function POST(
   const principal = await authorizePrincipal(request);
   if (!principal) {
     return Response.json({ error: 'unauthorized', requestId }, { status: 401 });
+  }
+
+  const idempotency = readIdempotencyKey(request);
+  if (!idempotency.ok) {
+    return Response.json({ error: 'invalid_idempotency_key', requestId }, { status: 400 });
   }
 
   const { clientId, journeyId } = await params;
@@ -106,11 +112,12 @@ export async function POST(
       // something a request body gets to add to.
       ...(journey.allowedHosts ? { allowedHosts: journey.allowedHosts } : {}),
       steps,
+      ...(idempotency.key ? { idempotencyKey: idempotency.key } : {}),
     },
     requestId,
   );
 
-  if (result.ok) {
+  if (result.ok && !result.replayed) {
     await platform.recordEvent({
       clientId,
       ...actorFields(principal),

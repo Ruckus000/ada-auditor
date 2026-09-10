@@ -2,6 +2,7 @@ import type { Environment } from '../../domain/contracts';
 import { reconcileRunStatus } from '../../domain/run-staleness';
 import {
   clampRunListLimit,
+  DuplicateIdempotencyKeyError,
   type ListRunsOptions,
   type RunIntent,
   type RunStore,
@@ -72,6 +73,7 @@ type RunRow = {
   // with the bug in `redactIntent` rather than catching it: `ruleset` was
   // stripped before it ever got here, and this type said that was the shape.
   intent: RunIntent | null;
+  idempotency_key: string | null;
 };
 
 type PageRow = {
@@ -110,6 +112,18 @@ type FindingRow = {
 
 function toIso(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
+/** Postgres signals a duplicate key with SQLSTATE 23505, wherever the driver puts it. */
+function isUniqueViolation(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; depth < 5 && current && typeof current === 'object'; depth++) {
+    if ('code' in current && (current as { code?: unknown }).code === '23505') {
+      return true;
+    }
+    current = 'cause' in current ? (current as { cause?: unknown }).cause : undefined;
+  }
+  return false;
 }
 
 /**
@@ -208,6 +222,7 @@ function toRecord(
   // Absent stays absent. A `{steps: []}` default here would claim every old
   // run walked nothing, and two of those would then compare as equal.
   if (run.intent !== null) record.intent = run.intent;
+  if (run.idempotency_key) record.idempotencyKey = run.idempotency_key;
 
   // Applied on the way out, so a run that died mid-flight never reads as still
   // in progress — not even in the window before the scheduled sweep rewrites
@@ -279,7 +294,7 @@ export class PostgresRunStore implements RunStore {
         ci_status, status, failure_reason, duration_ms, browser_mode,
         truncated_pages, truncation_reason, score, score_version, gate_version,
         created_at, started_at, phase_ms,
-        intent
+        intent, idempotency_key
       ) values (
         ${record.requestId}, ${record.journeyId}, ${record.environment},
         ${record.platform}, ${record.evidenceStatus}, ${record.ciStatus},
@@ -290,7 +305,8 @@ export class PostgresRunStore implements RunStore {
         ${record.scoreVersion ?? null}, ${record.gateVersion ?? null}, ${record.createdAt},
         ${record.startedAt ?? record.createdAt},
         ${record.phaseMs ? JSON.stringify(record.phaseMs) : null},
-        ${record.intent ? JSON.stringify(record.intent) : null}
+        ${record.intent ? JSON.stringify(record.intent) : null},
+        ${record.idempotencyKey ?? null}
       )
       on conflict (request_id) do update set
         journey_id = excluded.journey_id,
@@ -318,7 +334,8 @@ export class PostgresRunStore implements RunStore {
         created_at = least(runs.created_at, excluded.created_at),
         started_at = least(coalesce(runs.started_at, excluded.started_at), excluded.started_at),
         phase_ms = coalesce(excluded.phase_ms, runs.phase_ms),
-        intent = coalesce(excluded.intent, runs.intent)
+        intent = coalesce(excluded.intent, runs.intent),
+        idempotency_key = coalesce(excluded.idempotency_key, runs.idempotency_key)
     `);
 
     statements.push(sql`delete from run_pages where request_id = ${record.requestId}`);
@@ -363,12 +380,30 @@ export class PostgresRunStore implements RunStore {
       `);
     }
 
-    await sql.transaction(statements);
+    try {
+      await sql.transaction(statements);
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateIdempotencyKeyError();
+      }
+      throw error;
+    }
   }
 
   async getRun(requestId: string): Promise<StoredRunRecord | null> {
     const runs = await this.sql<RunRow>`
       select * from runs where request_id = ${requestId}
+    `;
+    if (runs.length === 0) {
+      return null;
+    }
+
+    return this.hydrateOne(runs[0]);
+  }
+
+  async getRunByIdempotencyKey(key: string): Promise<StoredRunRecord | null> {
+    const runs = await this.sql<RunRow>`
+      select * from runs where idempotency_key = ${key}
     `;
     if (runs.length === 0) {
       return null;

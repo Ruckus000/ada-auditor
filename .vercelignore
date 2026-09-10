@@ -1,0 +1,22 @@
+# CLI deploys upload the working tree. Agent worktrees, Next output, and the
+# document spike are why a local `vercel --prod` once offered 16k files / 1.2GB
+# and then died on a broken symlink. GitHub deploys never see these.
+#
+# Paths are root-anchored: a bare `artifacts` previously excluded
+# `src/integrations/artifacts/` and the production build could not resolve
+# `blob-store`.
+.claude
+.cursor
+.serena
+.agents
+.designops
+/.next
+/node_modules
+/coverage
+/dist
+/vendor
+/experiments
+/artifacts
+/.doc-blind-test
+/.blind-test
+/Remediation-Design

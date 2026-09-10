@@ -8,6 +8,7 @@ import { worstEvidenceStatus } from '../../../domain/evidence';
 import { getRunStore } from '../../../integrations/persistence';
 import { runBrowserAudit } from '../../../integrations/browser/run-browser-audit';
 import { PartialAuditError } from '../../../integrations/browser/partial-run';
+import { DuplicateIdempotencyKeyError, type StoredRunRecord } from '../../../domain/persistence';
 import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-log';
 import { compareToBaseline } from '../../../services/regression';
 import { toStoredRunRecord } from '../../../services/run-persistence';
@@ -134,7 +135,7 @@ export const auditRunBodySchema = z.object({
 });
 
 export type AuditRunHandlerResult =
-  | { ok: true; status: number; body: Record<string, unknown> }
+  | { ok: true; status: number; body: Record<string, unknown>; replayed?: boolean }
   | { ok: false; status: number; body: Record<string, unknown> };
 
 /**
@@ -189,6 +190,7 @@ async function executeRun(
   parsedBody: z.infer<typeof auditRunBodySchema>,
   requestId: string,
   startedAt: number,
+  idempotencyKey?: string,
 ): Promise<AuditRunHandlerResult> {
   const chaosParams = parsedBody.chaosScenario
     ? resolveChaosRunParams(parsedBody.chaosScenario, parsedBody.journeyId, parsedBody.environment)
@@ -291,6 +293,7 @@ async function executeRun(
       scoreVersion: report.scoreVersion,
       gateVersion: report.gateVersion,
       status: 'complete',
+      ...(idempotencyKey ? { idempotencyKey } : {}),
     });
     await store.saveRun(storedRun);
 
@@ -491,6 +494,7 @@ async function executeRun(
           browserMode: true,
           status: 'failed',
           failureReason: code,
+          ...(idempotencyKey ? { idempotencyKey } : {}),
           /**
            * No `intent` here, and that is not an omission.
            *
@@ -528,7 +532,88 @@ async function executeRun(
 export type AuditRunParams = z.infer<typeof auditRunBodySchema> & {
   /** Block and return the result, rather than 202 + a poll URL. */
   wait?: boolean;
+  /** One Clayton (or CI) request to one run. Absent means current behaviour. */
+  idempotencyKey?: string;
 };
+
+/**
+ * Printable ASCII, no whitespace, 1–256 chars.
+ *
+ * A retry token, not a secret — but it still must not be a header a caller
+ * can pad with newlines into a second log line, and empty is not a key.
+ */
+const IDEMPOTENCY_KEY_PATTERN = /^[\x21-\x7E]{1,256}$/;
+
+export function readIdempotencyKey(
+  request: Request,
+): { ok: true; key?: string } | { ok: false } {
+  const raw = request.headers.get('idempotency-key');
+  if (raw === null) return { ok: true };
+  if (!IDEMPOTENCY_KEY_PATTERN.test(raw)) return { ok: false };
+  return { ok: true, key: raw };
+}
+
+function replayedStart(existing: StoredRunRecord): AuditRunHandlerResult {
+  return {
+    ok: true,
+    status: 202,
+    replayed: true,
+    body: {
+      requestId: existing.requestId,
+      journeyId: existing.journeyId,
+      environment: existing.environment,
+      status: existing.status ?? 'running',
+      pollUrl: `/api/audit/runs/${existing.requestId}`,
+    },
+  };
+}
+
+/**
+ * The run a key already claimed — but only if it is the *same* request.
+ *
+ * Keys are one flat namespace: `getRunByIdempotencyKey` takes a string and
+ * nothing else, and there is no tenant column to narrow it with. So a caller
+ * that reuses `req-1` across two journeys — two clients' journeys, even —
+ * would otherwise be handed the first journey's `requestId` and poll URL,
+ * with the second audit never started, no activity event recorded, and the
+ * caller polling a run for somebody else's site believing it is their own.
+ *
+ * `journeyId` is enough to catch that on its own — it is the journeys primary
+ * key, so it already names the client. `environment` is checked beside it, and
+ * dropping it was considered and rejected: a caller whose key format is dated
+ * rather than per-environment (`clayton:propertypro:2026-09-09:attempt-1`)
+ * would then have its production start replay that morning's staging run, and
+ * report a staging walk as production compliance evidence. Loud and wrong
+ * beats quiet and wrong in a product whose output is a verdict.
+ *
+ * The cost is real and belongs here rather than in a footnote: the platform
+ * route resolves an omitted `environment` from the stored journey, so a
+ * journey edited between a dropped 202 and its retry moves the binding and
+ * answers 409 for a request whose bytes never changed. `docs/journeys-api.md`
+ * tells callers to send `environment` explicitly for exactly that reason.
+ *
+ * A key that names either differently is a caller bug rather than a retry, and
+ * 409 is the answer that says so instead of quietly answering the wrong
+ * question.
+ */
+function replayOrConflict(
+  existing: StoredRunRecord,
+  started: { journeyId: string; environment: string },
+  requestId: string,
+): AuditRunHandlerResult {
+  if (
+    existing.journeyId !== started.journeyId ||
+    existing.environment !== started.environment
+  ) {
+    return {
+      ok: false,
+      status: 409,
+      body: { error: 'idempotency_key_conflict', requestId },
+    };
+  }
+
+  return replayedStart(existing);
+}
 
 /**
  * Start a run. **This is the entry point every caller should use.**
@@ -554,7 +639,7 @@ export async function startRun(
   requestId = createRequestId(),
   startedAt = Date.now(),
 ): Promise<AuditRunHandlerResult> {
-  const { wait, ...parsedBody } = params;
+  const { wait, idempotencyKey, ...parsedBody } = params;
 
   if (parsedBody.chaosScenario) {
     if (!isChaosEnabled()) {
@@ -591,6 +676,41 @@ export async function startRun(
       );
 
       return { ok: false, status: 400, body: { error: 'invalid_chaos_scenario', requestId } };
+    }
+  }
+
+  /**
+   * A key and `wait=1` are mutually exclusive, and that is the whole answer.
+   *
+   * A replay can only hand back what the row holds. The synchronous body is
+   * the *report* — `executiveSummary`, `checksPassed`, the regression diff —
+   * and none of that is reconstructible from a `StoredRunRecord`; rebuilding
+   * it here would be a second body-builder drifting against the first.
+   * Answering a retried `wait=1` with the 202 poll shape instead is worse
+   * still: CI reads `body.ciStatus`, a replay would make that `undefined`, and
+   * a gate that reads `undefined` stops gating without saying so — on a run
+   * that may well have been `fail`.
+   *
+   * Refusing also removes the only path on which `wait` met a key. That path
+   * registered nothing before starting, so two simultaneous `wait=1` retries
+   * both walked, and the loser's `saveRun` hit the unique index *after* a full
+   * audit — throwing inside `executeRun`'s try, discarding pages, findings and
+   * score, and answering 422 for a run that had actually succeeded.
+   *
+   * Checked before the budget so a refused combination spends nothing.
+   */
+  if (idempotencyKey && wait) {
+    return {
+      ok: false,
+      status: 400,
+      body: { error: 'idempotency_key_requires_async', requestId },
+    };
+  }
+
+  if (idempotencyKey) {
+    const existing = await getRunStore().getRunByIdempotencyKey(idempotencyKey);
+    if (existing) {
+      return replayOrConflict(existing, parsedBody, requestId);
     }
   }
 
@@ -639,28 +759,39 @@ export async function startRun(
   // Sync (`wait`): block and return the result. CI wants a single call with a
   // pass/fail, and the chaos script and handler tests want determinism.
   if (wait) {
-    return executeRun(parsedBody, requestId, startedAt);
+    return executeRun(parsedBody, requestId, startedAt, idempotencyKey);
   }
 
   // Written before the work starts so a run that times out or crashes leaves a
   // trace. Previously a record only appeared on success, so a run that died
   // mid-flight was indistinguishable from one that never happened.
-  await getRunStore().saveRun(
-    toStoredRunRecord({
-      requestId,
-      journeyId: parsedBody.journeyId,
-      environment: parsedBody.environment,
-      platform: 'unknown',
-      evidenceStatus: 'unknown',
-      ciStatus: 'inconclusive',
-      findings: [],
-      durationMs: 0,
-      browserMode: true,
-      status: 'running',
-    }),
-  );
+  try {
+    await getRunStore().saveRun(
+      toStoredRunRecord({
+        requestId,
+        journeyId: parsedBody.journeyId,
+        environment: parsedBody.environment,
+        platform: 'unknown',
+        evidenceStatus: 'unknown',
+        ciStatus: 'inconclusive',
+        findings: [],
+        durationMs: 0,
+        browserMode: true,
+        status: 'running',
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+      }),
+    );
+  } catch (error) {
+    if (error instanceof DuplicateIdempotencyKeyError && idempotencyKey) {
+      const existing = await getRunStore().getRunByIdempotencyKey(idempotencyKey);
+      if (existing) {
+        return replayOrConflict(existing, parsedBody, requestId);
+      }
+    }
+    throw error;
+  }
 
-  const work = executeRun(parsedBody, requestId, startedAt);
+  const work = executeRun(parsedBody, requestId, startedAt, idempotencyKey);
   waitUntil(work);
 
   return {
@@ -718,5 +849,14 @@ export async function handleAuditRun(
 
   const wait = new URL(request.url).searchParams.get('wait') === '1';
 
-  return startRun({ ...parsedBody, wait }, requestId, startedAt);
+  const idempotency = readIdempotencyKey(request);
+  if (!idempotency.ok) {
+    return { ok: false, status: 400, body: { error: 'invalid_idempotency_key', requestId } };
+  }
+
+  return startRun(
+    { ...parsedBody, wait, ...(idempotency.key ? { idempotencyKey: idempotency.key } : {}) },
+    requestId,
+    startedAt,
+  );
 }

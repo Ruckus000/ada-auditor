@@ -31,6 +31,7 @@ type PersistRunInput = {
   gateVersion?: number;
   status?: RunStatus;
   failureReason?: string;
+  idempotencyKey?: string;
 };
 
 /**
@@ -201,5 +202,6 @@ export function toStoredRunRecord(input: PersistRunInput): StoredRunRecord {
     ...(input.gateVersion === undefined ? {} : { gateVersion: input.gateVersion }),
     ...(input.status ? { status: input.status } : {}),
     ...(input.failureReason ? { failureReason: input.failureReason } : {}),
+    ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
   };
 }
