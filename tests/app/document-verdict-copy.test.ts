@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { conformanceLine } from '../../src/services/presentation/document-verdict';
+import type { Conformance } from '../../src/domain/document-remediation';
 
 /**
  * No surface hand-builds a document's verdict, and none states one unscoped.
@@ -49,6 +51,30 @@ describe('document verdict rendering', () => {
     // one surface still making the claim it qualifies.
     expect(files.length).toBeGreaterThan(10);
     expect(files.filter((f) => /machine-detectable/i.test(f.source)).length).toBeGreaterThan(0);
+  });
+
+  it('is anchored to a prefix the seam still emits', () => {
+    // The negative below is only as strong as this. It forbids components
+    // containing `PDF/UA:` and draws all its power from `conformanceLine`
+    // being the one thing that says it — so if that prefix is ever reworded,
+    // the guard keeps passing while guarding nothing, because no component
+    // could contain it any more.
+    //
+    // A live hazard, not a hypothetical: `'PDF/UA: compliant (veraPDF)'` is
+    // the closest thing to a conformance verdict a client reads, and a copy
+    // pass aimed at the word "Conformant" lands one function away from it.
+    // This is the same failure as the vocabulary guard that shipped
+    // case-sensitive and let a lowercase page description through.
+    const summaries: Array<{ conformance: Conformance | undefined }> = [
+      { conformance: undefined },
+      { conformance: { checker: 'none', reason: 'unavailable' } },
+      { conformance: { checker: 'verapdf-ua1', compliant: true } },
+      { conformance: { checker: 'verapdf-ua1', compliant: false, failingClauses: ['7.1-1'] } },
+    ];
+
+    for (const summary of summaries) {
+      expect(conformanceLine(summary), JSON.stringify(summary)).toContain('PDF/UA:');
+    }
   });
 
   it('never hand-builds a PDF/UA verdict in a component', () => {

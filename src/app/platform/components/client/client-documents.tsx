@@ -327,8 +327,13 @@ export function ClientDocuments({
             Documents
           </h2>
           <p style={noteStyle}>
+            {/* The third clause named the state whose chip reads "Passed
+                automated checks", and said it "conforms" — the claim
+                `SCOPE_EXPLAINER` denies and the reason that chip was
+                relabelled. One screen cannot both make and deny it. */}
             Every document on record for this client, with one state each: what a person still
-            has to answer, what is waiting on the client, and what conforms.
+            has to answer, what is waiting on the client, and what has passed the automated
+            checks.
           </p>
         </span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>

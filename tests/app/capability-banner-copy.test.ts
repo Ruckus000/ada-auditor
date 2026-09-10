@@ -50,9 +50,20 @@ const SCREEN = 'src/app/platform/components/client/client-documents.tsx';
  * what a person sees on the screen, so the commentary about it is not part of
  * what is measured. Both JSX comment blocks and line comments go; the
  * assertions below are on rendered text.
+ *
+ * **Whitespace is collapsed for the same reason.** JSX wraps prose across
+ * lines and the browser renders it as one run, so a phrase that reads as four
+ * words on screen can be four words split by a newline and twelve spaces in
+ * the file. A guard that matches the source without collapsing sees a
+ * sentence the reader never sees, and silently fails to find phrases that are
+ * plainly there — which is how the positive half of the check below first
+ * came up red against copy that was already correct.
  */
 function withoutComments(source: string): string {
-  return source.replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '').replace(/^\s*\/\/.*$/gm, '');
+  return source
+    .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+    .replace(/\s+/g, ' ');
 }
 
 describe('the client documents capability banner', () => {
@@ -75,6 +86,17 @@ describe('the client documents capability banner', () => {
     // "…and this host cannot run it" named LibreOffice by its pronoun, which
     // is the same attribution with a different verb.
     expect(source).not.toMatch(/cannot run it/i);
+  });
+
+  it('does not claim conformance in the prose above a chip that denies it', () => {
+    // The section lede names the three states in words — "what a person still
+    // has to answer, what is waiting on the client, and what conforms" — and
+    // the third clause is the state whose chip now reads "Passed automated
+    // checks" precisely because `SCOPE_EXPLAINER` says a passing check is not
+    // a conformance claim. Relabelling the chip and leaving the paragraph put
+    // both halves of the contradiction on one screen, seventy lines apart.
+    expect(source).not.toMatch(/what conforms/i);
+    expect(source).toMatch(/passed the automated checks/i);
   });
 
   it('sends the reader to the screen that does know which half is missing', () => {

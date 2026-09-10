@@ -158,6 +158,18 @@ describe('renderRunReport — content', () => {
     );
   });
 
+  it('calls a needs-review finding by the same name every other surface uses', () => {
+    // The printable report said "Needs manual review" while the console, the
+    // client screen, the shared page and the tiles all say "Needs review".
+    // One state, two names, and this is the copy a client's counsel reads.
+    const html = renderRunReport(
+      run({ findings: [finding({ severity: 'needs-review', conformanceLevel: 'AA' })] }),
+    );
+
+    expect(html).toContain('Needs review');
+    expect(html).not.toContain('Needs manual review');
+  });
+
   it('cites the success criterion and level', () => {
     const html = renderRunReport(run());
 

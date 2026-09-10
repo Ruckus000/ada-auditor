@@ -95,8 +95,16 @@ export function ClientFindings({ view }: { view: FindingsView }) {
         <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Advisory</h3>
           <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12.5, color: T.inkMuted }}>
-            Judgements a rule engine cannot make, produced once over the whole journey. They never
-            affect the verdict.
+            Judgements a rule engine cannot make, produced once over the whole journey by a
+            language model. They never affect the verdict.
+
+            {/* The model is named because this screen has no other way to say
+                it: `InfoTip`, and the glossary entry reading "An AI
+                suggestion", live in the console tree and are never rendered
+                under `platform/`. Saying only what did not produce these left
+                an operator to guess what did, on findings the product marks
+                `gateable: false` exactly because a model's judgement is not a
+                proof. */}
           </p>
           {view.advisory.map((finding) => (
             <FindingRow key={finding.key} finding={finding} clientId={view.clientId} />

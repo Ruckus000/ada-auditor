@@ -27,6 +27,24 @@ describe('documentStateLabel', () => {
     expect(documentStateLabel('waiting-on-client')).toBe('Waiting on client');
   });
 
+  it('does not claim conformance for a document that passed the checker', () => {
+    // The label read "Conformant" while `SCOPE_EXPLAINER`, two functions down
+    // this same file, says "a passing check is not by itself a conformance
+    // claim" — 47 of PDF/UA-1's 136 failure conditions need a person. One
+    // place denied the claim and another made it, as the word on the chip,
+    // the state filter, the workbench header, and a toast reading "— now
+    // conformant."
+    //
+    // What the state actually means is that veraPDF found nothing, so that is
+    // what it says. `'conformant'` stays as the state key: a code name, the
+    // same seam drawn between `'portfolio'` and "Clients".
+    const label = documentStateLabel('conformant');
+
+    expect(label).not.toMatch(/conformant/i);
+    expect(label).toMatch(/passed/i);
+    expect(label).toMatch(/check/i);
+  });
+
   it('says in words what each state means for the row, counts included', () => {
     expect(documentStateNote('needs-answers', { open: 12, waiting: 1, expired: 0 })).toBe(
       '12 items need an answer, 1 waiting on the client',
