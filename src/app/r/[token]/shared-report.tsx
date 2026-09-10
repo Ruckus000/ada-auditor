@@ -374,7 +374,7 @@ function DocumentsSection({
               {entry.sourceAvailable ? (
                 <p style={{ margin: '2px 0 0', fontSize: 12.5, color: T.inkSoft }}>
                   A Word source for this file is on record — converting that source, not
-                  repairing this PDF, is the path to a conformant replacement.
+                  repairing this PDF, is the path to a replacement that passes these checks.
                 </p>
               ) : null}
               {entry.declared ? (

@@ -12,6 +12,17 @@ vi.mock('../../src/app/platform/components/client/issue-report', () => ({
   IssueReport: () => null,
 }));
 
+/**
+ * The advisory case below renders real finding rows, and each carries a
+ * `TriageControl` that calls `useRouter`. There is no app router under the
+ * server renderer, so the hook throws before any assertion runs. Only the
+ * hook is replaced; every component's own markup is the real one.
+ */
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: () => {}, push: () => {} }),
+  usePathname: () => '/clients/acme/findings',
+}));
+
 const { ClientFindings } = await import(
   '../../src/app/platform/components/client/client-findings'
 );
@@ -137,6 +148,44 @@ describe('the platform client screen', () => {
     const html = renderToStaticMarkup(createElement(ClientFindings, { view }));
 
     expect(html).toContain('served 503 — not usable as evidence');
+  });
+
+  it('says a model wrote the advisory findings, on the screen an operator acts from', () => {
+    // The section explained itself as "Judgements a rule engine cannot make"
+    // and stopped, which says what did *not* produce them and never what did.
+    // The glossary entry that names the model is console-only — `InfoTip` is
+    // not used anywhere under `platform/` — so on this screen there was no way
+    // to learn it.
+    //
+    // It matters because of what the product promises about these: they are
+    // `gateable: false` precisely because a model's judgement is not a proof.
+    // An operator weighing one deserves to know which it is.
+    const view = {
+      clientId: 'acme',
+      clientName: 'Acme',
+      run: RUN,
+      journeyName: 'Login',
+      pages: [],
+      advisory: [
+        {
+          key: 'ai-advisory:heading-size',
+          code: 'ai-advisory',
+          message: 'Heading used for size',
+          severity: 'advisory',
+          source: 'ai-advisory',
+          wcagCriteria: [],
+          fixAnyOf: [],
+          fixAllOf: [],
+          status: 'Open',
+          triage: null,
+          gateable: false,
+        },
+      ],
+    } as unknown as FindingsView;
+
+    const html = renderToStaticMarkup(createElement(ClientFindings, { view }));
+
+    expect(html).toMatch(/language model/i);
   });
 });
 

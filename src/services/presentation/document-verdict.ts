@@ -92,7 +92,14 @@ export function documentStateLabel(state: DocumentState): string {
     case 'needs-answers':
       return 'Needs answers';
     case 'conformant':
-      return 'Conformant';
+      // Not "Conformant". `SCOPE_EXPLAINER` below says a passing check is not
+      // by itself a conformance claim — 47 of PDF/UA-1's 136 failure
+      // conditions need a person — and this label made that claim anyway, on
+      // the chip, the state filter, the workbench header, and in a toast
+      // reading "— now conformant." What the state means is that the checker
+      // found nothing, so that is what it says. The state key stays
+      // `'conformant'`: a code name, not a word anyone reads.
+      return 'Passed automated checks';
     case 'ready':
       return 'Ready to run';
     case 'waiting-on-client':

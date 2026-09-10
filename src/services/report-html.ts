@@ -34,7 +34,10 @@ const SEVERITY_LABEL: Record<string, string> = {
   critical: 'Critical',
   major: 'Major',
   minor: 'Minor',
-  'needs-review': 'Needs manual review',
+  // "Needs review", as the console, the client screen, the shared page and
+  // every tile say it. This read "Needs manual review" — one state with two
+  // names, and this is the copy a client's counsel reads.
+  'needs-review': 'Needs review',
 };
 
 /**
