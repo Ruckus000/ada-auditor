@@ -9,6 +9,7 @@ import {
   type AuditPage,
   type AuditResult,
   type Finding,
+  type IncomparableReason,
   type Severity,
 } from './audit-types';
 
@@ -305,6 +306,26 @@ function EvidenceBlock({ result }: { result: AuditResult }) {
   );
 }
 
+/**
+ * Why the diff was withheld, in words that are true of the reason it was.
+ *
+ * A `Record` rather than a ternary so the compiler names the next reason. The
+ * "walked a different path" sentence is a good explanation and a false one for
+ * a run that walked the right path and could not see it — which is the whole
+ * case for the server sending a reason at all.
+ *
+ * `unknown` stands in for a payload that carries no reason. It cannot arrive
+ * from today's server, which sets one wherever it withholds, so it says only
+ * what is certain rather than guessing at one of the two.
+ */
+const INCOMPARABLE_COPY: Record<IncomparableReason | 'unknown', string> = {
+  'different-path':
+    'Not compared — the last run walked a different path, so anything missing from it would read as fixed rather than as never visited.',
+  'partial-run':
+    'Not compared — one of these two runs could not see every page it walked, so anything missing from it would read as fixed rather than as never checked.',
+  unknown: 'Not compared — these two runs cannot be held to the same measurement.',
+};
+
 function RegressionBlock({ result }: { result: AuditResult }) {
   const regression = result.regression;
   if (!regression) return null;
@@ -326,8 +347,7 @@ function RegressionBlock({ result }: { result: AuditResult }) {
           <InfoTip termKey="regression" />
         </div>
         <p className="regression-headline regression-incomparable">
-          Not compared — the last run walked a different path, so anything
-          missing from it would read as fixed rather than as never visited.
+          {INCOMPARABLE_COPY[regression.reason ?? 'unknown']}
         </p>
       </section>
     );

@@ -4,8 +4,19 @@ import { failsConformance } from './reporting';
 
 export type RegressionStatus = 'none' | 'warn' | 'fail' | 'incomparable';
 
+/**
+ * Why no comparison was made.
+ *
+ * Present only on `incomparable`, and present because the screen has to say
+ * something true: "the last run walked a different path" is a good sentence
+ * and a false explanation for a run that walked the right path and could not
+ * see it. Two causes, two sentences, chosen by the side that knows.
+ */
+export type IncomparableReason = 'different-path' | 'partial-run';
+
 export type RegressionSummary = {
   status: RegressionStatus;
+  reason?: IncomparableReason;
   baselineRequestId: string;
   newFindings: StoredFinding[];
   resolvedFindings: StoredFinding[];
@@ -82,10 +93,41 @@ function walkedTheSamePath(a: StoredRunRecord, b: StoredRunRecord): boolean {
   return a.intent.ruleset === b.intent.ruleset;
 }
 
+/**
+ * Whether a run saw everything it walked.
+ *
+ * Two doors, and both empty the finding set rather than qualify it:
+ *
+ * - A page whose artifacts are incomplete has its deterministic findings
+ *   **rejected** — `runBrowserAudit` gives it `findings: []` — so the page's
+ *   barriers are absent from the record, indistinguishable from fixed.
+ * - The page cap or the time budget can stop the walk short, and a page never
+ *   visited reports nothing for the same reason. `truncated_pages` is stored
+ *   precisely so "a partial audit must never read as a complete one"; this is
+ *   the reading that would otherwise break that promise. It has never fired
+ *   in stored history — the chaos suite is where it fires — so this half is
+ *   here for the invariant, not for an incident.
+ *
+ * `inconclusive` on its own is deliberately *not* the test. A run can be
+ * inconclusive for reasons that leave the finding set whole, and refusing
+ * those would withhold a diff that is perfectly sound.
+ */
+function sawTheWholePath(run: StoredRunRecord): boolean {
+  return run.evidenceStatus === 'complete' && (run.truncatedPages ?? 0) === 0;
+}
+
 export function compareToBaseline(
   current: StoredRunRecord,
   baseline: StoredRunRecord,
 ): RegressionSummary {
+  const withhold = (reason: IncomparableReason): RegressionSummary => ({
+    status: 'incomparable',
+    reason,
+    baselineRequestId: baseline.requestId,
+    newFindings: [],
+    resolvedFindings: [],
+    unchangedCount: 0,
+  });
   /**
    * Two runs of different paths have nothing to say to each other.
    *
@@ -101,13 +143,20 @@ export function compareToBaseline(
    * anything got better.
    */
   if (!walkedTheSamePath(current, baseline)) {
-    return {
-      status: 'incomparable',
-      baselineRequestId: baseline.requestId,
-      newFindings: [],
-      resolvedFindings: [],
-      unchangedCount: 0,
-    };
+    return withhold('different-path');
+  }
+
+  /**
+   * And each of them has to have seen the path it walked.
+   *
+   * The guard above asks what the two runs were *asked* to do. This one asks
+   * what they managed — because a page whose findings were rejected is a page
+   * whose barriers are missing from the record, and the diff cannot tell that
+   * from fixed. A baseline that could not see is the mirror case: its missing
+   * findings read as new, sending a client after a change nobody made.
+   */
+  if (!sawTheWholePath(current) || !sawTheWholePath(baseline)) {
+    return withhold('partial-run');
   }
 
   const currentDeterministic = deterministicFindings(current.findings);

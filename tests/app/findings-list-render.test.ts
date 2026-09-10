@@ -173,6 +173,55 @@ describe('the console regression block', () => {
     expect(card(block(html), 'meta-viewport')).toContain('Blocks release');
   });
 
+  /**
+   * The withheld diff has to explain itself truthfully. "The last run walked a
+   * different path" is a good sentence and the wrong one for a run that walked
+   * the right path and could not see it — a reader who believes it goes
+   * looking for a journey change that never happened.
+   */
+  it.each([
+    ['different-path', 'walked a different path', 'could not see every page'],
+    ['partial-run', 'could not see every page', 'walked a different path'],
+  ])('explains an incomparable diff by its actual reason: %s', (reason, says, doesNotSay) => {
+    const html = renderToStaticMarkup(
+      createElement(FindingsList, {
+        result: result(CARDS, {
+          regression: {
+            status: 'incomparable',
+            reason,
+            baselineRequestId: 'req-old',
+            newFindings: [],
+            resolvedFindings: [],
+            unchangedCount: 0,
+          },
+        }),
+      }),
+    );
+
+    expect(block(html)).toContain(says);
+    expect(block(html)).not.toContain(doesNotSay);
+  });
+
+  it('claims neither cause when the payload names no reason', () => {
+    const html = renderToStaticMarkup(
+      createElement(FindingsList, {
+        result: result(CARDS, {
+          regression: {
+            status: 'incomparable',
+            baselineRequestId: 'req-old',
+            newFindings: [],
+            resolvedFindings: [],
+            unchangedCount: 0,
+          },
+        }),
+      }),
+    );
+
+    expect(block(html)).toContain('cannot be held to the same measurement');
+    expect(block(html)).not.toContain('walked a different path');
+    expect(block(html)).not.toContain('could not see every page');
+  });
+
   it('does not call a run worse when the new finding blocks nothing', () => {
     const html = renderToStaticMarkup(
       createElement(FindingsList, {

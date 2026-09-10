@@ -405,6 +405,19 @@ Chromium launches on a Vercel function:
   needs-review`), so a `critical` best-practice finding under a passing gate
   reads `pass`; and the printable PDF now lists deterministic findings only,
   like the shared page, and is still linked from no screen.
+  **A diff needs two runs that each saw what they walked.** `walkedTheSamePath`
+  asks what two runs were *asked* to do; it cannot ask what they managed. A
+  page whose artifacts are incomplete has its deterministic findings
+  **rejected** — `runBrowserAudit` gives it `findings: []` — so its barriers
+  are absent from the record and a diff cannot tell them from fixed. Nineteen
+  of thirty stored runs had degraded evidence and sixteen had a predecessor to
+  be diffed against, so the console's most common regression headline was
+  "Better than last time — issues were resolved and nothing new appeared" on
+  runs that had simply lost sight of a page. `sawTheWholePath` withholds the
+  diff for that and for `truncated_pages > 0`, which is the same hole through
+  the page cap and has never fired outside chaos. `incomparable` now carries a
+  `reason`, because "the last run walked a different path" is a good sentence
+  and a false explanation for either of these.
   **`services/regression.ts` has since moved to the gate**, which is why it
   imports `gateDecided`: its `status` was the last surface keyed on impact,
   and it drove a headline sitting directly above cards keyed on the criterion,
