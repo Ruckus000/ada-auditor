@@ -569,6 +569,42 @@ function replayedStart(existing: StoredRunRecord): AuditRunHandlerResult {
 }
 
 /**
+ * The run a key already claimed — but only if it is the *same* request.
+ *
+ * Keys are one flat namespace: `getRunByIdempotencyKey` takes a string and
+ * nothing else, and there is no tenant column to narrow it with. So a caller
+ * that reuses `req-1` across two journeys — two clients' journeys, even —
+ * would otherwise be handed the first journey's `requestId` and poll URL,
+ * with the second audit never started, no activity event recorded, and the
+ * caller polling a run for somebody else's site believing it is their own.
+ *
+ * `journeyId` is enough to catch that on its own (it is the journeys primary
+ * key, so it already names the client), and `environment` is checked beside it
+ * because the same journey audited against staging and production are two
+ * different runs. A key that names either differently is a caller bug rather
+ * than a retry, and 409 is the answer that says so instead of quietly
+ * answering the wrong question.
+ */
+function replayOrConflict(
+  existing: StoredRunRecord,
+  started: { journeyId: string; environment: string },
+  requestId: string,
+): AuditRunHandlerResult {
+  if (
+    existing.journeyId !== started.journeyId ||
+    existing.environment !== started.environment
+  ) {
+    return {
+      ok: false,
+      status: 409,
+      body: { error: 'idempotency_key_conflict', requestId },
+    };
+  }
+
+  return replayedStart(existing);
+}
+
+/**
  * Start a run. **This is the entry point every caller should use.**
  *
  * It takes a validated body rather than a `Request` on purpose. When the only
@@ -633,6 +669,41 @@ export async function startRun(
   }
 
   /**
+   * A key and `wait=1` are mutually exclusive, and that is the whole answer.
+   *
+   * A replay can only hand back what the row holds. The synchronous body is
+   * the *report* — `executiveSummary`, `checksPassed`, the regression diff —
+   * and none of that is reconstructible from a `StoredRunRecord`; rebuilding
+   * it here would be a second body-builder drifting against the first.
+   * Answering a retried `wait=1` with the 202 poll shape instead is worse
+   * still: CI reads `body.ciStatus`, a replay would make that `undefined`, and
+   * a gate that reads `undefined` stops gating without saying so — on a run
+   * that may well have been `fail`.
+   *
+   * Refusing also removes the only path on which `wait` met a key. That path
+   * registered nothing before starting, so two simultaneous `wait=1` retries
+   * both walked, and the loser's `saveRun` hit the unique index *after* a full
+   * audit — throwing inside `executeRun`'s try, discarding pages, findings and
+   * score, and answering 422 for a run that had actually succeeded.
+   *
+   * Checked before the budget so a refused combination spends nothing.
+   */
+  if (idempotencyKey && wait) {
+    return {
+      ok: false,
+      status: 400,
+      body: { error: 'idempotency_key_requires_async', requestId },
+    };
+  }
+
+  if (idempotencyKey) {
+    const existing = await getRunStore().getRunByIdempotencyKey(idempotencyKey);
+    if (existing) {
+      return replayOrConflict(existing, parsedBody, requestId);
+    }
+  }
+
+  /**
    * The budget, checked here rather than in a route.
    *
    * Every caller funnels through `startRun` — the HTTP endpoint, the console,
@@ -644,13 +715,6 @@ export async function startRun(
    * leave no row behind, because it never started. That is also why this is not
    * a `RunFailureCode` — nothing failed, the run was declined.
    */
-  if (idempotencyKey) {
-    const existing = await getRunStore().getRunByIdempotencyKey(idempotencyKey);
-    if (existing) {
-      return replayedStart(existing);
-    }
-  }
-
   const budget = await consumeRunBudget(getRunCounter());
   if (!budget.allowed) {
     logWarn('run_budget_exceeded', {
@@ -710,7 +774,7 @@ export async function startRun(
     if (error instanceof DuplicateIdempotencyKeyError && idempotencyKey) {
       const existing = await getRunStore().getRunByIdempotencyKey(idempotencyKey);
       if (existing) {
-        return replayedStart(existing);
+        return replayOrConflict(existing, parsedBody, requestId);
       }
     }
     throw error;

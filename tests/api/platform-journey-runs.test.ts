@@ -285,6 +285,13 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/runs', () =
   });
 
   it('replays a start that repeats the same Idempotency-Key', async () => {
+    // The report echoes the journey and environment it was handed — see
+    // `run-browser-audit`. The shared fixture defaults to neither, and the
+    // completed row is what the replay checks the retry against, so a default
+    // report here would make a legitimate retry look like a reused key.
+    runBrowserAudit.mockResolvedValue(
+      auditReport({ journeyId: 'checkout', environment: 'production' }),
+    );
     const headers = { 'Idempotency-Key': 'clayton-req-1' };
 
     const first = await POST(request('acme', 'checkout', headers), params('acme', 'checkout'));

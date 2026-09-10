@@ -519,3 +519,104 @@ describe('run budget', () => {
     expect(runBrowserAudit).toHaveBeenCalledOnce();
   });
 });
+
+/**
+ * The key is a retry token for the async door, and nothing more.
+ *
+ * Both refusals here exist because the alternative is a caller that believes
+ * an audit it never got: a `wait=1` replay carries no `ciStatus`, and a key
+ * replayed across journeys carries somebody else's `requestId`.
+ */
+describe('startRun idempotency guards', () => {
+  beforeEach(() => {
+    runBrowserAudit.mockReset();
+    runBrowserAudit.mockResolvedValue(auditReport());
+    setRunStore(new MemoryRunStore());
+    setRunCounter(new MemoryRunCounter());
+  });
+
+  afterEach(() => {
+    resetRunCounter();
+    resetRunStore();
+  });
+
+  it('refuses a key sent with wait, and starts nothing', async () => {
+    const result = await startRun(
+      {
+        journeyId: 'demo-login',
+        environment: 'staging',
+        wait: true,
+        idempotencyKey: 'build-42',
+      },
+      'req-idemp-wait',
+    );
+
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe('idempotency_key_requires_async');
+    expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+
+  it('refuses the header form of the same combination', async () => {
+    const result = await handleAuditRun(
+      new Request('http://localhost/api/audit/run?wait=1', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'idempotency-key': 'build-42' },
+        body: JSON.stringify({ journeyId: 'demo-login', environment: 'staging' }),
+      }),
+      'req-idemp-wait-http',
+    );
+
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe('idempotency_key_requires_async');
+    expect(runBrowserAudit).not.toHaveBeenCalled();
+  });
+
+  it('replays a repeat of the same key on the same journey', async () => {
+    const first = await startRun(
+      { journeyId: 'demo-login', environment: 'staging', idempotencyKey: 'req-1' },
+      'req-idemp-first',
+    );
+    const second = await startRun(
+      { journeyId: 'demo-login', environment: 'staging', idempotencyKey: 'req-1' },
+      'req-idemp-second',
+    );
+
+    expect(second.status).toBe(202);
+    expect(second.body.requestId).toBe(first.body.requestId);
+  });
+
+  // The failure this scopes out: Acme's key handed back for Globex's POST.
+  it('refuses a key already claimed by another journey', async () => {
+    // Echoed, because the completed row is what the retry is checked against
+    // and a real report carries the journey it was handed.
+    runBrowserAudit.mockResolvedValue(
+      auditReport({ journeyId: 'acme-checkout', environment: 'staging' }),
+    );
+    await startRun(
+      { journeyId: 'acme-checkout', environment: 'staging', idempotencyKey: 'req-1' },
+      'req-idemp-acme',
+    );
+    const other = await startRun(
+      { journeyId: 'globex-signup', environment: 'staging', idempotencyKey: 'req-1' },
+      'req-idemp-globex',
+    );
+
+    expect(other.status).toBe(409);
+    expect(other.body.error).toBe('idempotency_key_conflict');
+    expect(other.body.requestId).toBe('req-idemp-globex');
+  });
+
+  it('refuses a key already claimed against another environment', async () => {
+    await startRun(
+      { journeyId: 'demo-login', environment: 'staging', idempotencyKey: 'req-2' },
+      'req-idemp-staging',
+    );
+    const production = await startRun(
+      { journeyId: 'demo-login', environment: 'production', idempotencyKey: 'req-2' },
+      'req-idemp-production',
+    );
+
+    expect(production.status).toBe(409);
+    expect(production.body.error).toBe('idempotency_key_conflict');
+  });
+});

@@ -162,8 +162,19 @@ Content-Type: application/json
 ```
 
 The same key again returns the same `202` shape with the **original**
-`requestId` and `pollUrl`. No second audit, no second budget unit. An invalid
-key is `400` `invalid_idempotency_key` and mints no row.
+`requestId` and `pollUrl`. No second audit. An invalid key is `400`
+`invalid_idempotency_key` and mints no row.
+
+A key is scoped to the request it first named. Repeating it against a
+different `journeyId` or `environment` is `409` `idempotency_key_conflict`
+rather than a replay — keys are one flat namespace with no tenant column, so
+replaying across journeys would hand back another client's `requestId` and
+poll URL for an audit that never started. Mint one key per start.
+
+One caveat on budget: the replay above spends nothing, but two *simultaneous*
+starts on one key can both pass the ceiling check before either claims the
+key. The loser is still replayed and starts no audit — it has already
+incremented the counter, and `RunCounter` has no decrement to give it back.
 
 Poll until `run.status` is `complete` or `failed`. Interval about 2s; give up
 after about 7 minutes (`AUDITOR_RUN_STALE_SECONDS`, default 360, plus a
@@ -301,6 +312,8 @@ a guaranteed id.
 | `unauthorized` | 401 | Missing or wrong machine token |
 | `invalid_request_body` | 400 | JSON/schema failed |
 | `invalid_idempotency_key` | 400 | Header present but not 1–256 printable ASCII without whitespace; no row |
+| `idempotency_key_requires_async` | 400 | `Idempotency-Key` sent with `wait=1`; no row, no budget unit |
+| `idempotency_key_conflict` | 409 | Key already claimed by a different `journeyId`/`environment`; no row |
 | `inline_credential` | 400 | Password in a step, or userinfo in `targetUrl`; no row |
 | `client_not_found` | 404 | Unknown client id |
 | `journey_not_found` | 404 | Unknown, archived, or belongs to another client |
@@ -330,4 +343,9 @@ not a Vercel SSO page (production).
 - Advisory still runs on **unauthenticated** journeys unless the model is
   `off` or a guaranteed id.
 - `wait=1` exists on `POST /api/audit/run` only, for CI. The platform
-  journey-run route always returns `202`.
+  journey-run route always returns `202`. It cannot carry an
+  `Idempotency-Key`: that pair is `400` `idempotency_key_requires_async`,
+  because a replay can only return what the row holds and the synchronous body
+  is the report — a retried `wait=1` answered with the poll shape would carry
+  no `ciStatus`, and a gate reading that field would read `undefined` and
+  pass. Retry against the async door and poll.
