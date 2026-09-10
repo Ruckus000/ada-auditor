@@ -235,6 +235,102 @@ describe('compareToBaseline', () => {
   });
 });
 
+/**
+ * A run can walk the whole path and still not see it.
+ *
+ * `walkedTheSamePath` asks whether two runs were *asked* to walk the same
+ * pages. It never asks whether either could see what it walked — and a page
+ * whose artifacts are incomplete has its deterministic findings **rejected**
+ * (`run-browser-audit.ts:68`), not merely marked unproven. So the findings on
+ * that page vanish from the set, and the diff reports them as resolved: the
+ * clean bill of health nobody earned, arriving through the one door that
+ * guard does not watch.
+ *
+ * The page cap is the second door. It has never fired in stored history, but
+ * the chaos suite exercises it on every run, and `truncated_pages` is stored
+ * precisely so "a partial audit must never read as a complete one".
+ */
+describe('compareToBaseline, when a run could not see all of what it audited', () => {
+  const onePerPage = (page: string) => ({
+    code: 'image-alt',
+    severity: 'critical' as const,
+    source: 'deterministic' as const,
+    conformanceLevel: 'A',
+    selector: '#hero',
+    pageUrl: page,
+  });
+
+  const FULL = [onePerPage('https://app.example.com/a'), onePerPage('https://app.example.com/b')];
+
+  it('refuses to call anything resolved when this run lost a page to bad evidence', () => {
+    // The acceptance case. The second page's findings were rejected, so the
+    // run holds one where the baseline held two — and reported as a diff that
+    // reads as a barrier fixed.
+    const summary = compareToBaseline(
+      makeRecord('current', [FULL[0]], SAME_PATH, {
+        evidenceStatus: 'degraded',
+        ciStatus: 'inconclusive',
+      }),
+      makeRecord('baseline', FULL, SAME_PATH, { ciStatus: 'fail' }),
+    );
+
+    expect(summary.status).toBe('incomparable');
+    expect(summary.reason).toBe('partial-run');
+    expect(summary.resolvedFindings).toHaveLength(0);
+    expect(summary.newFindings).toHaveLength(0);
+    expect(summary.unchangedCount).toBe(0);
+  });
+
+  it('refuses just as hard when the baseline is the run that could not see', () => {
+    // The mirror: findings absent from a partial baseline are not new to the
+    // site, and reporting them as new sends a client after a change nobody
+    // made.
+    const summary = compareToBaseline(
+      makeRecord('current', FULL, SAME_PATH, { ciStatus: 'fail' }),
+      makeRecord('baseline', [FULL[0]], SAME_PATH, {
+        evidenceStatus: 'degraded',
+        ciStatus: 'inconclusive',
+      }),
+    );
+
+    expect(summary.status).toBe('incomparable');
+    expect(summary.newFindings).toHaveLength(0);
+  });
+
+  it('refuses when the page cap stopped the run short of the journey', () => {
+    const summary = compareToBaseline(
+      makeRecord('current', [FULL[0]], SAME_PATH, { truncatedPages: 1 }),
+      makeRecord('baseline', FULL, SAME_PATH, { ciStatus: 'fail' }),
+    );
+
+    expect(summary.status).toBe('incomparable');
+    expect(summary.reason).toBe('partial-run');
+    expect(summary.resolvedFindings).toHaveLength(0);
+  });
+
+  it('still compares two runs that saw everything they walked', () => {
+    // The guard has to be a guard, not a blanket refusal: `inconclusive` on
+    // its own is not the disqualifier — losing sight of a page is.
+    const summary = compareToBaseline(
+      makeRecord('current', FULL, SAME_PATH, { ciStatus: 'fail' }),
+      makeRecord('baseline', [FULL[0]], SAME_PATH, { ciStatus: 'fail' }),
+    );
+
+    expect(summary.status).toBe('fail');
+    expect(summary.newFindings).toHaveLength(1);
+  });
+
+  it('names walking elsewhere as its own reason, not this one', () => {
+    const summary = compareToBaseline(
+      makeRecord('current', []),
+      makeRecord('baseline', FULL, [{ action: 'navigate', type: 'goto', path: '/other' }]),
+    );
+
+    expect(summary.status).toBe('incomparable');
+    expect(summary.reason).toBe('different-path');
+  });
+});
+
 describe('compareToBaseline, when the two runs did not walk the same path', () => {
   /**
    * The worst output this product can produce is a clean bill of health
@@ -337,6 +433,18 @@ describe('compareToBaseline, when the baseline is a run that died partway', () =
    * one and two, a current run that reached all four, and everything the
    * baseline never got to reported as newly appeared — or, the other way
    * round, everything the current run never reached reported as resolved.
+   *
+   * **`sawTheWholePath` does not cover this, and must not be read as if it
+   * did.** A run that died partway can carry `evidenceStatus: 'complete'` and
+   * `truncatedPages: 0` — the pages it did reach were captured properly, and
+   * only the cap and the budget increment the count — so that guard answers
+   * *yes, it saw everything* about a run that stopped in the middle. It was
+   * not extended to refuse `status: 'failed'` because that word covers two
+   * different runs: one that crashed mid-walk, whose findings really are
+   * partial, and one that crashed after the walk while persisting or running
+   * the advisory, whose findings are complete. Refusing both would withhold a
+   * sound diff to re-guard a case the missing `intent` already guards. The
+   * absence stays the protection; this test is what notices if it goes.
    */
   it('refuses to compare against a partial run', () => {
     const critical = {

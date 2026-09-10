@@ -353,6 +353,33 @@ describe('parseRegression', () => {
       expect(result.regression?.status).toBe(status);
     }
   });
+
+  it('carries the reason a withheld diff was withheld for', () => {
+    for (const reason of ['different-path', 'partial-run'] as const) {
+      const result = parseAuditResponse(
+        { regression: { status: 'incomparable', reason } },
+        200,
+        true,
+        false,
+      );
+      expect(result.regression?.reason).toBe(reason);
+    }
+  });
+
+  it('drops a reason it does not know rather than rendering one it guessed', () => {
+    // The screen picks its explanation from this field. An unknown reason is a
+    // server explaining something this build has never heard of, and choosing
+    // one of the two known sentences for it would describe the run wrongly
+    // with full confidence. Absent renders the sentence true of both.
+    const result = parseAuditResponse(
+      { regression: { status: 'incomparable', reason: 'ran-out-of-coffee' } },
+      200,
+      true,
+      false,
+    );
+
+    expect(result.regression?.reason).toBeUndefined();
+  });
 });
 
 describe('describeApiError', () => {

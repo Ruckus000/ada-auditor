@@ -73,9 +73,18 @@ export interface AuditPage {
   artifacts?: { screenshot: boolean; dom: boolean; axTree: boolean };
 }
 
+/** Mirrors `IncomparableReason` in `services/regression`. */
+export type IncomparableReason = 'different-path' | 'partial-run';
+
 export interface RegressionSummary {
   /** Mirrors `RegressionStatus` in `services/regression`. */
   status: 'none' | 'warn' | 'fail' | 'incomparable';
+  /**
+   * Why no comparison was made. Absent on any payload that did not send one,
+   * which the screen renders as the sentence true of both causes rather than
+   * picking one and explaining the run wrongly.
+   */
+  reason?: IncomparableReason;
   baselineRequestId?: string;
   newFindings: Finding[];
   resolvedFindings: Finding[];
@@ -200,8 +209,16 @@ function parseRegression(value: unknown): RegressionSummary | undefined {
       ? raw.status
       : 'incomparable';
 
+  // Unrecognised reads as absent, not as one of the two. An unknown reason is
+  // a server explaining something this build does not know about, and picking
+  // a sentence for it would describe the run wrongly with full confidence —
+  // the same fail-safe direction as `status` above.
+  const reason =
+    raw.reason === 'different-path' || raw.reason === 'partial-run' ? raw.reason : undefined;
+
   return {
     status,
+    reason,
     baselineRequestId:
       typeof raw.baselineRequestId === 'string' ? raw.baselineRequestId : undefined,
     newFindings: parseFindings(raw.newFindings),
