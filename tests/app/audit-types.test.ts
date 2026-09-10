@@ -13,7 +13,7 @@ describe('parseFindings', () => {
   it('keeps findings that have no message', () => {
     // Regression entries are StoredFinding records: code/severity/source only.
     // Requiring a message here silently emptied the "new findings" list while
-    // the regression headline still reported a new critical issue.
+    // the regression headline still announced that something had appeared.
     const findings = parseFindings([
       { code: 'missing-image-alt', severity: 'critical', source: 'deterministic' },
     ]);
