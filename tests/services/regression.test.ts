@@ -433,6 +433,18 @@ describe('compareToBaseline, when the baseline is a run that died partway', () =
    * one and two, a current run that reached all four, and everything the
    * baseline never got to reported as newly appeared — or, the other way
    * round, everything the current run never reached reported as resolved.
+   *
+   * **`sawTheWholePath` does not cover this, and must not be read as if it
+   * did.** A run that died partway can carry `evidenceStatus: 'complete'` and
+   * `truncatedPages: 0` — the pages it did reach were captured properly, and
+   * only the cap and the budget increment the count — so that guard answers
+   * *yes, it saw everything* about a run that stopped in the middle. It was
+   * not extended to refuse `status: 'failed'` because that word covers two
+   * different runs: one that crashed mid-walk, whose findings really are
+   * partial, and one that crashed after the walk while persisting or running
+   * the advisory, whose findings are complete. Refusing both would withhold a
+   * sound diff to re-guard a case the missing `intent` already guards. The
+   * absence stays the protection; this test is what notices if it goes.
    */
   it('refuses to compare against a partial run', () => {
     const critical = {
