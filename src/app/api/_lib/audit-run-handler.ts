@@ -578,12 +578,23 @@ function replayedStart(existing: StoredRunRecord): AuditRunHandlerResult {
  * with the second audit never started, no activity event recorded, and the
  * caller polling a run for somebody else's site believing it is their own.
  *
- * `journeyId` is enough to catch that on its own (it is the journeys primary
- * key, so it already names the client), and `environment` is checked beside it
- * because the same journey audited against staging and production are two
- * different runs. A key that names either differently is a caller bug rather
- * than a retry, and 409 is the answer that says so instead of quietly
- * answering the wrong question.
+ * `journeyId` is enough to catch that on its own — it is the journeys primary
+ * key, so it already names the client. `environment` is checked beside it, and
+ * dropping it was considered and rejected: a caller whose key format is dated
+ * rather than per-environment (`clayton:propertypro:2026-09-09:attempt-1`)
+ * would then have its production start replay that morning's staging run, and
+ * report a staging walk as production compliance evidence. Loud and wrong
+ * beats quiet and wrong in a product whose output is a verdict.
+ *
+ * The cost is real and belongs here rather than in a footnote: the platform
+ * route resolves an omitted `environment` from the stored journey, so a
+ * journey edited between a dropped 202 and its retry moves the binding and
+ * answers 409 for a request whose bytes never changed. `docs/journeys-api.md`
+ * tells callers to send `environment` explicitly for exactly that reason.
+ *
+ * A key that names either differently is a caller bug rather than a retry, and
+ * 409 is the answer that says so instead of quietly answering the wrong
+ * question.
  */
 function replayOrConflict(
   existing: StoredRunRecord,

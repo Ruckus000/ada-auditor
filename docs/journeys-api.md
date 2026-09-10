@@ -165,11 +165,19 @@ The same key again returns the same `202` shape with the **original**
 `requestId` and `pollUrl`. No second audit. An invalid key is `400`
 `invalid_idempotency_key` and mints no row.
 
-A key is scoped to the request it first named. Repeating it against a
-different `journeyId` or `environment` is `409` `idempotency_key_conflict`
-rather than a replay — keys are one flat namespace with no tenant column, so
+A key is scoped to the request it first named: it binds to that run's
+`journeyId` **and** `environment`. Repeating it against either a different
+journey or a different environment is `409` `idempotency_key_conflict` rather
+than a replay — keys are one flat namespace with no tenant column, so
 replaying across journeys would hand back another client's `requestId` and
-poll URL for an audit that never started. Mint one key per start.
+poll URL for an audit that never started, and replaying across environments
+would report a staging walk as the production one. Mint one key per start.
+
+Send `environment` explicitly on every start. Omitted, it is resolved from
+the stored journey, so a journey edited between a dropped `202` and its retry
+moves the binding and the retry answers `409` for a request whose bytes never
+changed — with the original `requestId` already lost. An explicit value
+cannot drift.
 
 One caveat on budget: the replay above spends nothing, but two *simultaneous*
 starts on one key can both pass the ceiling check before either claims the
@@ -343,9 +351,12 @@ not a Vercel SSO page (production).
 - Advisory still runs on **unauthenticated** journeys unless the model is
   `off` or a guaranteed id.
 - `wait=1` exists on `POST /api/audit/run` only, for CI. The platform
-  journey-run route always returns `202`. It cannot carry an
-  `Idempotency-Key`: that pair is `400` `idempotency_key_requires_async`,
-  because a replay can only return what the row holds and the synchronous body
-  is the report — a retried `wait=1` answered with the poll shape would carry
-  no `ciStatus`, and a gate reading that field would read `undefined` and
-  pass. Retry against the async door and poll.
+  journey-run route always returns `202`, and it takes an `Idempotency-Key`
+  like any other start — Clayton should send one. What is refused is the
+  *pair*: `wait=1` together with a key is `400`
+  `idempotency_key_requires_async`, because a replay can only return what the
+  row holds and the synchronous body is the report — a retried `wait=1`
+  answered with the poll shape would carry no `ciStatus`, and a gate reading
+  that field would read `undefined` and pass. Since the platform route cannot
+  send `wait=1`, that refusal is unreachable there; it exists for the CI door.
+  Retry against the async door and poll.
