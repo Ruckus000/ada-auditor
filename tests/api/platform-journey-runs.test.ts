@@ -18,7 +18,9 @@ const {
   setPlatformStore,
   setRunStore,
 } = await import('../../src/integrations/persistence');
-const { resetRunCounter } = await import('../../src/app/api/_lib/run-counter');
+const { MemoryRunCounter, resetRunCounter, setRunCounter } = await import(
+  '../../src/app/api/_lib/run-counter'
+);
 
 const OPERATOR = {
   kind: 'operator' as const,
@@ -35,7 +37,11 @@ function params(clientId: string, journeyId: string) {
 }
 
 /** Same-origin with a session: how the screen calls it. */
-function request(clientId = 'acme', journeyId = 'checkout'): Request {
+function request(
+  clientId = 'acme',
+  journeyId = 'checkout',
+  extraHeaders: Record<string, string> = {},
+): Request {
   principalFromRequest.mockResolvedValue(OPERATOR);
   return new Request(
     `http://localhost/api/platform/clients/${clientId}/journeys/${journeyId}/runs`,
@@ -45,6 +51,7 @@ function request(clientId = 'acme', journeyId = 'checkout'): Request {
         'content-type': 'application/json',
         origin: 'http://localhost',
         'sec-fetch-site': 'same-origin',
+        ...extraHeaders,
       },
       body: '{}',
     },
@@ -62,6 +69,7 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/runs', () =
     runs = new MemoryRunStore();
     setPlatformStore(platform);
     setRunStore(runs);
+    setRunCounter(new MemoryRunCounter());
 
     await platform.upsertClient({ id: 'acme', name: 'Acme' });
     await platform.upsertJourney({
@@ -274,5 +282,33 @@ describe('POST /api/platform/clients/[clientId]/journeys/[journeyId]/runs', () =
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(runBrowserAudit.mock.calls[0][0].environment).toBe('production');
+  });
+
+  it('replays a start that repeats the same Idempotency-Key', async () => {
+    const headers = { 'Idempotency-Key': 'clayton-req-1' };
+
+    const first = await POST(request('acme', 'checkout', headers), params('acme', 'checkout'));
+    const firstBody = await first.json();
+    const second = await POST(request('acme', 'checkout', headers), params('acme', 'checkout'));
+    const secondBody = await second.json();
+
+    expect(first.status).toBe(202);
+    expect(second.status).toBe(202);
+    expect(secondBody.requestId).toBe(firstBody.requestId);
+    expect(secondBody.pollUrl).toBe(firstBody.pollUrl);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(runBrowserAudit).toHaveBeenCalledTimes(1);
+    expect(await platform.listEvents({ clientId: 'acme' })).toHaveLength(1);
+  });
+
+  it('refuses an Idempotency-Key that is not a single token', async () => {
+    const response = await POST(
+      request('acme', 'checkout', { 'Idempotency-Key': 'has a space' }),
+      params('acme', 'checkout'),
+    );
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('invalid_idempotency_key');
+    expect(runBrowserAudit).not.toHaveBeenCalled();
   });
 });

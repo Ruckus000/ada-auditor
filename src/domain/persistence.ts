@@ -231,7 +231,30 @@ export type StoredRunRecord = {
   status?: RunStatus;
   /** Populated when `status` is `failed`; a stable code, never raw error text. */
   failureReason?: string;
+  /**
+   * Caller-supplied key that maps one HTTP start to one run.
+   *
+   * Absent on every run recorded before this existed, and on any start that
+   * did not send `Idempotency-Key`. A later save that omits it must not wipe
+   * a key already stored — `executeRun` rewrites the placeholder without
+   * knowing the header.
+   */
+  idempotencyKey?: string;
 };
+
+/**
+ * Two different `requestId`s claimed the same `idempotencyKey`.
+ *
+ * The HTTP handler looks up the original and returns it rather than starting
+ * a second walk. Stores throw this instead of a driver-shaped unique
+ * violation so the memory double and Postgres agree.
+ */
+export class DuplicateIdempotencyKeyError extends Error {
+  constructor() {
+    super('idempotency key already used');
+    this.name = 'DuplicateIdempotencyKeyError';
+  }
+}
 
 export type ListRunsOptions = {
   journeyId?: string;
@@ -271,6 +294,13 @@ export interface RunStore {
    */
   clearArtifactsBefore(cutoffIso: string): Promise<number>;
   getRun(requestId: string): Promise<StoredRunRecord | null>;
+  /**
+   * The run that claimed this idempotency key, if any.
+   *
+   * Reconciles stale `running` the same way `getRun` does, so a retry of a
+   * killed walk does not look in-flight forever.
+   */
+  getRunByIdempotencyKey(key: string): Promise<StoredRunRecord | null>;
   getLatestRun(
     journeyId: string,
     environment: Environment,

@@ -878,6 +878,14 @@ alter table client_documents add column if not exists content_sha256 text;
 alter table document_conversions add column if not exists verification_artifact_url text;
 alter table document_conversions add column if not exists verification_sha256 text;
 
+-- One HTTP start to one run. Unique where present so a retry cannot mint a
+-- second Chromium walk; nulls (every run before this, and any start that
+-- omitted the header) do not collide. `executeRun`'s rewrite coalesces so a
+-- completion that does not know the key cannot wipe it.
+alter table runs add column if not exists idempotency_key text;
+create unique index if not exists runs_idempotency_key_idx
+  on runs (idempotency_key) where idempotency_key is not null;
+
 -- Delivery is separate from audit reports: a remediation-only client has no run.
 alter table clients add column if not exists document_revision bigint not null default 0;
 create table if not exists document_signoffs (

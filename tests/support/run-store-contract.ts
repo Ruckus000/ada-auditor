@@ -760,4 +760,74 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
     expect(read?.status).toBe('failed');
     expect(read?.intent).toEqual({ steps });
   });
+
+  /**
+   * One Clayton POST must map to one run. The key lives on the row so a retry
+   * can find the original without starting a second browser walk — and so a
+   * later `executeRun` write that does not know the key cannot wipe it.
+   */
+  it('finds a run by its idempotency key', async () => {
+    const store = await makeStore();
+    const key = `${CONTRACT_PREFIX}-idemp-find`;
+    await store.saveRun(
+      runRecord({
+        requestId: `${CONTRACT_PREFIX}-idemp-run`,
+        idempotencyKey: key,
+      }),
+    );
+
+    const found = await store.getRunByIdempotencyKey(key);
+    expect(found?.requestId).toBe(`${CONTRACT_PREFIX}-idemp-run`);
+  });
+
+  it('returns null for an idempotency key nobody has used', async () => {
+    const store = await makeStore();
+    expect(await store.getRunByIdempotencyKey(`${CONTRACT_PREFIX}-idemp-missing`)).toBeNull();
+  });
+
+  it('keeps an idempotency key when a later save omits it', async () => {
+    const store = await makeStore();
+    const key = `${CONTRACT_PREFIX}-idemp-keep`;
+    await store.saveRun(
+      runRecord({
+        requestId: `${CONTRACT_PREFIX}-idemp-resave`,
+        status: 'running',
+        idempotencyKey: key,
+      }),
+    );
+    await store.saveRun(
+      runRecord({
+        requestId: `${CONTRACT_PREFIX}-idemp-resave`,
+        status: 'complete',
+        ciStatus: 'fail',
+      }),
+    );
+
+    const read = await store.getRun(`${CONTRACT_PREFIX}-idemp-resave`);
+    expect(read?.status).toBe('complete');
+    expect(read?.idempotencyKey).toBe(key);
+    expect((await store.getRunByIdempotencyKey(key))?.requestId).toBe(
+      `${CONTRACT_PREFIX}-idemp-resave`,
+    );
+  });
+
+  it('refuses a second request id that reuses an idempotency key', async () => {
+    const store = await makeStore();
+    const key = `${CONTRACT_PREFIX}-idemp-unique`;
+    await store.saveRun(
+      runRecord({
+        requestId: `${CONTRACT_PREFIX}-idemp-first`,
+        idempotencyKey: key,
+      }),
+    );
+
+    await expect(
+      store.saveRun(
+        runRecord({
+          requestId: `${CONTRACT_PREFIX}-idemp-second`,
+          idempotencyKey: key,
+        }),
+      ),
+    ).rejects.toMatchObject({ name: 'DuplicateIdempotencyKeyError' });
+  });
 }

@@ -8,6 +8,7 @@ import { worstEvidenceStatus } from '../../../domain/evidence';
 import { getRunStore } from '../../../integrations/persistence';
 import { runBrowserAudit } from '../../../integrations/browser/run-browser-audit';
 import { PartialAuditError } from '../../../integrations/browser/partial-run';
+import { DuplicateIdempotencyKeyError, type StoredRunRecord } from '../../../domain/persistence';
 import { createAuditRunLog, emitAuditRunLog } from '../../../services/audit-run-log';
 import { compareToBaseline } from '../../../services/regression';
 import { toStoredRunRecord } from '../../../services/run-persistence';
@@ -134,7 +135,7 @@ export const auditRunBodySchema = z.object({
 });
 
 export type AuditRunHandlerResult =
-  | { ok: true; status: number; body: Record<string, unknown> }
+  | { ok: true; status: number; body: Record<string, unknown>; replayed?: boolean }
   | { ok: false; status: number; body: Record<string, unknown> };
 
 /**
@@ -189,6 +190,7 @@ async function executeRun(
   parsedBody: z.infer<typeof auditRunBodySchema>,
   requestId: string,
   startedAt: number,
+  idempotencyKey?: string,
 ): Promise<AuditRunHandlerResult> {
   const chaosParams = parsedBody.chaosScenario
     ? resolveChaosRunParams(parsedBody.chaosScenario, parsedBody.journeyId, parsedBody.environment)
@@ -291,6 +293,7 @@ async function executeRun(
       scoreVersion: report.scoreVersion,
       gateVersion: report.gateVersion,
       status: 'complete',
+      ...(idempotencyKey ? { idempotencyKey } : {}),
     });
     await store.saveRun(storedRun);
 
@@ -491,6 +494,7 @@ async function executeRun(
           browserMode: true,
           status: 'failed',
           failureReason: code,
+          ...(idempotencyKey ? { idempotencyKey } : {}),
           /**
            * No `intent` here, and that is not an omission.
            *
@@ -528,7 +532,41 @@ async function executeRun(
 export type AuditRunParams = z.infer<typeof auditRunBodySchema> & {
   /** Block and return the result, rather than 202 + a poll URL. */
   wait?: boolean;
+  /** One Clayton (or CI) request to one run. Absent means current behaviour. */
+  idempotencyKey?: string;
 };
+
+/**
+ * Printable ASCII, no whitespace, 1–256 chars.
+ *
+ * A retry token, not a secret — but it still must not be a header a caller
+ * can pad with newlines into a second log line, and empty is not a key.
+ */
+const IDEMPOTENCY_KEY_PATTERN = /^[\x21-\x7E]{1,256}$/;
+
+export function readIdempotencyKey(
+  request: Request,
+): { ok: true; key?: string } | { ok: false } {
+  const raw = request.headers.get('idempotency-key');
+  if (raw === null) return { ok: true };
+  if (!IDEMPOTENCY_KEY_PATTERN.test(raw)) return { ok: false };
+  return { ok: true, key: raw };
+}
+
+function replayedStart(existing: StoredRunRecord): AuditRunHandlerResult {
+  return {
+    ok: true,
+    status: 202,
+    replayed: true,
+    body: {
+      requestId: existing.requestId,
+      journeyId: existing.journeyId,
+      environment: existing.environment,
+      status: existing.status ?? 'running',
+      pollUrl: `/api/audit/runs/${existing.requestId}`,
+    },
+  };
+}
 
 /**
  * Start a run. **This is the entry point every caller should use.**
@@ -554,7 +592,7 @@ export async function startRun(
   requestId = createRequestId(),
   startedAt = Date.now(),
 ): Promise<AuditRunHandlerResult> {
-  const { wait, ...parsedBody } = params;
+  const { wait, idempotencyKey, ...parsedBody } = params;
 
   if (parsedBody.chaosScenario) {
     if (!isChaosEnabled()) {
@@ -606,6 +644,13 @@ export async function startRun(
    * leave no row behind, because it never started. That is also why this is not
    * a `RunFailureCode` — nothing failed, the run was declined.
    */
+  if (idempotencyKey) {
+    const existing = await getRunStore().getRunByIdempotencyKey(idempotencyKey);
+    if (existing) {
+      return replayedStart(existing);
+    }
+  }
+
   const budget = await consumeRunBudget(getRunCounter());
   if (!budget.allowed) {
     logWarn('run_budget_exceeded', {
@@ -639,28 +684,39 @@ export async function startRun(
   // Sync (`wait`): block and return the result. CI wants a single call with a
   // pass/fail, and the chaos script and handler tests want determinism.
   if (wait) {
-    return executeRun(parsedBody, requestId, startedAt);
+    return executeRun(parsedBody, requestId, startedAt, idempotencyKey);
   }
 
   // Written before the work starts so a run that times out or crashes leaves a
   // trace. Previously a record only appeared on success, so a run that died
   // mid-flight was indistinguishable from one that never happened.
-  await getRunStore().saveRun(
-    toStoredRunRecord({
-      requestId,
-      journeyId: parsedBody.journeyId,
-      environment: parsedBody.environment,
-      platform: 'unknown',
-      evidenceStatus: 'unknown',
-      ciStatus: 'inconclusive',
-      findings: [],
-      durationMs: 0,
-      browserMode: true,
-      status: 'running',
-    }),
-  );
+  try {
+    await getRunStore().saveRun(
+      toStoredRunRecord({
+        requestId,
+        journeyId: parsedBody.journeyId,
+        environment: parsedBody.environment,
+        platform: 'unknown',
+        evidenceStatus: 'unknown',
+        ciStatus: 'inconclusive',
+        findings: [],
+        durationMs: 0,
+        browserMode: true,
+        status: 'running',
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+      }),
+    );
+  } catch (error) {
+    if (error instanceof DuplicateIdempotencyKeyError && idempotencyKey) {
+      const existing = await getRunStore().getRunByIdempotencyKey(idempotencyKey);
+      if (existing) {
+        return replayedStart(existing);
+      }
+    }
+    throw error;
+  }
 
-  const work = executeRun(parsedBody, requestId, startedAt);
+  const work = executeRun(parsedBody, requestId, startedAt, idempotencyKey);
   waitUntil(work);
 
   return {
@@ -718,5 +774,14 @@ export async function handleAuditRun(
 
   const wait = new URL(request.url).searchParams.get('wait') === '1';
 
-  return startRun({ ...parsedBody, wait }, requestId, startedAt);
+  const idempotency = readIdempotencyKey(request);
+  if (!idempotency.ok) {
+    return { ok: false, status: 400, body: { error: 'invalid_idempotency_key', requestId } };
+  }
+
+  return startRun(
+    { ...parsedBody, wait, ...(idempotency.key ? { idempotencyKey: idempotency.key } : {}) },
+    requestId,
+    startedAt,
+  );
 }

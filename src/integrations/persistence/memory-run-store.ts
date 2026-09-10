@@ -2,6 +2,7 @@ import type { Environment } from '../../domain/contracts';
 import { isAbandoned, reconcileRunStatus } from '../../domain/run-staleness';
 import {
   clampRunListLimit,
+  DuplicateIdempotencyKeyError,
   type ListRunsOptions,
   type RunStore,
   type StoredRunRecord,
@@ -34,19 +35,41 @@ export class MemoryRunStore implements RunStore {
     // shared contract, which exists to stop exactly that, did not ask.
     const existing = this.runs.get(record.requestId);
     const intent = record.intent ?? existing?.intent;
+    const idempotencyKey = record.idempotencyKey ?? existing?.idempotencyKey;
+
+    if (idempotencyKey) {
+      for (const [requestId, other] of this.runs) {
+        if (requestId !== record.requestId && other.idempotencyKey === idempotencyKey) {
+          throw new DuplicateIdempotencyKeyError();
+        }
+      }
+    }
 
     // Structured-cloned so a caller mutating the object it saved cannot reach
     // back into stored state — the database cannot be mutated that way either,
     // and a double that allows it hides bugs.
     this.runs.set(
       record.requestId,
-      structuredClone({ ...record, ...(intent ? { intent } : {}) }),
+      structuredClone({
+        ...record,
+        ...(intent ? { intent } : {}),
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+      }),
     );
   }
 
   async getRun(requestId: string): Promise<StoredRunRecord | null> {
     const record = this.runs.get(requestId);
     return record ? reconcileRunStatus(structuredClone(record)) : null;
+  }
+
+  async getRunByIdempotencyKey(key: string): Promise<StoredRunRecord | null> {
+    for (const record of this.runs.values()) {
+      if (record.idempotencyKey === key) {
+        return reconcileRunStatus(structuredClone(record));
+      }
+    }
+    return null;
   }
 
   async getLatestRun(
