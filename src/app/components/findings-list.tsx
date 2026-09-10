@@ -43,7 +43,7 @@ function gateTerm(finding: Finding, blocks: boolean): 'blocksCi' | 'advisory' | 
 
 /**
  * `showPage` is for lists that are not already grouped by page — the
- * regression diff, where "a new critical appeared" is only actionable once you
+ * regression diff, where "something new appeared" is only actionable once you
  * know which of five screens it appeared on.
  *
  * `decided` is whether the gate reached a verdict on this run. Where it did
@@ -335,7 +335,11 @@ function RegressionBlock({ result }: { result: AuditResult }) {
 
   const headline =
     regression.status === 'fail'
-      ? 'Worse than last time — a new critical issue appeared.'
+      ? // The gate's word, because the gate made this decision. It read "a new
+        // critical issue appeared" — axe's impact rating — directly above cards
+        // whose flag asks the criterion, so the two disagreed on the finding
+        // that had actually turned the verdict.
+        'Worse than last time — a new issue must be fixed.'
       : regression.status === 'warn'
         ? 'Slightly worse than last time — new issues appeared.'
         : regression.resolvedFindings.length > 0

@@ -1,6 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import type { StoredRunRecord } from '../../src/domain/persistence';
 import { compareToBaseline } from '../../src/services/regression';
+import { GATE_VERSION } from '../../src/services/reporting';
+
+/**
+ * The two findings that tell the gate apart from axe's impact rating.
+ *
+ * They are the repo's canonical pair, carried here verbatim from
+ * `findings-list-render.test.ts` and `uniform-run-surfaces.test.ts`, because a
+ * fixture that cannot separate the two rules cannot prove which one is in
+ * force. `region` is rated critical here and cites nothing; `meta-viewport` is
+ * impact moderate — so `minor` — and cites a Level AA criterion, which makes
+ * it the finding that turns a verdict while reading as the milder of the two.
+ */
+const GATES_NOTHING = {
+  code: 'region',
+  severity: 'critical' as const,
+  source: 'deterministic' as const,
+  conformanceLevel: null,
+};
+
+const FAILS_A_CRITERION = {
+  code: 'meta-viewport',
+  severity: 'minor' as const,
+  source: 'deterministic' as const,
+  conformanceLevel: 'AA' as const,
+};
 
 /**
  * `steps` is a parameter because comparing two runs now depends on it.
@@ -20,6 +45,7 @@ function makeRecord(
   requestId: string,
   findings: StoredRunRecord['findings'],
   steps: unknown[] = SAME_PATH,
+  over: Partial<StoredRunRecord> = {},
 ): StoredRunRecord {
   return {
     requestId,
@@ -32,7 +58,17 @@ function makeRecord(
     intent: { steps },
     durationMs: 10,
     createdAt: '2026-07-28T12:00:00.000Z',
+    // Present because the diff now asks whether *this* run's gate reached a
+    // verdict, and a record without it is a run an older gate decided.
+    gateVersion: GATE_VERSION,
+    ...over,
   };
+}
+
+/** A run the gate cannot be asked about: stored before `gate_version` existed. */
+function beforeGateVersion(record: StoredRunRecord): StoredRunRecord {
+  const { gateVersion: _gateVersion, ...rest } = record;
+  return rest;
 }
 
 /** A run from before `intent` existed. */
@@ -63,15 +99,23 @@ describe('compareToBaseline', () => {
     expect(summary.unchangedCount).toBe(1);
   });
 
-  it('fails regression when new critical deterministic findings appear', () => {
+  /**
+   * "Worse" is the gate's word, so it is the gate's decision.
+   *
+   * These two invert, which is the whole content of the rule: keyed on axe's
+   * impact the first is a warning and the second a failure, and keyed on the
+   * criterion it is the other way round. The headline they produce sits
+   * directly above finding cards whose gate flag is
+   * `decided && failsConformance(finding)` — so keyed on impact, the block
+   * said "slightly worse" over a card reading "Blocks release", and "worse"
+   * over one reading "Does not block release".
+   */
+  it('fails the diff when a new finding is one the gate failed the run on', () => {
     const summary = compareToBaseline(
-      makeRecord('current', [
-        {
-          code: 'missing-image-alt',
-          severity: 'critical',
-          source: 'deterministic',
-        },
-      ]),
+      // `ciStatus` is `fail` because this finding is what failed it. A run
+      // carrying an AA-gating finding and a `pass` verdict is a state
+      // `summarizeRun` cannot produce, and a fixture must not invent one.
+      makeRecord('current', [FAILS_A_CRITERION], SAME_PATH, { ciStatus: 'fail' }),
       makeRecord('baseline', []),
     );
 
@@ -79,20 +123,45 @@ describe('compareToBaseline', () => {
     expect(summary.newFindings).toHaveLength(1);
   });
 
-  it('warns on new major deterministic findings', () => {
+  it('only warns when a new finding is rated critical but gates nothing', () => {
     const summary = compareToBaseline(
-      makeRecord('current', [
-        {
-          code: 'low-contrast',
-          severity: 'major',
-          source: 'deterministic',
-        },
-      ]),
+      makeRecord('current', [GATES_NOTHING]),
+      makeRecord('baseline', []),
+    );
+
+    // The run still passes. Calling this "worse — a new critical issue
+    // appeared" over a card that says it does not block a release is the
+    // contradiction this rule removes.
+    expect(summary.status).toBe('warn');
+    expect(summary.newFindings).toHaveLength(1);
+  });
+
+  it('will not say worse on a run the gate never decided', () => {
+    // No `gate_version`: an older gate judged this run, and recounting it with
+    // today's rule would put a claim beside a verdict that claim did not
+    // produce. `warn` still says what is true — findings appeared.
+    const summary = compareToBaseline(
+      beforeGateVersion(makeRecord('current', [FAILS_A_CRITERION], SAME_PATH, { ciStatus: 'fail' })),
+      beforeGateVersion(makeRecord('baseline', [])),
+    );
+
+    expect(summary.status).toBe('warn');
+    expect(summary.newFindings).toHaveLength(1);
+  });
+
+  it('will not say worse on a run that could not be judged', () => {
+    const summary = compareToBaseline(
+      makeRecord('current', [FAILS_A_CRITERION], SAME_PATH, { ciStatus: 'inconclusive' }),
       makeRecord('baseline', []),
     );
 
     expect(summary.status).toBe('warn');
   });
+
+  // Deleted with the impact rule: a case asserting `major` warns "because it is
+  // not critical". Severity no longer decides, so the case proved nothing the
+  // pair above does not prove better — and its `low-contrast` fixture carried
+  // no `conformanceLevel`, which is false about a rule that cites 1.4.3.
 
   it('keeps the same rule and selector apart when they occur on two pages', () => {
     // A shared header template breaks `image-alt` on `#nav-logo` on every page
@@ -102,14 +171,18 @@ describe('compareToBaseline', () => {
       code: 'image-alt',
       severity: 'critical',
       source: 'deterministic',
+      // The criterion `image-alt` actually cites. Left off, this fixture said a
+      // missing alt attribute gates nothing, which is false about the rule and
+      // would make the status below prove the opposite of what it looks like.
+      conformanceLevel: 'A',
       selector: '#nav-logo',
       pageUrl: 'https://app.example.com/login',
     };
     const onDashboard = { ...onLogin, pageUrl: 'https://app.example.com/dashboard' };
 
     const summary = compareToBaseline(
-      makeRecord('current', [onLogin, onDashboard]),
-      makeRecord('baseline', [onLogin]),
+      makeRecord('current', [onLogin, onDashboard], SAME_PATH, { ciStatus: 'fail' }),
+      makeRecord('baseline', [onLogin], SAME_PATH, { ciStatus: 'fail' }),
     );
 
     expect(summary.status).toBe('fail');
@@ -329,7 +402,8 @@ describe('compareToBaseline, when the two runs used different rule sets', () => 
     );
 
     // Not `incomparable`, which is the whole point; `warn` rather than `fail`
-    // because the finding is `serious` and only `critical` fails a run.
+    // because this fixture cites no criterion, so the gate did not fail the
+    // run on it. Its `serious` rating is not what decides.
     expect(summary.status).toBe('warn');
     expect(summary.newFindings).toHaveLength(1);
   });

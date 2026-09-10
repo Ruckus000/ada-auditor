@@ -19,7 +19,10 @@ import { FindingsList } from '../../src/app/components/findings-list';
 
 const PAGE = { url: 'https://acme.test/', route: '/', title: 'Home', evidenceStatus: 'complete' };
 
-function result(findings: unknown[], over: { ciStatus?: string; evidenceStatus?: string } = {}) {
+function result(
+  findings: unknown[],
+  over: { ciStatus?: string; evidenceStatus?: string; regression?: unknown } = {},
+) {
   return parseAuditResponse(
     {
       requestId: 'req-cards',
@@ -134,6 +137,64 @@ describe('the console finding card on an inconclusive run', () => {
 });
 
 /**
+ * The diff's headline and the cards underneath it.
+ *
+ * The block had no render test at all, which is how its headline kept axe's
+ * vocabulary through the pass that moved every card to the gate. The two are
+ * asserted together on one render, because their agreement is the property —
+ * a headline that says "worse" over a card that says "Does not block release"
+ * is the defect, and either assertion alone would pass while it stood.
+ */
+describe('the console regression block', () => {
+  /** Just the diff section, so a card in the list above cannot answer for it. */
+  function block(html: string): string {
+    const found = html.split('<section class="regression-block"')[1];
+    if (!found) throw new Error('no regression block');
+    return found;
+  }
+
+  it('names the gate when a new finding failed the run, and flags that card', () => {
+    const html = renderToStaticMarkup(
+      createElement(FindingsList, {
+        result: result(CARDS, {
+          regression: {
+            status: 'fail',
+            baselineRequestId: 'req-old',
+            newFindings: [CARDS[0]],
+            resolvedFindings: [],
+            unchangedCount: 0,
+          },
+        }),
+      }),
+    );
+
+    expect(block(html)).toContain('Worse than last time — a new issue must be fixed.');
+    expect(block(html)).not.toContain('critical issue');
+    expect(card(block(html), 'meta-viewport')).toContain('Blocks release');
+  });
+
+  it('does not call a run worse when the new finding blocks nothing', () => {
+    const html = renderToStaticMarkup(
+      createElement(FindingsList, {
+        result: result(CARDS, {
+          ciStatus: 'pass',
+          regression: {
+            status: 'warn',
+            baselineRequestId: 'req-old',
+            newFindings: [CARDS[1]],
+            resolvedFindings: [],
+            unchangedCount: 0,
+          },
+        }),
+      }),
+    );
+
+    expect(block(html)).toContain('Slightly worse than last time');
+    expect(card(block(html), 'region')).toContain('Does not block release');
+  });
+});
+
+/**
  * The stylesheet is a plain file with no test of its own, so the two classes
  * the card renders for a review item are checked the way
  * `document-verdict-copy.test.ts` checks a source file: by reading it. A
@@ -164,6 +225,11 @@ describe('the console copy', () => {
       expect(source).not.toMatch(/critical rule-based/);
       expect(source).not.toMatch(/Only critical/);
       expect(source).not.toMatch(/finding is critical/);
+      // The fourth sentence, which the three above did not reach. The
+      // regression InfoTip read "A newly appearing critical issue is reported
+      // as a failure" and survived the sweep that wrote them — a guard is
+      // only as wide as the wording it happens to have seen.
+      expect(source).not.toMatch(/critical issue/i);
     },
   );
 });

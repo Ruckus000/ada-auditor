@@ -1,4 +1,6 @@
 import type { StoredFinding, StoredRunRecord } from '../domain/persistence';
+import { gateDecided } from './presentation/severity';
+import { failsConformance } from './reporting';
 
 export type RegressionStatus = 'none' | 'warn' | 'fail' | 'incomparable';
 
@@ -124,13 +126,32 @@ export function compareToBaseline(
     baselineCodes.has(findingKey(finding)),
   ).length;
 
-  const hasNewCritical = newFindings.some((finding) => finding.severity === 'critical');
-  const hasNewMajor = newFindings.some((finding) => finding.severity === 'major');
+  /**
+   * "Worse" is the gate's word, so it is the gate's decision.
+   *
+   * This read `severity === 'critical'`, which is axe's impact rating and not
+   * what fails a run. The two invert on findings this repo keeps fixtures for:
+   * `meta-viewport` is impact moderate — so `minor` — and cites a Level AA
+   * criterion, so it is what turns a verdict to FAIL while reading as the
+   * milder finding; `region` is rated critical and cites nothing, so it can
+   * never fail a run. Keyed on impact, the block announced "slightly worse"
+   * above a card reading "Blocks release", and "worse — a new critical issue
+   * appeared" above one reading "Does not block release".
+   *
+   * The expression is `FindingCard`'s `blocks` verbatim, which is the point:
+   * the headline and the badges under it are one rule, not two that agree
+   * today. Only the current run's gate is consulted, and only about findings
+   * the current run reported — the baseline's gate version cannot reach this.
+   * Where that gate reached no verdict nothing is a conformance failure, so an
+   * older run's diff says `warn`, which claims only that findings appeared.
+   */
+  const decided = gateDecided(current);
+  const brokeConformance = newFindings.some((finding) => decided && failsConformance(finding));
 
   let status: RegressionStatus = 'none';
-  if (hasNewCritical) {
+  if (brokeConformance) {
     status = 'fail';
-  } else if (hasNewMajor || newFindings.length > 0) {
+  } else if (newFindings.length > 0) {
     status = 'warn';
   }
 

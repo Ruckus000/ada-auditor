@@ -1,4 +1,5 @@
 import type { DeterministicFinding } from '../../src/services/deterministic-audit';
+import { GATE_VERSION } from '../../src/services/reporting';
 
 /**
  * Builds a `runBrowserAudit` return value for handler tests.
@@ -94,6 +95,12 @@ export function auditReport(overrides: ReportOverrides = {}) {
     findings,
     platform: { id: 'generic', hints: ['rendered-dom-baseline'] },
     contract: {},
+    // `summarizeRun` stamps this on every completed run, so a double that
+    // omits it stands in for a run no gate decided — which the regression diff
+    // now reads, and answers "not judged" to. The same failure as the
+    // `intent: {steps: undefined}` note above: a double minting a shape
+    // production cannot.
+    gateVersion: GATE_VERSION,
     pages: overrides.pages ?? defaultPages(evidenceStatus),
     truncatedPages: 0,
     executiveSummary: {

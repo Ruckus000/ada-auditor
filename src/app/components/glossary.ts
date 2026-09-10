@@ -176,7 +176,7 @@ export const GLOSSARY = {
     term: 'Compared to last run',
     short: 'How this run differs from the previous run of the same journey in the same environment.',
     detail:
-      'Only rule-based findings are compared. A newly appearing critical issue is reported as a failure; any other new issue is reported as a warning.',
+      'Only rule-based findings are compared. A new issue that fails a success criterion is reported as a failure; any other new issue is reported as a warning.',
   },
 
   traceId: {

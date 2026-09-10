@@ -403,9 +403,16 @@ Chromium launches on a Vercel function:
   surfaces and asserts the one number. Recorded, not changed, in the same
   pass: `runVerdict`'s `risk` predicate is impact-keyed (`major ||
   needs-review`), so a `critical` best-practice finding under a passing gate
-  reads `pass`; `services/regression.ts` decides "worse" by impact; and the
-  printable PDF now lists deterministic findings only, like the shared page,
-  and is still linked from no screen.
+  reads `pass`; and the printable PDF now lists deterministic findings only,
+  like the shared page, and is still linked from no screen.
+  **`services/regression.ts` has since moved to the gate**, which is why it
+  imports `gateDecided`: its `status` was the last surface keyed on impact,
+  and it drove a headline sitting directly above cards keyed on the criterion,
+  so the block said "slightly worse" over a card reading "Blocks release". It
+  asks only the *current* run's gate, about the findings that run reported —
+  a run stored before `gate_version` cannot reach `fail`, and answers `warn`,
+  which claims only that findings appeared. Still impact-keyed and unfixed:
+  the `risk` predicate above.
 - **A capability message says a stage did not run and that nothing was read.
   It does not say why, because by then nobody knows.** `resolveLibreOffice`
   and `resolveJavaRuntime` tell "nothing is installed" apart from "installed
