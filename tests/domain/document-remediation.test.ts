@@ -63,6 +63,10 @@ const provenance = (over: Partial<ConversionProvenance> = {}): ConversionProvena
   title: { kind: 'already-titled', title: 'Planning Committee Agenda' },
   sourceLanguage: 'en-GB',
   structure: structure(),
+  // Unreadable by default: these cases are about what `summarise` reports from
+  // a reading, and a fixture that claimed a readable source would make every
+  // one of them assert a fidelity verdict nothing here is testing.
+  sourceTruth: { readable: false },
   ...over,
 });
 
@@ -283,6 +287,9 @@ describe('the punch list', () => {
     title: { kind: 'already-titled' as const, title: 'T' },
     sourceLanguage: 'en',
     structure: structure(over),
+    // As above: these cases are about the punch list a reading produces, not
+    // about fidelity, so the source is declared unreadable rather than faked.
+    sourceTruth: { readable: false as const },
   });
 
   it('names each undescribed figure as one actionable item', () => {
@@ -395,6 +402,7 @@ describe('withConformance', () => {
   const base = summarise({
     title: { kind: 'already-titled' as const, title: 'T' },
     sourceLanguage: 'en',
+    sourceTruth: { readable: false as const },
     structure: {
       structureElements: 10,
       marked: true,
@@ -621,6 +629,7 @@ describe('withConformance', () => {
     const withItem = summarise({
       title: { kind: 'already-titled' as const, title: 'T' },
       sourceLanguage: null,
+      sourceTruth: { readable: false as const },
       structure: {
         structureElements: 10,
         marked: true,

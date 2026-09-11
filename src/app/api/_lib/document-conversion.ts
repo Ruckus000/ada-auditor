@@ -13,10 +13,12 @@ import {
   withContrast,
   withDeclarations,
   withExcerpt,
+  withFidelity,
   type Conformance,
   type RemediationSummary,
 } from '../../../domain/document-remediation';
 import { contentChanges, type DocumentStructure } from '../../../domain/document-structure';
+import { checkFidelity, hasAssertion } from '../../../domain/source-fidelity';
 import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/documents/convert';
 import { measureContrast } from '../../../integrations/documents/contrast';
 import { finishDocument, type FinishRequest } from '../../../integrations/documents/finish';
@@ -365,12 +367,92 @@ export async function remediateWordBytes(
       stageOptions,
       checkOptions,
     );
+    // The third instrument, and the only one that holds the delivered document
+    // against WHAT ITS AUTHOR WROTE. `contentChanges` above compares the
+    // converted file with itself plus the declared deltas, which is what lets
+    // it work without a reference; it cannot answer this question, because both
+    // its readings come from our own output. The export step that turns a
+    // `.docx` into a PDF is the one nothing else watches.
+    //
+    // Against `structure`, not `result.provenance.structure`: the declare pass
+    // above reassigns it, and judging the pre-declare reading would grade a
+    // file that is not the one shipping.
+    //
+    // An ASSERTION refuses delivery. The output stating something the source
+    // did not is the failure that misleads a screen-reader user with no visible
+    // signal — veraPDF passes clean on it, and so does every count. A document
+    // we cannot vouch for is worse than no document, which is the same judgement
+    // the `content-changed` and `answer-mismatch` refusals above already make.
+    //
+    // Omissions do not block. They are honest, a reviewer sees them, and
+    // `withFidelity` turns each into a punch-list item.
+    // Against the source PLUS what a person declared, which is master's own
+    // idiom one gate over (`expectedAfter`: tell the gate what deltas to
+    // expect). Without it this refuses the product's most common answer.
+    //
+    // `applyDeclarations` writes the operator's language onto the structure
+    // when the source declared none, and `CONTENT_FIELDS` deliberately omits
+    // `lang`, so the content gate lets it through. Arriving here unamended it
+    // reads as `source.language === null && delivered !== null` — which
+    // `source-fidelity.ts` calls "something re-invented one" and refuses. The
+    // 3.1.1 language ask is the cheapest item on the punch list and the one
+    // operators answer most; every such document would have been refused
+    // delivery, and the instrument would have been blaming the pipeline for a
+    // transcription a person supplied.
+    //
+    // The row stays live for what it is for: an exporter GUESSING a language
+    // still has no declaration behind it and still asserts.
+    const declaredTruth =
+      languageDeclared && result.provenance.sourceTruth.readable
+        ? { ...result.provenance.sourceTruth, language: sourceLanguage }
+        : result.provenance.sourceTruth;
+    const fidelity = checkFidelity(declaredTruth, structure);
+    if (fidelity.checked && hasAssertion(fidelity.defects)) {
+      logWarn('document_remediation_fidelity_assertion', {
+        requestId,
+        oracle: fidelity.oracle,
+        // Criteria only. The details carry counts, and the log is not the place
+        // to start describing a municipal record.
+        criteria: fidelity.defects.filter((d) => d.kind === 'assertion').map((d) => d.criterion),
+      });
+      return {
+        ok: false,
+        refusal: {
+          status: 422,
+          error: 'remediation_failed',
+          detail: 'fidelity-assertion',
+          message:
+            'the converted document states structure the source document does not — it was not delivered, because a document that misstates its own structure is worse than one that is honestly unremediated',
+        },
+      };
+    }
+
     // Read after the decision, so the verdict describes these exact bytes.
     const pdf = await readFile(output);
     const summary = await withMeasuredContrast(
       withExcerpt(
         withDeclarations(
-          withConformance(summarise({ title, sourceLanguage, structure }), conformance),
+          // **Fidelity OUTSIDE conformance, and the order is load-bearing.**
+          // `withConformance` suppresses a veraPDF clause when one of our own
+          // items already carries its criterion (`alreadyVoiced` /
+          // `VOICED_BY_OUR_INSTRUMENT`, which maps 7.2→3.1.1, 7.3-→1.1.1,
+          // 7.4→2.4.10, 7.1-9→2.4.2 — every criterion fidelity can emit).
+          // Run the other way round, a fidelity omission saying "2 figures
+          // delivered for 3 in the source" would earn the suppression of every
+          // alt-text clause, which it does not say. Suppression has to be
+          // earned by an item that actually voices the clause.
+          withFidelity(
+            withConformance(
+              summarise({
+                title,
+                sourceLanguage,
+                structure,
+                sourceTruth: result.provenance.sourceTruth,
+              }),
+              conformance,
+            ),
+            fidelity,
+          ),
           declaredCounts(answers, languageDeclared),
         ),
         structure,
@@ -558,6 +640,9 @@ export async function repairPdfBytes(
               title: decision.plan.title,
               sourceLanguage: decision.plan.language,
               structure: after.value,
+              // Repair works on a PDF that arrived alone. There is no source to
+              // hold it against, and saying so is not the same as passing.
+              sourceTruth: { readable: false },
             }),
             conformance,
           ),

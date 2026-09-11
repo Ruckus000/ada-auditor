@@ -32,7 +32,8 @@ export type AskKind =
   | 'untagged'
   | 'identifier'
   | 'pdfua'
-  | 'repair';
+  | 'repair'
+  | 'fidelity';
 
 /**
  * What a figure's description looked like when the ask was raised — the
@@ -122,6 +123,14 @@ export const ACCEPTS: Record<AskKind, ReadonlyArray<AnswerDisposition>> = {
   untagged: ['requested', 'decided'],
   repair: ['requested', 'decided'],
   identifier: [],
+  // Like `identifier`, and for the same reason: nothing to answer. A fidelity
+  // item reports that the delivered document and its source disagree about a
+  // count — nobody can supply the list items an export dropped, and no
+  // declaration would change the bytes. It carries an identity so it can be
+  // named and rendered, and `answerable: 'none'` keeps it out of the open-work
+  // list, where it would otherwise sit forever as work with no answer that
+  // could close it and hold every affected document in `needs-answers`.
+  fidelity: [],
 };
 
 /**
