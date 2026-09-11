@@ -3776,7 +3776,8 @@ Architecture order: source-type → Table/Figure ancestry → role-only
 QLoRA → R2 → selective marked eligibility QLoRA → deterministic
 action.
 
-Freeze commit: .
+Freeze commit: `fc50a3c` (records the hash table above; this
+pointer is documentation only).
 
 Logs: `out/h1-layout/rescored-armB-marked-binary.jsonl`,
 `out/h1-layout/score-armB-marked-binary.json`.
