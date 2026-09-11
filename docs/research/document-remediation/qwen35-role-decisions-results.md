@@ -1375,8 +1375,8 @@ a digit ornament; that is not this spike.
 ## Part 7 — R2 ornament veto around role-only QLoRA
 
 **Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
-**Status:** pre-registration. R2 traced. No hybrid generate yet. Adapter
-`out/adapter-role` unchanged.
+**Status:** measured. Gates A, B, C pass. Stop. Holdout-1 evaluation
+earned, not built.
 
 Ponytail: the residual is one known ornament class. Test the existing
 deterministic exclusion before teaching the model. No retrain, no new
@@ -1483,5 +1483,103 @@ exact, and no previously safe non-heading becomes an H* retag.
 
 ### Measurements
 
-Not yet. This section is committed before the first `--r2-veto` generate.
+Adapter `out/adapter-role` was not retrained. Predicate is
+`r2_ornament` in `run.py` (`Headings.java:220`). Logs: `out/r2-07.jsonl`,
+`out/r2-probes.jsonl`.
+
+#### Gate A — predicate scope (no model)
+
+`[V]` **pass.** Zero true headings matched.
+
+| set | cards | true headings | R2 matches | heading hits |
+|---|---|---|---|---|
+| train.json (02/04/05/06/10/12) | 43 | 22 | 0 | 0 |
+| valid-07.json | 6 | 1 | 0 | 0 |
+| probes.json | 17 | 11 | 1 | 0 |
+
+The one match: `08-numeral-3`, text `"3"`, GT `P`, existing `P`, trap
+heading. Vetoing heading promotion is correct.
+
+`Q1` (train 12-q1, `07-q1`, `03-q1`) did not match — R2 is no letters, not
+isdigit. `07-h1` "Throughput Trend Analysis" did not match.
+
+#### Gate B — hybrid, fresh 07
+
+`run.py --offline --role-only --r2-veto --path valid-07.json --adapter-path out/adapter-role`
+
+`[V]` **pass.** Parse 6/6. Unsafe **0**. Role exact **6/6**. Derived-action
+**6/6**. Heading exact **1/1**. Every `r2_veto` is false. R2 changed no 07
+decision. Spike 6 preserved.
+
+#### Gate C — hybrid, frozen probes
+
+`run.py --offline --role-only --r2-veto --adapter-path out/adapter-role`
+
+`[V]` **pass.** Parse 17/17. Unsafe **0** (was 1). Role exact **15/17**.
+Derived-action **16/17**. Heading exact **10/11**. Gates `pass: true`.
+
+The only row that moved vs spike-6 adapter-alone is `08-numeral-3`.
+
+Critical card `08-numeral-3`:
+
+| | |
+|---|---|
+| R2 | match (no letters) |
+| Qwen `model_role` | **H1** (still wrong) |
+| hybrid `final_role` | **P** |
+| derived action | keep (`P` == existing `P`) |
+| unsafe | false |
+
+The model is still wrong. The safety layer prevented application.
+
+| id | expect | exist | spike 6 | hybrid | notes |
+|---|---|---|---|---|---|
+| 01-h1 | H1 | H1 | H1 | H1 | |
+| 01-h2-throughput | H2 | H2 | H2 | H2 | |
+| 01-h3-regional | H3 | H3 | H3 | H3 | held |
+| 01-h2-actions | H2 | H2 | H2 | H2 | held |
+| 01-h2-approval | H2 | H2 | H2 | H2 | |
+| 01-runhead | Artifact | none | Artifact | Artifact | |
+| 01-runfoot | Artifact | none | Artifact | Artifact | |
+| 03-h1 | H1 | H1 | H2 | H2 | only heading miss; unchanged |
+| 03-review-period | P | TH | P | P | |
+| 03-q1 | P | TH | P | P | letter present; R2 silent |
+| 08-h1 | H1 | none | H1 | H1 | |
+| 08-kicker | Artifact | none | P | P | action-ok, role-wrong |
+| 08-numeral-3 | P | P | **H1** unsafe | **P** (veto; model H1) | |
+| 11-h1-terms | H1 | P | H1 | H1 | |
+| 11-h2-eligibility | H2 | H4 | H2 | H2 | |
+| 11-h2-applying | H2 | H4 | H2 | H2 | |
+| 11-h2-contact | H2 | H4 | H2 | H2 | |
+
+All four doc-11 cards remain exact. No previously safe non-heading became
+an H* retag.
+
+### Prediction check
+
+1. Existing R2 matches `08-numeral-3` — **hit**.
+2. Existing R2 matches no known true heading — **hit**.
+3. Fresh doc 07 remains 6/6 with unsafe 0 — **hit**.
+4. Frozen probes reach unsafe 0 while retaining 10/11 heading exact — **hit**.
+5. No additional training, vision, or model capacity — **hit**.
+
+### ponytail
+
+One predicate in `run.py`, provenance `Headings.java:220`. `--r2-veto`
+keeps `model_role`. No RuleEngine, no retrain, no new cards, no Holdout 1
+extractor, no `src/` wiring.
+
+---
+
+## Stopping (spike 7)
+
+**Pass.** The smallest passing development architecture is a role-only
+QLoRA classifier plus the existing R2 ornament veto, with mutation action
+derived deterministically.
+
+The model is useful but not independently safe; one pre-existing
+deterministic exclusion handles a known class better.
+
+A minimal blind Holdout-1 evaluation bridge is now earned. Do not build
+it in this spike. Do not retrain. Do not inspect Holdout 2.
 
