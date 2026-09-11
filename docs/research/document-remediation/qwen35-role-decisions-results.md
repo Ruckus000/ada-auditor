@@ -2621,3 +2621,25 @@ rejected there, stop without spent H1.
    exact below its existing 84% result (43/51).
 6. `[H]` Holdout 2 remains sealed.
 
+### Surface A freeze (text-only, before multimodal)
+
+Mechanical smoke: `mlx-community/Qwen3.5-4B-MLX-4bit` + `out/adapter-role`
++ one `--image` in the same `generate` call parsed `{"role":"H1"}` on
+the development marked H1. That is plumbing, not a win.
+
+Development bridge dump (01/03/07/08/11): 76 cards, Qwen skipped 28
+by Part 9 Arm B, 48 text-only adapter calls. Against those five
+answer keys, text-only is heading exact **11/12**, detect 12/12,
+demotions 0, unsafe 0. The one hierarchy miss is the only mutation
+that survives source-type, ancestry, and R2:
+
+| locator | text | existing | text-only `model_role` |
+|---|---|---|---|
+| 01-simple-text:5 | Regional detail | H3 | H2 |
+
+**n = 1.** Artifact retags and R2 numeral keeps are not heading
+promotions or heading-level changes, so they are not in this set.
+Label-independent.
+
+This locator is frozen before any marked-adapter call.
+
