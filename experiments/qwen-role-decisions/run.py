@@ -217,18 +217,31 @@ def dumps_to_cards(dumps: list[dict]) -> tuple[list[dict], list[dict]]:
     return cards, failed
 
 
-def attach_probe_expect(cards: list[dict], probes: list[dict]) -> tuple[list[dict], list[str]]:
-    """Match PDF cards to exposed probe texts. First unused probe per norm wins."""
+def attach_probe_expect(
+    cards: list[dict],
+    probes: list[dict],
+    by_doc: bool = False,
+) -> tuple[list[dict], list[str]]:
+    """Match PDF cards to exposed probe texts. First unused probe per norm wins.
+
+    by_doc: probe ids `NN-...` only match locators whose stem starts with `NN`.
+    """
     by_norm: dict[str, list[dict]] = {}
     for probe in probes:
         by_norm.setdefault(text_norm(probe["text"]), []).append(probe)
     used: set[str] = set()
     matched: list[dict] = []
     for card in cards:
+        loc = str(card.get("locator") or "")
+        doc_prefix = loc.split("-", 1)[0] if loc else ""
         hits = [
             p
             for p in by_norm.get(text_norm(card["text"]), [])
             if p["id"] not in used
+            and (
+                not by_doc
+                or str(p["id"]).startswith(f"{doc_prefix}-")
+            )
         ]
         if not hits:
             continue
@@ -910,7 +923,7 @@ def emit_verify_sft(
     dumps = dump_dir(pdf_dir)
     cards, failed = dumps_to_cards(dumps)
     probes = json.loads(match_path.read_text())["cases"]
-    matched, missing = attach_probe_expect(cards, probes)
+    matched, missing = attach_probe_expect(cards, probes, by_doc=True)
     png_cache: dict[tuple[str, int], Path] = {}
     rows: list[dict] = []
     excluded: list[dict] = []
@@ -1037,7 +1050,7 @@ def eval_verify_marked(
     dumps = dump_dir(pdf_dir)
     cards, failed = dumps_to_cards(dumps)
     probes = json.loads(match_path.read_text())["cases"]
-    matched, missing = attach_probe_expect(cards, probes)
+    matched, missing = attach_probe_expect(cards, probes, by_doc=True)
     png_cache: dict[tuple[str, int], Path] = {}
     rows: list[dict] = []
     for case in matched:
@@ -1508,6 +1521,19 @@ def self_check() -> None:
     )
     assert matched[0]["id"] == "01-h1"
     assert missing == []
+    crossed, still_missing = attach_probe_expect(
+        [
+            {
+                "locator": "12-kitchen-sink:26",
+                "text": "Northern",
+                "existing_tag": "P",
+            }
+        ],
+        [{"id": "04-northern", "text": "Northern", "expect": {"role": "P"}}],
+        by_doc=True,
+    )
+    assert crossed == []
+    assert still_missing == ["04-northern"]
     hold = score_holdout(
         [
             {
