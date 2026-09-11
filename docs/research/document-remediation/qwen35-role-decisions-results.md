@@ -1063,7 +1063,8 @@ this spike.
 ## Part 6 — role-only; existing_tag withheld
 
 **Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
-**Status:** Arm B measured and failed usefulness (safety held). Arm C earned; not yet trained.
+**Status:** measured. Arm B failed usefulness (safety held). Arm C failed
+safety (usefulness would have passed). Stop.
 
 Ponytail: one variable. Does the model see `existing_tag` and predict
 action, or does it predict semantic role with action derived? Do not add
@@ -1222,12 +1223,13 @@ is earned. Safety did not regress, so the retrain is allowed.
 3. Already-correct headings stay exact — **miss**.
 4. Arm B reaches ≥9/11 so Arm C is not earned — **miss**; Arm C is earned.
 
-#### Arm C command (earned; not yet run)
+#### Arm C — one retrain (earned because Arm B failed)
 
 Same frozen `train.json` (43 cards, docs 02/04/05/06/10/12). No 07, no
 probes, no holdouts, no wrong-tag examples. SFT via `python -c` using
 `ROLE_ONLY_STEM` and `card_prompt(..., hide_existing_tag=True)`. Completions
-`{"role":"<gt>"}` only. New gitignored paths so Arm A remains comparable.
+`{"role":"<gt>"}` only. Paths `out/gen-sft-role` and `out/adapter-role`
+(gitignored) so `out/adapter-gen` stays the Arm A reference.
 
 ```
 HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
@@ -1243,10 +1245,128 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
   --output-path out/adapter-role
 ```
 
-Eval, in order, deriving action as in Arm B:
+`[V]` One run. `TRAIN_EXIT:0`. Iterations **258**. Learning rate `2.000e-05`.
+`#trainable params: 16.232448 M || all params: 4539.264 M || trainable%: 0.358%`.
+Language-side LoRA, rank 8, no vision. Loss 0.296 → **0.000178**. Peak mem
+9.707 GB. Trained tokens 45,114 (spike 4 was 56,946; completions are shorter
+because they no longer carry `action`). Adapter 62 MiB. `adapter-gen`
+untouched.
 
-```
-python run.py --offline --role-only --path valid-07.json --adapter-path out/adapter-role
-python run.py --offline --role-only --adapter-path out/adapter-role
-```
+Eval, in order, deriving action as in Arm B. Logs: `out/armc-07.jsonl`,
+`out/armc-probes.jsonl`.
+
+#### Arm C — Gate 1, fresh 07
+
+`run.py --offline --role-only --path valid-07.json --adapter-path out/adapter-role`
+
+`[V]` **pass.** Parse 6/6. Unsafe **0**. Role accuracy **6/6**. Derived-action
+accuracy **6/6**. Heading exact **1/1**. No material regression vs Arm A.
+The H1 Arm B demoted is H1 again.
+
+| id | expect | exist | Arm A | Arm B | Arm C |
+|---|---|---|---|---|---|
+| 07-h1 | H1 keep | H1 | H1 | **H2** | H1 |
+| 07-intro | P keep | P | P | P | P |
+| 07-chart-title | P retag | none | P | P | P |
+| 07-northern | P retag | none | P | P | P |
+| 07-q1 | P retag | none | P | P | P |
+| 07-cap | P keep | P | P | P | P |
+
+#### Arm C — Gate 2, known challenge
+
+`run.py --offline --role-only --adapter-path out/adapter-role`
+
+`[V]` **fail safety.** Parse 17/17. Heading exact **10/11** (meets ≥9/11).
+Role accuracy **14/17**. Derived-action accuracy **15/17**. Unsafe **1**
+(was 0). Usefulness would have passed. Safety is the hard gate, so the arm
+fails. Do not keep the hierarchy gain.
+
+| id | expect | exist | Arm A | Arm B | Arm C | notes |
+|---|---|---|---|---|---|---|
+| 01-h1 | H1 | H1 | H1 | H1 | H1 | held |
+| 01-h2-throughput | H2 | H2 | H2 | H2 | H2 | held |
+| 01-h3-regional | H3 | H3 | H3 | **P** | H3 | Arm B break restored |
+| 01-h2-actions | H2 | H2 | H2 | **P** | H2 | Arm B break restored |
+| 01-h2-approval | H2 | H2 | H2 | H2 | H2 | held |
+| 01-runhead | Artifact | none | Artifact | Artifact | Artifact | |
+| 01-runfoot | Artifact | none | Artifact | Artifact | Artifact | |
+| 03-h1 | H1 | H1 | H1 | H1 | **H2** | only heading miss |
+| 03-review-period | P | TH | P | P | P | |
+| 03-q1 | P | TH | P | P | P | |
+| 08-h1 | H1 | none | H1 | H1 | H1 | |
+| 08-kicker | Artifact | none | P | P | P | action-ok, role-wrong |
+| 08-numeral-3 | P | P | P | P | **H1** | **unsafe**; 34pt digit |
+| 11-h1-terms | H1 | P | H2 | H2 | **H1** | |
+| 11-h2-eligibility | H2 | H4 | H4 | H2 | **H2** | |
+| 11-h2-applying | H2 | H4 | H4 | P | **H2** | |
+| 11-h2-contact | H2 | H4 | H4 | P | **H2** | |
+
+Critical cards (all four exact under Arm C):
+
+- `11-h1-terms`: expected H1, predicted H1.
+- `11-h2-eligibility`: expected H2, predicted H2.
+- `11-h2-applying`: expected H2, predicted H2.
+- `11-h2-contact`: expected H2, predicted H2.
+
+Already-correct headings: Arm B's two 01 breaks returned. `07-h1` returned.
+`03-h1` is the new heading miss (H1→H2, derived `retag`).
+
+Confusion (gt→pred, misses only): `Artifact→P` 1, `H1→H2` 1, `P→H1` 1.
+Action-ok / role-wrong: `08-kicker` only. `08-numeral-3` is not in that
+bucket: derived `retag` is the wrong mutation *because* the role is wrong.
+
+The H4 keep-magnet is gone on this adapter. Doc-11 hierarchy is not the
+residual. The residual is the digit ornament spike 4 had already cleared
+(`08-numeral-3`, existing `P`, 34pt bold `"3"`). Arm B hid the tag on the
+*same* spike-4 adapter and still predicted `P`, so inference-time
+`existing_tag` is not what refuses this trap. The unsafe promotion appears
+only after the role-only retrain. The training contract change is the
+variable that revived it.
+
+Targeted H4-vs-H2 training data is **not** earned: the four critical cards
+are exact. Holdout 1 is **not** earned: safety failed. No second retrain.
+
+### Prediction check (this spike)
+
+1. Withholding `existing_tag` does not revive unsafe promotions — **hit on
+   Arm B, miss on Arm C** (08-numeral-3).
+2. Doc 11 H4 keep-magnet was the tag; Arm B predicts H2 on the three H4
+   cards — **partial miss on B**; **hit on C** (all three H2, and the H1).
+3. Already-correct headings stay exact — **miss on B**; **partial on C**
+   (`03-h1` H1→H2).
+4. Arm B reaches ≥9/11 so Arm C is not earned — **miss**; Arm C was earned
+   and then failed the safety gate.
+
+### ponytail
+
+`run.py --role-only` (already committed before Arm B generate) + this file.
+SFT emitted with `python -c` from frozen `train.json`. One upstream
+`mlx_vlm.lora` into gitignored `out/adapter-role`. No trainer, no dataset
+module, no vision, no Holdout 1 path, no rank sweep, no wrong-tag examples,
+no second retrain after the unsafe promotion.
+
+---
+
+## Stopping (spike 6)
+
+**Fail — safety on Arm C.** The cheaper hypothesis is only half-true.
+
+Arm B: hiding the current tag from the tag-trained adapter does **not**
+meet the gates. Usefulness fell. Safety held. The adapter was using
+`existing_tag`.
+
+Arm C: training the same 43 cards as a role classifier, with action derived,
+clears doc 11 (10/11 heading exact, all four critical cards) and restores
+fresh 07, **and** promotes `08-numeral-3` to H1. Zero-unsafe is the hard
+gate. Do not trade it for hierarchy.
+
+`existing_tag` is mutation state, not semantic evidence. Withholding it at
+inference (Arm B) does not meet the gates. Retraining without it (Arm C)
+clears the hierarchy the tag had magnetized and fails safety on a trap the
+tag-trained adapter refused even when the tag was hidden. Adding H4-vs-H2
+examples would climb a rung that already held. Stop.
+
+Holdout 1 is not earned. Do not inspect Holdout 2. A later spike may ask
+what information besides the current tag distinguishes a true heading from
+a digit ornament; that is not this spike.
 
