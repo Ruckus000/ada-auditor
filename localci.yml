@@ -58,10 +58,20 @@ suite:
   - npm run test:browser
   # The same store contract the unit suite runs against an in-memory double,
   # this time against real Postgres -- the only thing that catches the two
-  # drifting apart. Skipped without a DATABASE_URL, exactly as CI skips it, so
-  # that a machine without the Neon branch configured is not permanently red.
-  # localci reads DATABASE_URL from a git-ignored .env in this directory.
-  - if [ -n "$DATABASE_URL" ]; then npm run migrate && npm run test:db; else echo "DATABASE_URL not set - Postgres store contract skipped"; fi
+  # drifting apart. Skipped without the branch configured, exactly as CI skips
+  # it, so that a machine without one is not permanently red.
+  #
+  # It reads `.env.test.local`, NOT the `.env` localci injects. That is
+  # deliberate and it is the safety property: `.env` here is whatever somebody
+  # pulled from Vercel, which is production, and three of the contract's cases
+  # call store methods that take no scope. One of them blanked production
+  # evidence pointers the first time this step ever actually ran. See
+  # `vitest.db.config.ts`.
+  #
+  # `migrate` reads DATABASE_URL, so it is pointed at the branch explicitly --
+  # same shape as the `CHAOS_ENABLED=true` prefix above, no new capability
+  # asked of the engine. Without it the schema would be applied to production.
+  - if [ -f .env.test.local ]; then set -a; . ./.env.test.local; set +a; DATABASE_URL="$DATABASE_URL_TEST" npm run migrate && npm run test:db; else echo ".env.test.local not present - Postgres store contract skipped"; fi
   # The document stages against a real JVM. Guarded exactly like the Postgres
   # step above and for the same reason: a machine without a JDK should not be
   # permanently red over a subsystem it cannot run. The build now happens

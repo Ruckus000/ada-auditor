@@ -25,7 +25,8 @@ Required for Phase 1 Vercel control plane operation.
 | `AUDITOR_EXPECT_TIMEOUT_MS` | No | How long an `expect` step may wait for the URL or selector it declares. Default 30000, deliberately longer than `AUDITOR_STEP_TIMEOUT_MS`. The ten-second figure above is justified by the page having already arrived; an expectation is the opposite case — it usually follows a click and spans the arrival itself, which is the reason the step exists. Capping that at an interaction-scale number is the mistake `page.goto` is deliberately kept away from. |
 | `AUDITOR_RUN_STALE_SECONDS` | No | How long a run may sit in `running` before it is treated as abandoned. Default 360 — `maxDuration` plus a minute of grace. A run whose function times out or crashes never gets to overwrite its own row, so without this a dead run is displayed as "scanning" forever. Derived on read so screens are honest immediately, and written back durably by the hourly tick. |
 | `CHAOS_ENABLED` | No | Set to `true` to allow chaos scenario injection via API (`chaosScenario` body field) and to run `npm run chaos`. Default: disabled. Preview only recommended. |
-| `DATABASE_URL` | Yes | Neon Postgres connection string, injected by the Vercel Marketplace integration (`vercel integration add neon`). The run store needs it everywhere, including locally — there is no filesystem fallback, because one would mean a misconfigured deploy quietly writing runs to a disk that disappears with the invocation. Apply the schema with `npm run migrate`. |
+| `DATABASE_URL` | Yes | Neon Postgres connection string, injected by the Vercel Marketplace integration (`vercel integration add neon`). The run store needs it everywhere, including locally — there is no filesystem fallback, because one would mean a misconfigured deploy quietly writing runs to a disk that disappears with the invocation. Apply the schema with `npm run migrate`. The store contract does **not** use it — see `DATABASE_URL_TEST`. |
+| `DATABASE_URL_TEST` | For `npm run test:db` | The database the store contract is allowed to touch. Lives in `.env.test.local`, not `.env.local`, and must be a **dedicated Neon branch, never production**. `vitest.db.config.ts` refuses without it and never loads `.env.local`, so production's connection string is not in that process at all. Three contract cases call store methods that take no scope — `clearArtifactsBefore`, `reconcileStaleRuns`, `claimDueJourneys`. |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | No | Upstash Redis REST credentials. The console sign-in throttle and the run budget both count here. Unset means both count in process memory, which on serverless resets on every cold start and is per-instance — so the effective run ceiling becomes the limit times however many instances are warm, and the throttle is a speed bump rather than a limit. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | No | Alternate Upstash env names; accepted if `KV_REST_API_*` is unset. |
 | `BLOB_READ_WRITE_TOKEN` | Required on Vercel | Vercel Blob credentials, for run evidence (screenshot, DOM snapshot, accessibility tree). Unset means artifacts stay on local disk — fine locally and in CI, but on serverless the filesystem disappears with the invocation, so evidence would be unreachable. `/api/ready` warns (`evidence_storage_not_configured`) rather than failing, and the warning matters more than it looks: a page's evidence is judged complete from its *local* paths, so an unconfigured store still produces runs reporting `evidenceStatus: 'complete'` whose evidence answers 410 forever after. Provision with `vercel blob create-store <name> --access private` and the token is injected automatically. **The store must be private**: this evidence is authenticated pages on a client's system, and uploads are written with `access: 'private'` — a public store would leave the stored URL as the only thing protecting it. |
@@ -85,9 +86,45 @@ openssl rand -hex 32  # if you need a separate preview value, or reuse the same:
 vercel env pull .env.local
 ```
 
-Do **not** symlink env files — Vercel stores secrets in the cloud; `vercel env pull` is the sync.
+Do **not** symlink env files — Vercel stores secrets in the cloud; `vercel env pull` is the sync. `.env.test.local` is the one
+env file Vercel does not manage — nothing provisions the test branch — so it
+is written by hand and survives a pull.
 
 ## Persistence
+
+### The database the tests may touch
+
+`npm run test:db` runs the shared store contract against real Postgres, and it
+does **not** use `DATABASE_URL`. Point it at a dedicated Neon branch:
+
+```bash
+# 1. create a branch — Neon console, or:  neonctl branches create --name auditor-test
+# 2. write it down where `vercel env pull` will not overwrite it
+echo 'DATABASE_URL_TEST="postgres://…branch…"' >> .env.test.local
+# 3. apply the schema to the branch (migrate reads DATABASE_URL)
+DATABASE_URL="$DATABASE_URL_TEST" npm run migrate
+```
+
+The reason is not the rows the suite writes — those carry a per-process
+`contract-`/`pc-` prefix and are cleaned up, and that part works. It is the
+three cases that call store methods taking **no scope**, which therefore
+mutate rows the suite never wrote:
+
+| Method | What it does to rows it did not write |
+|---|---|
+| `clearArtifactsBefore` | Blanks `run_pages.artifacts` for **every** run past the cutoff. On 2026-09-11 it blanked three production runs' evidence pointers — the 30-day band of a 90-day retention |
+| `reconcileStaleRuns` | Flips **every** `running` row to `failed` / `run_timed_out` |
+| `claimDueJourneys` | Stamps `journeys.last_scheduled_at`, so the next real cron tick skips that client's scheduled audit |
+
+The first two are now pinned to 1970 cutoffs inside the contract and cannot
+reach a real row whatever they are pointed at. `claimDueJourneys` matches on an
+hour of the day and has no out-of-range value, so the branch is the only thing
+between it and a silently missed audit.
+
+What this guarantees, precisely: the suite cannot pick up production **by
+accident**. It is not proof against deliberately pasting the production string
+into `.env.test.local`.
+
 
 **Neon Postgres, everywhere.** `createRunStore()` throws without `DATABASE_URL`
 rather than falling back, so a misconfigured deploy fails where someone can see

@@ -608,12 +608,23 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
    * so against Postgres it corrects every abandoned run in the database — the
    * same caveat this file already records for `listClients`/`listEvents`, and
    * the same consequence: assert with `toBeGreaterThanOrEqual`, never an exact
-   * count. Correcting real abandoned rows is the sweep doing its job, which is
-   * also why the CI job points at a dedicated Neon branch and not production.
+   * count.
+   *
+   * **The fixtures sit in 1970 so the cutoff cannot reach a row anybody
+   * cares about.** The method is unscoped and cannot be narrowed, but the
+   * *cutoff* is ours to choose, and a sweep of everything older than 1970-01-03
+   * is a sweep of exactly this test's rows. The claim — abandoned corrected,
+   * finished left alone — is unchanged. `clearArtifactsBefore` below is narrowed
+   * the same way and for the same reason; `claimDueJourneys` in the platform
+   * contract has no such escape, because it matches on an hour of the day and
+   * no hour is out of range. That one is why `vitest.db.config.ts` refuses to
+   * run against anything but a dedicated Neon branch.
    */
   it('sweeps abandoned runs and reports how many it corrected', async () => {
     const store = await makeStore();
-    const longAgo = new Date(Date.now() - 3 * RUN_STALE_AFTER_MS).toISOString();
+    const longAgo = '1970-01-02T00:00:00.000Z';
+    // Everything older than 1970-01-03 — a window no real run falls inside.
+    const sweepOlderThanMs = Date.now() - Date.parse('1970-01-03T00:00:00.000Z');
 
     await store.saveRun(
       runRecord({ requestId: `${CONTRACT_PREFIX}-sweep-a`, status: 'running', createdAt: longAgo, startedAt: longAgo }),
@@ -622,7 +633,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
       runRecord({ requestId: `${CONTRACT_PREFIX}-sweep-b`, status: 'complete', createdAt: longAgo, startedAt: longAgo }),
     );
 
-    expect(await store.reconcileStaleRuns(RUN_STALE_AFTER_MS)).toBeGreaterThanOrEqual(1);
+    expect(await store.reconcileStaleRuns(sweepOlderThanMs)).toBeGreaterThanOrEqual(1);
     // A finished run is not touched, whatever its age.
     expect((await store.getRun(`${CONTRACT_PREFIX}-sweep-b`))?.status).toBe('complete');
   });
@@ -637,7 +648,10 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
    */
   it('clears artifact pointers for runs older than the cutoff', async () => {
     const store = await makeStore();
-    const old = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+    // 1970, with a 1971 cutoff below: unscoped like the sweep above, so the
+    // cutoff is the only thing keeping it off real evidence. It blanked three
+    // production runs' artifact pointers once, when this read `now - 30 days`.
+    const old = '1970-01-02T00:00:00.000Z';
 
     await store.saveRun(
       runRecord({
@@ -655,9 +669,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
       }),
     );
 
-    const cleared = await store.clearArtifactsBefore(
-      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    );
+    const cleared = await store.clearArtifactsBefore('1971-01-01T00:00:00.000Z');
 
     expect(cleared).toBeGreaterThanOrEqual(1);
     // Absent, not empty: the page never had evidence as far as anyone reading
@@ -685,9 +697,7 @@ export function runStoreContract(makeStore: () => Promise<RunStore> | RunStore):
       }),
     );
 
-    await store.clearArtifactsBefore(
-      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    );
+    await store.clearArtifactsBefore('1971-01-01T00:00:00.000Z');
 
     expect((await store.getRun(`${CONTRACT_PREFIX}-fresh`))?.pages?.[0]?.artifacts).toEqual({
       screenshotUrl: 'https://blob.test/fresh.png',

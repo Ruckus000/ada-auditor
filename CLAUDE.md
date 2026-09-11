@@ -63,7 +63,7 @@ and `build` must be green before claiming done.
 | `npm test` | `vitest.config.ts` | fast unit suite — 103 files under `tests/` | nothing (no browser, no socket) |
 | `npm run test:browser` | `vitest.browser.config.ts` | `tests/integrations/browser/**` | Chromium (`npm run playwright:install`) |
 | `npm run test:hydration` | `vitest.hydration.config.ts` | drives the **built** app under `next start`, runs a real audit, asserts pages hydrated | `npm run build` first, and `npm run build:documents` — two cases drive the Java stages through the app |
-| `npm run test:db` | `vitest.db.config.ts` | `postgres-*.test.ts` — the store contract against real Neon | `DATABASE_URL`, `npm run migrate` |
+| `npm run test:db` | `vitest.db.config.ts` | `postgres-*.test.ts` — the store contract against real Neon | `DATABASE_URL_TEST` in `.env.test.local` — a **dedicated Neon branch, never production** — and the schema applied to it |
 | `npm run test:documents` | `vitest.documents.config.ts` | `java-*.test.ts` — the document stages against a real JVM | JDK 17+, `npm run build:documents` |
 | `npm run chaos` | `scripts/chaos.ts` | steady-state assertions | `CHAOS_ENABLED=true` (hard-fails without it) |
 
@@ -102,6 +102,16 @@ non-zero exit blocks the push. The rest of the suite runs detached afterwards
 and reports as a commit status. `localci.yml` deliberately mirrors
 `.github/workflows/ci.yml` minus `npm ci`, which would wipe the tree you are
 working in.
+
+**`localci` runs in the directory registered in `~/.localci/projects.json` —
+the main checkout — whatever directory you invoke it from.** In a worktree
+that means `localci suite` reports on a tree that is not the one you are
+editing, and it reports green. The tell is small and you have to be looking
+for it: a run whose `npm test` line said 2334 tests against a worktree holding
+2339, and the five missing ones were the change under review. To gate a
+worktree, run the steps directly (`npm test`, `npm run build`, …) — and note
+the suite serialises on a lock, so a run started elsewhere silently delays
+yours rather than failing.
 
 Lint is first in both because it is the cheapest failure and the only gate that
 runs the React Compiler rules — `eslint-config-next` has sixteen `react-hooks/*`
@@ -192,6 +202,18 @@ not in one implementation.
   `toContain`, never `toEqual`/`toHaveLength`, and build every identity from
   `CONTRACT_PREFIX` / `PLATFORM_PREFIX` — never a literal, because
   `operators.email` is unique and a literal collides outright.
+- **Prefixes do not make that suite safe, and for months nothing said so.**
+  They confine the rows it *inserts*. Three of its cases call store methods
+  that take no scope and mutate rows it never wrote: `clearArtifactsBefore`
+  blanks `run_pages.artifacts` for every run past the cutoff,
+  `reconcileStaleRuns` flips every `running` row to `failed`, and
+  `claimDueJourneys` stamps `last_scheduled_at` so the next real cron tick
+  skips that client's audit. `ci.yml` asked for a dedicated Neon branch and
+  nothing enforced it, so locally the suite ran against the production
+  `.env.local` and blanked three runs' evidence pointers. The first two are
+  now pinned to 1970 cutoffs in the contract and cannot reach a real row; the
+  third cannot be narrowed, so `vitest.db.config.ts` refuses without
+  `DATABASE_URL_TEST` and never loads `.env.local` at all.
 - **eslint ignores `.claude/**`** because agent worktrees live there, each a
   full checkout with its own `.next`; without it one stale worktree turned 22
   real problems into 38,846.

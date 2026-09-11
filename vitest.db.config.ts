@@ -1,15 +1,28 @@
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 import { loadEnvLocal } from './scripts/load-env';
+import { requireTestDatabaseUrl } from './scripts/require-test-database';
 
 /**
  * Database-backed tests.
  *
  * Separate from the unit suite for the same reason the browser suite is: these
  * need credentials and a network round trip, and a fast suite that sometimes
- * needs the internet stops being run. `vitest` does not read `.env.local`, so
- * the config loads it — otherwise `DATABASE_URL` is undefined and every test
- * fails somewhere far from the cause.
+ * needs the internet stops being run.
+ *
+ * **It reads `.env.test.local`, not `.env.local`, and that is the whole
+ * safety property.** Three cases in the store contract call methods that take
+ * no scope — `clearArtifactsBefore`, `reconcileStaleRuns`, `claimDueJourneys`
+ * — so they mutate rows the suite never wrote. `clearArtifactsBefore` has
+ * already blanked production evidence pointers once. Never loading
+ * production's `DATABASE_URL` into this process is a stronger guarantee than
+ * loading it and then checking it, and `.env.test.local` is not a file
+ * `vercel env pull` rewrites, so the setting survives a routine pull.
+ *
+ * `DATABASE_URL_TEST` is resolved by `scripts/require-test-database.ts` and
+ * handed to the suites as `DATABASE_URL` through `test.env` below, so the
+ * three `postgres-*.test.ts` files read one variable and know nothing about
+ * any of this.
  *
  * Runs serially: the suite shares one database, and parallel files would
  * delete each other's rows between a write and the read that checks it.
@@ -28,7 +41,16 @@ import { loadEnvLocal } from './scripts/load-env';
  * test, short enough that a query which will never come back does not hold the
  * suite for minutes.
  */
-loadEnvLocal();
+loadEnvLocal(process.cwd(), '.env.test.local');
+
+const database = requireTestDatabaseUrl(process.env);
+if (!database.ok) {
+  // `console.error` + `exit`, not `throw`: this is a configuration fault, and
+  // a stack trace wrapped around it buries the instructions. Matches
+  // `scripts/migrate.ts`.
+  console.error(database.message);
+  process.exit(1);
+}
 
 export default defineConfig({
   resolve: {
@@ -39,6 +61,8 @@ export default defineConfig({
   test: {
     include: ['tests/integrations/persistence/postgres-*.test.ts'],
     environment: 'node',
+    // The suites read `DATABASE_URL`; only this line ever sets it for them.
+    env: { DATABASE_URL: database.url },
     fileParallelism: false,
     sequence: { concurrent: false },
     testTimeout: 20_000,

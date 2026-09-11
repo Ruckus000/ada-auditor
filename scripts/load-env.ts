@@ -10,11 +10,17 @@ import { join } from 'node:path';
  *
  * Values already present in the real environment win, so CI — which injects
  * variables rather than writing a file — is unaffected.
+ *
+ * `file` exists for exactly one caller. `vitest.db.config.ts` passes
+ * `.env.test.local`, because the store contract must not have production's
+ * `DATABASE_URL` in its process **at all** — three of its cases call store
+ * methods that take no scope and mutate rows the suite did not write. Not
+ * loading the variable is a stronger guarantee than checking it afterwards.
  */
-export function loadEnvLocal(cwd = process.cwd()): void {
+export function loadEnvLocal(cwd = process.cwd(), file = '.env.local'): void {
   let raw: string;
   try {
-    raw = readFileSync(join(cwd, '.env.local'), 'utf8');
+    raw = readFileSync(join(cwd, file), 'utf8');
   } catch {
     return;
   }

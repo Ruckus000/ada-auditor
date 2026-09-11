@@ -127,10 +127,23 @@ jobs:
     # access to it, and a job that fails for everyone outside the repo trains
     # people to ignore red.
     #
-    # Point the secret at a dedicated Neon branch, NOT at production. The
-    # contract writes and deletes rows; it namespaces them under `contract-%`
-    # and cleans up after itself, but a test suite with delete rights on the
-    # database holding real client evidence is a blast radius nobody needs.
+    # Point the secret at a dedicated Neon branch, NOT at production. That was
+    # a request here for months and nothing enforced it, so locally it was
+    # simply never followed: `.env.local` is a `vercel env pull` of production,
+    # and the suite ran against it. `vitest.db.config.ts` now refuses without
+    # `DATABASE_URL_TEST` and never loads the file carrying production's
+    # `DATABASE_URL` — which is also why this secret is named
+    # `DATABASE_URL_TEST` rather than `DATABASE_URL`: under the old name an
+    # org- or repo-level production value could be inherited into it.
+    #
+    # The reason is not only that the contract writes and deletes its own rows,
+    # which prefixes already handle. Three of its cases call store methods that
+    # take no scope at all — `clearArtifactsBefore`, `reconcileStaleRuns` and
+    # `claimDueJourneys` — so they mutate rows the suite never wrote. The first
+    # two are now pinned to 1970 cutoffs in the contract itself and cannot
+    # reach a real row; `claimDueJourneys` matches on an hour of the day and
+    # cannot be narrowed, so the branch is what stands between it and a
+    # client's scheduled audit being silently skipped.
     name: Database store contract
     runs-on: ubuntu-latest
     # Parallel again, and safe because the rows are namespaced rather than
@@ -150,7 +163,7 @@ jobs:
     # that still matches the shared prefix and so is the one part that could
     # bring the blast radius back.
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -159,8 +172,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Apply schema and run the store contract
-        if: env.DATABASE_URL != ''
-        run: npm run migrate && npm run test:db
+        if: env.DATABASE_URL_TEST != ''
+        # `migrate` reads DATABASE_URL, so it is pointed at the branch
+        # explicitly. Without the prefix the schema would be applied to
+        # whatever DATABASE_URL happens to be — the same trap one layer down.
+        run: DATABASE_URL="$DATABASE_URL_TEST" npm run migrate && npm run test:db
       - name: Report that the contract was skipped
-        if: env.DATABASE_URL == ''
-        run: echo "::warning::DATABASE_URL not set — the Postgres store contract did not run."
+        if: env.DATABASE_URL_TEST == ''
+        run: echo "::warning::DATABASE_URL_TEST not set — the Postgres store contract did not run."
