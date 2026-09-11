@@ -3977,6 +3977,136 @@ Frozen-object hashes unchanged from Gate 0 / Part 16. `run.py`
 `096f83e1…`. Adapters untouched.
 
 Every evaluable candidate received an architectural decision. Labels
-still closed.
+were still closed at freeze commit `7427413`. SHA-256 re-checked
+immediately before scoring: still `75cf5222…`. Predictions were not
+regenerated.
+
+### Labels opened — scoring
+
+`--score-holdout out/h2/predictions.frozen.jsonl --gt-dir holdout2`.
+Same Part-8 definitions. `run.py` not modified.
+
+#### Execution `[V]` pass
+
+Every evaluable candidate received a decision. Role parse 108/108.
+Verifier parse 18/18. Bridge failures 3 empty-text figures, reported
+separately, not as model abstentions. Scoring is possible. Not
+Outcome E.
+
+#### Safety — **fail** (hard gate) → Outcome B
+
+Final unsafe retags: **3**.
+
+| stage | unsafe retags |
+|---|---|
+| role-model-only | 7 |
+| after source-type / ancestry | 7 |
+| after R2 | 7 (R2 never matched on this corpus) |
+| after marked verifier (final) | **3** |
+
+The marked verifier blocked 4 of the 7 role-model mutations. It does
+not get credit for the 3 it allowed. Structural scope did not remove
+any of these 7. R2 did not remove any.
+
+| locator | text | exist | model | verify | final | mechanism |
+|---|---|---|---|---|---|---|
+| k07:0 | `VaccineStSoIhcnikfnMlPgaunlteeernusizmxao` | H1 | H2 | true | H2 retag | bridge / segmentation: rotated column headers collapsed into one glyph-soup block that ODL already tagged H1; verifier false-positive |
+| k07:21 | `tSoIhcnikfnMlPgaunlteeernus` | P | H1 | true | H1 retag | same rotated-header collapse; a leftover fragment promoted; verifier false-positive |
+| k16:43 | Episode | H1 | H2 | true | H2 retag | role classification: glossary term, not in `headingHierarchy`; verifier false-positive |
+
+k07’s GT heading `Vaccine Stock Matrix` is unmatched (below): one
+extraction failure produces both an unmatched heading and two unsafe
+retags. Do not patch. Do not re-run.
+
+#### Verifier vs revealed GT
+
+18 invocations. `verification_failure` 0.
+
+| | n | `heading:true` | `heading:false` |
+|---|---|---|---|
+| GT-heading verifier calls | 11 | 9 | **2** |
+| GT-nonheading verifier calls | 7 | 3 FP | 4 TN |
+
+Verifier-caused genuine-heading vetoes: **2**. Hard architecture
+requirement was 0. Outcome C also fails.
+
+* `k14:3` `backlog.` — GT heading `Backlog` (H2). Existing P, model H3,
+  verifier false, final P keep. **Detection demotion.**
+* `k16:6` `Position at year end` — GT H3. Existing H1, model H2,
+  verifier false, final H1 keep. H→H level change blocked; still
+  detected as a heading (H1 vs wanted H3).
+
+The four true-negative blocks (not counted as unsafe): `k01:7` Ward
+(kept existing H3), `k07:19` and `k07:20` rotated-header debris
+(kept P), `k13:3` Low (kept P). Prediction 7 is confirmed: the
+verifier made safety-relevant blocks. It also harmed true headings.
+
+#### Usefulness — **fail** → Outcome D also
+
+GT headings **28/40** exact (70%, bar was ≥80%). Detection **36/40**.
+Demotions **3**. Hierarchy confusion **8**. Unmatched **1**.
+
+| want \ got | H1 | H2 | H3 | P | LI |
+|---|---|---|---|---|---|
+| H1 | 15 |  |  |  |  |
+| H2 | 3 | 13 |  | 2 | 1 |
+| H3 | 1 | 3 |  |  |  |
+| H4 |  | 1 |  |  |  |
+
+Demotions: `k11:9` Lighting (existing LI, source-type skip), `k11:11`
+The mark itself (existing P, role kept P), `k14:3` Backlog (verifier
+veto). Unmatched: k07 `Vaccine Stock Matrix` (rotated-header
+extraction; no card text matched).
+
+Predicting-no-headings did not occur: 36/40 still detected.
+
+#### Pre-existing bad headings kept (not unsafe retags)
+
+**4.** Mutation-safety goalpost unchanged.
+
+| locator | text | exist | action |
+|---|---|---|---|
+| k01:4 | Uptake by Ward, 2026 | H2 | keep |
+| k01:7 | Ward | H3 | keep (verifier blocked H2) |
+| k12:2 | Episode | H2 | keep |
+| k12:6 | Breach | H2 | keep |
+
+These are upstream tagger headings the architecture declined to
+mutate. They are not the registered unsafe-retag failures.
+
+#### R2
+
+Matches **0**. True-heading collisions **0**. No letters-without-letters
+ornaments in this corpus. Gate holds; R2 contributed nothing to safety
+here.
+
+### Predictions scored
+
+1. `[H]` Executes without a bridge/parse failure that prevents scoring.
+   **Confirmed.**
+2. `[H]` Structural scope removes a substantial ineligible share.
+   **Confirmed** (426/534).
+3. `[H]` Final unsafe retags are zero. **Miss** (3).
+4. `[H]` Marked verifier vetoes zero genuine headings. **Miss** (2).
+5. `[H]` Exact heading-level accuracy ≥80%. **Miss** (28/40).
+6. `[H]` R2 has zero true-heading collisions. **Confirmed.**
+7. `[H]` Marked verifier makes at least one safety-relevant decision.
+   **Confirmed** (4 of 7 model-unsafe blocked). Informative only.
+8. `[H]` No retraining, prompt change, crop, heuristic, or larger
+   model. **Confirmed.**
+
+### Stop — Outcome B
+
+Any final unsafe retag. Holdout 2 is spent. The frozen Qwen3.5-4B
+hybrid did **not** remain safe on an untouched second holdout through
+the real PDF bridge.
+
+Outcome C also holds (verifier harmed two genuine headings) and
+Outcome D also holds (28/40 exact). They are reported, not used to
+open a second run. No Part 17B. No patch. No prompt/marker/crop.
+No text-verifier fallback. No production integration.
+
+Part 16 remains spent diagnostic evidence. It is not independent
+validation. This Holdout-2 evaluation is.
 
 
