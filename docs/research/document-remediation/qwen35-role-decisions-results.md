@@ -1753,3 +1753,92 @@ the hybrid. Do not retune.
 
 Holdout 1 becomes spent evidence once scored. One blind run.
 
+### Measurements (one blind run, after freeze)
+
+Predictions frozen before labels were opened.
+
+| | |
+|---|---|
+| freeze commit (bridge + gates) | `e961473` |
+| hash recorded | `8dc6db1` |
+| predictions SHA-256 | `4ec2198a7216d979edd1e5e20deda5ee07f1a819e95c47ec970a4568deb4fe17` |
+| path | gitignored `experiments/qwen-role-decisions/out/h1/predictions.frozen.jsonl` |
+| command | `run.py --dump-dir out/holdout-tagged --out-dir out/h1 --predict --offline --role-only --r2-veto --adapter-path out/adapter-role` |
+
+ODL tagged 16/16 Holdout-1 PDFs. Cards.java selected 444 evaluable BLOCK
+elements. Bridge failures: 3 empty-text figures on `h04` (not abstentions).
+Parse **444/444**. Derived action **444/444** (deterministic). No GT fields
+in the prediction artifact.
+
+#### Execution
+
+A decision for every evaluable candidate. `model_role` / `r2_match` /
+`final_role` distinct. Bridge failures reported separately.
+
+#### Safety — **fail** (hard gate)
+
+Final unsafe promotions: **17**. Model-only unsafe: **18**. R2 prevented
+one (`h01-big-text-not-heading:7`, text `£680`, model H2 → final P).
+
+| locator | text | exist | model | final | class |
+|---|---|---|---|---|---|
+| h05:0,7,8,11 | `R` / `e` / `R` / `y` | Figure | H1/H2 | same | extraction: logo glyphs as text; R2 silent (they are letters) |
+| h14:4 | `R` | Figure | H2 | H2 | same Figure-letter leak |
+| h06:14 | Depot Staff Vehicles | P | H2 | H2 | table header row (represented in train 03; model failed) |
+| h07:3 | Depot | P | H2 | H2 | table header cell |
+| h07:6–9 | `H1` / `H2` / `H1` / `H2` | P | H2 | H2 | three-level table headers whose *text* is the token H1/H2 |
+| h08:3,120 | Registration | P | H2 | H2 | repeating table column header across pages |
+| h09:8 | Notice to berth holders… | P | H2 | H2 | spanning banner; needs layout |
+| h11:4 | Berth Occupancy by Month | H1 | H2 | H2 | chart title (doc attack: chart labels as headings) |
+| h11:7 | Month of year | P | H2 | H2 | chart axis label |
+| h13:1 | COMMERCIAL IN CONFIDENCE | H2 | H1 | H1 | classification stamp above the real H1 |
+
+Five of seventeen are single-letter Figure leftovers. Eight are table
+headers ODL emitted as `P`. Two are chart furniture. One is a banner. One
+is a stamp. None is the letter-less ornament R2 covers.
+
+Do not add a veto in this spike.
+
+#### Usefulness (would have passed if safety had)
+
+GT headings **43/51** exact (84%). Detection **47/51**. Demotions **0**.
+Hierarchy confusions **4**: h02 H1→H2; h12 Purpose H2→H1; h16
+Discrepancies H3→H2; h16 Segregation H3→H2. Unmatched **4**, all h02
+body-sized headings: ODL merged each heading with the following sentence
+into one `P`, so no card existed to score (bridge miss, not a model
+abstention). Predicting-no-headings did not occur.
+
+Final role **422/444**. R2 matches **152**, **0** true-heading collisions
+(almost all `h08` table numbers).
+
+#### Prediction check
+
+1. Real PDF path reproduces required inputs — **hit** (on development;
+   Holdout 1 dump also emitted font/weight/text/neighbors).
+2. Bridge preserves development result — **hit** (10/11, unsafe 0).
+3. Zero unsafe on Holdout 1 — **miss**.
+4. Heading exact ≥80% — **hit** (43/51).
+5. R2 no true-heading collision — **hit**.
+6. No retrain / vision / new veto / larger model — **hit** (none added).
+
+### ponytail
+
+Cards.java + `run.py --dump-dir/--predict/--score-holdout`. No production
+tagger, no `src/` wiring, no new veto, adapter untouched. Holdout 2 not
+opened.
+
+---
+
+## Stopping (spike 8)
+
+**FAIL — safety.** The frozen Qwen3.5-4B role-only QLoRA + R2 hybrid did
+not remain safe on blind Holdout 1 when driven from real PDF extraction.
+
+Usefulness and R2's no-letter predicate both held. Safety did not. The
+17 unsafe retags are not the development numeral class: they are figure
+glyph leaks, table headers, chart furniture, a spanning banner, and a
+classification stamp.
+
+Holdout 1 is spent. Do not retrain against it. Do not add another veto
+in this spike. Do not inspect Holdout 2.
+
