@@ -726,6 +726,44 @@ describe('the flat-ODF fallback, for legacy .doc', () => {
     expect(truth.language).toBe('cy-GB');
   });
 
+  it('does NOT count a list item that only wraps a nested list', () => {
+    // `[V]` r02, and the whole of its 43→42. ODF represents a list that starts
+    // INDENTED as an outer list holding one item whose only child is the real
+    // list — a structural wrapper carrying no text, no paragraph and nothing a
+    // screen reader could announce. The export emits no `LI` for it, correctly,
+    // because there is no content to tag.
+    //
+    // Counted, it read as a delivered document that had dropped an item. r02
+    // carries exactly one, and 43 − 1 = 42 is exactly what was delivered.
+    const truth = sourceTruthFromFodt(
+      fodt(
+        // The wrapper: an item that is nothing but a nested list.
+        '<text:list><text:list-item>' +
+          '<text:list><text:list-item><text:p>a</text:p></text:list-item>' +
+          '<text:list-item><text:p>b</text:p></text:list-item></text:list>' +
+          '</text:list-item></text:list>',
+      ),
+      null,
+    );
+    if (!truth.readable) throw new Error('expected readable');
+    expect(truth.listItems).toBe(2);
+  });
+
+  it('still counts an item that has its own content AND a nested list', () => {
+    // The guard must not swallow a real item that happens to have a sublist —
+    // r02's other single-item list is exactly this, and it IS delivered.
+    const truth = sourceTruthFromFodt(
+      fodt(
+        '<text:list><text:list-item><text:p>parent</text:p>' +
+          '<text:list><text:list-item><text:p>child</text:p></text:list-item></text:list>' +
+          '</text:list-item></text:list>',
+      ),
+      null,
+    );
+    if (!truth.readable) throw new Error('expected readable');
+    expect(truth.listItems).toBe(2);
+  });
+
   it('counts framed images and the descriptions on them', () => {
     const truth = sourceTruthFromFodt(
       fodt(

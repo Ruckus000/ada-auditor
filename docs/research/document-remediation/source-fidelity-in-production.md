@@ -670,3 +670,58 @@ not fixed**: a fix would have to detect a `<text:h>` nested inside a
 43→42, so whatever costs it one item, it is not a heading counted twice. That
 remains open, and remains the one genuine unexplained discrepancy in this
 corpus.
+
+# r02 chased, 2026-09-11 — a structural wrapper, not a lost item
+
+The one discrepancy the correction above left open. It is the same class as the
+other two, a third time: **the source reader counting something structural as
+content.**
+
+## What it was
+
+r02's flat ODF carries 13 lists and 43 `text:list-item`; the delivered PDF
+carries 12 lists and 42 items. Not one item missing from a list — one whole
+single-item list missing.
+
+Two of the 13 source lists hold exactly one item, and they are not the same
+shape:
+
+| list style | the item's children | its own text | nested |
+|---|---|---:|---|
+| `WW8Num3` | `[text:list]` | **0 chars** | a 6-item list |
+| `WW8Num4` | `[text:p, text:list]` | 40 chars | a 2-item list |
+
+`WW8Num3`'s item is nothing but a nested list. That is how ODF represents a
+list which starts **indented** — an outer wrapper with no parent bullet. It has
+no paragraph, no text, and nothing a screen reader could announce, so the
+export emits no `LI` for it. Correctly: there is nothing to tag.
+
+r02 carries exactly one such wrapper, and 43 − 1 = 42 is exactly what was
+delivered. `WW8Num4` is a real item that happens to have a sublist, and it *is*
+delivered — which is why the fix keys on the shape and not on "a list with one
+item".
+
+## Fixed and re-measured
+
+`sourceTruthFromFodt` now subtracts items whose only child is a nested list.
+Across the 31 documents: **31 converted, 0 refused, 0 assertions, 5 documents
+with omissions** (was 7 before either fix, 6 after the first). r02 reads 42→42.
+Nothing else moved — r27 still 106→106, r09 16→16, r05/r07/r20 6→6.
+
+**Every 1.3.1 list-item omission in this corpus is now gone.** All five
+remaining omissions are the 2.4.10 heading-depth item produced by the standing
+`renumberHeadings` policy, which is the open decision recorded above and not a
+defect.
+
+## What three for three means
+
+Every "content loss" this instrument reported on real documents has turned out
+to be this instrument miscounting the source:
+
+1. numbered headings counted as list items (r15, r21, r24, r26),
+2. and a structural list wrapper counted as an item (r02).
+
+The pipeline has still never been shown to drop content or to invent it — 0
+assertions on every run. That is worth stating plainly, because the reverse was
+recorded as fact for two weeks. The comparison is only as good as the reading
+behind it, and the reading is the half that has been wrong every time.

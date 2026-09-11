@@ -450,7 +450,25 @@ export function sourceTruthFromFodt(xml: string, language: string | null): Sourc
     // was inflated. Recorded in the results write-up.
     tables: count(body, /<table:table[ >]/g),
     lists: count(body, /<text:list[ >]/g),
-    listItems: count(body, /<text:list-item[ >]/g),
+    // Items that carry content, never the structural wrappers.
+    //
+    // ODF represents a list that starts INDENTED as an outer list holding one
+    // item whose only child is the real list. That wrapper has no paragraph,
+    // no text and nothing a screen reader could announce, and the export emits
+    // no `LI` for it — correctly, because there is nothing to tag.
+    //
+    // `[V]` r02 is the whole of its 43→42: it carries exactly one such
+    // wrapper, and counting it read as a delivered document that had dropped
+    // an item. The sibling case — an item with its own paragraph AND a nested
+    // list — is a real item, is delivered, and still counts; r02 has one of
+    // those too, which is why the subtraction is by shape and not by "single
+    // item list".
+    //
+    // `\s*` rather than a parser because this reader is regexes over a flat
+    // file by design; in JS it spans the newlines a pretty-printed fodt has.
+    listItems:
+      count(body, /<text:list-item[ >]/g) -
+      count(body, /<text:list-item[^>]*>\s*<text:list[ >]/g),
     figures: frames.length + shapes,
     // Only framed graphics can carry a description; a bare drawn shape has
     // nowhere to put one, so it counts toward `figures` and never toward this.
