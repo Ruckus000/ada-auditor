@@ -579,3 +579,94 @@ not exercised — no answers exist for these documents — so the declared-langu
 path is held by tests and by nothing on real bytes. And the corpus is the one
 the reader has been corrected against; the completeness caveat from the blind
 validation above stands unchanged.
+
+# Correction, 2026-09-11 — the list-item loss was never a loss
+
+Appended rather than edited above, per this document's own rule. **Everything
+the sections above say about list items being dropped on export is wrong, and
+the error is in this instrument's source reader, not in the pipeline.**
+
+## What was actually happening
+
+`sourceTruthFromDocx` counted a paragraph as a list item when it numbered —
+inline `w:numPr`, or a style definition carrying one — and separately pushed a
+heading level for the same paragraph. Nothing stopped one paragraph being
+counted as both. A **numbered heading** — `Heading1` whose style definition
+carries `numPr`, giving "1. INTRODUCTION", "2. SCOPE" — is exactly that
+paragraph, and municipal documents are full of them.
+
+The delivered document was right all along. A numbered heading exports as
+`/H1` with its number in the text, which is what PDF/UA asks for; it is not a
+list and is not tagged as one.
+
+## The evidence
+
+Counting, per document, how many paragraphs the reader classified as **both** a
+heading and a list item:
+
+| document | source items | delivered | recorded "loss" | heading/item overlap |
+|---|---:|---:|---:|---:|
+| r15 | 6 | 0 | 6 | **6** |
+| r21 | 74 | 69 | 5 | **5** |
+| r24 | 66 | 61 | 5 | **5** |
+| r26 | 61 | 56 | 5 | **5** |
+
+**The overlap equals the loss on every affected document.** r15 is the pure
+case — every one of its list items is a numbered heading, so the count fell to
+zero and the client was told every list had been lost.
+
+## Re-measured with the reader fixed
+
+31 documents, 31 converted, 0 refused, **0 assertions**, **6** with omissions
+(was 7). Every 1.3.1 list-item omission on a `.docx` is gone: r15 is clean,
+and r21/r24/r26 now read 69→69, 61→61, 56→56 against their sources. What
+remains on those three, and on r09 and r16, is the 2.4.10 heading-depth item
+that the standing `renumberHeadings` policy produces — unchanged, and still the
+open decision recorded above.
+
+## What this revises, and what it does not
+
+**Revised.** "Five list items are lost on export, on three documents,
+consistently… a real content loss that no instrument in this project could see"
+— the headline finding of the 2026-08-27 campaign, and the sentence this whole
+instrument was justified by. There was no loss. The campaign's own check —
+"each flat ODF carries exactly its source's item count" — was true and
+consistent with this: ODF wraps a numbered heading in `text:list-item` as well,
+so the intermediate really did carry 74. The measurement was sound; the
+interpretation was not.
+
+**Not revised.** `r02` still reads 43→42. It is a legacy `.doc` read through
+the flat-ODF oracle, which this fix does not touch, and one item is unexplained.
+Stopped there rather than guessed at.
+
+**The instrument's value is not revised either, and it is worth being precise
+about why.** It was built to catch the pipeline claiming what a source did not
+say. It has now caught its own reader doing exactly that — a false claim about
+a client's document, found because the comparison was run again on real bytes
+rather than trusted. That is the instrument working, on itself.
+
+## The same shape on the legacy `.doc` path — looked for, not found
+
+Raised by review over this correction: `sourceTruthFromFodt` counts
+`text:list-item` and `<text:h>` independently and was NOT changed, and ODF
+wraps a numbered heading in `text:list-item` — so the double-count should
+exist there too.
+
+Measured rather than reasoned about. Three of the seven `engine-derived`
+documents carry headings, and every one agrees exactly:
+
+| document | source headings | source items | delivered items |
+|---|---:|---:|---:|
+| r09 | 6 | 16 | 16 |
+| r13 | 9 | 0 | 0 |
+| r27 | 16 | 106 | 106 |
+
+No inflation on any document that could show it. **Recorded as a latent risk,
+not fixed**: a fix would have to detect a `<text:h>` nested inside a
+`text:list-item` wrapper, and there is no failing document to prove it against
+— building it would be guessing at a shape this corpus has never produced.
+
+**It also does not explain r02.** r02 reports **zero headings** and still reads
+43→42, so whatever costs it one item, it is not a heading counted twice. That
+remains open, and remains the one genuine unexplained discrepancy in this
+corpus.
