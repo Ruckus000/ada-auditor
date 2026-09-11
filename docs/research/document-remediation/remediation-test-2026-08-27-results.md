@@ -10,6 +10,17 @@
 > [source-fidelity-in-production.md](source-fidelity-in-production.md);
 > restatement at the end of this document.
 
+> **FURTHER CORRECTED, 2026-09-11 — the last of the four fell too.**
+> **Lists are 31/31, not 27/31.** The banner above was written on 2026-08-31
+> and says the list drifts stand; they do not. All four were the same
+> instrument counting its own source wrongly — numbered headings counted twice
+> as both headings and list items, and a content-free structural list wrapper
+> counted as an item. **All four real-corpus fidelity numbers are now 31/31,
+> and the corpus reports zero omissions on all 31 documents.** The export was
+> never shown to drop or invent anything. See the note on the list-drift
+> section below, and
+> [source-fidelity-in-production.md](source-fidelity-in-production.md).
+
 **Date:** 2026-08-27. The test
 [the predictions file](remediation-test-predictions-2026-08-27.md) was
 registered for: **120 documents** — 61 through Arm A (conversion, the
@@ -164,7 +175,8 @@ Committed before the runner started, same discipline as the original test.
 5. **Fidelity (real):** headings 31/31, tables 29/31, lists 27/31,
    figures 30/31 — unchanged from the Phase-5 measurement, same reasoning
    as (2). **[CORRECTED 2026-08-31: tables 31/31, figures 31/31 — see the
-   banner and the restatement below.]**
+   banner and the restatement below.]** **[FURTHER CORRECTED 2026-09-11:
+   lists 31/31 too. All four are 31/31.]**
 6. **Production parity subset (10):** identical summaries local vs deployed,
    including the filename-derived titles this campaign added.
 
@@ -206,6 +218,12 @@ caveat from the alignment phase).
 > generous to the oracle: the drifts were not a *caveat* about a weaker
 > reading, they were **defects in it**. The three table and figure drifts do
 > not exist. The four list drifts do. See the restatement below.
+
+> **FURTHER CORRECTED 2026-09-11 — lists 31/31.** "The four list drifts do"
+> was the same mistake one field over: they were defects in the oracle too,
+> numbered headings and a structural wrapper counted as list items. The
+> sentence above got the diagnosis right for tables and figures and then
+> stopped one column short.
 
 Every real shortfall, itemized — this is the punch list working:
 
@@ -340,7 +358,7 @@ instrument was right and this document was wrong.
 |---|---|---|---|
 | headings (real) | 31/31 | 31/31 | unchanged |
 | **tables (real)** | **29/31** | **31/31** | both drifts were artifacts |
-| lists (real) | 27/31 | 27/31 | unchanged — **the drifts are real** |
+| lists (real) | 27/31 | 27/31 | unchanged — **the drifts are real** — **[FURTHER CORRECTED 2026-09-11: 31/31. The drifts were this instrument counting numbered headings and a structural wrapper as list items; see the note below.]** |
 | **figures (real)** | **30/31** | **31/31** | the drift was an artifact |
 
 Nothing else moves. Verdicts, UA-1 conformance counts, the 23/31 both-green
@@ -386,6 +404,24 @@ Both are fixed, with the same `[ >]` idiom and shape counting already carried by
 delivered PDFs on tables, figures and headings.
 
 ## The list drifts are real, and now localized
+
+> **FURTHER CORRECTED, 2026-09-11 — this section is wrong, and it is the last
+> of the four numbers to fall.** The drifts are not real and the export dropped
+> nothing. All four were this instrument miscounting its own source: r21, r24
+> and r26 counted **numbered headings twice**, once as headings and once as
+> list items, because their `Heading1` style definition carries `w:numPr`; r02
+> counted a **structural list wrapper** — the content-free outer item ODF uses
+> for a list that starts indented — as an item. The heading/item overlap
+> equalled the recorded loss on every affected document.
+>
+> The reasoning below is sound and the measurement honest; the flat ODF really
+> does carry 74, because ODF wraps a numbered heading in `text:list-item` too.
+> The inference from it was wrong. **`lists` is 31/31**, and the corpus now
+> reports zero omissions on all 31 documents. Account in
+> [source-fidelity-in-production.md](source-fidelity-in-production.md).
+>
+> Left standing below rather than rewritten, per this document's own practice:
+> what was believed on 2026-08-31, and why, is the record.
 
 `lists 27/31` stands. Four documents lose list items, and the production run
 localized the loss that this campaign left unexplained:
