@@ -3927,4 +3927,56 @@ verifier, verifier invocation vs GT, verifier-caused genuine-heading
 demotions, H→H level changes blocked by the verifier, and
 `pre-existing_bad_heading_kept`.
 
+### Freeze check commit
+
+`3d95427` — Part 17 predictions registered; Gate 0 matched; base
+checkpoint hashes recorded. Labels still closed.
+
+### Prediction freeze (before labels)
+
+Predictions frozen. Do not regenerate. Labels not yet opened.
+
+| | |
+|---|---|
+| freeze-check commit | `3d95427` |
+| path | gitignored `experiments/qwen-role-decisions/out/h2/predictions.frozen.jsonl` |
+| predictions SHA-256 | `75cf5222f8716af5293bddae5f09bfcb23d713cfd9a0265406ff6e460bee7bc9` |
+| PDFs | 16/16 ODL-tagged |
+| evaluable BLOCK candidates | 534 |
+| parsed | **534/534** |
+| bridge failures | **3**, all `empty_text` (`k11:0`, `k11:4`, `k11:7`) |
+| role-model invocations | **108** |
+| structural skips | **426/534** (ancestry 376, source_type 50) |
+| R2 matches | **0** |
+| marked-verifier invocations | **18** (all mutation locators from `mutation_locators`; not the spent Part-10 list) |
+| marked PNGs | 18 |
+| role parse | **108/108** |
+| verifier parse | **18/18** (`verification_failure` 0) |
+| verifier `heading:true` / `false` | 12 / 6 (GT still closed) |
+| no GT fields in artifact | confirmed |
+
+Commands:
+
+```
+node generate-holdout.mjs holdout2 out/holdout2
+node run-opendataloader.mjs out/holdout2 out/holdout2-tagged
+HF_HUB_OFFLINE=1 python run.py \
+  --dump-dir ../document-remediation/out/holdout2-tagged \
+  --out-dir out/h2 --predict --offline --role-only --r2-veto \
+  --adapter-path out/adapter-role --arm B
+python run.py --rescore out/h2/predictions.jsonl --arm B \
+  --from-blocks out/h2/blocks.json --list-mutations
+python run.py --rescore out/h2/predictions.jsonl --arm B \
+  --verify-marked-binary --adapter-path out/adapter-verify-marked \
+  --from-blocks out/h2/blocks.json \
+  --pdf-dir ../document-remediation/out/holdout2-tagged \
+  --verify-locators out/h2/mutations.json --out-dir out/h2
+```
+
+Frozen-object hashes unchanged from Gate 0 / Part 16. `run.py`
+`096f83e1…`. Adapters untouched.
+
+Every evaluable candidate received an architectural decision. Labels
+still closed.
+
 
