@@ -253,14 +253,6 @@ export function sourceTruthFromDocx(bytes: Uint8Array): SourceTruth {
       .map((t) => t[1] ?? '')
       .join('');
 
-    // A list item is a paragraph that numbers, inline or through its style.
-    //
-    // Counted BEFORE the empty-text guard below, and that asymmetry with
-    // headings is measured rather than stylistic. `removeEmptyHeadings` deletes
-    // a blank heading-styled line, so truth must not count it. Nothing deletes
-    // a blank numbered line: `[V]` r04 and r08 each carry one, the export keeps
-    // it, and skipping it read 24 against 25 delivered — a false assertion that
-    // refused both documents.
     const style = /w:pStyle w:val="([^"]+)"/.exec(para)?.[1];
     const resolved = style === undefined ? undefined : styleFacts.get(style);
     const numId = /<w:numId w:val="(\d+)"/.exec(para)?.[1];
@@ -273,13 +265,10 @@ export function sourceTruthFromDocx(bytes: Uint8Array): SourceTruth {
     // `[V]` Blind corpus r34 read 94 against 93 delivered, the only document
     // where the source read exceeded the delivery.
     const numberingRemoved = numId === '0';
-    if (!numberingRemoved && (/<w:numPr>/.test(para) || resolved?.numbered === true)) {
-      listItemCount += 1;
-      numberingGroups.add(numId ?? `style:${style ?? ''}`);
-    }
 
-    if (text.trim() === '') continue;
-
+    // The level is resolved BEFORE the item check, because a paragraph that is
+    // a heading is not also a list item and the check needs to know.
+    //
     // Every style route — outline level, canonical name, id spelling and
     // inheritance — is resolved above. A style the document USES but never
     // declares still gets the id-spelling read, which is the only signal left.
@@ -287,6 +276,39 @@ export function sourceTruthFromDocx(bytes: Uint8Array): SourceTruth {
     const fromStyle = resolved?.level ?? (undeclaredId === undefined ? null : Number(undeclaredId));
     const direct = /<w:outlineLvl w:val="([0-8])"\s*\/>/.exec(para)?.[1];
     const level = fromStyle ?? (direct === undefined ? null : Number(direct) + 1);
+
+    // A list item is a paragraph that numbers and is NOT a heading.
+    //
+    // **A numbered heading numbers through its style and is still a heading.**
+    // `[V]` r15's `Heading1` definition carries `numPr` — "1. INTRODUCTION" —
+    // so all six of its headings were counted twice, and fidelity told the
+    // client "0 list items delivered for 6 in the source". The export is
+    // right: a numbered heading tags as `/H1` with the number in its text,
+    // which is what PDF/UA asks for and is not a list.
+    //
+    // This is also the whole of the 2026-08-27 campaign's "five list items
+    // lost on export". `[V]` The heading/item overlap equals the recorded loss
+    // on every affected document — r21 5, r24 5, r26 5, r15 6 — so nothing was
+    // lost and the export never dropped anything.
+    //
+    // Counted BEFORE the empty-text guard below, and that asymmetry with
+    // headings is measured rather than stylistic. `removeEmptyHeadings` deletes
+    // a blank heading-styled line, so truth must not count it. Nothing deletes
+    // a blank numbered line: `[V]` r04 and r08 each carry one, the export keeps
+    // it, and skipping it read 24 against 25 delivered — a false assertion that
+    // refused both documents. Neither carries a heading, so the guard above
+    // leaves them alone.
+    if (
+      !numberingRemoved &&
+      level === null &&
+      (/<w:numPr>/.test(para) || resolved?.numbered === true)
+    ) {
+      listItemCount += 1;
+      numberingGroups.add(numId ?? `style:${style ?? ''}`);
+    }
+
+    if (text.trim() === '') continue;
+
     if (level !== null) headingLevels.push(level);
   }
 

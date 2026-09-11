@@ -323,6 +323,69 @@ describe('lists, tables, title and language', () => {
     expect(truth.listItems).toBe(2);
   });
 
+  it('does NOT count a numbered HEADING as a list item', () => {
+    // `[V]` r15 is the pure case and it reached a client. Its `Heading1` style
+    // definition carries `numPr` — numbered headings, "1. INTRODUCTION" — so
+    // all six of its headings were counted twice: once as headings, once as
+    // list items. The delivered PDF tags them `/H1` with the number in the
+    // text, which is what PDF/UA asks for and is not a list, so fidelity
+    // reported "0 list items delivered for 6 in the source" and told the
+    // client their lists had been lost. Nothing was lost.
+    //
+    // The same overlap explains the losses the 2026-08-27 campaign recorded as
+    // real content loss: r21 74→69, r24 66→61, r26 61→56, each with exactly
+    // five numbered headings. The overlap equalled the "loss" on all four
+    // documents.
+    const styles =
+      '<w:styles><w:style w:type="paragraph" w:styleId="Heading1">' +
+      '<w:pPr><w:outlineLvl w:val="0"/><w:numPr><w:numId w:val="2"/></w:numPr></w:pPr>' +
+      '</w:style></w:styles>';
+    const truth = readable(
+      zip([
+        [
+          'word/document.xml',
+          wordDocument(
+            para('one', { style: 'Heading1' }) +
+              para('two', { style: 'Heading1' }) +
+              para('three', { style: 'Heading1' }),
+          ),
+        ],
+        ['word/styles.xml', styles],
+      ]),
+    );
+
+    expect(truth.headings).toBe(3);
+    expect(truth.headingLevels).toEqual([1, 1, 1]);
+    expect(truth.listItems).toBe(0);
+  });
+
+  it('still counts a numbered paragraph that is not a heading', () => {
+    // The guard above must not swallow real lists. A numbered body paragraph
+    // has no outline level and stays an item.
+    const styles =
+      '<w:styles><w:style w:type="paragraph" w:styleId="Heading1">' +
+      '<w:pPr><w:outlineLvl w:val="0"/><w:numPr><w:numId w:val="2"/></w:numPr></w:pPr>' +
+      '</w:style>' +
+      '<w:style w:type="paragraph" w:styleId="ListPara">' +
+      '<w:pPr><w:numPr><w:numId w:val="4"/></w:numPr></w:pPr></w:style></w:styles>';
+    const truth = readable(
+      zip([
+        [
+          'word/document.xml',
+          wordDocument(
+            para('heading', { style: 'Heading1' }) +
+              para('item', { style: 'ListPara' }) +
+              para('item', { style: 'ListPara' }),
+          ),
+        ],
+        ['word/styles.xml', styles],
+      ]),
+    );
+
+    expect(truth.headingLevels).toEqual([1]);
+    expect(truth.listItems).toBe(2);
+  });
+
   it('reads heading levels from the style’s canonical NAME, whatever the id is', () => {
     // `[V]` Blind corpus r28: 13 heading-styled paragraphs read as 9, and the
     // under-count inverted the sign — a heading LOST (13 source, 12 delivered)
