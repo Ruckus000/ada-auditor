@@ -1639,6 +1639,8 @@ model abstention.
 
 ### Frozen command
 
+**Frozen at `e961473`.** Adapter `out/adapter-role` was not retrained.
+
 ```
 python run.py --dump-dir <odl-tagged-pdfs> --out-dir <out> \
   --predict --offline --role-only --r2-veto --adapter-path out/adapter-role
