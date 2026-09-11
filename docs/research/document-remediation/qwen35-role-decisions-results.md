@@ -2080,3 +2080,117 @@ headings). Unchanged.
 Default `--arm` is now `B` (A was measured first and did not pass).
 `--arm C` is ancestry-only; Headings R1/R6 were tested and not wired.
 
+---
+
+## Part 10 — Existing layout against residual promotions (pre-registration)
+
+**Date:** 2026-09-11 · same branch. Part 9 Arm B is the frozen
+reference: source-type eligibility + Table/Figure ancestry + role-only
+QLoRA + R2 + deterministic action. Adapter, prompt, R2, and those two
+structural gates do not change. Holdout 1 predictions remain immutable
+(`4ec2198a…`). Holdout 2 sealed.
+
+### The one question
+
+> Can layout information already available in this codebase eliminate
+> the residual unsafe promotions without retraining or inventing
+> semantic string heuristics?
+
+Not a training spike. Not four residual-specific rules.
+
+### Inventory (completed before any new flag)
+
+`belongsToTable` has **one caller**: `Headings.java:232`. The method is
+`Headings.java:311–321`. It does not look at parent pointers.
+
+**How table boxes are obtained.** `StructText.find(root, {"Table"})`
+then `text.boxOf(t)`. Finding the region **depends on a `Table`
+structure tag existing**. The box itself is the union of glyph boxes of
+everything that Table element references (`StructText.boxOf` /
+`harvest` from `TextPosition`). Same-page, x-overlap ≥ 0.5 × min(widths),
+and vertically inside or within `CAPTION_GAP = 24` pt above or below.
+
+So R5 is hybrid: structure to *find* the table, geometry to *test*
+whether other text sits against that box. It cannot invent a table from
+an unruled grid that has no `Table` tag. It *can* catch Document-level
+`P` that sits against a tagged table's glyph box. h06 has one `Table`
+(the ruled grid). Whether `h06:14` lies in that box is the Arm A
+measurement. Thresholds are not retuned.
+
+**Figures.java** locates *drawn images* (`PDImage`) by MCID for
+thin-band / byte-identical-repeat artifacting. It has no SVG or chart-
+text region. **FigureOrder** (production `Preview.java`) locates
+`Figure` structure elements' image boxes. Spent h11 has **zero** Figure
+tags. Arm B1 (existing geometric chart/figure region independent of
+structure) **does not exist** for the chart residuals. Do not
+manufacture it.
+
+**Preview.java** already renders a full-page PNG (`PDFRenderer`, RGB,
+capped scale) and writes it as base64 JSON. That is the existing
+full-page capability for a later selective verifier. `run.py`
+`generate()` already accepts `--image`.
+
+**Cards.java** already compiles `StructText.java` onto the same
+classpath. Arm A should call `boxOf` and the existing `belongsToTable`
+predicate, not harvest a second geometry.
+
+No `COMMERCIAL IN CONFIDENCE` / banner / `Month of year` / all-caps /
+font-size rules. Those would encode spent Holdout 1.
+
+### Architecture (registered)
+
+Part 9 Arm B unchanged, then:
+
+**Arm A (this spike) — R5 geometric table containment.** If
+`belongsToTable` is true, the text is not eligible for document-heading
+promotion. Same constants as Headings.java. If it misses h06 or hits a
+true heading: STOP that rung. Do not retune.
+
+**Arm B1 — existing figure/chart region.** Skipped unless the inventory
+is wrong. It is not: no such region exists for SVG text.
+
+**Arm B2 — selective full-page verifier.** Only if residuals remain
+after A. Only candidates that survive source-type, ancestry, R2, and R5
+(if A passed) and whose text-only role is an H* promotion or an H*
+level change. Binary `{"heading": true|false}`. No H1/H2/H3. No adapter
+on the vision call. No crops until full-page localization measurably
+fails. Parse failure → do not auto-promote, counted separately.
+
+### Frozen ML
+
+No change to checkpoint, `out/adapter-role`, prompt, R2, structural
+gates, action derivation, or generation settings.
+
+### Gates
+
+Spent H1 is diagnostic. Development is the regression surface.
+
+- final unsafe promotions: 0 on the exposed universe
+- layout layer vetoes 0 known true headings
+- probes heading exact ≥ 9/11; 07 stays correct; spent H1 exact ≥ 80%;
+  no new demotions from the verifier
+- even if exposed unsafe hits 0: **do not run Holdout 2**
+
+### Registered prediction
+
+1. `[H]` Existing R5 geometry catches `h06:14` without a true-heading
+   collision.
+2. `[H]` No new handcrafted semantic rule is necessary.
+3. `[H]` If existing geometric figure context is unavailable, selective
+   full-page vision correctly rejects the banner/chart/stamp residuals.
+4. `[H]` The layout stage vetoes zero known true headings.
+5. `[H]` Exposed final unsafe promotions fall from 5 to 0.
+6. `[H]` No retraining, crop pipeline, larger model, or production
+   architecture is required.
+
+### Win / fail
+
+- **R5 + existing figure geometry clears everything:** STOP. No vision.
+- **R5 helps and full-page verifier clears the rest:** STOP. No crops.
+- **Full-page verifier cannot locate the target:** STOP. Crops earned
+  next, not this spike.
+- **Verifier harms true headings:** STOP. Do not prompt-tune on
+  exposed failures.
+- **A residual remains:** STOP. Do not add a regex.
+- **Holdout 2:** not this spike, even on exposed unsafe 0.
+
