@@ -299,6 +299,8 @@ def prediction_record(case: dict, pred: dict | None, raw: str) -> dict:
         "r5_table_box": bool((pred or {}).get("r5_table_box", case.get("in_table_box"))),
         "page_verify": None if pred is None else pred.get("page_verify"),
         "page_verify_parsed": bool(pred.get("page_verify_parsed")) if pred else False,
+        "verify_input": None if pred is None else pred.get("verify_input"),
+        "verification_failure": bool(pred.get("verification_failure")) if pred else False,
         "final_role": final_role,
         "derived_action": action,
         "parsed": pred is not None,
@@ -439,6 +441,7 @@ REPO = HERE.parents[1]
 PDFBOX = HERE.parent / "document-remediation" / "vendor" / "pdfbox-app-3.0.8.jar"
 STRUCT_TEXT = REPO / "src" / "integrations" / "documents" / "java" / "StructText.java"
 CARDS_JAVA = HERE / "Cards.java"
+MARK_JAVA = HERE / "Mark.java"
 CARDS_CLASSES = HERE / "out" / "classes"
 JAVA_HOME = Path(os.environ.get("JAVA_HOME", "/opt/homebrew/opt/openjdk@17"))
 MODEL = "mlx-community/Qwen3.5-4B-MLX-4bit"
@@ -603,8 +606,34 @@ HEADING_VERIFY_STEM = (
     "Return ONLY JSON with key heading whose value is true or false. "
     "Do not assign H1, H2, or H3."
 )
+MARKED_VERIFY_STEM = (
+    "You are shown a PDF page. The outlined rectangle marks the exact element "
+    "being evaluated. Decide whether the marked element is a document section "
+    "or subsection heading, rather than table/chart labeling, a banner, stamp, "
+    "page furniture, or other non-document-heading content. "
+    "Return ONLY {\"heading\":true} or {\"heading\":false}."
+)
+PART10_VERIFY_LOCATORS = (
+    "h01-big-text-not-heading:4",
+    "h01-big-text-not-heading:11",
+    "h02-headings-look-like-body:0",
+    "h06-mixed-table-borders:2",
+    "h06-mixed-table-borders:13",
+    "h06-mixed-table-borders:14",
+    "h09-three-column:8",
+    "h11-chart-labels-as-headings:4",
+    "h11-chart-labels-as-headings:7",
+    "h12-visible-title-no-metadata:5",
+    "h13-first-big-text-not-title:1",
+    "h16-inconsistent-hierarchy:4",
+    "h16-inconsistent-hierarchy:6",
+    "h16-inconsistent-hierarchy:10",
+)
 PREVIEW_JAVA = REPO / "src" / "integrations" / "documents" / "java" / "Preview.java"
 FIGURE_ORDER_JAVA = REPO / "src" / "integrations" / "documents" / "java" / "FigureOrder.java"
+DEV_MAP_PDF = (
+    HERE.parent / "document-remediation" / "out" / "bridge-tagged" / "01-simple-text.pdf"
+)
 
 
 def heading_verify_prompt(text: str, page_1based: int | None) -> str:
@@ -670,6 +699,93 @@ def render_page_png(pdf: Path, page_1based: int, dest: Path) -> Path:
     return dest
 
 
+def compile_mark() -> None:
+    CARDS_CLASSES.mkdir(parents=True, exist_ok=True)
+    javac = JAVA_HOME / "bin" / "javac"
+    cmd = [
+        str(javac),
+        "-cp",
+        str(PDFBOX),
+        "-d",
+        str(CARDS_CLASSES),
+        str(MARK_JAVA),
+    ]
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
+
+
+def mark_page_png(
+    pdf: Path,
+    page_1based: int,
+    box: tuple[float, float, float, float],
+    src: Path,
+    dest: Path,
+    check_only: bool = False,
+) -> dict:
+    compile_mark()
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    java = JAVA_HOME / "bin" / "java"
+    cmd = [
+        str(java),
+        "-Djava.awt.headless=true",
+        "-cp",
+        f"{PDFBOX}:{CARDS_CLASSES}",
+        "Mark",
+    ]
+    if check_only:
+        cmd.append("--check")
+    cmd.extend(
+        [
+            str(pdf),
+            str(page_1based),
+            f"{box[0]:.4f}",
+            f"{box[1]:.4f}",
+            f"{box[2]:.4f}",
+            f"{box[3]:.4f}",
+            str(src),
+        ]
+    )
+    if not check_only:
+        cmd.append(str(dest))
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if proc.returncode not in (0, 1) or (not check_only and proc.returncode != 0):
+        raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
+    return json.loads(proc.stdout.strip().splitlines()[-1])
+
+
+def check_box_map() -> dict:
+    if not DEV_MAP_PDF.is_file():
+        raise SystemExit(f"missing development pdf {DEV_MAP_PDF}")
+    dump = dump_pdf(DEV_MAP_PDF)
+    block = next(
+        (
+            b
+            for b in dump.get("blocks") or []
+            if b.get("existing_tag") == "H1"
+            and "Quarterly Operations Summary" in (b.get("text") or "")
+            and b.get("x0") is not None
+        ),
+        None,
+    )
+    if block is None:
+        raise SystemExit("development H1 box missing from Cards dump")
+    page_1 = int(block["page"]) + 1
+    png = HERE / "out" / "box-map" / "01-simple-text-p1.png"
+    render_page_png(DEV_MAP_PDF, page_1, png)
+    mapped = mark_page_png(
+        DEV_MAP_PDF,
+        page_1,
+        (float(block["x0"]), float(block["y0"]), float(block["x1"]), float(block["y1"])),
+        png,
+        HERE / "out" / "box-map" / "01-simple-text-p1-marked.png",
+        check_only=True,
+    )
+    if not mapped.get("inside"):
+        raise SystemExit(f"mapped rectangle outside image bounds: {mapped}")
+    return {"locator": block["locator"], **mapped}
+
+
 def needs_page_verify(pred: dict | None, case: dict) -> bool:
     if not pred or not pred.get("qwen_called"):
         return False
@@ -682,10 +798,17 @@ def needs_page_verify(pred: dict | None, case: dict) -> bool:
     return exist not in HEADING or exist != role
 
 
-def apply_page_verify(pred: dict, case: dict, heading: bool | None) -> dict:
+def apply_page_verify(
+    pred: dict,
+    case: dict,
+    heading: bool | None,
+    verify_input: str = "full",
+) -> dict:
     out = dict(pred)
     out["page_verify"] = heading
     out["page_verify_parsed"] = heading is not None
+    out["verify_input"] = verify_input
+    out["verification_failure"] = heading is None
     if heading is True:
         return out
     tag = case.get("existing_tag") or ""
@@ -1205,10 +1328,16 @@ def self_check() -> None:
         {"role": "H1", "action": "retag", "qwen_called": True},
         {"existing_tag": "H2"},
         None,
+        verify_input="marked",
     )
     assert parse_miss["page_verify_parsed"] is False
+    assert parse_miss["verification_failure"] is True
+    assert parse_miss["verify_input"] == "marked"
     assert parse_miss["role"] == "H2"
     assert parse_miss["action"] == "keep"
+    assert "outlined rectangle" in MARKED_VERIFY_STEM
+    assert "H1" not in MARKED_VERIFY_STEM
+    assert len(PART10_VERIFY_LOCATORS) == 14
 
 
 def load_block_dumps() -> list[dict] | None:
@@ -1239,6 +1368,10 @@ def block_fields_by_locator(dumps: list[dict]) -> dict[str, dict]:
                     "ancestors": list(block.get("ancestors") or []),
                     "in_table_box": bool(block.get("in_table_box")),
                     "page": block.get("page"),
+                    "x0": block.get("x0"),
+                    "y0": block.get("y0"),
+                    "x1": block.get("x1"),
+                    "y1": block.get("y1"),
                 }
     return out
 
@@ -1249,12 +1382,14 @@ def rescore_frozen(
     arm: str,
     r5_veto: bool = False,
     verify_page: bool = False,
+    verify_marked: bool = False,
     pdf_dir: Path | None = None,
     png_dir: Path | None = None,
 ) -> tuple[list[dict], int]:
     rows = []
     skipped = 0
     png_cache: dict[tuple[str, int], Path] = {}
+    pages_dir = png_dir or (HERE / "out" / "pages")
     for pred in preds:
         loc = str(pred.get("locator") or "")
         extra = fields.get(loc) or {}
@@ -1272,6 +1407,10 @@ def rescore_frozen(
             "ancestors": extra.get("ancestors", pred.get("ancestors") or []),
             "in_table_box": extra.get("in_table_box", pred.get("r5_table_box") or pred.get("in_table_box")),
             "page": extra.get("page", pred.get("page")),
+            "x0": extra.get("x0", pred.get("x0")),
+            "y0": extra.get("y0", pred.get("y0")),
+            "x1": extra.get("x1", pred.get("x1")),
+            "y1": extra.get("y1", pred.get("y1")),
         }
         incoming = {"role": pred["model_role"]} if pred.get("model_role") else None
         decided = decide_card(
@@ -1279,12 +1418,16 @@ def rescore_frozen(
         )
         if decided is not None and not decided.get("qwen_called"):
             skipped += 1
-        if verify_page and decided is not None and needs_page_verify(decided, case):
+        want_marked = verify_marked and loc in PART10_VERIFY_LOCATORS
+        want_full = verify_page and not verify_marked
+        if (want_full or want_marked) and decided is not None and needs_page_verify(decided, case):
             page = case.get("page")
             stem = loc.rsplit(":", 1)[0]
             heading_flag: bool | None = None
             raw_verify = ""
-            if pdf_dir is None or page is None:
+            verify_input = "marked" if want_marked else "full"
+            box_ok = all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1"))
+            if pdf_dir is None or page is None or (want_marked and not box_ok):
                 heading_flag = None
             else:
                 page_1 = int(page) + 1
@@ -1292,18 +1435,39 @@ def rescore_frozen(
                 png = png_cache.get(cache_key)
                 if png is None:
                     pdf = pdf_dir / f"{stem}.pdf"
-                    dest = (png_dir or (HERE / "out" / "pages")) / f"{stem}-p{page_1}.png"
-                    png = render_page_png(pdf, page_1, dest)
+                    dest = pages_dir / f"{stem}-p{page_1}.png"
+                    if dest.is_file():
+                        png = dest
+                    else:
+                        png = render_page_png(pdf, page_1, dest)
                     png_cache[cache_key] = png
+                image = png
+                prompt = heading_verify_prompt(str(case.get("text") or ""), page_1)
+                if want_marked:
+                    marked = pages_dir / "marked" / f"{loc.replace(':', '_')}.png"
+                    mark_page_png(
+                        pdf_dir / f"{stem}.pdf",
+                        page_1,
+                        (
+                            float(case["x0"]),
+                            float(case["y0"]),
+                            float(case["x1"]),
+                            float(case["y1"]),
+                        ),
+                        png,
+                        marked,
+                    )
+                    image = marked
+                    prompt = MARKED_VERIFY_STEM
                 raw_verify = generate(
                     MODEL,
-                    heading_verify_prompt(str(case.get("text") or ""), page_1),
-                    image=str(png),
+                    prompt,
+                    image=str(image),
                     thinking_mode="disabled",
                     adapter_path=None,
                 )
                 heading_flag = parse_heading_flag(raw_verify)
-            decided = apply_page_verify(decided, case, heading_flag)
+            decided = apply_page_verify(decided, case, heading_flag, verify_input=verify_input)
             if raw_verify:
                 pred = dict(pred)
                 pred["verify_raw"] = raw_verify[-1500:]
@@ -1311,6 +1475,10 @@ def rescore_frozen(
         if decided is not None:
             rows[-1]["page_verify"] = decided.get("page_verify")
             rows[-1]["page_verify_parsed"] = bool(decided.get("page_verify_parsed"))
+            rows[-1]["verify_input"] = decided.get("verify_input")
+            rows[-1]["verification_failure"] = bool(decided.get("verification_failure"))
+            if pred.get("verify_raw"):
+                rows[-1]["verify_raw"] = pred["verify_raw"]
     return rows, skipped
 
 
@@ -1318,6 +1486,10 @@ if __name__ == "__main__":
     if "--self-check" in sys.argv:
         self_check()
         print("ok")
+        raise SystemExit(0)
+
+    if "--check-box-map" in sys.argv:
+        print(json.dumps(check_box_map(), indent=2))
         raise SystemExit(0)
 
     score_path = flag_value("--score-holdout")
@@ -1355,12 +1527,18 @@ if __name__ == "__main__":
             arm,
             r5_veto=r5_veto,
             verify_page="--verify-page" in sys.argv,
+            verify_marked="--verify-marked" in sys.argv,
             pdf_dir=Path(flag_value("--pdf-dir")) if flag_value("--pdf-dir") else None,
             png_dir=(Path(flag_value("--out-dir")) / "pages") if flag_value("--out-dir") else None,
         )
         out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "bridge"))
         out_dir.mkdir(parents=True, exist_ok=True)
-        suffix = f"arm{arm}" + ("-r5" if r5_veto else "") + ("-verify" if "--verify-page" in sys.argv else "")
+        suffix = (
+            f"arm{arm}"
+            + ("-r5" if r5_veto else "")
+            + ("-marked" if "--verify-marked" in sys.argv else "")
+            + ("-verify" if "--verify-page" in sys.argv and "--verify-marked" not in sys.argv else "")
+        )
         out_file = out_dir / f"rescored-{suffix}.jsonl"
         out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
         print(json.dumps({"arm": arm, "r5_veto": r5_veto, "n": len(rows), "qwen_skipped": skipped, "out": str(out_file)}))

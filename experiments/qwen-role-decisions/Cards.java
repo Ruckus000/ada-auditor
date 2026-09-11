@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -128,6 +129,9 @@ public final class Cards {
                 json.append(", \"in_table_box\": ").append(inTable);
                 if (box != null) {
                     json.append(", \"page\": ").append(box.page());
+                    json.append(String.format(Locale.ROOT,
+                        ", \"x0\":%.4f, \"y0\":%.4f, \"x1\":%.4f, \"y1\":%.4f",
+                        box.x0(), box.y0(), box.x1(), box.y1()));
                 }
                 json.append("}");
                 json.append(i < found.size() - 1 ? ",\n" : "\n");

@@ -2302,3 +2302,131 @@ true-heading vetoes. That is not Holdout-2-ready.
 Default remains Part 9 Arm B. `--r5-veto` / `--verify-page` stay as
 measured switches.
 
+---
+
+## Part 11 — does marking the existing box on the existing page fix the last two?
+
+**Date:** 2026-09-11. Same branch. Holdout 1 remains spent diagnostic
+evidence. Holdout 2 remains sealed. No retrain. No semantic rules.
+No prompt-tuning against `h06:14` / `h11:4` as categories.
+
+The current exposed-safe baseline remains Part 9 Arm B:
+
+source-type eligibility + Table/Figure ancestry + role-only QLoRA +
+R2 + deterministic action
+
+Part 10 left two architecture-verifier residuals after selective
+full-page verification: `h06-mixed-table-borders:14` and
+`h11-chart-labels-as-headings:4`. This part asks a narrower question
+than “can vision classify headings?” (Part 10 already showed that it
+often can):
+
+> Does explicitly localizing the target element in the existing page
+> image resolve the remaining verifier errors without vetoing genuine
+> headings?
+
+This is a localization experiment before it is a crop experiment.
+
+### Freeze
+
+The comparison set is the exact 14 Part 10 Arm B2 architecture
+candidates. Do not add or remove.
+
+| locator | GT heading? | Part 10 full-page |
+|---|---|---|
+| h01-big-text-not-heading:4 Standard rates | yes | true |
+| h01-big-text-not-heading:11 Exclusions | yes | true |
+| h02-headings-look-like-body:0 BERTH ALLOCATION PROCEDURE | yes | true |
+| h06-mixed-table-borders:2 Fully ruled | yes | true |
+| h06-mixed-table-borders:13 Horizontal rules only | yes | true |
+| h06-mixed-table-borders:14 Depot Staff Vehicles | no | **true** (unsafe) |
+| h09-three-column:8 spanning banner | no | false |
+| h11-chart-labels-as-headings:4 Berth Occupancy by Month | no | **true** (unsafe) |
+| h11-chart-labels-as-headings:7 Month of year | no | false |
+| h12-visible-title-no-metadata:5 Recommendation | yes | true |
+| h13-first-big-text-not-title:1 COMMERCIAL IN CONFIDENCE | no | false |
+| h16-inconsistent-hierarchy:4 Discrepancies | yes | true |
+| h16-inconsistent-hierarchy:6 STORAGE | yes | true |
+| h16-inconsistent-hierarchy:10 Dispatch | yes | true |
+
+Part 10’s 14 full-page predictions are the baseline and are not
+regenerated. Same PDF, same candidate, same base Qwen3.5-4B, same
+binary contract, same generation settings (temperature 0, thinking
+disabled, max-tokens 256, no adapter), same text, same GT. Only the
+visual target-localization representation changes.
+
+### Coordinate mapping (traced, not reinvented)
+
+The box already exists. `StructText.boxOf` unions glyph boxes from
+`getXDirAdj` / `getYDirAdj` / `getHeightDir` — top-down page
+coordinates matching PDFTextStripper (`StructText.java`). `Cards.java`
+already called `boxOf` for `page` and R5; it did not emit `x0,y0,x1,y1`.
+Part 11 exposes those four numbers. No second geometry extractor.
+
+`Preview.java` is the renderer: `PDFRenderer.renderImage` at
+`min(2, 1600/max(cropWidth, cropHeight))`, crop box, then page
+rotation. Figure overlays already convert unrotated top-down media
+coordinates into the displayed crop (`x - crop.LLX`,
+`y + crop.URY - mediaHeight`) and then rotate clockwise 90/180/270
+the same way the raster does (`java-preview.test.ts` pins that on a
+cropped+rotated fixture).
+
+StructText’s DirAdj box is the same top-down convention. Mapping it
+onto Preview’s PNG reuses those six lines, then scales by the raster
+size over the displayed crop. PDF y-down vs image y-down is already
+the DirAdj convention; page rotation is Preview’s existing switch.
+
+No image-analysis framework. No coordinate abstraction layer.
+
+One runnable check: dump tagged development `01-simple-text`, take the
+existing H1 box for “Quarterly Operations Summary”, render page 1 with
+Preview, map the box, assert the rectangle is inside the PNG bounds
+(`python run.py --check-box-map`).
+
+Crop/clip inventory: no `getSubimage` and no crop helper on this
+path. `Contrast.java` renders a full page at 150 DPI for sampling,
+which is a different stage. If a context crop is earned, the policy
+will be written here *before* any Arm-B image is generated, and the
+operation will be `BufferedImage.getSubimage` on the already-rendered
+image. Not earned yet.
+
+### Arm A — marked full page (not yet generated)
+
+Reuse each candidate’s existing full-page PNG. Draw one rectangle
+around that candidate’s existing glyph box (`Graphics2D`, magenta
+stroke, no labels, no arrows, no OCR, no text on the image). One
+marked PNG per candidate, because several of the 14 share a page.
+
+Frozen marker prompt (binds the question to the outlined object; not
+semantic prompt-tuning):
+
+> You are shown a PDF page. The outlined rectangle marks the exact
+> element being evaluated. Decide whether the marked element is a
+> document section or subsection heading, rather than table/chart
+> labeling, a banner, stamp, page furniture, or other
+> non-document-heading content. Return ONLY {"heading":true} or
+> {"heading":false}.
+
+Verifier stays selective: source-type → ancestry → role QLoRA → R2 →
+only then vision, and only when the proposed mutation is a heading
+promotion or heading-level change. Parse failure on an architecture
+candidate is `verification_failure` and fail-closes (no automatic
+promotion). It is not scored as a correct non-heading classification.
+
+If Arm A reaches parse 14/14, true-heading vetoes 0, final unsafe 0:
+STOP. Do not build a crop. Holdout 2 still not run.
+
+### Registered predictions (written before Arm A generation)
+
+1. `[H]` Explicit target marking fixes `h11:4`, because Part 10’s
+   failure is at least partly localization-shaped.
+2. `[H]` Target marking alone may not fix `h06:14`, because its text
+   is unique and it visually resembles a section/table-group heading.
+3. `[H]` Marking vetoes zero genuine headings among the same 14
+   candidates.
+4. `[H]` If `h06` remains, one fixed local-context crop supplies
+   enough resolution/context to reject it.
+5. `[H]` Exposed final unsafe falls 2 → 0 without semantic rules or
+   retraining.
+6. `[H]` Holdout 2 remains untouched.
+
