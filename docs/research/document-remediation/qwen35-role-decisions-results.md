@@ -2836,3 +2836,178 @@ shape as Part 4/6). `--train-on-completions` exists.
    regex, or Holdout-1 training example is needed.
 7. `[H]` Holdout 2 remains sealed.
 
+### Dataset (train.json → marked PDF, architectural filter)
+
+Tagged PDFs: development 02/04/05/06/10/12 from the existing ODL
+corpus copies, stems unchanged. Images: Part-11 Preview PNG + magenta
+rectangle. Labels: `heading = expect.role in H1..H6`. Matching uses
+`attach_probe_expect(..., by_doc=True)` so a probe `04-*` cannot bind
+a `12-*` BLOCK (without that, `04-northern` attached to
+`12-kitchen-sink:26`).
+
+| | n |
+|---|---|
+| train.json cards | 43 |
+| matched to a BLOCK | 38 |
+| unmatched (not replaced) | 5: `12-h3-apron`, `04-northern`, `04-units`, `04-vehicle-class`, `12-brand` |
+| excluded source_type | 5 (`06-p`, `06-h2-apron`, `06-h2-mark`, `06-h2-layout`, `12-footer`) |
+| excluded ancestry | 2 (`12-review-period`, `12-q1`) |
+| excluded R2 | 0 |
+| **verifier train rows** | **31** (18 `heading:true`, 13 `heading:false`) |
+
+All six train documents are represented. No Holdout-1 row. No
+manufactured replacement.
+
+SFT: gitignored `out/gen-sft-verify/train.json` (`messages` + local
+`image` path). HuggingFace `load_dataset` keeps the path as a string;
+`process_image` / `load_image` resolve it.
+
+### Plumbing (not scored)
+
+One copied train row in `out/plumb-sft`. Loader: image path exists.
+First `mlx_vlm.lora --iters 1` on the native 1130×1600 PNG **OOM**
+(`kIOGPUCommandBufferCallbackErrorOutOfMemory`) after LoRA setup —
+images are reaching the forward pass (text-only LoRA was 9.7 GB).
+
+`--grad-checkpoint` (installed CLI) completed one step: loss
+0.0546, 1886 tokens (text-only was ~185 tokens/example), peak 13.4
+GB, adapter written. Plumbing adapter discarded.
+
+The first full 31-row run with `--grad-checkpoint` and native
+resolution died on iter 1 (`METAL Internal Error`) before a loss
+line. Same CLI, `--image-resize-shape 560 800` (full page, not a
+crop; bounds vision memory). That is the one training run below.
+`--train-vision` stayed off. No source patch.
+
+### Training health — `out/adapter-verify-marked`
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft-verify \
+  --split train --batch-size 1 --lora-rank 8 --epochs 6 \
+  --steps-per-report 10 --steps-per-save 1000 \
+  --train-on-completions --grad-checkpoint \
+  --image-resize-shape 560 800 \
+  --output-path out/adapter-verify-marked
+```
+
+| | |
+|---|---|
+| rows | 31 (18 true / 13 false) |
+| iters | 186 = (31 // 1) × 6 |
+| loss | 0.0391 (iter 10) → 0.000024 (iter 186); no NaN |
+| peak mem | 14.057 GB |
+| adapter | 62 MiB `adapters.safetensors` |
+| LoRA keys | `language_model.*` only |
+| image-bearing | yes (1886–1900 tokens/example vs ~185 text-only) |
+
+No crash on this run. Adapter loads. Binary JSON parses on every
+eval row below.
+
+### Gate 1 — fresh document 07
+
+`run.py --eval-verify-marked --pdf-dir out/eval-tagged --match-path valid-07.json`
+
+Mapped 4/6. Unmatched, not replaced: `07-northern`, `07-q1` (legend /
+axis ticks absent as usable BLOCKs).
+
+| id | locator | GT heading | text role | verifier | applied? | final |
+|---|---|---|---|---|---|---|
+| 07-h1 | :0 | true | H1 | true | no (keep H1) | H1 |
+| 07-intro | :1 | false | P | false | no | P |
+| 07-chart-title | :2 | false | H2 | false | no (keep H2) | H2 |
+| 07-cap | :11 | false | P | false | no | P |
+
+Parse **4/4**. True-heading vetoes **0**. Unsafe promotions **0**.
+H1 eligible. Not all-false. Accuracy **4/4**. Recall **1/1**.
+Non-heading rejection **3/3**. Confusion TP1 TN3 FP0 FN0.
+
+`[V]` **pass.** Chart-title is tagged H2 on this PDF and the role
+adapter agrees, so the verifier is not invoked (no heading
+*mutation*). Its binary prediction is still false. Architecture
+unsafe remains 0.
+
+### Gate 2 — known development challenge
+
+`run.py --eval-verify-marked --match-path probes.json` (docs 01/03/08/11).
+
+Parse **17/17**. Verifier-caused heading vetoes **0**. Final unsafe
+**0**. Role-layer heading exact **10/11** (≥9/11). No new heading
+demotions (verifier never said false on a GT heading).
+
+| id | GT | text role | verifier | applied? | final |
+|---|---|---|---|---|---|
+| 01-h3-regional | H3 | H2 | true | yes (H3→H2) | H2 (preserved model_role) |
+| 01-h2-actions | H2 | H2 | true | no | H2 |
+| 03-h1 | H1 | H1 | true | no | H1 |
+| 08-numeral-3 | P | H1 | true | no (R2) | P |
+| 11-h1-terms | H1 | H1 | true | no | H1 |
+| 11-h2-eligibility | H2 | H2 | true | no | H2 |
+| 11-h2-applying | H2 | H2 | true | no | H2 |
+| 11-h2-contact | H2 | H2 | true | no | H2 |
+
+Verifier accuracy 16/17 (FP: `08-numeral-3` `heading:true`; R2 already
+blocks). Recall 11/11. Non-heading rejection 5/6.
+
+`[V]` **pass.** The H3/H2 miss on Regional detail is the role adapter.
+The verifier said heading and preserved `model_role`.
+
+### Image ablation (after Gate 1/2 frozen)
+
+Same adapter, same 07 rows, same prompt and generation settings,
+`--omit-image`.
+
+| id | marked | no-image | flip? |
+|---|---|---|---|
+| 07-h1 | true | true | no |
+| 07-intro | false | false | no |
+| 07-chart-title | false | false | no |
+| 07-cap | false | false | no |
+
+Zero flips. The difficult mapped non-heading (`07-chart-title`) is
+rejected with and without the page. Visual localization is **not**
+shown to be load-bearing on this validation set.
+
+### Predictions scored
+
+1. `[H]` Stock MLX-VLM trains language-side QLoRA on marked pages
+   without `--train-vision` or a source fork. **Confirmed**
+   (`--grad-checkpoint` and `--image-resize-shape 560 800` were
+   mechanical, required to hold Metal memory).
+2. `[H]` Doc 07: zero heading vetoes, zero unsafe promotions.
+   **Confirmed** on the four mapped rows.
+3. `[H]` Known challenge usefulness held while rejecting
+   heading-like non-headings. **Confirmed** at the architecture
+   gate (10/11 exact, unsafe 0). The one verifier FP is the R2
+   numeral, already blocked upstream.
+4. `[H]` Marked image contributes on at least one difficult 07
+   example. **Falsified.** Ablation identical.
+5. `[H]` Spent H1 residuals. **Not run.** Outcome D stops.
+6. `[H]` No crop, vision-tower FT, larger model, semantic regex, or
+   Holdout-1 train row. **Confirmed** as constraints held.
+7. `[H]` Holdout 2 sealed. **Confirmed.**
+
+### Stop — Outcome D
+
+Development gates pass. Image ablation on frozen doc 07 is
+indistinguishable from text-only inference of the same adapter.
+
+A language-side QLoRA *can* learn the binary heading-eligibility
+contract from development marked pages, parse, and avoid true-heading
+vetoes on 07 and the known challenge. That does not prove the marked
+visual signal is doing work. This adapter may be a second text
+classifier that happens to have been trained with images present.
+
+Do not promote the multimodal design to production.
+
+Do not run spent Holdout 1. Do not run Holdout 2. Do not enable
+`--train-vision`. Do not crop. Do not add epochs or examples.
+
+The next cheaper experiment, if any, is the **same binary verifier
+contract without images**, not a blind holdout and not vision-layer
+training.
+
+Architecture remains Part 9 Arm B. `--eval-verify-marked` is a
+measured switch, off by default. `out/adapter-role` is unchanged.
+
