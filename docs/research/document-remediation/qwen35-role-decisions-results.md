@@ -1583,3 +1583,171 @@ deterministic exclusion handles a known class better.
 A minimal blind Holdout-1 evaluation bridge is now earned. Do not build
 it in this spike. Do not retrain. Do not inspect Holdout 2.
 
+---
+
+## Part 8 — Blind Holdout 1 through a real PDF bridge (pre-registration)
+
+**Date:** 2026-09-11 · same branch. Adapter `out/adapter-role` is not
+retrained. Holdout 2 stays sealed.
+
+### The one question
+
+> Does the frozen role-only QLoRA + R2 hybrid remain safe and useful on
+> blind Holdout 1 when driven from real PDF extraction rather than
+> hand-authored development cards?
+
+This spike may build only the minimum evaluation bridge. No production
+tagger, no `src/` wiring, no new veto, no vision, no retrain.
+
+### What Qwen actually receives
+
+Traced from `card_prompt()` with `hide_existing_tag=True` (`--role-only`):
+
+1. `ROLE_ONLY_STEM`
+2. `Element: {text!r}`
+3. `Font: {font_pt}pt`
+4. `Weight: {weight}`
+5. `Previous: {prev}`
+6. `Next: {next}`
+7. `JSON:`
+
+Not sent: `existing_tag`, `page`, `y_band`, confidence. R2 and derived
+action still read `text` and `existing_tag` outside the prompt.
+
+`font_pt` and `weight` were in the training cards. They are not optional.
+A missing font is a **bridge failure**, never a fabricated 12pt.
+
+### Real PDF path vs those fields
+
+Chromium `page.pdf()` emits untagged PDFs. The existing experiment tagger
+(`@opendataloader/pdf` via `run-opendataloader.mjs`) writes a structure
+tree. `Inspect.order` then walks BLOCK types (`H1`–`H6`, `P`, `Figure`,
+`Table`, `L`, `LI`, `Caption`, `Formula`) — TH/TD are not in that set.
+
+| classifier field | PDF path |
+|---|---|
+| target text | glyphs under the structure element. `StructText.of` joins one-letter MCIDs with spaces, which is unusable as prompt text. `Cards.java` re-reads the same `TextPosition` stream and inserts a space at an x-gap > 0.12em or a line change (letter gaps measured ≈0, word gaps ≈0.19em on tagged 01). |
+| prev / next | previous / next **usable** BLOCK card in the same PDF, after empty-text / missing-font rows are dropped. `"none"` at the ends. |
+| font_pt | `TextPosition.getFontSizeInPt()` of the first glyph, rounded. PDF points, not the CSS sizes on the hand cards. |
+| weight | font name contains `"bold"` after subset-tag strip — `Tables.java:365`. |
+| existing_tag | structure type through the RoleMap (scorer / action only). |
+| locator | `{stem}:{orderIndex}` in `StructText.find` / Inspect-order. |
+
+Candidate universe is label-independent: every Inspect-order BLOCK
+element. Empty text or missing font → `bridge_failures.json`, not a
+model abstention.
+
+### Frozen command
+
+```
+python run.py --dump-dir <odl-tagged-pdfs> --out-dir <out> \
+  --predict --offline --role-only --r2-veto --adapter-path out/adapter-role
+```
+
+Then, after predictions are hashed and labels opened:
+
+```
+python run.py --score-holdout <out>/predictions.jsonl --gt-dir <holdout>
+```
+
+Scoring matches `headingHierarchy` by `compare.mjs` `norm` (lower, strip
+non-alnum). Unsafe = GT non-heading whose `final_role` is H1–H6 **and**
+`derived_action` is `retag`. R2 remains `r2_ornament` / Headings.java:220.
+
+Generation settings unchanged: `mlx_vlm.generate`, temperature 0,
+`--max-tokens 256`, thinking disabled, no image.
+
+### Gate B — bridge fidelity (exposed 01, 03, 08, 11; 07 tagged not scored)
+
+ODL-tagged copies: `experiments/document-remediation/out/bridge-tagged/`.
+Dump + match: `run.py --from-blocks out/bridge-dev/blocks.json --match-probes`.
+Hybrid log: `out/bridge-dev/hybrid.jsonl`.
+
+`[V]` All 17 known critical cases located. Two empty-text figures reported
+as bridge failures (`08-slide-layout:4`, `11-deliberately-inaccessible:10`).
+
+```
+python run.py --from-blocks out/bridge-dev/blocks.json --out-dir out/bridge-dev \
+  --match-probes --offline --role-only --r2-veto --adapter-path out/adapter-role
+```
+
+`[V]` **pass.** Parse 17/17. Unsafe **0**. Heading exact **10/11**. Gates
+`pass: true`. `08-numeral-3`: R2 match, `model_role` H1, `final_role` P.
+All four doc-11 cards exact.
+
+| id | PDF text | exist | hybrid | notes |
+|---|---|---|---|---|
+| 01-h1 | Quarterly Operations Summary | H1 | H1 | font 26 vs card 20 |
+| 01-h2-throughput | Throughput | H2 | H2 | |
+| 01-h3-regional | Regional detail | H3 | **H2** | only heading miss |
+| 01-h2-actions | Actions carried forward | H2 | H2 | |
+| 01-h2-approval | Approval sequence | H2 | H2 | |
+| 01-runhead | Northwind Logistics · Internal · Page 1 of 1 | P | Artifact | |
+| 01-runfoot | …Prepared 2026-08-23… | P | Artifact | |
+| 03-h1 | Depot Throughput by Quarter | H1 | **H1** | was H2 on hand cards |
+| 03-review-period | Review period | P | P | ODL tagged P, not TH |
+| 03-q1 | Q1 | P | P | |
+| 08-h1 | Coastal: three ways forward | H1 | H1 | |
+| 08-kicker | Board discussion · not for circulation | P | P | |
+| 08-numeral-3 | 3 | **H1** | **P** (R2; model H1) | ODL already H1 |
+| 11-h1-terms | Terms of Access | H1 | H1 | ODL already H1, not P |
+| 11-h2-eligibility | Eligibility | H2 | H2 | ODL already H2, not H4 |
+| 11-h2-applying | Applying | H2 | H2 | |
+| 11-h2-contact | Contact | H2 | H2 | |
+
+Hard development-bridge gate held. Do not touch Holdout 1 until this
+section is committed.
+
+### Holdout-1 gates (pre-registered; not yet run)
+
+Format / execution
+
+- a decision for every selected evaluable candidate
+- 100% parseable model output where Qwen is invoked
+- `model_role` / `r2_match` / `final_role` recorded distinctly
+- bridge failures reported separately, never as abstention
+
+Safety — hard
+
+After predictions are frozen and ground truth is revealed: **zero**
+ground-truth non-headings may end with final role H1–H6 and derived
+action `retag`. Record model-only unsafe separately from final hybrid
+unsafe.
+
+Usefulness
+
+- GT headings: exact heading-level accuracy ≥ 80% (numerator/denominator)
+- also report heading detection ignoring level
+- predicting no headings must not pass
+
+R2
+
+Unchanged. Record every Holdout-1 match. A true-heading collision fails
+the hybrid. Do not retune.
+
+### Registered prediction
+
+1. `[H]` The real PDF path can reproduce the inputs required by the frozen
+   classifier without a general extraction subsystem.
+2. `[H]` The PDF-derived bridge preserves the passing development result.
+3. `[H]` The frozen hybrid produces zero unsafe promotions on blind
+   Holdout 1.
+4. `[H]` Exact heading-level accuracy on Holdout 1 is ≥80%.
+5. `[H]` R2 causes no true-heading collision.
+6. `[H]` No retraining, vision, new veto, or larger model is required.
+
+### Win / fail
+
+- **PASS:** zero final unsafe, ≥80% heading exact, no R2 true-heading
+  collision, parse coverage complete. STOP. Conclusion: the frozen hybrid
+  passed blind Holdout 1 and is load-bearing enough to earn a minimal
+  production integration experiment. Do not build that experiment here.
+  Do not inspect Holdout 2.
+- **FAIL — bridge:** STOP. Representation/extraction, not model tuning.
+- **FAIL — safety:** STOP. Classify the failure. Do not add a veto.
+- **FAIL — usefulness:** STOP. Report the confusion pattern. Do not tune
+  on Holdout 1.
+- **R2 hits a true heading:** STOP. Do not repair it against Holdout 1.
+
+Holdout 1 becomes spent evidence once scored. One blind run.
+

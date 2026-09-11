@@ -76,6 +76,316 @@ def apply_r2_veto(pred: dict | None, case: dict) -> dict | None:
     return out
 
 
+def collapse_glyph_spaces(text: str) -> str:
+    """PDFMarkedContentExtractor often yields one glyph per token. Headings.java R1."""
+    tokens = text.split()
+    if not tokens:
+        return text
+    if sum(1 for tok in tokens if len(tok) == 1) / len(tokens) >= 0.8:
+        return "".join(tokens)
+    return text
+
+
+def blocks_to_cards(blocks: list[dict]) -> tuple[list[dict], list[dict]]:
+    usable = []
+    failed = []
+    for block in blocks:
+        raw = block.get("text") or ""
+        if not str(raw).strip():
+            failed.append({"locator": block.get("locator"), "reason": "empty_text"})
+            continue
+        if block.get("font_pt") is None:
+            failed.append({"locator": block.get("locator"), "reason": "missing_font"})
+            continue
+        usable.append(block)
+    cards = []
+    for i, block in enumerate(usable):
+        prev_t = collapse_glyph_spaces(usable[i - 1]["text"]) if i else "none"
+        next_t = collapse_glyph_spaces(usable[i + 1]["text"]) if i + 1 < len(usable) else "none"
+        cards.append(
+            {
+                "locator": block["locator"],
+                "id": block["locator"],
+                "text": collapse_glyph_spaces(block["text"]),
+                "font_pt": block["font_pt"],
+                "weight": block["weight"],
+                "prev": prev_t,
+                "next": next_t,
+                "existing_tag": block["existing_tag"],
+            }
+        )
+    return cards, failed
+
+
+def text_norm(s: str) -> str:
+    """compare.mjs: lower, strip non-alnum. Glyph spaces vanish under this."""
+    return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+
+def dumps_to_cards(dumps: list[dict]) -> tuple[list[dict], list[dict]]:
+    """One document at a time so prev/next never cross a PDF boundary."""
+    cards: list[dict] = []
+    failed: list[dict] = []
+    for dump in dumps:
+        stem = dump.get("stem") or dump.get("pdf")
+        if not dump.get("hasStructTree"):
+            failed.append(
+                {
+                    "locator": stem,
+                    "reason": dump.get("error") or "no_structure_tree",
+                }
+            )
+            continue
+        c, f = blocks_to_cards(dump.get("blocks") or [])
+        cards.extend(c)
+        failed.extend(f)
+    return cards, failed
+
+
+def attach_probe_expect(cards: list[dict], probes: list[dict]) -> tuple[list[dict], list[str]]:
+    """Match PDF cards to exposed probe texts. First unused probe per norm wins."""
+    by_norm: dict[str, list[dict]] = {}
+    for probe in probes:
+        by_norm.setdefault(text_norm(probe["text"]), []).append(probe)
+    used: set[str] = set()
+    matched: list[dict] = []
+    for card in cards:
+        hits = [
+            p
+            for p in by_norm.get(text_norm(card["text"]), [])
+            if p["id"] not in used
+        ]
+        if not hits:
+            continue
+        probe = hits[0]
+        used.add(probe["id"])
+        row = dict(card)
+        row["id"] = probe["id"]
+        row["probe_id"] = probe["id"]
+        row["expect"] = probe["expect"]
+        if "trap" in probe:
+            row["trap"] = probe["trap"]
+        matched.append(row)
+    missing = [p["id"] for p in probes if p["id"] not in used]
+    return matched, missing
+
+
+def card_bundle(cards: list[dict], model: str = "mlx-community/Qwen3.5-4B-MLX-4bit") -> dict:
+    return {"model": model, "cases": cards}
+
+
+def decide_card(pred: dict | None, case: dict, role_only: bool, r2_veto: bool) -> dict | None:
+    if role_only and pred is not None and "role" in pred:
+        pred = dict(pred)
+        pred["action"] = "keep" if pred["role"] == case["existing_tag"] else "retag"
+    if r2_veto:
+        pred = apply_r2_veto(pred, case)
+    return pred
+
+
+def prediction_record(case: dict, pred: dict | None, raw: str) -> dict:
+    model_role = pred.get("model_role") if pred else None
+    if model_role is None and pred is not None:
+        model_role = pred.get("role")
+    r2_match = bool(pred.get("r2_veto")) if pred else r2_ornament(case.get("text") or "")
+    final_role = pred.get("role") if pred else None
+    action = pred.get("action") if pred else None
+    return {
+        "locator": case.get("locator") or case.get("id"),
+        "text": case.get("text"),
+        "font_pt": case.get("font_pt"),
+        "weight": case.get("weight"),
+        "prev": case.get("prev"),
+        "next": case.get("next"),
+        "existing_tag": case.get("existing_tag"),
+        "model_role": model_role,
+        "r2_match": r2_match,
+        "final_role": final_role,
+        "derived_action": action,
+        "parsed": pred is not None,
+        "raw": (raw or "")[-1500:],
+    }
+
+
+def score_holdout(preds: list[dict], gt_by_stem: dict[str, dict]) -> dict:
+    """Score frozen predictions against headingHierarchy. No confidence."""
+    heading_rows: list[dict] = []
+    nonheading_rows: list[dict] = []
+    unmatched_gt: list[dict] = []
+    r2_matches: list[dict] = []
+    r2_heading_collisions: list[dict] = []
+    for pred in preds:
+        locator = str(pred.get("locator") or "")
+        stem = locator.rsplit(":", 1)[0]
+        gt = gt_by_stem.get(stem) or {}
+        headings = list(gt.get("headingHierarchy") or [])
+        norms = [text_norm(h["text"]) for h in headings]
+        n = text_norm(pred.get("text") or "")
+        is_gt_heading = bool(n) and n in norms
+        row = dict(pred)
+        row["stem"] = stem
+        row["gt_heading"] = is_gt_heading
+        if pred.get("r2_match"):
+            r2_matches.append(row)
+            if is_gt_heading:
+                r2_heading_collisions.append(row)
+        if is_gt_heading:
+            heading_rows.append(row)
+        else:
+            nonheading_rows.append(row)
+    # Exact / detection: each GT heading matched to at most one prediction, in order.
+    used_locators: set[str] = set()
+    heading_exact = 0
+    heading_detect = 0
+    heading_demote = 0
+    hierarchy = 0
+    heading_n = 0
+    for stem, gt in gt_by_stem.items():
+        for h in gt.get("headingHierarchy") or []:
+            heading_n += 1
+            want = f"H{h['level']}"
+            n = text_norm(h["text"])
+            hit = next(
+                (
+                    p
+                    for p in preds
+                    if str(p.get("locator") or "").rsplit(":", 1)[0] == stem
+                    and text_norm(p.get("text") or "") == n
+                    and p.get("locator") not in used_locators
+                ),
+                None,
+            )
+            if hit is None:
+                unmatched_gt.append({"stem": stem, "text": h["text"], "level": h["level"]})
+                continue
+            used_locators.add(hit["locator"])
+            got = hit.get("final_role")
+            if got == want:
+                heading_exact += 1
+                heading_detect += 1
+            elif got in HEADING:
+                heading_detect += 1
+                hierarchy += 1
+            else:
+                heading_demote += 1
+    unsafe = [
+        p
+        for p in nonheading_rows
+        if p.get("final_role") in HEADING and p.get("derived_action") == "retag"
+    ]
+    model_unsafe = [
+        p
+        for p in nonheading_rows
+        if p.get("model_role") in HEADING and p.get("model_role") != p.get("existing_tag")
+    ]
+    evaluable = [p for p in preds if p.get("parsed")]
+    role_exact = 0
+    for p in heading_rows:
+        stem = str(p.get("locator") or "").rsplit(":", 1)[0]
+        want = None
+        n = text_norm(p.get("text") or "")
+        for h in (gt_by_stem.get(stem) or {}).get("headingHierarchy") or []:
+            if text_norm(h["text"]) == n:
+                want = f"H{h['level']}"
+                break
+        if want and p.get("final_role") == want:
+            role_exact += 1
+    nonheading_role_ok = sum(
+        1 for p in nonheading_rows if p.get("parsed") and p.get("final_role") not in HEADING
+    )
+    final_role_n = len(heading_rows) + len(nonheading_rows)
+    final_role_ok = role_exact + nonheading_role_ok
+    action_ok = 0
+    action_n = 0
+    for p in preds:
+        if not p.get("parsed") or p.get("final_role") is None:
+            continue
+        action_n += 1
+        want_action = "keep" if p.get("final_role") == p.get("existing_tag") else "retag"
+        if p.get("derived_action") == want_action:
+            action_ok += 1
+    parse_fail = sum(1 for p in preds if not p.get("parsed"))
+    usefulness_ok = heading_n > 0 and heading_exact * 10 >= heading_n * 8
+    return {
+        "evaluable": len(preds),
+        "parsed": len(evaluable),
+        "parse_fail": parse_fail,
+        "heading_n": heading_n,
+        "heading_exact": heading_exact,
+        "heading_detect": heading_detect,
+        "heading_demote": heading_demote,
+        "hierarchy_confusion": hierarchy,
+        "unmatched_gt_headings": unmatched_gt,
+        "unsafe": len(unsafe),
+        "unsafe_locators": [u.get("locator") for u in unsafe],
+        "model_unsafe": len(model_unsafe),
+        "r2_matches": len(r2_matches),
+        "r2_match_locators": [r.get("locator") for r in r2_matches],
+        "r2_true_heading_collisions": len(r2_heading_collisions),
+        "r2_collision_locators": [r.get("locator") for r in r2_heading_collisions],
+        "final_role_ok": final_role_ok,
+        "final_role_n": final_role_n,
+        "derived_action_ok": action_ok,
+        "derived_action_n": action_n,
+        "usefulness_ok": usefulness_ok,
+        "safety_ok": len(unsafe) == 0 and parse_fail == 0,
+        "pass": parse_fail == 0
+        and len(unsafe) == 0
+        and usefulness_ok
+        and len(r2_heading_collisions) == 0,
+    }
+
+
+REPO = HERE.parents[1]
+PDFBOX = HERE.parent / "document-remediation" / "vendor" / "pdfbox-app-3.0.8.jar"
+STRUCT_TEXT = REPO / "src" / "integrations" / "documents" / "java" / "StructText.java"
+CARDS_JAVA = HERE / "Cards.java"
+CARDS_CLASSES = HERE / "out" / "classes"
+JAVA_HOME = Path(os.environ.get("JAVA_HOME", "/opt/homebrew/opt/openjdk@17"))
+MODEL = "mlx-community/Qwen3.5-4B-MLX-4bit"
+
+
+def compile_cards() -> None:
+    CARDS_CLASSES.mkdir(parents=True, exist_ok=True)
+    javac = JAVA_HOME / "bin" / "javac"
+    cmd = [
+        str(javac),
+        "-cp",
+        str(PDFBOX),
+        "-d",
+        str(CARDS_CLASSES),
+        str(STRUCT_TEXT),
+        str(CARDS_JAVA),
+    ]
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
+
+
+def dump_pdf(pdf: Path) -> dict:
+    compile_cards()
+    java = JAVA_HOME / "bin" / "java"
+    cmd = [
+        str(java),
+        "-Djava.awt.headless=true",
+        "-cp",
+        f"{PDFBOX}:{CARDS_CLASSES}",
+        "Cards",
+        str(pdf),
+    ]
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
+    return json.loads(proc.stdout)
+
+
+def dump_dir(folder: Path) -> list[dict]:
+    dumps = []
+    for pdf in sorted(folder.glob("*.pdf")):
+        dumps.append(dump_pdf(pdf))
+    return dumps
+
+
 def parse_json(text: str) -> dict | None:
     stripped = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
     match = re.search(r"\{.*\}", stripped, flags=re.S)
@@ -234,11 +544,7 @@ def run_cases(
             thinking_budget=thinking_budget,
             adapter_path=adapter_path,
         )
-        pred = parse_json(raw)
-        if role_only and pred is not None and "role" in pred:
-            pred["action"] = "keep" if pred["role"] == case["existing_tag"] else "retag"
-        if r2_veto:
-            pred = apply_r2_veto(pred, case)
+        pred = decide_card(parse_json(raw), case, role_only=role_only, r2_veto=r2_veto)
         row = score(pred, case)
         row["raw"] = raw[-1500:]
         if r2_veto and pred is not None:
@@ -250,6 +556,37 @@ def run_cases(
             shown["raw"] = row["raw"]
         print(json.dumps(shown, sort_keys=True))
     print(json.dumps({"gates": gates(rows)}, sort_keys=True))
+    return rows
+
+
+def run_predict(
+    cards: list[dict],
+    offline: bool = False,
+    adapter_path: str | None = None,
+    role_only: bool = True,
+    r2_veto: bool = True,
+    thinking_mode: str = "disabled",
+) -> list[dict]:
+    if offline:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+    if not role_only:
+        raise SystemExit("--predict requires --role-only")
+    rows = []
+    for case in cards:
+        raw = generate(
+            MODEL,
+            card_prompt(ROLE_ONLY_STEM, case, hide_existing_tag=True),
+            thinking_mode=thinking_mode,
+            adapter_path=adapter_path,
+        )
+        pred = decide_card(parse_json(raw), case, role_only=True, r2_veto=r2_veto)
+        row = prediction_record(case, pred, raw)
+        rows.append(row)
+        shown = {k: v for k, v in row.items() if k != "raw"}
+        if not row["parsed"]:
+            shown["raw"] = row["raw"]
+        print(json.dumps(shown, sort_keys=True))
+    print(json.dumps({"evaluable": len(rows), "parsed": sum(1 for r in rows if r["parsed"])}))
     return rows
 
 
@@ -371,6 +708,133 @@ def self_check() -> None:
     assert heading_keep["model_role"] == "H1"
     assert heading_keep["action"] == "retag"
     assert apply_r2_veto(None, {"text": "Hello", "existing_tag": "P"}) is None
+    assert collapse_glyph_spaces("Q u a r t e r l y O p e r a t i o n s") == "QuarterlyOperations"
+    assert collapse_glyph_spaces("Regional detail") == "Regional detail"
+    assert collapse_glyph_spaces("3") == "3"
+    built, failed = blocks_to_cards(
+        [
+            {
+                "locator": "01:0",
+                "existing_tag": "P",
+                "text": "N o r t h w i n d",
+                "font_pt": 8,
+                "weight": "regular",
+            },
+            {
+                "locator": "01:1",
+                "existing_tag": "H1",
+                "text": "Q u a r t e r l y",
+                "font_pt": 20,
+                "weight": "bold",
+            },
+            {"locator": "01:2", "existing_tag": "Figure", "text": "", "font_pt": 12, "weight": "regular"},
+            {"locator": "01:3", "existing_tag": "P", "text": "Hello", "weight": "regular"},
+        ]
+    )
+    assert [c["locator"] for c in built] == ["01:0", "01:1"]
+    assert built[1]["text"] == "Quarterly"
+    assert built[1]["prev"] == "Northwind"
+    assert built[0]["next"] == "Quarterly"
+    assert built[0]["prev"] == "none"
+    assert built[1]["next"] == "none"
+    assert any(f["locator"] == "01:2" and f["reason"] == "empty_text" for f in failed)
+    assert any(f["locator"] == "01:3" and f["reason"] == "missing_font" for f in failed)
+    assert text_norm("Q u a r t e r l y O p e r a t i o n s") == text_norm(
+        "Quarterly Operations"
+    )
+    dumps, dump_fail = dumps_to_cards(
+        [
+            {
+                "stem": "01-simple-text",
+                "hasStructTree": True,
+                "blocks": [
+                    {
+                        "locator": "01-simple-text:0",
+                        "existing_tag": "H1",
+                        "text": "Quarterly Operations Summary",
+                        "font_pt": 20,
+                        "weight": "bold",
+                    }
+                ],
+            },
+            {"stem": "untagged", "hasStructTree": False, "error": "no_structure_tree"},
+        ]
+    )
+    assert dumps[0]["locator"] == "01-simple-text:0"
+    assert dumps[0]["prev"] == "none"
+    assert any(f["reason"] == "no_structure_tree" for f in dump_fail)
+    matched, missing = attach_probe_expect(
+        dumps,
+        [{"id": "01-h1", "text": "Quarterly Operations Summary", "expect": {"role": "H1"}}],
+    )
+    assert matched[0]["id"] == "01-h1"
+    assert missing == []
+    hold = score_holdout(
+        [
+            {
+                "locator": "doc:0",
+                "text": "Title",
+                "existing_tag": "P",
+                "model_role": "H1",
+                "r2_match": False,
+                "final_role": "H1",
+                "derived_action": "retag",
+                "parsed": True,
+            },
+            {
+                "locator": "doc:1",
+                "text": "3",
+                "existing_tag": "H1",
+                "model_role": "H1",
+                "r2_match": True,
+                "final_role": "P",
+                "derived_action": "retag",
+                "parsed": True,
+            },
+        ],
+        {"doc": {"headingHierarchy": [{"level": 1, "text": "Title"}]}},
+    )
+    assert hold["heading_exact"] == 1
+    assert hold["heading_n"] == 1
+    assert hold["unsafe"] == 0
+    assert hold["r2_true_heading_collisions"] == 0
+    assert hold["pass"] is True
+    unsafe_hold = score_holdout(
+        [
+            {
+                "locator": "doc:0",
+                "text": "DRAFT",
+                "existing_tag": "P",
+                "model_role": "H1",
+                "r2_match": False,
+                "final_role": "H1",
+                "derived_action": "retag",
+                "parsed": True,
+            }
+        ],
+        {"doc": {"headingHierarchy": [{"level": 1, "text": "Real Title"}]}},
+    )
+    assert unsafe_hold["unsafe"] == 1
+    assert unsafe_hold["pass"] is False
+    assert unsafe_hold["unmatched_gt_headings"][0]["text"] == "Real Title"
+
+
+def load_block_dumps() -> list[dict] | None:
+    raw = flag_value("--from-blocks")
+    folder = flag_value("--dump-dir")
+    one = flag_value("--dump-pdf")
+    if folder:
+        return dump_dir(Path(folder))
+    if one:
+        return [dump_pdf(Path(one))]
+    if raw:
+        payload = json.loads(Path(raw).read_text())
+        if isinstance(payload, list):
+            return payload
+        if "blocks" in payload:
+            return [payload]
+        return payload.get("pdfs") or []
+    return None
 
 
 if __name__ == "__main__":
@@ -378,6 +842,86 @@ if __name__ == "__main__":
         self_check()
         print("ok")
         raise SystemExit(0)
+
+    score_path = flag_value("--score-holdout")
+    if score_path:
+        gt_dir = Path(flag_value("--gt-dir") or "")
+        if not gt_dir:
+            raise SystemExit("--score-holdout requires --gt-dir")
+        preds = [
+            json.loads(line)
+            for line in Path(score_path).read_text().splitlines()
+            if line.strip()
+        ]
+        gt_by_stem = {}
+        for path in sorted(gt_dir.glob("*.ground-truth.json")):
+            payload = json.loads(path.read_text())
+            stem = payload.get("document") or path.name.replace(".ground-truth.json", "")
+            gt_by_stem[stem] = payload
+        print(json.dumps(score_holdout(preds, gt_by_stem), indent=2, default=str))
+        raise SystemExit(0)
+
+    dumps = load_block_dumps()
+    if dumps is not None:
+        cards, failed = dumps_to_cards(dumps)
+        out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "bridge"))
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "blocks.json").write_text(json.dumps({"pdfs": dumps}, indent=2) + "\n")
+        (out_dir / "bridge_failures.json").write_text(json.dumps(failed, indent=2) + "\n")
+        if "--match-probes" in sys.argv:
+            probes = json.loads(PROBES_PATH.read_text())["cases"]
+            matched, missing = attach_probe_expect(cards, probes)
+            (out_dir / "matched-probes.json").write_text(
+                json.dumps(card_bundle(matched), indent=2) + "\n"
+            )
+            print(
+                json.dumps(
+                    {
+                        "cards": len(cards),
+                        "matched": [m["id"] for m in matched],
+                        "missing": missing,
+                        "bridge_failures": failed,
+                    },
+                    sort_keys=True,
+                )
+            )
+            if "--offline" in sys.argv:
+                tmp = out_dir / "matched-probes.json"
+                run_cases(
+                    path=tmp,
+                    offline=True,
+                    adapter_path=flag_value("--adapter-path"),
+                    role_only="--role-only" in sys.argv,
+                    r2_veto="--r2-veto" in sys.argv,
+                    thinking_mode=flag_value("--thinking-mode") or "disabled",
+                    thinking_budget=flag_value("--thinking-budget"),
+                )
+            raise SystemExit(0)
+        (out_dir / "cards.json").write_text(json.dumps(card_bundle(cards), indent=2) + "\n")
+        print(
+            json.dumps(
+                {
+                    "pdfs": len(dumps),
+                    "cards": len(cards),
+                    "bridge_failures": failed,
+                },
+                sort_keys=True,
+            )
+        )
+        if "--predict" in sys.argv:
+            rows = run_predict(
+                cards,
+                offline="--offline" in sys.argv,
+                adapter_path=flag_value("--adapter-path"),
+                role_only="--role-only" in sys.argv,
+                r2_veto="--r2-veto" in sys.argv,
+                thinking_mode=flag_value("--thinking-mode") or "disabled",
+            )
+            (out_dir / "predictions.jsonl").write_text(
+                "".join(json.dumps(r) + "\n" for r in rows)
+            )
+        raise SystemExit(0)
+
     image_dir = flag_value("--image-dir")
     cards = flag_value("--path")
     run_cases(
