@@ -2430,3 +2430,106 @@ STOP. Do not build a crop. Holdout 2 still not run.
    retraining.
 6. `[H]` Holdout 2 remains untouched.
 
+### Mapping check
+
+`--check-box-map` on tagged development `01-simple-text:1`
+(“Quarterly Operations Summary”): mapped `{x:108,y:187,w:619,h:26}`
+inside 1130×1600. The rectangle sits on that H1, not on the running
+header or the following paragraph.
+
+The same mapping on the two residuals lands on the existing glyph
+box, not a guessed region: `h11:4` on the chart title string; `h06:14`
+on the union of the three column-header glyphs Cards concatenates as
+that locator’s text. No second extractor.
+
+### Arm A — marked full page `[V]`
+
+Same 14. Existing Preview PNGs reused. One magenta rectangle per
+candidate. Base Qwen3.5-4B, no adapter, temperature 0, thinking
+disabled, max-tokens 256. Marker prompt as frozen above. No `Text:`
+line — the rectangle is the binding.
+
+| locator | GT heading? | full page | marked page | final |
+|---|---|---|---|---|
+| h01:4 Standard rates | yes | true | **false** | P (keep) |
+| h01:11 Exclusions | yes | true | **false** | H3 (keep) |
+| h02:0 BERTH ALLOCATION PROCEDURE | yes | true | true | H2 |
+| h06:2 Fully ruled | yes | true | true | H2 |
+| h06:13 Horizontal rules only | yes | true | **false** | P (keep) |
+| h06:14 Depot Staff Vehicles | no | true | false | P (keep) |
+| h09:8 spanning banner | no | false | false | P |
+| h11:4 Berth Occupancy by Month | no | true | false | H1 (keep) |
+| h11:7 Month of year | no | false | false | P |
+| h12:5 Recommendation | yes | true | true | H2 |
+| h13:1 COMMERCIAL IN CONFIDENCE | no | false | false | keep H2 |
+| h16:4 Discrepancies | yes | true | true | H2 |
+| h16:6 STORAGE | yes | true | **false** | H4 (keep) |
+| h16:10 Dispatch | yes | true | true | H2 |
+
+Parse **14/14**. `verification_failure` **0**. Every raw parse was
+`{"heading":true}` or `{"heading":false}`.
+
+`h11:4`: full page true → marked false. Direct evidence that Part
+10’s miss was at least partly localization-shaped. Fail-closed keeps
+the existing `H1` (the proposed mutation was H1→H2), so this row
+leaves the unsafe-*retag* list without turning the chart title into
+`P`.
+
+`h06:14`: marked false. The model, pointed at that box, did not call
+it a heading. That is not scored as a localization failure.
+
+True-heading vetoes **4** (gate is 0):
+
+- `h01:4` Standard rates (P, would have been promoted)
+- `h01:11` Exclusions (stays H3; level change blocked)
+- `h06:13` Horizontal rules only (P, would have been promoted)
+- `h16:6` STORAGE (stays H4; level change blocked)
+
+Two of those are heading demotions in the scorer (`Standard rates`,
+`Horizontal rules only`). Heading exact **43 → 39 / 51**. Detect
+47 → 45. Demotions **0 → 2**. Usefulness gate (80% exact) **fails**.
+
+Final unsafe **0**. `model_unsafe` still 18. Qwen skipped 320/444
+unchanged.
+
+### Predictions scored
+
+1. `[H]` Marking fixes `h11:4`. **Confirmed.**
+2. `[H]` Marking may not fix `h06:14`. **Falsified** (marked
+   `heading:false`).
+3. `[H]` Zero genuine-heading vetoes. **Falsified** (4).
+4. `[H]` Crop rejects remaining `h06`. **Not run.** Outcome E stops
+   before a crop.
+5. `[H]` Unsafe 2 → 0 without semantic rules or retraining.
+   **Confirmed as a count**, and not adoptable: the same switch
+   demoted known headings.
+6. `[H]` Holdout 2 untouched. **Confirmed.**
+
+### Stop — Outcome E
+
+The marked full-page verifier vetoed genuine headings. Stop
+immediately. Do not trade promotion safety for that.
+
+Do not build a crop. Do not change the crop size, the prompt, or the
+marker. Do not add examples, an all-caps rule, or table-label
+strings. Do not retrain. Do not run Holdout 2.
+
+What this measured: once the 4B verifier can see which object we
+mean, it can reject the two Part 10 residuals, and it also rejects
+section headings that the unmarked full page had allowed. Target
+localization is not a free safety upgrade on this model and this
+binary contract.
+
+Architecture remains Part 9 Arm B:
+
+source-type eligibility + Table/Figure ancestry + role-only QLoRA +
+R2 + deterministic action
+
+`--verify-page` / `--verify-marked` stay measured switches, off by
+default. Selective invocation is preserved; it is the *representation*
+that failed the heading-veto gate, not the idea of running vision on
+every BLOCK.
+
+The next decision, if any, is model/data architecture — not a second
+crop, and not Holdout 2.
+
