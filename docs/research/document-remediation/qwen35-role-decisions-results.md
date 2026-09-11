@@ -3392,3 +3392,139 @@ Reference before verifier (Part 9 Arm B): unsafe **5**, heading exact
 
 Do not run Holdout 2.
 
+### Gate A — execution
+
+`--list-mutations` on frozen Part-9 Arm B `out/h1-scope/rescored-armB.jsonl`
+reproduced the exact 14 Part-10 locators, in order. No dump re-filter.
+No 444-row role regeneration. `--verify-text-binary` called
+`out/adapter-verify-text` with the Part-14 prompt, temperature 0,
+thinking disabled, max-tokens 256, no `--image`.
+
+Verifier calls **14**. Role-model calls avoided by structural scope
+**320 / 444**, unchanged. `qwen_called` **124**. Parse **14/14**.
+`verification_failure` **0**. `verify_input` `text-binary` on all 14.
+
+`[V]` **pass.** Not Outcome D plumbing.
+
+### Gate B — genuine-heading preservation `[V]` **fail**
+
+Nine GT-heading rows. Verifier false on four of them. Hard requirement
+was zero vetoes.
+
+| locator | GT | exist | frozen model_role | verifier | applied? | final | veto? |
+|---|---|---|---|---|---|---|---|
+| h01:4 Standard rates | yes | P | H2 | true | yes | H2 | no |
+| h01:11 Exclusions | yes | H3 | H2 | true | yes | H2 | no |
+| h02:0 BERTH ALLOCATION PROCEDURE | yes | P | H2 | **false** | yes | P (keep) | **yes** |
+| h06:2 Fully ruled | yes | P | H2 | true | yes | H2 | no |
+| h06:13 Horizontal rules only | yes | P | H2 | **false** | yes | P (keep) | **yes** |
+| h12:5 Recommendation | yes | H1 | H2 | true | yes | H2 | no |
+| h16:4 Discrepancies | yes | H3 | H2 | **false** | yes | H3 (keep) | **yes** |
+| h16:6 STORAGE | yes | H4 | H2 | **false** | yes | H4 (keep) | **yes** |
+| h16:10 Dispatch | yes | H1 | H2 | true | yes | H2 | no |
+
+Verifier-caused true-heading vetoes **4**. Two of those (`h02:0`,
+`h06:13`) are promotions blocked back to existing `P` (scorer
+demotions). Two (`h16:4`, `h16:6`) fail-close to the existing heading
+tag, so they stay headings and are not demotions.
+
+STOP Gate B. Do not adjust the prompt, epochs, threshold, or training
+data. Do not restore the image path automatically. Do not run Holdout 2.
+
+Gate C and Gate D are reported below as the spent record, not as a
+rescue.
+
+### Gate C — known unsafe residuals (reported; not a passing rung)
+
+Five GT non-headings. Verifier eligibility vs final architecture
+safety are not the same number.
+
+| locator | verifier | existing | frozen model_role | final | action | unsafe retag? |
+|---|---|---|---|---|---|---|
+| h06:14 Depot Staff Vehicles | false | P | H2 | P | keep | no |
+| h09:8 spanning banner | false | P | H2 | P | keep | no |
+| h11:4 Berth Occupancy by Month | **true** | H1 | H2 | H2 | retag | **yes** |
+| h11:7 Month of year | false | P | H2 | P | keep | no |
+| h13:1 COMMERCIAL IN CONFIDENCE | **true** | H2 | H1 | H1 | retag | **yes** |
+
+Verifier eligibility on these five: **3/5** (TN `h06:14`, `h09:8`,
+`h11:7`; FP `h11:4`, `h13:1`). Final unsafe retags **2 / 5**, not 0/5.
+The FPs are both existing `H*` whose proposed level change the
+verifier allowed. Fail-close did not apply because the verifier said
+true.
+
+### Gate D — full spent-H1 architecture rescore
+
+Frozen Part-9 Arm B jsonl, verifier substituted only on the 14. No
+Qwen pass over 444 cards.
+
+| | Part 9 Arm B | Part 15 |
+|---|---|---|
+| final unsafe promotions | 5 | **2** (`h11:4`, `h13:1`) |
+| heading exact / 51 | 43 | **42** |
+| heading detection / 51 | 47 | **45** |
+| heading demotions | 0 | **2** (`h02:0`, `h06:13`) |
+| verifier-caused heading vetoes | — | **4** |
+| parse / verification failures | 444/444 | 444/444; verifier 14/14 |
+| verifier calls | 0 | 14 |
+| role-model calls avoided by structural scope | 320/444 | **320/444** unchanged |
+
+Hard targets all missed: unsafe 0, exact ≥43, detection ≥47, demotions
+0, vetoes 0.
+
+Do not claim Holdout-1 generalization. Holdout 1 is spent.
+
+### Comparison (already-recorded Part 10/11/12; Part 13 marked not run)
+
+| row | GT heading? | frozen model_role | Part 10 full-page binary | Part 11 marked binary | Part 12 marked role eligibility | Part 15 text verifier | final |
+|---|---|---|---|---|---|---|---|
+| h01:4 Standard rates | yes | H2 | true | false | true | true | H2 |
+| h01:11 Exclusions | yes | H3→H2 | true | false | true | true | H2 |
+| h02:0 BERTH ALLOCATION PROCEDURE | yes | H2 | true | true | true | **false** | P |
+| h06:2 Fully ruled | yes | H2 | true | true | true | true | H2 |
+| h06:13 Horizontal rules only | yes | H2 | true | false | true | **false** | P |
+| h06:14 Depot Staff Vehicles | no | H2 | true | false | false | false | P |
+| h09:8 spanning banner | no | H2 | false | false | false | false | P |
+| h11:4 Berth Occupancy by Month | no | H1→H2 | true | false | true | true | H2 |
+| h11:7 Month of year | no | H2 | false | false | false | false | P |
+| h12:5 Recommendation | yes | H1→H2 | true | true | true | true | H2 |
+| h13:1 COMMERCIAL IN CONFIDENCE | no | H2→H1 | false | false | true | true | H1 |
+| h16:4 Discrepancies | yes | H3→H2 | true | true | true | **false** | H3 |
+| h16:6 STORAGE | yes | H4→H2 | true | false | true | **false** | H4 |
+| h16:10 Dispatch | yes | H1→H2 | true | true | true | true | H2 |
+
+Part 13 marked verifier: **not run** on Holdout 1.
+
+### Predictions scored
+
+1. `[H]` Parses all 14. **Confirmed.**
+2. `[H]` Accepts all 9 genuine headings. **Falsified** (4 vetoes).
+3. `[H]` Final unsafe 5 → 0. **Falsified** (2 remain).
+4. `[H]` Exact 43/51 and detection 47/51. **Falsified** (42 / 45;
+   two demotions).
+5. `[H]` Succeeds without images, confirming Part 14. **Falsified**
+   as a residual-surface win. Part 14’s development identity still
+   stands; it does not clear this spent failure surface.
+6. `[H]` No retraining, image path, crop, new heuristic, or larger
+   model. **Confirmed** as constraints held.
+7. `[H]` Holdout 2 sealed. **Confirmed.**
+
+### Stop — Outcome B
+
+The frozen text-only eligibility verifier is not safe enough to sit
+in front of heading mutation. It vetoed genuine headings on the spent
+14-row surface.
+
+Do not tune it on the spent row. Do not add examples or a semantic
+rule from Holdout 1. Do not restore the image path automatically —
+Part 14 already showed marked and text-only identical on development,
+and this spike did not re-measure Part 13 on Holdout 1.
+
+Do not run Holdout 2. Do not freeze adapters as a Holdout-2 object.
+The architecture is not earned for a blind evaluation.
+
+`out/adapter-role` and `out/adapter-verify-text` are unchanged.
+Logs: `out/h1-layout/rescored-armB-text-binary.jsonl`,
+`out/h1-layout/score-armB-text-binary.json`.
+
+
