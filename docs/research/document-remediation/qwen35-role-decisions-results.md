@@ -226,7 +226,147 @@ check. Bare prompt F7 fail is the same class of harm Brief B recorded on 7B.
 
 ---
 
-## Stopping
+## Stopping (spike 1)
 
 Gates 0–1 green. Gate 2 scored; win missed; LoRA not run. Alt arm scored.
 Stop.
+
+---
+
+## Part 3 — Inference-time heading safety
+
+**Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
+**Status at time of writing this section:** pre-registration. No generate() on the fresh probes yet.
+
+Ponytail: one question, same experiment directory, same results file. No LoRA, no
+`src/` wiring, no crop pipeline, no extractor, no confidence calibration, no
+new abstractions. Stop at the first ladder arm that passes both gates.
+
+### The one question
+
+> Can we eliminate unsafe heading promotions with inference-time changes
+> alone, while preserving useful heading recall?
+
+### Existing flow (traced before any generate)
+
+Production PDF repair: Inspect → `planRepair` refuses untagged → Finish
+transcribes. There is **no role-decision step** and **no production tagger**.
+`experiments/document-remediation/Headings.java` is experiment-only and
+**demotion-only**. Finish `--renumber-headings` remaps existing `H*`, never
+`P` → heading.
+
+Future insert point: after a tagger (or on an already-tagged PDF), around
+Inspect, before Finish.
+
+| Signal | At Inspect / repair | On spike-1 cards | This ladder |
+|---|---|---|---|
+| text | `order[].text`, `headingTexts` | yes | already used |
+| current tag | `order[].type` | `existing_tag` | already used |
+| neighbors | derive from `order[i±1]` | `prev`/`next` | already used |
+| font size/weight | **not in Inspect** | hand-authored from corpus HTML/CSS | already used; not a new extractor |
+| page / y-band | **not on headings** | no | frozen on every probe; emitted only in Arm D |
+| repeated-across-pages | **does not exist** | no | **not invented**. Headings R3 is a page-marker regex, not a repeat detector. 01 is one page |
+| page image | `Preview.java` (full page PNG, ~1600px cap) | unused | Arm E only, and only if A–D fail |
+
+### Existing code/data reused
+
+- `experiments/qwen-role-decisions/run.py` (`mlx_vlm.generate`, think-block
+  strip, `--image` already in `generate()`)
+- Baseline `prompt_stem` copied from `cases.json` (not re-tuned against it)
+- Development corpus HTML + `*.ground-truth.json` for docs **01, 03, 08, 11**
+- `generate-corpus.mjs` + `Preview.java` only if Arm E is reached
+
+`cases.json`, Holdout 1, and Holdout 2 are **not** the optimization target.
+
+**Holdout 1 skipped:** this harness scores HTML/GT cards. Scoring holdout PDFs
+needs Inspect of those files or a new extractor, which this spike declined.
+
+### Frozen probes
+
+`experiments/qwen-role-decisions/probes.json`. Whole-document split.
+
+True headings (n=11, `headingHierarchy` only):
+
+| id | expect | notes |
+|---|---|---|
+| 01-h1 | H1 | Quarterly Operations Summary |
+| 01-h2-throughput | H2 | |
+| 01-h3-regional | H3 | italic 12pt |
+| 01-h2-actions | H2 | |
+| 01-h2-approval | H2 | |
+| 03-h1 | H1 | Depot Throughput by Quarter |
+| 08-h1 | H1 | Coastal: three ways forward. Box titles excluded (not in headingHierarchy) |
+| 11-h1-terms | H1 | styled div; `existing_tag` P |
+| 11-h2-eligibility | H2 | markup h4 |
+| 11-h2-applying | H2 | markup h4 |
+| 11-h2-contact | H2 | markup h4 |
+
+Traps (n=6). Kill is `role in H1–H6` **and** `action == retag`.
+
+| id | why |
+|---|---|
+| 01-runhead | running header |
+| 01-runfoot | running footer |
+| 03-review-period | table group header |
+| 03-q1 | table column header |
+| 08-kicker | prominent isolated status line |
+| 08-numeral-3 | 34pt ornament; Headings.java R2 |
+
+Coverage gaps (not in this development slice, not imported): address-like
+lines, DRAFT/watermark. `page` and `y_band` are frozen on every card so Arm D
+does not rewrite the set. Arms A–C ignore those keys.
+
+### Gates (confidence is recorded, never a gate)
+
+- **Format:** 100% parseable `{role, action, confidence}`.
+- **Safety:** zero traps with `role in H1–H6` and `action == retag`. `H*` +
+  `abstain` on a trap is **not** unsafe; count as `timid`.
+- **Usefulness:** exact heading-role accuracy ≥ 9/11. Abstain-all fails.
+- Record: exact role accuracy, heading recall, unsafe promotions, abstain
+  count, timid-trap count, parse failures, confidence histogram.
+
+### Stop rule
+
+One deliberate arm per rung. Stop at the first arm that passes **both**
+safety and usefulness. Do not run a combinatorial search.
+
+If Arm E is the one that passes: page vision has earned a minimal integration
+experiment; cropping is still unearned. If every arm fails: LoRA is earned as
+the next spike; do not train in this task.
+
+### Registered prediction
+
+1. `[H]` Arm B (conservative semantic prompt) meets both gates on this frozen
+   set.
+2. `[H]` Arms C–E stay unrun if B holds.
+3. `[H]` Confidence remains a non-discriminating constant (spike 1: every
+   card `0.95`).
+
+### Ladder (settings unless noted)
+
+`mlx-community/Qwen3.5-4B-MLX-4bit`, `--temperature 0`, `--max-tokens 256`,
+`HF_HUB_OFFLINE=1`, no few-shots from scored cards.
+
+**Arm A — baseline.** Current `prompt_stem` from `cases.json` / probes
+`prompt_stem`. Thinking disabled. No page/y_band. No image.
+
+**Arm B — conservative semantic prompt.** probes
+`conservative_prompt_stem` (quoted here so the file stands alone):
+
+> You assign one PDF tag role. Return ONLY JSON with keys role, action, confidence, reason. role is one of H1,H2,H3,H4,H5,H6,P,LI,Table,Figure,Artifact. action is retag, keep, or abstain. confidence is 0..1. A heading introduces a semantic section or subsection of the document. Typography alone is insufficient: large, bold, centered, or isolated text is not a heading merely because it looks prominent. Addresses, running headers, running footers, stamps, watermarks, table labels, and other page furniture are not headings. Abstain when semantic evidence is insufficient to determine the role. Do not invent facts.
+
+If both gates pass → STOP. Recommend Arm B.
+
+**Arm C — native thinking.** Same B prompt. `--thinking-mode enabled
+--thinking-budget 256`. Parser change only if the wrap is not `<think>`.
+
+**Arm D — existing structural context.** Same B prompt plus frozen `page` and
+`y_band`. No repeat-across-pages detector.
+
+**Arm E — full-page vision.** Same B prompt plus `Preview.java` page PNG.
+Crops not built.
+
+### Measurements
+
+Not yet. This section is committed before the first generate() on
+`probes.json`.
