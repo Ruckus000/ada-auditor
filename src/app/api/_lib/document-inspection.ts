@@ -59,9 +59,14 @@ export async function inspectPdfBytes(
       };
     }
 
-    // A reading has no source document to compare against, so the two fields
-    // that describe provenance are answered from the file itself: the title
-    // it carries, and the language it declares. Neither is inferred.
+    // A reading has no source document to compare against, so the fields that
+    // describe provenance are answered from the file itself: the title it
+    // carries, and the language it declares. Neither is inferred.
+    //
+    // `sourceTruth` is unreadable here for the same reason and states it
+    // rather than omitting it — there is no Word source behind an inspected
+    // PDF, so fidelity renders as "not verified" instead of silently as a
+    // match. Required on the type precisely so this has to be said out loud.
     const summary = summarise({
       title:
         result.value.title === null
@@ -69,6 +74,7 @@ export async function inspectPdfBytes(
           : { kind: 'already-titled', title: result.value.title },
       sourceLanguage: result.value.lang,
       structure: result.value,
+      sourceTruth: { readable: false },
     });
 
     // The second instrument reads the same temp file the first did.

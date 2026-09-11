@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 import type { DocumentStructure } from './document-structure';
+import type { Fidelity } from './source-fidelity';
+import type { SourceTruth } from './source-truth';
 
 /**
  * What a remediation produced, and where every claim in it came from.
@@ -42,6 +44,19 @@ export type ConversionProvenance = {
   sourceLanguage: string | null;
   /** The structure of the finished document, as read back. */
   structure: DocumentStructure;
+  /**
+   * What the SOURCE said about its own structure — the reference half.
+   *
+   * Reported here rather than compared here: this type is the account of where
+   * a conversion's claims came from, and the two readings it now carries are
+   * exactly the two sides of that account. `source-fidelity.ts` does the
+   * comparing, and the caller decides what a defect means. Converting and
+   * judging are different jobs.
+   *
+   * `readable: false` where neither oracle could read the container. That
+   * renders as "not verified", never as a clean bill.
+   */
+  sourceTruth: SourceTruth;
 };
 
 /**
@@ -105,6 +120,20 @@ export type RemediationSummary = {
    * as `checker: 'none'` — "conformance not checked" — never as clean.
    */
   conformance?: Conformance;
+  /**
+   * Whether the delivered document says what its SOURCE said.
+   *
+   * Absent on readings taken before this instrument shipped, and
+   * `checked: false` where the source container could not be read. Both render
+   * as "not verified", never as a match — the `conformance` precedent, for the
+   * same reason.
+   *
+   * An assertion never reaches here: a document carrying one is refused rather
+   * than delivered, so a stored summary with `fidelity.defects` holds omissions
+   * and `unverified` findings only. That is an invariant of the pipeline, not
+   * of this type.
+   */
+  fidelity?: Fidelity;
 };
 
 /**
@@ -164,6 +193,72 @@ export function withConformance(
 }
 
 /**
+ * Fold the fidelity verdict into a summary.
+ *
+ * Pure, and the same shape as `withConformance` above: the verdict is handed
+ * in, never computed here. Omissions become punch-list items, because an
+ * omission is by definition something a person still has to supply.
+ *
+ * Assertions are deliberately NOT translated into items. A document carrying
+ * one is refused rather than delivered, so an assertion reaching this function
+ * would mean the gate upstream failed — and quietly rendering it as a work item
+ * is exactly how a hard gate decays into a suggestion. It is passed through on
+ * `fidelity.defects` where a test can see it, and nowhere else.
+ */
+export function withFidelity(
+  summary: RemediationSummary,
+  fidelity: Fidelity,
+): RemediationSummary {
+  const out: RemediationSummary = { ...summary, fidelity };
+  if (!fidelity.checked) return out;
+
+  const caveat =
+    fidelity.oracle === 'engine-derived'
+      ? ' (read via the document converter, because a legacy .doc carries no readable source)'
+      : '';
+  // Omissions AND unverified findings both become items. An `unverified`
+  // finding is real work — "the delivered document carries more of this than
+  // the source reading accounts for, check it" — and the scorer's property is
+  // that every finding is voiced somewhere a promise covers. `summary.fidelity`
+  // alone is a field no promise covers, which is how a suppressed-but-quiet
+  // defect happens. Only assertions stay out, because a document carrying one
+  // is refused rather than delivered.
+  const items = fidelity.defects
+    .filter((defect) => defect.kind !== 'assertion')
+    .map((defect) => ({ criterion: defect.criterion, item: `${defect.detail}${caveat}` }));
+
+  if (items.length === 0) return out;
+
+  // A fidelity heading-level item REPLACES the one `needsIn` wrote, rather than
+  // sitting beside it. The same problem `withConformance` solves with
+  // `voicedByOurInstrument` above — "or every document would say everything
+  // twice" — one level up, and here the duplicate is worse than noise.
+  //
+  // `[V]` On r21 the client got both "Heading levels skip from H1 to H6 —
+  // decide whether the author meant an H2" and "heading levels differ from the
+  // source". The first is **wrong advice**: the author decided already, writing
+  // a Word outline level 7, and PDF has no heading type below H6 to carry it.
+  // `needsIn` reads only the delivered document and cannot know that; fidelity
+  // read the source and can. The instrument that knows more wins.
+  //
+  // Scoped to 2.4.10 alone, deliberately. The two vocabularies also share
+  // `1.3.1` — annotations outside the structure tree versus lost tables and
+  // list items — and those are different subjects that must both survive. A
+  // blanket criterion filter would silently swallow one of them.
+  //
+  // Nothing is dropped when fidelity has no level item to offer: a faithfully
+  // transcribed document that genuinely starts at H2 keeps `needsIn`'s
+  // question, which is the right one to ask there, and an unreadable source
+  // never reaches this line at all.
+  const supersedesHeadingLevels = items.some((item) => item.criterion === '2.4.10');
+  const kept = (summary.needs ?? []).filter(
+    (need) => !(supersedesHeadingLevels && need.criterion === '2.4.10'),
+  );
+
+  return { ...out, needs: [...kept, ...items] };
+}
+
+/**
  * The honest half of the record.
  *
  * A remediation that reports only what it fixed is the "98% of machine-checkable
@@ -212,7 +307,15 @@ export function withConformance(
  * work somebody can do, which is a different sentence and a new one in the
  * vocabulary.
  */
-export const INSTRUMENT_VERSION = 6;
+/**
+ * 7 — the summary gained `fidelity`: the delivered document compared against
+ * what its own SOURCE declared, in the assertion/omission vocabulary. The
+ * punch list gains omission items in criteria it could already emit, but from
+ * a NEW instrument — a stored reading made before this cannot gain them, and
+ * diffing across the boundary would report our new eyes as the client's
+ * document changing. Absence reads as "not verified", never as a match.
+ */
+export const INSTRUMENT_VERSION = 7;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;

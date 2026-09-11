@@ -1,63 +1,17 @@
-import { deflateRawSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { docxDeclaredLanguage } from '../../src/domain/docx-language';
+import { zip } from '../support/docx-fixture';
 
 /**
  * The reader that beats the importer to the source's own words.
  *
- * Zips are built here byte by byte (store and deflate both), because the fast
- * suite tracks no binaries and spawns no `zip` — and because the reader's
- * whole claim is that it needs nothing but the bytes.
+ * Zips are built byte by byte (store and deflate both) by `tests/support/
+ * docx-fixture.ts`, because the fast suite tracks no binaries and spawns no
+ * `zip` — and because the reader's whole claim is that it needs nothing but
+ * the bytes. The builder moved there when `source-truth.test.ts` needed the
+ * same fixtures; two copies of a central-directory writer would drift exactly
+ * as two copies of the reader would.
  */
-
-function crc32(buf: Buffer): number {
-  let c = ~0;
-  for (const byte of buf) {
-    c ^= byte;
-    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
-  }
-  return ~c >>> 0;
-}
-
-function zip(entries: Array<[string, string]>, method: 0 | 8 = 8): Uint8Array {
-  const locals: Buffer[] = [];
-  const centrals: Buffer[] = [];
-  let offset = 0;
-  for (const [name, text] of entries) {
-    const raw = Buffer.from(text, 'utf8');
-    const data = method === 8 ? deflateRawSync(raw) : raw;
-    const nameBuf = Buffer.from(name, 'utf8');
-    const local = Buffer.alloc(30);
-    local.writeUInt32LE(0x04034b50, 0);
-    local.writeUInt16LE(20, 4);
-    local.writeUInt16LE(method, 8);
-    local.writeUInt32LE(crc32(raw), 14);
-    local.writeUInt32LE(data.length, 18);
-    local.writeUInt32LE(raw.length, 22);
-    local.writeUInt16LE(nameBuf.length, 26);
-    locals.push(local, nameBuf, data);
-
-    const central = Buffer.alloc(46);
-    central.writeUInt32LE(0x02014b50, 0);
-    central.writeUInt16LE(20, 6);
-    central.writeUInt16LE(method, 10);
-    central.writeUInt32LE(crc32(raw), 16);
-    central.writeUInt32LE(data.length, 20);
-    central.writeUInt32LE(raw.length, 24);
-    central.writeUInt16LE(nameBuf.length, 28);
-    central.writeUInt32LE(offset, 42);
-    centrals.push(central, nameBuf);
-    offset += 30 + nameBuf.length + data.length;
-  }
-  const cd = Buffer.concat(centrals);
-  const eocd = Buffer.alloc(22);
-  eocd.writeUInt32LE(0x06054b50, 0);
-  eocd.writeUInt16LE(entries.length, 8);
-  eocd.writeUInt16LE(entries.length, 10);
-  eocd.writeUInt32LE(cd.length, 12);
-  eocd.writeUInt32LE(offset, 16);
-  return Buffer.concat([...locals, cd, eocd]);
-}
 
 const styles = (lang: string | null) =>
   `<w:styles><w:docDefaults><w:rPrDefault><w:rPr>${lang === null ? '' : `<w:lang w:val="${lang}"/>`}</w:rPr></w:rPrDefault></w:docDefaults></w:styles>`;

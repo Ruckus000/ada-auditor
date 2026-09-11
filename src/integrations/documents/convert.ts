@@ -12,6 +12,7 @@ import { finishDocument } from './finish';
 import { inspectDocument } from './inspect';
 import { deriveAltFromCaptions, readLanguage, removeEmptyHeadings, repairTitle } from './flat-odf';
 import { docxDeclaredLanguage } from '../../domain/docx-language';
+import { sourceTruthFromDocx, sourceTruthFromFodt } from '../../domain/source-truth';
 import { resolveLibreOffice, type LibreOfficeRuntime } from './libreoffice-runtime';
 import type { Env, JavaRuntime } from './java-runtime';
 import { childEnv, type StageExecutor } from './stage';
@@ -299,8 +300,23 @@ export async function convertSourceToPdf(
     //    container (legacy .doc) falls back to the fodt reading, which for
     //    that format is the only reading there is — inflation caveat and all.
     const original = await readFile(fodt, 'utf8');
-    const declared = docxDeclaredLanguage(await readFile(sourcePath));
+    const sourceBytes = await readFile(sourcePath);
+    const declared = docxDeclaredLanguage(sourceBytes);
     const sourceLanguage = declared.readable ? declared.language : readLanguage(original);
+
+    //    What the source states about its own STRUCTURE, by the same precedence
+    //    and for the same reason as the language above: the .docx's own bytes
+    //    wherever they are readable, the importer's reading only where there is
+    //    no other. Reported, never acted on here — `source-fidelity.ts`
+    //    compares it and the caller decides what a mismatch means.
+    //
+    //    Read from `original`, before the repairs below touch anything. The
+    //    reference has to be what the author wrote, not what we have already
+    //    corrected, or the comparison grades our own edits as the author's.
+    const fromDocx = sourceTruthFromDocx(sourceBytes);
+    const sourceTruth = fromDocx.readable
+      ? fromDocx
+      : sourceTruthFromFodt(original, sourceLanguage);
     // Empty headings go first, so a blank heading-styled line can never be
     // the "first heading" a title gets transcribed from.
     const cleaned = removeEmptyHeadings(original);
@@ -394,6 +410,7 @@ export async function convertSourceToPdf(
         title: repaired.outcome,
         sourceLanguage,
         structure: read.value,
+        sourceTruth,
       },
     };
   } finally {

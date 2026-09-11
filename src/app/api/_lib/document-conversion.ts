@@ -5,9 +5,11 @@ import { join } from 'node:path';
 import {
   summarise,
   withConformance,
+  withFidelity,
   type RemediationSummary,
 } from '../../../domain/document-remediation';
 import { contentChanges } from '../../../domain/document-structure';
+import { checkFidelity, hasAssertion } from '../../../domain/source-fidelity';
 import { convertSourceToPdf, type ConvertOptions } from '../../../integrations/documents/convert';
 import { finishDocument } from '../../../integrations/documents/finish';
 import { inspectDocument } from '../../../integrations/documents/inspect';
@@ -66,6 +68,41 @@ export async function remediateWordBytes(
       };
     }
 
+    // The third instrument, and the only one that holds the delivered document
+    // against WHAT ITS AUTHOR WROTE. `contentChanges` in `repairPdfBytes`
+    // compares a PDF with itself and needs no reference, which is what makes it
+    // work on a client's PDF; it cannot answer this question, because both its
+    // readings come from the output.
+    //
+    // An ASSERTION refuses delivery. The output stating something the source
+    // did not is the failure that misleads a screen-reader user with no visible
+    // signal — veraPDF passes clean on it, and so does every count. A document
+    // we cannot vouch for is worse than no document, exactly as with the
+    // content-changed refusal below.
+    //
+    // Omissions do not block. They are honest, a reviewer sees them, and
+    // `withFidelity` turns each into a punch-list item.
+    const fidelity = checkFidelity(result.provenance.sourceTruth, result.provenance.structure);
+    if (fidelity.checked && hasAssertion(fidelity.defects)) {
+      logWarn('document_remediation_fidelity_assertion', {
+        requestId,
+        oracle: fidelity.oracle,
+        // Criteria only. The details carry counts, and the log is not the place
+        // to start describing a municipal record.
+        criteria: fidelity.defects.filter((d) => d.kind === 'assertion').map((d) => d.criterion),
+      });
+      return {
+        ok: false,
+        refusal: {
+          status: 422,
+          error: 'remediation_failed',
+          detail: 'fidelity-assertion',
+          message:
+            'the converted document states structure the source document does not — it was not delivered, because a document that misstates its own structure is worse than one that is honestly unremediated',
+        },
+      };
+    }
+
     const pdf = await readFile(output);
     // The second instrument, on the delivered bytes. `checker: 'none'` on a
     // host without it — visible as "not checked", never as clean.
@@ -74,7 +111,14 @@ export async function remediateWordBytes(
       ...(options.env === undefined ? {} : { env: options.env }),
       ...(options.javaRuntime === undefined ? {} : { runtime: options.javaRuntime }),
     });
-    return { ok: true, pdf, summary: withConformance(summarise(result.provenance), conformance) };
+    return {
+      ok: true,
+      pdf,
+      summary: withFidelity(
+        withConformance(summarise(result.provenance), conformance),
+        fidelity,
+      ),
+    };
   } finally {
     // Every path, including a throw inside the conversion. `convertSourceToPdf`
     // cleans its own working directory; this is ours.
@@ -199,6 +243,9 @@ export async function repairPdfBytes(
           title: decision.plan.title,
           sourceLanguage: decision.plan.language,
           structure: after.value,
+          // Repair works on a PDF that arrived alone. There is no source to
+          // hold it against, and saying so is not the same as passing.
+          sourceTruth: { readable: false },
         }),
         conformance,
       ),

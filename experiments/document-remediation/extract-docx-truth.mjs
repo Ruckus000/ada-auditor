@@ -31,8 +31,27 @@ function extractDocTruthViaFodt(docPath) {
     const headingLevels = [...xml.matchAll(/<text:h\b[^>]*text:outline-level="(\d+)"[^>]*>([\s\S]*?)<\/text:h>/g)]
       .filter((m) => m[2].replace(/<[^>]+>/g, '').trim() !== '')
       .map((m) => Number(m[1]));
+    // What becomes a `/Figure` on export, which is more than raster images.
+    // `[V]` r09 is a `.doc` whose only graphic is a `draw:custom-shape` — a
+    // drawn vector shape, no binary image data anywhere in the file — and it
+    // exports as one tagged `/Figure`. An image-only filter read that as the
+    // pipeline inventing a graphic, which is backwards: the author drew it.
+    // That single miscount is the whole of the campaign's "figures 30/31".
     const frames = [...xml.matchAll(/<draw:frame\b[\s\S]*?<\/draw:frame>/g)].map((m) => m[0])
-      .filter((f) => f.includes('<draw:image'));
+      .filter((f) => /<draw:(?:image|object|object-ole)\b/.test(f));
+    // Bare drawn shapes are figures too, and have nowhere to carry a
+    // description — so they count toward `figures` and never `figuresWithAlt`.
+    //
+    // Scoped to `office:text`, unlike everything else here. `[V]` r13's only
+    // custom-shape sits in a page HEADER (`office:master-styles`), which is
+    // page furniture: the export artifacts it and the delivered document
+    // carries no Figure for it. A whole-document count invented a figure that
+    // was never in the body. `src/domain/source-truth.ts` scopes its whole
+    // reading this way; the counts above are left whole-document because they
+    // were validated that way and narrowing them silently would move numbers
+    // this correction is not about.
+    const textBody = /<office:text\b[\s\S]*?<\/office:text>/.exec(xml)?.[0] ?? '';
+    const shapes = [...textBody.matchAll(/<draw:custom-shape[ >]/g)].length;
     return {
       file: basename(docPath),
       readable: true,
@@ -45,10 +64,21 @@ function extractDocTruthViaFodt(docPath) {
       language: readLanguage(xml),
       headings: headingLevels.length,
       headingLevels,
-      tables: [...xml.matchAll(/<table:table\b/g)].length,
-      lists: [...xml.matchAll(/<text:list\b/g)].length,
-      listItems: [...xml.matchAll(/<text:list-item\b/g)].length,
-      figures: frames.length,
+      // `[ >]`, never `\b`. `[V]` A word boundary sits between `table` and the
+      // hyphen of `table:table-cell`, so `/<table:table\b/` counts every cell,
+      // row and column as a table: r09's ONE real table read as 24. Same trap
+      // in `<text:list\b`, which counts `text:list-item` and
+      // `text:list-header` — 26 against a true 10. `[ >]` admits an attributed
+      // open tag and cannot match the hyphenated siblings.
+      //
+      // Found by the production instrument graduated from this file; the
+      // measurement is in `docs/research/document-remediation/
+      // source-fidelity-in-production.md`, and the same fix carries the same
+      // comment in `src/domain/source-truth.ts`.
+      tables: [...xml.matchAll(/<table:table[ >]/g)].length,
+      lists: [...xml.matchAll(/<text:list[ >]/g)].length,
+      listItems: [...xml.matchAll(/<text:list-item[ >]/g)].length,
+      figures: frames.length + shapes,
       figuresWithAlt: frames.filter((f) => /<svg:(?:desc|title)>/.test(f)).length,
     };
   } catch {

@@ -5,10 +5,16 @@ import {
   logSafe,
   summarise,
   withConformance,
+  withFidelity,
   titleFromFilename,
   type ConversionProvenance,
 } from '../../src/domain/document-remediation';
-import { documentStructureSchema } from '../../src/domain/document-structure';
+import {
+  documentStructureSchema,
+  type DocumentStructure,
+} from '../../src/domain/document-structure';
+import { checkFidelity } from '../../src/domain/source-fidelity';
+import type { SourceTruth } from '../../src/domain/source-truth';
 
 const structure = (over = {}) =>
   documentStructureSchema.parse({
@@ -34,6 +40,11 @@ const provenance = (over: Partial<ConversionProvenance> = {}): ConversionProvena
   title: { kind: 'already-titled', title: 'Planning Committee Agenda' },
   sourceLanguage: 'en-GB',
   structure: structure(),
+  // These cases exercise `summarise` and the gap vocabulary, which read the
+  // delivered structure only. Fidelity is a separate instrument with its own
+  // suite; an unreadable source here says "not compared" rather than quietly
+  // implying a match.
+  sourceTruth: { readable: false },
   ...over,
 });
 
@@ -244,6 +255,9 @@ describe('the punch list', () => {
     title: { kind: 'already-titled' as const, title: 'T' },
     sourceLanguage: 'en',
     structure: structure(over),
+    // The punch list under test here is built from the delivered structure.
+    // Fidelity has its own suite; "not compared" is the honest value.
+    sourceTruth: { readable: false as const },
   });
 
   it('names each undescribed figure as one actionable item', () => {
@@ -349,10 +363,120 @@ describe('the punch list', () => {
 });
 
 
+describe('withFidelity and the punch list', () => {
+  const structure = (over: Partial<DocumentStructure> = {}): DocumentStructure => ({
+    structureElements: 30,
+    marked: true,
+    signed: false,
+    annotationsNotInStructure: 0,
+    textChars: 900,
+    images: 0,
+    pages: 2,
+    lang: 'en-US',
+    title: 'Agenda',
+    headings: [],
+    headingTexts: [],
+    figures: [],
+    tables: [],
+    lists: [],
+    order: [],
+    ...over,
+  });
+
+  const truth = (over: Partial<Extract<SourceTruth, { readable: true }>> = {}): SourceTruth => ({
+    readable: true,
+    oracle: 'ooxml',
+    title: 'Agenda',
+    language: 'en-US',
+    headings: 0,
+    headingLevels: [],
+    tables: 0,
+    lists: 0,
+    listItems: 0,
+    figures: 0,
+    figuresWithAlt: 0,
+    ...over,
+  });
+
+  const build = (s: DocumentStructure, t: SourceTruth) =>
+    withFidelity(
+      summarise({
+        title: { kind: 'already-titled', title: 'Agenda' },
+        sourceLanguage: 'en-US',
+        structure: s,
+        sourceTruth: t,
+      }),
+      checkFidelity(t, s),
+    );
+
+  const at = (summary: ReturnType<typeof build>, criterion: string) =>
+    (summary.needs ?? []).filter((n) => n.criterion === criterion);
+
+  it('replaces the heading-level item when it knows why the levels differ', () => {
+    // `[V]` r21's shape: the source declares a Word outline level 7 and PDF has
+    // no heading type below H6, so the exporter clamps. `needsIn` sees only the
+    // delivered H1→H6 jump and tells the client to "decide whether the author
+    // meant an H2" — advice that is actively wrong, because the author decided
+    // already and the format could not carry it. The instrument that read the
+    // source knows strictly more, so its item wins rather than sitting beside.
+    const s = structure({ headings: ['H1', 'H1', 'H1', 'H6'] });
+    const t = truth({ headings: 4, headingLevels: [1, 1, 1, 7] });
+    const summary = build(s, t);
+
+    expect(at(summary, '2.4.10')).toHaveLength(1);
+    expect(at(summary, '2.4.10')[0]!.item).toMatch(/different depth from the source/i);
+    expect(at(summary, '2.4.10')[0]!.item).not.toMatch(/decide whether the author meant/i);
+  });
+
+  it('keeps needsIn’s item when fidelity has nothing to say about levels', () => {
+    // A document whose author genuinely started deep, transcribed faithfully.
+    // Fidelity emits no 2.4.10 at all, and `needsIn`'s question is the right
+    // one — it must survive untouched.
+    const s = structure({ headings: ['H2', 'H3'] });
+    const t = truth({ headings: 2, headingLevels: [2, 3] });
+    const summary = build(s, t);
+
+    expect(at(summary, '2.4.10')).toHaveLength(1);
+    expect(at(summary, '2.4.10')[0]!.item).toMatch(/start at H2/i);
+  });
+
+  it('keeps needsIn’s item when there was no source to compare against', () => {
+    // `repairPdfBytes` and `inspectPdfBytes` both pass an unreadable source.
+    // Dropping the only signal there would be strictly worse than a duplicate.
+    const s = structure({ headings: ['H2', 'H4'] });
+    const summary = withFidelity(
+      summarise({
+        title: { kind: 'already-titled', title: 'Agenda' },
+        sourceLanguage: 'en-US',
+        structure: s,
+        sourceTruth: { readable: false },
+      }),
+      checkFidelity({ readable: false }, s),
+    );
+
+    expect(at(summary, '2.4.10').length).toBeGreaterThan(0);
+  });
+
+  it('does not drop a 1.3.1 item just because fidelity emits one too', () => {
+    // The criteria collide but the SUBJECTS do not: `needsIn`'s 1.3.1 is about
+    // annotations outside the structure tree, fidelity's is about lost content.
+    // A blanket criterion filter would silently swallow one of them.
+    const s = structure({ annotationsNotInStructure: 2, lists: [{ depth: 1, items: 2 }] });
+    const t = truth({ listItems: 9 });
+    const summary = build(s, t);
+
+    const items = at(summary, '1.3.1');
+    expect(items.length).toBeGreaterThanOrEqual(2);
+    expect(items.some((n) => /form field|link/i.test(n.item))).toBe(true);
+    expect(items.some((n) => /list item/i.test(n.item))).toBe(true);
+  });
+});
+
 describe('withConformance', () => {
   const base = summarise({
     title: { kind: 'already-titled' as const, title: 'T' },
     sourceLanguage: 'en',
+    sourceTruth: { readable: false as const },
     structure: {
       structureElements: 10,
       marked: true,
@@ -439,6 +563,7 @@ describe('withConformance', () => {
     const withItem = summarise({
       title: { kind: 'already-titled' as const, title: 'T' },
       sourceLanguage: null,
+      sourceTruth: { readable: false as const },
       structure: {
         structureElements: 10,
         marked: true,
