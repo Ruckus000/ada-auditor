@@ -120,7 +120,7 @@ Follow `YAGNI → KISS → SRP → DRY`.
 
 - Domain/service unit tests required for contract and reporting changes
 - Chaos-style regressions required for steady-state claims (incomplete evidence, hint conflicts, scope fail-closed, complete-evidence CI fail path)
-- Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos`, `npm run build` and `npm run test:hydration` evidence
+- Do not claim “done” without fresh `npm test`, `npm run test:browser`, `npm run test:db`, `npm run chaos`, `npm run build` and `npm run test:hydration` evidence. `test:db` needs `DATABASE_URL_TEST` in `.env.test.local`, pointing at a dedicated Neon branch — it refuses rather than falling back, for the reason recorded under the testing policy below
 - `npm run typecheck`, not bare `tsc`, and it is a CI gate. It runs
   `next typegen` first because `next-env.d.ts` is generated and gitignored and
   the gate runs before anything builds — see `CLAUDE.md`. `tsconfig.json`
@@ -154,6 +154,23 @@ Follow `YAGNI → KISS → SRP → DRY`.
   see each other; a literal reintroduces the failure that reddened master over
   a documentation-only diff. Cleanup lives in `tests/support/contract-cleanup.ts`
   and `postgres-contract-isolation.test.ts` is what keeps it confined
+- **That machinery confines what the contract *inserts*, and nothing more.**
+  Three of its cases call store methods that take no scope and mutate rows the
+  suite never wrote — `clearArtifactsBefore` (blanks `run_pages.artifacts` for
+  every run past the cutoff), `reconcileStaleRuns` (flips every `running` row
+  to `failed`), `claimDueJourneys` (stamps `last_scheduled_at`, so the next
+  real cron tick skips that client's audit). `[V]` On 2026-09-11 the first ran
+  against production and blanked the artifact pointers of three runs — the
+  30-day band of a 90-day retention. `ci.yml` had asked for a dedicated Neon
+  branch since the job was written; nothing enforced it, and `.env.local` is a
+  `vercel env pull` of **production**, so the first local run with a
+  `DATABASE_URL` present went straight at it. The two time-bounded calls are
+  now pinned to 1970 cutoffs inside the contract and cannot reach a real row.
+  `claimDueJourneys` matches on an hour of the day and has no out-of-range
+  value, so the branch is what stands between it and a missed client audit:
+  `test:db` reads `DATABASE_URL_TEST` from `.env.test.local`, and
+  `vitest.db.config.ts` refuses without it, never loading the file that
+  carries production's `DATABASE_URL`
 - Keep browser launches out of the unit suite. Handler tests mock the audit; the real browser is covered by `tests/integrations/browser/**` and by chaos.
 - When adding Vercel routes: add route/handler tests or chaos script assertions for terminal statuses
 - Before claiming a change works end to end, run one real audit through
