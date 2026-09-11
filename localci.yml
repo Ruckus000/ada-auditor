@@ -71,7 +71,14 @@ suite:
   # `migrate` reads DATABASE_URL, so it is pointed at the branch explicitly --
   # same shape as the `CHAOS_ENABLED=true` prefix above, no new capability
   # asked of the engine. Without it the schema would be applied to production.
-  - if [ -f .env.test.local ]; then set -a; . ./.env.test.local; set +a; DATABASE_URL="$DATABASE_URL_TEST" npm run migrate && npm run test:db; else echo ".env.test.local not present - Postgres store contract skipped"; fi
+  #
+  # The guard is on the VARIABLE, not on the file. Gating on `-f
+  # .env.test.local` sounds equivalent and is not: a placeholder or
+  # half-written file would then source to nothing, hand `migrate` an empty
+  # DATABASE_URL and take the suite red -- for a configuration state whose
+  # whole point is to skip. Sourcing a file that is not there is harmless, so
+  # the file check only guards the `.`, and the variable decides.
+  - if [ -f .env.test.local ]; then set -a; . ./.env.test.local; set +a; fi; if [ -n "$DATABASE_URL_TEST" ]; then DATABASE_URL="$DATABASE_URL_TEST" npm run migrate && npm run test:db; else echo "DATABASE_URL_TEST not set - Postgres store contract skipped"; fi
   # The document stages against a real JVM. Guarded exactly like the Postgres
   # step above and for the same reason: a machine without a JDK should not be
   # permanently red over a subsystem it cannot run. The build now happens
