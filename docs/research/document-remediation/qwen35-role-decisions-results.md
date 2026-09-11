@@ -3129,3 +3129,171 @@ into a failure-explanation experiment.
 
 Do not run Holdout 2.
 
+### Dataset reconstruction — Gate 0 population
+
+`--emit-verify-text-sft` loaded `out/gen-sft-verify/train.json`, replaced
+the visual stem, dropped the `image` column, and zipped rows onto the
+frozen Part-13 ID order. Image-filename document prefixes were checked
+against those IDs. No PDF re-dump. No 43-card re-filter.
+
+| | |
+|---|---|
+| n | **31** |
+| heading true / false | **18 / 13** |
+| ID set | exact Part-13 train IDs |
+| documents | 02/04/05/06/10/12 |
+| sha256 (`train.json`) | `43b0c82a500511465fe5fba6ba76b0846703d93661fd4d3f470fcbcdee3ab6f1` |
+
+`[V]` **pass.** Not a dataset-reproduction failure.
+
+SFT: gitignored `out/gen-sft-verify-text/train.json` (`messages` only).
+No marked PNG generation.
+
+### Training health — `out/adapter-verify-text`
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft-verify-text \
+  --split train --batch-size 1 --lora-rank 8 --epochs 6 \
+  --steps-per-report 10 --steps-per-save 1000 \
+  --train-on-completions \
+  --output-path out/adapter-verify-text
+```
+
+No `--train-vision`. No `--image-resize-shape`. No `--grad-checkpoint`.
+One run. `TRAIN_EXIT:0`.
+
+| | |
+|---|---|
+| rows | 31 (18 true / 13 false) |
+| iters | 186 = (31 // 1) × 6 |
+| loss | 0.1085 (iter 10) → 0.000021 (iter 186); no NaN |
+| peak mem | 8.495 GB |
+| adapter | 62 MiB `adapters.safetensors` |
+| LoRA keys | `language_model.*` only |
+| trainable | 16.232448 M / 4539.264 M (0.358%) |
+| tokens | 24,798 (~133/example; Part 13 image-bearing was ~1,886–1,900) |
+
+Adapter written and loads. Binary JSON parses on every eval row below.
+
+`[V]` **pass.**
+
+### Gate 1 — fresh document 07
+
+`run.py --eval-verify-text --pdf-dir out/eval-tagged --match-path valid-07.json`
+
+Mapped 4/6. Unmatched, not replaced: `07-northern`, `07-q1`.
+
+| id | GT | text role | Part 13 marked | Part 13 ablate | Part 14 text | applied? | final |
+|---|---|---|---|---|---|---|---|
+| 07-h1 | true | H1 | true | true | true | no (keep H1) | H1 |
+| 07-intro | false | P | false | false | false | no | P |
+| 07-chart-title | false | H2 | false | false | false | no (keep H2) | H2 |
+| 07-cap | false | P | false | false | false | no | P |
+
+Parse **4/4**. True-heading vetoes **0**. Unsafe **0**. H1 eligible.
+Not all-false. Accuracy **4/4**. Recall **1/1**. Rejection **3/3**.
+Confusion TP1 TN3 FP0 FN0.
+
+Exact agreement with Part-13 marked: **4/4**. With Part-13 image
+ablation: **4/4**. Zero heading/role/final disagreements.
+
+`[V]` **pass.** Logs: `out/verify-07/verify-text.jsonl`.
+
+### Gate 2 — known development challenge
+
+Only because Gate 1 passed.
+
+`run.py --eval-verify-text --pdf-dir out/eval-tagged --match-path probes.json`
+
+Architecture: source type → ancestry → `out/adapter-role` → R2 →
+selective `out/adapter-verify-text` → deterministic action.
+
+Parse **17/17**. Verifier-caused heading vetoes **0**. Final unsafe
+**0**. Role-layer heading exact **10/11** (≥9/11). No new heading
+demotions (verifier never said false on a GT heading).
+
+| id | GT | text role | verifier | applied? | final |
+|---|---|---|---|---|---|
+| 01-h3-regional | H3 | H2 | true | yes (H3→H2) | H2 (preserved model_role) |
+| 01-h2-actions | H2 | H2 | true | no | H2 |
+| 03-h1 | H1 | H1 | true | no | H1 |
+| 08-numeral-3 | P | H1 | true | no (R2) | P |
+| 11-h1-terms | H1 | H1 | true | no | H1 |
+| 11-h2-eligibility | H2 | H2 | true | no | H2 |
+| 11-h2-applying | H2 | H2 | true | no | H2 |
+| 11-h2-contact | H2 | H2 | true | no | H2 |
+
+Verifier accuracy 16/17 (FP: `08-numeral-3` `heading:true`; R2 already
+blocks). Recall 11/11. Non-heading rejection 5/6. The verifier does
+not get credit for R2.
+
+Row-level disagreement vs Part-13 marked verifier: **0** of 17
+(heading, `model_role`, `final_role`, `verify_applied`, `action`,
+`unsafe`).
+
+`[V]` **pass.** Logs: `out/verify-probes/verify-text.jsonl`.
+
+### Direct Part-13 comparison
+
+| metric | Part 13 marked verifier | Part 14 text-only verifier |
+|---|---|---|
+| train rows | 31 | 31 |
+| epochs | 6 | 6 |
+| fresh-07 parse | 4/4 | 4/4 |
+| fresh-07 eligibility accuracy | 4/4 | 4/4 |
+| fresh-07 true-heading vetoes | 0 | 0 |
+| fresh-07 final unsafe | 0 | 0 |
+| probe parse | 17/17 | 17/17 |
+| probe eligibility accuracy | 16/17 | 16/17 |
+| probe true-heading vetoes | 0 | 0 |
+| probe final unsafe | 0 | 0 |
+| role heading exact | 10/11 | 10/11 |
+| peak memory | 14.057 GB | 8.495 GB |
+| adapter size | 62 MiB | 62 MiB |
+
+The FP is the same row (`08-numeral-3`). The role miss is the same
+row (`01-h3-regional`). No additional vetoes. No additional unsafe
+promotions.
+
+### Predictions scored
+
+1. `[H]` Same 31-row binary task trains without images. **Confirmed.**
+2. `[H]` Fresh 07: parse 4/4, vetoes 0, unsafe 0, accuracy 4/4.
+   **Confirmed.**
+3. `[H]` Known challenge: zero unsafe, zero verifier-caused heading
+   vetoes, role exact ≥9/11. **Confirmed** (10/11).
+4. `[H]` Text-only 07 predictions match Part-13 marked. **Confirmed**
+   (4/4; ablation also 4/4).
+5. `[H]` Simpler verifier at least as good on development gates.
+   **Confirmed** (identical).
+6. `[H]` No images, crops, vision training, larger model, new rule,
+   or extra data. **Confirmed** as constraints held.
+7. `[H]` Holdout 2 sealed. **Confirmed.**
+
+### Stop — Outcome D
+
+On every development row that both adapters scored, the text-only
+verifier and the marked verifier are identical. The image-bearing
+training path is functionally redundant on all available development
+evidence.
+
+Prefer:
+
+source type + ancestry → role QLoRA → R2 → selective text-only
+eligibility QLoRA → deterministic action
+
+Do not keep the image path because it might help later. YAGNI. The
+marked verifier remains experimental evidence, not architecture.
+`--eval-verify-marked` stays a measured switch. `out/adapter-verify-marked`
+and its SFT stay on disk for reproducibility. They are not the
+proposed next component.
+
+Do not run spent Holdout 1 in this spike. The next cheaper experiment,
+if any, is that spent-14 diagnostic against this frozen text-only
+adapter. Do not run Holdout 2. Do not enable `--train-vision`. Do not
+crop. Do not add epochs or examples.
+
+`out/adapter-role` is unchanged.
+
