@@ -9,6 +9,8 @@ the model, keeping model_role. `--emit-verify-sft` writes image-bearing
 rows for the separate eligibility adapter; `--eval-verify-marked` runs it.
 `--emit-verify-text-sft` strips those images onto the same 31 rows;
 `--eval-verify-text` scores the text-only adapter.
+`--verify-text-binary` applies that adapter to frozen rescore rows
+without images or role-model regeneration.
 """
 
 from __future__ import annotations
@@ -2057,6 +2059,7 @@ def rescore_frozen(
     verify_marked: bool = False,
     verify_marked_role: bool = False,
     verify_marked_binary: bool = False,
+    verify_text_binary: bool = False,
     omit_image: bool = False,
     verify_locators: tuple[str, ...] | None = None,
     adapter_path: str | None = None,
@@ -2097,11 +2100,13 @@ def rescore_frozen(
         if decided is not None and not decided.get("qwen_called"):
             skipped += 1
         want_role = verify_marked_role and loc in role_locs
-        want_binary = verify_marked_binary and loc in role_locs
+        want_text = verify_text_binary and loc in role_locs
+        want_binary = verify_marked_binary and loc in role_locs and not verify_text_binary
         want_marked = (
             verify_marked
             and not verify_marked_role
             and not verify_marked_binary
+            and not verify_text_binary
             and loc in PART10_VERIFY_LOCATORS
         )
         want_full = (
@@ -2109,14 +2114,17 @@ def rescore_frozen(
             and not verify_marked
             and not verify_marked_role
             and not verify_marked_binary
+            and not verify_text_binary
         )
-        if (want_full or want_marked or want_role or want_binary) and decided is not None and needs_page_verify(decided, case):
+        if (want_full or want_marked or want_role or want_binary or want_text) and decided is not None and needs_page_verify(decided, case):
             page = case.get("page")
             stem = loc.rsplit(":", 1)[0]
             heading_flag: bool | None = None
             visual_role: str | None = None
             raw_verify = ""
-            if want_binary:
+            if want_text:
+                verify_input = "text-binary"
+            elif want_binary:
                 verify_input = "text-only" if omit_image else "marked-binary"
             elif want_role:
                 verify_input = "marked-role"
@@ -2126,7 +2134,16 @@ def rescore_frozen(
                 verify_input = "full"
             box_ok = all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1"))
             needs_box = want_marked or want_role or (want_binary and not omit_image)
-            if pdf_dir is None or page is None or (needs_box and not box_ok):
+            if want_text:
+                raw_verify = generate(
+                    MODEL,
+                    text_eligibility_prompt(case),
+                    image=None,
+                    thinking_mode="disabled",
+                    adapter_path=adapter_path or str(ADAPTER_VERIFY_TEXT),
+                )
+                heading_flag = parse_heading_flag(raw_verify)
+            elif pdf_dir is None or page is None or (needs_box and not box_ok):
                 heading_flag = None
             else:
                 page_1 = int(page) + 1
@@ -2357,6 +2374,7 @@ if __name__ == "__main__":
             verify_marked="--verify-marked" in sys.argv,
             verify_marked_role="--verify-marked-role" in sys.argv,
             verify_marked_binary="--verify-marked-binary" in sys.argv,
+            verify_text_binary="--verify-text-binary" in sys.argv,
             omit_image="--omit-image" in sys.argv,
             verify_locators=verify_locs,
             adapter_path=flag_value("--adapter-path"),
@@ -2368,11 +2386,12 @@ if __name__ == "__main__":
         suffix = (
             f"arm{arm}"
             + ("-r5" if r5_veto else "")
-            + ("-marked-binary" if "--verify-marked-binary" in sys.argv else "")
+            + ("-text-binary" if "--verify-text-binary" in sys.argv else "")
+            + ("-marked-binary" if "--verify-marked-binary" in sys.argv and "--verify-text-binary" not in sys.argv else "")
             + ("-ablate" if "--omit-image" in sys.argv else "")
             + ("-marked-role" if "--verify-marked-role" in sys.argv else "")
-            + ("-marked" if "--verify-marked" in sys.argv and "--verify-marked-role" not in sys.argv and "--verify-marked-binary" not in sys.argv else "")
-            + ("-verify" if "--verify-page" in sys.argv and "--verify-marked" not in sys.argv and "--verify-marked-role" not in sys.argv and "--verify-marked-binary" not in sys.argv else "")
+            + ("-marked" if "--verify-marked" in sys.argv and "--verify-marked-role" not in sys.argv and "--verify-marked-binary" not in sys.argv and "--verify-text-binary" not in sys.argv else "")
+            + ("-verify" if "--verify-page" in sys.argv and "--verify-marked" not in sys.argv and "--verify-marked-role" not in sys.argv and "--verify-marked-binary" not in sys.argv and "--verify-text-binary" not in sys.argv else "")
         )
         out_file = out_dir / f"rescored-{suffix}.jsonl"
         out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
