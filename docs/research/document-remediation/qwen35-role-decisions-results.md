@@ -3297,3 +3297,98 @@ crop. Do not add epochs or examples.
 
 `out/adapter-role` is unchanged.
 
+---
+
+## Part 15 — spent Holdout-1 diagnostic of the frozen text-only verifier
+
+**Date:** 2026-09-11. Same branch. No training. No images. No crop.
+No prompt change. No new examples. No Holdout 2. `out/adapter-role`,
+`out/adapter-verify-text`, and `out/adapter-verify-marked` are not
+modified and are not retrained. Frozen Holdout-1 role predictions
+are not regenerated. No production `src/` wiring.
+
+Part 14 Outcome D: the marked-page verifier and a text-only verifier
+trained on the same 31 development rows are identical on every
+available development evaluation row. The proposed architecture is
+now:
+
+1. source-type eligibility;
+2. Table/Figure ancestry;
+3. text-only `out/adapter-role`;
+4. R2;
+5. only when the resulting mutation would promote to H1–H6 or change
+   an H* level:
+6. selective text-only eligibility QLoRA (`out/adapter-verify-text`);
+7. deterministic action.
+
+The one question: does that frozen verifier remove the known
+post-structure unsafe heading mutations on the exact spent Holdout-1
+candidate surface without blocking genuine headings?
+
+This is a spent diagnostic, not a new generalization claim. Holdout 1
+is spent.
+
+### Exact comparison surface (14 Part-10 architecture candidates)
+
+Label-independent: after source-type, ancestry, and R2, the frozen
+role adapter proposed a non-heading→H* promotion or an H* level
+change. Do not recompute selection from GT. Do not add or remove.
+
+| locator | text | GT heading? |
+|---|---|---|
+| h01-big-text-not-heading:4 | Standard rates | yes |
+| h01-big-text-not-heading:11 | Exclusions | yes |
+| h02-headings-look-like-body:0 | BERTH ALLOCATION PROCEDURE | yes |
+| h06-mixed-table-borders:2 | Fully ruled | yes |
+| h06-mixed-table-borders:13 | Horizontal rules only | yes |
+| h06-mixed-table-borders:14 | Depot Staff Vehicles | no |
+| h09-three-column:8 | spanning banner | no |
+| h11-chart-labels-as-headings:4 | Berth Occupancy by Month | no |
+| h11-chart-labels-as-headings:7 | Month of year | no |
+| h12-visible-title-no-metadata:5 | Recommendation | yes |
+| h13-first-big-text-not-title:1 | COMMERCIAL IN CONFIDENCE | no |
+| h16-inconsistent-hierarchy:4 | Discrepancies | yes |
+| h16-inconsistent-hierarchy:6 | STORAGE | yes |
+| h16-inconsistent-hierarchy:10 | Dispatch | yes |
+
+Nine GT headings. Five GT non-headings.
+
+Fail-closed: verifier true → preserve frozen `model_role`; verifier
+false → block the proposed heading mutation (keep existing tag; do
+not convert an existing H* to P). Parse failure is
+`verification_failure`, not a correct non-heading classification.
+
+Reference before verifier (Part 9 Arm B): unsafe **5**, heading exact
+**43/51**, detection **47/51**, demotions **0**.
+
+### Registered predictions (frozen before the verifier pass)
+
+1. `[H]` The text-only verifier parses all 14 candidates.
+2. `[H]` It accepts all 9 genuine headings.
+3. `[H]` It rejects the five known non-heading eligibility cases
+   strongly enough that final unsafe falls 5 → 0.
+4. `[H]` Heading exact remains 43/51 and detection 47/51 because no
+   genuine heading mutation is blocked.
+5. `[H]` The text-only verifier succeeds on the residual surface
+   without images, confirming Part 14’s simplification.
+6. `[H]` No retraining, image path, crop, new heuristic, or larger
+   model is required.
+7. `[H]` Holdout 2 remains sealed.
+
+### Stop rule
+
+* **A** — zero unsafe, zero genuine-heading vetoes, usefulness
+  unchanged. Architecture frozen strongly enough to earn one later
+  blind Holdout-2 evaluation. Do not run Holdout 2 in this spike.
+  Do not make another training pass before Holdout 2.
+* **B** — any genuine heading vetoed. STOP. Do not tune on the spent
+  row. Do not restore the image path automatically. Do not run
+  Holdout 2.
+* **C** — genuine headings preserved but one or more unsafe residuals
+  remain. STOP. Do not add examples or a semantic rule from Holdout 1.
+  Do not run Holdout 2.
+* **D** — parse/reproduction failure. STOP as experiment plumbing.
+  Do not reinterpret it as model performance.
+
+Do not run Holdout 2.
+
