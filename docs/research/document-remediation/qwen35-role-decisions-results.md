@@ -3527,4 +3527,91 @@ The architecture is not earned for a blind evaluation.
 Logs: `out/h1-layout/rescored-armB-text-binary.jsonl`,
 `out/h1-layout/score-armB-text-binary.json`.
 
+---
+
+## Part 16 — marked vs text-only on the spent 14-row surface
+
+**Date:** 2026-09-11. Same branch. Inference only. No training. No
+crop. No prompt edit. No `--train-vision`. No larger model. No new
+examples. Holdout 2 remains sealed. Frozen Holdout-1 role predictions
+are not regenerated. `out/adapter-role`, `out/adapter-verify-text`,
+and `out/adapter-verify-marked` are not modified and are not
+retrained.
+
+Part 15 killed the text-only eligibility verifier as an architecture
+component: 4/9 genuine headings vetoed, 2/5 unsafe residuals left,
+exact 43→42/51, detection 47→45/51, demotions 0→2.
+
+Part 14 established marked == text-only on development. It did not
+establish equivalence on this spent Holdout-1 surface.
+
+The one cheaper unresolved comparison: does the already-trained
+Part-13 marked-page eligibility verifier behave differently from the
+text-only verifier on the exact same 14 Part-10 mutation candidates?
+
+This is spent diagnostic evidence, not generalization evidence.
+
+### Exact surface (unchanged from Part 15)
+
+The 14 Part-10 architecture candidates, same order. Do not recompute
+from GT. Existing Part-11 marked full-page PNGs in
+`out/h1-layout/pages/marked/` (14/14 present). Do not redraw unless
+a file is mechanically missing.
+
+Nine GT headings: `h01:4`, `h01:11`, `h02:0`, `h06:2`, `h06:13`,
+`h12:5`, `h16:4`, `h16:6`, `h16:10`.
+
+Five GT non-headings: `h06:14`, `h09:8`, `h11:4`, `h11:7`, `h13:1`.
+
+Part 15 text-verifier failures of diagnostic interest (report-only,
+no special-case): `h02:0`, `h06:13`, `h16:4`, `h16:6`, and the two
+unsafe survivors `h11:4`, `h13:1`.
+
+### Invocation (existing path)
+
+`--rescore` of frozen Part-9 Arm B with `--verify-marked-binary` and
+`out/adapter-verify-marked`. That is the Part-13 contract: marked
+page, `MARKED_ELIGIBILITY_STEM`, Element/Font/Weight/Previous/Next,
+no existing tag, temperature 0, thinking disabled, max-tokens 256.
+`--eval-verify-marked` is not used here because it would re-call the
+role adapter from PDF dumps.
+
+Fail-closed semantics unchanged. Verifier never chooses heading
+level. Do not rerun `out/adapter-role`.
+
+### Registered predictions (frozen before the 14 calls)
+
+1. `[H]` The frozen marked verifier parses all 14.
+2. `[H]` Its predictions differ from the text-only verifier on at
+   least one spent-H1 candidate despite their development
+   equivalence.
+3. `[H]` Visual localization restores eligibility for the genuine
+   headings the text verifier vetoed.
+4. `[H]` It rejects `h11:4` and `h13:1` strongly enough to reduce
+   final unsafe to zero.
+5. `[H]` Spent-H1 heading exact remains at least 43/51, detection at
+   least 47/51, and demotions remain zero.
+6. `[H]` No retraining, crop, prompt tuning, semantic heuristic, or
+   larger model is required.
+7. `[H]` Holdout 2 remains sealed.
+
+### Stop rule
+
+* **A** — true-heading vetoes 0, final unsafe 0, exact ≥43/51,
+  detection ≥47/51, demotions 0, no verification failure. Visual
+  input is load-bearing on the spent failure surface. Overturn
+  Part 14 YAGNI. Freeze hashes. Do not run Holdout 2 in this spike.
+* **B** — marked and text-only effectively identical. Visual path
+  redundant on development and the spent surface. Do not train
+  vision, crop, or run Holdout 2.
+* **C** — marked differs but still vetoes any genuine heading. Not
+  safe for mutation gating. Do not tune on spent rows. Do not run
+  Holdout 2.
+* **D** — genuine headings preserved but an unsafe residual remains.
+  Insufficient specificity. Do not add a Holdout-1 example, regex,
+  prompt clause, or crop. Do not run Holdout 2.
+* **E** — reproduction / parse failure. STOP as plumbing.
+
+Do not run Holdout 2.
+
 
