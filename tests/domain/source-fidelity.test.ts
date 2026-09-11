@@ -159,6 +159,26 @@ describe('headings, by level sequence', () => {
     expect(found[0]!.criterion).toBe('2.4.10');
   });
 
+  it('fires when the ORDER changes but the number of distinct levels does not', () => {
+    // The case that separates this rule from a weaker one that only counts
+    // distinct levels. Both sides have exactly two: source `[1, 2, 1]` — a
+    // heading, a sub-heading, then back up — against a delivered `[1, 1, 2]`,
+    // where the second heading lost its depth and the third gained it. Ranks
+    // diverge at index 1.
+    //
+    // Every other firing case in this file happens to have a DIFFERENT count
+    // of distinct levels on each side, so `new Set(a).size !== new Set(b).size`
+    // would pass all of them and report nothing here. That is the shape of
+    // `9f0e12f "The guard enforced less than it claimed"`, and the only defence
+    // against it is a case the weaker rule gets wrong.
+    const found = fidelityDefects(
+      source({ headings: 3, headingLevels: [1, 2, 1] }),
+      delivered({ headings: ['H1', 'H1', 'H2'] }),
+    );
+    expect(omissions(found)).toHaveLength(1);
+    expect(found[0]!.criterion).toBe('2.4.10');
+  });
+
   it('does not fire when the sequence matches', () => {
     expect(
       fidelityDefects(
