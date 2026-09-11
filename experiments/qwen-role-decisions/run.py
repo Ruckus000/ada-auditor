@@ -7,10 +7,13 @@ scores. `--role-only` hides existing_tag and derives keep/retag from the
 predicted role. `--r2-veto` applies Headings.java R2 (no letters → P) after
 the model, keeping model_role. `--emit-verify-sft` writes image-bearing
 rows for the separate eligibility adapter; `--eval-verify-marked` runs it.
+`--emit-verify-text-sft` strips those images onto the same 31 rows;
+`--eval-verify-text` scores the text-only adapter.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -641,6 +644,45 @@ MARKED_ELIGIBILITY_STEM = (
     "non-document-heading content. "
     'Return ONLY {"heading":true} or {"heading":false}.'
 )
+TEXT_ONLY_ELIGIBILITY_STEM = (
+    "Decide whether the Element described below is a document section "
+    "or subsection heading rather than table/chart labeling, a banner, "
+    "stamp, page furniture, or other non-document-heading content. "
+    'Return ONLY {"heading":true} or {"heading":false}.'
+)
+PART13_VERIFY_TRAIN_IDS = (
+    "02-h1",
+    "02-p",
+    "02-callout",
+    "02-h2",
+    "02-footer",
+    "04-h1",
+    "04-p",
+    "05-brand",
+    "05-h1",
+    "05-p",
+    "05-fig1",
+    "05-h2",
+    "06-h1",
+    "06-h2-site",
+    "10-h1",
+    "10-p",
+    "10-h2-english",
+    "10-h2-fr",
+    "10-h2-closing",
+    "12-h1",
+    "12-sub",
+    "12-org",
+    "12-h2-contents",
+    "12-h2-summary",
+    "12-p",
+    "12-h2-throughput",
+    "12-table-caption",
+    "12-chart-title",
+    "12-h2-fleet",
+    "12-h2-site",
+    "12-h2-options",
+)
 PART10_VERIFY_LOCATORS = (
     "h01-big-text-not-heading:4",
     "h01-big-text-not-heading:11",
@@ -850,6 +892,7 @@ MARKED_ROLE_LOCALIZER = (
 )
 ADAPTER_ROLE = HERE / "out" / "adapter-role"
 ADAPTER_VERIFY_MARKED = HERE / "out" / "adapter-verify-marked"
+ADAPTER_VERIFY_TEXT = HERE / "out" / "adapter-verify-text"
 
 
 def marked_role_prompt(case: dict) -> str:
@@ -860,6 +903,10 @@ def marked_role_prompt(case: dict) -> str:
 
 def marked_eligibility_prompt(case: dict) -> str:
     return card_prompt(MARKED_ELIGIBILITY_STEM, case, hide_existing_tag=True)
+
+
+def text_eligibility_prompt(case: dict) -> str:
+    return card_prompt(TEXT_ONLY_ELIGIBILITY_STEM, case, hide_existing_tag=True)
 
 
 def gt_heading(case: dict) -> bool:
@@ -998,6 +1045,84 @@ def emit_verify_sft(
     return manifest
 
 
+def emit_verify_text_sft(source: Path, out_dir: Path) -> dict:
+    """Strip images from the Part-13 SFT; keep the same 31 rows and labels."""
+    if not source.is_file():
+        raise SystemExit(f"dataset-reproduction failure: missing Part 13 SFT {source}")
+    raw = json.loads(source.read_text())
+    if not isinstance(raw, list):
+        raise SystemExit("dataset-reproduction failure: train.json is not a list")
+    if len(raw) != len(PART13_VERIFY_TRAIN_IDS):
+        raise SystemExit(
+            f"dataset-reproduction failure: count {len(raw)} != {len(PART13_VERIFY_TRAIN_IDS)}"
+        )
+    rows: list[dict] = []
+    ids: list[str] = []
+    n_true = 0
+    for row, cid in zip(raw, PART13_VERIFY_TRAIN_IDS, strict=True):
+        messages = row.get("messages") or []
+        if len(messages) < 2:
+            raise SystemExit(f"dataset-reproduction failure: {cid} missing messages")
+        content = messages[0].get("content") or ""
+        if not content.startswith(MARKED_ELIGIBILITY_STEM):
+            raise SystemExit(
+                f"dataset-reproduction failure: {cid} unexpected prompt stem"
+            )
+        image = row.get("image")
+        if image:
+            doc = Path(str(image)).stem.split("-", 1)[0]
+            if not cid.startswith(f"{doc}-"):
+                raise SystemExit(
+                    f"dataset-reproduction failure: {cid} vs image {image}"
+                )
+        try:
+            heading = json.loads(messages[1]["content"])["heading"]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            raise SystemExit(f"dataset-reproduction failure: {cid} bad completion")
+        if heading is not True and heading is not False:
+            raise SystemExit(f"dataset-reproduction failure: {cid} heading not bool")
+        if heading:
+            n_true += 1
+        ids.append(cid)
+        rows.append(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": TEXT_ONLY_ELIGIBILITY_STEM
+                        + content[len(MARKED_ELIGIBILITY_STEM) :],
+                    },
+                    messages[1],
+                ]
+            }
+        )
+    n_false = len(rows) - n_true
+    if n_true != 18 or n_false != 13:
+        raise SystemExit(
+            f"dataset-reproduction failure: heading true={n_true} false={n_false} (want 18/13)"
+        )
+    if set(ids) != set(PART13_VERIFY_TRAIN_IDS):
+        raise SystemExit("dataset-reproduction failure: ID set mismatch")
+    if any("image" in row for row in rows):
+        raise SystemExit("dataset-reproduction failure: image column survived")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    train_path = out_dir / "train.json"
+    payload = json.dumps(rows, indent=2) + "\n"
+    train_path.write_text(payload)
+    manifest = {
+        "n": len(rows),
+        "heading_true": n_true,
+        "heading_false": n_false,
+        "ids": ids,
+        "documents": sorted({i.split("-")[0] for i in ids}),
+        "source": str(source),
+        "sha256": hashlib.sha256(payload.encode()).hexdigest(),
+        "train_json": str(train_path),
+    }
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    return manifest
+
+
 def verifier_gate(rows: list[dict]) -> dict:
     parsed_n = sum(1 for r in rows if r.get("verify_parsed"))
     n = len(rows)
@@ -1046,6 +1171,7 @@ def eval_verify_marked(
     role_adapter: Path,
     verify_adapter: Path,
     omit_image: bool = False,
+    text_prompt: bool = False,
 ) -> dict:
     dumps = dump_dir(pdf_dir)
     cards, failed = dumps_to_cards(dumps)
@@ -1075,11 +1201,18 @@ def eval_verify_marked(
         verify_raw = ""
         box_ok = all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1", "page"))
         image = None
-        if box_ok and not omit_image:
+        if box_ok and not omit_image and not text_prompt:
             image = str(ensure_marked_png(case, pdf_dir, pages_dir, png_cache))
+        prompt_fn = text_eligibility_prompt if text_prompt else marked_eligibility_prompt
+        if text_prompt:
+            verify_input = "text-binary"
+        elif omit_image:
+            verify_input = "text-only"
+        else:
+            verify_input = "marked-binary"
         verify_raw = generate(
             MODEL,
-            marked_eligibility_prompt(case),
+            prompt_fn(case),
             image=image,
             thinking_mode="disabled",
             adapter_path=str(verify_adapter),
@@ -1091,13 +1224,13 @@ def eval_verify_marked(
                 decided,
                 case,
                 heading_flag,
-                verify_input="text-only" if omit_image else "marked-binary",
+                verify_input=verify_input,
             )
         elif decided is not None:
             decided = dict(decided)
             decided["page_verify"] = heading_flag
             decided["page_verify_parsed"] = heading_flag is not None
-            decided["verify_input"] = "text-only" if omit_image else "marked-binary"
+            decided["verify_input"] = verify_input
             decided["verification_failure"] = heading_flag is None
         expect = case.get("expect") or {}
         scored = score(decided, case)
@@ -1128,7 +1261,8 @@ def eval_verify_marked(
         "matched": [c.get("id") for c in matched],
         "missing": missing,
         "bridge_failures": failed,
-        "omit_image": omit_image,
+        "omit_image": omit_image or text_prompt,
+        "text_prompt": text_prompt,
         "gates": verifier_gate(rows),
         "role_gates": gates(
             [
@@ -1145,7 +1279,12 @@ def eval_verify_marked(
         ),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    suffix = "ablate" if omit_image else "marked"
+    if text_prompt:
+        suffix = "text"
+    elif omit_image:
+        suffix = "ablate"
+    else:
+        suffix = "marked"
     out_file = out_dir / f"verify-{suffix}.jsonl"
     out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
     (out_dir / f"verify-{suffix}-summary.json").write_text(
@@ -1771,6 +1910,27 @@ def self_check() -> None:
     assert "Berth Occupancy" not in MARKED_ELIGIBILITY_STEM
     assert "COMMERCIAL IN CONFIDENCE" not in MARKED_ELIGIBILITY_STEM
     assert "H1" not in MARKED_ELIGIBILITY_STEM
+    assert len(PART13_VERIFY_TRAIN_IDS) == 31
+    assert TEXT_ONLY_ELIGIBILITY_STEM.startswith("Decide whether")
+    assert "outlined" not in TEXT_ONLY_ELIGIBILITY_STEM
+    assert "You are shown" not in TEXT_ONLY_ELIGIBILITY_STEM
+    assert "H1" not in TEXT_ONLY_ELIGIBILITY_STEM
+    assert "Depot Staff" not in TEXT_ONLY_ELIGIBILITY_STEM
+    assert "Berth Occupancy" not in TEXT_ONLY_ELIGIBILITY_STEM
+    assert "COMMERCIAL IN CONFIDENCE" not in TEXT_ONLY_ELIGIBILITY_STEM
+    text_elig = text_eligibility_prompt(
+        {
+            "text": "Eligibility",
+            "font_pt": 13,
+            "weight": "bold",
+            "prev": "Terms of Access",
+            "next": "Access is granted",
+            "existing_tag": "H4",
+        }
+    )
+    assert text_elig.startswith(TEXT_ONLY_ELIGIBILITY_STEM)
+    assert "Element: 'Eligibility'" in text_elig
+    assert "Existing tag" not in text_elig
     assert gt_heading({"expect": {"role": "H2"}}) is True
     assert gt_heading({"expect": {"role": "P"}}) is False
     assert verifier_skip_reason({"existing_tag": "Figure", "text": "Logo", "ancestors": []}) == "source_type"
@@ -2058,6 +2218,15 @@ if __name__ == "__main__":
         print(json.dumps(emit_verify_sft(pdf_dir, match_path, out_dir, pages_dir), indent=2, default=str))
         raise SystemExit(0)
 
+    if "--emit-verify-text-sft" in sys.argv:
+        source = Path(
+            flag_value("--source")
+            or (HERE / "out" / "gen-sft-verify" / "train.json")
+        )
+        out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "gen-sft-verify-text"))
+        print(json.dumps(emit_verify_text_sft(source, out_dir), indent=2, default=str))
+        raise SystemExit(0)
+
     if "--eval-verify-marked" in sys.argv:
         pdf_dir = Path(flag_value("--pdf-dir") or flag_value("--dump-dir") or "")
         match_path = Path(flag_value("--match-path") or str(PROBES_PATH))
@@ -2073,6 +2242,25 @@ if __name__ == "__main__":
             Path(flag_value("--role-adapter") or ADAPTER_ROLE),
             Path(flag_value("--adapter-path") or ADAPTER_VERIFY_MARKED),
             omit_image="--omit-image" in sys.argv,
+        )
+        raise SystemExit(0)
+
+    if "--eval-verify-text" in sys.argv:
+        pdf_dir = Path(flag_value("--pdf-dir") or flag_value("--dump-dir") or "")
+        match_path = Path(flag_value("--match-path") or str(PROBES_PATH))
+        out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "verify-text"))
+        pages_dir = Path(flag_value("--pages-dir") or (out_dir / "pages"))
+        if not pdf_dir:
+            raise SystemExit("--eval-verify-text requires --pdf-dir or --dump-dir")
+        eval_verify_marked(
+            pdf_dir,
+            match_path,
+            out_dir,
+            pages_dir,
+            Path(flag_value("--role-adapter") or ADAPTER_ROLE),
+            Path(flag_value("--adapter-path") or ADAPTER_VERIFY_TEXT),
+            omit_image=True,
+            text_prompt=True,
         )
         raise SystemExit(0)
 
