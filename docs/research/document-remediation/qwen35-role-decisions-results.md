@@ -808,9 +808,8 @@ now earned. Stop. Do not test generalization in this spike.
 ## Part 5 — QLoRA generalization (dev-corpus)
 
 **Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
-**Status:** pre-registration. Training examples, doc-07 cards, and the train
-command are frozen below. No generate on 07 or `probes.json` for this
-adapter yet.
+**Status:** measured. Gate 1 (doc 07) passed. Gate 2 challenge usefulness
+failed (7/11 exact, need ≥9/11). Stop. Holdout 1 not earned.
 
 Ponytail: one question. Spike 3's 12/12 is memorization, not this result.
 No Holdout 1, no Holdout 2, no vision, no trainer.py.
@@ -946,6 +945,116 @@ not a holdout-ready classifier.
 
 ### Measurements
 
-Not yet. This section is committed before the first generate on 07 / probes
-and before `mlx_vlm.lora` on `train.json`.
+Machine: Apple M4 Max, 36 GiB. Same venv as spike 3 (`mlx-vlm==0.7.0`,
+`mlx==0.32.2`, `datasets==5.0.1`). Offline. One train run. No second
+configuration. Train/07 JSON were not edited after generate.
+
+#### Base (frozen prompt, before this adapter)
+
+Doc 07 (`run.py --offline --path valid-07.json`): parse 6/6. Unsafe **2**
+(`07-northern` → H3 retag; `07-q1` → H1 retag). `07-chart-title` → Table
+(wrong, not an `H*` retag). Heading exact **1/1**. Role+action exact 3/6.
+
+`probes.json --conservative` (same stem as training): parse 17/17. Unsafe
+**5** (01-runhead/runfoot H1; 03-review-period H2; 03-q1 H1; 08-numeral-3
+H1). Heading exact **7/11**. Matches spike-2 Arm B (5 unsafe, 7/11), not
+Arm A (original stem). Fair base for this adapter is Arm B.
+
+#### Gate 0 — training health
+
+`[V]` **pass.** 258 iters as registered. Loss 0.643 → 0.00022. No NaN.
+Trainable 16.232448 M (0.358%). Peak mem 10.183 GB. ~277 s
+(12:19:17–12:23:54). Adapter `out/adapter-gen/adapters.safetensors`
+64,991,946 bytes. Generate loaded it.
+
+#### Gate 1 — fresh 07 (primary)
+
+`run.py --offline --path valid-07.json --adapter-path out/adapter-gen`
+
+`[V]` **pass.** Parse 6/6. Unsafe **0**. Role+action exact **6/6**. Heading
+exact **1/1** (not collapsed). Confidence absent (`null`).
+
+| id | expect | base | adapter | adapter ok |
+|---|---|---|---|---|
+| 07-h1 | H1 keep | H1 keep | H1 keep | yes |
+| 07-intro | P keep | P keep | P keep | yes |
+| 07-chart-title | P retag | Table retag | P retag | yes |
+| 07-northern | P retag | **H3** retag | P retag | yes |
+| 07-q1 | P retag | **H1** retag | P retag | yes |
+| 07-cap | P keep | P keep | P keep | yes |
+
+False heading promotions: 0. Heading demotions: 0. No Artifact/Table
+confusions on this set. Chart-label category was represented in train
+(12-q1, 04-northern, 12-chart-title); this is generalization, not a
+missing-class fix.
+
+#### Gate 2 — known challenge (after Gate 1)
+
+`run.py --offline --conservative --adapter-path out/adapter-gen`
+
+`[V]` **fail usefulness.** Parse 17/17. Unsafe **0** (was 5). Heading exact
+**7/11** (need ≥9/11). Same 7/11 as this conservative base; not a
+usefulness win vs Arm A (8/11) or E (8/11). Safety *does* beat A and E.
+
+| id | expect | base (conservative) | adapter | notes |
+|---|---|---|---|---|
+| 01-h1 | H1 | H1 | H1 | |
+| 01-h2-throughput | H2 | H2 | H2 | |
+| 01-h3-regional | H3 | H3 | H3 | italic H3 held |
+| 01-h2-actions | H2 | H2 | H2 | |
+| 01-h2-approval | H2 | H2 | H2 | |
+| 01-runhead | Artifact | **H1** | Artifact | unsafe cleared |
+| 01-runfoot | Artifact | **H1** | Artifact | unsafe cleared |
+| 03-h1 | H1 | Table | H1 | heading recovered |
+| 03-review-period | P | **H2** | P | unsafe cleared |
+| 03-q1 | P | **H1** | P | unsafe cleared |
+| 08-h1 | H1 | H1 | H1 | |
+| 08-kicker | Artifact | Artifact | P | safe; P vs Artifact |
+| 08-numeral-3 | P | **H1** | P | unsafe cleared; digit ornament was a train coverage gap |
+| 11-h1-terms | H1 | H1 | **H2** | hierarchy miss; existing `P` |
+| 11-h2-eligibility | H2 | H4 | H4 | existing-tag keep-magnet |
+| 11-h2-applying | H2 | H4 | H4 | same |
+| 11-h2-contact | H2 | H4 | H4 | same |
+
+Net heading_exact stayed 7/11: gained `03-h1`, lost `11-h1-terms`. The
+three 11 H2s never moved off H4.
+
+**Classification (not a second train run):**
+
+- 11 H4→should-be-H2: **missing training category**. The train pool has no
+  heading whose existing tag is the wrong *heading* level. Spike 2 already
+  named `existing_tag: H4` as a keep-magnet. Doc 11 is the challenge set,
+  so it was correctly excluded from train.
+- 11-h1 P→H2 instead of H1: **represented** (10-h1 is P→H1) but failed.
+- 08-kicker Artifact→P: furniture vs cover-subtitle `P` (12-sub). Safe.
+  Not scored as unsafe.
+
+Poor challenge heading accuracy is not a mechanical error. No second run.
+
+### Prediction check
+
+1. Unsafe on unseen 07 falls (2 → 0) — **hit**.
+2. Heading usefulness on 07 holds (1/1 H1) — **hit**.
+3. Probes: unsafe 0 **and** ≥9/11 exact — **miss** (unsafe 0; exact 7/11).
+4. 100% parseable `{role,action}` — **hit** (07 6/6, probes 17/17).
+5. Dev-corpus gate without vision/confidence/extractor/bigger model — **miss**
+   (Gate 2 usefulness).
+
+### ponytail
+
+`train.json` + `valid-07.json` + existing `run.py` + this file. Adapter
+under gitignored `out/adapter-gen`. No trainer, no dataset module, no
+vision, no Holdout 1 path, no rank sweep, no extra epochs after 7/11.
+
+---
+
+## Stopping (spike 4)
+
+**Fail — challenge usefulness.** Fresh doc 07 is clean and useful. The
+frozen probes are now *safe* (0 promotions) but heading exact is 7/11, not
+9/11, because doc 11's wrong-level existing tags still win. Holdout 1 is
+not earned. Stop. Do not add epochs. Do not inspect Holdout 2. A later
+spike may add one targeted train category (wrong-level existing heading
+tags) only if that is still the residual after this record; that is not
+this spike.
 
