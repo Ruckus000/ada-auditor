@@ -159,6 +159,23 @@ function levelsOf(headings: string[]): number[] {
     .filter((n) => Number.isFinite(n));
 }
 
+/**
+ * A heading ladder as RANKS: the distinct levels present, in order, mapped onto
+ * 1, 2, 3…
+ *
+ * The same rule `renumberHeadings` applies in `Finish.java`, written here
+ * rather than shared because one is a PDF structure rewrite in Java and this is
+ * a comparison over two number arrays; what has to agree is the RULE, and it is
+ * named on both sides so a change to one is a change somebody has to make
+ * twice on purpose.
+ *
+ * `[1, 1, 1, 7] -> [1, 1, 1, 2]`. Distinctions kept, depth discarded.
+ */
+function byRank(levels: number[]): number[] {
+  const rank = new Map([...new Set(levels)].sort((a, b) => a - b).map((level, i) => [level, i + 1]));
+  return levels.map((level) => rank.get(level) ?? level);
+}
+
 export function fidelityDefects(
   truth: SourceTruth,
   delivered: DocumentStructure,
@@ -214,8 +231,28 @@ export function fidelityDefects(
     // Only when the counts agree. A count defect has already been reported
     // above, and re-describing the same loss as a level mismatch would report
     // one defect twice and inflate every tally built on these.
-    const deliveredLevels = levelsOf(deliveredHeadings);
-    const sourceLevels = source.headingLevels;
+    // Compared by RANK, not by depth, because the pipeline re-ranks on purpose.
+    //
+    // `renumberHeadings` is a standing policy on the conversion lane
+    // (`convert.ts` passes it; `Finish.java` implements it) and it is an
+    // order-isomorphism: it collects the distinct levels present, sorts them,
+    // and maps them onto 1,2,3…. So an author's `{3, 5, 7}` is delivered as
+    // `{1, 2, 3}` with every distinction they drew intact, and the absolute
+    // numbers are exactly what the policy is designed to change.
+    //
+    // Comparing raw depth therefore reported the re-rank doing its job — on
+    // `[V]` five of the 31 real documents, as an item no edit to the client's
+    // document could ever resolve, and which displaced the heading question
+    // `needsIn` would otherwise have asked. Normalising both sides asks the
+    // question that survives the policy: did the author's DISTINCTIONS reach
+    // the reader?
+    //
+    // It dissolves the format ceiling for free and without special-casing it:
+    // level 7 clamping to H6 is still two ranks against two. A clamp that
+    // genuinely merges — levels 7 and 8 both landing on H6 — is three ranks
+    // against two and still reported, which is the case worth keeping.
+    const deliveredLevels = byRank(levelsOf(deliveredHeadings));
+    const sourceLevels = byRank(source.headingLevels);
     if (
       deliveredLevels.length === sourceLevels.length &&
       deliveredLevels.some((level, i) => level !== sourceLevels[i])
@@ -257,7 +294,11 @@ export function fidelityDefects(
       const differing = deliveredLevels.filter((level, i) => level !== sourceLevels[i]).length;
       omit(
         '2.4.10',
-        `${plural(differing, 'heading')} of ${sourceLevels.length} arrived at a different depth from the source, first at heading ${first + 1} (delivered H${deliveredLevels[first]}, source H${sourceLevels[first]}) — PDF has no level below H6, and the exporter can re-level a contents heading`,
+        // Rungs, not `H` numbers. These are ranks now, and printing a rank as
+        // "H2" would name a level the delivered document may not contain —
+        // this pipeline re-ranks on purpose, so the depth a reader sees is not
+        // the depth either side was compared at.
+        `${plural(differing, 'heading')} of ${sourceLevels.length} sit at a different rung of the outline than in the source, first at heading ${first + 1} (rung ${deliveredLevels[first]} against the source's ${sourceLevels[first]}) — a level distinction the author drew did not survive conversion`,
       );
     }
   }

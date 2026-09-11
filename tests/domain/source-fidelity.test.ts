@@ -118,13 +118,65 @@ describe('headings, by level sequence', () => {
     expect(found[0]!.detail).toMatch(/level/i);
   });
 
-  it('the H7 the PDF format cannot express is reported, and does not block', () => {
+  it('does NOT fire when the pipeline re-ranked a ladder it was told to re-rank', () => {
+    // `renumberHeadings` is a standing policy on the conversion lane and it is
+    // an ORDER-ISOMORPHISM: it collects the distinct levels present, sorts
+    // them, and maps them onto 1,2,3… — so every distinction the author made
+    // survives and the absolute numbers deliberately change. Comparing raw
+    // levels therefore flagged the re-rank doing its job, on a ladder that no
+    // edit to the client's document could ever bring back into agreement.
+    //
+    // `[V]` Five of the 31 real documents carried this, and the item displaced
+    // the heading question `needsIn` would otherwise have asked.
+    const found = fidelityDefects(
+      source({ headings: 3, headingLevels: [3, 3, 5] }),
+      delivered({ headings: ['H1', 'H1', 'H2'] }),
+    );
+    expect(found).toEqual([]);
+  });
+
+  it('does NOT fire on the H7 ceiling while the ladder keeps its shape', () => {
+    // PDF has no level below H6, so a Word outline level 7 clamps. That loses
+    // nothing while 7 is the only deep level: 1-vs-7 arrives as 1-vs-6, two
+    // levels either way.
     const found = fidelityDefects(
       source({ headings: 4, headingLevels: [1, 1, 1, 7] }),
       delivered({ headings: ['H1', 'H1', 'H1', 'H6'] }),
     );
+    expect(found).toEqual([]);
+  });
+
+  it('DOES fire when the ceiling actually merges two of the author’s levels', () => {
+    // The case the rule above must not swallow. Levels 7 and 8 are distinct in
+    // the source and both clamp to H6, so a distinction the author drew is
+    // genuinely gone — three ranks in, two out.
+    const found = fidelityDefects(
+      source({ headings: 3, headingLevels: [1, 7, 8] }),
+      delivered({ headings: ['H1', 'H6', 'H6'] }),
+    );
     expect(assertions(found)).toEqual([]);
     expect(omissions(found)).toHaveLength(1);
+    expect(found[0]!.criterion).toBe('2.4.10');
+  });
+
+  it('fires when the ORDER changes but the number of distinct levels does not', () => {
+    // The case that separates this rule from a weaker one that only counts
+    // distinct levels. Both sides have exactly two: source `[1, 2, 1]` — a
+    // heading, a sub-heading, then back up — against a delivered `[1, 1, 2]`,
+    // where the second heading lost its depth and the third gained it. Ranks
+    // diverge at index 1.
+    //
+    // Every other firing case in this file happens to have a DIFFERENT count
+    // of distinct levels on each side, so `new Set(a).size !== new Set(b).size`
+    // would pass all of them and report nothing here. That is the shape of
+    // `9f0e12f "The guard enforced less than it claimed"`, and the only defence
+    // against it is a case the weaker rule gets wrong.
+    const found = fidelityDefects(
+      source({ headings: 3, headingLevels: [1, 2, 1] }),
+      delivered({ headings: ['H1', 'H1', 'H2'] }),
+    );
+    expect(omissions(found)).toHaveLength(1);
+    expect(found[0]!.criterion).toBe('2.4.10');
   });
 
   it('does not fire when the sequence matches', () => {
