@@ -1370,3 +1370,118 @@ Holdout 1 is not earned. Do not inspect Holdout 2. A later spike may ask
 what information besides the current tag distinguishes a true heading from
 a digit ornament; that is not this spike.
 
+---
+
+## Part 7 — R2 ornament veto around role-only QLoRA
+
+**Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
+**Status:** pre-registration. R2 traced. No hybrid generate yet. Adapter
+`out/adapter-role` unchanged.
+
+Ponytail: the residual is one known ornament class. Test the existing
+deterministic exclusion before teaching the model. No retrain, no new
+examples, no Holdout 1/2, no vision, no rule engine.
+
+### Trace (before any hybrid code)
+
+`experiments/document-remediation/Headings.java`, comment R2 NO LETTERS
+(lines 41–42) and the predicate at line 220:
+
+```
+boolean noLetters = !t.chars().anyMatch(Character::isLetter);
+```
+
+`t` is `StructText.of(el)` — the element's text. Not font size. Not the
+current tag, except that Headings.java only *walks* current H1–H6 (it is a
+demotion pass). Empty text is skipped (`if (t.isEmpty()) continue`). A match
+is demoted with `setStructureType("P")`. Designed for corpus `08-slide-layout`
+decorativeGraphics "large numerals 1/2/3"; the probe card is `08-numeral-3`
+(`"3"`, 34pt, existing `P`).
+
+It is **not** `text.isdigit()`. `"Q1"` (07-q1, 03-q1, train 12-q1) contains a
+letter and must not match. Invoking the Java stage needs a tagged PDF; the
+cards already carry the text, so the experiment copies the one-line
+predicate. Provenance: `Headings.java:220`. Python `str.isalpha()` stands in
+for `Character.isLetter` on this Latin-script corpus.
+
+Headings.java would not fire on `08-numeral-3` as tagged today, because the
+element is already `P`. The hybrid uses the same *text* predicate as a
+**promotion veto**: letter-less text is not a heading, so Qwen is not allowed
+to make it one. Restricting the veto to current H* would miss the unsafe
+case this spike exists to stop.
+
+### The one question
+
+> Is the smallest safe system now QLoRA + one already-existing deterministic
+> exclusion?
+
+### Architecture (registered)
+
+1. Evaluate R2 on card `text`.
+2. If it matches: `final_role = P`. Still call Qwen; keep `model_role`.
+3. Else: `final_role = model_role` from `out/adapter-role` (role-only,
+   `existing_tag` withheld).
+4. `action = "keep" if final_role == existing_tag else "retag"`.
+
+R2 is a narrow veto, not a second classifier. Scoring uses `final_role`.
+A vetoed row reports both roles; do not pretend Qwen predicted `P`.
+
+### Not doing
+
+No retrain, no new cards, no counterfactual augmentation, no Holdout 1/2,
+no vision, no prompt tuning, no extractor, no SafetyPolicy / RuleEngine,
+no `src/` wiring. Do not retune R2 against individual examples.
+
+### Gate A — predicate scope (no model)
+
+Apply the frozen predicate to every card in `train.json`, `valid-07.json`,
+and `probes.json`. Record every match. Hard requirement: zero true headings
+(`expect.role` in H1–H6 and not a trap). If a true heading matches → STOP.
+
+### Gate B — hybrid, fresh 07
+
+```
+python run.py --offline --role-only --r2-veto --path valid-07.json --adapter-path out/adapter-role
+```
+
+Must stay parse 6/6, unsafe 0, role 6/6, heading 1/1. If R2 changes a
+correct 07 decision → STOP.
+
+### Gate C — hybrid, frozen probes
+
+```
+python run.py --offline --role-only --r2-veto --adapter-path out/adapter-role
+```
+
+Must reach complete 17/17, unsafe 0, heading exact ≥ 9/11. Critical card
+`08-numeral-3`: report R2, `model_role`, `final_role`, derived action.
+Confirm the four doc-11 cards and `01-h3-regional` / `01-h2-actions` stay
+exact, and no previously safe non-heading becomes an H* retag.
+
+### Registered prediction
+
+1. `[H]` Existing R2 matches `08-numeral-3`.
+2. `[H]` Existing R2 matches no known true heading in the exposed
+   development corpus.
+3. `[H]` Fresh doc 07 remains 6/6 with unsafe 0.
+4. `[H]` Frozen probes reach unsafe 0 while retaining 10/11 heading exact.
+5. `[H]` No additional training, vision, or model capacity is required to
+   pass the development gate.
+
+### Win / fail
+
+- **Win:** Gate A zero true headings, 07 preserved, probes unsafe 0 and
+  heading exact ≥ 9/11. STOP. Conclusion: the smallest passing development
+  architecture is role-only QLoRA plus the existing R2 ornament veto, with
+  action derived. A minimal Holdout-1 evaluation bridge is then earned —
+  not built here.
+- **R2 hits a true heading:** STOP. Veto not earned. Do not tune.
+- **R2 misses `08-numeral-3`:** STOP. Do not invent a replacement rule.
+- **Numeral fixed, another unsafe appears:** STOP. Report it. Do not stack
+  another heuristic.
+- **Safety passes, heading exact < 9/11:** STOP. Do not sacrifice hierarchy.
+
+### Measurements
+
+Not yet. This section is committed before the first `--r2-veto` generate.
+

@@ -4,7 +4,8 @@
 ponytail: no extractor, no LoRA wrapper, no schema lib, no trainer. Training
 is upstream `python -m mlx_vlm.lora`. This file only prompts, parses, and
 scores. `--role-only` hides existing_tag and derives keep/retag from the
-predicted role.
+predicted role. `--r2-veto` applies Headings.java R2 (no letters → P) after
+the model, keeping model_role.
 """
 
 from __future__ import annotations
@@ -52,6 +53,27 @@ def card_prompt(
         bits.append(f'Page band: {case.get("y_band", "unknown")}')
     bits.append("JSON:")
     return "\n".join(bits)
+
+
+def r2_ornament(text: str) -> bool:
+    """Headings.java R2: !t.chars().anyMatch(Character::isLetter). Empty skipped."""
+    if not text:
+        return False
+    return not any(ch.isalpha() for ch in text)
+
+
+def apply_r2_veto(pred: dict | None, case: dict) -> dict | None:
+    model_role = pred.get("role") if pred else None
+    veto = r2_ornament(case["text"])
+    role = "P" if veto else model_role
+    if role is None:
+        return None
+    out = dict(pred or {})
+    out["model_role"] = model_role
+    out["r2_veto"] = veto
+    out["role"] = role
+    out["action"] = "keep" if role == case["existing_tag"] else "retag"
+    return out
 
 
 def parse_json(text: str) -> dict | None:
@@ -181,6 +203,7 @@ def run_cases(
     image_dir: Path | None = None,
     adapter_path: str | None = None,
     role_only: bool = False,
+    r2_veto: bool = False,
 ) -> list[dict]:
     bundle = json.loads(path.read_text())
     if offline:
@@ -214,8 +237,13 @@ def run_cases(
         pred = parse_json(raw)
         if role_only and pred is not None and "role" in pred:
             pred["action"] = "keep" if pred["role"] == case["existing_tag"] else "retag"
+        if r2_veto:
+            pred = apply_r2_veto(pred, case)
         row = score(pred, case)
         row["raw"] = raw[-1500:]
+        if r2_veto and pred is not None:
+            row["model_role"] = pred.get("model_role")
+            row["r2_veto"] = pred.get("r2_veto")
         rows.append(row)
         shown = {k: v for k, v in row.items() if k != "raw"}
         if not row["parsed"]:
@@ -315,6 +343,34 @@ def self_check() -> None:
     unsafe_mix = [exact] * 11 + [bad]
     assert gates(unsafe_mix)["safety_ok"] is False
     assert gates(unsafe_mix)["pass"] is False
+    assert r2_ornament("3") is True
+    assert r2_ornament("Q1") is False
+    assert r2_ornament("Throughput Trend Analysis") is False
+    assert r2_ornament("") is False
+    numeral = {
+        "id": "08-numeral-3",
+        "text": "3",
+        "existing_tag": "P",
+        "expect": {"role": "P"},
+        "trap": "heading",
+    }
+    vetoed = apply_r2_veto({"role": "H1"}, numeral)
+    assert vetoed["model_role"] == "H1"
+    assert vetoed["role"] == "P"
+    assert vetoed["action"] == "keep"
+    assert vetoed["r2_veto"] is True
+    scored_veto = score(vetoed, numeral)
+    assert scored_veto["unsafe"] is False
+    assert scored_veto["ok"] is True
+    heading_keep = apply_r2_veto(
+        {"role": "H1"},
+        {"text": "Terms of Access", "existing_tag": "P"},
+    )
+    assert heading_keep["r2_veto"] is False
+    assert heading_keep["role"] == "H1"
+    assert heading_keep["model_role"] == "H1"
+    assert heading_keep["action"] == "retag"
+    assert apply_r2_veto(None, {"text": "Hello", "existing_tag": "P"}) is None
 
 
 if __name__ == "__main__":
@@ -334,4 +390,5 @@ if __name__ == "__main__":
         image_dir=Path(image_dir) if image_dir else None,
         adapter_path=flag_value("--adapter-path"),
         role_only="--role-only" in sys.argv,
+        r2_veto="--r2-veto" in sys.argv,
     )
