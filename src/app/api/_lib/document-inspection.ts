@@ -85,6 +85,11 @@ export async function inspectPdfBytes(
           : { kind: 'already-titled', title: result.value.title },
       sourceLanguage: languageToCarry(result.value.lang),
       structure: result.value,
+      // Unreadable for the same reason the fields above come from the file
+      // itself: there is no Word source behind an inspected PDF, so fidelity
+      // renders as "not verified" rather than silently as a match. Required on
+      // the type precisely so this has to be said out loud.
+      sourceTruth: { readable: false },
     });
 
     // The second instrument reads the same temp file the first did. Then the

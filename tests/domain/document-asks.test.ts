@@ -10,6 +10,7 @@ import {
   withContrast,
   withDeclarations,
   withExcerpt,
+  withFidelity,
   withRepairability,
   type ConversionProvenance,
   type RemediationSummary,
@@ -55,6 +56,9 @@ const provenance = (over: Partial<ConversionProvenance> = {}): ConversionProvena
   title: { kind: 'already-titled', title: 'Planning Committee Agenda' },
   sourceLanguage: 'en-GB',
   structure: structure(),
+  // These cases are about the asks a reading raises, not about fidelity, so
+  // the source is declared unreadable rather than faked.
+  sourceTruth: { readable: false },
   ...over,
 });
 
@@ -89,6 +93,68 @@ function everything(): RemediationSummary {
   });
   return withRepairability(summary, planRepair(s, undefined));
 }
+
+/**
+ * `withFidelity` is held in its own fixture, not folded into `everything()`.
+ *
+ * It is the one composer that REMOVES a punch item as well as adding them —
+ * a fidelity 2.4.10 supersedes the heading question `needsIn` asked — so
+ * composing it into the shared fixture silently changes what every other case
+ * in this file observes. `[V]` It emptied the heading-ask case two tests
+ * below, which is the supersession behaving correctly in a fixture that was
+ * not asking about it.
+ */
+const FIDELITY_DEFECTS = [
+  {
+    kind: 'omission' as const,
+    criterion: '1.3.1',
+    detail: '69 list items delivered for 74 read in the source',
+    oracle: 'ooxml' as const,
+  },
+  {
+    kind: 'omission' as const,
+    criterion: '2.4.10',
+    detail: 'heading levels differ from the source',
+    oracle: 'ooxml' as const,
+  },
+];
+
+describe('asks beside needs, across the composer that also removes one', () => {
+  const withFidelityItems = () =>
+    withFidelity(everything(), { checked: true, oracle: 'ooxml', defects: FIDELITY_DEFECTS });
+
+  it('keeps the positional contract when fidelity adds items', () => {
+    const summary = withFidelityItems();
+
+    expect(summary.asks).toHaveLength(summary.needs!.length);
+    summary.needs!.forEach((need, i) => {
+      expect(summary.asks![i].criterion, need.item).toBe(need.criterion);
+    });
+  });
+
+  it('drops the superseded heading item from BOTH arrays, not just the sentence', () => {
+    // The heading question `needsIn` raises is wrong advice once fidelity has
+    // read the source, so it is replaced. Removing the sentence and leaving
+    // its ask behind would keep the arrays the same length while mis-keying
+    // every pair after it — a break the length check alone cannot see.
+    const before = everything();
+    const after = withFidelityItems();
+
+    expect(before.asks!.some((ask) => ask.kind === 'heading')).toBe(true);
+    expect(after.asks!.some((ask) => ask.kind === 'heading')).toBe(false);
+    expect(after.needs!.some((need) => need.item.includes('Heading levels skip'))).toBe(false);
+  });
+
+  it('marks a fidelity item as answerable by nobody, so it never becomes open work', () => {
+    const fidelityAsks = withFidelityItems().asks!.filter((ask) => ask.kind === 'fidelity');
+
+    expect(fidelityAsks).toHaveLength(2);
+    // Nobody can supply the list items an export dropped. Marked answerable,
+    // each would sit in `open` forever and hold the document in
+    // `needs-answers` — see `services/document-state.ts`.
+    fidelityAsks.forEach((ask) => expect(ask.answerable).toBe('none'));
+  });
+});
 
 describe('asks beside needs', () => {
   it('emits exactly one ask per punch item, in the same order, with the same criterion', () => {
@@ -326,7 +392,7 @@ describe('withDeclarations', () => {
 });
 
 describe('the instrument version', () => {
-  it('moved to 12 for the repair ask, so stored baselines read incomparable once', () => {
-    expect(INSTRUMENT_VERSION).toBe(12);
+  it('moved to 13 for source fidelity, so stored baselines read incomparable once', () => {
+    expect(INSTRUMENT_VERSION).toBe(13);
   });
 });

@@ -3,6 +3,8 @@ import { z } from 'zod';
 import type { Ask, FigurePrior } from './document-answers';
 import type { ContrastReading, DocumentStructure } from './document-structure';
 import { languageHint } from './language-hint';
+import type { Fidelity } from './source-fidelity';
+import type { SourceTruth } from './source-truth';
 
 /**
  * What a remediation produced, and where every claim in it came from.
@@ -44,6 +46,19 @@ export type ConversionProvenance = {
   sourceLanguage: string | null;
   /** The structure of the finished document, as read back. */
   structure: DocumentStructure;
+  /**
+   * What the SOURCE said about its own structure — the reference half.
+   *
+   * Reported here rather than compared here: this type is the account of where
+   * a conversion's claims came from, and the two readings it now carries are
+   * exactly the two sides of that account. `source-fidelity.ts` does the
+   * comparing, and the caller decides what a defect means. Converting and
+   * judging are different jobs.
+   *
+   * `readable: false` where neither oracle could read the container. That
+   * renders as "not verified", never as a clean bill.
+   */
+  sourceTruth: SourceTruth;
 };
 
 /**
@@ -144,6 +159,20 @@ export type RemediationSummary = {
    * clean. Readings taken before `Contrast` graduated cannot gain it.
    */
   contrast?: ContrastReading;
+  /**
+   * Whether the delivered document says what its SOURCE said.
+   *
+   * Absent on readings taken before this instrument shipped, and
+   * `checked: false` where the source container could not be read. Both render
+   * as "not verified", never as a match — the `conformance` precedent, for the
+   * same reason.
+   *
+   * An assertion never reaches here: a document carrying one is refused rather
+   * than delivered, so a stored summary with `fidelity.defects` holds omissions
+   * and `unverified` findings only. That is an invariant of the pipeline, not
+   * of this type.
+   */
+  fidelity?: Fidelity;
 };
 
 export type DocumentExcerpt = {
@@ -613,6 +642,105 @@ export function withConformance(
 }
 
 /**
+ * Fold the fidelity verdict into a summary.
+ *
+ * Pure, and the same shape as `withConformance` above: the verdict is handed
+ * in, never computed here. Omissions become punch-list items, because an
+ * omission is by definition something a person still has to supply.
+ *
+ * Assertions are deliberately NOT translated into items. A document carrying
+ * one is refused rather than delivered, so an assertion reaching this function
+ * would mean the gate upstream failed — and quietly rendering it as a work item
+ * is exactly how a hard gate decays into a suggestion. It is passed through on
+ * `fidelity.defects` where a test can see it, and nowhere else.
+ *
+ * Builds `needs` directly rather than through `punchedOnto`, which the
+ * conformance path uses: this one has to REMOVE an item as well as add one
+ * (see the 2.4.10 note below), which that helper cannot express. `asks` rides
+ * through untouched on the spread.
+ */
+export function withFidelity(
+  summary: RemediationSummary,
+  fidelity: Fidelity,
+): RemediationSummary {
+  const out: RemediationSummary = { ...summary, fidelity };
+  if (!fidelity.checked) return out;
+
+  const caveat =
+    fidelity.oracle === 'engine-derived'
+      ? ' (read via the document converter, because a legacy .doc carries no readable source)'
+      : '';
+  // Omissions AND unverified findings both become items. An `unverified`
+  // finding is real work — "the delivered document carries more of this than
+  // the source reading accounts for, check it" — and the scorer's property is
+  // that every finding is voiced somewhere a promise covers. `summary.fidelity`
+  // alone is a field no promise covers, which is how a suppressed-but-quiet
+  // defect happens. Only assertions stay out, because a document carrying one
+  // is refused rather than delivered.
+  //
+  // Each one carries an `Ask` beside it, because `needs[i]`/`asks[i]` is a
+  // POSITIONAL contract over the whole summary, not a property of the four
+  // composers that happened to exist first. `answerable: 'none'` — see
+  // `ACCEPTS.fidelity`: nobody can supply the list items an export dropped, and
+  // an item marked answerable would hold the document in `needs-answers`
+  // forever, since `document-state.ts` only closes an ask that receives an
+  // answer.
+  const items = fidelity.defects
+    .filter((defect) => defect.kind !== 'assertion')
+    .map((defect, index) => ({
+      ask: {
+        id: `fidelity:${index}`,
+        kind: 'fidelity' as const,
+        criterion: defect.criterion,
+        answerable: 'none' as const,
+      },
+      need: { criterion: defect.criterion, item: `${defect.detail}${caveat}` },
+    }));
+
+  if (items.length === 0) return out;
+
+  // A fidelity heading-level item REPLACES the one `needsIn` wrote, rather than
+  // sitting beside it. The same problem `withConformance` solves with
+  // `voicedByOurInstrument` above — "or every document would say everything
+  // twice" — one level up, and here the duplicate is worse than noise.
+  //
+  // `[V]` On r21 the client got both "Heading levels skip from H1 to H6 —
+  // decide whether the author meant an H2" and "heading levels differ from the
+  // source". The first is **wrong advice**: the author decided already, writing
+  // a Word outline level 7, and PDF has no heading type below H6 to carry it.
+  // `needsIn` reads only the delivered document and cannot know that; fidelity
+  // read the source and can. The instrument that knows more wins.
+  //
+  // Scoped to 2.4.10 alone, deliberately. The two vocabularies also share
+  // `1.3.1` — annotations outside the structure tree versus lost tables and
+  // list items — and those are different subjects that must both survive. A
+  // blanket criterion filter would silently swallow one of them.
+  //
+  // Nothing is dropped when fidelity has no level item to offer: a faithfully
+  // transcribed document that genuinely starts at H2 keeps `needsIn`'s
+  // question, which is the right one to ask there, and an unreadable source
+  // never reaches this line at all.
+  // Dropped by INDEX across both arrays, never by filtering `needs` alone:
+  // removing a sentence and leaving its ask behind breaks the positional
+  // contract just as surely as adding a sentence with no ask, and the surfaces
+  // that read `asks[i]` beside `needs[i]` would mis-key from that point on.
+  const supersedesHeadingLevels = items.some((one) => one.need.criterion === '2.4.10');
+  const priorNeeds = summary.needs ?? [];
+  const priorAsks = summary.asks ?? [];
+  const superseded = new Set(
+    supersedesHeadingLevels
+      ? priorNeeds.flatMap((need, index) => (need.criterion === '2.4.10' ? [index] : []))
+      : [],
+  );
+
+  return {
+    ...out,
+    needs: [...priorNeeds.filter((_, i) => !superseded.has(i)), ...items.map((one) => one.need)],
+    asks: [...priorAsks.filter((_, i) => !superseded.has(i)), ...items.map((one) => one.ask)],
+  };
+}
+
+/**
  * Fold the repair decision into an inspection's summary.
  *
  * A refusal used to be an HTTP answer and nothing else: an inspected signed
@@ -940,7 +1068,18 @@ export const NOT_CHECKED_CRITERIA: ReadonlyArray<{ number: string; name: string 
  * holds the source. New vocabulary, so stored baselines read `incomparable`
  * once rather than reporting our change as the client's document changing.
  */
-export const INSTRUMENT_VERSION = 12;
+/**
+ * 13 — the punch list gained the source-fidelity vocabulary. A delivered
+ * document is now held against what its author wrote, and an omission becomes
+ * an item in 1.3.1, 1.1.1, 2.4.10, 2.4.2 or 3.1.1 that no earlier reading
+ * could emit. New vocabulary, so stored baselines read `incomparable` once
+ * rather than reporting our new eyes as the client's document changing — the
+ * same failure `services/regression.ts` was taught to refuse for site audits.
+ *
+ * The snapshot this came from bumped 6 → 7; 7 through 12 were taken while it
+ * sat uncommitted, so the number is re-derived here rather than carried over.
+ */
+export const INSTRUMENT_VERSION = 13;
 
 function gapsIn(provenance: ConversionProvenance): string[] {
   const { structure, title, sourceLanguage } = provenance;
