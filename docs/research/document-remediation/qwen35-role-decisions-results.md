@@ -501,3 +501,139 @@ exist only for arms that actually ran.
 ## Stopping (spike 2)
 
 No inference-time arm passed both gates. LoRA is the next spike. Stop.
+
+---
+
+## Part 4 — QLoRA trainer viability (overfit only)
+
+**Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
+**Status at time of writing this section:** pre-registration. No `mlx_vlm.lora`
+run yet. `datasets` is not installed.
+
+Ponytail: one question. Upstream CLI only. No trainer.py, no dataset.py, no
+fork, no site-packages edit. Do not run `probes.json` or either holdout.
+
+### The one question
+
+> Can the upstream MLX-VLM QLoRA implementation, on our existing Qwen3.5-4B
+> 4-bit checkpoint and installed stack, overfit a tiny clean role-decision
+> training set and then generate valid role decisions through the resulting
+> adapter?
+
+This is a trainer/adapter viability check, not a generalization experiment.
+
+### Installed stack (before any extra)
+
+| | |
+|---|---|
+| Python | 3.12.11 |
+| mlx-vlm | 0.7.0 |
+| mlx | 0.32.2 |
+| checkpoint | `mlx-community/Qwen3.5-4B-MLX-4bit` (already on disk) |
+| `datasets` extra | **absent** (`python -m mlx_vlm.lora` raises ImportError for `mlx-vlm[train]`) |
+| disk | 5.9 GiB free / 926 GiB volume (~100% used) |
+
+`--help` is unreachable until the extra is installed; the installed
+`mlx_vlm/lora.py` argparse was read instead. Defaults used below: `--lora-rank
+8`, `--lora-alpha 16`, language-side LoRA (`find_all_linear_names` on
+`model.language_model`), `--train-vision` off, `--full-finetune` off.
+
+### Tiny overfit set
+
+`experiments/qwen-role-decisions/overfit.json`. 12 cards from development docs
+**02, 04, 05, 06, 10, 12** only. Not used: `cases.json`, `probes.json`, 01/03/08/11,
+Holdout 1, Holdout 2, scanned 09. Doc 07 was available and unused (enough H1s
+without it).
+
+Targets are corpus `headingHierarchy` / `artifacts` / HTML, not Qwen
+predictions. Completions are `{"role":"...","action":"..."}` — no `reason`, no
+scored `confidence`.
+
+| id | expect | category |
+|---|---|---|
+| 02-h1 | H1 keep | true section heading |
+| 02-h2 | H2 retag | subordinate heading, existing tag `none` |
+| 02-p | P keep | normal paragraph |
+| 02-footer | Artifact retag | running furniture |
+| 04-h1 | H1 keep | true section heading |
+| 04-northern | P retag | table group label |
+| 04-units | P retag | table column label |
+| 05-brand | Artifact retag | running furniture |
+| 06-h2-site | H2 keep | subordinate heading |
+| 10-h1 | H1 retag | heading, existing tag `P` (styled div) |
+| 10-h2-english | H2 retag | heading, existing tag `P` (styled div) |
+| 12-sub | P retag | prominent cover subtitle, not in headingHierarchy |
+
+**Coverage gap:** no watermark/DRAFT and no digit ornament in this pool (those
+lived on 08 / holdout analogues, which stay evaluation-only).
+
+Text-only. No images.
+
+### Gates
+
+**Gate 0 — trainer runnable.** Installed `python -m mlx_vlm.lora` starts QLoRA
+on the existing 4-bit checkpoint without modifying MLX-VLM source. Installing
+`datasets` for `mlx-vlm[train]==0.7.0` is allowed if it does not upgrade mlx,
+mlx-vlm, transformers, or the checkpoint, and if disk remains practical. If
+the extra would force a disk crisis, record blocked and stop.
+
+**Gate 1 — training learns.** No NaN/crash; loss decreases; an adapter file is
+written. Loss alone is not success.
+
+**Gate 2 — adapter loadable and memorizes.** Adapter loads; outputs parse as
+`{role, action}`; role/action accuracy on **this same tiny set** is
+near-perfect; generation is not garbage tokens. Not a generalization claim.
+Do not run `probes.json`.
+
+**Gate 3 — base intact.** After training, generate **without** `--adapter-path`
+still works. The experiment did not overwrite the base checkpoint.
+
+### Planned command (exact; may add `--dataset` path once `load_dataset` is
+measured)
+
+```
+HF_HUB_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset <local json train split> \
+  --split train \
+  --batch-size 1 \
+  --lora-rank 8 \
+  --iters 200 \
+  --steps-per-report 10 \
+  --steps-per-save 200 \
+  --train-on-completions \
+  --output-path out/adapter
+```
+
+No `--train-vision`. No `--full-finetune`. One configuration. One correction
+only if the first run is an obvious mechanical failure.
+
+### Registered prediction
+
+1. `[H]` Stock MLX-VLM 0.7.0 QLoRA can train Qwen3.5-4B without source patches.
+2. `[H]` A tiny language-only adapter can intentionally overfit these 12
+   examples.
+3. `[H]` Adapter inference emits clean parseable JSON, not corrupted
+   generation.
+4. `[H]` The adapter is small relative to the 2.9 GiB base and does not
+   modify the base checkpoint.
+
+### Win
+
+Upstream trains, writes a loadable adapter, memorizes the tiny set, emits
+valid role/action JSON, leaves the base checkpoint intact. Then STOP:
+“QLoRA plumbing is viable. A small clean train/validation LoRA experiment is
+now earned.” Do not test generalization.
+
+### Kill
+
+Upstream cannot run without source modification; adapter cannot load;
+generation is corrupted; the tiny set cannot be overfit under one reasonable
+configuration; disk/deps make it impractical. Do not respond by building
+machinery.
+
+### Measurements
+
+Not yet. This section is committed before `pip install` of the train extra
+and before the first `lora` run.
+

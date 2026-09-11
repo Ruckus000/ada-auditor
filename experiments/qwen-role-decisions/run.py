@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Zero-shot role cards through mlx_vlm.generate.
 
-ponytail: no extractor, no LoRA wrapper, no schema lib. Fresh probes from
-the development corpus; stop at the first inference-time arm that is safe
-and useful. Do not train in this file.
+ponytail: no extractor, no LoRA wrapper, no schema lib, no trainer. Training
+is upstream `python -m mlx_vlm.lora`. This file only prompts, parses, and
+scores.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 PROBES_PATH = HERE / "probes.json"
 HEADING = {"H1", "H2", "H3", "H4", "H5", "H6"}
-NEEDED = ("role", "action", "confidence")
+NEEDED = ("role", "action")
 
 
 def card_prompt(stem: str, case: dict, with_page_band: bool = False) -> str:
@@ -66,7 +66,9 @@ def score(pred: dict | None, case: dict) -> dict:
     trap = case.get("trap")
     auto_heading = parsed and role in HEADING and action == "retag"
     heading_probe = expect["role"] in HEADING and not trap
-    if trap:
+    if "action" in expect:
+        role_ok = parsed and role == expect["role"] and action == expect["action"]
+    elif trap:
         role_ok = parsed and not auto_heading
     else:
         role_ok = parsed and role == expect["role"]
@@ -113,6 +115,7 @@ def generate(
     image: str | None = None,
     thinking_mode: str = "disabled",
     thinking_budget: str | None = None,
+    adapter_path: str | None = None,
 ) -> str:
     cmd = [
         sys.executable,
@@ -132,6 +135,8 @@ def generate(
     ]
     if thinking_budget:
         cmd.extend(["--thinking-budget", thinking_budget])
+    if adapter_path:
+        cmd.extend(["--adapter-path", adapter_path])
     if image:
         cmd.extend(["--image", image])
     env = os.environ.copy()
@@ -158,6 +163,7 @@ def run_cases(
     thinking_budget: str | None = None,
     with_page_band: bool = False,
     image_dir: Path | None = None,
+    adapter_path: str | None = None,
 ) -> list[dict]:
     bundle = json.loads(path.read_text())
     if offline:
@@ -176,6 +182,7 @@ def run_cases(
             image=image,
             thinking_mode=thinking_mode,
             thinking_budget=thinking_budget,
+            adapter_path=adapter_path,
         )
         pred = parse_json(raw)
         row = score(pred, case)
@@ -203,20 +210,32 @@ def self_check() -> None:
         {"id": "abstain-stamp", "expect": {"role": "Artifact", "allow_abstain": True}, "trap": "abstain"},
     )
     parsed = parse_json('preamble\n{"role":"H2","action":"retag","confidence":0.5}\n')
+    short = parse_json('{"role":"H2","action":"retag"}')
     think = parse_json('<think>not json</think>\n{"role":"H2","action":"retag","confidence":0.5}')
     low = score({"role": "H1", "action": "retag", "confidence": 0.4}, trap)
     timid = score({"role": "H1", "action": "abstain", "confidence": 0.95}, trap)
     exact = score({"role": "H1", "action": "keep", "confidence": 0.1}, heading)
     miss = score({"role": "P", "action": "keep", "confidence": 0.9}, heading)
+    overfit = score(
+        {"role": "H2", "action": "retag"},
+        {"id": "02-h2", "expect": {"role": "H2", "action": "retag"}},
+    )
+    overfit_miss = score(
+        {"role": "H2", "action": "keep"},
+        {"id": "02-h2", "expect": {"role": "H2", "action": "retag"}},
+    )
     assert bad["ok"] is False and bad["auto_heading"] is True
     assert good["ok"] is True
     assert abstain["ok"] is True
     assert parsed == {"role": "H2", "action": "retag", "confidence": 0.5}
     assert think == parsed
+    assert short == {"role": "H2", "action": "retag"}
     assert parse_json("not json") is None
     assert low["ok"] is False and low["auto_heading"] is True
     assert timid["ok"] is True and timid["auto_heading"] is False
     assert timid["timid"] is True
+    assert overfit["ok"] is True
+    assert overfit_miss["ok"] is False
     eleven_ok = [exact] * 9 + [miss] * 2 + [good] * 6
     eight_ok = [exact] * 8 + [miss] * 3 + [good] * 6
     abstain_all = [score({"role": "H1", "action": "abstain", "confidence": 0.5}, heading)] * 11
@@ -236,11 +255,14 @@ if __name__ == "__main__":
         print("ok")
         raise SystemExit(0)
     image_dir = flag_value("--image-dir")
+    cards = flag_value("--path")
     run_cases(
+        path=Path(cards) if cards else PROBES_PATH,
         offline="--offline" in sys.argv,
         conservative="--conservative" in sys.argv,
         thinking_mode=flag_value("--thinking-mode") or "disabled",
         thinking_budget=flag_value("--thinking-budget"),
         with_page_band="--with-page-band" in sys.argv,
         image_dir=Path(image_dir) if image_dir else None,
+        adapter_path=flag_value("--adapter-path"),
     )
