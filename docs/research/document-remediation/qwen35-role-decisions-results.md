@@ -1063,7 +1063,7 @@ this spike.
 ## Part 6 — role-only; existing_tag withheld
 
 **Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
-**Status:** pre-registration. No Arm B generate yet. No retrain.
+**Status:** Arm B measured and failed usefulness (safety held). Arm C earned; not yet trained.
 
 Ponytail: one variable. Does the model see `existing_tag` and predict
 action, or does it predict semantic role with action derived? Do not add
@@ -1141,5 +1141,112 @@ Safety remains the hard gate. Do not trade zero-unsafe for hierarchy.
 
 ### Measurements
 
-Not yet. This section is committed before the first `--role-only` generate.
+Arm B generate used the already-committed `--role-only` path. Adapter
+`out/adapter-gen` was not retrained. Logs: `out/armb-07.jsonl`,
+`out/armb-probes.jsonl` (gitignored).
+
+#### Arm B — Gate 1, fresh 07
+
+`run.py --offline --role-only --path valid-07.json --adapter-path out/adapter-gen`
+
+`[V]` **fail usefulness.** Parse 6/6. Unsafe **0**. Role accuracy **5/6**.
+Derived-action accuracy **5/6**. Heading exact **0/1** (need 1/1). Material
+regression vs Arm A: the only true heading (`07-h1`, existing `H1`) predicted
+**H2**, so derived action was `retag` instead of `keep`. The five traps stayed
+`P`. Safety held. Do not trade that for hierarchy.
+
+| id | expect | exist | Arm A | Arm B role | derived |
+|---|---|---|---|---|---|
+| 07-h1 | H1 keep | H1 | H1 keep | **H2** | retag |
+| 07-intro | P keep | P | P keep | P | keep |
+| 07-chart-title | P retag | none | P retag | P | retag |
+| 07-northern | P retag | none | P retag | P | retag |
+| 07-q1 | P retag | none | P retag | P | retag |
+| 07-cap | P keep | P | P keep | P | keep |
+
+Confusion: `H1→H2` 1. No action-ok / role-wrong rows on this set.
+
+#### Arm B — Gate 2, known challenge
+
+`run.py --offline --role-only --adapter-path out/adapter-gen`
+
+`[V]` **fail usefulness.** Parse 17/17. Unsafe **0**. Role accuracy **11/17**.
+Derived-action accuracy **15/17**. Heading exact **6/11** (need ≥9/11; Arm A
+was 7/11). Safety held. Four rows are action-ok with the wrong role — a
+correct derived `retag` does not conceal those misses.
+
+| id | expect | exist | Arm A | Arm B | notes |
+|---|---|---|---|---|---|
+| 01-h1 | H1 | H1 | H1 | H1 | held |
+| 01-h2-throughput | H2 | H2 | H2 | H2 | held |
+| 01-h3-regional | H3 | H3 | H3 | **P** | already-correct broke |
+| 01-h2-actions | H2 | H2 | H2 | **P** | already-correct broke |
+| 01-h2-approval | H2 | H2 | H2 | H2 | held |
+| 01-runhead | Artifact | none | Artifact | Artifact | |
+| 01-runfoot | Artifact | none | Artifact | Artifact | |
+| 03-h1 | H1 | H1 | H1 | H1 | held |
+| 03-review-period | P | TH | P | P | |
+| 03-q1 | P | TH | P | P | |
+| 08-h1 | H1 | none | H1 | H1 | |
+| 08-kicker | Artifact | none | P | P | action-ok, role-wrong |
+| 08-numeral-3 | P | P | P | P | |
+| 11-h1-terms | H1 | P | H2 | **H2** | still wrong |
+| 11-h2-eligibility | H2 | H4 | H4 | **H2** | keep-magnet broke |
+| 11-h2-applying | H2 | H4 | H4 | **P** | not H4, not H2 |
+| 11-h2-contact | H2 | H4 | H4 | **P** | not H4, not H2 |
+
+Critical cards:
+
+- `11-h1-terms`: expected H1, predicted H2 (same as Arm A).
+- `11-h2-eligibility`: expected H2, predicted H2 (Arm A kept H4).
+- `11-h2-applying`: expected H2, predicted P.
+- `11-h2-contact`: expected H2, predicted P.
+
+Already-correct headings that broke: `07-h1`, `01-h3-regional`,
+`01-h2-actions`.
+
+Confusion (gt→pred, misses only): `H2→P` 3, `Artifact→P` 1, `H1→H2` 1,
+`H3→P` 1.
+
+Hiding the tag did not revive unsafe promotions. It did move one of three
+H4 keep-magnets onto H2. It did not reach 9/11, and it demoted headings the
+same adapter had right when the tag was visible. This adapter was trained
+with `existing_tag` in the prompt and `{role,action}` completions, so Arm C
+is earned. Safety did not regress, so the retrain is allowed.
+
+#### Prediction check (Arm B)
+
+1. Withholding `existing_tag` does not revive unsafe promotions — **hit**.
+2. Doc 11 H4 keep-magnet was the tag; Arm B predicts H2 on the three H4
+   cards — **partial miss** (eligibility H2; applying/contact P).
+3. Already-correct headings stay exact — **miss**.
+4. Arm B reaches ≥9/11 so Arm C is not earned — **miss**; Arm C is earned.
+
+#### Arm C command (earned; not yet run)
+
+Same frozen `train.json` (43 cards, docs 02/04/05/06/10/12). No 07, no
+probes, no holdouts, no wrong-tag examples. SFT via `python -c` using
+`ROLE_ONLY_STEM` and `card_prompt(..., hide_existing_tag=True)`. Completions
+`{"role":"<gt>"}` only. New gitignored paths so Arm A remains comparable.
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft-role \
+  --split train \
+  --batch-size 1 \
+  --lora-rank 8 \
+  --epochs 6 \
+  --steps-per-report 10 \
+  --steps-per-save 1000 \
+  --train-on-completions \
+  --output-path out/adapter-role
+```
+
+Eval, in order, deriving action as in Arm B:
+
+```
+python run.py --offline --role-only --path valid-07.json --adapter-path out/adapter-role
+python run.py --offline --role-only --adapter-path out/adapter-role
+```
 
