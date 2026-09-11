@@ -8,6 +8,10 @@ question, one results file, hand-authored cards, and `mlx_vlm.generate`. No
 element extractor, no schema module, no LoRA wrapper, no `src/` wiring. The
 ladder said those exist only after this measurement says they must.
 
+**After every Part is written, the user-facing reply pastes that Part from
+this file in full.** Do not substitute a summary. The file is the
+deliverable.
+
 ---
 
 ## Part 1 — Pre-registration (written and committed before the first measurement)
