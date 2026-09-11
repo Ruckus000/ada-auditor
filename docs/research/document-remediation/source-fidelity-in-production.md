@@ -644,3 +644,29 @@ about why.** It was built to catch the pipeline claiming what a source did not
 say. It has now caught its own reader doing exactly that — a false claim about
 a client's document, found because the comparison was run again on real bytes
 rather than trusted. That is the instrument working, on itself.
+
+## The same shape on the legacy `.doc` path — looked for, not found
+
+Raised by review over this correction: `sourceTruthFromFodt` counts
+`text:list-item` and `<text:h>` independently and was NOT changed, and ODF
+wraps a numbered heading in `text:list-item` — so the double-count should
+exist there too.
+
+Measured rather than reasoned about. Three of the seven `engine-derived`
+documents carry headings, and every one agrees exactly:
+
+| document | source headings | source items | delivered items |
+|---|---:|---:|---:|
+| r09 | 6 | 16 | 16 |
+| r13 | 9 | 0 | 0 |
+| r27 | 16 | 106 | 106 |
+
+No inflation on any document that could show it. **Recorded as a latent risk,
+not fixed**: a fix would have to detect a `<text:h>` nested inside a
+`text:list-item` wrapper, and there is no failing document to prove it against
+— building it would be guessing at a shape this corpus has never produced.
+
+**It also does not explain r02.** r02 reports **zero headings** and still reads
+43→42, so whatever costs it one item, it is not a heading counted twice. That
+remains open, and remains the one genuine unexplained discrepancy in this
+corpus.
