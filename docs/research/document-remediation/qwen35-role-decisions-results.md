@@ -2533,3 +2533,91 @@ every BLOCK.
 The next decision, if any, is model/data architecture — not a second
 crop, and not Holdout 2.
 
+---
+
+## Part 12 — can the existing role adapter use the marked page?
+
+**Date:** 2026-09-11. Same branch. Holdout 1 remains spent. Holdout 2
+remains sealed. No retrain. No crop. No new binary-verifier adapter.
+No change to Part 9 structural gates.
+
+The frozen architecture before vision remains Part 9 Arm B:
+
+source-type eligibility + Table/Figure ancestry + role-only QLoRA +
+R2 + deterministic action
+
+Part 10: base-model full-page binary verifier, unsafe 5 → 2, zero
+true-heading vetoes.
+
+Part 11: the same binary verifier on an explicitly marked page solved
+both residuals (`h06:14`, `h11:4` true → false) and vetoed four
+genuine headings. Localization is no longer the unresolved variable.
+The base 4B binary heading/non-heading boundary is.
+
+This part asks whether the semantic classifier already trained
+(`out/adapter-role`) can consume that visual signal at inference
+without a new adapter, new examples, a prompt sweep, a crop, or
+Holdout 2.
+
+> Can the existing role-only QLoRA adapter preserve its learned
+> heading semantics while using an explicitly marked page to reject
+> contextually non-heading elements?
+
+Inference-only reuse. Mechanical success is not an experimental win.
+
+### Contract (frozen before generation)
+
+The adapter is not asked for `{"heading":true|false}`. It keeps the
+role-only contract it was trained on: `{"role":"..."}`,
+`ROLE_ONLY_STEM`, `existing_tag` withheld, mutation derived outside
+the model.
+
+The marked-image call answers: given the target’s text/metadata and
+its visual position/context, what semantic role is this element?
+
+Derived only for eligibility:
+
+`visual_heading = visual_role in H1..H6`
+
+If `visual_heading` is true, keep the frozen text-only `model_role`
+(the adapter does not get to pick the final level). If false, block
+the proposed heading mutation with the same fail-closed semantics as
+Part 11. Parse failure is `verification_failure`, not a correct
+non-heading.
+
+Fields stay distinct: `model_role`, `r2_match`, structural
+eligibility, `visual_role`, `visual_heading`,
+`verification_failure`, `final_role`, derived action.
+
+Prompt change is one sentence on the existing role card:
+
+> The outlined rectangle in the image marks the Element described below.
+
+No examples. No spent-failure vocabulary. Rectangle geometry and
+appearance are Part 11’s, unchanged.
+
+Two surfaces, frozen before multimodal generation:
+
+- **Surface A** — development regression: every real-PDF development
+  bridge candidate that survives source-type, ancestry, and R2 and
+  whose text-only `out/adapter-role` proposal would promote
+  non-heading → H* or change H* level. Label-independent.
+- **Surface B** — the exact 14 Part 10/11 architecture candidates.
+  Spent evidence. Part 11 marked-base outputs are not regenerated.
+
+Development is gated first. If genuine headings are visually
+rejected there, stop without spent H1.
+
+### Registered predictions (written before multimodal generation)
+
+1. `[H]` The role-only adapter accepts marked images without
+   retraining or source modification.
+2. `[H]` The adapter’s learned semantic heading boundary prevents the
+   four genuine-heading vetoes produced by the base binary verifier.
+3. `[H]` The marked image still provides enough contextual evidence
+   for `h06:14` and `h11:4` to move off heading eligibility.
+4. `[H]` Development regression shows zero genuine-heading vetoes.
+5. `[H]` Spent H1 reaches final unsafe 0 without reducing heading
+   exact below its existing 84% result (43/51).
+6. `[H]` Holdout 2 remains sealed.
+

@@ -182,6 +182,10 @@ def blocks_to_cards(blocks: list[dict]) -> tuple[list[dict], list[dict]]:
                 "ancestors": list(block.get("ancestors") or []),
                 "in_table_box": bool(block.get("in_table_box")),
                 "page": block.get("page"),
+                "x0": block.get("x0"),
+                "y0": block.get("y0"),
+                "x1": block.get("x1"),
+                "y1": block.get("y1"),
             }
         )
     return cards, failed
@@ -301,6 +305,8 @@ def prediction_record(case: dict, pred: dict | None, raw: str) -> dict:
         "page_verify_parsed": bool(pred.get("page_verify_parsed")) if pred else False,
         "verify_input": None if pred is None else pred.get("verify_input"),
         "verification_failure": bool(pred.get("verification_failure")) if pred else False,
+        "visual_role": None if pred is None else pred.get("visual_role"),
+        "visual_heading": None if pred is None else pred.get("visual_heading"),
         "final_role": final_role,
         "derived_action": action,
         "parsed": pred is not None,
@@ -814,6 +820,67 @@ def apply_page_verify(
     tag = case.get("existing_tag") or ""
     out["role"] = tag
     out["action"] = "keep"
+    return out
+
+
+MARKED_ROLE_LOCALIZER = (
+    "The outlined rectangle in the image marks the Element described below."
+)
+ADAPTER_ROLE = HERE / "out" / "adapter-role"
+
+
+def marked_role_prompt(case: dict) -> str:
+    return MARKED_ROLE_LOCALIZER + "\n" + card_prompt(
+        ROLE_ONLY_STEM, case, hide_existing_tag=True
+    )
+
+
+def visual_heading_of(role: str | None) -> bool | None:
+    if role is None:
+        return None
+    return role in HEADING
+
+
+def apply_visual_eligibility(
+    pred: dict,
+    case: dict,
+    visual_role: str | None,
+    verify_input: str = "marked-role",
+) -> dict:
+    heading = visual_heading_of(visual_role)
+    out = apply_page_verify(pred, case, heading, verify_input=verify_input)
+    out["visual_role"] = visual_role
+    out["visual_heading"] = heading
+    return out
+
+
+def mutation_locators(
+    preds: list[dict],
+    fields: dict[str, dict] | dict[str, list],
+    arm: str,
+    r5_veto: bool = False,
+) -> list[str]:
+    out: list[str] = []
+    for pred in preds:
+        loc = str(pred.get("locator") or "")
+        extra = fields.get(loc) or {}
+        if isinstance(extra, list):
+            extra = {"ancestors": extra}
+        case = {
+            "locator": loc,
+            "text": pred.get("text"),
+            "existing_tag": pred.get("existing_tag"),
+            "ancestors": extra.get("ancestors", pred.get("ancestors") or []),
+            "in_table_box": extra.get(
+                "in_table_box", pred.get("r5_table_box") or pred.get("in_table_box")
+            ),
+        }
+        incoming = {"role": pred["model_role"]} if pred.get("model_role") else None
+        decided = decide_card(
+            incoming, case, role_only=True, r2_veto=True, arm=arm, r5_veto=r5_veto
+        )
+        if decided is not None and needs_page_verify(decided, case):
+            out.append(loc)
     return out
 
 
@@ -1338,6 +1405,80 @@ def self_check() -> None:
     assert "outlined rectangle" in MARKED_VERIFY_STEM
     assert "H1" not in MARKED_VERIFY_STEM
     assert len(PART10_VERIFY_LOCATORS) == 14
+    loc_prompt = marked_role_prompt(
+        {
+            "text": "Eligibility",
+            "font_pt": 13,
+            "weight": "bold",
+            "prev": "Terms of Access",
+            "next": "Access is granted",
+            "existing_tag": "H4",
+        }
+    )
+    assert loc_prompt.startswith(MARKED_ROLE_LOCALIZER)
+    assert ROLE_ONLY_STEM in loc_prompt
+    assert "Existing tag" not in loc_prompt
+    assert "Depot Staff" not in loc_prompt
+    assert "Berth Occupancy" not in loc_prompt
+    assert '{"heading":true}' not in loc_prompt
+    assert visual_heading_of("H2") is True
+    assert visual_heading_of("P") is False
+    assert visual_heading_of(None) is None
+    kept = apply_visual_eligibility(
+        {"role": "H2", "action": "retag", "qwen_called": True, "model_role": "H2"},
+        {"existing_tag": "P"},
+        "H3",
+    )
+    assert kept["role"] == "H2"
+    assert kept["model_role"] == "H2"
+    assert kept["visual_role"] == "H3"
+    assert kept["visual_heading"] is True
+    assert kept["action"] == "retag"
+    blocked = apply_visual_eligibility(
+        {"role": "H2", "action": "retag", "qwen_called": True, "model_role": "H2"},
+        {"existing_tag": "P"},
+        "P",
+    )
+    assert blocked["role"] == "P"
+    assert blocked["action"] == "keep"
+    assert blocked["model_role"] == "H2"
+    assert blocked["visual_heading"] is False
+    fail = apply_visual_eligibility(
+        {"role": "H1", "action": "retag", "qwen_called": True, "model_role": "H1"},
+        {"existing_tag": "H2"},
+        None,
+    )
+    assert fail["verification_failure"] is True
+    assert fail["role"] == "H2"
+    assert fail["action"] == "keep"
+    assert mutation_locators(
+        [
+            {
+                "locator": "dev:1",
+                "text": "Section",
+                "existing_tag": "P",
+                "model_role": "H2",
+            },
+            {
+                "locator": "dev:2",
+                "text": "Body",
+                "existing_tag": "P",
+                "model_role": "P",
+            },
+            {
+                "locator": "dev:3",
+                "text": "R",
+                "existing_tag": "Figure",
+                "model_role": "H1",
+            },
+        ],
+        {
+            "dev:1": {"ancestors": ["Document"], "in_table_box": False},
+            "dev:2": {"ancestors": ["Document"], "in_table_box": False},
+            "dev:3": {"ancestors": ["Document"], "in_table_box": False},
+        },
+        "B",
+    ) == ["dev:1"]
 
 
 def load_block_dumps() -> list[dict] | None:
@@ -1383,6 +1524,9 @@ def rescore_frozen(
     r5_veto: bool = False,
     verify_page: bool = False,
     verify_marked: bool = False,
+    verify_marked_role: bool = False,
+    verify_locators: tuple[str, ...] | None = None,
+    adapter_path: str | None = None,
     pdf_dir: Path | None = None,
     png_dir: Path | None = None,
 ) -> tuple[list[dict], int]:
@@ -1390,6 +1534,7 @@ def rescore_frozen(
     skipped = 0
     png_cache: dict[tuple[str, int], Path] = {}
     pages_dir = png_dir or (HERE / "out" / "pages")
+    role_locs = verify_locators if verify_locators is not None else PART10_VERIFY_LOCATORS
     for pred in preds:
         loc = str(pred.get("locator") or "")
         extra = fields.get(loc) or {}
@@ -1418,16 +1563,18 @@ def rescore_frozen(
         )
         if decided is not None and not decided.get("qwen_called"):
             skipped += 1
-        want_marked = verify_marked and loc in PART10_VERIFY_LOCATORS
-        want_full = verify_page and not verify_marked
-        if (want_full or want_marked) and decided is not None and needs_page_verify(decided, case):
+        want_role = verify_marked_role and loc in role_locs
+        want_marked = verify_marked and not verify_marked_role and loc in PART10_VERIFY_LOCATORS
+        want_full = verify_page and not verify_marked and not verify_marked_role
+        if (want_full or want_marked or want_role) and decided is not None and needs_page_verify(decided, case):
             page = case.get("page")
             stem = loc.rsplit(":", 1)[0]
             heading_flag: bool | None = None
+            visual_role: str | None = None
             raw_verify = ""
-            verify_input = "marked" if want_marked else "full"
+            verify_input = "marked-role" if want_role else ("marked" if want_marked else "full")
             box_ok = all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1"))
-            if pdf_dir is None or page is None or (want_marked and not box_ok):
+            if pdf_dir is None or page is None or ((want_marked or want_role) and not box_ok):
                 heading_flag = None
             else:
                 page_1 = int(page) + 1
@@ -1443,31 +1590,45 @@ def rescore_frozen(
                     png_cache[cache_key] = png
                 image = png
                 prompt = heading_verify_prompt(str(case.get("text") or ""), page_1)
-                if want_marked:
+                adapter = None
+                if want_marked or want_role:
                     marked = pages_dir / "marked" / f"{loc.replace(':', '_')}.png"
-                    mark_page_png(
-                        pdf_dir / f"{stem}.pdf",
-                        page_1,
-                        (
-                            float(case["x0"]),
-                            float(case["y0"]),
-                            float(case["x1"]),
-                            float(case["y1"]),
-                        ),
-                        png,
-                        marked,
-                    )
+                    if not marked.is_file():
+                        mark_page_png(
+                            pdf_dir / f"{stem}.pdf",
+                            page_1,
+                            (
+                                float(case["x0"]),
+                                float(case["y0"]),
+                                float(case["x1"]),
+                                float(case["y1"]),
+                            ),
+                            png,
+                            marked,
+                        )
                     image = marked
-                    prompt = MARKED_VERIFY_STEM
+                    if want_role:
+                        prompt = marked_role_prompt(case)
+                        adapter = adapter_path or str(ADAPTER_ROLE)
+                    else:
+                        prompt = MARKED_VERIFY_STEM
                 raw_verify = generate(
                     MODEL,
                     prompt,
                     image=str(image),
                     thinking_mode="disabled",
-                    adapter_path=None,
+                    adapter_path=adapter,
                 )
-                heading_flag = parse_heading_flag(raw_verify)
-            decided = apply_page_verify(decided, case, heading_flag, verify_input=verify_input)
+                if want_role:
+                    parsed = parse_json(raw_verify)
+                    visual_role = parsed.get("role") if parsed else None
+                    heading_flag = visual_heading_of(visual_role)
+                else:
+                    heading_flag = parse_heading_flag(raw_verify)
+            if want_role:
+                decided = apply_visual_eligibility(decided, case, visual_role)
+            else:
+                decided = apply_page_verify(decided, case, heading_flag, verify_input=verify_input)
             if raw_verify:
                 pred = dict(pred)
                 pred["verify_raw"] = raw_verify[-1500:]
@@ -1477,6 +1638,8 @@ def rescore_frozen(
             rows[-1]["page_verify_parsed"] = bool(decided.get("page_verify_parsed"))
             rows[-1]["verify_input"] = decided.get("verify_input")
             rows[-1]["verification_failure"] = bool(decided.get("verification_failure"))
+            rows[-1]["visual_role"] = decided.get("visual_role")
+            rows[-1]["visual_heading"] = decided.get("visual_heading")
             if pred.get("verify_raw"):
                 rows[-1]["verify_raw"] = pred["verify_raw"]
     return rows, skipped
@@ -1491,6 +1654,49 @@ if __name__ == "__main__":
     if "--check-box-map" in sys.argv:
         print(json.dumps(check_box_map(), indent=2))
         raise SystemExit(0)
+
+    if "--smoke-adapter-image" in sys.argv:
+        png = HERE / "out" / "box-map" / "01-simple-text-p1-marked.png"
+        if not png.is_file():
+            dump = dump_pdf(DEV_MAP_PDF)
+            block = next(
+                b
+                for b in dump.get("blocks") or []
+                if b.get("locator") == "01-simple-text:1"
+            )
+            src = HERE / "out" / "box-map" / "01-simple-text-p1.png"
+            if not src.is_file():
+                render_page_png(DEV_MAP_PDF, int(block["page"]) + 1, src)
+            mark_page_png(
+                DEV_MAP_PDF,
+                int(block["page"]) + 1,
+                (float(block["x0"]), float(block["y0"]), float(block["x1"]), float(block["y1"])),
+                src,
+                png,
+            )
+        raw = generate(
+            MODEL,
+            marked_role_prompt(
+                {
+                    "text": "Quarterly Operations Summary",
+                    "font_pt": 26,
+                    "weight": "bold",
+                    "prev": "none",
+                    "next": "none",
+                    "existing_tag": "H1",
+                }
+            ),
+            image=str(png),
+            thinking_mode="disabled",
+            adapter_path=str(ADAPTER_ROLE),
+        )
+        parsed = parse_json(raw)
+        payload = {
+            "ok": parsed is not None and parsed.get("role") is not None,
+            "role": None if parsed is None else parsed.get("role"),
+        }
+        print(json.dumps(payload, indent=2))
+        raise SystemExit(0 if payload["ok"] else 1)
 
     score_path = flag_value("--score-holdout")
     if score_path:
@@ -1521,6 +1727,18 @@ if __name__ == "__main__":
             for line in Path(rescore_path).read_text().splitlines()
             if line.strip()
         ]
+        if "--list-mutations" in sys.argv:
+            locs = mutation_locators(preds, fields, arm, r5_veto=r5_veto)
+            print(json.dumps({"n": len(locs), "locators": locs}, indent=2))
+            raise SystemExit(0)
+        loc_file = flag_value("--verify-locators")
+        verify_locs = None
+        if loc_file:
+            payload = json.loads(Path(loc_file).read_text())
+            if isinstance(payload, list):
+                verify_locs = tuple(str(x) for x in payload)
+            else:
+                verify_locs = tuple(str(x) for x in payload.get("locators") or [])
         rows, skipped = rescore_frozen(
             preds,
             fields,
@@ -1528,6 +1746,9 @@ if __name__ == "__main__":
             r5_veto=r5_veto,
             verify_page="--verify-page" in sys.argv,
             verify_marked="--verify-marked" in sys.argv,
+            verify_marked_role="--verify-marked-role" in sys.argv,
+            verify_locators=verify_locs,
+            adapter_path=flag_value("--adapter-path"),
             pdf_dir=Path(flag_value("--pdf-dir")) if flag_value("--pdf-dir") else None,
             png_dir=(Path(flag_value("--out-dir")) / "pages") if flag_value("--out-dir") else None,
         )
@@ -1536,8 +1757,9 @@ if __name__ == "__main__":
         suffix = (
             f"arm{arm}"
             + ("-r5" if r5_veto else "")
-            + ("-marked" if "--verify-marked" in sys.argv else "")
-            + ("-verify" if "--verify-page" in sys.argv and "--verify-marked" not in sys.argv else "")
+            + ("-marked-role" if "--verify-marked-role" in sys.argv else "")
+            + ("-marked" if "--verify-marked" in sys.argv and "--verify-marked-role" not in sys.argv else "")
+            + ("-verify" if "--verify-page" in sys.argv and "--verify-marked" not in sys.argv and "--verify-marked-role" not in sys.argv else "")
         )
         out_file = out_dir / f"rescored-{suffix}.jsonl"
         out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
