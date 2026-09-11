@@ -1058,3 +1058,88 @@ spike may add one targeted train category (wrong-level existing heading
 tags) only if that is still the residual after this record; that is not
 this spike.
 
+---
+
+## Part 6 — role-only; existing_tag withheld
+
+**Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
+**Status:** pre-registration. No Arm B generate yet. No retrain.
+
+Ponytail: one variable. Does the model see `existing_tag` and predict
+action, or does it predict semantic role with action derived? Do not add
+wrong-tag training data until this is measured. No Holdout 1/2, no vision.
+
+### The one question
+
+> Can the current QLoRA adapter meet the development-corpus safety +
+> usefulness gates when `existing_tag` is withheld from the model and
+> action is derived deterministically?
+
+### Variable
+
+Arm A (registered reference, **not rerun**): spike 4 `out/adapter-gen`
+with `existing_tag` in the prompt and `{role,action}` from the model.
+
+| set | parse | unsafe | heading | exact |
+|---|---|---|---|---|
+| 07 | 6/6 | 0 | 1/1 | 6/6 |
+| probes | 17/17 | 0 | 7/11 | — |
+
+Arm B (this spike): same adapter. Hide `existing_tag`. Ask for `{"role":...}`
+only. Ignore any model `action`. Scorer:
+
+`action = "keep" if predicted_role == existing_tag else "retag"`
+
+`existing_tag` remains on the card for the scorer. Current tag is mutation
+state, not semantic evidence.
+
+Arm C: earned **only if Arm B fails**. Same frozen 43 train cards, no 07 /
+probes / holdouts, no new categories. Role-only input and
+`{"role":"<gt>"}` target. Same QLoRA config as spike 4 (`--epochs 6`,
+rank 8, batch 1). One run.
+
+### Arm B commands
+
+```
+python run.py --offline --role-only --path valid-07.json --adapter-path out/adapter-gen
+python run.py --offline --role-only --adapter-path out/adapter-gen
+```
+
+### Gates
+
+07: parse 6/6, unsafe 0, H1 exact 1/1, no material regression vs Arm A.
+
+Challenge: parse 17/17, unsafe 0, heading exact ≥ 9/11.
+
+Critical cards, reported individually: `11-h1-terms`,
+`11-h2-eligibility`, `11-h2-applying`, `11-h2-contact`. Also confirm
+already-correct headings do not break.
+
+Safety remains the hard gate. Do not trade zero-unsafe for hierarchy.
+
+### Registered prediction
+
+1. `[H]` Withholding `existing_tag` does not revive unsafe promotions on 07
+   or probes.
+2. `[H]` Doc 11's H4 keep-magnet was the current tag in the prompt; Arm B
+   predicts H2 on the three H4 cards.
+3. `[H]` Already-correct headings stay exact.
+4. `[H]` Arm B reaches ≥9/11 heading exact, so Arm C is not earned.
+
+### Win / fail
+
+- **Arm B pass:** STOP. “The current tag was harmful classification
+  context. Role prediction should be independent of mutation state; action
+  should be derived deterministically. A blind Holdout-1 evaluation bridge
+  is now earned.” Do not retrain.
+- **Arm B fail, safety holds:** Arm C once, same data, role-only contract.
+- **Arm C pass:** STOP. Holdout-1 evaluation earned.
+- **Arm C still fails doc-11 hierarchy:** STOP. Only then is targeted
+  hierarchy data earned. Do not invent it here.
+- **Safety regresses:** STOP. Do not keep a hierarchy gain that costs
+  unsafe promotions.
+
+### Measurements
+
+Not yet. This section is committed before the first `--role-only` generate.
+

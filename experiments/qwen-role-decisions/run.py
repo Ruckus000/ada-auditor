@@ -3,7 +3,8 @@
 
 ponytail: no extractor, no LoRA wrapper, no schema lib, no trainer. Training
 is upstream `python -m mlx_vlm.lora`. This file only prompts, parses, and
-scores.
+scores. `--role-only` hides existing_tag and derives keep/retag from the
+predicted role.
 """
 
 from __future__ import annotations
@@ -18,10 +19,24 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 PROBES_PATH = HERE / "probes.json"
 HEADING = {"H1", "H2", "H3", "H4", "H5", "H6"}
-NEEDED = ("role", "action")
+NEEDED = ("role",)
+ROLE_ONLY_STEM = (
+    "You assign one PDF tag role. Return ONLY JSON with key role. "
+    "role is one of H1,H2,H3,H4,H5,H6,P,LI,Table,Figure,Artifact. "
+    "A heading introduces a semantic section or subsection of the document. "
+    "Typography alone is insufficient: large, bold, centered, or isolated text "
+    "is not a heading merely because it looks prominent. Addresses, running "
+    "headers, running footers, stamps, watermarks, table labels, and other "
+    "page furniture are not headings. Do not invent facts."
+)
 
 
-def card_prompt(stem: str, case: dict, with_page_band: bool = False) -> str:
+def card_prompt(
+    stem: str,
+    case: dict,
+    with_page_band: bool = False,
+    hide_existing_tag: bool = False,
+) -> str:
     bits = [
         stem,
         f'Element: {case["text"]!r}',
@@ -29,8 +44,9 @@ def card_prompt(stem: str, case: dict, with_page_band: bool = False) -> str:
         f'Weight: {case["weight"]}',
         f'Previous: {case["prev"]}',
         f'Next: {case["next"]}',
-        f'Existing tag: {case["existing_tag"]}',
     ]
+    if not hide_existing_tag:
+        bits.append(f'Existing tag: {case["existing_tag"]}')
     if with_page_band:
         bits.append(f'Page: {case.get("page", "unknown")}')
         bits.append(f'Page band: {case.get("y_band", "unknown")}')
@@ -164,11 +180,17 @@ def run_cases(
     with_page_band: bool = False,
     image_dir: Path | None = None,
     adapter_path: str | None = None,
+    role_only: bool = False,
 ) -> list[dict]:
     bundle = json.loads(path.read_text())
     if offline:
         os.environ["HF_HUB_OFFLINE"] = "1"
-    stem = bundle["conservative_prompt_stem"] if conservative else bundle["prompt_stem"]
+    if role_only:
+        stem = ROLE_ONLY_STEM
+    elif conservative:
+        stem = bundle["conservative_prompt_stem"]
+    else:
+        stem = bundle["prompt_stem"]
     rows = []
     for case in bundle["cases"]:
         image = None
@@ -178,13 +200,20 @@ def run_cases(
                 image = str(candidate)
         raw = generate(
             bundle["model"],
-            card_prompt(stem, case, with_page_band=with_page_band),
+            card_prompt(
+                stem,
+                case,
+                with_page_band=with_page_band,
+                hide_existing_tag=role_only,
+            ),
             image=image,
             thinking_mode=thinking_mode,
             thinking_budget=thinking_budget,
             adapter_path=adapter_path,
         )
         pred = parse_json(raw)
+        if role_only and pred is not None and "role" in pred:
+            pred["action"] = "keep" if pred["role"] == case["existing_tag"] else "retag"
         row = score(pred, case)
         row["raw"] = raw[-1500:]
         rows.append(row)
@@ -232,6 +261,30 @@ def self_check() -> None:
         {"role": "P", "action": "retag"},
         {"id": "07-chart-title", "expect": {"role": "P", "action": "retag"}, "trap": "heading"},
     )
+    role_only = parse_json('{"role":"H2"}')
+    hidden = card_prompt(
+        "STEM",
+        {
+            "text": "Eligibility",
+            "font_pt": 13,
+            "weight": "bold",
+            "prev": "Terms of Access",
+            "next": "Access is granted",
+            "existing_tag": "H4",
+        },
+        hide_existing_tag=True,
+    )
+    shown_tag = card_prompt(
+        "STEM",
+        {
+            "text": "Eligibility",
+            "font_pt": 13,
+            "weight": "bold",
+            "prev": "Terms of Access",
+            "next": "Access is granted",
+            "existing_tag": "H4",
+        },
+    )
     assert bad["ok"] is False and bad["auto_heading"] is True
     assert good["ok"] is True
     assert abstain["ok"] is True
@@ -246,6 +299,11 @@ def self_check() -> None:
     assert overfit_miss["ok"] is False
     assert val_unsafe["ok"] is False and val_unsafe["unsafe"] is True
     assert val_safe["ok"] is True and val_safe["unsafe"] is False
+    assert role_only == {"role": "H2"}
+    assert "Existing tag" not in hidden
+    assert "Existing tag: H4" in shown_tag
+    assert ("keep" if "H2" == "H2" else "retag") == "keep"
+    assert ("keep" if "H2" == "H4" else "retag") == "retag"
     eleven_ok = [exact] * 9 + [miss] * 2 + [good] * 6
     eight_ok = [exact] * 8 + [miss] * 3 + [good] * 6
     abstain_all = [score({"role": "H1", "action": "abstain", "confidence": 0.5}, heading)] * 11
@@ -275,4 +333,5 @@ if __name__ == "__main__":
         with_page_band="--with-page-band" in sys.argv,
         image_dir=Path(image_dir) if image_dir else None,
         adapter_path=flag_value("--adapter-path"),
+        role_only="--role-only" in sys.argv,
     )
