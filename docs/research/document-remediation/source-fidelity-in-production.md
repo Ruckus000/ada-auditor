@@ -725,3 +725,63 @@ The pipeline has still never been shown to drop content or to invent it — 0
 assertions on every run. That is worth stating plainly, because the reverse was
 recorded as fact for two weeks. The comparison is only as good as the reading
 behind it, and the reading is the half that has been wrong every time.
+
+# The heading rung, 2026-09-11 — the open decision dissolved
+
+Recorded above as a decision for a person: our own `renumberHeadings` policy
+showed up as a 2.4.10 divergence on five documents, and the choice looked like
+"suppress it, or tell the client their H3 ladder became H1". **It was neither.
+The comparison was asking the wrong question.**
+
+## What the policy actually does
+
+`renumberHeadings` (`Finish.java:757`, passed only on the conversion lane) is an
+**order-isomorphism**: it collects the distinct heading levels present, sorts
+them, maps them onto 1, 2, 3…, and returns early when that is already the
+identity. An author's `{3, 5, 7}` is delivered as `{1, 2, 3}` — every
+distinction they drew intact, and the absolute numbers changed on purpose.
+
+The fidelity row compared absolute depth. So it fired **precisely when the
+re-rank did its job**, reporting the one property the pipeline is designed to
+change while ignoring the one it is designed to preserve. Worse, the item was
+unresolvable: no edit to the client's document could ever bring the ladders into
+agreement, and via `withFidelity`'s supersession it displaced the heading
+question `needsIn` would otherwise have asked.
+
+## The rule now
+
+Both ladders are normalised to **rungs** before comparison — the same rule
+`renumberHeadings` applies, named on both sides. The question becomes the one
+that survives the policy: *did the author's distinctions reach the reader?*
+
+The format ceiling dissolves with it, without special-casing: a Word outline
+level 7 clamping to H6 is two rungs against two. A clamp that genuinely
+**merges** — levels 7 and 8 both landing on H6 — is three rungs against two and
+is still reported. That case has its own test.
+
+## Re-measured
+
+**31 documents, 31 converted, 0 refused, 0 assertions, 0 omissions.** Every
+document in the corpus is now fully faithful.
+
+**A clean sweep is the result that should be trusted least, so it is guarded.**
+An instrument that reports nothing is indistinguishable from one that cannot
+report anything — which is the failure `fidelity-fires.test.ts` was written for
+after a comparator went two whole experiments unable to see figure
+under-tagging. That file proves every branch still fires, and
+`document-conversion-fidelity-gate.test.ts` proves a forged divergence still
+reaches a 422. Twenty-eight cases, all passing. The silence is the corpus, not
+the instrument.
+
+## What the sweep means
+
+Four "content losses" were reported on real documents across two weeks. All
+four were this instrument miscounting or mis-comparing its own source:
+
+1. numbered headings counted as list items — r15, r21, r24, r26
+2. a structural list wrapper counted as an item — r02
+3. heading depth compared where the pipeline re-ranks by design — five documents
+
+**The pipeline has never been shown to drop content or to invent it.** That was
+true on the first run and every run since; what changed is that the reader
+finally agrees.
