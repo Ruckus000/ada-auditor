@@ -100,11 +100,133 @@ Not extracted from municipal PDFs. Text-only. See
 ### Instrument
 
 `experiments/qwen-role-decisions/run.py` shells `python -m mlx_vlm.generate`
-(`--temp 0`). Score is exact `role` string match plus the trap rule above.
-`HF_HUB_OFFLINE=1` after the first successful download.
+(`--temperature 0`, `--thinking-mode disabled`). Score is exact `role` string
+match plus the trap rule above. `HF_HUB_OFFLINE=1` after the first successful
+download.
 
 ---
 
 ## Part 2 — Measurements
 
-*Empty until the predictions commit is on the branch.*
+Recorded 2026-09-11 on Apple M4 Max (arm64), 36 GiB unified memory, Python
+3.12.11, `mlx-vlm==0.7.0`, `mlx==0.32.2`. Checkpoint
+`mlx-community/Qwen3.5-4B-MLX-4bit` (Apache-2.0, `[R]` model card). Volume was
+**13 GiB free / 99% full** before install; do not delete anything to make
+room.
+
+### Gate 0 — `[V]`
+
+| | |
+|---|---|
+| arch | `arm64` / Apple M4 Max |
+| memory | 38654705664 bytes (36 GiB) |
+| `mlx-vlm` install | 13 GiB → 12 GiB free |
+| weights | **2.9 GiB** at `~/.cache/huggingface/hub/models--mlx-community--Qwen3.5-4B-MLX-4bit` |
+| after download | 9.7 GiB free |
+| smoke generate | `{"role":"P","action":"keep","confidence":0.5}` |
+| `HF_HUB_OFFLINE=1` | same output, exit 0 |
+
+Prediction 1 hit. Disk cost was the advertised 2.9 GiB, not SmolVLM's 9.2 GiB.
+
+### Gate 1 — `[V]`
+
+10/10 cards emitted parseable JSON with `role`, `action`, `confidence`.
+Prediction 2 hit.
+
+### Gate 2 — `[V]`
+
+| id | role | action | conf | ok | note |
+|---|---|---|---:|:---:|---|
+| easy-h1 | H1 | retag | 0.95 | yes | |
+| easy-h2 | H2 | retag | 0.95 | yes | |
+| easy-p | P | retag | 0.95 | yes | |
+| easy-li | LI | retag | 0.95 | yes | |
+| easy-h3 | P | retag | 0.95 | no | italic 12pt true H3 → P |
+| trap-address | P | keep | 0.95 | yes | the typographic kill case, not repeated |
+| trap-column-header | P | keep | 0.95 | yes | "Fee" not promoted |
+| trap-fake-heading | **H1** | retag | 0.95 | **no** | 24pt bold decoy auto-applied |
+| trap-running-header | **H1** | retag | 0.95 | no | 8pt running header → H1 |
+| abstain-stamp | **H1** | retag | 0.95 | **no** | `DRAFT` watermark, no abstain |
+
+**Win condition missed.** `trap-fake-heading` is H1 at 0.95. `abstain-stamp` did
+not abstain.
+
+Prediction 3 **hit**, but not the way written: the address and column-header
+traps stayed `P`. The 24pt decoy did not. This is not a replay of the
+typographic scorer, which promoted the address. Size-without-semantics still
+fires; street-shaped text does not.
+
+Prediction 4 **hit**. Every card returned `confidence: 0.95`. Errors among that
+bucket: 4/10 (easy-h3, trap-fake-heading, trap-running-header, abstain-stamp).
+A ≥0.95 auto-apply threshold would have written all ten.
+
+Prediction 6 **miss.** Text-only cards were enough to *pose* the kill, and the
+24pt decoy still died, but the address trap — the published typographic kill —
+was correctly kept as `P` without a page crop. Vision was not needed for that
+one save, and not sufficient (because unused) for the 24pt miss.
+
+### LoRA — not run
+
+Gate 2 failed the win and Gate 1 passed, so the brief *allowed* one upstream
+`lora.py` command. It was not run. A LoRA on these ten cards would train on
+the test. A real split needs an element dump from the development corpus,
+which this spike declined. FINDINGS, not a silent skip of a registered arm:
+the arm was conditional on having a train set that is not the scorecard.
+
+### Alt negative control — `[V]`
+
+`lacity-clerk-misc.pdf` was on disk. Five JPEG-2000 page scans extracted with
+PDFBox 3.0.8 `export:images` (matches Brief B's correction: one image XObject
+per page). Page 4 converted to PNG via `sips`. Bytes stayed in gitignored
+`out/`. No cloud call. `HF_HUB_OFFLINE=1`.
+
+Fact list scored against page 4 only. Raw strings are not copied here
+(municipal record).
+
+| | schema JSON | Brief B bare prompt |
+|---|---|---|
+| F1 notice identified as a notice | pass | pass |
+| F2 newspaper | pass | pass |
+| F3 building/storefront | pass (window) | pass (window) |
+| F4 same notice at entrance | pass (in the window) | pass (in a window) |
+| F5 two photographs | pass | fail |
+| F6 evidentiary purpose (proof of posting) | fail | fail — described the *notice's* purpose, not the photograph's |
+| F7 invents nothing | pass on this page | **fail** — asserted a street address that is **not** in the PDF's extracted text |
+
+Prediction 5 **split.** Schema-constrained 4B did **not** emit the invented
+address the bare prompt emitted. It still failed F6, and F7 on the schema arm
+is only "no address on this page," not a verifier. Brief B's limit stands: a
+clean F1–F5 with a populated `/Alt` is still an assertion nothing here can
+check. Bare prompt F7 fail is the same class of harm Brief B recorded on 7B.
+
+### Prediction check, line by line
+
+1. Gate 0 loads, RAM, ~3–5 GB disk — **hit** (2.9 GiB weights).
+2. Gate 1 ≥9/10 parseable — **hit** (10/10).
+3. Zero-shot promotes at least one of address / column-header / fake-heading at
+   ≥0.80 — **hit** (fake-heading only).
+4. Confidence not calibrated — **hit** (constant 0.95, 4/10 wrong).
+5. Schema 4B still fails F7 — **miss on schema, hit on bare.**
+6. Text-only reproduces the heading-promotion kill — **partial.** It
+   reproduced a size-decoy kill, not the published address kill.
+
+### FINDINGS (not pursued)
+
+- `confidence` looks like a prior, not a score. Do not put thresholds in front
+  of it until something calibrates.
+- Running-header → H1 at 8pt means "top of page + short" still leaks in, even
+  when the model refuses an address.
+- Italic H3 → P: hierarchy depth, the same miss Docling had, in miniature.
+- QLoRA still unmeasured. Needs a train split that is not `cases.json`.
+- 1.7B cascade still unmeasured.
+- Page crops still unmeasured. Prediction 6's miss is the reason they might
+  matter, and also the reason they are not free.
+- `mlx-vlm` pulled `opencv-python` and a 64 MiB metal wheel. Install cost is
+  not just the 2.9 GiB checkpoint.
+
+---
+
+## Stopping
+
+Gates 0–1 green. Gate 2 scored; win missed; LoRA not run. Alt arm scored.
+Stop.

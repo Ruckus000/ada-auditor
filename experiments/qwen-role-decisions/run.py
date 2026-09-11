@@ -101,8 +101,11 @@ def generate(model: str, prompt: str, image: str | None = None) -> str:
         prompt,
         "--max-tokens",
         "256",
-        "--temp",
+        "--temperature",
         "0",
+        "--thinking-mode",
+        "disabled",
+        "--no-verbose",
     ]
     if image:
         cmd.extend(["--image", image])
