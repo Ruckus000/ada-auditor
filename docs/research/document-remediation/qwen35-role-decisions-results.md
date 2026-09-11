@@ -368,5 +368,136 @@ Crops not built.
 
 ### Measurements
 
-Not yet. This section is committed before the first generate() on
-`probes.json`.
+Recorded 2026-09-11 on the same machine as spike 1 (M4 Max, Python 3.12.11,
+`mlx-vlm==0.7.0`, `HF_HUB_OFFLINE=1`). `probes.json` was not edited after
+aa7ed0a. Confidence was recorded and never used as a gate.
+
+| Arm | parse | unsafe | heading exact | timid | abstain | both gates |
+|---|---|---:|---:|---:|---:|---|
+| A baseline | 16/17 | 4 | 8/11 | 0 | 0 | no |
+| B conservative prompt | 17/17 | 5 | 7/11 | 0 | 0 | no |
+| C thinking 256 | 17/17 | 5 | 7/11 | 0 | 0 | no |
+| D page + y_band | 17/17 | 4 | 8/11 | 0 | 0 | no |
+| E full-page vision | 16/17 | 2 | 8/11 | 0 | 0 | no |
+
+**First rung that passed: none.**
+
+#### Arm A — baseline
+
+`prompt_stem` from `cases.json`, thinking disabled, no page/y_band, no image.
+`--temperature 0 --max-tokens 256`.
+
+| id | role | action | conf | note |
+|---|---|---|---:|---|
+| 01-h1 | H1 | keep | 0.95 | exact |
+| 01-h2-throughput | H2 | keep | 0.95 | exact |
+| 01-h3-regional | H3 | keep | 0.95 | exact (italic H3, unlike spike 1) |
+| 01-h2-actions | H2 | keep | 0.95 | exact |
+| 01-h2-approval | H2 | keep | 0.95 | exact |
+| 01-runhead | **H1** | retag | 0.95 | **unsafe** |
+| 01-runfoot | **H1** | retag | 0.95 | **unsafe** |
+| 03-h1 | H1 | retag | 0.95 | exact |
+| 03-review-period | **H2** | retag | 0.95 | **unsafe** |
+| 03-q1 | **H1** | retag | 0.95 | **unsafe** |
+| 08-h1 | H1 | retag | 0.95 | exact |
+| 08-kicker | P | retag | 0.95 | safe |
+| 08-numeral-3 | — | — | — | **unparsed** |
+| 11-h1-terms | H1 | retag | 0.95 | exact |
+| 11-h2-eligibility | H4 | keep | 0.95 | kept markup, not GT H2 |
+| 11-h2-applying | H4 | keep | 0.95 | same |
+| 11-h2-contact | H4 | keep | 0.95 | same |
+
+#### Arm B — conservative semantic prompt
+
+Exact `conservative_prompt_stem` quoted above. Same settings otherwise. No
+few-shots.
+
+Unsafe (5): 01-runhead H1, 01-runfoot H1, 03-review-period H2, 03-q1 H1,
+08-numeral-3 **H1**. Usefulness dropped: 03-h1 → `Table`. 08-kicker →
+Artifact (safe). 11 h4s still kept. Parse 17/17. Abstain 0.
+
+#### Arm C — native thinking
+
+Same B prompt, `--thinking-mode enabled --thinking-budget 256`. Parser did
+not need a change (`<think>` strip already in `parse_json`). Role/action
+on every card **matched Arm B**. Thinking added no decision.
+
+#### Arm D — existing structural context
+
+Same B prompt plus frozen `page` and `y_band`. No repeat-across-pages
+detector (none exists).
+
+Unsafe (4): 01-runhead H1, 03-review-period H2, 03-q1 H1, 08-numeral-3 H1.
+01-runfoot became P (safe, not Artifact). 03-h1 recovered as H1. 11-h2-contact
+→ P (usefulness miss). 8/11 exact. Abstain 0.
+
+#### Arm E — full-page vision
+
+Same B prompt. Corpus PDFs from existing `generate-corpus.mjs`. Page rasters
+via installed PDFBox 3.0.8 `render` (same `PDFRenderer` family as
+`Preview.java`; Preview classes were not compiled in this worktree). 150 DPI
+PNGs, 1239×1753 (08 landscape 1753×1239), gitignored under
+`experiments/qwen-role-decisions/out/`. `--image` + card text. No crops.
+
+Unsafe (2): 01-runhead still H1; 08-numeral-3 **H3**. 03-q1 → TH (safe).
+03-review-period **unparsed**: the model started `{"role":"H3",...}` then
+wrote a long reason that overflowed `--max-tokens 256`. 01-h2-approval → H3.
+11-h2-eligibility/applying → H3; 11-h2-contact → **H2** (first exact on that
+card). 8/11 exact. Format not 100%. Abstain 0.
+
+Page vision did **not** pass both gates, so it has **not** earned an
+integration experiment. Cropping is still unearned.
+
+### Prediction check
+
+1. Arm B meets both gates — **miss** (5 unsafe, 7/11 exact).
+2. C–E stay unrun if B holds — **miss** (B failed; C–E ran and failed).
+3. Confidence remains a non-discriminating constant — **hit**. Histogram:
+   Arm A–D almost every parsed card `0.95`, one `1.0` (08-kicker on B/C/D).
+   Arm E the same `0.95` on every parsed card. Zero abstains on any arm.
+
+### Holdout 1
+
+Skipped, as registered: this harness scores HTML/GT cards. Scoring holdout
+PDFs needs Inspect of those files or a new extractor.
+
+### FINDINGS (not pursued)
+
+- Conservative wording did not stop furniture or table-label promotions, and
+  it cost the 03 title (`Table`). Prompting is not the missing signal.
+- Native thinking was a no-op on this set.
+- `y_band=bottom` moved the running footer off H1; `y_band=top` did not save
+  the running header or the 34pt numeral. Page band is not enough.
+- Full-page vision cut unsafe 5→2 and got one 11-level right, then invented
+  H3 on two other 11 headings and still promoted the numeral. It also blew
+  the JSON budget on a table label. That is not a pass, and it is not a
+  crop experiment.
+- `existing_tag: H4` is a keep-magnet. The model trusts the current tag more
+  than the heading hierarchy the GT records.
+- Confidence still looks like a prior. Do not calibrate it here.
+- Abstain never fired, including on traps.
+
+### LoRA is earned (not run)
+
+Every inference-time arm failed safety, usefulness, or both. Minimum clean
+material for the **next** spike, not this one:
+
+- Train/validation from development docs **not** in this probe: `02, 04, 05,
+  06, 07, 10, 12`. Skip scanned `09` if it has no text layer.
+- Keep `01, 03, 08, 11` and both holdouts untouched.
+- Include R2 ornaments, running furniture, italic subheads, and table labels.
+- First LoRA spike = upstream `mlx_vlm` `lora.py` overfit a tiny split and
+  still emit JSON. Do not write a trainer in this file.
+
+### ponytail
+
+One experiment dir, one results file, `probes.json` + `run.py`. No extractor,
+no crop helpers, no LoRA wrapper, no `src/` wiring, no confidence gate. Arm E
+used PDFBox `render` already on disk rather than compiling Preview. Flags
+exist only for arms that actually ran.
+
+---
+
+## Stopping (spike 2)
+
+No inference-time arm passed both gates. LoRA is the next spike. Stop.

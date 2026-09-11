@@ -31,10 +31,6 @@ def card_prompt(stem: str, case: dict, with_page_band: bool = False) -> str:
         f'Next: {case["next"]}',
         f'Existing tag: {case["existing_tag"]}',
     ]
-    if case.get("bullet"):
-        bits.append("Marker: list bullet")
-    if case.get("centered"):
-        bits.append("Alignment: centered")
     if with_page_band:
         bits.append(f'Page: {case.get("page", "unknown")}')
         bits.append(f'Page band: {case.get("y_band", "unknown")}')
@@ -185,7 +181,10 @@ def run_cases(
         row = score(pred, case)
         row["raw"] = raw[-1500:]
         rows.append(row)
-        print(json.dumps({k: row[k] for k in row if k != "raw"}, sort_keys=True))
+        shown = {k: v for k, v in row.items() if k != "raw"}
+        if not row["parsed"]:
+            shown["raw"] = row["raw"]
+        print(json.dumps(shown, sort_keys=True))
     print(json.dumps({"gates": gates(rows)}, sort_keys=True))
     return rows
 
