@@ -803,3 +803,149 @@ no `dataset.py`, no LoRA wrapper, no `src/` wiring, no vision, no
 QLoRA plumbing is viable. A small clean train/validation LoRA experiment is
 now earned. Stop. Do not test generalization in this spike.
 
+---
+
+## Part 5 — QLoRA generalization (dev-corpus)
+
+**Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
+**Status:** pre-registration. Training examples, doc-07 cards, and the train
+command are frozen below. No generate on 07 or `probes.json` for this
+adapter yet.
+
+Ponytail: one question. Spike 3's 12/12 is memorization, not this result.
+No Holdout 1, no Holdout 2, no vision, no trainer.py.
+
+### The one question
+
+> Can a small QLoRA adapter trained on one group of development documents
+> generalize to unseen development documents while eliminating unsafe heading
+> promotions without destroying heading-role accuracy?
+
+### Split (honest exposure)
+
+| Pool | Docs | Role |
+|---|---|---|
+| Train | 02, 04, 05, 06, 10, 12 | `train.json` (43 cards) |
+| Fresh validation | **07 only** | `valid-07.json` (6 cards). Every 07 element stays out of training. |
+| Known challenge | 01, 03, 08, 11 | existing frozen `probes.json`. Not blind. |
+| Unused | `cases.json`, Holdout 1, Holdout 2, scanned 09 | not used |
+
+Prompt stem: identical to the spike-3 conservative stem. Completions:
+`{"role":"...","action":"..."}`. No confidence scored. Text-only.
+
+### Train set (43)
+
+All targets from corpus `headingHierarchy` / `artifacts` / HTML tags, not
+Qwen. Paragraphs downsampled to one per train document.
+
+| category | n | ids |
+|---|---|---|
+| H1 | 5 | 02-h1, 04-h1, 05-h1, 06-h1, 12-h1 |
+| H1 misleading tag | 1 | 10-h1 (styled div / existing `P`) |
+| H2 | 11 | 05-h2, 06-h2-*, 12-h2-* |
+| H2 misleading tag | 4 | 02-h2 (`div.spanner`), 10-h2-english/fr/closing |
+| H3 | 1 | 12-h3-apron (only deeper heading in the train pool) |
+| paragraph | 6 | one intro per train doc |
+| table-label | 5 | 04-northern/units/vehicle-class, 12-review-period/q1 |
+| prominent-nonheading | 6 | 12-sub/org/chart-title/table-caption, 05-fig1, 02-callout |
+| furniture | 4 | 02-footer, 05-brand, 12-brand, 12-footer |
+
+Roles: H1 6, H2 15, H3 1, P 17, Artifact 4.
+
+**Coverage gaps (not invented):** no H4–H6 in these six docs; no watermark /
+DRAFT / digit ornament (those live on 08 / holdouts); 06's decorative rules
+are images, so no text Artifact from 06.
+
+### Doc 07 validation (6) — frozen, not yet generated
+
+Doc 07 GT `headingHierarchy` has **one** heading. 80% of 1 is not a
+statistical claim; usefulness is 1/1 exact H1 and no collapse-to-P, not a
+percentage theater.
+
+| id | expect | category | trap |
+|---|---|---|---|
+| 07-h1 | H1 keep | true heading | no |
+| 07-intro | P keep | paragraph | heading |
+| 07-chart-title | P retag | 13pt bold SVG title, not in headingHierarchy | heading |
+| 07-northern | P retag | legend label | heading |
+| 07-q1 | P retag | axis tick | heading |
+| 07-cap | P keep | trailing description | heading |
+
+### Duration decision (before train)
+
+Spike 3 used 200 iters to **memorize** 12 cards (~17 epochs). That duration
+is not reused.
+
+43 examples, batch 1, **`--epochs 6` → 258 iterations**. Six passes over the
+real set, not a second 200-iter memorize. Not a sweep. `--steps-per-save
+1000` so only the final adapter is written (spike 3's 200-step save
+duplicated 62 MiB).
+
+### Planned command
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft \
+  --split train \
+  --batch-size 1 \
+  --lora-rank 8 \
+  --epochs 6 \
+  --steps-per-report 10 \
+  --steps-per-save 1000 \
+  --train-on-completions \
+  --output-path out/adapter-gen
+```
+
+SFT JSON is `python -c` from frozen `train.json` via existing `card_prompt`,
+same as spike 3. No `--train-vision`. No `--full-finetune`. One run. A
+second run only for a mechanical error.
+
+Eval prompt: `--path valid-07.json` (stem already conservative);
+`probes.json --conservative` so the challenge set uses the same stem.
+
+### Gates
+
+**Gate 0 — training health.** No crash/NaN; adapter written; generate loads.
+
+**Gate 1 — fresh 07 (primary).** 100% parse; **zero** unsafe promotions
+(GT non-heading → `H*` + `retag`); heading exact 1/1 (sample too small for
+80% theater). Also record role accuracy, action accuracy, confusions.
+Do not use confidence. Do not look at 07 predictions until this section is
+committed.
+
+**Gate 2 — known challenge.** Only after Gate 1. Spike-2 gates: 100% parse,
+zero unsafe, heading exact ≥ 9/11. Compare to Base A (4 unsafe, 8/11) and
+best inference-time E (2 unsafe, 8/11). Passing 07 while failing this is
+not a holdout-ready classifier.
+
+### Registered prediction
+
+1. `[H]` QLoRA materially reduces unsafe heading promotions on unseen doc 07
+   vs the base model.
+2. `[H]` The gain is not merely “predict fewer headings”; exact heading-role
+   usefulness remains acceptable (1/1 H1, not collapse-to-P).
+3. `[H]` The adapter eliminates unsafe promotions on frozen `probes.json` and
+   reaches at least 9/11 exact heading roles.
+4. `[H]` Output remains 100% parseable `{role,action}` JSON.
+5. `[H]` No vision, confidence, new extractor, or larger model is required
+   to meet the development-corpus gate.
+
+### Win / fail
+
+- **Win:** zero unsafe on 07, useful heading there, and the challenge gate.
+  Then STOP. “Small QLoRA training generalizes across the development corpus
+  strongly enough to earn a blind Holdout-1 evaluation.” Do not touch
+  Holdout 1 here.
+- **Fail — safety:** any 07 unsafe promotion. Classify missing category /
+  ambiguous GT / missing visual context / represented-but-failed. Do not
+  add epochs.
+- **Fail — usefulness:** safety via collapsing headings.
+- **Fail — challenge:** 07 passes but probes still unsafe or major hierarchy
+  regression.
+
+### Measurements
+
+Not yet. This section is committed before the first generate on 07 / probes
+and before `mlx_vlm.lora` on `train.json`.
+

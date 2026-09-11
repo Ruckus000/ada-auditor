@@ -224,6 +224,14 @@ def self_check() -> None:
         {"role": "H2", "action": "keep"},
         {"id": "02-h2", "expect": {"role": "H2", "action": "retag"}},
     )
+    val_unsafe = score(
+        {"role": "H1", "action": "retag"},
+        {"id": "07-chart-title", "expect": {"role": "P", "action": "retag"}, "trap": "heading"},
+    )
+    val_safe = score(
+        {"role": "P", "action": "retag"},
+        {"id": "07-chart-title", "expect": {"role": "P", "action": "retag"}, "trap": "heading"},
+    )
     assert bad["ok"] is False and bad["auto_heading"] is True
     assert good["ok"] is True
     assert abstain["ok"] is True
@@ -236,6 +244,8 @@ def self_check() -> None:
     assert timid["timid"] is True
     assert overfit["ok"] is True
     assert overfit_miss["ok"] is False
+    assert val_unsafe["ok"] is False and val_unsafe["unsafe"] is True
+    assert val_safe["ok"] is True and val_safe["unsafe"] is False
     eleven_ok = [exact] * 9 + [miss] * 2 + [good] * 6
     eight_ok = [exact] * 8 + [miss] * 3 + [good] * 6
     abstain_all = [score({"role": "H1", "action": "abstain", "confidence": 0.5}, heading)] * 11

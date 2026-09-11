@@ -1,0 +1,653 @@
+{
+  "model": "mlx-community/Qwen3.5-4B-MLX-4bit",
+  "prompt_stem": "You assign one PDF tag role. Return ONLY JSON with keys role, action, confidence, reason. role is one of H1,H2,H3,H4,H5,H6,P,LI,Table,Figure,Artifact. action is retag, keep, or abstain. confidence is 0..1. A heading introduces a semantic section or subsection of the document. Typography alone is insufficient: large, bold, centered, or isolated text is not a heading merely because it looks prominent. Addresses, running headers, running footers, stamps, watermarks, table labels, and other page furniture are not headings. Abstain when semantic evidence is insufficient to determine the role. Do not invent facts.",
+  "conservative_prompt_stem": "You assign one PDF tag role. Return ONLY JSON with keys role, action, confidence, reason. role is one of H1,H2,H3,H4,H5,H6,P,LI,Table,Figure,Artifact. action is retag, keep, or abstain. confidence is 0..1. A heading introduces a semantic section or subsection of the document. Typography alone is insufficient: large, bold, centered, or isolated text is not a heading merely because it looks prominent. Addresses, running headers, running footers, stamps, watermarks, table labels, and other page furniture are not headings. Abstain when semantic evidence is insufficient to determine the role. Do not invent facts.",
+  "note": "Spike 4 train: development docs 02,04,05,06,10,12 only. Frozen before any generate on 07 or probes.",
+  "cases": [
+    {
+      "id": "02-h1",
+      "text": "Coastal Depot Review",
+      "font_pt": 19,
+      "weight": "bold",
+      "prev": "none",
+      "next": "The depot lease expires within the year and the review below sets out the position ahead of the renewal decision.",
+      "existing_tag": "H1",
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "source": "corpus/02-two-column.html headingHierarchy"
+    },
+    {
+      "id": "04-h1",
+      "text": "Fleet Utilisation Detail",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "none",
+      "next": "Utilisation is reported by vehicle class and by depot.",
+      "existing_tag": "H1",
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "source": "corpus/04-difficult-table.html headingHierarchy"
+    },
+    {
+      "id": "05-h1",
+      "text": "Coastal Quay Site Report",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "Coastal Quay Site Report · Page 1",
+      "next": "Two site visits were made during the review period.",
+      "existing_tag": "H1",
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "source": "corpus/05-images-captioned.html headingHierarchy"
+    },
+    {
+      "id": "06-h1",
+      "text": "Asset Register Extract",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "none",
+      "next": "This extract exists to mark the boundary of deterministic remediation.",
+      "existing_tag": "H1",
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "source": "corpus/06-images-uncaptioned.html headingHierarchy"
+    },
+    {
+      "id": "10-h1",
+      "text": "Notice de conformité — Compliance Notice",
+      "font_pt": 19,
+      "weight": "bold",
+      "prev": "none",
+      "next": "This document carries no title metadata and declares no language.",
+      "existing_tag": "P",
+      "expect": {
+        "role": "H1",
+        "action": "retag"
+      },
+      "category": "H1-misleading-tag",
+      "source": "corpus/10-metadata-problems.html headingHierarchy (styled div)"
+    },
+    {
+      "id": "12-h1",
+      "text": "Coastal Depot",
+      "font_pt": 26,
+      "weight": "bold",
+      "prev": "none",
+      "next": "Annual Review 2026 · prepared for the Board",
+      "existing_tag": "H1",
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy"
+    },
+    {
+      "id": "02-h2",
+      "text": "Financial position",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "A third option, closure, is recorded here only to note that it has been considered and set aside for this cycle.",
+      "next": "Rent is the dominant cost and is fixed for the remainder of the term.",
+      "existing_tag": "none",
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2-misleading-tag",
+      "source": "corpus/02-two-column.html headingHierarchy; styled div.spanner"
+    },
+    {
+      "id": "05-h2",
+      "text": "Depot apron",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "Coastal Quay Site Report · Page 2",
+      "next": "Figure 2: The northern apron, which would be surrendered under the reduced-footprint option.",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/05-images-captioned.html headingHierarchy"
+    },
+    {
+      "id": "06-h2-site",
+      "text": "Site",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "no text anywhere in the document from which a description could be extracted.",
+      "next": "none",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/06-images-uncaptioned.html headingHierarchy"
+    },
+    {
+      "id": "06-h2-apron",
+      "text": "Apron",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "none",
+      "next": "none",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/06-images-uncaptioned.html headingHierarchy"
+    },
+    {
+      "id": "06-h2-mark",
+      "text": "Mark",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "none",
+      "next": "none",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/06-images-uncaptioned.html headingHierarchy"
+    },
+    {
+      "id": "06-h2-layout",
+      "text": "Layout",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "none",
+      "next": "none",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/06-images-uncaptioned.html headingHierarchy"
+    },
+    {
+      "id": "10-h2-english",
+      "text": "English section",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "It also mixes two natural languages in the body, so a single document-level language declaration is insufficient on its own.",
+      "next": "The depot lease and the berth allocation are administered under separate instruments.",
+      "existing_tag": "P",
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2-misleading-tag",
+      "source": "corpus/10-metadata-problems.html headingHierarchy (styled div)"
+    },
+    {
+      "id": "10-h2-fr",
+      "text": "Section française",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "should not be read as assuming otherwise.",
+      "next": "Le bail du dépôt et l'attribution des postes à quai relèvent d'instruments distincts.",
+      "existing_tag": "P",
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2-misleading-tag",
+      "source": "corpus/10-metadata-problems.html headingHierarchy (styled div)"
+    },
+    {
+      "id": "10-h2-closing",
+      "text": "Closing",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "et se trouve à l'intérieur d'un document dont la langue principale est l'anglais.",
+      "next": "The headings above are styled divs rather than heading elements, so nothing in the source carries heading semantics into the rendered page.",
+      "existing_tag": "P",
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2-misleading-tag",
+      "source": "corpus/10-metadata-problems.html headingHierarchy (styled div)"
+    },
+    {
+      "id": "12-h2-contents",
+      "text": "Contents",
+      "font_pt": 15,
+      "weight": "bold",
+      "prev": "Coastal Depot Annual Review · Page 2",
+      "next": "Summary",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy"
+    },
+    {
+      "id": "12-h2-summary",
+      "text": "Summary",
+      "font_pt": 15,
+      "weight": "bold",
+      "prev": "Coastal Depot Annual Review · Page 3",
+      "next": "Coastal has operated below its designed capacity for six consecutive quarters.",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy"
+    },
+    {
+      "id": "12-h2-throughput",
+      "text": "Throughput",
+      "font_pt": 15,
+      "weight": "bold",
+      "prev": "of the rent saving set out under options.",
+      "next": "Containers handled, by depot and quarter (hundreds)",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy"
+    },
+    {
+      "id": "12-h2-fleet",
+      "text": "Fleet utilisation",
+      "font_pt": 15,
+      "weight": "bold",
+      "prev": "Coastal Depot Annual Review · Page 4",
+      "next": "Blank cells mean the class is not operated at that depot, which differs from zero.",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy"
+    },
+    {
+      "id": "12-h2-site",
+      "text": "Site",
+      "font_pt": 15,
+      "weight": "bold",
+      "prev": "Not operated at Coastal. Both northern units listed for retirement.",
+      "next": "Figure 1: The western quay at low tide.",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy"
+    },
+    {
+      "id": "12-h2-options",
+      "text": "Options and recommendation",
+      "font_pt": 15,
+      "weight": "bold",
+      "prev": "Coastal Depot Annual Review · Page 5",
+      "next": "Renew as-is.",
+      "existing_tag": "H2",
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy"
+    },
+    {
+      "id": "12-h3-apron",
+      "text": "Northern apron",
+      "font_pt": 12,
+      "weight": "regular",
+      "prev": "The Northwind berth is second from the left.",
+      "next": "Figure 2: The northern apron, which the reduced-footprint option would surrender.",
+      "existing_tag": "H3",
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "source": "corpus/12-kitchen-sink.html headingHierarchy; italic h3"
+    },
+    {
+      "id": "02-p",
+      "text": "The depot lease expires within the year and the review below sets out the position ahead of the renewal decision.",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "Coastal Depot Review",
+      "next": "Coastal has operated below its designed capacity for six consecutive quarters.",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "source": "corpus/02-two-column.html intro paragraph"
+    },
+    {
+      "id": "04-p",
+      "text": "Utilisation is reported by vehicle class and by depot. Blank cells indicate that the class is not operated at that depot, which is different from a recorded zero.",
+      "font_pt": 10.5,
+      "weight": "regular",
+      "prev": "Fleet Utilisation Detail",
+      "next": "Vehicle class",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "source": "corpus/04-difficult-table.html intro paragraph"
+    },
+    {
+      "id": "05-p",
+      "text": "Two site visits were made during the review period. The photographs below were taken on the second visit and are referenced in the utilisation discussion.",
+      "font_pt": 11,
+      "weight": "regular",
+      "prev": "Coastal Quay Site Report",
+      "next": "Figure 1: The western quay at low tide, viewed from the depot apron.",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "source": "corpus/05-images-captioned.html intro paragraph"
+    },
+    {
+      "id": "06-p",
+      "text": "This extract exists to mark the boundary of deterministic remediation. None of the graphics below has a caption, a surrounding description, or an alt attribute. There is no text anywhere in the document from which a description could be extracted.",
+      "font_pt": 11,
+      "weight": "regular",
+      "prev": "Asset Register Extract",
+      "next": "none",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "source": "corpus/06-images-uncaptioned.html intro paragraph"
+    },
+    {
+      "id": "10-p",
+      "text": "This document carries no title metadata and declares no language. Both are deliberate. It also mixes two natural languages in the body, so a single document-level language declaration is insufficient on its own.",
+      "font_pt": 11,
+      "weight": "regular",
+      "prev": "Notice de conformité — Compliance Notice",
+      "next": "English section",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "source": "corpus/10-metadata-problems.html intro paragraph"
+    },
+    {
+      "id": "12-p",
+      "text": "Coastal has operated below its designed capacity for six consecutive quarters. The shortfall is structural rather than seasonal, dating to the port authority's reorganisation of the western quay.",
+      "font_pt": 10.5,
+      "weight": "regular",
+      "prev": "Summary",
+      "next": "Two options are live: renewal on the existing footprint, or renewal on a reduced footprint surrendering the northern apron.",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "source": "corpus/12-kitchen-sink.html Summary paragraph"
+    },
+    {
+      "id": "04-northern",
+      "text": "Northern",
+      "font_pt": 9.5,
+      "weight": "bold",
+      "prev": "Vehicle class",
+      "next": "Southern",
+      "existing_tag": "TH",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "table-label",
+      "source": "corpus/04-difficult-table.html table group header"
+    },
+    {
+      "id": "04-units",
+      "text": "Units",
+      "font_pt": 9.5,
+      "weight": "bold",
+      "prev": "Northern",
+      "next": "Util. %",
+      "existing_tag": "TH",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "table-label",
+      "source": "corpus/04-difficult-table.html table column header"
+    },
+    {
+      "id": "04-vehicle-class",
+      "text": "Vehicle class",
+      "font_pt": 9.5,
+      "weight": "bold",
+      "prev": "Utilisation is reported by vehicle class and by depot.",
+      "next": "Northern",
+      "existing_tag": "TH",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "table-label",
+      "source": "corpus/04-difficult-table.html table row-header label"
+    },
+    {
+      "id": "12-review-period",
+      "text": "Review period",
+      "font_pt": 9.5,
+      "weight": "bold",
+      "prev": "Depot",
+      "next": "Q1",
+      "existing_tag": "TH",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "table-label",
+      "source": "corpus/12-kitchen-sink.html throughput table group header"
+    },
+    {
+      "id": "12-q1",
+      "text": "Q1",
+      "font_pt": 9.5,
+      "weight": "bold",
+      "prev": "Review period",
+      "next": "Q2",
+      "existing_tag": "TH",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "table-label",
+      "source": "corpus/12-kitchen-sink.html throughput table column header"
+    },
+    {
+      "id": "12-sub",
+      "text": "Annual Review 2026 · prepared for the Board",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Coastal Depot",
+      "next": "Northwind Logistics · Estates and Operations",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "prominent-nonheading",
+      "source": "corpus/12-kitchen-sink.html cover subtitle; not in headingHierarchy"
+    },
+    {
+      "id": "12-org",
+      "text": "Northwind Logistics · Estates and Operations",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "Annual Review 2026 · prepared for the Board",
+      "next": "Coastal Depot Annual Review · Page 2",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "prominent-nonheading",
+      "source": "corpus/12-kitchen-sink.html cover org line; not in headingHierarchy"
+    },
+    {
+      "id": "12-chart-title",
+      "text": "Quarterly trend by depot",
+      "font_pt": 11,
+      "weight": "bold",
+      "prev": "Coastal",
+      "next": "Q1",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "prominent-nonheading",
+      "source": "corpus/12-kitchen-sink.html SVG chart title; not in headingHierarchy"
+    },
+    {
+      "id": "12-table-caption",
+      "text": "Containers handled, by depot and quarter (hundreds)",
+      "font_pt": 9.5,
+      "weight": "bold",
+      "prev": "Throughput",
+      "next": "Depot",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "prominent-nonheading",
+      "source": "corpus/12-kitchen-sink.html table caption; not in headingHierarchy"
+    },
+    {
+      "id": "05-fig1",
+      "text": "Figure 1: The western quay at low tide, viewed from the depot apron. The berth allocated to Northwind is the second from the left.",
+      "font_pt": 9.5,
+      "weight": "regular",
+      "prev": "Two site visits were made during the review period.",
+      "next": "The quay itself is in good condition.",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "prominent-nonheading",
+      "source": "corpus/05-images-captioned.html figcaption"
+    },
+    {
+      "id": "02-callout",
+      "text": "Note. This box straddles the gutter on purpose. It belongs to neither column, and a reading-order algorithm has to place it somewhere.",
+      "font_pt": 9.5,
+      "weight": "bold",
+      "prev": "A third option, closure, is recorded here only to note that it has been considered and set aside for this cycle.",
+      "next": "Financial position",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "prominent-nonheading",
+      "source": "corpus/02-two-column.html callout; not in headingHierarchy"
+    },
+    {
+      "id": "02-footer",
+      "text": "Northwind Logistics · Coastal Depot Review · Page 1 of 1",
+      "font_pt": 8,
+      "weight": "regular",
+      "prev": "The reduced-footprint option saves roughly a fifth of the rent while retaining the berth access that makes the site useful at all.",
+      "next": "none",
+      "existing_tag": "none",
+      "expect": {
+        "role": "Artifact",
+        "action": "retag"
+      },
+      "category": "furniture",
+      "source": "corpus/02-two-column.html artifacts footer"
+    },
+    {
+      "id": "05-brand",
+      "text": "Coastal Quay Site Report · Page 1",
+      "font_pt": 8.5,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Coastal Quay Site Report",
+      "existing_tag": "none",
+      "expect": {
+        "role": "Artifact",
+        "action": "retag"
+      },
+      "category": "furniture",
+      "source": "corpus/05-images-captioned.html artifacts brand bar"
+    },
+    {
+      "id": "12-brand",
+      "text": "Coastal Depot Annual Review · Page 2",
+      "font_pt": 8,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Contents",
+      "existing_tag": "none",
+      "expect": {
+        "role": "Artifact",
+        "action": "retag"
+      },
+      "category": "furniture",
+      "source": "corpus/12-kitchen-sink.html artifacts brand bar"
+    },
+    {
+      "id": "12-footer",
+      "text": "Northwind Logistics · Page 2",
+      "font_pt": 8,
+      "weight": "regular",
+      "prev": "Options and recommendation",
+      "next": "none",
+      "existing_tag": "none",
+      "expect": {
+        "role": "Artifact",
+        "action": "retag"
+      },
+      "category": "furniture",
+      "source": "corpus/12-kitchen-sink.html artifacts footer"
+    }
+  ]
+}
