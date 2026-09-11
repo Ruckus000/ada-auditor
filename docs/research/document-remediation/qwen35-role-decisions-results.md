@@ -1842,3 +1842,107 @@ classification stamp.
 Holdout 1 is spent. Do not retrain against it. Do not add another veto
 in this spike. Do not inspect Holdout 2.
 
+---
+
+## Part 9 — Structural heading eligibility (pre-registration)
+
+**Date:** 2026-09-11 · same branch. ML freeze unchanged: Qwen3.5-4B 4-bit,
+`out/adapter-role`, role-only prompt, R2, derived action, no vision.
+Holdout 1 predictions remain immutable (`4ec2198a…`). Holdout 2 sealed.
+
+### The one question
+
+> Can existing PDF structure and existing remediation rules define a
+> narrow heading-eligibility boundary that removes the unsafe classes
+> without changing the QLoRA adapter?
+
+Candidate-scope / structural safety. Not a training spike.
+
+### Inventory (completed before any new predicate)
+
+Headings.java is **demotion-only**. Rules: R1 length, R2 no letters (frozen
+in `r2_ornament`), R3 page-marker regex, R4 caption-text, R5 geometric
+table containment (`belongsToTable` on boxes, not parent pointers), R6
+short following paragraph, R7 nothing after, R8 restore hierarchy.
+`PDStructureElement.getParent()` already exists (Tables.java / Figures.java
+removeKid). `StructText.find` does not expose the parent. Cards.java
+currently throws parent types away.
+
+| H1 failure class | existing evidence |
+|---|---|
+| Figure glyph leaks (5) | `existing_tag == Figure`, parent `Document` |
+| table headers (h07, h08) | `getParent` chain `P → TD → TR → Table` |
+| h06 "Depot Staff Vehicles" | **not** under a Table — ODL left the unruled grid as Document-level `P` |
+| chart furniture (h11) | **no Figure** — SVG text, same hole Headings.java R5 recorded for doc 07 |
+| spanning banner (h09) | Document-level `P`; R1 length would describe it as a body paragraph |
+| classification stamp (h13) | already `H2`; no Headings rule names stamps (R3 is page markers only) |
+
+True-heading source types on hand-authored train/07/probes, spent H1 GT
+matches, and tagged development 01: **never** Figure, Table, L, LI,
+Caption, or Formula. Those types are outside the heading-promotion
+domain. `none` / `P` / `H1`–`H6` remain in-domain (`H*` because wrong
+headings must stay demotable).
+
+FINDING NOT PURSUED — candidate segmentation/merge (h02's four unmatched
+headings). Do not change ODL in this spike.
+
+### Architecture (registered)
+
+`existing_tag` still withheld from Qwen. It may participate in **scope**.
+
+Ladder; stop at the first rung that holds.
+
+**Arm A — source type.** `Figure`, `Table`, `L`, `LI`, `Caption`,
+`Formula` are not eligible for H1–H6 promotion. Preserve the existing
+non-heading type; do not call Qwen. `P` / `none` / `H1`–`H6` still go to
+the frozen hybrid.
+
+**Arm B — Table/Figure ancestry.** Only if A leaves unsafe cases. Walk
+`getParent()`; if any ancestor is `Table` or `Figure`, the text is not a
+document heading. Do not teach Qwen table strings.
+
+**Arm C — existing Headings.java rule.** Only if residual remains. Use a
+rule that already describes the mechanism. Do not add all-caps, banner
+regexes, or font-size gates.
+
+### Frozen ML
+
+No change to adapter, prompt, R2, generation, or action derivation.
+
+### Gates
+
+Development (tuning/regression): train, 07, probes, real-PDF bridge of
+development docs. Holdout 1: spent diagnostic only; not a second test.
+
+Hard, before Holdout 2 can be earned:
+
+- zero final unsafe H* promotions on that exposed universe
+- no structural gate blocks a known true heading
+- development heading usefulness still ≥ 9/11 (probes) / 6/6 (07)
+- PDF bridge still emits a decision for every evaluable candidate
+
+Report Qwen calls avoided. Bonus, not the win.
+
+### Registered prediction
+
+1. `[H]` The five Figure-letter failures disappear by restricting heading
+   promotion to structurally eligible source types.
+2. `[H]` Existing Table/Figure ancestry eliminates most table/chart-furniture
+   unsafe promotions.
+3. `[H]` These structural gates collide with zero known true document headings.
+4. `[H]` Heading usefulness remains materially unchanged because Qwen still
+   handles genuine document-flow candidates.
+5. `[H]` At most one residual failure class remains after existing structural
+   evidence is used.
+6. `[H]` No retraining, new model, vision, or bespoke rule engine is required.
+
+### Win / fail
+
+- **Win:** A or A+B (or A+B plus one existing Headings rule) yields zero
+  exposed unsafe, zero true-heading collisions, usefulness holds. STOP.
+  Holdout 2 is then earned — not run here.
+- **Source-type or ancestry gate hits a true heading:** STOP that rung.
+- **Banner/stamp remain after existing rules:** STOP. Residual earns a
+  later layout spike. Do not stack heuristics.
+- **Usefulness collapses:** STOP.
+
