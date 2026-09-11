@@ -507,8 +507,8 @@ No inference-time arm passed both gates. LoRA is the next spike. Stop.
 ## Part 4 — QLoRA trainer viability (overfit only)
 
 **Date:** 2026-09-11 · same branch `cursor/qwen35-role-decisions-914b`.
-**Status at time of writing this section:** pre-registration. No `mlx_vlm.lora`
-run yet. `datasets` is not installed.
+**Status:** measured. Stock `mlx_vlm.lora` overfit the 12-card set. Adapter
+emits clean role/action JSON. Base checkpoint unchanged. Stop.
 
 Ponytail: one question. Upstream CLI only. No trainer.py, no dataset.py, no
 fork, no site-packages edit. Do not run `probes.json` or either holdout.
@@ -634,6 +634,172 @@ machinery.
 
 ### Measurements
 
-Not yet. This section is committed before `pip install` of the train extra
-and before the first `lora` run.
+Machine: Apple M4 Max, 36 GiB, darwin arm64. Python 3.12.11 venv. Offline
+after the extra install (`HF_HUB_OFFLINE=1`, `HF_DATASETS_OFFLINE=1`). No
+MLX-VLM source edit. No second checkpoint. No rank/LR sweep. One train run.
+
+#### Versions and disk
+
+Training extra was **absent** at pre-registration. Installed
+`datasets>=2.19.1` with pins `mlx-vlm==0.7.0`, `mlx==0.32.2`,
+`transformers==5.17.0`. Did **not** run `pip install mlx-vlm[train]`, which
+could have upgraded mlx-vlm.
+
+| | before extra | after extra / train |
+|---|---|---|
+| mlx-vlm | 0.7.0 | 0.7.0 |
+| mlx | 0.32.2 | 0.32.2 |
+| transformers | 5.17.0 | 5.17.0 |
+| datasets | absent | 5.0.1 |
+| huggingface_hub | 1.31.0 | 1.31.0 |
+| disk free | 6.2 GiB (pip) / 5.9 GiB (pre-reg) | 5.9 GiB after pip; 5.8 GiB after train |
+
+`[V]` `fsspec` 2026.7.0 → 2026.6.0 as a `datasets` pin. mlx / mlx-vlm /
+transformers / the 4-bit blob were not upgraded. Extra install used ~260 MiB;
+the two adapter copies used ~124 MiB. Disk stayed practical. Gate 0 not
+blocked on space.
+
+`python -m mlx_vlm.lora --help` works after the extra.
+
+#### Dataset path (mechanical, before train)
+
+`load_dataset` on a **folder** containing `train.json` (12 rows, `messages`
+column) works. A bare file path fails. SFT JSON was emitted with a
+`python -c` that reused `card_prompt()`; no `dataset.py`. Completions:
+
+`{"role":"<expect.role>","action":"<expect.action>"}`
+
+gitignored at `experiments/qwen-role-decisions/out/overfit-sft/train.json`.
+
+#### Exact train command
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/overfit-sft \
+  --split train \
+  --batch-size 1 \
+  --lora-rank 8 \
+  --iters 200 \
+  --steps-per-report 10 \
+  --steps-per-save 200 \
+  --train-on-completions \
+  --output-path out/adapter
+```
+
+No `--train-vision`. No `--full-finetune`. `--lora-alpha` left at CLI default
+16. Learning rate left at CLI default `2e-5`. No second run.
+
+#### Gate 0 — trainer runnable
+
+`[V]` **pass.** Upstream started QLoRA on
+`mlx-community/Qwen3.5-4B-MLX-4bit` without patches.
+
+`#trainable params: 16.232448 M || all params: 4539.264 M || trainable%: 0.358%`
+
+Language-side LoRA only (`find_all_linear_names(model.language_model)`).
+`adapter_config.json` records rank 8, dropout 0, scale 2.0
+(`alpha/rank`).
+
+#### Gate 1 — training learns
+
+`[V]` **pass.** No crash, no NaN. ~197 s wall (11:47:19–11:50:36). Peak mem
+10.183 GB. ~1.0–1.1 it/s.
+
+| iter | train loss |
+|---|---|
+| 10 | 0.68414369 |
+| 20 | 0.12242137 |
+| 30 | 0.05136564 |
+| 40 | 0.01364803 |
+| 50 | 0.00668115 |
+| 60 | 0.00198498 |
+| 70 | 0.00079029 |
+| 80 | 0.00033518 |
+| 90 | 0.00023024 |
+| 100 | 0.00018183 |
+| 110 | 0.00021038 |
+| 120 | 0.00015515 |
+| 130 | 0.00016428 |
+| 140 | 0.00014498 |
+| 150 | 0.00012322 |
+| 160 | 0.00014402 |
+| 170 | 0.00014053 |
+| 180 | 0.00011741 |
+| 190 | 0.00010263 |
+| 200 | 0.00012647 |
+
+Adapter written: `out/adapter/adapters.safetensors` (64,991,946 bytes) plus
+`adapter_config.json` (14,480 bytes). Iter-200 also wrote a duplicate
+`0000200_adapters.safetensors` (same 62.0 MiB). Gitignored.
+
+Loss alone is not the win. Gate 2 is.
+
+#### Gate 2 — adapter memorizes the tiny set
+
+`python run.py --offline --path overfit.json --adapter-path out/adapter`
+
+`[V]` **pass.** Adapter loaded. Parse 12/12. Role+action exact **12/12**.
+No vision-token garbage. One raw completion captured on `02-footer`
+(base had promoted it to H1):
+
+```
+{"role":"Artifact","action":"retag"}
+```
+
+Confidence is absent (`null` in the scorer). That is the trained completion
+shape, not a calibrated number. Not scored.
+
+| id | expect | base (before) | adapter | adapter ok |
+|---|---|---|---|---|
+| 02-h1 | H1 keep | H1 keep | H1 keep | yes |
+| 02-h2 | H2 retag | H2 retag | H2 retag | yes |
+| 02-p | P keep | P keep | P keep | yes |
+| 02-footer | Artifact retag | **H1** retag | Artifact retag | yes |
+| 04-h1 | H1 keep | H1 keep | H1 keep | yes |
+| 04-northern | P retag | **H2** retag | P retag | yes |
+| 04-units | P retag | **H2** retag | P retag | yes |
+| 05-brand | Artifact retag | **H1** retag | Artifact retag | yes |
+| 06-h2-site | H2 keep | **unparsed** (reason overflow) | H2 keep | yes |
+| 10-h1 | H1 retag | H1 retag | H1 retag | yes |
+| 10-h2-english | H2 retag | H2 retag | H2 retag | yes |
+| 12-sub | P retag | **H1** retag | P retag | yes |
+
+Base before: 6/12 exact, 11/12 parsed. Adapter: 12/12. This is
+**memorization of the train set**, not generalization. `probes.json` and
+both holdouts were not run.
+
+#### Gate 3 — base intact
+
+`[V]` **pass.** After training, `python run.py --offline --path overfit.json`
+(no `--adapter-path`): 12/12 decisions identical to the pre-train base
+run, including the same `06-h2-site` overflow. Checkpoint SHA-256
+unchanged:
+
+- `model.safetensors` `5fb9acd0246866381cf8c5c354c6db1019f6498eec4ccb4f5edcc71ffeacb2db` (3,034,300,695 bytes)
+- `config.json` `f3efc81b2ea8d96a45301037d3ccccbcccdef44a961845c87f286aaddbc6eaaa`
+
+Adapter 62.0 MiB vs 2.83 GiB 4-bit blob (~2.1%). The trainer wrote beside
+the experiment `out/` directory, not over the hub snapshot.
+
+### Prediction check
+
+1. Stock 0.7.0 QLoRA trains Qwen3.5-4B without patches — **hit**.
+2. Tiny language-only adapter overfits these 12 examples — **hit** (12/12).
+3. Adapter emits clean parseable JSON, not corrupted generation — **hit**.
+4. Adapter is small and does not modify the base checkpoint — **hit**.
+
+### ponytail
+
+`overfit.json` + `--path` / `--adapter-path` on existing `run.py` + this
+file. SFT JSON and adapter live under gitignored `out/`. No `trainer.py`,
+no `dataset.py`, no LoRA wrapper, no `src/` wiring, no vision, no
+`probes.json` eval, no holdout.
+
+---
+
+## Stopping (spike 3)
+
+QLoRA plumbing is viable. A small clean train/validation LoRA experiment is
+now earned. Stop. Do not test generalization in this spike.
 
