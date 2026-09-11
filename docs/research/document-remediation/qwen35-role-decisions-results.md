@@ -2643,3 +2643,101 @@ Label-independent.
 
 This locator is frozen before any marked-adapter call.
 
+### Development gate `[V]`
+
+One marked-adapter call, on `01-simple-text:5` only. Same Part 11
+marker. Adapter `out/adapter-role`, role-only contract, one
+localization sentence.
+
+| locator | GT | existing | text-only | visual_role | visual_heading | final |
+|---|---|---|---|---|---|---|
+| 01-simple-text:5 Regional detail | H3 | H3 | H2 | H2 | true | H2 |
+
+Parse 1/1. True-heading vetoes **0**. Unsafe **0**. Heading exact
+stays **11/12**. Demotions **0**. Visual verifier did not change the
+mutation (still the text-only H2 level change).
+
+Development holds. Spent H1 diagnostic is allowed.
+
+### Spent H1 diagnostic `[V]`
+
+Exact 14. Part 11 marked-base outputs not regenerated. Adapter on
+the same marked PNGs.
+
+| locator | GT heading? | text-only | base marked binary | adapter visual_role | visual_heading | final |
+|---|---|---|---|---|---|---|
+| h01:4 Standard rates | yes | H2 | false | H2 | true | H2 |
+| h01:11 Exclusions | yes | H2 | false | H2 | true | H2 |
+| h02:0 BERTH ALLOCATION PROCEDURE | yes | H2 | true | H1 | true | H2 |
+| h06:2 Fully ruled | yes | H2 | true | H2 | true | H2 |
+| h06:13 Horizontal rules only | yes | H2 | false | H2 | true | H2 |
+| h06:14 Depot Staff Vehicles | no | H2 | false | Table | false | P |
+| h09:8 spanning banner | no | H2 | false | P | false | P |
+| h11:4 Berth Occupancy by Month | no | H2 | false | H2 | true | H2 |
+| h11:7 Month of year | no | H2 | false | P | false | P |
+| h12:5 Recommendation | yes | H2 | true | H2 | true | H2 |
+| h13:1 COMMERCIAL IN CONFIDENCE | no | H1 | false | H2 | true | H1 |
+| h16:4 Discrepancies | yes | H2 | true | H3 | true | H2 |
+| h16:6 STORAGE | yes | H2 | false | H2 | true | H2 |
+| h16:10 Dispatch | yes | H2 | true | H2 | true | H2 |
+
+Parse **14/14**. `verification_failure` **0**. True-heading vetoes
+**0**. Heading exact **43/51** (84%). Demotions **0**.
+
+The four Part 11 casualties are heading-eligible again. `h06:14`
+moves off heading (`visual_role: Table`). `h11:4` does not
+(`visual_role: H2`). `h13:1` is newly heading-eligible, so the
+text-only H2→H1 mutation applies; Part 10/11 had fail-closed to keep
+H2. Final unsafe **2** (`h11:4`, `h13:1`). Same count as Part 10,
+different members.
+
+`visual_role` is recorded and is not `final_role`. Where
+`visual_heading` is true, text-only `model_role` wins (h02 visual H1
+stays final H2; h16:4 visual H3 stays final H2).
+
+### Predictions scored
+
+1. `[H]` Adapter accepts marked images without retraining. **Confirmed**
+   (smoke + 1 development + 14 spent).
+2. `[H]` Prevents the four genuine-heading vetoes. **Confirmed.**
+3. `[H]` `h06:14` and `h11:4` both leave heading eligibility.
+   **Partial.** `h06:14` yes; `h11:4` no.
+4. `[H]` Development zero genuine-heading vetoes. **Confirmed.**
+5. `[H]` Spent H1 unsafe 0 at ≥84% exact. **Falsified.** Exact holds
+   43/51; unsafe is 2.
+6. `[H]` Holdout 2 sealed. **Confirmed.**
+
+### Stop — Outcome B
+
+The existing role adapter preserves heading semantics on a marked
+page and does not learn the remaining visual furniture distinction
+zero-shot. `h11:4` stays H2; the classification stamp becomes
+eligible again.
+
+Do not train in this spike. Do not crop. Do not prompt-sweep. Do not
+run Holdout 2.
+
+A trained localized visual verifier is earned next. It would not be
+“train on the 14 Holdout-1 mistakes.” Holdout 1 is spent evaluation
+evidence and stays out of training.
+
+That next spike, if run, would build marked-page verifier examples
+only from development documents, with:
+
+- true headings;
+- visually heading-like non-headings;
+- table/group labels;
+- chart labels;
+- banners/furniture where development supplies them;
+- whole-document separation for validation;
+- this same marker representation, frozen;
+- binary eligibility or role-only chosen before training.
+
+Prefer upstream `mlx_vlm.lora` / QLoRA again. Do not invent a
+trainer. Do not decide whether vision layers need training until a
+tiny language-side multimodal overfit/generalization measurement
+says so.
+
+Architecture remains Part 9 Arm B. `--verify-marked-role` is a
+measured switch, off by default. Selective invocation is unchanged.
+
