@@ -3011,3 +3011,121 @@ training.
 Architecture remains Part 9 Arm B. `--eval-verify-marked` is a
 measured switch, off by default. `out/adapter-role` is unchanged.
 
+---
+
+## Part 14 — text-only binary eligibility QLoRA (same 31 rows)
+
+**Date:** 2026-09-11. Same branch. Holdout 1 remains spent and is
+**not** scored in this spike. Holdout 2 remains sealed. No crop. No
+marker change. No extra examples. No extra epochs. No `--train-vision`.
+`out/adapter-role` and `out/adapter-verify-marked` are not modified
+and are not retrained. No production `src/` wiring.
+
+Part 13 Outcome D: the marked-page language-side verifier passed
+development, but its doc-07 predictions were identical with the image
+removed (0 flips). Vision has not earned a place in the architecture.
+This spike asks the remaining cheaper question: can the **same**
+binary contract, on the **same** 31 development rows, be learned
+without images at all?
+
+If yes, prefer the text-only verifier. If no, the image-bearing
+*training* path may have contributed despite the inference ablation.
+This is a model-comparison spike, not a data-expansion spike.
+
+### Frozen architecture (unchanged order)
+
+1. source-type eligibility;
+2. Table/Figure ancestry;
+3. text-only `out/adapter-role`;
+4. R2;
+5. only when the resulting mutation would promote to H1–H6 or change
+   an H* level:
+6. binary eligibility verifier (`out/adapter-verify-text` in this
+   spike; Part 13 `out/adapter-verify-marked` is the comparison
+   reference, not retrained);
+7. deterministic action.
+
+Structural gates remain architecture outside the model. The verifier
+still never chooses H1/H2/H3.
+
+### Frozen verifier contract (Part 13 minus the visual sentence)
+
+Completion: `{"heading":true}` or `{"heading":false}`.
+Target: `heading = expect.role in H1..H6`.
+No confidence, reason, action, or existing tag.
+
+Frozen prompt:
+
+> Decide whether the Element described below is a document section or subsection heading rather than table/chart labeling, a banner, stamp, page furniture, or other non-document-heading content. Return ONLY {“heading”:true} or {“heading”:false}.
+
+Then: Element / Font / Weight / Previous / Next / JSON.
+
+No page, y-band, bounding box, ancestry, source type, existing tag,
+image-derived fields, or few-shots.
+
+### Frozen train population (do not re-filter)
+
+Part 13’s 31 semantic rows, reconstructed from
+`out/gen-sft-verify/train.json` against the recorded IDs. Same IDs,
+labels, texts, fonts, weights, previous/next, documents, class
+balance. The only training-input difference is: remove the image.
+
+| | n |
+|---|---|
+| **verifier train rows** | **31** (18 `heading:true`, 13 `heading:false`) |
+| documents | 02/04/05/06/10/12 |
+| unmatched (not replaced) | 5: `12-h3-apron`, `04-northern`, `04-units`, `04-vehicle-class`, `12-brand` |
+| excluded source_type / ancestry | 7, unchanged |
+
+If reconstruction is not 31 / 18 / 13 with that ID set: STOP as a
+dataset-reproduction failure. Do not train on a different population.
+
+Validation surfaces unchanged: the four mapped `valid-07.json` rows
+(`07-h1`, `07-intro`, `07-chart-title`, `07-cap`); the 17
+`probes.json` rows from docs 01/03/08/11. Unmatched `07-northern` and
+`07-q1` stay unmatched. No text-only replacements.
+
+Part 13 frozen comparison points (not retrained):
+
+* Fresh 07: parse 4/4, vetoes 0, unsafe 0, eligibility 4/4, recall
+  1/1, rejection 3/3. Image ablation: 0 flips.
+* Known challenge: parse 17/17, vetoes 0, unsafe 0, role heading
+  exact 10/11, verifier eligibility 16/17. FP: `08-numeral-3`,
+  already blocked by R2.
+
+### Registered predictions (frozen before plumbing, dataset, or the one run)
+
+1. `[H]` The same 31-row binary eligibility task trains successfully
+   without images.
+2. `[H]` Fresh doc 07 remains parse 4/4, zero true-heading vetoes,
+   zero architecture unsafe, accuracy 4/4.
+3. `[H]` Known development challenge remains zero architecture unsafe
+   with zero verifier-caused heading vetoes and role heading exact
+   ≥9/11.
+4. `[H]` Text-only verifier predictions on doc 07 match the Part-13
+   marked verifier.
+5. `[H]` The simpler verifier is at least as good as the marked
+   verifier on the development gates.
+6. `[H]` No images, crops, vision training, larger model, new rule,
+   or additional data are needed.
+7. `[H]` Holdout 2 remains sealed.
+
+Spent Holdout 1 is not run in this spike even if development is
+perfect. Mixing residuals in would turn an architecture comparison
+into a failure-explanation experiment.
+
+### Stop rule (after Gate 1, and Gate 2 only if Gate 1 passes)
+
+* **A** — text-only matches or beats marked on both gates, no extra
+  vetoes or unsafe promotions, usefulness holds. Prefer text-only.
+  Marked verifier remains experimental evidence, not architecture.
+* **B** — text-only fails fresh 07; marked passed. STOP. Report
+  which rows differ. Do not enable `--train-vision`.
+* **C** — fresh 07 passes, probes regress. STOP. Report
+  disagreements. Do not patch the probe misses.
+* **D** — outputs effectively identical everywhere. Marked-image
+  training path is functionally redundant on all available
+  development evidence.
+
+Do not run Holdout 2.
+
