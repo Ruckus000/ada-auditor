@@ -2741,3 +2741,98 @@ says so.
 Architecture remains Part 9 Arm B. `--verify-marked-role` is a
 measured switch, off by default. Selective invocation is unchanged.
 
+---
+
+## Part 13 — language-side QLoRA marked-page eligibility verifier
+
+**Date:** 2026-09-11. Same branch. Holdout 1 remains spent. Holdout 2
+remains sealed. No crop. No semantic string rules. No Holdout-1
+training rows. `out/adapter-role` is not modified and is not
+retrained. No production `src/` wiring.
+
+Part 12 Outcome B: reusing the text-role adapter on marked pages
+restored the four Part-11 genuine-heading casualties and left two
+unsafe furniture promotions (`h11:4`, `h13:1`). The next earned
+component is a **separate** binary eligibility adapter, not another
+role classifier.
+
+### Frozen architecture (unchanged order)
+
+1. source-type eligibility;
+2. Table/Figure ancestry;
+3. text-only `out/adapter-role`;
+4. R2;
+5. only when the resulting mutation would promote to H1–H6 or change
+   an H* level:
+6. localized eligibility verifier (`out/adapter-verify-marked`);
+7. deterministic action.
+
+The two adapters are not merged and are not stacked. The role adapter
+keeps semantic role and H1/H2/H3 hierarchy. The verifier answers one
+question: is the marked element eligible to act as a document section
+or subsection heading? If `heading: true`, preserve text-role
+`model_role`. If `heading: false`, block the heading mutation. The
+verifier never chooses H1/H2/H3.
+
+### Frozen verifier contract (before training)
+
+Completion: `{"heading":true}` or `{"heading":false}`.
+Target: `heading = expect.role in H1..H6`.
+No confidence, reason, action, or existing tag in the prompt.
+
+Frozen prompt:
+
+> You are shown a PDF page. The outlined rectangle marks the exact Element described below. Decide whether that marked element is a document section or subsection heading rather than table/chart labeling, a banner, stamp, page furniture, or other non-document-heading content. Return ONLY {“heading”:true} or {“heading”:false}.
+
+Then the ordinary metadata: Element / Font / Weight / Previous /
+Next / JSON.
+
+No few-shots. No Holdout-1 strings or locators. No special treatment
+for COMMERCIAL IN CONFIDENCE, Berth Occupancy by Month, Depot Staff
+Vehicles, all-caps, chart titles, or banner wording.
+
+Split (existing, not invented): train `train.json` docs 02/04/05/06/10/12;
+fresh validation `valid-07.json`; known challenge `probes.json` docs
+01/03/08/11. Training images are marked full-page Preview PNGs from
+real tagged PDFs. Holdout 1 is absent from train and validation
+construction. Holdout 2 is sealed.
+
+### Upstream training path (inspected before SFT)
+
+Installed `mlx_vlm==0.7.0`. Not patched. No custom trainer.
+
+- `mlx_vlm/lora.py` `transform_dataset_to_messages`: a dataset that
+  already has `messages` is returned as-is. Image columns are not
+  copied into message content in that branch.
+- `VisionDataset.process` reads images from the dataset item
+  (`images` or `image`), then `apply_chat_template(..., num_images=len(images))`
+  and `prepare_inputs(..., images=...)`.
+- `process_image` accepts a local path string via `load_image`.
+- `--train-vision` is a store-true flag, default off. LoRA is applied
+  only to `model.language_model`. Image tensors still flow through
+  `prepare_inputs` when an `image` column is present.
+
+First rung is therefore: vision encoder frozen; language-side LoRA;
+image-bearing rows via `messages` plus an `image` path column. SFT
+lives in a folder containing `train.json` (same `load_dataset`
+shape as Part 4/6). `--train-on-completions` exists.
+
+### Registered predictions (frozen before plumbing, dataset, or the one run)
+
+1. `[H]` Stock MLX-VLM 0.7.0 can train a language-side QLoRA on
+   image-bearing marked-page examples without training the vision
+   encoder or patching source.
+2. `[H]` The marked verifier generalizes to doc 07 with zero
+   true-heading vetoes and zero unsafe promotions.
+3. `[H]` It preserves the known development challenge’s heading
+   usefulness while rejecting heading-like non-headings.
+4. `[H]` The marked image contributes information beyond the same
+   verifier’s text-only inference on at least one difficult
+   validation example.
+5. `[H]` On spent H1, the trained verifier rejects both the
+   chart-title and classification-stamp residuals while preserving
+   the four Part-11 genuine headings.
+6. `[H]` No crop, vision-layer fine-tuning, larger model, semantic
+   regex, or Holdout-1 training example is needed.
+7. `[H]` Holdout 2 remains sealed.
+
