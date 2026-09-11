@@ -1946,3 +1946,137 @@ Report Qwen calls avoided. Bonus, not the win.
   later layout spike. Do not stack heuristics.
 - **Usefulness collapses:** STOP.
 
+### Measurement (2026-09-11)
+
+ML freeze unchanged. Holdout 1 predictions not regenerated
+(`4ec2198a…` still matches `out/h1/predictions.frozen.jsonl`). Cards.java
+now emits `ancestors` via `el.getParent()`. Rescore joins that dump onto
+the frozen rows and reapplies R2 + derived action. Holdout 2 untouched.
+
+True-heading source types, confirming the registered domain: matched GT
+headings on spent H1 are only `P` / `H1`–`H4`; every matched heading's
+ancestor tuple is `('Document',)`. Hand-card true headings in
+`train.json` / `valid-07.json` / `probes.json` are `P` / `none` /
+`H1`–`H4`. Tagged development 01/03/07/08/11 heading probes are Document
+`H*`. **None** of Figure, Table, L, LI, Caption, Formula. **None** inside
+a Table or Figure.
+
+#### Arm A — source type (spent H1 diagnostic)
+
+Out-of-flow types preserve their existing non-heading role; Qwen is not
+called. `P` / `none` / `H*` still go to the frozen hybrid.
+
+`[V]` parse 444/444. Final unsafe **12** (was 17). Heading exact **43/51**.
+Detection 47/51. Demotions **0**. True-heading collisions **0**. Qwen
+calls avoided **21** (11 Figure, 6 Caption, 4 Table).
+
+The five Figure-letter leaks (`h05:0,7,8,11`, `h14:4`) become `final_role
+= Figure`, `derived_action = keep`. Model still said H1; the architecture
+does not apply it.
+
+Does not pass the hard safety gate. Continue.
+
+#### Arm B — Table/Figure ancestry (spent H1 diagnostic)
+
+A+B. Text whose parent walk contains `Table` or `Figure` is not a
+document heading. Existing `H*` under those containers demote to `P`;
+other types keep their existing non-heading role.
+
+`[V]` parse 444/444. Final unsafe **5**. Heading exact **43/51**. Detection
+47/51. Demotions **0**. True-heading collisions **0**. Qwen calls avoided
+**320 / 444** (21 source-type + 299 ancestry, almost all table `P` cells).
+
+The seven table-header promotions (`h07:3,6–9`, `h08:3,120`) are gone.
+`h06:14` "Depot Staff Vehicles" is Document-level `P` — ODL left the
+unruled grid outside any Table, so ancestry cannot see it. Both h11 chart
+labels are Document-level with **no Figure** (SVG; the same hole
+Headings.java R5 recorded for doc 07).
+
+Does not pass the hard safety gate. Continue to Arm C **test only**.
+
+#### Arm C — existing Headings.java rules (tested, not adopted)
+
+Residuals after A+B, with the existing rule that would describe each:
+
+| locator | class | existing rule? | result |
+|---|---|---|---|
+| `h06:14` Depot Staff Vehicles | unruled table label, Document `P` | R5 geometric table box | not measured as a gate: Cards does not emit boxes, and the unruled grid is not a Table child. R6 next-short would catch it **and** would demote three true headings (below). |
+| `h09:8` spanning banner | Document `P`, 110 dense chars | R1 length (>80 dense) | would catch this one. Zero GT-heading collisions on spent H1. Development heading dense max is 35 (`train.json`). Does not reach the other four residuals. |
+| `h11:4` Berth Occupancy by Month | chart title, existing `H1`, no Figure | R6 short following P | next is `Western quay, 2026` — the literal R6 example. **Unsafe as a candidate gate:** R6 would also fire on true headings `h01:4` Standard rates (next `£412`), `h06:13` Horizontal rules only, `h11:0` Utilisation Dashboard. |
+| `h11:7` Month of year | chart axis, Document `P` | none | next is a 55-char sentence. R1 no, R6 no, no Figure. |
+| `h13:1` COMMERCIAL IN CONFIDENCE | classification stamp, already `H2` | none | R3 is page markers (`page\d\|\d+of\d+`) only. No Headings rule names stamps. |
+
+R6 is an existing rule that describes chart titles, and it **collides
+with true headings** when applied over this candidate universe. STOP that
+rule. Do not special-case the survivors.
+
+R1 would take the banner with no heading collision and still leave four
+unsafe promotions. It is not a passing rung. Not adopted. No all-caps
+rule, no banner regex, no font-size gate.
+
+#### Development (tuning/regression)
+
+Hand cards (`probes.json`, `valid-07.json`, `train.json`): no out-of-flow
+true headings and no ancestors on the cards, so Arm A/B is a no-op.
+Previously passing logs still stand: probes heading exact **10/11**, 07
+**6/6**, unsafe 0.
+
+Real-PDF bridge of 01/03/07/08/11 (`out/bridge-dev-scope/`): 76 cards.
+Arm A would skip 7 (L/LI/Figure/Caption/Table). Arm B would skip 28
+(those plus 21 table descendants on doc 03). All 11 matched heading
+probes stay Document `H*` — **zero skips of known true headings**. The
+two table-cell traps on doc 03 (`03-review-period`, `03-q1`) would now
+keep `P` without asking Qwen. Doc 07 still has no Figure around its
+chart title; that is the h11 hole on development, not a new one.
+
+Usefulness does not collapse. Bridge still emits a decision for every
+evaluable candidate (444/444 parsed on the rescore; skipped rows are
+keeps, not abstentions).
+
+#### Predictions
+
+1. `[H]` Figure-letter failures disappear by source type. **Confirmed** (5/5).
+2. `[H]` Table/Figure ancestry eliminates most table/chart-furniture unsafe
+   promotions. **Partial.** 7/8 table-header promotions gone. Chart
+   furniture 0/2 (no Figure). Unruled table label 0/1 (no Table parent).
+3. `[H]` Structural gates collide with zero known true headings. **Confirmed**
+   (Arm A and Arm B, spent H1 + development heading probes).
+4. `[H]` Heading usefulness remains materially unchanged. **Confirmed.**
+   Spent H1 exact 43/51, detection 47/51, demotions 0. Development
+   probes/07 unchanged by construction.
+5. `[H]` At most one residual failure class remains. **Falsified.** Four
+   remain after A+B: unruled table label, spanning banner, chart
+   furniture without Figure, classification stamp.
+6. `[H]` No retraining, new model, vision, or bespoke rule engine.
+   **Confirmed.**
+
+#### Stop
+
+A+B is not a passing rung (final unsafe 5 on spent H1). Arm C has no
+single existing Headings rule that clears the residual without hitting a
+true heading. This is the registered fail path:
+
+> Structural gates clear most cases but banner/stamp remain. STOP after
+> testing existing rules. Do not stack new heuristics.
+
+Holdout 2 stays sealed. It is not earned.
+
+The unsafe Holdout-1 failures were **primarily** candidate-scope /
+structure failures (12 of 17). The smallest revised architecture that is
+safe on known true headings is:
+
+**structural heading eligibility (source type + Table/Figure ancestry) +
+role-only QLoRA + R2 + deterministic action.**
+
+That architecture is not yet Holdout-2-ready. The residual four classes
+have no Table/Figure parent to read, and no existing Headings.java rule
+that can be applied as a candidate gate without collateral. They earn a
+dedicated layout/context experiment. Do not retrain. Do not inspect
+Holdout 2.
+
+FINDING NOT PURSUED — candidate segmentation/merge (h02's four unmatched
+headings). Unchanged.
+
+Default `--arm` is now `B` (A was measured first and did not pass).
+`--arm C` is ancestry-only; Headings R1/R6 were tested and not wired.
+

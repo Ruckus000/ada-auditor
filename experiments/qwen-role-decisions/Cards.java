@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkedContentReference;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDMarkedContent;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -23,6 +24,8 @@ import org.apache.pdfbox.text.TextPosition;
  * Experiment-only PDF → classifier-card dump.
  *
  * Candidate universe is Inspect.order BLOCK types via StructText.find.
+ * Each block also carries `ancestors`: the role-mapped parent chain from
+ * `el.getParent()`, the same walk Tables.java / Figures.java already use.
  * Text and font come from the same PDFMarkedContentExtractor walk StructText
  * already makes; this file keeps the first glyph's size/weight (StructText
  * discards them) and inserts a space when the x/y gap between glyphs exceeds
@@ -104,6 +107,13 @@ public final class Cards {
                     json.append(", \"font_pt\": ").append(face.fontPt);
                     json.append(", \"weight\": ").append(q(face.weight));
                 }
+                json.append(", \"ancestors\": [");
+                List<String> ancestors = ancestorTypes(el, roleMap);
+                for (int a = 0; a < ancestors.size(); a++) {
+                    if (a > 0) json.append(", ");
+                    json.append(q(ancestors.get(a)));
+                }
+                json.append("]");
                 json.append("}");
                 json.append(i < found.size() - 1 ? ",\n" : "\n");
             }
@@ -201,6 +211,29 @@ public final class Cards {
             prev = g;
         }
         return sb.toString().replaceAll("\\s+", " ").trim();
+    }
+
+    /**
+     * Same parent walk Tables.java / Figures.java already use (`el.getParent()`).
+     * Document / Part / Sect stay in the list; the gate keys on Table and Figure.
+     */
+    private static List<String> ancestorTypes(PDStructureElement el, Map<String, Object> roleMap) {
+        List<String> out = new ArrayList<>();
+        PDStructureNode n = el.getParent();
+        while (n instanceof PDStructureElement p) {
+            out.add(standard(p, roleMap));
+            n = p.getParent();
+        }
+        return out;
+    }
+
+    /** Role-mapped type, same reading Inspect / Headings use. */
+    private static String standard(PDStructureElement el, Map<String, Object> roleMap) {
+        String type = el.getStructureType();
+        if (roleMap != null && type != null && roleMap.get(type) != null) {
+            return roleMap.get(type).toString();
+        }
+        return type == null ? "" : type;
     }
 
     private static String q(String s) {

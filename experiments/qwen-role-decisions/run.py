@@ -76,6 +76,51 @@ def apply_r2_veto(pred: dict | None, case: dict) -> dict | None:
     return out
 
 
+OUT_OF_FLOW = frozenset({"Figure", "Table", "L", "LI", "Caption", "Formula"})
+CONTAINERS = frozenset({"Table", "Figure"})
+
+
+def source_eligible(tag: str) -> bool:
+    """Arm A: only document-flow types may be promoted to H1–H6."""
+    return (tag or "") not in OUT_OF_FLOW
+
+
+def ancestry_eligible(ancestors: list | None) -> bool:
+    """Arm B: text inside a Table or Figure is not a document heading."""
+    return not any(a in CONTAINERS for a in (ancestors or []))
+
+
+def apply_structural_scope(pred: dict | None, case: dict, arm: str = "A") -> dict | None:
+    """Scope first. existing_tag is not sent to Qwen; it may veto promotion."""
+    tag = case.get("existing_tag") or ""
+    reason = None
+    if not source_eligible(tag):
+        reason = "source_type"
+    elif arm in {"B", "C"} and not ancestry_eligible(case.get("ancestors")):
+        reason = "ancestry"
+    if reason is None:
+        if pred is None:
+            return None
+        out = dict(pred)
+        out["qwen_called"] = True
+        out["scope"] = None
+        return out
+    role = "P" if reason == "ancestry" and tag in HEADING else tag
+    model_role = None
+    if pred:
+        model_role = pred.get("model_role")
+        if model_role is None:
+            model_role = pred.get("role")
+    return {
+        "role": role,
+        "model_role": model_role,
+        "qwen_called": False,
+        "scope": reason,
+        "r2_veto": False,
+        "action": "keep" if role == tag else "retag",
+    }
+
+
 def collapse_glyph_spaces(text: str) -> str:
     """PDFMarkedContentExtractor often yields one glyph per token. Headings.java R1."""
     tokens = text.split()
@@ -112,6 +157,7 @@ def blocks_to_cards(blocks: list[dict]) -> tuple[list[dict], list[dict]]:
                 "prev": prev_t,
                 "next": next_t,
                 "existing_tag": block["existing_tag"],
+                "ancestors": list(block.get("ancestors") or []),
             }
         )
     return cards, failed
@@ -174,13 +220,27 @@ def card_bundle(cards: list[dict], model: str = "mlx-community/Qwen3.5-4B-MLX-4b
     return {"model": model, "cases": cards}
 
 
-def decide_card(pred: dict | None, case: dict, role_only: bool, r2_veto: bool) -> dict | None:
-    if role_only and pred is not None and "role" in pred:
-        pred = dict(pred)
-        pred["action"] = "keep" if pred["role"] == case["existing_tag"] else "retag"
+def decide_card(
+    pred: dict | None,
+    case: dict,
+    role_only: bool,
+    r2_veto: bool,
+    arm: str = "A",
+) -> dict | None:
+    scoped = apply_structural_scope(pred, case, arm=arm)
+    if scoped is None:
+        return None
+    if not scoped.get("qwen_called"):
+        return scoped
+    if role_only and "role" in scoped:
+        scoped = dict(scoped)
+        scoped["action"] = "keep" if scoped["role"] == case["existing_tag"] else "retag"
     if r2_veto:
-        pred = apply_r2_veto(pred, case)
-    return pred
+        scoped = apply_r2_veto(scoped, case)
+        if scoped is not None:
+            scoped["qwen_called"] = True
+            scoped["scope"] = None
+    return scoped
 
 
 def prediction_record(case: dict, pred: dict | None, raw: str) -> dict:
@@ -198,8 +258,11 @@ def prediction_record(case: dict, pred: dict | None, raw: str) -> dict:
         "prev": case.get("prev"),
         "next": case.get("next"),
         "existing_tag": case.get("existing_tag"),
+        "ancestors": list(case.get("ancestors") or []),
         "model_role": model_role,
         "r2_match": r2_match,
+        "scope": pred.get("scope") if pred else None,
+        "qwen_called": bool(pred.get("qwen_called")) if pred else False,
         "final_role": final_role,
         "derived_action": action,
         "parsed": pred is not None,
@@ -362,8 +425,9 @@ def compile_cards() -> None:
         raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
 
 
-def dump_pdf(pdf: Path) -> dict:
-    compile_cards()
+def dump_pdf(pdf: Path, compile: bool = True) -> dict:
+    if compile:
+        compile_cards()
     java = JAVA_HOME / "bin" / "java"
     cmd = [
         str(java),
@@ -380,9 +444,10 @@ def dump_pdf(pdf: Path) -> dict:
 
 
 def dump_dir(folder: Path) -> list[dict]:
+    compile_cards()
     dumps = []
     for pdf in sorted(folder.glob("*.pdf")):
-        dumps.append(dump_pdf(pdf))
+        dumps.append(dump_pdf(pdf, compile=False))
     return dumps
 
 
@@ -514,6 +579,7 @@ def run_cases(
     adapter_path: str | None = None,
     role_only: bool = False,
     r2_veto: bool = False,
+    arm: str = "A",
 ) -> list[dict]:
     bundle = json.loads(path.read_text())
     if offline:
@@ -525,37 +591,48 @@ def run_cases(
     else:
         stem = bundle["prompt_stem"]
     rows = []
+    skipped = 0
     for case in bundle["cases"]:
         image = None
         if image_dir is not None:
             candidate = image_dir / f'{case["id"].split("-", 1)[0]}.png'
             if candidate.exists():
                 image = str(candidate)
-        raw = generate(
-            bundle["model"],
-            card_prompt(
-                stem,
-                case,
-                with_page_band=with_page_band,
-                hide_existing_tag=role_only,
-            ),
-            image=image,
-            thinking_mode=thinking_mode,
-            thinking_budget=thinking_budget,
-            adapter_path=adapter_path,
-        )
-        pred = decide_card(parse_json(raw), case, role_only=role_only, r2_veto=r2_veto)
+        pre = apply_structural_scope(None, case, arm=arm)
+        if pre is not None and not pre.get("qwen_called"):
+            pred = pre
+            raw = ""
+            skipped += 1
+        else:
+            raw = generate(
+                bundle["model"],
+                card_prompt(
+                    stem,
+                    case,
+                    with_page_band=with_page_band,
+                    hide_existing_tag=role_only,
+                ),
+                image=image,
+                thinking_mode=thinking_mode,
+                thinking_budget=thinking_budget,
+                adapter_path=adapter_path,
+            )
+            pred = decide_card(
+                parse_json(raw), case, role_only=role_only, r2_veto=r2_veto, arm=arm
+            )
         row = score(pred, case)
         row["raw"] = raw[-1500:]
-        if r2_veto and pred is not None:
+        if pred is not None:
             row["model_role"] = pred.get("model_role")
             row["r2_veto"] = pred.get("r2_veto")
+            row["scope"] = pred.get("scope")
+            row["qwen_called"] = pred.get("qwen_called")
         rows.append(row)
         shown = {k: v for k, v in row.items() if k != "raw"}
         if not row["parsed"]:
             shown["raw"] = row["raw"]
         print(json.dumps(shown, sort_keys=True))
-    print(json.dumps({"gates": gates(rows)}, sort_keys=True))
+    print(json.dumps({"gates": gates(rows), "qwen_skipped": skipped}, sort_keys=True))
     return rows
 
 
@@ -566,27 +643,43 @@ def run_predict(
     role_only: bool = True,
     r2_veto: bool = True,
     thinking_mode: str = "disabled",
+    arm: str = "A",
 ) -> list[dict]:
     if offline:
         os.environ["HF_HUB_OFFLINE"] = "1"
     if not role_only:
         raise SystemExit("--predict requires --role-only")
     rows = []
+    skipped = 0
     for case in cards:
-        raw = generate(
-            MODEL,
-            card_prompt(ROLE_ONLY_STEM, case, hide_existing_tag=True),
-            thinking_mode=thinking_mode,
-            adapter_path=adapter_path,
-        )
-        pred = decide_card(parse_json(raw), case, role_only=True, r2_veto=r2_veto)
+        pre = apply_structural_scope(None, case, arm=arm)
+        if pre is not None and not pre.get("qwen_called"):
+            pred = pre
+            raw = ""
+            skipped += 1
+        else:
+            raw = generate(
+                MODEL,
+                card_prompt(ROLE_ONLY_STEM, case, hide_existing_tag=True),
+                thinking_mode=thinking_mode,
+                adapter_path=adapter_path,
+            )
+            pred = decide_card(parse_json(raw), case, role_only=True, r2_veto=r2_veto, arm=arm)
         row = prediction_record(case, pred, raw)
         rows.append(row)
         shown = {k: v for k, v in row.items() if k != "raw"}
         if not row["parsed"]:
             shown["raw"] = row["raw"]
         print(json.dumps(shown, sort_keys=True))
-    print(json.dumps({"evaluable": len(rows), "parsed": sum(1 for r in rows if r["parsed"])}))
+    print(
+        json.dumps(
+            {
+                "evaluable": len(rows),
+                "parsed": sum(1 for r in rows if r["parsed"]),
+                "qwen_skipped": skipped,
+            }
+        )
+    )
     return rows
 
 
@@ -719,6 +812,7 @@ def self_check() -> None:
                 "text": "N o r t h w i n d",
                 "font_pt": 8,
                 "weight": "regular",
+                "ancestors": ["Document"],
             },
             {
                 "locator": "01:1",
@@ -737,6 +831,7 @@ def self_check() -> None:
     assert built[0]["next"] == "Quarterly"
     assert built[0]["prev"] == "none"
     assert built[1]["next"] == "none"
+    assert built[0]["ancestors"] == ["Document"]
     assert any(f["locator"] == "01:2" and f["reason"] == "empty_text" for f in failed)
     assert any(f["locator"] == "01:3" and f["reason"] == "missing_font" for f in failed)
     assert text_norm("Q u a r t e r l y O p e r a t i o n s") == text_norm(
@@ -817,6 +912,84 @@ def self_check() -> None:
     assert unsafe_hold["unsafe"] == 1
     assert unsafe_hold["pass"] is False
     assert unsafe_hold["unmatched_gt_headings"][0]["text"] == "Real Title"
+    assert source_eligible("P") is True
+    assert source_eligible("none") is True
+    assert source_eligible("H4") is True
+    assert source_eligible("Figure") is False
+    assert source_eligible("Table") is False
+    assert source_eligible("LI") is False
+    assert source_eligible("Caption") is False
+    assert ancestry_eligible([]) is True
+    assert ancestry_eligible(["Document"]) is True
+    assert ancestry_eligible(["TD", "TR", "Table", "Document"]) is False
+    assert ancestry_eligible(["Figure", "Document"]) is False
+    fig = apply_structural_scope(
+        {"role": "H1"},
+        {"text": "R", "existing_tag": "Figure", "ancestors": ["Document"]},
+        arm="A",
+    )
+    assert fig["model_role"] == "H1"
+    assert fig["qwen_called"] is False
+    assert fig["scope"] == "source_type"
+    assert fig["role"] == "Figure"
+    assert fig["action"] == "keep"
+    skipped = apply_structural_scope(
+        None,
+        {"text": "R", "existing_tag": "Figure", "ancestors": ["Document"]},
+        arm="A",
+    )
+    assert skipped["model_role"] is None
+    assert skipped["role"] == "Figure"
+    table_p = apply_structural_scope(
+        {"role": "H2"},
+        {"text": "Registration", "existing_tag": "P", "ancestors": ["TD", "TR", "Table"]},
+        arm="B",
+    )
+    assert table_p["qwen_called"] is False
+    assert table_p["scope"] == "ancestry"
+    assert table_p["role"] == "P"
+    still_a = apply_structural_scope(
+        {"role": "H2"},
+        {"text": "Registration", "existing_tag": "P", "ancestors": ["TD", "TR", "Table"]},
+        arm="A",
+    )
+    assert still_a["qwen_called"] is True
+    assert still_a["role"] == "H2"
+    flow = apply_structural_scope(
+        {"role": "H1"},
+        {"text": "Terms of Access", "existing_tag": "P", "ancestors": ["Document"]},
+        arm="B",
+    )
+    assert flow["qwen_called"] is True
+    assert flow["scope"] is None
+    assert flow["role"] == "H1"
+    heading_in_table = apply_structural_scope(
+        {"role": "H2"},
+        {"text": "Terms of Access", "existing_tag": "H2", "ancestors": ["Table", "Document"]},
+        arm="B",
+    )
+    assert heading_in_table["scope"] == "ancestry"
+    assert heading_in_table["role"] == "P"
+    assert heading_in_table["action"] == "retag"
+    rec, skipped_n = rescore_frozen(
+        [
+            {
+                "locator": "h05:0",
+                "text": "R",
+                "existing_tag": "Figure",
+                "model_role": "H1",
+                "final_role": "H1",
+                "derived_action": "retag",
+            }
+        ],
+        {"h05:0": ["Document"]},
+        "A",
+    )
+    assert skipped_n == 1
+    assert rec[0]["final_role"] == "Figure"
+    assert rec[0]["model_role"] == "H1"
+    assert rec[0]["derived_action"] == "keep"
+    assert rec[0]["scope"] == "source_type"
 
 
 def load_block_dumps() -> list[dict] | None:
@@ -835,6 +1008,40 @@ def load_block_dumps() -> list[dict] | None:
             return [payload]
         return payload.get("pdfs") or []
     return None
+
+
+def ancestors_by_locator(dumps: list[dict]) -> dict[str, list]:
+    out: dict[str, list] = {}
+    for dump in dumps:
+        for block in dump.get("blocks") or []:
+            loc = block.get("locator")
+            if loc:
+                out[str(loc)] = list(block.get("ancestors") or [])
+    return out
+
+
+def rescore_frozen(preds: list[dict], ancestors: dict[str, list], arm: str) -> tuple[list[dict], int]:
+    rows = []
+    skipped = 0
+    for pred in preds:
+        loc = str(pred.get("locator") or "")
+        case = {
+            "locator": loc,
+            "id": pred.get("id") or loc,
+            "text": pred.get("text"),
+            "font_pt": pred.get("font_pt"),
+            "weight": pred.get("weight"),
+            "prev": pred.get("prev"),
+            "next": pred.get("next"),
+            "existing_tag": pred.get("existing_tag"),
+            "ancestors": ancestors.get(loc, pred.get("ancestors") or []),
+        }
+        incoming = {"role": pred["model_role"]} if pred.get("model_role") else None
+        decided = decide_card(incoming, case, role_only=True, r2_veto=True, arm=arm)
+        if decided is not None and not decided.get("qwen_called"):
+            skipped += 1
+        rows.append(prediction_record(case, decided, pred.get("raw") or ""))
+    return rows, skipped
 
 
 if __name__ == "__main__":
@@ -859,6 +1066,24 @@ if __name__ == "__main__":
             stem = payload.get("document") or path.name.replace(".ground-truth.json", "")
             gt_by_stem[stem] = payload
         print(json.dumps(score_holdout(preds, gt_by_stem), indent=2, default=str))
+        raise SystemExit(0)
+
+    arm = flag_value("--arm") or "B"
+    rescore_path = flag_value("--rescore")
+    if rescore_path:
+        dumps = load_block_dumps() or []
+        anc = ancestors_by_locator(dumps)
+        preds = [
+            json.loads(line)
+            for line in Path(rescore_path).read_text().splitlines()
+            if line.strip()
+        ]
+        rows, skipped = rescore_frozen(preds, anc, arm)
+        out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "bridge"))
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_file = out_dir / f"rescored-arm{arm}.jsonl"
+        out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        print(json.dumps({"arm": arm, "n": len(rows), "qwen_skipped": skipped, "out": str(out_file)}))
         raise SystemExit(0)
 
     dumps = load_block_dumps()
@@ -895,6 +1120,7 @@ if __name__ == "__main__":
                     r2_veto="--r2-veto" in sys.argv,
                     thinking_mode=flag_value("--thinking-mode") or "disabled",
                     thinking_budget=flag_value("--thinking-budget"),
+                    arm=arm,
                 )
             raise SystemExit(0)
         (out_dir / "cards.json").write_text(json.dumps(card_bundle(cards), indent=2) + "\n")
@@ -916,6 +1142,7 @@ if __name__ == "__main__":
                 role_only="--role-only" in sys.argv,
                 r2_veto="--r2-veto" in sys.argv,
                 thinking_mode=flag_value("--thinking-mode") or "disabled",
+                arm=arm,
             )
             (out_dir / "predictions.jsonl").write_text(
                 "".join(json.dumps(r) + "\n" for r in rows)
@@ -935,4 +1162,5 @@ if __name__ == "__main__":
         adapter_path=flag_value("--adapter-path"),
         role_only="--role-only" in sys.argv,
         r2_veto="--r2-veto" in sys.argv,
+        arm=arm,
     )
