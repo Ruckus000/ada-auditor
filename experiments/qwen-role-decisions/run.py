@@ -16,6 +16,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+import base64
 
 HERE = Path(__file__).resolve().parent
 PROBES_PATH = HERE / "probes.json"
@@ -116,6 +117,27 @@ def apply_structural_scope(pred: dict | None, case: dict, arm: str = "A") -> dic
         "model_role": model_role,
         "qwen_called": False,
         "scope": reason,
+        "r5_table_box": bool(case.get("in_table_box")),
+        "r2_veto": False,
+        "action": "keep" if role == tag else "retag",
+    }
+
+
+def apply_r5_scope(pred: dict | None, case: dict) -> dict:
+    """Headings.java R5 as a promotion veto. existing_tag still withheld from Qwen."""
+    tag = case.get("existing_tag") or ""
+    role = "P" if tag in HEADING else tag
+    model_role = None
+    if pred:
+        model_role = pred.get("model_role")
+        if model_role is None:
+            model_role = pred.get("role")
+    return {
+        "role": role,
+        "model_role": model_role,
+        "qwen_called": False,
+        "scope": pred.get("scope") if pred else None,
+        "r5_table_box": True,
         "r2_veto": False,
         "action": "keep" if role == tag else "retag",
     }
@@ -158,6 +180,8 @@ def blocks_to_cards(blocks: list[dict]) -> tuple[list[dict], list[dict]]:
                 "next": next_t,
                 "existing_tag": block["existing_tag"],
                 "ancestors": list(block.get("ancestors") or []),
+                "in_table_box": bool(block.get("in_table_box")),
+                "page": block.get("page"),
             }
         )
     return cards, failed
@@ -226,12 +250,17 @@ def decide_card(
     role_only: bool,
     r2_veto: bool,
     arm: str = "A",
+    r5_veto: bool = False,
 ) -> dict | None:
     scoped = apply_structural_scope(pred, case, arm=arm)
+    if scoped is not None and not scoped.get("qwen_called"):
+        out = dict(scoped)
+        out["r5_table_box"] = bool(case.get("in_table_box"))
+        return out
+    if r5_veto and case.get("in_table_box"):
+        return apply_r5_scope(pred, case)
     if scoped is None:
         return None
-    if not scoped.get("qwen_called"):
-        return scoped
     if role_only and "role" in scoped:
         scoped = dict(scoped)
         scoped["action"] = "keep" if scoped["role"] == case["existing_tag"] else "retag"
@@ -240,6 +269,10 @@ def decide_card(
         if scoped is not None:
             scoped["qwen_called"] = True
             scoped["scope"] = None
+            scoped["r5_table_box"] = bool(case.get("in_table_box"))
+    elif scoped is not None:
+        scoped = dict(scoped)
+        scoped["r5_table_box"] = bool(case.get("in_table_box"))
     return scoped
 
 
@@ -263,6 +296,9 @@ def prediction_record(case: dict, pred: dict | None, raw: str) -> dict:
         "r2_match": r2_match,
         "scope": pred.get("scope") if pred else None,
         "qwen_called": bool(pred.get("qwen_called")) if pred else False,
+        "r5_table_box": bool((pred or {}).get("r5_table_box", case.get("in_table_box"))),
+        "page_verify": None if pred is None else pred.get("page_verify"),
+        "page_verify_parsed": bool(pred.get("page_verify_parsed")) if pred else False,
         "final_role": final_role,
         "derived_action": action,
         "parsed": pred is not None,
@@ -559,6 +595,105 @@ def generate(
     return proc.stdout
 
 
+HEADING_VERIFY_STEM = (
+    "Look at the page image. The specified text appears on this page. "
+    "Is that text a document section or subsection heading, rather than "
+    "page furniture, chart or table labeling, a banner, stamp, watermark, "
+    "or other non-document-heading content? "
+    "Return ONLY JSON with key heading whose value is true or false. "
+    "Do not assign H1, H2, or H3."
+)
+PREVIEW_JAVA = REPO / "src" / "integrations" / "documents" / "java" / "Preview.java"
+FIGURE_ORDER_JAVA = REPO / "src" / "integrations" / "documents" / "java" / "FigureOrder.java"
+
+
+def heading_verify_prompt(text: str, page_1based: int | None) -> str:
+    bits = [HEADING_VERIFY_STEM, f"Text: {text!r}"]
+    if page_1based is not None:
+        bits.append(f"Page: {page_1based}")
+    bits.append("JSON:")
+    return "\n".join(bits)
+
+
+def parse_heading_flag(text: str) -> bool | None:
+    stripped = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
+    match = re.search(r"\{.*\}", stripped, flags=re.S)
+    if not match:
+        return None
+    try:
+        data = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict) or "heading" not in data:
+        return None
+    value = data["heading"]
+    if value is True or value is False:
+        return value
+    return None
+
+
+def compile_preview() -> None:
+    CARDS_CLASSES.mkdir(parents=True, exist_ok=True)
+    javac = JAVA_HOME / "bin" / "javac"
+    cmd = [
+        str(javac),
+        "-cp",
+        str(PDFBOX),
+        "-d",
+        str(CARDS_CLASSES),
+        str(FIGURE_ORDER_JAVA),
+        str(PREVIEW_JAVA),
+    ]
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
+
+
+def render_page_png(pdf: Path, page_1based: int, dest: Path) -> Path:
+    compile_preview()
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    java = JAVA_HOME / "bin" / "java"
+    cmd = [
+        str(java),
+        "-Djava.awt.headless=true",
+        "-cp",
+        f"{PDFBOX}:{CARDS_CLASSES}",
+        "Preview",
+        str(pdf),
+        str(page_1based),
+    ]
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
+    payload = json.loads(proc.stdout)
+    dest.write_bytes(base64.b64decode(payload["png"]))
+    return dest
+
+
+def needs_page_verify(pred: dict | None, case: dict) -> bool:
+    if not pred or not pred.get("qwen_called"):
+        return False
+    if pred.get("r2_veto"):
+        return False
+    role = pred.get("role")
+    if role not in HEADING:
+        return False
+    exist = case.get("existing_tag") or ""
+    return exist not in HEADING or exist != role
+
+
+def apply_page_verify(pred: dict, case: dict, heading: bool | None) -> dict:
+    out = dict(pred)
+    out["page_verify"] = heading
+    out["page_verify_parsed"] = heading is not None
+    if heading is True:
+        return out
+    tag = case.get("existing_tag") or ""
+    out["role"] = tag
+    out["action"] = "keep"
+    return out
+
+
 def flag_value(flag: str) -> str | None:
     if flag not in sys.argv:
         return None
@@ -580,6 +715,7 @@ def run_cases(
     role_only: bool = False,
     r2_veto: bool = False,
     arm: str = "A",
+    r5_veto: bool = False,
 ) -> list[dict]:
     bundle = json.loads(path.read_text())
     if offline:
@@ -601,6 +737,11 @@ def run_cases(
         pre = apply_structural_scope(None, case, arm=arm)
         if pre is not None and not pre.get("qwen_called"):
             pred = pre
+            pred["r5_table_box"] = bool(case.get("in_table_box"))
+            raw = ""
+            skipped += 1
+        elif r5_veto and case.get("in_table_box"):
+            pred = apply_r5_scope(None, case)
             raw = ""
             skipped += 1
         else:
@@ -618,7 +759,7 @@ def run_cases(
                 adapter_path=adapter_path,
             )
             pred = decide_card(
-                parse_json(raw), case, role_only=role_only, r2_veto=r2_veto, arm=arm
+                parse_json(raw), case, role_only=role_only, r2_veto=r2_veto, arm=arm, r5_veto=r5_veto
             )
         row = score(pred, case)
         row["raw"] = raw[-1500:]
@@ -644,6 +785,7 @@ def run_predict(
     r2_veto: bool = True,
     thinking_mode: str = "disabled",
     arm: str = "A",
+    r5_veto: bool = False,
 ) -> list[dict]:
     if offline:
         os.environ["HF_HUB_OFFLINE"] = "1"
@@ -655,6 +797,11 @@ def run_predict(
         pre = apply_structural_scope(None, case, arm=arm)
         if pre is not None and not pre.get("qwen_called"):
             pred = pre
+            pred["r5_table_box"] = bool(case.get("in_table_box"))
+            raw = ""
+            skipped += 1
+        elif r5_veto and case.get("in_table_box"):
+            pred = apply_r5_scope(None, case)
             raw = ""
             skipped += 1
         else:
@@ -664,7 +811,7 @@ def run_predict(
                 thinking_mode=thinking_mode,
                 adapter_path=adapter_path,
             )
-            pred = decide_card(parse_json(raw), case, role_only=True, r2_veto=r2_veto, arm=arm)
+            pred = decide_card(parse_json(raw), case, role_only=True, r2_veto=r2_veto, arm=arm, r5_veto=r5_veto)
         row = prediction_record(case, pred, raw)
         rows.append(row)
         shown = {k: v for k, v in row.items() if k != "raw"}
@@ -982,7 +1129,7 @@ def self_check() -> None:
                 "derived_action": "retag",
             }
         ],
-        {"h05:0": ["Document"]},
+        {"h05:0": {"ancestors": ["Document"], "in_table_box": False}},
         "A",
     )
     assert skipped_n == 1
@@ -990,6 +1137,78 @@ def self_check() -> None:
     assert rec[0]["model_role"] == "H1"
     assert rec[0]["derived_action"] == "keep"
     assert rec[0]["scope"] == "source_type"
+    r5_hit = apply_r5_scope(
+        {"role": "H2"},
+        {"text": "Depot Staff Vehicles", "existing_tag": "P", "in_table_box": True},
+    )
+    assert r5_hit["qwen_called"] is False
+    assert r5_hit["r5_table_box"] is True
+    assert r5_hit["role"] == "P"
+    assert r5_hit["action"] == "keep"
+    r5_heading = apply_r5_scope(
+        {"role": "H1"},
+        {"text": "True Heading", "existing_tag": "H1", "in_table_box": True},
+    )
+    assert r5_heading["role"] == "P"
+    missed = decide_card(
+        {"role": "H2"},
+        {"text": "Banner", "existing_tag": "P", "in_table_box": False, "ancestors": ["Document"]},
+        role_only=True,
+        r2_veto=True,
+        arm="B",
+        r5_veto=True,
+    )
+    assert missed["role"] == "H2"
+    assert missed["r5_table_box"] is False
+    gated = decide_card(
+        {"role": "H2"},
+        {"text": "Depot Staff Vehicles", "existing_tag": "P", "in_table_box": True, "ancestors": ["Document"]},
+        role_only=True,
+        r2_veto=True,
+        arm="B",
+        r5_veto=True,
+    )
+    assert gated["role"] == "P"
+    assert gated["qwen_called"] is False
+    assert gated["model_role"] == "H2"
+    assert parse_heading_flag('{"heading":true}') is True
+    assert parse_heading_flag('{"heading":false}') is False
+    assert parse_heading_flag("not json") is None
+    assert parse_heading_flag('{"role":"H1"}') is None
+    assert needs_page_verify(
+        {"role": "H2", "qwen_called": True, "r2_veto": False},
+        {"existing_tag": "P"},
+    )
+    assert not needs_page_verify(
+        {"role": "H1", "qwen_called": True, "r2_veto": False},
+        {"existing_tag": "H1"},
+    )
+    assert not needs_page_verify(
+        {"role": "P", "qwen_called": True, "r2_veto": True},
+        {"existing_tag": "H1"},
+    )
+    vetoed = apply_page_verify(
+        {"role": "H2", "action": "retag", "qwen_called": True},
+        {"existing_tag": "P"},
+        False,
+    )
+    assert vetoed["role"] == "P"
+    assert vetoed["action"] == "keep"
+    assert vetoed["page_verify"] is False
+    allowed = apply_page_verify(
+        {"role": "H2", "action": "retag", "qwen_called": True},
+        {"existing_tag": "P"},
+        True,
+    )
+    assert allowed["role"] == "H2"
+    parse_miss = apply_page_verify(
+        {"role": "H1", "action": "retag", "qwen_called": True},
+        {"existing_tag": "H2"},
+        None,
+    )
+    assert parse_miss["page_verify_parsed"] is False
+    assert parse_miss["role"] == "H2"
+    assert parse_miss["action"] == "keep"
 
 
 def load_block_dumps() -> list[dict] | None:
@@ -1010,21 +1229,37 @@ def load_block_dumps() -> list[dict] | None:
     return None
 
 
-def ancestors_by_locator(dumps: list[dict]) -> dict[str, list]:
-    out: dict[str, list] = {}
+def block_fields_by_locator(dumps: list[dict]) -> dict[str, dict]:
+    out: dict[str, dict] = {}
     for dump in dumps:
         for block in dump.get("blocks") or []:
             loc = block.get("locator")
             if loc:
-                out[str(loc)] = list(block.get("ancestors") or [])
+                out[str(loc)] = {
+                    "ancestors": list(block.get("ancestors") or []),
+                    "in_table_box": bool(block.get("in_table_box")),
+                    "page": block.get("page"),
+                }
     return out
 
 
-def rescore_frozen(preds: list[dict], ancestors: dict[str, list], arm: str) -> tuple[list[dict], int]:
+def rescore_frozen(
+    preds: list[dict],
+    fields: dict[str, dict] | dict[str, list],
+    arm: str,
+    r5_veto: bool = False,
+    verify_page: bool = False,
+    pdf_dir: Path | None = None,
+    png_dir: Path | None = None,
+) -> tuple[list[dict], int]:
     rows = []
     skipped = 0
+    png_cache: dict[tuple[str, int], Path] = {}
     for pred in preds:
         loc = str(pred.get("locator") or "")
+        extra = fields.get(loc) or {}
+        if isinstance(extra, list):
+            extra = {"ancestors": extra}
         case = {
             "locator": loc,
             "id": pred.get("id") or loc,
@@ -1034,13 +1269,48 @@ def rescore_frozen(preds: list[dict], ancestors: dict[str, list], arm: str) -> t
             "prev": pred.get("prev"),
             "next": pred.get("next"),
             "existing_tag": pred.get("existing_tag"),
-            "ancestors": ancestors.get(loc, pred.get("ancestors") or []),
+            "ancestors": extra.get("ancestors", pred.get("ancestors") or []),
+            "in_table_box": extra.get("in_table_box", pred.get("r5_table_box") or pred.get("in_table_box")),
+            "page": extra.get("page", pred.get("page")),
         }
         incoming = {"role": pred["model_role"]} if pred.get("model_role") else None
-        decided = decide_card(incoming, case, role_only=True, r2_veto=True, arm=arm)
+        decided = decide_card(
+            incoming, case, role_only=True, r2_veto=True, arm=arm, r5_veto=r5_veto
+        )
         if decided is not None and not decided.get("qwen_called"):
             skipped += 1
+        if verify_page and decided is not None and needs_page_verify(decided, case):
+            page = case.get("page")
+            stem = loc.rsplit(":", 1)[0]
+            heading_flag: bool | None = None
+            raw_verify = ""
+            if pdf_dir is None or page is None:
+                heading_flag = None
+            else:
+                page_1 = int(page) + 1
+                cache_key = (stem, page_1)
+                png = png_cache.get(cache_key)
+                if png is None:
+                    pdf = pdf_dir / f"{stem}.pdf"
+                    dest = (png_dir or (HERE / "out" / "pages")) / f"{stem}-p{page_1}.png"
+                    png = render_page_png(pdf, page_1, dest)
+                    png_cache[cache_key] = png
+                raw_verify = generate(
+                    MODEL,
+                    heading_verify_prompt(str(case.get("text") or ""), page_1),
+                    image=str(png),
+                    thinking_mode="disabled",
+                    adapter_path=None,
+                )
+                heading_flag = parse_heading_flag(raw_verify)
+            decided = apply_page_verify(decided, case, heading_flag)
+            if raw_verify:
+                pred = dict(pred)
+                pred["verify_raw"] = raw_verify[-1500:]
         rows.append(prediction_record(case, decided, pred.get("raw") or ""))
+        if decided is not None:
+            rows[-1]["page_verify"] = decided.get("page_verify")
+            rows[-1]["page_verify_parsed"] = bool(decided.get("page_verify_parsed"))
     return rows, skipped
 
 
@@ -1069,21 +1339,31 @@ if __name__ == "__main__":
         raise SystemExit(0)
 
     arm = flag_value("--arm") or "B"
+    r5_veto = "--r5-veto" in sys.argv
     rescore_path = flag_value("--rescore")
     if rescore_path:
         dumps = load_block_dumps() or []
-        anc = ancestors_by_locator(dumps)
+        fields = block_fields_by_locator(dumps)
         preds = [
             json.loads(line)
             for line in Path(rescore_path).read_text().splitlines()
             if line.strip()
         ]
-        rows, skipped = rescore_frozen(preds, anc, arm)
+        rows, skipped = rescore_frozen(
+            preds,
+            fields,
+            arm,
+            r5_veto=r5_veto,
+            verify_page="--verify-page" in sys.argv,
+            pdf_dir=Path(flag_value("--pdf-dir")) if flag_value("--pdf-dir") else None,
+            png_dir=(Path(flag_value("--out-dir")) / "pages") if flag_value("--out-dir") else None,
+        )
         out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "bridge"))
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_file = out_dir / f"rescored-arm{arm}.jsonl"
+        suffix = f"arm{arm}" + ("-r5" if r5_veto else "") + ("-verify" if "--verify-page" in sys.argv else "")
+        out_file = out_dir / f"rescored-{suffix}.jsonl"
         out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
-        print(json.dumps({"arm": arm, "n": len(rows), "qwen_skipped": skipped, "out": str(out_file)}))
+        print(json.dumps({"arm": arm, "r5_veto": r5_veto, "n": len(rows), "qwen_skipped": skipped, "out": str(out_file)}))
         raise SystemExit(0)
 
     dumps = load_block_dumps()
@@ -1121,6 +1401,7 @@ if __name__ == "__main__":
                     thinking_mode=flag_value("--thinking-mode") or "disabled",
                     thinking_budget=flag_value("--thinking-budget"),
                     arm=arm,
+                    r5_veto=r5_veto,
                 )
             raise SystemExit(0)
         (out_dir / "cards.json").write_text(json.dumps(card_bundle(cards), indent=2) + "\n")
@@ -1143,6 +1424,7 @@ if __name__ == "__main__":
                 r2_veto="--r2-veto" in sys.argv,
                 thinking_mode=flag_value("--thinking-mode") or "disabled",
                 arm=arm,
+                r5_veto=r5_veto,
             )
             (out_dir / "predictions.jsonl").write_text(
                 "".join(json.dumps(r) + "\n" for r in rows)
@@ -1163,4 +1445,5 @@ if __name__ == "__main__":
         role_only="--role-only" in sys.argv,
         r2_veto="--r2-veto" in sys.argv,
         arm=arm,
+        r5_veto=r5_veto,
     )

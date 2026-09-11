@@ -2194,3 +2194,111 @@ Spent H1 is diagnostic. Development is the regression surface.
 - **A residual remains:** STOP. Do not add a regex.
 - **Holdout 2:** not this spike, even on exposed unsafe 0.
 
+### Measurement (2026-09-11)
+
+ML freeze unchanged. Frozen H1 hash `4ec2198a…` untouched. Part 9 Arm B
+is the reference. `--r5-veto` and `--verify-page` are measured flags,
+off by default.
+
+#### Arm A — R5 geometric table containment
+
+Cards.java now calls `StructText.boxOf` (the same boxes Headings.java
+uses) and copies `belongsToTable` with `CAPTION_GAP = 24` and
+`MIN_OVERLAP = 0.5`. Not retuned.
+
+h06 has one tagged `Table` (the ruled grid). `h06:14` "Depot Staff
+Vehicles" is Document-level `P` on the same page. **`in_table_box`:
+false.** The unruled label sits outside the existing table glyph box and
+outside the 24 pt caption gap.
+
+`[V]` Spent H1 with Arm B + `--r5-veto`: unsafe still **5**, including
+`h06:14`. Heading exact 43/51. Demotions 0. GT headings with
+`r5_table_box`: **0**. Development heading probes: **0** collisions.
+R5 does mark 304 rows, almost all already ancestry-gated table cells,
+plus one Document-level caption-adjacent `P` on h07.
+
+**STOP Arm A.** Do not change thresholds. Do not redraw the table
+region around this example. `--r5-veto` is not adopted.
+
+Prediction 1 **falsified**.
+
+#### Arm B1 — existing figure/chart region
+
+Skipped. Figures.java / FigureOrder locate *images* under `Figure`
+tags. Spent h11 has zero Figure tags. No SVG region exists to reuse.
+
+#### Arm B2 — selective full-page verifier
+
+Preview.java PNG (existing). Binary `{"heading": true|false}`. Base
+model, **no adapter**. Only candidates that survived source-type,
+ancestry, and R2 and whose text-only role is an H* promotion or level
+change: **14** of 444. Unique pages rendered, not 444 images.
+
+`[V]` Architecture path on spent H1:
+
+| locator | GT heading? | verify | final |
+|---|---|---|---|
+| h01:4 Standard rates | yes | true | H2 |
+| h01:11 Exclusions | yes | true | H2 |
+| h02:0 BERTH ALLOCATION PROCEDURE | yes | true | H2 |
+| h06:2 Fully ruled | yes | true | H2 |
+| h06:13 Horizontal rules only | yes | true | H2 |
+| h06:14 Depot Staff Vehicles | no | **true** | H2 (still unsafe) |
+| h09:8 spanning banner | no | false | P |
+| h11:4 Berth Occupancy by Month | no | **true** | H2 (still unsafe) |
+| h11:7 Month of year | no | false | P |
+| h12:5 Recommendation | yes | true | H2 |
+| h13:1 COMMERCIAL IN CONFIDENCE | no | false | keep H2 |
+| h16:4 / :6 / :10 hierarchy | yes | true | H2 |
+
+Parse 14/14. True-heading vetoes **0**. Heading exact **43/51**.
+Demotions **0**. Final unsafe **2** (was 5).
+
+Same-page keep controls (diagnostic, not in the architecture set):
+true headings `Depot Cost Comparison`, `Port Bulletin`, `Utilisation
+Dashboard`, `Berth occupancy`, `Northern Apron Surrender: Heads of
+Terms` all `heading: true`. Already-gated table headers `Depot` /
+`Registration` `false`. Figure letter `R` `true` (never reaches this
+stage; the verifier is not "always false"). R2 `£680` `false`. One
+parse failure on keep `Charges` (h09:9) — counted as parse fail, not
+as a veto; that row does not enter the architecture verifier.
+
+Two residuals the full page did not reject:
+
+- `h06:14` is unique text. Localization is not the failure. The page
+  shows a table-group label that looks like a heading.
+- `h11:4` sits on the same page as GT `Berth occupancy` / `Utilisation
+  Dashboard`. Localization *may* be the failure; the chart title also
+  looks like a heading.
+
+#### Predictions
+
+1. `[H]` R5 catches `h06:14` without a true-heading collision. **Falsified**
+   (no collision, but it does not catch `h06:14`).
+2. `[H]` No new handcrafted semantic rule. **Confirmed.**
+3. `[H]` Selective full-page vision rejects banner/chart/stamp.
+   **Partial.** Banner, axis label, and stamp rejected. Chart title
+   not. Unruled table label not.
+4. `[H]` Layout stage vetoes zero known true headings. **Confirmed** on
+   the architecture set. Extra keeps: no `false`; one parse miss on
+   `Charges`.
+5. `[H]` Exposed final unsafe 5 → 0. **Falsified.** 5 → **2**.
+6. `[H]` No retraining, crop pipeline, larger model, or production
+   architecture. **Confirmed.** Crops are earned, not built.
+
+#### Stop
+
+Registered fail path: residuals remain after existing geometry and
+full-page vision. Do not add a regex. Do not prompt-tune. Do not run
+Holdout 2.
+
+h11:4 is the localization-shaped miss; h06:14 is visual ambiguity of
+furniture that looks like a heading. A **minimal target-crop
+experiment** is earned next. Not this spike.
+
+The unsafe count that structure could not see went 5 → 2 with zero
+true-heading vetoes. That is not Holdout-2-ready.
+
+Default remains Part 9 Arm B. `--r5-veto` / `--verify-page` stay as
+measured switches.
+

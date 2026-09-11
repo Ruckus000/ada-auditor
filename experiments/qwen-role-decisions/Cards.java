@@ -53,6 +53,10 @@ public final class Cards {
      */
     private static final float WORD_GAP_EM = 0.12f;
 
+    /** Headings.java R5. Copied, not retuned. */
+    private static final float CAPTION_GAP = 24f;
+    private static final float MIN_OVERLAP = 0.5f;
+
     private record Glyph(String u, float x, float y, float w, float fontPt, boolean bold) {}
 
     private record Face(int fontPt, String weight) {}
@@ -83,21 +87,28 @@ public final class Cards {
                 pageIndex.put(doc.getPage(i).getCOSObject(), i);
             }
             List<PDStructureElement> found = StructText.find(root, BLOCK, root.getRoleMap());
+            Map<String, Object> roleMap = root.getRoleMap();
+            StructText text = new StructText(doc);
+            List<StructText.Box> tables = new ArrayList<>();
+            for (PDStructureElement el : found) {
+                if ("Table".equals(standard(el, roleMap))) {
+                    StructText.Box b = text.boxOf(el);
+                    if (b != null) tables.add(b);
+                }
+            }
             json.append("  \"hasStructTree\": true,\n");
             json.append("  \"blocks\": [\n");
             for (int i = 0; i < found.size(); i++) {
                 PDStructureElement el = found.get(i);
-                String type = el.getStructureType();
-                Map<String, Object> roleMap = root.getRoleMap();
-                if (roleMap != null && type != null && roleMap.get(type) != null) {
-                    type = roleMap.get(type).toString();
-                }
+                String type = standard(el, roleMap);
                 List<Glyph> gs = new ArrayList<>();
                 gather(el, null, pageIndex, glyphs, gs, new IdentityHashMap<>());
                 String t = wordsOf(gs);
                 Face face = gs.isEmpty() ? null : new Face(
                     Math.round(gs.get(0).fontPt),
                     gs.get(0).bold ? "bold" : "regular");
+                StructText.Box box = text.boxOf(el);
+                boolean inTable = belongsToTable(box, tables);
                 json.append("    {\"locator\": ").append(q(stem + ":" + i));
                 json.append(", \"existing_tag\": ").append(q(type == null ? "" : type));
                 json.append(", \"text\": ").append(q(t));
@@ -114,6 +125,10 @@ public final class Cards {
                     json.append(q(ancestors.get(a)));
                 }
                 json.append("]");
+                json.append(", \"in_table_box\": ").append(inTable);
+                if (box != null) {
+                    json.append(", \"page\": ").append(box.page());
+                }
                 json.append("}");
                 json.append(i < found.size() - 1 ? ",\n" : "\n");
             }
@@ -225,6 +240,20 @@ public final class Cards {
             n = p.getParent();
         }
         return out;
+    }
+
+    /** Headings.java:311–321. Same constants, same tests. Not retuned. */
+    private static boolean belongsToTable(StructText.Box h, List<StructText.Box> tables) {
+        if (h == null) return false;
+        for (StructText.Box t : tables) {
+            if (!h.samePage(t)) continue;
+            if (h.overlapX(t) < MIN_OVERLAP * Math.min(h.width(), t.width())) continue;
+            boolean inside = h.y0() >= t.y0() && h.y1() <= t.y1();
+            boolean above = t.y0() - h.y1() >= 0 && t.y0() - h.y1() <= CAPTION_GAP;
+            boolean below = h.y0() - t.y1() >= 0 && h.y0() - t.y1() <= CAPTION_GAP;
+            if (inside || above || below) return true;
+        }
+        return false;
     }
 
     /** Role-mapped type, same reading Inspect / Headings use. */
