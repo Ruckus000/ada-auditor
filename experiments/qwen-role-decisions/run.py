@@ -5,7 +5,8 @@ ponytail: no extractor, no LoRA wrapper, no schema lib, no trainer. Training
 is upstream `python -m mlx_vlm.lora`. This file only prompts, parses, and
 scores. `--role-only` hides existing_tag and derives keep/retag from the
 predicted role. `--r2-veto` applies Headings.java R2 (no letters → P) after
-the model, keeping model_role.
+the model, keeping model_role. `--emit-verify-sft` writes image-bearing
+rows for the separate eligibility adapter; `--eval-verify-marked` runs it.
 """
 
 from __future__ import annotations
@@ -619,6 +620,14 @@ MARKED_VERIFY_STEM = (
     "page furniture, or other non-document-heading content. "
     "Return ONLY {\"heading\":true} or {\"heading\":false}."
 )
+MARKED_ELIGIBILITY_STEM = (
+    "You are shown a PDF page. The outlined rectangle marks the exact "
+    "Element described below. Decide whether that marked element is a "
+    "document section or subsection heading rather than table/chart "
+    "labeling, a banner, stamp, page furniture, or other "
+    "non-document-heading content. "
+    'Return ONLY {"heading":true} or {"heading":false}.'
+)
 PART10_VERIFY_LOCATORS = (
     "h01-big-text-not-heading:4",
     "h01-big-text-not-heading:11",
@@ -827,12 +836,310 @@ MARKED_ROLE_LOCALIZER = (
     "The outlined rectangle in the image marks the Element described below."
 )
 ADAPTER_ROLE = HERE / "out" / "adapter-role"
+ADAPTER_VERIFY_MARKED = HERE / "out" / "adapter-verify-marked"
 
 
 def marked_role_prompt(case: dict) -> str:
     return MARKED_ROLE_LOCALIZER + "\n" + card_prompt(
         ROLE_ONLY_STEM, case, hide_existing_tag=True
     )
+
+
+def marked_eligibility_prompt(case: dict) -> str:
+    return card_prompt(MARKED_ELIGIBILITY_STEM, case, hide_existing_tag=True)
+
+
+def gt_heading(case: dict) -> bool:
+    expect = case.get("expect") or {}
+    return (expect.get("role") or "") in HEADING
+
+
+def verifier_skip_reason(case: dict) -> str | None:
+    """Production never asks the verifier after these upstream gates."""
+    tag = case.get("existing_tag") or ""
+    if not source_eligible(tag):
+        return "source_type"
+    if not ancestry_eligible(case.get("ancestors")):
+        return "ancestry"
+    if r2_ornament(case.get("text") or ""):
+        return "r2"
+    return None
+
+
+def ensure_marked_png(
+    case: dict,
+    pdf_dir: Path,
+    pages_dir: Path,
+    png_cache: dict[tuple[str, int], Path],
+) -> Path:
+    loc = str(case["locator"])
+    stem = loc.rsplit(":", 1)[0]
+    page_1 = int(case["page"]) + 1
+    cache_key = (stem, page_1)
+    png = png_cache.get(cache_key)
+    if png is None:
+        dest = pages_dir / f"{stem}-p{page_1}.png"
+        if dest.is_file():
+            png = dest
+        else:
+            png = render_page_png(pdf_dir / f"{stem}.pdf", page_1, dest)
+        png_cache[cache_key] = png
+    marked = pages_dir / "marked" / f"{loc.replace(':', '_')}.png"
+    if not marked.is_file():
+        mark_page_png(
+            pdf_dir / f"{stem}.pdf",
+            page_1,
+            (
+                float(case["x0"]),
+                float(case["y0"]),
+                float(case["x1"]),
+                float(case["y1"]),
+            ),
+            png,
+            marked,
+        )
+    return marked
+
+
+def emit_verify_sft(
+    pdf_dir: Path,
+    match_path: Path,
+    out_dir: Path,
+    pages_dir: Path,
+) -> dict:
+    dumps = dump_dir(pdf_dir)
+    cards, failed = dumps_to_cards(dumps)
+    probes = json.loads(match_path.read_text())["cases"]
+    matched, missing = attach_probe_expect(cards, probes)
+    png_cache: dict[tuple[str, int], Path] = {}
+    rows: list[dict] = []
+    excluded: list[dict] = []
+    for case in matched:
+        reason = verifier_skip_reason(case)
+        if reason:
+            excluded.append(
+                {
+                    "id": case.get("id"),
+                    "locator": case.get("locator"),
+                    "reason": reason,
+                    "gt_heading": gt_heading(case),
+                }
+            )
+            continue
+        box_ok = all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1", "page"))
+        if not box_ok:
+            excluded.append(
+                {
+                    "id": case.get("id"),
+                    "locator": case.get("locator"),
+                    "reason": "missing_box",
+                    "gt_heading": gt_heading(case),
+                }
+            )
+            continue
+        marked = ensure_marked_png(case, pdf_dir, pages_dir, png_cache)
+        heading = gt_heading(case)
+        rows.append(
+            {
+                "messages": [
+                    {"role": "user", "content": marked_eligibility_prompt(case)},
+                    {
+                        "role": "assistant",
+                        "content": json.dumps(
+                            {"heading": heading}, separators=(",", ":")
+                        ),
+                    },
+                ],
+                "image": str(marked.resolve()),
+            }
+        )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "train.json").write_text(json.dumps(rows, indent=2) + "\n")
+    docs = sorted(
+        {
+            str(case.get("locator") or "").rsplit(":", 1)[0]
+            for case in matched
+            if verifier_skip_reason(case) is None
+            and all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1", "page"))
+        }
+    )
+    n_true = sum(
+        1
+        for case in matched
+        if verifier_skip_reason(case) is None
+        and all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1", "page"))
+        and gt_heading(case)
+    )
+    manifest = {
+        "n": len(rows),
+        "heading_true": n_true,
+        "heading_false": len(rows) - n_true,
+        "documents": docs,
+        "matched": [c.get("id") for c in matched],
+        "missing": missing,
+        "excluded": excluded,
+        "bridge_failures": failed,
+        "train_json": str(out_dir / "train.json"),
+    }
+    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    return manifest
+
+
+def verifier_gate(rows: list[dict]) -> dict:
+    parsed_n = sum(1 for r in rows if r.get("verify_parsed"))
+    n = len(rows)
+    gt_pos = [r for r in rows if r.get("gt_heading")]
+    gt_neg = [r for r in rows if not r.get("gt_heading")]
+    tp = sum(1 for r in gt_pos if r.get("heading") is True)
+    fn = sum(1 for r in gt_pos if r.get("heading") is False)
+    tn = sum(1 for r in gt_neg if r.get("heading") is False)
+    fp = sum(1 for r in gt_neg if r.get("heading") is True)
+    vetoes = [
+        r.get("id") or r.get("locator")
+        for r in gt_pos
+        if r.get("heading") is False
+    ]
+    unsafe = [r.get("id") or r.get("locator") for r in rows if r.get("unsafe")]
+    all_false = bool(rows) and all(r.get("heading") is False for r in rows)
+    h1 = next((r for r in rows if (r.get("expect_role") == "H1")), None)
+    return {
+        "n": n,
+        "parse_ok": parsed_n == n and n > 0,
+        "true_heading_vetoes": vetoes,
+        "unsafe": unsafe,
+        "h1_eligible": None if h1 is None else h1.get("heading") is True,
+        "all_false": all_false,
+        "accuracy": None if n == 0 else (tp + tn) / n,
+        "heading_recall": None if not gt_pos else tp / len(gt_pos),
+        "nonheading_rejection": None if not gt_neg else tn / len(gt_neg),
+        "tp": tp,
+        "tn": tn,
+        "fp": fp,
+        "fn": fn,
+        "pass": parsed_n == n
+        and n > 0
+        and not vetoes
+        and not unsafe
+        and not all_false
+        and (h1 is None or h1.get("heading") is True),
+    }
+
+
+def eval_verify_marked(
+    pdf_dir: Path,
+    match_path: Path,
+    out_dir: Path,
+    pages_dir: Path,
+    role_adapter: Path,
+    verify_adapter: Path,
+    omit_image: bool = False,
+) -> dict:
+    dumps = dump_dir(pdf_dir)
+    cards, failed = dumps_to_cards(dumps)
+    probes = json.loads(match_path.read_text())["cases"]
+    matched, missing = attach_probe_expect(cards, probes)
+    png_cache: dict[tuple[str, int], Path] = {}
+    rows: list[dict] = []
+    for case in matched:
+        incoming = None
+        role_raw = ""
+        pre = apply_structural_scope(None, case, arm="B")
+        if pre is not None and not pre.get("qwen_called"):
+            decided = dict(pre)
+            decided["r5_table_box"] = bool(case.get("in_table_box"))
+        else:
+            role_raw = generate(
+                MODEL,
+                card_prompt(ROLE_ONLY_STEM, case, hide_existing_tag=True),
+                thinking_mode="disabled",
+                adapter_path=str(role_adapter),
+            )
+            incoming = parse_json(role_raw)
+            decided = decide_card(
+                incoming, case, role_only=True, r2_veto=True, arm="B"
+            )
+        heading_flag: bool | None = None
+        verify_raw = ""
+        box_ok = all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1", "page"))
+        image = None
+        if box_ok and not omit_image:
+            image = str(ensure_marked_png(case, pdf_dir, pages_dir, png_cache))
+        verify_raw = generate(
+            MODEL,
+            marked_eligibility_prompt(case),
+            image=image,
+            thinking_mode="disabled",
+            adapter_path=str(verify_adapter),
+        )
+        heading_flag = parse_heading_flag(verify_raw)
+        applied = decided is not None and needs_page_verify(decided, case)
+        if applied and decided is not None:
+            decided = apply_page_verify(
+                decided,
+                case,
+                heading_flag,
+                verify_input="text-only" if omit_image else "marked-binary",
+            )
+        elif decided is not None:
+            decided = dict(decided)
+            decided["page_verify"] = heading_flag
+            decided["page_verify_parsed"] = heading_flag is not None
+            decided["verify_input"] = "text-only" if omit_image else "marked-binary"
+            decided["verification_failure"] = heading_flag is None
+        expect = case.get("expect") or {}
+        scored = score(decided, case)
+        row = {
+            "id": case.get("id"),
+            "locator": case.get("locator"),
+            "text": case.get("text"),
+            "existing_tag": case.get("existing_tag"),
+            "expect_role": expect.get("role"),
+            "gt_heading": gt_heading(case),
+            "model_role": None if decided is None else decided.get("model_role"),
+            "heading": heading_flag,
+            "verify_parsed": heading_flag is not None,
+            "verify_applied": applied,
+            "final_role": None if decided is None else decided.get("role"),
+            "action": None if decided is None else decided.get("action"),
+            "unsafe": scored.get("unsafe"),
+            "ok": scored.get("ok"),
+            "heading_probe": scored.get("heading_probe"),
+            "trap": case.get("trap"),
+            "skip": verifier_skip_reason(case),
+            "verify_raw": verify_raw[-1500:],
+        }
+        rows.append(row)
+        shown = {k: v for k, v in row.items() if k != "verify_raw"}
+        print(json.dumps(shown, sort_keys=True))
+    summary = {
+        "matched": [c.get("id") for c in matched],
+        "missing": missing,
+        "bridge_failures": failed,
+        "omit_image": omit_image,
+        "gates": verifier_gate(rows),
+        "role_gates": gates(
+            [
+                {
+                    "parsed": r["final_role"] is not None,
+                    "ok": r["ok"],
+                    "unsafe": r["unsafe"],
+                    "heading_probe": r["heading_probe"],
+                    "abstain": False,
+                    "timid": False,
+                }
+                for r in rows
+            ]
+        ),
+    }
+    out_dir.mkdir(parents=True, exist_ok=True)
+    suffix = "ablate" if omit_image else "marked"
+    out_file = out_dir / f"verify-{suffix}.jsonl"
+    out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (out_dir / f"verify-{suffix}-summary.json").write_text(
+        json.dumps(summary, indent=2, default=str) + "\n"
+    )
+    print(json.dumps({**summary, "out": str(out_file)}, default=str))
+    return summary
 
 
 def visual_heading_of(role: str | None) -> bool | None:
@@ -1421,6 +1728,44 @@ def self_check() -> None:
     assert "Depot Staff" not in loc_prompt
     assert "Berth Occupancy" not in loc_prompt
     assert '{"heading":true}' not in loc_prompt
+    elig = marked_eligibility_prompt(
+        {
+            "text": "Eligibility",
+            "font_pt": 13,
+            "weight": "bold",
+            "prev": "Terms of Access",
+            "next": "Access is granted",
+            "existing_tag": "H4",
+        }
+    )
+    assert elig.startswith(MARKED_ELIGIBILITY_STEM)
+    assert "Element: 'Eligibility'" in elig
+    assert "Existing tag" not in elig
+    assert "Depot Staff" not in MARKED_ELIGIBILITY_STEM
+    assert "Berth Occupancy" not in MARKED_ELIGIBILITY_STEM
+    assert "COMMERCIAL IN CONFIDENCE" not in MARKED_ELIGIBILITY_STEM
+    assert "H1" not in MARKED_ELIGIBILITY_STEM
+    assert gt_heading({"expect": {"role": "H2"}}) is True
+    assert gt_heading({"expect": {"role": "P"}}) is False
+    assert verifier_skip_reason({"existing_tag": "Figure", "text": "Logo", "ancestors": []}) == "source_type"
+    assert verifier_skip_reason({"existing_tag": "P", "text": "Cell", "ancestors": ["Table"]}) == "ancestry"
+    assert verifier_skip_reason({"existing_tag": "P", "text": "3", "ancestors": ["Document"]}) == "r2"
+    assert verifier_skip_reason({"existing_tag": "P", "text": "Site", "ancestors": ["Document"]}) is None
+    kept_h = apply_page_verify(
+        {"role": "H2", "action": "retag", "qwen_called": True, "model_role": "H2"},
+        {"existing_tag": "P"},
+        True,
+        verify_input="marked-binary",
+    )
+    assert kept_h["role"] == "H2"
+    blocked_h = apply_page_verify(
+        {"role": "H2", "action": "retag", "qwen_called": True, "model_role": "H2"},
+        {"existing_tag": "P"},
+        False,
+        verify_input="marked-binary",
+    )
+    assert blocked_h["role"] == "P"
+    assert blocked_h["action"] == "keep"
     assert visual_heading_of("H2") is True
     assert visual_heading_of("P") is False
     assert visual_heading_of(None) is None
@@ -1525,6 +1870,8 @@ def rescore_frozen(
     verify_page: bool = False,
     verify_marked: bool = False,
     verify_marked_role: bool = False,
+    verify_marked_binary: bool = False,
+    omit_image: bool = False,
     verify_locators: tuple[str, ...] | None = None,
     adapter_path: str | None = None,
     pdf_dir: Path | None = None,
@@ -1564,58 +1911,78 @@ def rescore_frozen(
         if decided is not None and not decided.get("qwen_called"):
             skipped += 1
         want_role = verify_marked_role and loc in role_locs
-        want_marked = verify_marked and not verify_marked_role and loc in PART10_VERIFY_LOCATORS
-        want_full = verify_page and not verify_marked and not verify_marked_role
-        if (want_full or want_marked or want_role) and decided is not None and needs_page_verify(decided, case):
+        want_binary = verify_marked_binary and loc in role_locs
+        want_marked = (
+            verify_marked
+            and not verify_marked_role
+            and not verify_marked_binary
+            and loc in PART10_VERIFY_LOCATORS
+        )
+        want_full = (
+            verify_page
+            and not verify_marked
+            and not verify_marked_role
+            and not verify_marked_binary
+        )
+        if (want_full or want_marked or want_role or want_binary) and decided is not None and needs_page_verify(decided, case):
             page = case.get("page")
             stem = loc.rsplit(":", 1)[0]
             heading_flag: bool | None = None
             visual_role: str | None = None
             raw_verify = ""
-            verify_input = "marked-role" if want_role else ("marked" if want_marked else "full")
+            if want_binary:
+                verify_input = "text-only" if omit_image else "marked-binary"
+            elif want_role:
+                verify_input = "marked-role"
+            elif want_marked:
+                verify_input = "marked"
+            else:
+                verify_input = "full"
             box_ok = all(case.get(k) is not None for k in ("x0", "y0", "x1", "y1"))
-            if pdf_dir is None or page is None or ((want_marked or want_role) and not box_ok):
+            needs_box = want_marked or want_role or (want_binary and not omit_image)
+            if pdf_dir is None or page is None or (needs_box and not box_ok):
                 heading_flag = None
             else:
                 page_1 = int(page) + 1
-                cache_key = (stem, page_1)
-                png = png_cache.get(cache_key)
-                if png is None:
-                    pdf = pdf_dir / f"{stem}.pdf"
-                    dest = pages_dir / f"{stem}-p{page_1}.png"
-                    if dest.is_file():
-                        png = dest
-                    else:
-                        png = render_page_png(pdf, page_1, dest)
-                    png_cache[cache_key] = png
-                image = png
+                image = None
                 prompt = heading_verify_prompt(str(case.get("text") or ""), page_1)
                 adapter = None
-                if want_marked or want_role:
-                    marked = pages_dir / "marked" / f"{loc.replace(':', '_')}.png"
-                    if not marked.is_file():
-                        mark_page_png(
-                            pdf_dir / f"{stem}.pdf",
-                            page_1,
-                            (
-                                float(case["x0"]),
-                                float(case["y0"]),
-                                float(case["x1"]),
-                                float(case["y1"]),
-                            ),
-                            png,
-                            marked,
-                        )
-                    image = marked
+                if want_binary:
+                    prompt = marked_eligibility_prompt(case)
+                    adapter = adapter_path or str(ADAPTER_VERIFY_MARKED)
+                    if not omit_image:
+                        image = ensure_marked_png(case, pdf_dir, pages_dir, png_cache)
+                elif want_marked or want_role:
+                    cache_key = (stem, page_1)
+                    png = png_cache.get(cache_key)
+                    if png is None:
+                        dest = pages_dir / f"{stem}-p{page_1}.png"
+                        if dest.is_file():
+                            png = dest
+                        else:
+                            png = render_page_png(pdf_dir / f"{stem}.pdf", page_1, dest)
+                        png_cache[cache_key] = png
+                    image = ensure_marked_png(case, pdf_dir, pages_dir, png_cache)
                     if want_role:
                         prompt = marked_role_prompt(case)
                         adapter = adapter_path or str(ADAPTER_ROLE)
                     else:
                         prompt = MARKED_VERIFY_STEM
+                else:
+                    cache_key = (stem, page_1)
+                    png = png_cache.get(cache_key)
+                    if png is None:
+                        dest = pages_dir / f"{stem}-p{page_1}.png"
+                        if dest.is_file():
+                            png = dest
+                        else:
+                            png = render_page_png(pdf_dir / f"{stem}.pdf", page_1, dest)
+                        png_cache[cache_key] = png
+                    image = png
                 raw_verify = generate(
                     MODEL,
                     prompt,
-                    image=str(image),
+                    image=str(image) if image is not None else None,
                     thinking_mode="disabled",
                     adapter_path=adapter,
                 )
@@ -1653,6 +2020,34 @@ if __name__ == "__main__":
 
     if "--check-box-map" in sys.argv:
         print(json.dumps(check_box_map(), indent=2))
+        raise SystemExit(0)
+
+    if "--emit-verify-sft" in sys.argv:
+        pdf_dir = Path(flag_value("--pdf-dir") or flag_value("--dump-dir") or "")
+        match_path = Path(flag_value("--match-path") or (HERE / "train.json"))
+        out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "gen-sft-verify"))
+        pages_dir = Path(flag_value("--pages-dir") or (out_dir / "pages"))
+        if not pdf_dir:
+            raise SystemExit("--emit-verify-sft requires --pdf-dir or --dump-dir")
+        print(json.dumps(emit_verify_sft(pdf_dir, match_path, out_dir, pages_dir), indent=2, default=str))
+        raise SystemExit(0)
+
+    if "--eval-verify-marked" in sys.argv:
+        pdf_dir = Path(flag_value("--pdf-dir") or flag_value("--dump-dir") or "")
+        match_path = Path(flag_value("--match-path") or str(PROBES_PATH))
+        out_dir = Path(flag_value("--out-dir") or (HERE / "out" / "verify-marked"))
+        pages_dir = Path(flag_value("--pages-dir") or (out_dir / "pages"))
+        if not pdf_dir:
+            raise SystemExit("--eval-verify-marked requires --pdf-dir or --dump-dir")
+        eval_verify_marked(
+            pdf_dir,
+            match_path,
+            out_dir,
+            pages_dir,
+            Path(flag_value("--role-adapter") or ADAPTER_ROLE),
+            Path(flag_value("--adapter-path") or ADAPTER_VERIFY_MARKED),
+            omit_image="--omit-image" in sys.argv,
+        )
         raise SystemExit(0)
 
     if "--smoke-adapter-image" in sys.argv:
@@ -1747,6 +2142,8 @@ if __name__ == "__main__":
             verify_page="--verify-page" in sys.argv,
             verify_marked="--verify-marked" in sys.argv,
             verify_marked_role="--verify-marked-role" in sys.argv,
+            verify_marked_binary="--verify-marked-binary" in sys.argv,
+            omit_image="--omit-image" in sys.argv,
             verify_locators=verify_locs,
             adapter_path=flag_value("--adapter-path"),
             pdf_dir=Path(flag_value("--pdf-dir")) if flag_value("--pdf-dir") else None,
@@ -1757,9 +2154,11 @@ if __name__ == "__main__":
         suffix = (
             f"arm{arm}"
             + ("-r5" if r5_veto else "")
+            + ("-marked-binary" if "--verify-marked-binary" in sys.argv else "")
+            + ("-ablate" if "--omit-image" in sys.argv else "")
             + ("-marked-role" if "--verify-marked-role" in sys.argv else "")
-            + ("-marked" if "--verify-marked" in sys.argv and "--verify-marked-role" not in sys.argv else "")
-            + ("-verify" if "--verify-page" in sys.argv and "--verify-marked" not in sys.argv and "--verify-marked-role" not in sys.argv else "")
+            + ("-marked" if "--verify-marked" in sys.argv and "--verify-marked-role" not in sys.argv and "--verify-marked-binary" not in sys.argv else "")
+            + ("-verify" if "--verify-page" in sys.argv and "--verify-marked" not in sys.argv and "--verify-marked-role" not in sys.argv and "--verify-marked-binary" not in sys.argv else "")
         )
         out_file = out_dir / f"rescored-{suffix}.jsonl"
         out_file.write_text("".join(json.dumps(r) + "\n" for r in rows))
@@ -1774,7 +2173,7 @@ if __name__ == "__main__":
         (out_dir / "blocks.json").write_text(json.dumps({"pdfs": dumps}, indent=2) + "\n")
         (out_dir / "bridge_failures.json").write_text(json.dumps(failed, indent=2) + "\n")
         if "--match-probes" in sys.argv:
-            probes = json.loads(PROBES_PATH.read_text())["cases"]
+            probes = json.loads(Path(flag_value("--match-path") or str(PROBES_PATH)).read_text())["cases"]
             matched, missing = attach_probe_expect(cards, probes)
             (out_dir / "matched-probes.json").write_text(
                 json.dumps(card_bundle(matched), indent=2) + "\n"
