@@ -3786,5 +3786,145 @@ pointer is documentation only).
 Logs: `out/h1-layout/rescored-armB-marked-binary.jsonl`,
 `out/h1-layout/score-armB-marked-binary.json`.
 
+---
+
+## Part 17 — Blind Holdout 2 of the frozen Part-16 architecture
+
+**Date:** 2026-09-11. Same branch. No training. No prompt edit. No crop.
+No threshold. No semantic rule. No model sweep. No extra development
+examples. No Holdout-1-derived correction. No production integration.
+Holdout-2 labels are closed until the prediction artifact is frozen and
+hashed. Part 16 is spent diagnostic evidence and is not independent
+validation.
+
+### The one question
+
+> Does the completely frozen Part-16 architecture remain safe and useful
+> on untouched Holdout 2 when executed through the real PDF bridge?
+
+Frozen order: source-type eligibility → Table/Figure ancestry →
+role-only QLoRA → R2 → selective marked eligibility QLoRA →
+deterministic action.
+
+### Gate 0 — freeze verification (before any Holdout-2 file is opened)
+
+Disk SHA-256 vs Part 16 table. All eleven required objects **match**.
+No unexpected difference. Holdout 2 may open at the PDF-bridge layer
+only.
+
+| object | Part 16 | disk | match |
+|---|---|---|---|
+| `out/adapter-role/adapters.safetensors` | `8178c345…fe68dfdb` | same | yes |
+| `out/adapter-role/adapter_config.json` | `51518b19…6d31d82` | same | yes |
+| `out/adapter-verify-marked/adapters.safetensors` | `7cecddda…c0824a8` | same | yes |
+| `out/adapter-verify-marked/adapter_config.json` | `51518b19…6d31d82` | same | yes |
+| `ROLE_ONLY_STEM` | `5aed4505…5518df` | same | yes |
+| `MARKED_ELIGIBILITY_STEM` | `e5f8d312…39902` | same | yes |
+| architecture order string | `6ef2ef08…a4e2705` | same | yes |
+| `experiments/qwen-role-decisions/run.py` | `096f83e1…27c71934` | same | yes |
+| `experiments/qwen-role-decisions/Mark.java` | `6ed6bea4…a31538379a650` | same | yes |
+| `experiments/qwen-role-decisions/Cards.java` | `31a268d6…efa29b` | same | yes |
+| `src/integrations/documents/java/Preview.java` | `1d6b1102…a89916b348` | same | yes |
+
+Base checkpoint files already recorded earlier in this experiment at
+`out/base-checkpoint.sha256`. Same local snapshot
+`mlx-community/Qwen3.5-4B-MLX-4bit` /
+`32f3e8ecf65426fc3306969496342d504bfa13f3`. Not downloaded. Not
+refreshed.
+
+| object | SHA-256 |
+|---|---|
+| `model.safetensors` | `5fb9acd0246866381cf8c5c354c6db1019f6498eec4ccb4f5edcc71ffeacb2db` |
+| `config.json` | `f3efc81b2ea8d96a45301037d3ccccbcccdef44a961845c87f286aaddbc6eaaa` |
+
+These are the same two files already hashed in `out/base-checkpoint.sha256`.
+
+Evaluation commit after this mechanical freeze check: recorded in the
+commit that adds this section.
+
+### Blindness
+
+Before predictions: do not open Holdout-2 ground truth, do not inspect
+per-document expected headings, do not hand-author cards, do not select
+candidates using GT, do not retune structural scope, do not inspect
+model failures to decide whether to continue. The bridge may
+mechanically process the PDFs. Labels stay closed until
+`predictions.frozen.jsonl` is hashed.
+
+### Existing execution path (no new inference implementation)
+
+Same real-PDF bridge as Part 8, then the Part-16 marked-verifier rescore
+over **all** architecture mutations, not the spent 14-row locator list.
+
+1. `generate-holdout.mjs holdout2 out/holdout2`
+2. `run-opendataloader.mjs out/holdout2 out/holdout2-tagged`
+3. `run.py --dump-dir <tagged> --out-dir out/h2 --predict --offline --role-only --r2-veto --adapter-path out/adapter-role --arm B`
+4. `run.py --rescore out/h2/predictions.jsonl --arm B --from-blocks out/h2/blocks.json --list-mutations` (label-independent)
+5. `run.py --rescore out/h2/predictions.jsonl --arm B --verify-marked-binary --adapter-path out/adapter-verify-marked --from-blocks out/h2/blocks.json --pdf-dir <tagged> --verify-locators <mutations> --out-dir out/h2`
+
+`--verify-locators` is required so `--verify-marked-binary` does not
+default to the spent Part-10 14-row list. The locator list is
+`mutation_locators` output: post-structure / post-R2 heading mutations
+only. No GT.
+
+Settings unchanged: temperature 0, thinking disabled, max-tokens 256,
+role-only stem, marked eligibility stem, no existing tag in either
+prompt, no crop, no role adapter on the verifier call.
+
+### Registered predictions (frozen before labels)
+
+1. `[H]` The frozen architecture executes Holdout 2 without bridge or
+   parse failure that prevents scoring.
+2. `[H]` Structural scope again removes a substantial portion of
+   obviously ineligible heading candidates before Qwen.
+3. `[H]` Final unsafe retags on Holdout 2 are zero.
+4. `[H]` The marked verifier vetoes zero genuine headings.
+5. `[H]` Exact heading-level accuracy remains ≥80%.
+6. `[H]` R2 has zero true-heading collisions.
+7. `[H]` The marked verifier makes at least one safety-relevant
+   decision that would differ from accepting the role-model mutation
+   blindly. Informative, not required for the win.
+8. `[H]` No retraining, prompt change, crop, semantic heuristic, or
+   larger model is needed.
+
+### Stop rule
+
+* **A** — final unsafe retags 0, verifier heading demotions 0, R2
+  heading collisions 0, heading exact ≥80%, execution complete, freeze
+  intact. Load-bearing enough to earn a later production-integration
+  experiment. Do not integrate here. Do not retrain.
+* **B** — any final unsafe retag. STOP. Classify mechanism only after
+  scoring. Do not patch. Holdout 2 is spent. No second “blind” run.
+* **C** — verifier harms a true heading. STOP. Do not tune marker or
+  prompt against Holdout 2.
+* **D** — safety holds but exact heading accuracy <80% or detection
+  collapses. STOP. Do not add epochs or restore `existing_tag`.
+* **E** — bridge / extraction prevents meaningful scoring. STOP as
+  bridge evidence.
+* **F** — mutation safety and usefulness pass, but some GT non-headings
+  entered as existing H* and stayed H* with `action=keep`. Report
+  `pre-existing_bad_heading_kept`. Do not fail the registered
+  mutation-safety gate solely for those. Distinguish mutation safety
+  from end-state semantic correctness.
+
+One frozen architecture. One blind prediction artifact. One score.
+No Part 17B.
+
+### Scoring (frozen definitions; labels still closed)
+
+Unsafe retag = GT non-heading whose `final_role` is H1–H6 **and**
+`derived_action` is `retag`. Same as Part 8. Do not move that
+goalpost.
+
+Usefulness: exact heading-level accuracy ≥80% over
+`headingHierarchy`, unmatched GT headings from bridge/segmentation
+reported separately. Safety must not be achieved by collapse-to-
+nonheading.
+
+After labels, also report (not a new gate): role-model-only unsafe,
+unsafe after source/ancestry, unsafe after R2, unsafe after marked
+verifier, verifier invocation vs GT, verifier-caused genuine-heading
+demotions, H→H level changes blocked by the verifier, and
+`pre-existing_bad_heading_kept`.
 
 
