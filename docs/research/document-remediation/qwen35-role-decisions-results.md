@@ -4528,4 +4528,89 @@ the bottleneck. One expanded role-only QLoRA run is earned next.
 
 Do not train it in Part 19.
 
+---
+
+## Part 20 — does deeper development coverage improve the role adapter?
+
+**Date:** 2026-09-11. Same branch. Role-layer experiment. No fixture
+edits. No Holdout-1 / Holdout-2. No marked verifier. No image input.
+No structural-rule change. No production integration.
+`out/adapter-role` is the frozen reference and is never overwritten.
+
+Part 19 passed: the development corpus now has enough bridge-visible
+H3/H4 and hard-negative evidence to test the Part-18 hypothesis.
+
+### The one question
+
+> Does expanding the development-only role-training corpus with the
+> frozen Part-19 H3/H4 and hard-negative documents materially improve
+> the Qwen3.5-4B role classifier’s hierarchy accuracy and semantic
+> heading safety on untouched whole-document development validation?
+
+Score semantic role, not merely mutation safety. A GT non-heading
+whose `model_role` is H1–H6 is a false-heading prediction even if the
+existing PDF tag is already H* and derived action would be `keep`.
+
+### Registered predictions (frozen before Gate 1 inference)
+
+1. `[H]` The frozen old `out/adapter-role` reproduces the shallow
+   hierarchy weakness on the new whole-document validation set.
+2. `[H]` Its largest heading errors are concentrated in H3/H4 rather
+   than H1.
+3. `[H]` The expanded 137-card development-only training population
+   materially improves deeper heading-level accuracy.
+4. `[H]` Expanded training also reduces false non-heading→H*
+   role predictions rather than only moving headings between levels.
+5. `[H]` The expanded adapter reaches zero false-heading predictions
+   and ≥80% exact heading-level accuracy on docs 17/18.
+6. `[H]` H3/H4 no longer behave as a one-example class:
+   H3+H4 exact reaches at least 11/14 and detection does not collapse.
+7. `[H]` Previously passing development behavior does not materially
+   regress.
+8. `[H]` No vision, verifier change, larger model, structural-rule
+   change, holdout example, or production integration is required.
+
+### Frozen data (verified before any model call)
+
+| file | expected SHA-256 | verified |
+|---|---|---|
+| `train.json` | *(recorded now)* `1097a038bc0145092c51572e77c8fed3405773418fd1ab60a9011ddfb2fede14` | 43 cards, H1 6 / H2 15 / H3 1 / H4 0 / P 17 / Artifact 4, docs 02/04/05/06/10/12. Not edited. |
+| `role-expanded-new-train.json` | `abb2bc78f915ea6c657b699d39c1d6a43bda9455dc532df497b5987c389359df` | match. 94 cards, H1 4 / H2 8 / H3 12 / H4 16 / P 54, docs 13–16 only. |
+| `role-expanded-valid.json` | `207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f` | match. 47 cards, H1 2 / H2 4 / H3 6 / H4 8 / P 27, docs 17–18 only. |
+| `split.json` | `87dc5e69c85fc5ddd9458e96a2847c49c2f47a7609b65f2d82d94119b667d1f9` | match. Train 13–16. Validation 17–18. |
+
+`ROLE_ONLY_STEM` SHA-256
+`5aed45055e21db61a3209d9ad38483f59e1be519f459f06630b373754e5518df`
+(same as Part 16 freeze).
+
+Frozen `out/adapter-role` (not overwritten this Part):
+
+* `adapters.safetensors` `8178c345f9f195d93fc3f099a22809ac0145a03915b96d6cbeb9dd02fe68dfdb`
+* `adapter_config.json` `51518b19e2a1ec53f75a40c119de15da988dca39344e05b7e917ecacc6d31d82`
+
+Base checkpoint hashes unchanged vs Part 16
+(`model.safetensors` `5fb9acd0…acb2db`, `config.json` `f3efc81b…c6eaaa`).
+
+### Gate 0 — 137-row training population
+
+Concatenation of the two frozen semantic card sets. No oversampling.
+No duplicate H3/H4 rows. No validation row. No Holdout-1 or Holdout-2
+row.
+
+`experiments/qwen-role-decisions/role-expanded/role-expanded-train.json`
+
+| role | n |
+|---|---:|
+| H1 | 10 |
+| H2 | 23 |
+| H3 | 13 |
+| H4 | 16 |
+| P | 71 |
+| Artifact | 4 |
+| **total** | **137** |
+
+SHA-256 `638f83ac7114590e889a813918c213b9d2d29d4750193e7964b8ee61b321390c`
+
+**Gate 0: PASS.** Dataset reproduced. No model call yet.
+
 
