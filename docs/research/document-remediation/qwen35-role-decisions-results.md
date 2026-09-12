@@ -5289,5 +5289,175 @@ Gate 2, Holdout 1, or Holdout 2. Do not blend adapters.
 not invoked. Hierarchy remains a separate unsolved task, and it is not
 earned while eligibility still promotes a chart title.
 
+---
+
+## Part 23 — is chart-title specificity still a data-coverage problem?
+
+**Date:** 2026-09-12. Same branch. Data construction / inventory only.
+No QLoRA. No verifier inference. No role adapter. No prompt change.
+No marker change. No crop. No `--train-vision`. No larger model. No
+Holdout-1 / Holdout-2. Docs 17/18 remain frozen validation and are
+not edited, copied, paraphrased, or used as training material.
+`out/adapter-verify-marked-expanded` is not modified. Validation
+pages were not inspected while designing any later fixtures. The
+already-recorded failure classification `chart-title` is sufficient.
+
+Part 22 removed every false negative on docs 17/18 (heading 20/20,
+H4 8/8, H3+H4 14/14; callout and running footer stay false). One
+semantic false positive remains: `18-sample-receipt:21`, GT P,
+authored category `chart-title`, verifier `heading:true`.
+
+### The one question
+
+> Before changing the model or retraining again, does the development
+> training side contain enough independent chart-title / chart-label
+> evidence to test specificity honestly, or do we need to construct
+> that missing evidence first?
+
+This Part answers only the data question.
+
+### Frozen validation (not modified)
+
+`role-expanded/role-expanded-valid.json` SHA-256
+`207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f`
+
+Docs 17/18 remain evaluation-only. Not copied: the failing string,
+its neighbors, typography, page arrangement, chart type, locator, or
+ODL tag pattern.
+
+### Registered predictions (frozen before any new fixture)
+
+1. `[H]` Part-22 training contains materially less chart-title
+   diversity than its overall 66-negative count suggests.
+2. `[H]` The persistent doc-18 FP is therefore consistent with
+   within-class coverage being thin even though the category is
+   technically represented.
+3. `[H]` Three small whole development documents can add at least six
+   independent chart-title negatives without copying validation or
+   holdout content.
+4. `[H]` The existing real-PDF bridge preserves those examples as
+   standalone verifier rows.
+5. `[H]` Genuine headings can be colocated with chart contexts without
+   structural scope removing them.
+6. `[H]` No model execution is required to establish whether one more
+   verifier-training experiment is justified.
+
+### Gate 0 — inventory of the exact 124 Part-22 verifier-training rows
+
+Source: frozen
+`role-expanded/verifier-expanded-train-manifest.json` SHA-256
+`d151f392359360aeada16a28469b4a557942392646cb772a6bf3d911be15896b`
+joined to gitignored SFT
+`out/gen-sft-verify-expanded/train.json` SHA-256
+`79c510e9226269365f843adea50344af7c8952bebc395e04efadad2e02ce678f`
+(124/124, same ID order). Categories are the stored GT / probe
+fields. No category was assigned from model output.
+
+| | n |
+|---|---:|
+| SFT rows | 124 |
+| heading true | 58 |
+| heading false | **66** |
+| documents | 02, 04, 05, 06, 10, 12, 13–16 |
+
+Heading-false stored categories:
+
+| stored category | n | documents |
+|---|---:|---|
+| P / paragraph (ordinary body) | 47 | 02, 04, 05, 10, 12, 13–16 |
+| prominent-nonheading | 6 | 02, 05, 12 |
+| furniture | 2 | 02, 05 |
+| running-header | 2 | 13, 15 |
+| status-line | 2 | 13, 15 |
+| running-footer | 2 | 13, 14 |
+| callout | 1 | 13 |
+| group-label | 1 | 14 |
+| table-title | 1 | 14 |
+| definition-term | 1 | 15 |
+| body-label | 1 | 16 |
+
+Authored `nonHeadings` `chart-title` in this 124: **0**.
+The one chart-related negative is Pool A `12-chart-title`, stored
+as `prominent-nonheading`, source note “SVG chart title”.
+
+#### Chart-related negatives that actually entered SFT
+
+| bucket | n | rows |
+|---|---:|---|
+| 1. chart titles | **1** | `12-chart-title` “Quarterly trend by depot”, 11pt bold, existing_tag `none`, prev `Coastal` next `Q1`, source SVG chart title on doc 12 |
+| 2. chart subtitles | **0** | — |
+| 3. legends | **0** | `07-northern` exists on spent doc 07 / `valid-07.json` and is **not** in the 124 |
+| 4. axis labels | **0** | — |
+| 5. tick labels | **0** | `07-q1` likewise not in the 124; R2 would drop letterless ticks anyway |
+| 6. chart-adjacent prose/captions | **0** | `12-table-caption` is an authored **table** caption (`prominent-nonheading`), not a chart caption |
+
+`14-pump-overhaul:22` “Parts used this shift” is `table-title`, not
+chart-title. Figure caption `05-fig1` is photograph figcaption, not
+a chart.
+
+Independent chart-title negatives: **1**, from **1** document.
+Required diversity bar was four from at least three whole documents
+with materially different visual/typographic contexts.
+
+#### Every heading:false row
+
+SFT font/weight is what the verifier-training prompt carried
+(ODL-measured). Pool A `ancestors` were not stored on `train.json`;
+those rows entered SFT, so they passed `verifier_skip_reason`
+(source-type / Table-Figure ancestry / R2). Pool B ancestors are
+`Document` on every listed negative. Full prev/next strings live on
+the frozen manifest; abbreviated here.
+
+| id | doc | stored category | authored visual context | SFT font/wt | existing_tag | text |
+|---|---|---|---|---|---|---|
+| `02-p` | 02 | paragraph | — | 13pt/regular | P | The depot lease expires within the year… |
+| `02-callout` | 02 | prominent-nonheading | callout (source note; no `nonHeadings`) | 12pt/bold | none | Note. This box straddles the gutter… |
+| `02-footer` | 02 | furniture | running footer (source note) | 10pt/regular | none | Northwind Logistics · Coastal Depot Review · Page 1 of 1 |
+| `04-p` | 04 | paragraph | — | 14pt/regular | P | Utilisation is reported by vehicle class… |
+| `05-brand` | 05 | furniture | brand bar (source note) | 11pt/regular | none | Coastal Quay Site Report · Page 1 |
+| `05-p` | 05 | paragraph | — | 14pt/regular | P | Two site visits were made during the review period. |
+| `05-fig1` | 05 | prominent-nonheading | figure caption (source note) | 12pt/regular | none | Figure 1: The western quay at low tide… |
+| `10-p` | 10 | paragraph | — | 14pt/regular | P | This document carries no title metadata… |
+| `12-sub` | 12 | prominent-nonheading | cover subtitle (source note) | 17pt/regular | none | Annual Review 2026 · prepared for the Board |
+| `12-org` | 12 | prominent-nonheading | cover org line (source note) | 13pt/regular | none | Northwind Logistics · Estates and Operations |
+| `12-p` | 12 | paragraph | — | 10.5pt/regular | P | Coastal has operated below its designed capacity… |
+| `12-table-caption` | 12 | prominent-nonheading | table caption (source note) | 12pt/bold | none | Containers handled, by depot and quarter (hundreds) |
+| `12-chart-title` | 12 | prominent-nonheading | **SVG chart title** (no GT `nonHeadings`) | 11pt/bold | none | Quarterly trend by depot |
+| `13-workshop-induction:0` | 13 | running-header | running-header | 10pt/regular | P | Northwind Logistics · Workshop · Page 1 of 1 |
+| `13-workshop-induction:1` | 13 | status-line | status-line | 13pt/regular | P | Internal draft — not a controlled copy |
+| `13-workshop-induction:3`–`:21` (10 body P) | 13 | P | — | 14pt/regular | P | ordinary paragraphs |
+| `13-workshop-induction:22` | 13 | callout | callout | 14pt/bold | H4 | Note. PPE is issued at the locker, not at the machine. |
+| `13-workshop-induction:23` | 13 | running-footer | running-footer | 10pt/regular | P | Northwind Logistics · Induction · Prepared 2026-09-11 |
+| `14-pump-overhaul:1`–`:19` (10 body P) | 14 | P | — | 14pt/regular | P | ordinary paragraphs |
+| `14-pump-overhaul:20` | 14 | group-label | group-label | 16pt/regular | H3 | Issued from stores |
+| `14-pump-overhaul:21` | 14 | P | — | 14pt/regular | P | These lines are the consumables booked against this job… |
+| `14-pump-overhaul:22` | 14 | table-title | table-title | 17pt/regular | H2 | Parts used this shift |
+| `14-pump-overhaul:30` | 14 | running-footer | running-footer | 10pt/regular | P | East pump house · shift log |
+| `15-archive-transfer:0` | 15 | running-header | running-header | 10pt/regular | P | Records office · transfer note |
+| `15-archive-transfer:1` | 15 | status-line | status-line | 13pt/regular | P | Draft list — boxes not yet sealed |
+| `15-archive-transfer:3`–`:21` (10 body P) | 15 | P | — | 14pt/regular | P | ordinary paragraphs |
+| `15-archive-transfer:22` | 15 | definition-term | definition-term | 14pt/bold | H4 | Series. A run of records kept together… |
+| `16-shift-handover:1`–`:19` (10 body P) | 16 | P | — | 14pt/regular | P | ordinary paragraphs |
+| `16-shift-handover:20` | 16 | body-label | body-label | 14pt/bold | P | Priority. Speak the conveyor isolation… |
+| `16-shift-handover:22` | 16 | P | — | 14pt/regular | H2 | Three vehicles were held overnight… |
+
+`12-chart-title` prev/next: `Coastal` / `Q1` (SVG neighbors, not
+section prose). That is the entire within-class neighbor context
+the trainer saw.
+
+**Gate 0 decision: sparse.** Chart-title coverage is essentially
+`12-chart-title` alone. Data construction is earned. Another QLoRA
+is not run in this Part.
+
+### Future semantic-safety requirement (recorded, not executed)
+
+A later verifier architecture must score every in-scope element that
+would otherwise finish as H1–H6, including keep-as-H*. Report
+`legacy_unsafe_mutation` (GT non-heading + final H* + action=retag)
+and `semantic_false_heading` (GT non-heading + final H*, any action)
+separately. `semantic_false_heading == 0` is the remediation safety
+target. An existing H* that the verifier rejects must not be counted
+safe by keep; demotion vs unresolved is a later integration choice.
+
 
 
