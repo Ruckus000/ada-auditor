@@ -143,11 +143,10 @@ describe('describeDocumentRefusal', () => {
   });
 
   it('offers no errand on the refusal that does not know what the document is', () => {
-    // `converter_unavailable` is raised by `refuseWithoutToolchain` before the
-    // route fetches anything, so it fires for a PDF repair as readily as for a
-    // Word conversion — and the Repair button is not gated on the converter at
-    // all. Told to "convert it on a computer that has LibreOffice", an operator
-    // repairing a PDF has no Word source to take anywhere and no errand to run.
+    // `converter_unavailable` once fired for a PDF repair as readily as for a
+    // Word conversion, and the Repair button is not gated on the converter.
+    // Every producer now raises it for Word work only, but the copy stays
+    // lane-neutral: a sentence that names no lane cannot be wrong about one.
     const copy = describeDocumentRefusal({ error: 'converter_unavailable' });
 
     expect(copy).not.toMatch(/Convert it on/i);

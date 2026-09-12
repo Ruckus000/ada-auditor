@@ -59,13 +59,12 @@ const NOT_AVAILABLE = 'so the document was not read. This says nothing about the
 const NO_CONVERTER = `Word conversion is not available on this host, ${NOT_AVAILABLE} Convert it on a computer that has LibreOffice.`;
 
 /**
- * The refusal raised before the route has fetched anything, so it does NOT
- * know what the document is — `refuseWithoutToolchain` probes LibreOffice
- * first and answers this for a PDF repair as readily as for a Word
- * conversion, and the "Repair this PDF" button is not gated on the converter
- * at all. Naming Word here, or sending the reader to convert somewhere else,
- * hands an operator repairing a PDF an errand with no Word source to run it
- * on. It says only what was refused.
+ * Written lane-neutral because `documents/convert`'s POST once raised it before
+ * fetching, for a PDF repair as readily as for a Word conversion. Every
+ * producer now raises it only for Word work — the stateless `remediate-url`
+ * accepts nothing else, and the others check once the bytes say Word — so the
+ * sentence is narrower than it has to be, not wrong. It says only what was
+ * refused.
  */
 const NO_CONVERTER_YET = `This host cannot run the converter, ${NOT_AVAILABLE}`;
 const NO_TOOLCHAIN = `The PDF stages are not available on this host, ${NOT_AVAILABLE}`;

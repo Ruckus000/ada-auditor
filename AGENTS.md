@@ -489,13 +489,15 @@ Chromium launches on a Vercel function:
   hydration suite runs on a machine where the banner correctly never renders,
   so a render test cannot reach it and the limitation is written down rather
   than papered over.
-  **Recorded, not fixed here:** `documents/convert`'s POST calls
-  `refuseWithoutToolchain` before it fetches, so it probes LibreOffice for a
-  **PDF repair**, which needs none — the sibling upload path in the same file
-  says so outright — and the "Repair this PDF" button is not gated on the
-  converter. On a converter-less host that repair is refused with
-  `converter_unavailable`. The copy for that code is lane-neutral for exactly
-  this reason (`NO_CONVERTER_YET`), but the refusal itself is a route bug.
+  **Fixed since:** `documents/convert`'s POST used to probe LibreOffice before
+  it fetched, so before it knew the bytes were a PDF, and refused a **PDF
+  repair** — which needs no converter — with `converter_unavailable`. "Repair
+  this PDF" is not gated on the converter, so that button hit it on any
+  converter-less host, a Writer-less production bundle included. POST now
+  makes PUT's split: the JVM before the fetch, the converter only once the
+  bytes say Word. A Word document on such a host now costs one fetch before
+  the refusal; that is the price of knowing. The copy for that code stays
+  lane-neutral (`NO_CONVERTER_YET`).
 - **The screen that lists clients is labelled Clients; its code is called
   `portfolio`.** The label was Portfolio — agency jargon for a book of
   accounts, on a screen that lists clients — and it is retired from the tab,

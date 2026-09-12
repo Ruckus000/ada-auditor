@@ -364,6 +364,21 @@ describe('consuming the answers on record', () => {
     expect(summary.declared).toEqual({ language: true, figures: 1 });
   });
 
+  it('repairs a crawled PDF on a host with no converter, because a repair needs none', async () => {
+    // The route used to probe LibreOffice before the fetch, so before it knew
+    // the bytes were a PDF — and "Repair this PDF" was refused
+    // `converter_unavailable` on a host that could do the work. A Writer-less
+    // bundle is how a production host gets there. PUT already had this right.
+    runtimes.soffice = false;
+    await seedAnsweredPdf();
+
+    const response = await POST(request({ url: PDF_URL }), params('acme'));
+
+    expect(response.status).toBe(200);
+    const events = await platform.listEvents({ clientId: 'acme' });
+    expect(events[0]).toMatchObject({ action: 'document_repaired' });
+  });
+
   it('refuses an answer whose figure no longer looks as it did when answered', async () => {
     // The document now carries a description on that figure. Writing a
     // person's answer over an author's words is not transcription, so the
@@ -591,14 +606,30 @@ describe('/api/platform/clients/[clientId]/documents/convert', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('answers 503 before fetching when the host cannot convert', async () => {
+  it('answers 503 before fetching when the host has no Java runtime', async () => {
+    // Both lanes need the JVM, so this one can be refused before the bytes.
+    runtimes.java = false;
+
+    const response = await POST(request({ url: DOC_URL }), params('acme'));
+
+    expect(response.status).toBe(503);
+    expect((await response.json()).error).toBe('document_toolchain_unavailable');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('answers 503 for a Word document when the host cannot convert, and persists nothing', async () => {
+    // Only once the bytes say Word: until then the work might be a PDF repair,
+    // which needs no converter. The fetch is the price of knowing.
     runtimes.soffice = false;
 
     const response = await POST(request({ url: DOC_URL }), params('acme'));
 
     expect(response.status).toBe(503);
     expect((await response.json()).error).toBe('converter_unavailable');
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledOnce();
+    expect(convertSourceToPdf).not.toHaveBeenCalled();
+    expect((await platform.listClientDocuments('acme')).documents).toEqual([]);
+    expect(await platform.listEvents({ clientId: 'acme' })).toEqual([]);
   });
 
   it('answers 404 for a client that does not exist', async () => {
