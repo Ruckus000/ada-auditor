@@ -6638,5 +6638,199 @@ shrink the population.
 
 Training has not started at the time this subsection was committed.
 
+### Training health (one registered run)
+
+Launched after the predictions commit (`f01f4d9`). Same CLI as
+registered. Working directory
+`experiments/qwen-role-decisions`. Offline Hub/datasets. No seed.
+No second configuration. Destination did not exist before the run
+and was not created.
+
+`[V]` `TRAIN_EXIT:1`. Rows **161**. Announced iterations **966**
+(161 × 6). Learning rate default `2e-5`. Trainable
+**349.746688 M / 4539.264 M (7.705%)**. Language-side LoRA remains
+(496 tensors, same last-names as Part 24). Vision modules receiving
+full-weight updates: `vision_tower.patch_embed`,
+`vision_tower.pos_embed`, `vision_tower.blocks.*`,
+`vision_tower.merger` (297 tensors; vision `nn.Linear` count 98;
+not QuantizedLinear; not LoRA). Log line immediately before the
+crash: `Unfreezing vision stack for training`.
+
+No completed optimizer step. No `Iter 10` report. No train loss
+start/end. No NaN. Crash at
+`mlx_vlm/trainer/sft_trainer.py:594` `mx.eval(state, losses,
+n_tokens, grad_accum)` on iteration 1:
+
+`RuntimeError: [METAL] Command buffer execution failed: Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory).`
+
+Peak mem was not printed (report is every 10 steps). No adapter
+file. No `adapter_config.json` for the vision destination. Training
+set not scored.
+
+Log SHA-256
+`31a1fb2a31ad256e3166d58cada138f3554f19303b677557c9bd328569ef8f43`.
+
+`--grad-checkpoint` was already on. Inspection of the installed
+trainer (`sft_trainer.py:487–491`): checkpointing wraps
+`module.layers[0]` for each `model.children()` entry that has
+`.layers`. Qwen3.5 `vision_tower` exposes `.blocks`, not `.layers`,
+so this switch checkpoints language layers and does **not**
+checkpoint the unfrozen vision tower. That is why Part 24 (language
+LoRA only, 14.057 GB) ran and this run died on step 1.
+
+The one allowed mechanical correction is an upstream memory switch
+**already used** in this experiment. Both such switches are already
+in the registered command (`--grad-checkpoint`,
+`--image-resize-shape 560 800`). Do not lower resolution. Do not
+shrink the population. Do not add `--gradient-accumulation-steps`
+(never used here as a memory fix; batch size is already 1). Do not
+patch MLX-VLM to checkpoint `.blocks`. Do not write a custom
+trainer.
+
+Frozen adapters untouched (same 62 MiB language-LoRA files as
+before this Part): `out/adapter-verify-marked-chart-expanded`,
+`out/adapter-verify-marked-expanded`, `out/adapter-verify-marked`,
+`out/adapter-role`.
+
+### Gate 1 — not run
+
+No adapter exists. Direct semantic eligibility on docs 17/18 was
+not scored. Do not evaluate Part 24 in its place. Do not treat the
+OOM as a semantic FN or FP.
+
+Required critical rows were not generated.
+
+### Gate 2 / Gate 2B / Gate 3 — not earned
+
+Causal image ablation and older-development regression require a
+perfect Gate 1. Stop.
+
+Holdout 1 and Holdout 2 were not run.
+
+### Comparison table
+
+Gate 1 did not run, so Part 27 has no eligibility numbers. Frozen
+Part 22 / Part 24 references are unchanged:
+
+| metric | Part 22 language-side expanded | Part 24 chart-expanded language-side | Part 27 vision-trained |
+|---|---:|---:|---|
+| parse | 47/47 | 47/47 | not scored |
+| TP /20 | 20 | 19 | not scored |
+| FN /20 | 0 | 1 | not scored |
+| TN /27 | 26 | 27 | not scored |
+| FP /27 | 1 | 0 | not scored |
+| H1 /2 | 2 | 2 | not scored |
+| H2 /4 | 4 | 4 | not scored |
+| H3 /6 | 6 | 6 | not scored |
+| H4 /8 | 8 | 7 | not scored |
+| H3+H4 /14 | 14 | 13 | not scored |
+
+| row | Part 22 | Part 24 | Part 27 |
+|---|---|---|---|
+| Workshop floor | true | false | not scored |
+| Receipts by hour | true | false | not scored |
+
+The measured marker-specific tradeoff is therefore **unresolved**.
+This Part did not move it.
+
+### Predictions vs evidence
+
+1. `[H]` Supported `--train-vision` path without source
+   modification. **HIT** (Gate 0). The path is full vision-tower
+   unfreeze plus language LoRA, loaded through existing
+   `apply_lora_layers`.
+2. `[H]` 161-row population trains with the same QLoRA settings plus
+   `--train-vision`. **MISS.** Mechanical OOM before the first
+   completed step.
+3. `[H]` Parse 47/47, FN 0, FP 0. **untested.**
+4. `[H]` Workshop floor becomes true. **untested.**
+5. `[H]` Receipts by hour remains false. **untested.**
+6. `[H]` No other row regresses. **untested.**
+7. `[H]` H1/H2/H3/H4 2/2, 4/4, 6/6, 8/8. **untested.**
+8. `[H]` Image ablation still visual. **untested** (Gate 2 not
+   earned).
+9. `[H]` Older development does not regress. **untested.**
+10. `[H]` No new data/prompt/marker/crop/model/role/rule/holdout/
+    production integration. **HIT** by construction. Stopped
+    instead of adding any of those.
+
+### Outcome
+
+**E — upstream vision-training path is mechanically unworkable on
+this installed stack at the frozen 560×800 / 161-row / rank-8 /
+6-epoch configuration.**
+
+`--train-vision` is supported as a flag and as a serializer (Gate
+0). It is not runnable here: Metal OOM on optimizer step 1 while
+349.7 M parameters are trainable, and the already-used
+`--grad-checkpoint` switch does not wrap `vision_tower.blocks`.
+
+STOP.
+
+Do not train another configuration. Do not lower resolution. Do not
+crop. Do not patch MLX-VLM. Do not build a vision-LoRA wrapper. Do
+not add Workshop floor or Receipts by hour. Do not run spent
+holdouts. Do not production-integrate. Do not start Part 28.
+
+The Part-24 language-side adapter remains the latest recorded
+docs-17/18 eligibility result (parse 47/47, TP 19/20, FN 1, TN
+27/27, FP 0). Outcome D from Part 24 is unchanged. Part 25’s causal
+marker-dependence finding is unchanged. Neither is a vision-trained
+fix.
+
+### Part-26 contract (stated, not wired)
+
+This Part is a component experiment. It does not claim final
+remediation safety, Holdout-1 safety, Holdout-2 safety, or
+production readiness.
+
+Any later integration of a verifier is still required to use the
+Part-26 contract, whether or not vision training later becomes
+runnable:
+
+`preverify_final_role` = role after source-type + ancestry + role
+classifier + R2.
+
+`verify_candidate` = `preverify_final_role in H1..H6`, including
+non-H* → H*, H* → different H*, and H* → same H*.
+
+Semantic safety:
+
+`semantic_false_heading = gt_nonheading && final_role in H1..H6`
+
+not merely `legacy_unsafe_mutation`.
+
+Verifier `false` may not silently retain an existing H* and then be
+called safe.
+
+That integration is **not earned** by this Part. The component did
+not produce a vision-trained adapter.
+
+### Required answers
+
+1. Upstream `--train-vision` on this stack fully unfreezes
+   `vision_tower` (not LoRA) while leaving language-side LoRA
+   trainable, dumps both through `save_adapter`, and ordinary
+   adapter load applies the vision tensors via
+   `load_weights(..., strict=False)`.
+2. The one registered run did **not** complete. Metal OOM on
+   iteration 1. `TRAIN_EXIT:1`. No adapter.
+3. Direct semantic eligibility on the 47 docs-17/18 rows was **not
+   scored**. FP=0 and FN=0 are untested.
+4. Workshop floor did not become a heading in this Part (not
+   scored).
+5. Receipts by hour was not re-scored.
+6. No other validation row was scored, so none can be said to have
+   regressed or improved.
+7. Visual causality of a new adapter was not tested. There is no
+   new adapter.
+8. Target-marker vs generic-page dependence of a new adapter was
+   not tested.
+9. Known older development behavior was not re-scored.
+10. A corrected Part-26 end-to-end integration experiment is **not**
+    earned. The vision-side component did not train.
+
+STOP. No Part 28.
+
 
 
