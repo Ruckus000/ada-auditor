@@ -5929,17 +5929,125 @@ false.
    training, larger model, role model, structural rule, or holdout
    evaluation is required.
 
-### Arm B plan
+### Arm B — same adapter, image omitted
 
-Same 47 cards, same Part-24 adapter, same `MARKED_ELIGIBILITY_STEM`
-prompt, image omitted. Gate is causal dependence, not beating the
-marked arm. Outcome A if all 47 identical (stop; no Arm C). Outcome
-B/C/D if flips exist; Arm C then runs on flip rows only
-(unmarked full page, magenta rectangle removed, no crop).
+Same 47 mapped cards, same Part-24 adapter, same
+`MARKED_ELIGIBILITY_STEM` prompt. `generate(..., image=None)`. The
+marked-image sentence was not replaced. `out/adapter-verify-text`
+was not used.
 
-Do not train a new adapter. Do not interpret zero image dependence
-as proof that vision cannot solve the task. Do not interpret
-nonzero dependence as an eligibility pass.
+`out/part25/arm-b.jsonl` SHA-256
+`9af7165a8156976aaf76659f87246252a260b83350023c2c1664e64487f017d7`
+
+Parse **47/47**.
+
+| | marked (Arm A) | no-image (Arm B) |
+|---|---|---|
+| parse | 47/47 | **47/47** |
+| TP /20 | 19 | **15** |
+| FN /20 | 1 | **5** |
+| TN /27 | 27 | **26** |
+| FP /27 | 0 | **1** |
+| H1 /2 | 2/2 | 2/2 |
+| H2 /4 | 4/4 | 4/4 |
+| H3 /6 | 6/6 | **5/6** |
+| H4 /8 | 7/8 | **4/8** |
+
+Marked → no-image disagreements: **7**.
+Unchanged correct: **40**. Unchanged wrong: **0**.
+
+Beneficial flips (no-image correct, marked wrong) — image
+**harmfully** load-bearing:
+
+| id | text | GT | marked | no-image |
+|---|---|---|---|---|
+| `17-visitor-brief:14` | Workshop floor | H4 | false | **true** |
+
+Harmful flips (marked correct, no-image wrong) — image
+**beneficially** load-bearing:
+
+| id | text | GT | marked | no-image |
+|---|---|---|---|---|
+| `17-visitor-brief:10` | Cloakroom | H4 | true | false |
+| `18-sample-receipt:6` | Batch numbers | H4 | true | false |
+| `18-sample-receipt:8` | Time of receipt | H4 | true | false |
+| `18-sample-receipt:16` | FRIDGE | H3 | true | false |
+| `18-sample-receipt:18` | Shelf map | H4 | true | false |
+| `18-sample-receipt:21` | Receipts by hour | P | false | true |
+
+Critical rows:
+
+| id | text | GT | marked | no-image | flip |
+|---|---|---|---|---|---|
+| `17-visitor-brief:14` | Workshop floor | H4 | false | true | yes |
+| `18-sample-receipt:21` | Receipts by hour | P | false | true | yes |
+
+**Outcome D** on Arm B: mixed dependence. Arm C earned on the seven
+flip rows.
+
+### Arm C — unmarked full page on flip rows only
+
+Same adapter, same prompt, same full-page raster, magenta target
+rectangle removed (`Preview.java` page PNG). No crop. No resolution
+change.
+
+`out/part25/arm-c.jsonl` SHA-256
+`abf447fad52d840928c5bb447a74bcf9dab9fb5a458134868ab2f9a6e28ab9e2`
+
+Parse 7/7.
+
+| id | text | marked | unmarked | no-image | class |
+|---|---|---|---|---|---|
+| `17-visitor-brief:10` Cloakroom | true | true | false | page-image, not marker |
+| `17-visitor-brief:14` Workshop floor | false | true | true | **target-marker** |
+| `18-sample-receipt:6` Batch numbers | true | true | false | page-image, not marker |
+| `18-sample-receipt:8` Time of receipt | true | true | false | page-image, not marker |
+| `18-sample-receipt:16` FRIDGE | true | true | false | page-image, not marker |
+| `18-sample-receipt:18` Shelf map | true | true | false | page-image, not marker |
+| `18-sample-receipt:21` Receipts by hour | false | true | true | **target-marker** |
+
+The two rows whose Part-24 marked decision differs from both
+unmarked-page and no-image are the chart-title correction and the
+quiet-H4 FN. Both are target-marker dependent. The five genuine
+headings that no-image dropped stay true on an unmarked page: those
+need some page image, not the magenta box.
+
+### Predictions vs evidence
+
+1. `[H]` Arm B parses 47/47. **HIT.**
+2. `[H]` At least one prediction changes. **HIT.** 7.
+3. `[H]` Receipts by hour benefits from the marked image. **HIT.**
+   Arm C: target-marker dependent.
+4. `[H]` Workshop floor is image-dependent or unchanged. **HIT.**
+   Target-marker dependent; unmarked page and no-image both
+   `heading:true`.
+5. `[H]` Arm C distinguishes marker vs page. **HIT.**
+6. `[H]` No new data/QLoRA/prompt/crop/vision/holdout. **HIT.**
+
+### Outcome
+
+**D.** Mixed causal dependence.
+
+STOP.
+
+The Part-24 language-side marked verifier **does** use the visual
+channel on this validation surface. It is not a pure text/metadata
+classifier. Seven of 47 decisions change when the image is omitted.
+
+That dependence is not uniformly helpful:
+
+* the magenta target marker is what rejects `Receipts by hour` and
+  what vetoes `Workshop floor`;
+* five other genuine headings that the marked arm kept are kept by
+  an unmarked page too, and drop only when the image is absent.
+
+Do not interpret this as an eligibility pass. Part 24 remains
+failed (TP 19/20). Do not train a new adapter in this Part. Zero
+uniform benefit is not a reason to drop the visual channel, and
+nonzero dependence is not a reason to promote the Part-24 adapter.
+
+A later experiment may test whether adapting the vision side
+changes the marker-harm on quiet H4s. That is not this Part.
 
 
 
