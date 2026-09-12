@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Sample Receipt Protocol</title>
+<style>
+  @page { size: A4; margin: 20mm 20mm; }
+  html { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
+  body { font: 10.5pt/1.55 "Times New Roman", Times, serif; color: #1b1b1b; letter-spacing: 0.02em; }
+  h1 { font-size: 17pt; font-weight: bold; border-bottom: 2pt solid #1b1b1b;
+       padding-bottom: 4pt; margin: 0 0 10pt; }
+  h2 { font-size: 13pt; font-weight: bold; margin: 15pt 0 4pt; }
+  h3 { font-size: 13pt; font-weight: bold; font-variant: small-caps;
+       letter-spacing: 0.03em; margin: 12pt 0 3pt; }
+  h4 { font-size: 10.5pt; font-weight: bold; margin: 8pt 0 2pt; }
+  .chart-title { font-size: 11pt; font-weight: bold; margin: 12pt 0 2pt; }
+  .axis { font-size: 8pt; color: #444; margin: 0 0 10pt; }
+  .hold { font-size: 10.5pt; font-weight: bold; margin: 12pt 0 8pt; }
+  .status { font-size: 9pt; font-style: italic; margin-top: 18pt; }
+</style>
+</head>
+<body>
+<h1>Sample Receipt Protocol</h1>
+<p>Samples are logged before they are stored. An unlogged sample is not
+placed in a fridge.</p>
+
+<h2>Logging</h2>
+<p>Logging is done at the bench by the receiving technician. It is not
+done later from memory.</p>
+
+<h3>Paper forms</h3>
+<p>The paper form is completed even when the digital log is available.
+The form stays with the sample until storage.</p>
+
+<h4>Batch numbers</h4>
+<p>The number on the form is copied from the sender’s label. A missing
+label stops receipt.</p>
+
+<h4>Time of receipt</h4>
+<p>Time is written as local time to the minute. Rounding to the hour is
+not accepted.</p>
+
+<h3>Digital log</h3>
+<p>The digital log is a copy of the paper form, not a second numbering
+scheme.</p>
+
+<h4>Unique ids</h4>
+<p>The system issues one id per sample. Reusing an id is treated as a
+failed receipt.</p>
+
+<h2>Storage</h2>
+<p>Storage starts only after both logs exist. Location is written on
+the form before the door is closed.</p>
+
+<h3>Fridge</h3>
+<p>The fridge holds only logged samples. Unlabelled tubes found inside
+are removed and held separately.</p>
+
+<h4>Shelf map</h4>
+<p>The map on the door shows shelf letters, not sample ids. Ids are
+on the form only.</p>
+
+<p class="hold">Hold. Samples without a time of receipt stay on the bench.</p>
+<p class="chart-title">Receipts by hour</p>
+<p class="axis">08 09 10 11 12 — counts are illustrative, not a live feed</p>
+<p class="status">For laboratory use only</p>
+</body>
+</html>

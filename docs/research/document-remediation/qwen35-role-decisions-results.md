@@ -4333,4 +4333,199 @@ authored, never inferred from ODL.
 
 No `src/` changes. No Cards.java / ODL special cases.
 
+### Frozen split (do not reshuffle)
+
+* train: `13-workshop-induction`, `14-pump-overhaul`,
+  `15-archive-transfer`, `16-shift-handover`
+* validation: `17-visitor-brief`, `18-sample-receipt`
+
+Style families (not one CSS template with swapped text):
+
+* 13 Georgia, conventional decreasing sizes
+* 14 system-ui, H3/H4 near body size, distinguished by weight
+* 15 Palatino, italic H3, lighter H4
+* 16 Avenir Next, H2/H3 share size
+* 17 Helvetica (validation), quiet H4 against a louder callout
+* 18 Times (validation), H2/H3 share size, small-caps H3
+
+### Gate A — authored corpus sanity (before PDF)
+
+`validate-fixtures.mjs` well-formed. Mechanical counts:
+
+| | H1 | H2 | H3 | H4 | H5 | H6 |
+|---|---:|---:|---:|---:|---:|---:|
+| 13 (train) | 1 | 2 | 3 | 4 | 0 | 0 |
+| 14 (train) | 1 | 2 | 3 | 4 | 0 | 0 |
+| 15 (train) | 1 | 2 | 3 | 4 | 0 | 0 |
+| 16 (train) | 1 | 2 | 3 | 4 | 0 | 0 |
+| 17 (val) | 1 | 2 | 3 | 4 | 0 | 0 |
+| 18 (val) | 1 | 2 | 3 | 4 | 0 | 0 |
+| **total** | **6** | **12** | **18** | **24** | **0** | **0** |
+
+Authored hard negatives: train 12 across nine categories
+(running-header, status-line, callout, running-footer, group-label,
+table-title, definition-term, body-label, decorative-numeral);
+validation 6 across six categories (running-header, callout,
+running-footer, body-label, chart-title, status-line).
+
+Validation stems are absent from the training-document list.
+No H5/H6 was authored. No banned holdout literal or locator in the
+new HTML/GT.
+
+**Gate A: PASS.**
+
+### Gate B — real PDF bridge fidelity
+
+Path used (same tools as Parts 5/18, new stems only):
+
+`corpus/*.html` → `generate-corpus.mjs` (Chromium `page.pdf()`) →
+`run-opendataloader.mjs` defaults → `run.py --dump-dir` / Cards.java.
+
+No `--predict`. No adapter. No Qwen.
+
+148 evaluable BLOCK cards, 0 `empty_text` / `missing_font` failures.
+
+GT matching is existing `text_norm` against `headingHierarchy[].text`.
+
+| | authored | standalone BLOCK | in-scope after source-type / ancestry |
+|---|---:|---:|---:|
+| H1 | 6 | 6 | 6 |
+| H2 | 12 | 12 | 12 |
+| H3 | 18 | 18 | 18 |
+| H4 | 24 | 24 | 24 |
+| **total** | **60** | **60** | **60** |
+
+All 42 new H3/H4 headings are their own evaluable cards. None contains
+its following body sentence. Font, weight, previous, and next are
+present on every matched heading. Source-type / Table-Figure ancestry
+removed **zero** true headings. Validation documents remain disjoint.
+
+H1/H2: 18/18 standalone and in-scope. No mechanical miss to record.
+
+ODL's own tags are often wrong (expected): 16's decorative `3` is
+`H1`; 17's quiet H4s are `P`; 18's H3s dump as `H1`/`H2`. GT hierarchy
+is the authored outline, not ODL.
+
+Mechanical fixture corrections before freeze (same semantic documents;
+wording and levels unchanged):
+
+1. Doc 14 H3/H4 at exact body size with 2pt gaps merged heading+body
+   into one text run. Increased heading/body gap and a 0.5–1pt size
+   delta so H3/H4 stay near body size but are distinct line boxes.
+2. Chromium emitted `fi`/`fl` ligatures (`Staffing`, `Workshop floor`),
+   which `text_norm` strips, so the existing matcher missed standalone
+   cards. `letter-spacing: 0.02–0.03em` plus `"liga" 0` on the six
+   fixtures. No Cards.java / ODL change.
+3. Doc 14's group-label and table-title clustered into one card.
+   A body sentence between them, and a 1pt size difference, split
+   them. Headings untouched.
+
+**Gate B: PASS.** 42/42 new headings as standalone real-PDF cards.
+
+### Gate C — post-scope data sufficiency
+
+Cards that would actually reach the role model (in-scope BLOCKS):
+
+| | H1 | H2 | H3 | H4 | P/non-heading from every train doc | authored hard negatives |
+|---|---:|---:|---:|---:|---|---:|
+| train 13–16 | 4 | 8 | 12 | 16 | yes (14 / 14 / 13 / 13) | 12, nine categories |
+| val 17–18 | 2 | 4 | 6 | 8 | — | 6, six categories |
+
+Required floors: train ≥4/8/8/8 and ≥12 negatives across ≥3
+categories; val ≥2/4/4/4 and ≥6 negatives across ≥2 categories.
+
+**Gate C: PASS.** No duplicated cards. No H3/H4 oversampled.
+
+### Gate D — frozen card surfaces
+
+Emitted through the same real-PDF bridge. No model prediction was
+generated before these files and the document split were frozen.
+
+`experiments/qwen-role-decisions/role-expanded/role-expanded-new-train.json`
+
+* documents: 13, 14, 15, 16 only
+* 94 in-scope cards: 40 true H1–H4, 42 ordinary paragraphs,
+  12 authored hard negatives
+* expect roles: H1 4 / H2 8 / H3 12 / H4 16 / P 54
+* SHA-256 `abb2bc78f915ea6c657b699d39c1d6a43bda9455dc532df497b5987c389359df`
+
+`experiments/qwen-role-decisions/role-expanded/role-expanded-valid.json`
+
+* documents: 17, 18 only (whole-document in-scope surface)
+* 47 cards: 20 true headings, 21 ordinary paragraphs,
+  6 authored hard negatives
+* expect roles: H1 2 / H2 4 / H3 6 / H4 8 / P 27
+* SHA-256 `207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f`
+
+`split.json` SHA-256
+`87dc5e69c85fc5ddd9458e96a2847c49c2f47a7609b65f2d82d94119b667d1f9`
+
+Fixture SHA-256 (HTML / GT):
+
+| file | SHA-256 |
+|---|---|
+| 13-workshop-induction.html | `61db700ba563fa2ea19f7169ff6363e8e188502324db0ce28ccba4fb944ddf82` |
+| 13-workshop-induction.ground-truth.json | `b3ff6e83bacd96944db8f97064bc2f6c11fd93eee380fd7c197c637faf3b8237` |
+| 14-pump-overhaul.html | `b307dda2c08ee72815bbded39d75dd88cb1503376ab8cb40881e79a9b77102d4` |
+| 14-pump-overhaul.ground-truth.json | `41d3e27ea03abced86231e0b78cd38e074e0745b85c26569fe5608e166c28f5d` |
+| 15-archive-transfer.html | `2727daf5f455e772cd5a38e17ba3478980942134bd7e1a9aa33ffaebd6be3514` |
+| 15-archive-transfer.ground-truth.json | `d9d4245a42b74e3218be39c614efde57f9f5a2f179b381af992404d7b98855a7` |
+| 16-shift-handover.html | `d2233e1af0caccaf659d4cc11b71304bab780c41438e76baa5cda5b44c9da688` |
+| 16-shift-handover.ground-truth.json | `3c9cd1d3b24af59a9dfc7064f87a315a4f508afd501f16af2629c32b537620a3` |
+| 17-visitor-brief.html | `3da381bfc3b5d878bcdb12a877a9f0488295429f00530d5577703ef91f05e355` |
+| 17-visitor-brief.ground-truth.json | `298f8ae362c62377dbf78e9d0871502ac66bc668d098d6816e464b6077e81a83` |
+| 18-sample-receipt.html | `50c8499ac50a70121da54e8eb580a0033577331f6104936e04dc17a221040248` |
+| 18-sample-receipt.ground-truth.json | `68cc418b338ef243dc18caedaf5db59c742e60afe2b8cea1bfc888c6d89bf04b` |
+
+Earlier 43 `train.json` cards are untouched.
+
+### Counts for a later Part 20 mixture decision (not taken here)
+
+1. Original role-training (`train.json`, docs 02/04/05/06/10/12):
+   43 cards — H1 6 / H2 15 / H3 1 / H4 0 / P 17 / Artifact 4
+2. New training documents (13–16):
+   94 cards — H1 4 / H2 8 / H3 12 / H4 16 / P 54
+3. If the next spike simply concatenated (1)+(2):
+   137 cards — H1 10 / H2 23 / H3 13 / H4 16 / P 71 / Artifact 4
+4. New untouched validation (17–18):
+   47 cards — H1 2 / H2 4 / H3 6 / H4 8 / P 27
+
+No oversampling. No duplicated hierarchy cards.
+
+### Predictions vs evidence
+
+1. `[H]` Six fixtures can supply ≥12 H3 and ≥12 H4 without spent
+   holdout content. **HIT.** Authored H3 18 / H4 24.
+2. `[H]` The existing PDF → ODL → Cards bridge preserves all new
+   H3/H4 as standalone evaluable cards. **HIT.** 18/18 and 24/24.
+3. `[H]` Source-type / ancestry scope collides with zero new true
+   headings. **HIT.**
+4. `[H]` Four training documents provide ≥8 bridge-visible H3 and
+   ≥8 H4. **HIT.** 12 and 16.
+5. `[H]` Two validation documents provide ≥4 H3 and ≥4 H4. **HIT.**
+   6 and 8.
+6. `[H]` Same fixtures provide enough heading-like non-headings.
+   **HIT.** Train 12 across nine categories; val 6 across six.
+7. `[H]` No Holdout-1 / Holdout-2 row, string-derived imitation,
+   image, or GT record is needed. **HIT.**
+8. `[H]` No model execution or production architecture is required.
+   **HIT.**
+
+### Outcome
+
+**PASS.** Six whole development documents exist. Split frozen
+4 train / 2 validation. Hierarchy counts meet the registered
+minimums. All H3/H4 survive as standalone real-PDF cards.
+Structural scope collides with zero true headings. Hard-negative
+minimums are met. No holdout material entered the corpus. Card
+surfaces are frozen and hashed.
+
+Then STOP.
+
+The development corpus now has enough bridge-visible H3/H4 and
+hard-negative coverage to test whether role-training coverage was
+the bottleneck. One expanded role-only QLoRA run is earned next.
+
+Do not train it in Part 19.
+
 

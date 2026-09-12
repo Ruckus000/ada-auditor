@@ -1,0 +1,997 @@
+{
+  "note": "Part 19 freeze. Whole-document in-scope cards from the two validation documents. Not down-selected on model behaviour. Training documents 13\u201316 are absent.",
+  "split": "validation",
+  "documents": [
+    "17-visitor-brief",
+    "18-sample-receipt"
+  ],
+  "cases": [
+    {
+      "id": "17-visitor-brief:0",
+      "locator": "17-visitor-brief:0",
+      "document": "17-visitor-brief",
+      "text": "Open morning \u00b7 site brief",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Visitor Day Brief",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "running-header",
+      "kind": "hard-negative",
+      "source": "corpus/17-visitor-brief.html nonHeadings:running-header"
+    },
+    {
+      "id": "17-visitor-brief:1",
+      "locator": "17-visitor-brief:1",
+      "document": "17-visitor-brief",
+      "text": "Visitor Day Brief",
+      "font_pt": 29,
+      "weight": "bold",
+      "prev": "Open morning \u00b7 site brief",
+      "next": "This brief is for staff hosting visitors, not for the visitors themselves. Times are local.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:2",
+      "locator": "17-visitor-brief:2",
+      "document": "17-visitor-brief",
+      "text": "This brief is for staff hosting visitors, not for the visitors themselves. Times are local.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Visitor Day Brief",
+      "next": "Do not enter the machine hall unescorted.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:3",
+      "locator": "17-visitor-brief:3",
+      "document": "17-visitor-brief",
+      "text": "Do not enter the machine hall unescorted.",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "This brief is for staff hosting visitors, not for the visitors themselves. Times are local.",
+      "next": "ARRIVAL",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "callout",
+      "kind": "hard-negative",
+      "source": "corpus/17-visitor-brief.html nonHeadings:callout"
+    },
+    {
+      "id": "17-visitor-brief:4",
+      "locator": "17-visitor-brief:4",
+      "document": "17-visitor-brief",
+      "text": "ARRIVAL",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "Do not enter the machine hall unescorted.",
+      "next": "Hosts collect their group at the gate, not at the workshop door. Late arrivals wait at reception.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:5",
+      "locator": "17-visitor-brief:5",
+      "document": "17-visitor-brief",
+      "text": "Hosts collect their group at the gate, not at the workshop door. Late arrivals wait at reception.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "ARRIVAL",
+      "next": "Reception",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:6",
+      "locator": "17-visitor-brief:6",
+      "document": "17-visitor-brief",
+      "text": "Reception",
+      "font_pt": 16,
+      "weight": "bold",
+      "prev": "Hosts collect their group at the gate, not at the workshop door. Late arrivals wait at reception.",
+      "next": "Reception issues a sticker, not a pass. The sticker is dated for this morning only.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:7",
+      "locator": "17-visitor-brief:7",
+      "document": "17-visitor-brief",
+      "text": "Reception issues a sticker, not a pass. The sticker is dated for this morning only.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Reception",
+      "next": "Badges",
+      "existing_tag": "H5",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:8",
+      "locator": "17-visitor-brief:8",
+      "document": "17-visitor-brief",
+      "text": "Badges",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Reception issues a sticker, not a pass. The sticker is dated for this morning only.",
+      "next": "Names are written as given. No job title is added on the sticker.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:9",
+      "locator": "17-visitor-brief:9",
+      "document": "17-visitor-brief",
+      "text": "Names are written as given. No job title is added on the sticker.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Badges",
+      "next": "Cloakroom",
+      "existing_tag": "H5",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:10",
+      "locator": "17-visitor-brief:10",
+      "document": "17-visitor-brief",
+      "text": "Cloakroom",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Names are written as given. No job title is added on the sticker.",
+      "next": "Coats stay in the cloakroom. Bags larger than a notebook stay there too.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:11",
+      "locator": "17-visitor-brief:11",
+      "document": "17-visitor-brief",
+      "text": "Coats stay in the cloakroom. Bags larger than a notebook stay there too.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Cloakroom",
+      "next": "Tours",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:12",
+      "locator": "17-visitor-brief:12",
+      "document": "17-visitor-brief",
+      "text": "Tours",
+      "font_pt": 16,
+      "weight": "bold",
+      "prev": "Coats stay in the cloakroom. Bags larger than a notebook stay there too.",
+      "next": "Each host walks one route. Groups do not combine on the floor.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:13",
+      "locator": "17-visitor-brief:13",
+      "document": "17-visitor-brief",
+      "text": "Each host walks one route. Groups do not combine on the floor.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Tours",
+      "next": "Workshop floor",
+      "existing_tag": "H5",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:14",
+      "locator": "17-visitor-brief:14",
+      "document": "17-visitor-brief",
+      "text": "Workshop floor",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Each host walks one route. Groups do not combine on the floor.",
+      "next": "The floor route stays behind the yellow line. Machines stay under power; they are not demonstrated.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:15",
+      "locator": "17-visitor-brief:15",
+      "document": "17-visitor-brief",
+      "text": "The floor route stays behind the yellow line. Machines stay under power; they are not demonstrated.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Workshop floor",
+      "next": "DEPARTURE",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:16",
+      "locator": "17-visitor-brief:16",
+      "document": "17-visitor-brief",
+      "text": "DEPARTURE",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "The floor route stays behind the yellow line. Machines stay under power; they are not demonstrated.",
+      "next": "Hosts return the group to reception. The gate is not used as a shortcut out.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:17",
+      "locator": "17-visitor-brief:17",
+      "document": "17-visitor-brief",
+      "text": "Hosts return the group to reception. The gate is not used as a shortcut out.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "DEPARTURE",
+      "next": "Feedback",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:18",
+      "locator": "17-visitor-brief:18",
+      "document": "17-visitor-brief",
+      "text": "Feedback",
+      "font_pt": 16,
+      "weight": "bold",
+      "prev": "Hosts return the group to reception. The gate is not used as a shortcut out.",
+      "next": "A comment is optional. It is written on paper, not taken as a recorded interview.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:19",
+      "locator": "17-visitor-brief:19",
+      "document": "17-visitor-brief",
+      "text": "A comment is optional. It is written on paper, not taken as a recorded interview.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Feedback",
+      "next": "Forms",
+      "existing_tag": "H5",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:20",
+      "locator": "17-visitor-brief:20",
+      "document": "17-visitor-brief",
+      "text": "Forms",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "A comment is optional. It is written on paper, not taken as a recorded interview.",
+      "next": "Forms are left in the tray. They are not collected from visitors at the door.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/17-visitor-brief.html headingHierarchy"
+    },
+    {
+      "id": "17-visitor-brief:21",
+      "locator": "17-visitor-brief:21",
+      "document": "17-visitor-brief",
+      "text": "Forms are left in the tray. They are not collected from visitors at the door.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Forms",
+      "next": "Host copy \u2014 not for visitors",
+      "existing_tag": "H5",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/17-visitor-brief.html in-scope"
+    },
+    {
+      "id": "17-visitor-brief:22",
+      "locator": "17-visitor-brief:22",
+      "document": "17-visitor-brief",
+      "text": "Host copy \u2014 not for visitors",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "Forms are left in the tray. They are not collected from visitors at the door.",
+      "next": "none",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "running-footer",
+      "kind": "hard-negative",
+      "source": "corpus/17-visitor-brief.html nonHeadings:running-footer"
+    },
+    {
+      "id": "18-sample-receipt:0",
+      "locator": "18-sample-receipt:0",
+      "document": "18-sample-receipt",
+      "text": "Sample Receipt Protocol",
+      "font_pt": 22,
+      "weight": "bold",
+      "prev": "none",
+      "next": "Samples are logged before they are stored. An unlogged sample is not placed in a fridge.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:1",
+      "locator": "18-sample-receipt:1",
+      "document": "18-sample-receipt",
+      "text": "Samples are logged before they are stored. An unlogged sample is not placed in a fridge.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Sample Receipt Protocol",
+      "next": "Logging",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:2",
+      "locator": "18-sample-receipt:2",
+      "document": "18-sample-receipt",
+      "text": "Logging",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "Samples are logged before they are stored. An unlogged sample is not placed in a fridge.",
+      "next": "Logging is done at the bench by the receiving technician. It is not done later from memory.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:3",
+      "locator": "18-sample-receipt:3",
+      "document": "18-sample-receipt",
+      "text": "Logging is done at the bench by the receiving technician. It is not done later from memory.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Logging",
+      "next": "PAPER FORMS",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:4",
+      "locator": "18-sample-receipt:4",
+      "document": "18-sample-receipt",
+      "text": "PAPER FORMS",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "Logging is done at the bench by the receiving technician. It is not done later from memory.",
+      "next": "The paper form is completed even when the digital log is available. The form stays with the sample until storage.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:5",
+      "locator": "18-sample-receipt:5",
+      "document": "18-sample-receipt",
+      "text": "The paper form is completed even when the digital log is available. The form stays with the sample until storage.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "PAPER FORMS",
+      "next": "Batch numbers",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:6",
+      "locator": "18-sample-receipt:6",
+      "document": "18-sample-receipt",
+      "text": "Batch numbers",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The paper form is completed even when the digital log is available. The form stays with the sample until storage.",
+      "next": "The number on the form is copied from the sender\u2019s label. A missing label stops receipt.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:7",
+      "locator": "18-sample-receipt:7",
+      "document": "18-sample-receipt",
+      "text": "The number on the form is copied from the sender\u2019s label. A missing label stops receipt.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Batch numbers",
+      "next": "Time of receipt",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:8",
+      "locator": "18-sample-receipt:8",
+      "document": "18-sample-receipt",
+      "text": "Time of receipt",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The number on the form is copied from the sender\u2019s label. A missing label stops receipt.",
+      "next": "Time is written as local time to the minute. Rounding to the hour is not accepted.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:9",
+      "locator": "18-sample-receipt:9",
+      "document": "18-sample-receipt",
+      "text": "Time is written as local time to the minute. Rounding to the hour is not accepted.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Time of receipt",
+      "next": "DIGITAL LOG",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:10",
+      "locator": "18-sample-receipt:10",
+      "document": "18-sample-receipt",
+      "text": "DIGITAL LOG",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "Time is written as local time to the minute. Rounding to the hour is not accepted.",
+      "next": "The digital log is a copy of the paper form, not a second numbering scheme.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:11",
+      "locator": "18-sample-receipt:11",
+      "document": "18-sample-receipt",
+      "text": "The digital log is a copy of the paper form, not a second numbering scheme.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "DIGITAL LOG",
+      "next": "Unique ids",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:12",
+      "locator": "18-sample-receipt:12",
+      "document": "18-sample-receipt",
+      "text": "Unique ids",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The digital log is a copy of the paper form, not a second numbering scheme.",
+      "next": "The system issues one id per sample. Reusing an id is treated as a failed receipt.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:13",
+      "locator": "18-sample-receipt:13",
+      "document": "18-sample-receipt",
+      "text": "The system issues one id per sample. Reusing an id is treated as a failed receipt.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Unique ids",
+      "next": "Storage",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:14",
+      "locator": "18-sample-receipt:14",
+      "document": "18-sample-receipt",
+      "text": "Storage",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "The system issues one id per sample. Reusing an id is treated as a failed receipt.",
+      "next": "Storage starts only after both logs exist. Location is written on the form before the door is closed.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:15",
+      "locator": "18-sample-receipt:15",
+      "document": "18-sample-receipt",
+      "text": "Storage starts only after both logs exist. Location is written on the form before the door is closed.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Storage",
+      "next": "FRIDGE",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:16",
+      "locator": "18-sample-receipt:16",
+      "document": "18-sample-receipt",
+      "text": "FRIDGE",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "Storage starts only after both logs exist. Location is written on the form before the door is closed.",
+      "next": "The fridge holds only logged samples. Unlabelled tubes found inside are removed and held separately.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:17",
+      "locator": "18-sample-receipt:17",
+      "document": "18-sample-receipt",
+      "text": "The fridge holds only logged samples. Unlabelled tubes found inside are removed and held separately.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "FRIDGE",
+      "next": "Shelf map",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:18",
+      "locator": "18-sample-receipt:18",
+      "document": "18-sample-receipt",
+      "text": "Shelf map",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The fridge holds only logged samples. Unlabelled tubes found inside are removed and held separately.",
+      "next": "The map on the door shows shelf letters, not sample ids. Ids are on the form only.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/18-sample-receipt.html headingHierarchy"
+    },
+    {
+      "id": "18-sample-receipt:19",
+      "locator": "18-sample-receipt:19",
+      "document": "18-sample-receipt",
+      "text": "The map on the door shows shelf letters, not sample ids. Ids are on the form only.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Shelf map",
+      "next": "Hold. Samples without a time of receipt stay on the bench.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:20",
+      "locator": "18-sample-receipt:20",
+      "document": "18-sample-receipt",
+      "text": "Hold. Samples without a time of receipt stay on the bench.",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The map on the door shows shelf letters, not sample ids. Ids are on the form only.",
+      "next": "Receipts by hour",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "body-label",
+      "kind": "hard-negative",
+      "source": "corpus/18-sample-receipt.html nonHeadings:body-label"
+    },
+    {
+      "id": "18-sample-receipt:21",
+      "locator": "18-sample-receipt:21",
+      "document": "18-sample-receipt",
+      "text": "Receipts by hour",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "Hold. Samples without a time of receipt stay on the bench.",
+      "next": "08 09 10 11 12 \u2014 counts are illustrative, not a live feed",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-title",
+      "kind": "hard-negative",
+      "source": "corpus/18-sample-receipt.html nonHeadings:chart-title"
+    },
+    {
+      "id": "18-sample-receipt:22",
+      "locator": "18-sample-receipt:22",
+      "document": "18-sample-receipt",
+      "text": "08 09 10 11 12 \u2014 counts are illustrative, not a live feed",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "Receipts by hour",
+      "next": "For laboratory use only",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/18-sample-receipt.html in-scope"
+    },
+    {
+      "id": "18-sample-receipt:23",
+      "locator": "18-sample-receipt:23",
+      "document": "18-sample-receipt",
+      "text": "For laboratory use only",
+      "font_pt": 12,
+      "weight": "regular",
+      "prev": "08 09 10 11 12 \u2014 counts are illustrative, not a live feed",
+      "next": "none",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "status-line",
+      "kind": "hard-negative",
+      "source": "corpus/18-sample-receipt.html nonHeadings:status-line"
+    }
+  ]
+}
