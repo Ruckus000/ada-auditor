@@ -4887,4 +4887,156 @@ invocation.
 
 Frozen validation locators all exist in the Part-19 `out/role-expanded/blocks.json` dump (47/47). Tagged PDFs are absent from disk and must be reproduced from the frozen HTML through the same `generate-corpus.mjs` → `run-opendataloader.mjs` → `Cards.java` path. Evaluation population remains the frozen 47-card JSON, joined by locator. `--eval-verify-marked` is not used: that path calls a role adapter. This Part scores eligibility only.
 
+### Reproduction (mechanical, before scoring)
+
+Tagged PDFs for 17/18 were absent. Reproduced only from frozen Part-19
+HTML, same pipeline, no HTML edit, `ODL_OPTS` unset:
+
+1. `node generate-corpus.mjs` (Chromium `page.pdf()`).
+2. `node run-opendataloader.mjs out/part21-untagged out/part21-tagged`
+   on copies of `17-visitor-brief.pdf` and `18-sample-receipt.pdf` only.
+3. `run.py` `dump_dir` / Cards.java.
+
+Join key: frozen `locator`. `text_norm` of dump text matched frozen
+card text on **47/47**. Zero missing locators. Zero extra 17/18 dump
+cards. Boxes taken from this dump (not the stale Part-19 `blocks.json`
+coordinates against a new PDF).
+
+`--eval-verify-marked` was not invoked. Scoring used
+`MARKED_ELIGIBILITY_STEM` + `card_prompt(..., hide_existing_tag=True)`
++ `out/adapter-verify-marked` + marked full-page PNG (`Mark.java` /
+`Preview.java`). No `Existing tag` in any prompt. No role adapter.
+Temperature 0, thinking disabled, max tokens 256.
+
+### Gate — all 47 rows, once
+
+`out/part21/verify-marked.jsonl` SHA-256
+`4e0dabbe5bb675615d5dd8256ca53342b5de610a8f1546452d4e4031b08cddfc`
+
+Adapter hashes unchanged after inference.
+
+| metric | result |
+|---|---|
+| parse | **47/47** |
+| overall eligibility accuracy | 43/47 |
+| TP /20 | **17/20** |
+| FN /20 | **3/20** |
+| TN /27 | **26/27** |
+| FP /27 | **1/27** |
+| heading recall /20 | 17/20 |
+| non-heading rejection /27 | 26/27 |
+| H1 eligibility recall /2 | **2/2** |
+| H2 eligibility recall /4 | **4/4** |
+| H3 eligibility recall /6 | **6/6** |
+| H4 eligibility recall /8 | **5/8** |
+| H3+H4 eligibility recall /14 | **11/14** |
+
+Heading level was not scored. The verifier does not predict one.
+
+### False positives
+
+| id | text | GT | verifier | authored category | ODL tag |
+|---|---|---|---|---|---|
+| `18-sample-receipt:21` | Receipts by hour | P | `heading:true` | chart-title | H1 |
+
+Represented in Part-13 verifier training (`12-chart-title`). Failed.
+An already-bad ODL `H1` tag is not credit: GT is P.
+
+### False negatives
+
+All three are **H4**, quiet 13pt regular on doc 17, ODL already `P`.
+
+| id | text | GT | verifier | ODL tag | font |
+|---|---|---|---|---|---|
+| `17-visitor-brief:10` | Cloakroom | H4 | `heading:false` | P | 13pt regular |
+| `17-visitor-brief:14` | Workshop floor | H4 | `heading:false` | P | 13pt regular |
+| `17-visitor-brief:20` | Forms | H4 | `heading:false` | P | 13pt regular |
+
+Visually quiet / body-sized. Part 19 built doc 17 specifically so
+quiet H4s sit against a louder callout. Not represented as H4 in the
+Part-13 31-row verifier set (docs 02/04/05/06/10/12, H1/H2-centric).
+Not an H1 or H2 veto. Sister H4 `Badges` (same 13pt regular, ODL `P`)
+was accepted. Doc 18’s four H4s (14pt bold) were all accepted.
+
+A GT H4 with `heading:false` is a genuine-heading veto. Fail-close
+keeping an existing H* tag would not hide these: ODL already tagged
+them `P`.
+
+### Critical Part-20 expanded-role false headings
+
+| id | text | GT | category | verifier |
+|---|---|---|---|---|
+| `17-visitor-brief:3` | Do not enter the machine hall unescorted. | P | callout | **false** (rejected) |
+| `17-visitor-brief:22` | Host copy — not for visitors | P | running-footer | **false** (rejected) |
+| `18-sample-receipt:21` | Receipts by hour | P | chart-title | **true** (accepted) |
+
+Two of three represented hard-negatives are rejected. Chart title is
+not.
+
+### H3/H4 eligibility (compact)
+
+| id | GT | verifier | ODL |
+|---|---|---|---|
+| `17-visitor-brief:6` Reception | H3 | true | H4 |
+| `17-visitor-brief:8` Badges | H4 | true | P |
+| `17-visitor-brief:10` Cloakroom | H4 | **false** | P |
+| `17-visitor-brief:12` Tours | H3 | true | H4 |
+| `17-visitor-brief:14` Workshop floor | H4 | **false** | P |
+| `17-visitor-brief:18` Feedback | H3 | true | H4 |
+| `17-visitor-brief:20` Forms | H4 | **false** | P |
+| `18-sample-receipt:4` PAPER FORMS | H3 | true | H2 |
+| `18-sample-receipt:6` Batch numbers | H4 | true | H3 |
+| `18-sample-receipt:8` Time of receipt | H4 | true | H3 |
+| `18-sample-receipt:10` DIGITAL LOG | H3 | true | H1 |
+| `18-sample-receipt:12` Unique ids | H4 | true | H2 |
+| `18-sample-receipt:16` FRIDGE | H3 | true | H1 |
+| `18-sample-receipt:18` Shelf map | H4 | true | H2 |
+
+H3 6/6. H4 5/8. The eligibility verifier does not solve safety by
+rejecting every quiet deeper heading, but it does reject three of
+four quiet doc-17 H4s.
+
+### Predictions vs evidence
+
+1. `[H]` Executes and parses all 47 without retraining. **HIT.**
+2. `[H]` Accepts all 20 genuine headings, including 14 H3/H4. **MISS.**
+   FN 3/20, all H4; H3+H4 11/14.
+3. `[H]` Rejects all 27 GT non-headings. **MISS.** FP 1/27.
+4. `[H]` Rejects callout, running footer, and chart title. **MISS.**
+   Callout and footer rejected; chart title accepted.
+5. `[H]` Boundary materially cleaner than either role adapter. **MISS**
+   against a usable eligibility gate. FP 1/27 vs role false-heading
+   2–3/27, but heading recall 17/20 vs role detection 18–20/20. Not
+   a clean decomposition.
+6. `[H]` No role-model, R2, structural gate, crop, retraining, or
+   larger model. **HIT.**
+7. `[H]` Holdout 1 and Holdout 2 are not run. **HIT.**
+
+### Outcome
+
+**Outcome D — both FP and FN.**
+
+STOP.
+
+Parse 47/47. FP 1 (chart-title, represented). FN 3 (quiet H4 on
+doc 17, visually quiet/body-sized, not an H4 class in verifier
+training). Do not trade one error type for the other with a
+threshold. The output is binary and there is no calibrated
+confidence. Do not prompt-sweep. Do not crop.
+
+The existing marked verifier is not a safe eligibility boundary on
+this surface, and it is not a lossless heading-preservation gate
+either. A heading-only level classifier is **not** earned: the
+binary half of the decomposition has not held.
+
+Do not retrain the eligibility verifier in this Part. Do not add
+the failed validation rows to training. Do not write a semantic
+rule. Do not run Holdout-1 / Holdout-2. `out/adapter-role` was not
+replaced. `out/adapter-verify-marked` was not modified.
+
+The next possible rung, if any, is expanded development-only
+marked-verifier training using train documents only, with docs 17/18
+remaining frozen validation. Not this Part.
+
+
 
