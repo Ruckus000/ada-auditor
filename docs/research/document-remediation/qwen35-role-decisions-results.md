@@ -5706,12 +5706,11 @@ population.
 8. `[H]` No prompt/marker/crop/vision-layer/model-size/structural-
    rule/holdout change is required.
 
-### Training command (registered; not yet run)
+### Training health (one registered run)
 
-One QLoRA. Expected iterations: 161 × 6 = 966. No second
-configuration. No epoch extension. No oversampling. No class
-weighting. No `--train-vision`. Destination
-`out/adapter-verify-marked-chart-expanded` — do not overwrite
+One QLoRA. No second configuration. No epoch extension. No
+oversampling. No class weighting. No `--train-vision`. Destination
+`out/adapter-verify-marked-chart-expanded` — did not overwrite
 `out/adapter-verify-marked` or `out/adapter-verify-marked-expanded`.
 
 ```
@@ -5730,41 +5729,126 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
   --output-path out/adapter-verify-marked-chart-expanded
 ```
 
-A mechanical interruption without an adapter may be restarted with
-the exact command and recorded as such. A completed run that misses
-the gates is experimental evidence, not a reason to rerun.
+`[V]` `TRAIN_EXIT:0`. Rows **161**. Iterations **966** (161 × 6).
+Learning rate `2.000e-05`. Trainable 16.232448 M / 0.358%.
+Language-side LoRA only. Rank 8. Loss 0.103 (iter 10) →
+**0.000055** (iter 966). No NaN. Peak mem 14.057 GB. Adapter 62 MiB.
+Training set not scored. No mechanical restart.
+
+| artifact | SHA-256 |
+|---|---|
+| `out/adapter-verify-marked-chart-expanded/adapters.safetensors` | `9c5ce9f23d670251b2f41be2a378d253cab6e95b2d822e43ec53f43e127088f0` |
+| `out/adapter-verify-marked-chart-expanded/adapter_config.json` | `51518b19e2a1ec53f75a40c119de15da988dca39344e05b7e917ecacc6d31d82` |
+
+Frozen `out/adapter-verify-marked-expanded` hash unchanged
+(`7fdd591e…6c9d90`). Frozen `out/adapter-verify-marked` unchanged
+(`7cecddda…c0824a8`). Frozen `out/adapter-role` unchanged
+(`8178c345…8dfdb`). Neither role adapter was invoked on Gate 1.
 
 Loss is training health only.
 
-### Gate 1 plan (after training)
+### Gate 1 — direct semantic eligibility on frozen docs 17/18
 
-Exact Part-21/22 direct semantic eligibility over all 47 cards. No
-role adapter. No R2 rescue. No structural-gate rescue.
-`gt_heading = expect.role in H1..H6` against `verify_heading`.
+Same Part-21/22 evaluation: all 47 frozen cards, `gt_heading` vs
+`verify_heading`, no role adapter, no R2/structure rescue.
 
-Hard requirements: parse 47/47, TP 20/20, FN 0, TN 27/27, FP 0,
-H1 2/2, H2 4/4, H3 6/6, H4 8/8, H3+H4 14/14.
+`out/part24/gate1.jsonl` SHA-256
+`b08ceefc6e5cf58a154259055c0f57c8bd41e6a491a9a853407af705e56911bc`
 
-Critical rows: `17-visitor-brief:10` Cloakroom; `:14` Workshop
-floor; `:20` Forms; `:3` callout; `:22` running footer;
-`18-sample-receipt:21` Receipts by hour.
+| metric | Part 22 expanded | Part 24 chart-expanded |
+|---|---|---|
+| parse | 47/47 | **47/47** |
+| TP /20 | 20/20 | **19/20** |
+| FN /20 | 0/20 | **1/20** |
+| TN /27 | 26/27 | **27/27** |
+| FP /27 | 1/27 | **0/27** |
+| H1 recall /2 | 2/2 | 2/2 |
+| H2 recall /4 | 4/4 | 4/4 |
+| H3 recall /6 | 6/6 | 6/6 |
+| H4 recall /8 | 8/8 | **7/8** |
+| H3+H4 recall /14 | 14/14 | **13/14** |
 
-Gate 1 PASS only if all 47 semantic eligibility labels are correct.
-Any FP → STOP (Outcome B if the chart-title remains; Outcome C if a
-new FP). Any FN → STOP (Outcome D). Do not add the validation row,
-oversample chart titles, change the prompt, crop, train vision, or
-rerun.
+Hard gate required parse 47/47, FN 0/20, **and** FP 0/27. Missed
+on FN.
 
-### Gate 2 plan (earned only if Gate 1 passes)
+Only disagreement vs Part 22 (and the only error):
 
-Regression evidence, not an optimization surface. Frozen doc-07
-mapped verifier rows `07-h1`, `07-intro`, `07-chart-title`,
-`07-cap`: parse 4/4, heading recall 1/1, non-heading rejection 3/3.
-Frozen probes 01/03/08/11: apply upstream R2 before interpreting
-verifier eligibility. `08-numeral-3` is R2-owned; verifier output
-is diagnostic only and receives no architectural credit.
+| id | text | GT | Part 22 | Part 24 | category | ODL |
+|---|---|---|---|---|---|---|
+| `17-visitor-brief:14` | Workshop floor | H4 | `heading:true` | **`heading:false`** | H4 | P |
+| `18-sample-receipt:21` | Receipts by hour | P | `heading:true` | `heading:false` | chart-title | H1 |
 
-Do not run Holdout 1 or Holdout 2. Both are spent.
+`Workshop floor` is 13pt regular, existing tag `P`, neighbors
+ordinary body. It is a quiet genuine H4 that Part 22 had recovered.
+The chart-title FP is gone, and no new FP appeared.
+
+Critical rows:
+
+| id | text | GT | verifier |
+|---|---|---|---|
+| `17-visitor-brief:10` | Cloakroom | H4 | true |
+| `17-visitor-brief:14` | Workshop floor | H4 | **false** |
+| `17-visitor-brief:20` | Forms | H4 | true |
+| `17-visitor-brief:3` | callout | P | false |
+| `17-visitor-brief:22` | running footer | P | false |
+| `18-sample-receipt:21` | Receipts by hour | P | false |
+
+**Gate 1 FAIL — FN.** Any FN stops. Gate 2 is not earned. Do not
+threshold, tune, add the validation row, oversample chart titles,
+change the prompt, crop, train vision, or rerun.
+
+### Gate 2 — not run
+
+Not earned. Doc-07 and probes 01/03/08/11 were not scored. Holdout-1
+and Holdout-2 were not run.
+
+### Predictions vs evidence
+
+1. `[H]` 161-row population reproduces and trains. **HIT.**
+2. `[H]` Parse 47/47. **HIT.**
+3. `[H]` Heading preservation 20/20 including H4 8/8. **MISS.** 19/20, H4 7/8.
+4. `[H]` Non-heading rejection 27/27. **HIT.**
+5. `[H]` `18-sample-receipt:21` becomes `heading:false`. **HIT.**
+6. `[H]` No new FP or FN elsewhere. **MISS.** New FN on `:14`.
+7. `[H]` Older development does not regress. **untested** (Gate 2 not earned).
+8. `[H]` No prompt/marker/crop/vision/model/holdout change. **HIT.**
+
+### Outcome
+
+**D.** The verifier is still not a lossless eligibility boundary.
+
+STOP.
+
+Independent chart-context coverage closed the measured chart-title
+false positive on untouched docs 17/18, and callout / running-footer
+rejection held. It did so by vetoing one quiet genuine H4 that the
+Part-22 trainer had labelled `heading:true`. Specificity and
+preservation were not obtained together under this frozen
+Qwen3.5-4B language-side marked-verifier configuration.
+
+A pass would have supported “broader independent chart-context
+development coverage was sufficient.” This failure does not prove
+that six chart-title examples caused the FN, and it does not prove
+that vision in general cannot solve the boundary. It says this
+development evidence, under this frozen configuration, did not.
+
+Do not add `18-sample-receipt:21` or `17-visitor-brief:14` to
+training. Do not run another QLoRA with more of the same class.
+Do not retrain a joint role adapter in this Part. Do not call the
+remediation architecture solved.
+
+`out/adapter-verify-marked-expanded` (Part 22, Outcome C) remains
+the last adapter that preserved all 20 genuine headings. The
+Part-24 adapter is recorded, not promoted.
+
+### Semantic-remediation guardrail (unchanged)
+
+Even after a later eligibility pass, no end-to-end safety claim may
+select the verifier only for heading mutations. Future scoring must
+include `legacy_unsafe_mutation` and `semantic_false_heading`, with
+`semantic_false_heading == 0` as the safety target, including
+keep-as-H*. Integration of a verifier rejection of an existing H*
+(demote to P vs unresolved) is still not this Part.
 
 
 
