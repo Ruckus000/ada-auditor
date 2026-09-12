@@ -5176,5 +5176,118 @@ recorded before the training run.
    larger model, role-model change, holdout example, or production
    integration is required.
 
+### Training health (one registered run)
+
+The first launch of the identical CLI was killed by the agent session
+at iter 170 with **no adapter written** and no METAL/NaN line. That is
+recorded as a mechanical interruption, not a hyperparameter retry.
+The same command was restarted in tmux and completed:
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft-verify-expanded \
+  --split train --batch-size 1 --lora-rank 8 --epochs 6 \
+  --steps-per-report 10 --steps-per-save 1000 \
+  --train-on-completions --grad-checkpoint \
+  --image-resize-shape 560 800 \
+  --output-path out/adapter-verify-marked-expanded
+```
+
+`[V]` `TRAIN_EXIT:0`. Rows **124**. Iterations **744** (124 × 6).
+Learning rate `2.000e-05`. Trainable 16.232448 M / 0.358%. Language-side
+LoRA only (`language_model.*`). Rank 8, alpha/scale unchanged from
+Part 13. Loss 0.216 (iter 10) → **0.000149** (iter 744). No NaN.
+Peak mem 14.058 GB. Adapter 62 MiB. Training set not scored.
+
+| artifact | SHA-256 |
+|---|---|
+| `out/adapter-verify-marked-expanded/adapters.safetensors` | `7fdd591ec548f27d4f43a86016b96a27d4b43018a8b323d6c85ae38a626c9d90` |
+| `out/adapter-verify-marked-expanded/adapter_config.json` | `51518b19e2a1ec53f75a40c119de15da988dca39344e05b7e917ecacc6d31d82` |
+
+Frozen `out/adapter-verify-marked` hash unchanged (`7cecddda…c0824a8`).
+Frozen `out/adapter-role` hash unchanged (`8178c345…8dfdb`). Neither
+role adapter was invoked on Gate 1.
+
+### Gate 1 — direct semantic eligibility on frozen docs 17/18
+
+Same Part-21 evaluation: all 47 frozen cards, `gt_heading` vs
+`verify_heading`, no role adapter, no R2/structure rescue.
+
+`out/part22/gate1.jsonl` SHA-256
+`2258b30527f1793be0301ed6f682e27b66917fc0abcccdfe66e722def063e86b`
+
+| metric | Part 21 old | expanded |
+|---|---|---|
+| parse | 47/47 | **47/47** |
+| accuracy | 43/47 | 46/47 |
+| TP /20 | 17/20 | **20/20** |
+| FN /20 | 3/20 | **0/20** |
+| TN /27 | 26/27 | 26/27 |
+| FP /27 | 1/27 | **1/27** |
+| H1 recall /2 | 2/2 | 2/2 |
+| H2 recall /4 | 4/4 | 4/4 |
+| H3 recall /6 | 6/6 | 6/6 |
+| H4 recall /8 | 5/8 | **8/8** |
+| H3+H4 recall /14 | 11/14 | **14/14** |
+
+Hard gate required parse 47/47, FN 0/20, **and** FP 0/27. Missed on FP.
+
+False positives:
+
+| id | text | GT | verifier | category | ODL |
+|---|---|---|---|---|---|
+| `18-sample-receipt:21` | Receipts by hour | P | `heading:true` | chart-title | H1 |
+
+**Represented** in Pool A (`12-chart-title`) and still accepted. Not
+added to training. An already-bad ODL `H1` is not credit.
+
+False negatives: none.
+
+Critical rows:
+
+| id | GT | Part 21 | expanded |
+|---|---|---|---|
+| `17-visitor-brief:10` Cloakroom | H4 | FN | **true** |
+| `17-visitor-brief:14` Workshop floor | H4 | FN | **true** |
+| `17-visitor-brief:20` Forms | H4 | FN | **true** |
+| `18-sample-receipt:21` Receipts by hour | P chart-title | FP | **FP** |
+| `17-visitor-brief:3` callout | P | TN | **false** |
+| `17-visitor-brief:22` running footer | P | TN | **false** |
+
+**Gate 1: FAIL** on FP. Gate 2 was not run.
+
+### Predictions vs evidence
+
+1. `[H]` Quiet H3/H4 coverage added, negatives preserved. **HIT.**
+   H3 12 / H4 16 in train; chart-title and table-title remain.
+2. `[H]` Stock MLX-VLM trains the expanded marked verifier. **HIT.**
+3. `[H]` Parse 47/47, FN 0/20, FP 0/27. **MISS.** FP 1/27.
+4. `[H]` H4 5/8 → 8/8 without reducing H1–H3. **HIT.** 2/2, 4/4, 6/6, 8/8.
+5. `[H]` Chart-title `18-sample-receipt:21` rejected. **MISS.** Still FP.
+6. `[H]` Callout and running-footer remain rejected. **HIT.**
+7. `[H]` Older development does not regress. **Not evaluated.**
+   Gate 2 is gated on Gate 1.
+8. `[H]` No prompt/marker/crop/vision/larger-model/role/holdout/prod.
+   **HIT.**
+
+### Outcome
+
+**Outcome C — FN 0 but any FP.**
+
+STOP.
+
+Heading preservation is solved on this surface (quiet doc-17 H4s now
+accepted; H3+H4 14/14). Eligibility specificity is not: the represented
+chart-title `18-sample-receipt:21` is still `heading:true`.
+
+Do not add that validation row. Do not write a semantic rule. No second
+verifier run. Do not train a heading-only level classifier. Do not run
+Gate 2, Holdout 1, or Holdout 2. Do not blend adapters.
+
+`out/adapter-verify-marked` was not replaced. `out/adapter-role` was
+not invoked. Hierarchy remains a separate unsolved task, and it is not
+earned while eligibility still promotes a chart title.
+
 
 
