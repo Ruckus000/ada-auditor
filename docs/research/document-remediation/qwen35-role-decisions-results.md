@@ -6195,5 +6195,229 @@ unsafe mutation is false. Semantic false heading is true.
 The current implementation has **not** already been corrected
 (Outcome B is not available from the trace).
 
+### Table 1 — metric definitions
+
+| metric | definition | action used? |
+|---|---|---|
+| `legacy_unsafe_mutation` | GT non-heading AND `final_role ∈ H1..H6` AND `derived_action == "retag"` | yes (historical continuity only) |
+| `semantic_false_heading` | GT non-heading AND `final_role ∈ H1..H6` | **no** |
+| `true_heading_removed` | GT heading AND `final_role ∉ H1..H6` | no |
+| old verifier candidate | `needs_page_verify`: Qwen called, not R2, role is H*, and existing is non-H* or a different H* | mutation-only |
+| corrected verifier candidate | `preverify_final_role ∈ H1..H6` after source-type, ancestry, role-only, R2 | would-finish-H* |
+| experimental fail-close | if candidate and verifier `false` → `final_role = P` | demotion, not paragraphhood |
+| parse failure | unresolved; not `heading:false`; not a keep-H* success | n/a |
+
+Also retained: heading exact, heading detection ignoring level, unmatched GT headings, verifier parse failures, R2 true-heading collisions, structural true-heading exclusions.
+
+`pre-existing_bad_heading_kept` is still not a `run.py` function. This Part reconstructs it as `semantic_false_heading && !legacy_unsafe_mutation`.
+
+### Runnable check
+
+`python part26_semantic.py --check-only` (also runs first under a full audit).
+
+Four synthetic rows:
+
+1. GT P, existing P, preverify H2, verifier true → `semantic_false_heading = true`
+2. GT P, existing H2, preverify H2, verifier false → old candidate false; corrected candidate true; corrected final non-H*; `semantic_false_heading = false`
+3. GT H2, existing P, preverify H2, verifier false → corrected final non-H*; `true_heading_removed = true`
+4. GT H2, existing H2, preverify H2, verifier true → remains H2; no removal
+
+`part26 check ok`.
+
+Helpers live in `experiments/qwen-role-decisions/part26_semantic.py`. Production `needs_page_verify` / `apply_page_verify` / `score_holdout` are unchanged. Audit JSON is gitignored `out/part26/audit.json` SHA-256 `ee66b28c5c13389825d7a369cff19fdadac664f6f4b138b08a6c6aab26d24ae5`.
+
+### Gate A — zero-generation rescore of frozen development verifier outputs
+
+No model call. Inputs: `out/verify-07/verify-marked.jsonl`, `out/verify-probes/verify-marked.jsonl`. Mapped coverage only: doc 07 is 4/6 (`07-northern`, `07-q1` unmatched, not replaced). All 17 probes are present.
+
+#### Table 2 — doc-07 proof
+
+| id | GT heading | exist | preverify | verifier | old cand? | new cand? | hist final / action | hist legacy unsafe | hist semantic false | corr final / action | corr semantic false |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `07-h1` | yes | H1 | H1 | true | no | **yes** | H1 keep | 0 | 0 | H1 keep | 0 |
+| `07-intro` | no | P | P | false | no | no | P keep | 0 | 0 | P keep | 0 |
+| `07-chart-title` | no | H2 | H2 | false | **no** | **yes** | H2 keep | **0** | **1** | **P retag** | **0** |
+| `07-cap` | no | H3 | P | false | no | no | P retag | 0 | 0 | P retag | 0 |
+
+`07-chart-title` is the proof row. Old architecture skipped verification because there was no heading mutation. Corrected architecture selects it because it would finish H2. Verifier false demotes to P. Legacy unsafe stays 0 either way; semantic false heading is 1 under the old contract and 0 after the experimental integration.
+
+#### Probes (17)
+
+`08-numeral-3` (`3`): skip `r2`, `preverify_final_role = P`. R2 owns it. Verifier `heading:true` is diagnostic only. Not a corrected candidate.
+
+| | old mutation-only | corrected would-finish-H* |
+|---|---|---|
+| verifier candidates | 1 (`01-h3-regional` H3→H2) | 11 |
+| newly added same-level H* | — | 10 |
+| class breakdown | 1 H*→different H* | 0 non-H*→H*; 1 H*→different H*; 10 H*→same H* |
+| semantic false heading | 0 | **0** |
+| true heading removed | 0 | **0** |
+| heading exact | 10/11 | 10/11 |
+| heading detection | 11/11 | 11/11 |
+| parse failures | 0 | 0 |
+
+Hard development requirement: `semantic_false_heading == 0` and `true_heading_removed == 0`. **Holds on the rows that have verifier predictions** (4 mapped doc-07 + 17 probes). This is not a global architecture pass. Unmapped `07-northern` / `07-q1` are outside this rescore.
+
+### Gate B — spent Holdout-1 444-row Arm-B surface
+
+Frozen Part-9 Arm B: `out/h1-scope/rescored-armB.jsonl`. Role predictions not regenerated. Verifier not invoked. `preverify_final_role` reconstructed with `decide_card(..., arm="B")` from frozen `model_role` + ancestors + R2. GT used only after candidate membership was frozen.
+
+| | |
+|---|---|
+| evaluable | 444 |
+| old mutation-only candidates | **14** (same 14 as `PART10_VERIFY_LOCATORS` / Part 10) |
+| corrected would-finish-H* | **53** |
+| newly added | 39 |
+| newly added same-level H* | **39** |
+| non-H* → H* | 7 |
+| H* → different H* | 7 |
+| H* → same H* | 39 |
+| GT heading among corrected | 47 |
+| GT non-heading among corrected | 6 |
+| baseline `legacy_unsafe_mutation` | **5** (Part 9 Arm B: `h06:14`, `h09:8`, `h11:4`, `h11:7`, `h13:1`) |
+| baseline `semantic_false_heading` | **6** |
+| missed by legacy | **1** |
+| heading exact / detect | 43/51, 47/51 |
+| unmatched GT headings | 4 (h02 merge; no card) |
+| heading demote / R2 true-heading collisions | 0 / 0 |
+
+The one semantic false heading the legacy metric missed:
+
+`h13-first-big-text-not-title:0` `DRAFT` — existing H1, preverify H1, action keep, old candidate false, corrected candidate true. Classification/watermark furniture already tagged H1. Sibling `h13:1` `COMMERCIAL IN CONFIDENCE` was a retag and already counted as legacy unsafe.
+
+### Gate C — frozen marked-verifier coverage on the corrected H1 universe
+
+Still no generation. Marked eligibility is the historical end-of-chain component (`out/adapter-verify-marked` via Part 16 `rescored-armB-marked-binary.jsonl`).
+
+| partition | n |
+|---|---|
+| corrected H1 candidates | 53 |
+| `has_frozen_marked_eligibility_prediction` | **14** |
+| missing | **39** |
+
+Every prior H1 verifier artifact covers the same 14 mutation locators and none of the 39 same-level keeps:
+
+| source | covered of 53 |
+|---|---|
+| Part 10 full-page binary | 14 |
+| Part 11 marked base | 14 |
+| Part 12 marked role | 14 |
+| Part 15 text binary | 14 |
+| Part 16 marked binary | 14 |
+
+Do not substitute one verifier for another. Partial semantic rescore on the 14 Part-16 marked rows under the P-demotion rule: `semantic_false_heading = 0`, `true_heading_removed = 0`, parse failures 0. **This is not a pass.** 39 candidates remain unresolved, including `DRAFT`. Partial coverage is not an eligibility success.
+
+### Gate D — spent Holdout 2 from frozen Part-17 artifacts
+
+`out/h2/predictions.frozen.jsonl` (534) + `out/h2/mutations.json` (18) + `out/h2/rescored-armB-marked-binary.jsonl`. No rerun.
+
+| | |
+|---|---|
+| evaluable | 534 |
+| old mutation-only candidates | **18** (matches `mutations.json`) |
+| corrected would-finish-H* | **48** |
+| newly added same-level H* | **30** |
+| non-H* → H* | 8 |
+| H* → different H* | 10 |
+| H* → same H* | 30 |
+| GT heading among corrected | 38 |
+| GT non-heading among corrected | 10 |
+| baseline `legacy_unsafe_mutation` | **3** |
+| baseline `semantic_false_heading` | **7** |
+| missed by legacy | **4** (exactly Part 17's `pre-existing_bad_heading_kept`) |
+| heading exact / detect | 28/40, 36/40 |
+| unmatched / R2 collisions | 1 / 0 |
+
+Part 17 four, reconciled:
+
+| locator | text | exist | preverify | old cand? | marked pred? | hist final | hist semantic false | corrected if pred existed |
+|---|---|---|---|---|---|---|---|---|
+| `k01:4` | Uptake by Ward, 2026 | H2 | H2 | **no** | **missing** | H2 keep | 1 | unresolved |
+| `k01:7` | Ward | H3 | H2 | yes | yes, `false` | H3 keep | 1 | **P** (semantic false → 0) |
+| `k12:2` | Episode | H2 | H2 | **no** | **missing** | H2 keep | 1 | unresolved |
+| `k12:6` | Breach | H2 | H2 | **no** | **missing** | H2 keep | 1 | unresolved |
+
+`k01:7` had a mutation-only verifier call. Old fail-close kept existing H3 and scored it safe. Corrected integration would demote to P. The other three were never asked because the role layer agreed with the existing H*.
+
+Coverage: 18/48 have Part-17 marked predictions; 30 missing. Partial rescore on those 18: `semantic_false_heading = 3` (the three remaining unsafe retags the verifier accepted: `k07:0`, `k07:21`, `k16:43`), `true_heading_removed = 2` (`k14:3` backlog, and `k16:6` Position at year end — existing H1, verifier false, now P instead of fail-close keep H1). Not a pass. 30 unresolved.
+
+### Table 3 — corrected candidate counts
+
+| surface | evaluable | old mutation candidates | corrected would-finish-H* | newly added same-level H* |
+|---|---|---|---|---|
+| doc 07 mapped | 4 | 0 | 2 | 2 |
+| development probes | 17 | 1 | 11 | 10 |
+| spent H1 Arm B | 444 | 14 | 53 | 39 |
+| spent H2 | 534 | 18 | 48 | 30 |
+
+### Table 4 — semantic safety delta
+
+| surface | metric | old contract (historical final) | corrected / baseline |
+|---|---|---|---|
+| doc 07 mapped | legacy unsafe mutation | 0 | 0 |
+| doc 07 mapped | semantic false heading | **1** (`07-chart-title`) | **0** (full verifier coverage on 4 mapped) |
+| doc 07 mapped | true heading removed | 0 | 0 |
+| probes | legacy unsafe mutation | 0 | 0 |
+| probes | semantic false heading | 0 | 0 |
+| probes | true heading removed | 0 | 0 |
+| spent H1 | legacy unsafe mutation | 5 | baseline 5 (no new verifier) |
+| spent H1 | semantic false heading | **6** | baseline **6**; partial on 14 marked rows: 0; **unresolved 39** |
+| spent H1 | true heading removed | 0 | partial on 14: 0; unresolved 39 |
+| spent H2 | legacy unsafe mutation | 3 | baseline 3 |
+| spent H2 | semantic false heading | **7** | baseline **7**; partial on 18: 3; **unresolved 30** |
+| spent H2 | true heading removed | 3 (historical demotions) | partial on 18: 2; unresolved 30 |
+
+Do not read any partial rescore as a pass.
+
+### Table 5 — missed-by-legacy rows
+
+GT non-heading, historical final H*, `action != retag`, so `legacy_unsafe_mutation == false`.
+
+| locator | text | exist | preverify | action | old cand? | new cand? | semantic false |
+|---|---|---|---|---|---|---|---|
+| `07-complex-chart:2` `07-chart-title` | Containers handled per quarter (hundreds) | H2 | H2 | keep | no | yes | 1 |
+| `h13-first-big-text-not-title:0` | DRAFT | H1 | H1 | keep | no | yes | 1 |
+| `k01-vector-chart-titles:4` | Uptake by Ward, 2026 | H2 | H2 | keep | no | yes | 1 |
+| `k01-vector-chart-titles:7` | Ward | H3 | H2 | keep | yes | yes | 1 |
+| `k12-definition-list:2` | Episode | H2 | H2 | keep | no | yes | 1 |
+| `k12-definition-list:6` | Breach | H2 | H2 | keep | no | yes | 1 |
+
+Source/category grouping of the miss:
+
+* chart title already tagged H* (`07-chart-title`, `k01:4`)
+* chart axis / legend already tagged H* (`k01:7` Ward; verifier was applied, fail-closed to H3)
+* definition-list terms already tagged H2 (`k12:2`, `k12:6`)
+* watermark/stamp already tagged H1 (`h13:0` DRAFT)
+
+Five of six were skipped entirely by mutation-only invocation. One (`k01:7`) was invoked and then scored safe because fail-close preserved an H*.
+
+### Predictions vs evidence
+
+1. `[H]` Verifier candidates are still mutation-selected. **HIT.** `needs_page_verify` plus `self_check` lines 1846–1848.
+2. `[H]` `07-chart-title` proves `unsafe_retag == 0` with a remaining H2. **HIT.**
+3. `[H]` Would-finish-H* adds same-level existing-H* on spent H1 and H2. **HIT.** +39 H1, +30 H2.
+4. `[H]` `semantic_false_heading` strictly greater than `legacy_unsafe_mutation` on at least one surface. **HIT.** Doc 07 1>0; H1 6>5; H2 7>3.
+5. `[H]` Some corrected candidates lack frozen marked predictions. **HIT.** H1 39/53 missing; H2 30/48 missing. Coverage equals the old mutation lists.
+6. `[H]` No new model generation required. **HIT.** Zero Qwen calls.
+7. `[H]` Holdout 1 and 2 remain spent; no new blind claim. **HIT.**
+
+### Outcome
+
+**A — contract bug confirmed.**
+
+Rows exist satisfying `gt_nonheading && final_role in H1..H6 && legacy_unsafe_mutation == false`. Corrected candidate selection adds rows historical selective invocation skipped (same-level H* keeps).
+
+STOP.
+
+Do not generate their verifier predictions in this Part.
+
+The historical architecture measured **mutation safety**, not final semantic safety. A same-level bad H* bypasses verification. Expanding to every would-finish-H* row adds 2 (doc 07), 10 (probes), 39 (H1), and 30 (H2) same-level candidates. Legacy missed 1 development proof row, 1 spent-H1 stamp, and 4 spent-H2 rows. Frozen marked-verifier coverage on the corrected universe is exactly the old mutation set: 14/53 H1, 18/48 H2. Later inference, if run, must score every would-finish-H* row and must use `semantic_false_heading`, not `legacy_unsafe_mutation` alone.
+
+The visual/vision-training rung from Part 25 remains earned **in principle**. It may proceed only under this corrected semantic-final-heading candidate and scoring contract. Do not call any architecture safe because `legacy_unsafe_mutation == 0`.
+
+This Part does not decide whether the current verifier is good enough.
+
+No Part 27 in this run.
+
 
 
