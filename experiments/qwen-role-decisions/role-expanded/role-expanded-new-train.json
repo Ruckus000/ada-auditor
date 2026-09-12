@@ -1,0 +1,1986 @@
+{
+  "note": "Part 19 freeze. Cards from the four new training documents only, via the real PDF\u2192ODL\u2192Cards bridge. No model has seen these rows. Do not reshuffle. Validation documents 17\u201318 are absent.",
+  "split": "train",
+  "documents": [
+    "13-workshop-induction",
+    "14-pump-overhaul",
+    "15-archive-transfer",
+    "16-shift-handover"
+  ],
+  "cases": [
+    {
+      "id": "13-workshop-induction:0",
+      "locator": "13-workshop-induction:0",
+      "document": "13-workshop-induction",
+      "text": "Northwind Logistics \u00b7 Workshop \u00b7 Page 1 of 1",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Internal draft \u2014 not a controlled copy",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "running-header",
+      "kind": "hard-negative",
+      "source": "corpus/13-workshop-induction.html nonHeadings:running-header"
+    },
+    {
+      "id": "13-workshop-induction:1",
+      "locator": "13-workshop-induction:1",
+      "document": "13-workshop-induction",
+      "text": "Internal draft \u2014 not a controlled copy",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Northwind Logistics \u00b7 Workshop \u00b7 Page 1 of 1",
+      "next": "Workshop Induction Pack",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "status-line",
+      "kind": "hard-negative",
+      "source": "corpus/13-workshop-induction.html nonHeadings:status-line"
+    },
+    {
+      "id": "13-workshop-induction:2",
+      "locator": "13-workshop-induction:2",
+      "document": "13-workshop-induction",
+      "text": "Workshop Induction Pack",
+      "font_pt": 26,
+      "weight": "bold",
+      "prev": "Internal draft \u2014 not a controlled copy",
+      "next": "This pack is given to every new starter on their first morning. It is a short outline of the day, not a substitute for the full health and safety manual held by the supervisor.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:3",
+      "locator": "13-workshop-induction:3",
+      "document": "13-workshop-induction",
+      "text": "This pack is given to every new starter on their first morning. It is a short outline of the day, not a substitute for the full health and safety manual held by the supervisor.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Workshop Induction Pack",
+      "next": "First day",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:4",
+      "locator": "13-workshop-induction:4",
+      "document": "13-workshop-induction",
+      "text": "First day",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "This pack is given to every new starter on their first morning. It is a short outline of the day, not a substitute for the full health and safety manual held by the supervisor.",
+      "next": "The first day is spent on site. No unsupervised work is scheduled until the safety briefing has been signed.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:5",
+      "locator": "13-workshop-induction:5",
+      "document": "13-workshop-induction",
+      "text": "The first day is spent on site. No unsupervised work is scheduled until the safety briefing has been signed.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "First day",
+      "next": "Arrival",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:6",
+      "locator": "13-workshop-induction:6",
+      "document": "13-workshop-induction",
+      "text": "Arrival",
+      "font_pt": 16,
+      "weight": "bold",
+      "prev": "The first day is spent on site. No unsupervised work is scheduled until the safety briefing has been signed.",
+      "next": "New starters report to the workshop office, not to the floor. A named host meets them and walks the rest of the morning with them.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:7",
+      "locator": "13-workshop-induction:7",
+      "document": "13-workshop-induction",
+      "text": "New starters report to the workshop office, not to the floor. A named host meets them and walks the rest of the morning with them.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Arrival",
+      "next": "Sign-in desk",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:8",
+      "locator": "13-workshop-induction:8",
+      "document": "13-workshop-induction",
+      "text": "Sign-in desk",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "New starters report to the workshop office, not to the floor. A named host meets them and walks the rest of the morning with them.",
+      "next": "The desk issues a visitor pass for the first day only. The pass is returned before leaving.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:9",
+      "locator": "13-workshop-induction:9",
+      "document": "13-workshop-induction",
+      "text": "The desk issues a visitor pass for the first day only. The pass is returned before leaving.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Sign-in desk",
+      "next": "Locker keys",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:10",
+      "locator": "13-workshop-induction:10",
+      "document": "13-workshop-induction",
+      "text": "Locker keys",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The desk issues a visitor pass for the first day only. The pass is returned before leaving.",
+      "next": "A locker is allocated in the changing room. Lost keys are reported to the office the same day.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:11",
+      "locator": "13-workshop-induction:11",
+      "document": "13-workshop-induction",
+      "text": "A locker is allocated in the changing room. Lost keys are reported to the office the same day.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Locker keys",
+      "next": "Safety briefing",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:12",
+      "locator": "13-workshop-induction:12",
+      "document": "13-workshop-induction",
+      "text": "Safety briefing",
+      "font_pt": 16,
+      "weight": "bold",
+      "prev": "A locker is allocated in the changing room. Lost keys are reported to the office the same day.",
+      "next": "The briefing covers the workshop as it is today. It is repeated if the floor layout changes.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:13",
+      "locator": "13-workshop-induction:13",
+      "document": "13-workshop-induction",
+      "text": "The briefing covers the workshop as it is today. It is repeated if the floor layout changes.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Safety briefing",
+      "next": "Fire exits",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:14",
+      "locator": "13-workshop-induction:14",
+      "document": "13-workshop-induction",
+      "text": "Fire exits",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The briefing covers the workshop as it is today. It is repeated if the floor layout changes.",
+      "next": "Two marked exits serve the main bay. The briefing walks both routes before any machine is started.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:15",
+      "locator": "13-workshop-induction:15",
+      "document": "13-workshop-induction",
+      "text": "Two marked exits serve the main bay. The briefing walks both routes before any machine is started.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Fire exits",
+      "next": "After week one",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:16",
+      "locator": "13-workshop-induction:16",
+      "document": "13-workshop-induction",
+      "text": "After week one",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "Two marked exits serve the main bay. The briefing walks both routes before any machine is started.",
+      "next": "By the end of the first week the starter should have a named mentor and a short written note of what still needs practice.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:17",
+      "locator": "13-workshop-induction:17",
+      "document": "13-workshop-induction",
+      "text": "By the end of the first week the starter should have a named mentor and a short written note of what still needs practice.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "After week one",
+      "next": "Mentor pairing",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:18",
+      "locator": "13-workshop-induction:18",
+      "document": "13-workshop-induction",
+      "text": "Mentor pairing",
+      "font_pt": 16,
+      "weight": "bold",
+      "prev": "By the end of the first week the starter should have a named mentor and a short written note of what still needs practice.",
+      "next": "Pairing is decided by the supervisor, not by the starter. The mentor is someone already signed off on the same tasks.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:19",
+      "locator": "13-workshop-induction:19",
+      "document": "13-workshop-induction",
+      "text": "Pairing is decided by the supervisor, not by the starter. The mentor is someone already signed off on the same tasks.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Mentor pairing",
+      "next": "Review notes",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:20",
+      "locator": "13-workshop-induction:20",
+      "document": "13-workshop-induction",
+      "text": "Review notes",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "Pairing is decided by the supervisor, not by the starter. The mentor is someone already signed off on the same tasks.",
+      "next": "The mentor keeps a one-page note of tasks watched and tasks still to watch. The note stays in the office file.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/13-workshop-induction.html headingHierarchy"
+    },
+    {
+      "id": "13-workshop-induction:21",
+      "locator": "13-workshop-induction:21",
+      "document": "13-workshop-induction",
+      "text": "The mentor keeps a one-page note of tasks watched and tasks still to watch. The note stays in the office file.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Review notes",
+      "next": "Note. PPE is issued at the locker, not at the machine.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/13-workshop-induction.html in-scope"
+    },
+    {
+      "id": "13-workshop-induction:22",
+      "locator": "13-workshop-induction:22",
+      "document": "13-workshop-induction",
+      "text": "Note. PPE is issued at the locker, not at the machine.",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "The mentor keeps a one-page note of tasks watched and tasks still to watch. The note stays in the office file.",
+      "next": "Northwind Logistics \u00b7 Induction \u00b7 Prepared 2026-09-11",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "callout",
+      "kind": "hard-negative",
+      "source": "corpus/13-workshop-induction.html nonHeadings:callout"
+    },
+    {
+      "id": "13-workshop-induction:23",
+      "locator": "13-workshop-induction:23",
+      "document": "13-workshop-induction",
+      "text": "Northwind Logistics \u00b7 Induction \u00b7 Prepared 2026-09-11",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "Note. PPE is issued at the locker, not at the machine.",
+      "next": "none",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "running-footer",
+      "kind": "hard-negative",
+      "source": "corpus/13-workshop-induction.html nonHeadings:running-footer"
+    },
+    {
+      "id": "14-pump-overhaul:0",
+      "locator": "14-pump-overhaul:0",
+      "document": "14-pump-overhaul",
+      "text": "Pump Overhaul Log",
+      "font_pt": 24,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Entries cover one shift on the east pump. The log is written as work proceeds, not reconstructed afterwards.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:1",
+      "locator": "14-pump-overhaul:1",
+      "document": "14-pump-overhaul",
+      "text": "Entries cover one shift on the east pump. The log is written as work proceeds, not reconstructed afterwards.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Pump Overhaul Log",
+      "next": "Planned work",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:2",
+      "locator": "14-pump-overhaul:2",
+      "document": "14-pump-overhaul",
+      "text": "Planned work",
+      "font_pt": 17,
+      "weight": "regular",
+      "prev": "Entries cover one shift on the east pump. The log is written as work proceeds, not reconstructed afterwards.",
+      "next": "Planned items were agreed at the morning briefing. Nothing is added to this section after the briefing closes.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:3",
+      "locator": "14-pump-overhaul:3",
+      "document": "14-pump-overhaul",
+      "text": "Planned items were agreed at the morning briefing. Nothing is added to this section after the briefing closes.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Planned work",
+      "next": "Seal replacement",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:4",
+      "locator": "14-pump-overhaul:4",
+      "document": "14-pump-overhaul",
+      "text": "Seal replacement",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Planned items were agreed at the morning briefing. Nothing is added to this section after the briefing closes.",
+      "next": "The outboard seal is the only planned replacement this shift. The inboard seal is inspected and left in place if dry.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:5",
+      "locator": "14-pump-overhaul:5",
+      "document": "14-pump-overhaul",
+      "text": "The outboard seal is the only planned replacement this shift. The inboard seal is inspected and left in place if dry.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Seal replacement",
+      "next": "Tools required",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:6",
+      "locator": "14-pump-overhaul:6",
+      "document": "14-pump-overhaul",
+      "text": "Tools required",
+      "font_pt": 15,
+      "weight": "regular",
+      "prev": "The outboard seal is the only planned replacement this shift. The inboard seal is inspected and left in place if dry.",
+      "next": "Puller, torque wrench, and the seal kit staged on the bench before isolation begins.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:7",
+      "locator": "14-pump-overhaul:7",
+      "document": "14-pump-overhaul",
+      "text": "Puller, torque wrench, and the seal kit staged on the bench before isolation begins.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Tools required",
+      "next": "Isolation steps",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:8",
+      "locator": "14-pump-overhaul:8",
+      "document": "14-pump-overhaul",
+      "text": "Isolation steps",
+      "font_pt": 15,
+      "weight": "regular",
+      "prev": "Puller, torque wrench, and the seal kit staged on the bench before isolation begins.",
+      "next": "Power locked out, suction and discharge closed, casing drained. The permit is signed before the coupling is opened.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:9",
+      "locator": "14-pump-overhaul:9",
+      "document": "14-pump-overhaul",
+      "text": "Power locked out, suction and discharge closed, casing drained. The permit is signed before the coupling is opened.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Isolation steps",
+      "next": "Bearing check",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:10",
+      "locator": "14-pump-overhaul:10",
+      "document": "14-pump-overhaul",
+      "text": "Bearing check",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Power locked out, suction and discharge closed, casing drained. The permit is signed before the coupling is opened.",
+      "next": "Both bearings are checked once the coupling is free. Play outside the maker\u02bcs limit stops the job and is written under unplanned work.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:11",
+      "locator": "14-pump-overhaul:11",
+      "document": "14-pump-overhaul",
+      "text": "Both bearings are checked once the coupling is free. Play outside the maker\u02bcs limit stops the job and is written under unplanned work.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Bearing check",
+      "next": "Clearance readings",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:12",
+      "locator": "14-pump-overhaul:12",
+      "document": "14-pump-overhaul",
+      "text": "Clearance readings",
+      "font_pt": 15,
+      "weight": "regular",
+      "prev": "Both bearings are checked once the coupling is free. Play outside the maker\u02bcs limit stops the job and is written under unplanned work.",
+      "next": "Readings are entered in millimetres. A blank cell means the check was not reached, not that the reading was zero.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:13",
+      "locator": "14-pump-overhaul:13",
+      "document": "14-pump-overhaul",
+      "text": "Readings are entered in millimetres. A blank cell means the check was not reached, not that the reading was zero.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Clearance readings",
+      "next": "Unplanned work",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:14",
+      "locator": "14-pump-overhaul:14",
+      "document": "14-pump-overhaul",
+      "text": "Unplanned work",
+      "font_pt": 17,
+      "weight": "regular",
+      "prev": "Readings are entered in millimetres. A blank cell means the check was not reached, not that the reading was zero.",
+      "next": "Anything found after the briefing belongs here, even if it is finished in the same shift.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:15",
+      "locator": "14-pump-overhaul:15",
+      "document": "14-pump-overhaul",
+      "text": "Anything found after the briefing belongs here, even if it is finished in the same shift.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Unplanned work",
+      "next": "Leak reports",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:16",
+      "locator": "14-pump-overhaul:16",
+      "document": "14-pump-overhaul",
+      "text": "Leak reports",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Anything found after the briefing belongs here, even if it is finished in the same shift.",
+      "next": "A leak found during isolation is reported before the seal kit is opened, so the parts list stays honest.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:17",
+      "locator": "14-pump-overhaul:17",
+      "document": "14-pump-overhaul",
+      "text": "A leak found during isolation is reported before the seal kit is opened, so the parts list stays honest.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Leak reports",
+      "next": "Immediate action",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:18",
+      "locator": "14-pump-overhaul:18",
+      "document": "14-pump-overhaul",
+      "text": "Immediate action",
+      "font_pt": 15,
+      "weight": "regular",
+      "prev": "A leak found during isolation is reported before the seal kit is opened, so the parts list stays honest.",
+      "next": "Contain first, then decide whether the overhaul continues or the pump is stood down.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/14-pump-overhaul.html headingHierarchy"
+    },
+    {
+      "id": "14-pump-overhaul:19",
+      "locator": "14-pump-overhaul:19",
+      "document": "14-pump-overhaul",
+      "text": "Contain first, then decide whether the overhaul continues or the pump is stood down.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Immediate action",
+      "next": "Issued from stores",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:20",
+      "locator": "14-pump-overhaul:20",
+      "document": "14-pump-overhaul",
+      "text": "Issued from stores",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Contain first, then decide whether the overhaul continues or the pump is stood down.",
+      "next": "These lines are the consumables booked against this job, not a new section of the log.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "group-label",
+      "kind": "hard-negative",
+      "source": "corpus/14-pump-overhaul.html nonHeadings:group-label"
+    },
+    {
+      "id": "14-pump-overhaul:21",
+      "locator": "14-pump-overhaul:21",
+      "document": "14-pump-overhaul",
+      "text": "These lines are the consumables booked against this job, not a new section of the log.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Issued from stores",
+      "next": "Parts used this shift",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/14-pump-overhaul.html in-scope"
+    },
+    {
+      "id": "14-pump-overhaul:22",
+      "locator": "14-pump-overhaul:22",
+      "document": "14-pump-overhaul",
+      "text": "Parts used this shift",
+      "font_pt": 17,
+      "weight": "regular",
+      "prev": "These lines are the consumables booked against this job, not a new section of the log.",
+      "next": "Item Qty Outboard seal 1 Gasket set 1",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "table-title",
+      "kind": "hard-negative",
+      "source": "corpus/14-pump-overhaul.html nonHeadings:table-title"
+    },
+    {
+      "id": "14-pump-overhaul:30",
+      "locator": "14-pump-overhaul:30",
+      "document": "14-pump-overhaul",
+      "text": "East pump house \u00b7 shift log",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "1",
+      "next": "none",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "running-footer",
+      "kind": "hard-negative",
+      "source": "corpus/14-pump-overhaul.html nonHeadings:running-footer"
+    },
+    {
+      "id": "15-archive-transfer:0",
+      "locator": "15-archive-transfer:0",
+      "document": "15-archive-transfer",
+      "text": "Records office \u00b7 transfer note",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Draft list \u2014 boxes not yet sealed",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "running-header",
+      "kind": "hard-negative",
+      "source": "corpus/15-archive-transfer.html nonHeadings:running-header"
+    },
+    {
+      "id": "15-archive-transfer:1",
+      "locator": "15-archive-transfer:1",
+      "document": "15-archive-transfer",
+      "text": "Draft list \u2014 boxes not yet sealed",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Records office \u00b7 transfer note",
+      "next": "Archive Transfer Note",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "status-line",
+      "kind": "hard-negative",
+      "source": "corpus/15-archive-transfer.html nonHeadings:status-line"
+    },
+    {
+      "id": "15-archive-transfer:2",
+      "locator": "15-archive-transfer:2",
+      "document": "15-archive-transfer",
+      "text": "Archive Transfer Note",
+      "font_pt": 25,
+      "weight": "bold",
+      "prev": "Draft list \u2014 boxes not yet sealed",
+      "next": "This note lists what left the office and what is still to go. It is not a catalogue of the whole holding.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:3",
+      "locator": "15-archive-transfer:3",
+      "document": "15-archive-transfer",
+      "text": "This note lists what left the office and what is still to go. It is not a catalogue of the whole holding.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Archive Transfer Note",
+      "next": "Incoming boxes",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:4",
+      "locator": "15-archive-transfer:4",
+      "document": "15-archive-transfer",
+      "text": "Incoming boxes",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "This note lists what left the office and what is still to go. It is not a catalogue of the whole holding.",
+      "next": "Boxes arriving this week are listed before they are opened. Counts are of boxes, not of files inside them.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:5",
+      "locator": "15-archive-transfer:5",
+      "document": "15-archive-transfer",
+      "text": "Boxes arriving this week are listed before they are opened. Counts are of boxes, not of files inside them.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Incoming boxes",
+      "next": "Paper series",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:6",
+      "locator": "15-archive-transfer:6",
+      "document": "15-archive-transfer",
+      "text": "Paper series",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Boxes arriving this week are listed before they are opened. Counts are of boxes, not of files inside them.",
+      "next": "Paper is packed as it stood on the shelf. Folders are not reordered during packing.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:7",
+      "locator": "15-archive-transfer:7",
+      "document": "15-archive-transfer",
+      "text": "Paper is packed as it stood on the shelf. Folders are not reordered during packing.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Paper series",
+      "next": "Minutes",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:8",
+      "locator": "15-archive-transfer:8",
+      "document": "15-archive-transfer",
+      "text": "Minutes",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Paper is packed as it stood on the shelf. Folders are not reordered during packing.",
+      "next": "Bound minute books travel upright. Loose gatherings are wrapped before they go in a box.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:9",
+      "locator": "15-archive-transfer:9",
+      "document": "15-archive-transfer",
+      "text": "Bound minute books travel upright. Loose gatherings are wrapped before they go in a box.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Minutes",
+      "next": "Correspondence",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:10",
+      "locator": "15-archive-transfer:10",
+      "document": "15-archive-transfer",
+      "text": "Correspondence",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Bound minute books travel upright. Loose gatherings are wrapped before they go in a box.",
+      "next": "Letter files keep their original clips. New fasteners are not added for the journey.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:11",
+      "locator": "15-archive-transfer:11",
+      "document": "15-archive-transfer",
+      "text": "Letter files keep their original clips. New fasteners are not added for the journey.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Correspondence",
+      "next": "Photographs",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:12",
+      "locator": "15-archive-transfer:12",
+      "document": "15-archive-transfer",
+      "text": "Photographs",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Letter files keep their original clips. New fasteners are not added for the journey.",
+      "next": "Prints and negatives are packed separately even when they belong to the same job.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:13",
+      "locator": "15-archive-transfer:13",
+      "document": "15-archive-transfer",
+      "text": "Prints and negatives are packed separately even when they belong to the same job.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Photographs",
+      "next": "Prints",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:14",
+      "locator": "15-archive-transfer:14",
+      "document": "15-archive-transfer",
+      "text": "Prints",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Prints and negatives are packed separately even when they belong to the same job.",
+      "next": "Each print stays in its sleeve. Sleeves are not labelled again if they already carry a number.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:15",
+      "locator": "15-archive-transfer:15",
+      "document": "15-archive-transfer",
+      "text": "Each print stays in its sleeve. Sleeves are not labelled again if they already carry a number.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Prints",
+      "next": "Outgoing boxes",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:16",
+      "locator": "15-archive-transfer:16",
+      "document": "15-archive-transfer",
+      "text": "Outgoing boxes",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "Each print stays in its sleeve. Sleeves are not labelled again if they already carry a number.",
+      "next": "Outgoing boxes are those leaving for the off-site store. A box is outgoing only after the receipt is signed.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:17",
+      "locator": "15-archive-transfer:17",
+      "document": "15-archive-transfer",
+      "text": "Outgoing boxes are those leaving for the off-site store. A box is outgoing only after the receipt is signed.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Outgoing boxes",
+      "next": "Digital copies",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:18",
+      "locator": "15-archive-transfer:18",
+      "document": "15-archive-transfer",
+      "text": "Digital copies",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Outgoing boxes are those leaving for the off-site store. A box is outgoing only after the receipt is signed.",
+      "next": "A copy is made when the paper cannot travel, not as a substitute for every file.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:19",
+      "locator": "15-archive-transfer:19",
+      "document": "15-archive-transfer",
+      "text": "A copy is made when the paper cannot travel, not as a substitute for every file.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Digital copies",
+      "next": "Checksums",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:20",
+      "locator": "15-archive-transfer:20",
+      "document": "15-archive-transfer",
+      "text": "Checksums",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "A copy is made when the paper cannot travel, not as a substitute for every file.",
+      "next": "Each copy carries a checksum written on the transfer sheet. The checksum is the record that the copy was complete at the door.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "retag"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/15-archive-transfer.html headingHierarchy"
+    },
+    {
+      "id": "15-archive-transfer:21",
+      "locator": "15-archive-transfer:21",
+      "document": "15-archive-transfer",
+      "text": "Each copy carries a checksum written on the transfer sheet. The checksum is the record that the copy was complete at the door.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Checksums",
+      "next": "Series. A run of records kept together because they were created by the same activity, not because they share a subject heading.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/15-archive-transfer.html in-scope"
+    },
+    {
+      "id": "15-archive-transfer:22",
+      "locator": "15-archive-transfer:22",
+      "document": "15-archive-transfer",
+      "text": "Series. A run of records kept together because they were created by the same activity, not because they share a subject heading.",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "Each copy carries a checksum written on the transfer sheet. The checksum is the record that the copy was complete at the door.",
+      "next": "none",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "definition-term",
+      "kind": "hard-negative",
+      "source": "corpus/15-archive-transfer.html nonHeadings:definition-term"
+    },
+    {
+      "id": "16-shift-handover:0",
+      "locator": "16-shift-handover:0",
+      "document": "16-shift-handover",
+      "text": "Shift Handover",
+      "font_pt": 21,
+      "weight": "bold",
+      "prev": "none",
+      "next": "Handover is spoken and then written. The written note is what the incoming lead relies on if the outgoing lead has already left.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:1",
+      "locator": "16-shift-handover:1",
+      "document": "16-shift-handover",
+      "text": "Handover is spoken and then written. The written note is what the incoming lead relies on if the outgoing lead has already left.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Shift Handover",
+      "next": "Night shift",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:2",
+      "locator": "16-shift-handover:2",
+      "document": "16-shift-handover",
+      "text": "Night shift",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "Handover is spoken and then written. The written note is what the incoming lead relies on if the outgoing lead has already left.",
+      "next": "Night covers the yard and the indoor bays. Anything still open at dawn is named, not implied.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:3",
+      "locator": "16-shift-handover:3",
+      "document": "16-shift-handover",
+      "text": "Night covers the yard and the indoor bays. Anything still open at dawn is named, not implied.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Night shift",
+      "next": "Outstanding jobs",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:4",
+      "locator": "16-shift-handover:4",
+      "document": "16-shift-handover",
+      "text": "Outstanding jobs",
+      "font_pt": 17,
+      "weight": "regular",
+      "prev": "Night covers the yard and the indoor bays. Anything still open at dawn is named, not implied.",
+      "next": "Jobs that started at night and are not finished are listed with the bay, not with the person who started them.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:5",
+      "locator": "16-shift-handover:5",
+      "document": "16-shift-handover",
+      "text": "Jobs that started at night and are not finished are listed with the bay, not with the person who started them.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Outstanding jobs",
+      "next": "Bay 4 conveyor",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:6",
+      "locator": "16-shift-handover:6",
+      "document": "16-shift-handover",
+      "text": "Bay 4 conveyor",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Jobs that started at night and are not finished are listed with the bay, not with the person who started them.",
+      "next": "The conveyor was stopped after a belt wander. It is isolated. Restart is a day-shift decision.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:7",
+      "locator": "16-shift-handover:7",
+      "document": "16-shift-handover",
+      "text": "The conveyor was stopped after a belt wander. It is isolated. Restart is a day-shift decision.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Bay 4 conveyor",
+      "next": "Yard lighting",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:8",
+      "locator": "16-shift-handover:8",
+      "document": "16-shift-handover",
+      "text": "Yard lighting",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "The conveyor was stopped after a belt wander. It is isolated. Restart is a day-shift decision.",
+      "next": "Two columns on the east fence are dark. Temporary lights are in place. A repair is booked, not started.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:9",
+      "locator": "16-shift-handover:9",
+      "document": "16-shift-handover",
+      "text": "Two columns on the east fence are dark. Temporary lights are in place. A repair is booked, not started.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Yard lighting",
+      "next": "Staffing",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:10",
+      "locator": "16-shift-handover:10",
+      "document": "16-shift-handover",
+      "text": "Staffing",
+      "font_pt": 17,
+      "weight": "regular",
+      "prev": "Two columns on the east fence are dark. Temporary lights are in place. A repair is booked, not started.",
+      "next": "Night ran one person short after midnight. Cover came from the standby list, not from overtime on the floor.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:11",
+      "locator": "16-shift-handover:11",
+      "document": "16-shift-handover",
+      "text": "Night ran one person short after midnight. Cover came from the standby list, not from overtime on the floor.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Staffing",
+      "next": "Cover list",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:12",
+      "locator": "16-shift-handover:12",
+      "document": "16-shift-handover",
+      "text": "Cover list",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Night ran one person short after midnight. Cover came from the standby list, not from overtime on the floor.",
+      "next": "The names used tonight are ticked on the office copy. Unticked names were not called.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:13",
+      "locator": "16-shift-handover:13",
+      "document": "16-shift-handover",
+      "text": "The names used tonight are ticked on the office copy. Unticked names were not called.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Cover list",
+      "next": "Day shift",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:14",
+      "locator": "16-shift-handover:14",
+      "document": "16-shift-handover",
+      "text": "Day shift",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "The names used tonight are ticked on the office copy. Unticked names were not called.",
+      "next": "Day takes the outstanding jobs as written. New work is not mixed into the night list.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:15",
+      "locator": "16-shift-handover:15",
+      "document": "16-shift-handover",
+      "text": "Day takes the outstanding jobs as written. New work is not mixed into the night list.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Day shift",
+      "next": "Opening checks",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:16",
+      "locator": "16-shift-handover:16",
+      "document": "16-shift-handover",
+      "text": "Opening checks",
+      "font_pt": 17,
+      "weight": "regular",
+      "prev": "Day takes the outstanding jobs as written. New work is not mixed into the night list.",
+      "next": "Checks are done before the first vehicle is accepted. A failed check closes the bay, not the whole yard.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "keep"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:17",
+      "locator": "16-shift-handover:17",
+      "document": "16-shift-handover",
+      "text": "Checks are done before the first vehicle is accepted. A failed check closes the bay, not the whole yard.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Opening checks",
+      "next": "Keys",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:18",
+      "locator": "16-shift-handover:18",
+      "document": "16-shift-handover",
+      "text": "Keys",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Checks are done before the first vehicle is accepted. A failed check closes the bay, not the whole yard.",
+      "next": "Bay keys hang on the numbered board. A missing key is a failed opening check for that bay.",
+      "existing_tag": "H4",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H4",
+        "action": "keep"
+      },
+      "category": "H4",
+      "kind": "heading",
+      "source": "corpus/16-shift-handover.html headingHierarchy"
+    },
+    {
+      "id": "16-shift-handover:19",
+      "locator": "16-shift-handover:19",
+      "document": "16-shift-handover",
+      "text": "Bay keys hang on the numbered board. A missing key is a failed opening check for that bay.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Keys",
+      "next": "Priority. Speak the conveyor isolation before any other item.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    },
+    {
+      "id": "16-shift-handover:20",
+      "locator": "16-shift-handover:20",
+      "document": "16-shift-handover",
+      "text": "Priority. Speak the conveyor isolation before any other item.",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "Bay keys hang on the numbered board. A missing key is a failed opening check for that bay.",
+      "next": "3",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "body-label",
+      "kind": "hard-negative",
+      "source": "corpus/16-shift-handover.html nonHeadings:body-label"
+    },
+    {
+      "id": "16-shift-handover:21",
+      "locator": "16-shift-handover:21",
+      "document": "16-shift-handover",
+      "text": "3",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "Priority. Speak the conveyor isolation before any other item.",
+      "next": "Three vehicles were held overnight for inspection. They remain on the south pad until day shift signs them off.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "decorative-numeral",
+      "kind": "hard-negative",
+      "source": "corpus/16-shift-handover.html nonHeadings:decorative-numeral"
+    },
+    {
+      "id": "16-shift-handover:22",
+      "locator": "16-shift-handover:22",
+      "document": "16-shift-handover",
+      "text": "Three vehicles were held overnight for inspection. They remain on the south pad until day shift signs them off.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "3",
+      "next": "none",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/16-shift-handover.html in-scope"
+    }
+  ]
+}

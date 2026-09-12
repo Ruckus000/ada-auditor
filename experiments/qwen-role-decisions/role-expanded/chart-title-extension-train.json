@@ -1,0 +1,788 @@
+{
+  "note": "Part 23 freeze. Cards from the three new training documents only, via the real PDF→ODL→Cards bridge. No model has seen these rows. Validation documents 17–18 are absent. Holdout-1 / Holdout-2 are absent.",
+  "split": "train",
+  "documents": [
+    "19-quay-roster",
+    "20-tank-soundings",
+    "21-ice-window"
+  ],
+  "cases": [
+    {
+      "id": "19-quay-roster:0",
+      "locator": "19-quay-roster:0",
+      "document": "19-quay-roster",
+      "text": "UNCONTROLLED COPY",
+      "font_pt": 21,
+      "weight": "bold",
+      "prev": "none",
+      "next": "Quay Roster Notice",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "stamp",
+      "kind": "hard-negative",
+      "source": "corpus/19-quay-roster.html nonHeadings:stamp"
+    },
+    {
+      "id": "19-quay-roster:1",
+      "locator": "19-quay-roster:1",
+      "document": "19-quay-roster",
+      "text": "Quay Roster Notice",
+      "font_pt": 24,
+      "weight": "bold",
+      "prev": "UNCONTROLLED COPY",
+      "next": "This notice names who is on the quay tonight. It is written before the watch starts and is not a substitute for the spoken handover.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/19-quay-roster.html headingHierarchy"
+    },
+    {
+      "id": "19-quay-roster:2",
+      "locator": "19-quay-roster:2",
+      "document": "19-quay-roster",
+      "text": "This notice names who is on the quay tonight. It is written before the watch starts and is not a substitute for the spoken handover.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Quay Roster Notice",
+      "next": "Night allocation",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/19-quay-roster.html in-scope"
+    },
+    {
+      "id": "19-quay-roster:3",
+      "locator": "19-quay-roster:3",
+      "document": "19-quay-roster",
+      "text": "Night allocation",
+      "font_pt": 17,
+      "weight": "bold",
+      "prev": "This notice names who is on the quay tonight. It is written before the watch starts and is not a substitute for the spoken handover.",
+      "next": "Berth occupancy",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/19-quay-roster.html headingHierarchy"
+    },
+    {
+      "id": "19-quay-roster:4",
+      "locator": "19-quay-roster:4",
+      "document": "19-quay-roster",
+      "text": "Berth occupancy",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "Night allocation",
+      "next": "Tied up",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-title",
+      "kind": "hard-negative",
+      "source": "corpus/19-quay-roster.html nonHeadings:chart-title"
+    },
+    {
+      "id": "19-quay-roster:5",
+      "locator": "19-quay-roster:5",
+      "document": "19-quay-roster",
+      "text": "Tied up",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Berth occupancy",
+      "next": "Names below are the posted berths. A blank berth means it is kept clear, not that a vessel failed to arrive.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "chart-legend",
+      "kind": "hard-negative",
+      "source": "corpus/19-quay-roster.html nonHeadings:chart-legend"
+    },
+    {
+      "id": "19-quay-roster:6",
+      "locator": "19-quay-roster:6",
+      "document": "19-quay-roster",
+      "text": "Names below are the posted berths. A blank berth means it is kept clear, not that a vessel failed to arrive.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Tied up",
+      "next": "Sign-off",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/19-quay-roster.html in-scope"
+    },
+    {
+      "id": "19-quay-roster:7",
+      "locator": "19-quay-roster:7",
+      "document": "19-quay-roster",
+      "text": "Sign-off",
+      "font_pt": 16,
+      "weight": "bold",
+      "prev": "Names below are the posted berths. A blank berth means it is kept clear, not that a vessel failed to arrive.",
+      "next": "The duty clerk signs the roster after the last name is posted. The signed copy stays in the quay hut.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/19-quay-roster.html headingHierarchy"
+    },
+    {
+      "id": "19-quay-roster:8",
+      "locator": "19-quay-roster:8",
+      "document": "19-quay-roster",
+      "text": "The duty clerk signs the roster after the last name is posted. The signed copy stays in the quay hut.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Sign-off",
+      "next": "Delay mix",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/19-quay-roster.html in-scope"
+    },
+    {
+      "id": "19-quay-roster:9",
+      "locator": "19-quay-roster:9",
+      "document": "19-quay-roster",
+      "text": "Delay mix",
+      "font_pt": 21,
+      "weight": "bold",
+      "prev": "The duty clerk signs the roster after the last name is posted. The signed copy stays in the quay hut.",
+      "next": "The bar is a picture of how the lost hours split. It is not a heading for a new section of this notice.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-title",
+      "kind": "hard-negative",
+      "source": "corpus/19-quay-roster.html nonHeadings:chart-title"
+    },
+    {
+      "id": "19-quay-roster:10",
+      "locator": "19-quay-roster:10",
+      "document": "19-quay-roster",
+      "text": "The bar is a picture of how the lost hours split. It is not a heading for a new section of this notice.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Delay mix",
+      "next": "Northwind Logistics · Quay hut · posted at dusk",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/19-quay-roster.html in-scope"
+    },
+    {
+      "id": "19-quay-roster:11",
+      "locator": "19-quay-roster:11",
+      "document": "19-quay-roster",
+      "text": "Northwind Logistics · Quay hut · posted at dusk",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "The bar is a picture of how the lost hours split. It is not a heading for a new section of this notice.",
+      "next": "none",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/19-quay-roster.html in-scope"
+    },
+    {
+      "id": "20-tank-soundings:0",
+      "locator": "20-tank-soundings:0",
+      "document": "20-tank-soundings",
+      "text": "Ops desk — not for customs",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "none",
+      "next": "Tank Soundings Sheet",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "banner",
+      "kind": "hard-negative",
+      "source": "corpus/20-tank-soundings.html nonHeadings:banner"
+    },
+    {
+      "id": "20-tank-soundings:1",
+      "locator": "20-tank-soundings:1",
+      "document": "20-tank-soundings",
+      "text": "Tank Soundings Sheet",
+      "font_pt": 29,
+      "weight": "bold",
+      "prev": "Ops desk — not for customs",
+      "next": "Readings are taken at the start of the watch. They are not a cargo account and they are not sent to the jetty clerk.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/20-tank-soundings.html headingHierarchy"
+    },
+    {
+      "id": "20-tank-soundings:2",
+      "locator": "20-tank-soundings:2",
+      "document": "20-tank-soundings",
+      "text": "Readings are taken at the start of the watch. They are not a cargo account and they are not sent to the jetty clerk.",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Tank Soundings Sheet",
+      "next": "East bank",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/20-tank-soundings.html in-scope"
+    },
+    {
+      "id": "20-tank-soundings:3",
+      "locator": "20-tank-soundings:3",
+      "document": "20-tank-soundings",
+      "text": "East bank",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "Readings are taken at the start of the watch. They are not a cargo account and they are not sent to the jetty clerk.",
+      "next": "Stored volume",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "retag"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/20-tank-soundings.html headingHierarchy"
+    },
+    {
+      "id": "20-tank-soundings:4",
+      "locator": "20-tank-soundings:4",
+      "document": "20-tank-soundings",
+      "text": "Stored volume",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "East bank",
+      "next": "By tank, this watch",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "chart-title",
+      "kind": "hard-negative",
+      "source": "corpus/20-tank-soundings.html nonHeadings:chart-title"
+    },
+    {
+      "id": "20-tank-soundings:5",
+      "locator": "20-tank-soundings:5",
+      "document": "20-tank-soundings",
+      "text": "By tank, this watch",
+      "font_pt": 12,
+      "weight": "regular",
+      "prev": "Stored volume",
+      "next": "East bank tanks are sounded in the same order each watch. Skip a tank only when it is isolated.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "chart-subtitle",
+      "kind": "hard-negative",
+      "source": "corpus/20-tank-soundings.html nonHeadings:chart-subtitle"
+    },
+    {
+      "id": "20-tank-soundings:6",
+      "locator": "20-tank-soundings:6",
+      "document": "20-tank-soundings",
+      "text": "East bank tanks are sounded in the same order each watch. Skip a tank only when it is isolated.",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "By tank, this watch",
+      "next": "West bank",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/20-tank-soundings.html in-scope"
+    },
+    {
+      "id": "20-tank-soundings:7",
+      "locator": "20-tank-soundings:7",
+      "document": "20-tank-soundings",
+      "text": "West bank",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "East bank tanks are sounded in the same order each watch. Skip a tank only when it is isolated.",
+      "next": "West bank is smaller. The same method is used. The numbers are not copied across from the east sheet.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/20-tank-soundings.html headingHierarchy"
+    },
+    {
+      "id": "20-tank-soundings:8",
+      "locator": "20-tank-soundings:8",
+      "document": "20-tank-soundings",
+      "text": "West bank is smaller. The same method is used. The numbers are not copied across from the east sheet.",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "West bank",
+      "next": "Ullage change",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/20-tank-soundings.html in-scope"
+    },
+    {
+      "id": "20-tank-soundings:9",
+      "locator": "20-tank-soundings:9",
+      "document": "20-tank-soundings",
+      "text": "Ullage change",
+      "font_pt": 24,
+      "weight": "bold",
+      "prev": "West bank is smaller. The same method is used. The numbers are not copied across from the east sheet.",
+      "next": "The line is the change since last watch. It does not open a new section of this sheet.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-title",
+      "kind": "hard-negative",
+      "source": "corpus/20-tank-soundings.html nonHeadings:chart-title"
+    },
+    {
+      "id": "20-tank-soundings:10",
+      "locator": "20-tank-soundings:10",
+      "document": "20-tank-soundings",
+      "text": "The line is the change since last watch. It does not open a new section of this sheet.",
+      "font_pt": 13,
+      "weight": "regular",
+      "prev": "Ullage change",
+      "next": "Northwind Logistics · tank farm · watch copy",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/20-tank-soundings.html in-scope"
+    },
+    {
+      "id": "20-tank-soundings:11",
+      "locator": "20-tank-soundings:11",
+      "document": "20-tank-soundings",
+      "text": "Northwind Logistics · tank farm · watch copy",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "The line is the change since last watch. It does not open a new section of this sheet.",
+      "next": "none",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/20-tank-soundings.html in-scope"
+    },
+    {
+      "id": "21-ice-window:0",
+      "locator": "21-ice-window:0",
+      "document": "21-ice-window",
+      "text": "Harbour master circular",
+      "font_pt": 17,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Ice Window Brief",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "kicker",
+      "kind": "hard-negative",
+      "source": "corpus/21-ice-window.html nonHeadings:kicker"
+    },
+    {
+      "id": "21-ice-window:1",
+      "locator": "21-ice-window:1",
+      "document": "21-ice-window",
+      "text": "Ice Window Brief",
+      "font_pt": 34,
+      "weight": "regular",
+      "prev": "Harbour master circular",
+      "next": "This circular states when the inner channel is expected to be usable. It is advice for masters, not a closure order.",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "kind": "heading",
+      "source": "corpus/21-ice-window.html headingHierarchy"
+    },
+    {
+      "id": "21-ice-window:2",
+      "locator": "21-ice-window:2",
+      "document": "21-ice-window",
+      "text": "This circular states when the inner channel is expected to be usable. It is advice for masters, not a closure order.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Ice Window Brief",
+      "next": "Open water",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/21-ice-window.html in-scope"
+    },
+    {
+      "id": "21-ice-window:3",
+      "locator": "21-ice-window:3",
+      "document": "21-ice-window",
+      "text": "Open water",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "This circular states when the inner channel is expected to be usable. It is advice for masters, not a closure order.",
+      "next": "Open water here means a path a loaded coaster can keep without ice escort. The picture below is the present reading, not a forecast.",
+      "existing_tag": "H2",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H2",
+        "action": "keep"
+      },
+      "category": "H2",
+      "kind": "heading",
+      "source": "corpus/21-ice-window.html headingHierarchy"
+    },
+    {
+      "id": "21-ice-window:4",
+      "locator": "21-ice-window:4",
+      "document": "21-ice-window",
+      "text": "Open water here means a path a loaded coaster can keep without ice escort. The picture below is the present reading, not a forecast.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Open water",
+      "next": "Channel status",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/21-ice-window.html in-scope"
+    },
+    {
+      "id": "21-ice-window:5",
+      "locator": "21-ice-window:5",
+      "document": "21-ice-window",
+      "text": "Channel status",
+      "font_pt": 16,
+      "weight": "regular",
+      "prev": "Open water here means a path a loaded coaster can keep without ice escort. The picture below is the present reading, not a forecast.",
+      "next": "Dots mark the three reaches. Colour is a drawing convenience. It is not a heading.",
+      "existing_tag": "H3",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-title",
+      "kind": "hard-negative",
+      "source": "corpus/21-ice-window.html nonHeadings:chart-title"
+    },
+    {
+      "id": "21-ice-window:6",
+      "locator": "21-ice-window:6",
+      "document": "21-ice-window",
+      "text": "Dots mark the three reaches. Colour is a drawing convenience. It is not a heading.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Channel status",
+      "next": "Tug cover",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/21-ice-window.html in-scope"
+    },
+    {
+      "id": "21-ice-window:7",
+      "locator": "21-ice-window:7",
+      "document": "21-ice-window",
+      "text": "Tug cover",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Dots mark the three reaches. Colour is a drawing convenience. It is not a heading.",
+      "next": "One tug is held at the lock. A second tug is on two hours notice. Cover is not increased automatically when ice thickens.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "H3",
+        "action": "retag"
+      },
+      "category": "H3",
+      "kind": "heading",
+      "source": "corpus/21-ice-window.html headingHierarchy"
+    },
+    {
+      "id": "21-ice-window:8",
+      "locator": "21-ice-window:8",
+      "document": "21-ice-window",
+      "text": "One tug is held at the lock. A second tug is on two hours notice. Cover is not increased automatically when ice thickens.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Tug cover",
+      "next": "Wait times",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/21-ice-window.html in-scope"
+    },
+    {
+      "id": "21-ice-window:9",
+      "locator": "21-ice-window:9",
+      "document": "21-ice-window",
+      "text": "Wait times",
+      "font_pt": 26,
+      "weight": "bold",
+      "prev": "One tug is held at the lock. A second tug is on two hours notice. Cover is not increased automatically when ice thickens.",
+      "next": "Wait in hours",
+      "existing_tag": "H1",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-title",
+      "kind": "hard-negative",
+      "source": "corpus/21-ice-window.html nonHeadings:chart-title"
+    },
+    {
+      "id": "21-ice-window:10",
+      "locator": "21-ice-window:10",
+      "document": "21-ice-window",
+      "text": "Wait in hours",
+      "font_pt": 12,
+      "weight": "regular",
+      "prev": "Wait times",
+      "next": "The columns are a picture of delay at the lock. They do not name a new part of this circular.",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "chart-axis",
+      "kind": "hard-negative",
+      "source": "corpus/21-ice-window.html nonHeadings:chart-axis"
+    },
+    {
+      "id": "21-ice-window:11",
+      "locator": "21-ice-window:11",
+      "document": "21-ice-window",
+      "text": "The columns are a picture of delay at the lock. They do not name a new part of this circular.",
+      "font_pt": 14,
+      "weight": "regular",
+      "prev": "Wait in hours",
+      "next": "Northwind Logistics · harbour office · winter desk",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/21-ice-window.html in-scope"
+    },
+    {
+      "id": "21-ice-window:12",
+      "locator": "21-ice-window:12",
+      "document": "21-ice-window",
+      "text": "Northwind Logistics · harbour office · winter desk",
+      "font_pt": 10,
+      "weight": "regular",
+      "prev": "The columns are a picture of delay at the lock. They do not name a new part of this circular.",
+      "next": "none",
+      "existing_tag": "P",
+      "ancestors": [
+        "Document"
+      ],
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "P",
+      "kind": "paragraph",
+      "source": "corpus/21-ice-window.html in-scope"
+    }
+  ]
+}

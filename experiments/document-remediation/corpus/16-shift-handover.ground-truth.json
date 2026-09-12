@@ -1,0 +1,40 @@
+{
+  "document": "16-shift-handover",
+  "tests": "Part 19 role-coverage train fixture. H2 and H3 share font size; H4 is only slightly smaller. Priority line and decorative numeral are non-headings.",
+  "adversarial": false,
+  "title": "Shift Handover",
+  "language": "en",
+  "split": "train",
+  "headingHierarchy": [
+    { "level": 1, "text": "Shift Handover" },
+    { "level": 2, "text": "Night shift" },
+    { "level": 3, "text": "Outstanding jobs" },
+    { "level": 4, "text": "Bay 4 conveyor" },
+    { "level": 4, "text": "Yard lighting" },
+    { "level": 3, "text": "Staffing" },
+    { "level": 4, "text": "Cover list" },
+    { "level": 2, "text": "Day shift" },
+    { "level": 3, "text": "Opening checks" },
+    { "level": 4, "text": "Keys" }
+  ],
+  "nonHeadings": [
+    { "text": "Priority. Speak the conveyor isolation before any other item.", "role": "P", "category": "body-label" },
+    { "text": "3", "role": "P", "category": "decorative-numeral" }
+  ],
+  "readingOrder": [
+    "H1", "intro",
+    "H2 Night shift", "paragraph",
+    "H3 Outstanding jobs", "paragraph", "H4 Bay 4 conveyor", "paragraph", "H4 Yard lighting", "paragraph",
+    "H3 Staffing", "paragraph", "H4 Cover list", "paragraph",
+    "H2 Day shift", "paragraph",
+    "H3 Opening checks", "paragraph", "H4 Keys", "paragraph",
+    "priority line", "numeral", "paragraph"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": []
+}

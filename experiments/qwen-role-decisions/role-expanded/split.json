@@ -1,0 +1,13 @@
+{
+  "train": [
+    "13-workshop-induction",
+    "14-pump-overhaul",
+    "15-archive-transfer",
+    "16-shift-handover"
+  ],
+  "validation": [
+    "17-visitor-brief",
+    "18-sample-receipt"
+  ],
+  "note": "Frozen before any model sees the documents. Do not reshuffle."
+}

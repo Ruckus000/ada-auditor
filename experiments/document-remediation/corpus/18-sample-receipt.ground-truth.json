@@ -1,0 +1,41 @@
+{
+  "document": "18-sample-receipt",
+  "tests": "Part 19 role-coverage validation fixture. H2/H3 share size; H3 uses small-caps. Chart title and status line are non-headings. CSS family distinct from training and from 17.",
+  "adversarial": false,
+  "title": "Sample Receipt Protocol",
+  "language": "en",
+  "split": "validation",
+  "headingHierarchy": [
+    { "level": 1, "text": "Sample Receipt Protocol" },
+    { "level": 2, "text": "Logging" },
+    { "level": 3, "text": "Paper forms" },
+    { "level": 4, "text": "Batch numbers" },
+    { "level": 4, "text": "Time of receipt" },
+    { "level": 3, "text": "Digital log" },
+    { "level": 4, "text": "Unique ids" },
+    { "level": 2, "text": "Storage" },
+    { "level": 3, "text": "Fridge" },
+    { "level": 4, "text": "Shelf map" }
+  ],
+  "nonHeadings": [
+    { "text": "Hold. Samples without a time of receipt stay on the bench.", "role": "P", "category": "body-label" },
+    { "text": "Receipts by hour", "role": "P", "category": "chart-title" },
+    { "text": "For laboratory use only", "role": "P", "category": "status-line" }
+  ],
+  "readingOrder": [
+    "H1", "intro",
+    "H2 Logging", "paragraph",
+    "H3 Paper forms", "paragraph", "H4 Batch numbers", "paragraph", "H4 Time of receipt", "paragraph",
+    "H3 Digital log", "paragraph", "H4 Unique ids", "paragraph",
+    "H2 Storage", "paragraph",
+    "H3 Fridge", "paragraph", "H4 Shelf map", "paragraph",
+    "hold line", "chart title", "axis line", "status"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": []
+}

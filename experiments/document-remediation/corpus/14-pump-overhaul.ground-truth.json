@@ -1,0 +1,44 @@
+{
+  "document": "14-pump-overhaul",
+  "tests": "Part 19 role-coverage train fixture. H3/H4 at body size, distinguished by weight and position. Table title is a non-heading.",
+  "adversarial": false,
+  "title": "Pump Overhaul Log",
+  "language": "en",
+  "split": "train",
+  "headingHierarchy": [
+    { "level": 1, "text": "Pump Overhaul Log" },
+    { "level": 2, "text": "Planned work" },
+    { "level": 3, "text": "Seal replacement" },
+    { "level": 4, "text": "Tools required" },
+    { "level": 4, "text": "Isolation steps" },
+    { "level": 3, "text": "Bearing check" },
+    { "level": 4, "text": "Clearance readings" },
+    { "level": 2, "text": "Unplanned work" },
+    { "level": 3, "text": "Leak reports" },
+    { "level": 4, "text": "Immediate action" }
+  ],
+  "nonHeadings": [
+    { "text": "Issued from stores", "role": "P", "category": "group-label" },
+    { "text": "Parts used this shift", "role": "P", "category": "table-title" },
+    { "text": "East pump house · shift log", "role": "P", "category": "running-footer" }
+  ],
+  "readingOrder": [
+    "H1", "intro",
+    "H2 Planned work", "paragraph",
+    "H3 Seal replacement", "paragraph", "H4 Tools required", "paragraph", "H4 Isolation steps", "paragraph",
+    "H3 Bearing check", "paragraph", "H4 Clearance readings", "paragraph",
+    "H2 Unplanned work", "paragraph",
+    "H3 Leak reports", "paragraph", "H4 Immediate action", "paragraph",
+    "group label", "paragraph", "table title", "table", "footer"
+  ],
+  "lists": [],
+  "tables": [
+    { "name": "parts used", "borders": "full", "columns": 2, "bodyRows": 2,
+      "headerStructure": { "row1": ["Item", "Qty"] } }
+  ],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": []
+}
