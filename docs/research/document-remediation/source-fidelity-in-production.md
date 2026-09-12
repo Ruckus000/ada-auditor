@@ -785,3 +785,34 @@ four were this instrument miscounting or mis-comparing its own source:
 **The pipeline has never been shown to drop content or to invent it.** That was
 true on the first run and every run since; what changed is that the reader
 finally agrees.
+
+# Correction, 2026-09-12 — what "nothing on real bytes" left out, and now covers
+
+Appended, per this document's rule. Two sections above say the answers path is
+held "by nothing on real bytes". **That overstated the gap.**
+
+`tests/integrations/documents/toolchain/soffice-remediate-route.test.ts` has put
+a person's **figure description** through a real LibreOffice conversion and a
+real JVM since before the gate existed, and since #240 that request has passed
+through `checkFidelity`. A 200 there has meant no assertion fired. What was
+genuinely uncovered was the **declared language**, the path where the gate's
+worst defect lived: every case for it mocked the conversion.
+
+That file now has the case. Building it turned up something the mocks could not:
+**LibreOffice will not write a `.docx` that declares no language.** A seed with
+none, `none`, or an unparseable tag came out as its locale's `en-US` (`zxx`
+came out as `zxx`, a real tag). A LibreOffice-made fixture therefore cannot reach
+the declared-language branch at all. The test takes every `w:lang` out of
+LibreOffice's own output and re-zips the rest untouched. Before it was trusted,
+the `declaredTruth` substitution in `remediateWordBytes` was disabled, and the
+test refused delivery with `fidelity-assertion` on 3.1.1. That is the defect
+that shipped.
+
+One qualification to "every document in the corpus is now fully faithful" above.
+The harness counts assertions and omissions and prints `faithful` for a document
+with neither. It does not count `unverified`, the third kind, which `withFidelity`
+also puts on the punch list. From the stored per-document rows, no count on any
+of the 31 delivers more than its source. The rows record only `hasTitle`, not
+title values, so the one `unverified` finding they cannot rule out is a title
+that differs from the source on a `.doc` document. The sweep stands, with that
+exception named.
