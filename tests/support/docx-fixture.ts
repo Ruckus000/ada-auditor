@@ -24,12 +24,13 @@ function crc32(buf: Buffer): number {
 }
 
 /** Both storage methods, because real `.docx` files use deflate and the spec allows store. */
-export function zip(entries: Array<[string, string]>, method: 0 | 8 = 8): Uint8Array {
+export function zip(entries: Array<[string, string | Buffer]>, method: 0 | 8 = 8): Uint8Array {
   const locals: Buffer[] = [];
   const centrals: Buffer[] = [];
   let offset = 0;
   for (const [name, text] of entries) {
-    const raw = Buffer.from(text, 'utf8');
+    // Bytes pass through untouched: a repacked real `.docx` carries media.
+    const raw = Buffer.isBuffer(text) ? text : Buffer.from(text, 'utf8');
     const data = method === 8 ? deflateRawSync(raw) : raw;
     const nameBuf = Buffer.from(name, 'utf8');
     const local = Buffer.alloc(30);

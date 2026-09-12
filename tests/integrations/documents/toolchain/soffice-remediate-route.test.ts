@@ -7,9 +7,11 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { zipEntry } from '../../../../src/domain/docx-language';
 import { resolveLibreOffice } from '../../../../src/integrations/documents/libreoffice-runtime';
 import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
 import { inspectDocument } from '../../../../src/integrations/documents/inspect';
+import { zip } from '../../../support/docx-fixture';
 
 const execFileAsync = promisify(execFile);
 
@@ -214,6 +216,74 @@ describe.skipIf(skip)('POST /api/documents/remediate, end to end', () => {
       expect(read.value.figures.map((figure) => figure.alt)).toEqual(['A site plan of the mill']);
       expect(read.value.headings).toEqual(['H1', 'H2']);
       expect(read.value.title).toBe('Planning Committee Agenda');
+    }
+  }, 180_000);
+
+  /**
+   * A language a person declared, through the source-fidelity gate, on real bytes.
+   *
+   * The gate compares the delivered PDF against what the `.docx` declares, and
+   * a source that declares no language plus a delivered one reads as "something
+   * re-invented one" — an assertion, a refused delivery. So the gate has to be
+   * told what the operator supplied, or the cheapest answer on the punch list
+   * refuses every document it is given. That shipped once, and every test that
+   * covered it mocked the conversion; this is the first to put it through
+   * LibreOffice, the JVM and `checkFidelity` together.
+   *
+   * `summary.declared` is asserted first because it is what proves the case is
+   * reached at all: the declaration is only consumed where the source declares
+   * no language, so a seed that carried one would pass this test without ever
+   * touching the gate.
+   */
+  it('delivers a language a person declared, and the fidelity gate lets it through', async () => {
+    // `[V]` LibreOffice will not write a `.docx` that declares no language. A
+    // seed declaring nothing, `none`, or an unparseable tag came out as its
+    // locale's `en-US`; `zxx` came out as `zxx`, a real tag that is carried. So
+    // the language is taken OUT of its own output — every
+    // `w:lang` in every part, the rest of the bytes untouched and re-zipped with
+    // `[Content_Types].xml` first so `isWordDocument` still sees its markers.
+    const path = join(dir, 'seed.docx');
+    const { stdout } = await execFileAsync('unzip', ['-Z1', path]);
+    const names = stdout
+      .split('\n')
+      .filter(Boolean)
+      .sort((a, b) => Number(b === '[Content_Types].xml') - Number(a === '[Content_Types].xml'));
+    const undeclared = zip(
+      names.map((name): [string, string | Buffer] => {
+        const entry = zipEntry(docx, name);
+        if (entry === null) throw new Error(`unreadable zip entry: ${name}`);
+        return /\.(xml|rels)$/.test(name)
+          ? [name, entry.toString('utf8').replace(/<w:lang\b[^>]*\/>/g, '')]
+          : [name, entry];
+      }),
+    );
+
+    const answers = {
+      inputSha256: createHash('sha256').update(undeclared).digest('hex'),
+      language: 'en',
+      figures: [],
+    };
+
+    const response = await POST(upload(undeclared, 'agenda.docx', answers));
+    // A refusal carries no summary header, so say what it was: this is where
+    // the defect lands, as `fidelity-assertion` — or as `answer-mismatch` if
+    // the seed ever starts declaring a language again.
+    const refusal = response.status === 200 ? null : await response.clone().json();
+    expect(refusal).toBeNull();
+
+    const summary = JSON.parse(response.headers.get('x-remediation-summary') ?? '{}');
+    expect(summary.declared).toMatchObject({ language: true });
+    expect(summary.fidelity?.checked).toBe(true);
+    expect(summary.fidelity.defects.filter((d: { kind: string }) => d.kind === 'assertion')).toEqual([]);
+
+    const out = join(dir, 'declared-language.pdf');
+    await writeFile(out, Buffer.from(await response.arrayBuffer()));
+
+    const read = await inspectDocument(out);
+    expect(read.ok).toBe(true);
+    if (read.ok) {
+      expect(read.value.lang).toBe('en');
+      expect(read.value.headings).toEqual(['H1', 'H2']);
     }
   }, 180_000);
 
