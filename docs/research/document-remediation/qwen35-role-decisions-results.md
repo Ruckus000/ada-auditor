@@ -4267,4 +4267,70 @@ Gate 0 inventory, then stop. One dump of the development PDFs for
 counts. No expanded dataset. No QLoRA. No verifier. No holdout
 rescue.
 
+---
+
+## Part 19 — build the missing development evidence before retraining
+
+**Date:** 2026-09-11. Same branch. Data construction only. No QLoRA.
+No inference comparison. No marked verifier. No Holdout-1 or
+Holdout-2 rows. No production integration. `out/adapter-role` is not
+modified.
+
+Part 18 stopped correctly: the existing 01–12 corpus cannot test the
+role-data coverage hypothesis. This spike asks whether the missing
+evidence can be constructed and survive the real PDF bridge.
+
+### The one question
+
+> Can we create a small, holdout-independent development extension
+> that supplies enough bridge-visible H3/H4 hierarchy and hard
+> non-heading examples to test the role-data coverage hypothesis
+> honestly?
+
+If this passes, it earns exactly one expanded role-QLoRA experiment
+in the next Part. That run is not this spike.
+
+### Registered predictions (frozen before authoring)
+
+1. `[H]` Six small development fixtures can supply at least 12 true
+   H3 and 12 true H4 examples without using spent holdout content.
+2. `[H]` The existing PDF → ODL → Cards bridge preserves all new
+   H3/H4 headings as standalone evaluable cards.
+3. `[H]` Source-type / ancestry scope collides with zero new true
+   headings.
+4. `[H]` The four training documents provide at least 8
+   bridge-visible H3 and 8 bridge-visible H4 examples.
+5. `[H]` The two validation documents provide at least 4 H3 and 4 H4
+   examples, enough that deeper hierarchy is no longer a one-card
+   anecdote.
+6. `[H]` The same fixtures provide enough heading-like non-headings
+   to prevent the next training experiment from being hierarchy-only.
+7. `[H]` No Holdout-1 / Holdout-2 row, string-derived imitation,
+   image, or GT record is needed.
+8. `[H]` No model execution or production architecture is required
+   in this Part.
+
+### Fixture path (traced, not rewritten)
+
+* HTML + GT live in `experiments/document-remediation/corpus/`.
+* `generate-corpus.mjs` renders every `corpus/*.html` through
+  Chromium `page.pdf()`.
+* `run-opendataloader.mjs` tags those PDFs (defaults).
+* `run.py --dump-dir` / Cards.java emits BLOCK cards with text,
+  font_pt, weight, ancestors, locator `{stem}:{i}`.
+* GT matching is `text_norm` against `headingHierarchy[].text`
+  (`score_holdout` / Part 18 inventory).
+
+New fixtures continue the 01–12 numbering. Split frozen before any
+model sees it:
+
+* train: 13, 14, 15, 16
+* validation: 17, 18
+
+Hard negatives recorded on each GT as `nonHeadings` (experiment-local
+field; comparator does not require it). Semantic expected role is
+authored, never inferred from ODL.
+
+No `src/` changes. No Cards.java / ODL special cases.
+
 
