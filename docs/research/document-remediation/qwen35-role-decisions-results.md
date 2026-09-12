@@ -4109,4 +4109,162 @@ No text-verifier fallback. No production integration.
 Part 16 remains spent diagnostic evidence. It is not independent
 validation. This Holdout-2 evaluation is.
 
+---
+
+## Part 18 — is role-training coverage the bottleneck?
+
+**Date:** 2026-09-11. Same branch. Part 17 is not rescued. Holdout-1
+and Holdout-2 strings, locators, cards, images, and GT rows stay out
+of training. `out/adapter-role` is not modified.
+`out/adapter-verify-marked` is not used to decide this spike.
+No production integration.
+
+### The one question
+
+> Can the same Qwen3.5-4B role-only QLoRA architecture, trained on a
+> broader but still development-only role corpus, remove the
+> shallow-hierarchy / unsafe-role failure pattern without changing
+> model size, inference features, structural rules, or the marked
+> verifier?
+
+This is a role-adapter data-coverage experiment, not a Holdout-2
+repair. The marked verifier remains frozen and unread for pass/fail.
+
+### Registered predictions (frozen before any new adapter training)
+
+1. `[H]` The development corpus / existing generator can provide
+   materially broader hierarchy coverage than the original 43-card
+   role set without using spent holdouts.
+2. `[H]` The old role adapter reproduces hierarchy weakness on the new
+   whole-document validation set.
+3. `[H]` Expanded development-only role training reduces H-level
+   confusion.
+4. `[H]` Expanded training also reduces unsafe non-heading→H*
+   proposals rather than merely changing heading levels.
+5. `[H]` The new adapter reaches zero model-only unsafe and ≥80%
+   exact heading level on the frozen validation documents.
+6. `[H]` No image input, verifier change, larger model, or new
+   structural rule is required for this role-layer improvement.
+7. `[H]` Holdout-1 and Holdout-2 examples remain absent from SFT.
+
+### Gate 0 — development inventory (no SFT rows authored)
+
+Sources inspected: corpus docs 01–12 HTML + `headingHierarchy`;
+`train.json` (43 cards, docs 02/04/05/06/10/12); `valid-07.json`;
+`probes.json`; `generate-corpus.mjs` (renders existing HTML to PDF);
+existing `out/bridge-dev` dump; a fresh real-PDF dump of ODL-tagged
+development PDFs into `out/dev-corpus/` (Cards.java, same bridge as
+inference). Holdout 1 and Holdout 2 were not searched.
+
+#### 1. True heading counts already in development GT
+
+| level | corpus `headingHierarchy` | original `train.json` |
+|---|---|---|
+| H1 | 12 | 6 |
+| H2 | 21 | 15 |
+| H3 | **2** | **1** |
+| H4+ | **0** | **0** |
+| total | 35 | 22 heading rows of 43 |
+
+The two H3 texts are `Regional detail` (01) and `Northern apron` (12).
+There is no H4, H5, or H6 anywhere in development GT. Doc 09 is a
+scan; its H1 has no text layer.
+
+#### 2. Representable as real-PDF BLOCK cards
+
+12/12 development PDFs tagged. Evaluable BLOCK cards **199**.
+Bridge failures **6**, all `empty_text` (figures / scan).
+
+GT headings matched to a card: **33 / 35**. Unmatched: 09 scan H1;
+12 `Northern apron` (the second H3 — no card text matched).
+
+Matched by true level: H1 11, H2 21, H3 **1**, H4+ **0**.
+
+After frozen source-type / ancestry scope, **30** of those matched
+headings remain in-scope. The surviving true H3 is still only
+`Regional detail`. Expanding to whole-document cards does not create
+a second H3 example the bridge can see.
+
+ODL emitted one in-scope `H4` (`12:41` `Quarterly trend by depot`).
+That string is **not** in `headingHierarchy`. It is a chart title.
+Using it as an H4 target would be relabeling furniture as deeper
+hierarchy, which this spike forbids.
+
+#### 3. Heading-like non-headings after frozen scope
+
+In-scope non-GT-heading cards: **88** (plus 30 in-scope true
+headings → 118 in-scope / 199).
+
+#### 4. Categories that exist naturally in development
+
+Present:
+
+* ordinary paragraphs (majority of the 88)
+* prominent non-headings (02 callout; 08 kicker; 12 cover subtitle /
+  option lines; train.json already had 6 of this class)
+* table / group labels (03 table caption tagged H2; 04 header-row
+  fragments as P)
+* chart labels (07 axis ticks and legend; 07/12 chart titles tagged
+  H2/H4 by ODL, not GT headings)
+* banners / status furniture (08 `Board discussion · not for
+  circulation`; 08 numerals `1`/`2`/`3` tagged H1)
+* running furniture (01 header/footer; 02 footer tagged H3; 05 page
+  labels)
+* body-sized true heading: one (`Regional detail`, italic ~12pt)
+
+Absent from development (not recovered from holdouts; just not here):
+
+* glossary / term-like labels as a labeled class
+* rotated text
+* any true H4–H6
+
+#### 5. Existing generator for deeper hierarchy?
+
+`generate-corpus.mjs` only prints the twelve existing HTML fixtures
+to PDF. `generate-holdout.mjs` is the holdout renderer and is not a
+development template. There is no seed/template in-repo that emits
+new labeled H3/H4 documents without authoring new HTML or copying
+spent holdout wording.
+
+### Stop — existing development corpus cannot test the hypothesis
+
+The original 43-card set was already 6 H1 / 15 H2 / 1 H3 / 0 H4+.
+Whole-document real-PDF cards add many P/Artifact/table/chart rows.
+They add **zero** true H4+ and they add **zero** additional
+bridge-visible H3 (the second GT H3 does not appear as a card).
+
+The validation split is equally blocked. A disjoint whole-document
+val set that has several H1, several H2, and at least two deeper
+headings cannot be cut from this corpus: only two GT H3 exist, only
+one is a card, and putting that one in validation leaves training
+with no H3. Scoring train as validation is forbidden. Doc 07 is 1 H1
++ chart furniture — Part-5 “1/1 H1” theater.
+
+H4+ remains zero and H3 remains effectively one example.
+**STOP before training.**
+
+role-data coverage is the next bottleneck, but the existing
+development corpus cannot test it honestly.
+
+Do not fabricate H4 cards by relabeling chart titles. Do not turn
+Holdout 2 into training data. Do not author new hierarchy HTML in
+this spike. Do not run `out/adapter-role-expanded`. Do not touch
+`out/adapter-role`. Do not involve the marked verifier. Do not
+production-integrate.
+
+### Predictions scored
+
+1. `[H]` Materially broader hierarchy coverage without spent
+   holdouts. **Miss.** Broader *candidate* coverage, not deeper
+   hierarchy.
+2–6. Not tested. No adapter was trained.
+7. `[H]` Holdout examples absent from SFT. **Confirmed** (no SFT
+   written).
+
+### Ponytail
+
+Gate 0 inventory, then stop. One dump of the development PDFs for
+counts. No expanded dataset. No QLoRA. No verifier. No holdout
+rescue.
+
 
