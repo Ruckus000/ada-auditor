@@ -4613,4 +4613,76 @@ SHA-256 `638f83ac7114590e889a813918c213b9d2d29d4750193e7964b8ee61b321390c`
 
 **Gate 0: PASS.** Dataset reproduced. No model call yet.
 
+### Gate 1 — frozen `out/adapter-role` on docs 17/18
+
+Command (role-only; no `--r2-veto`; validation already in-scope so
+source-type / ancestry skipped 0 cards; `qwen_called` 47/47):
+
+```
+python run.py \
+  --offline \
+  --role-only \
+  --path role-expanded/role-expanded-valid.json \
+  --adapter-path out/adapter-role
+```
+
+The frozen validation file has no `model` key. An eval copy under
+gitignored `out/part20/valid.json` added only
+`model: mlx-community/Qwen3.5-4B-MLX-4bit`. The hashed file was not
+edited.
+
+`model_role` is the parsed `role` (R2 not applied). Semantic scoring
+does not treat an already-bad ODL `H*` tag as a correct classifier.
+
+| metric | old `out/adapter-role` |
+|---|---|
+| parse | **47/47** |
+| exact role /47 | 31/47 |
+| heading exact /20 | **6/20** |
+| heading detection /20 | 18/20 |
+| H1 /2 | **2/2** |
+| H2 /4 | **4/4** |
+| H3 /6 | **0/6** |
+| H4 /8 | **0/8** |
+| H3+H4 /14 | **0/14** |
+| false-heading predictions /27 | **2/27** |
+| unsafe_retag (informational) | 1 |
+| heading demotions | 2 |
+| derived-action accuracy | 31/47 |
+
+Heading confusion (GT → pred): H1→H1 2; H2→H2 4; H3→H1 1; H3→H2 5;
+H4→H2 6; H4→P 2. P→pred: P 25, H2 2.
+
+False-heading predictions:
+
+* `17-visitor-brief:3` callout “Do not enter the machine hall
+  unescorted.” GT P, `model_role` H2, existing ODL tag H2, action
+  `keep`. Mutation safety would hide this. Semantic role does not.
+* `18-sample-receipt:21` chart-title “Receipts by hour.” GT P,
+  `model_role` H2, existing H1, action `retag`. This is also
+  `unsafe_retag`.
+
+H4 demotions to P: `17-visitor-brief:8` Badges; `:20` Forms. H3 did
+not collapse to P (all six detected as H1/H2). H4 did not collapse as
+a class (6/8 still detected as some H*). Exact deeper hierarchy is
+zero.
+
+Baseline stop required parse 47/47, false-heading 0, heading exact
+≥16/20, H3+H4 ≥11/14, detection ≥19/20, no systematic H3 or H4
+collapse-to-P. Missed on false-heading, heading exact, H3+H4, and
+detection.
+
+**Gate 1: old adapter does not already pass. The single expanded
+QLoRA run is earned.**
+
+SFT emitted via existing `card_prompt(ROLE_ONLY_STEM, …,
+hide_existing_tag=True)` from the frozen 137 cards. Completions
+`{"role":"<gt>"}` only. Artifact retained (4 rows). No existing tag,
+page, y-band, bbox, ancestors, image, confidence, or action in the
+prompt.
+
+`out/gen-sft-role-expanded/train.json` SHA-256
+`8cfa9e1c60c314a8a8318bb347ec8907b0c5fb47bba5e4a2f0e1c7a3a8035d88`
+(gitignored). Recorded before training.
+
 
