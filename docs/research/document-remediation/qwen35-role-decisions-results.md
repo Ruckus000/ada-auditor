@@ -5850,5 +5850,96 @@ include `legacy_unsafe_mutation` and `semantic_false_heading`, with
 keep-as-H*. Integration of a verifier rejection of an existing H*
 (demote to P vs unresolved) is still not this Part.
 
+---
+
+## Part 25 — is the visual input causally load-bearing in the latest verifier?
+
+**Date:** 2026-09-12. Same branch. Inference only. No QLoRA. No
+fixture edit. No new examples. No prompt change. No marker change.
+No crop. No `--train-vision`. No role adapter. No structural-rule
+change. No Holdout-1 / Holdout-2. Docs 17/18 remain frozen
+validation.
+
+Part 24 moved the frozen docs-17/18 eligibility boundary from
+TP 20/20 TN 26/27 (one chart-title FP) to TP 19/20 TN 27/27
+(chart-title fixed, one quiet-H4 FN). Independent chart-context
+coverage changed the untouched validation decision boundary. It
+did not produce a lossless eligibility verifier. This Part does
+not add more data.
+
+### The one question
+
+> On the frozen Part-24 verifier, does the marked page itself
+> causally affect eligibility decisions on untouched docs 17/18, or
+> is the latest adapter still functioning primarily as a
+> text/metadata classifier?
+
+Inference ablation. It does not ask whether vision could work after
+vision-layer training.
+
+### Frozen primary surface
+
+`role-expanded/role-expanded-valid.json` SHA-256
+`207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f`
+
+47 cards, docs 17/18 only. GT headings 20 / non-headings 27.
+H1 2 / H2 4 / H3 6 / H4 8 / P 27.
+
+Part-24 marked predictions are frozen and are **not regenerated**.
+
+### Frozen model and contract (verified before Arm B)
+
+| artifact | SHA-256 |
+|---|---|
+| `out/adapter-verify-marked-chart-expanded/adapters.safetensors` | `9c5ce9f23d670251b2f41be2a378d253cab6e95b2d822e43ec53f43e127088f0` |
+| `adapter_config.json` | `51518b19e2a1ec53f75a40c119de15da988dca39344e05b7e917ecacc6d31d82` |
+| `MARKED_ELIGIBILITY_STEM` | `e5f8d312b57c3c9a7b9a4ab0b30269bcfd009d4ce7d216c2dcd2176b09f39902` |
+| Arm A `out/part24/gate1.jsonl` | `b08ceefc6e5cf58a154259055c0f57c8bd41e6a491a9a853407af705e56911bc` |
+
+Completion remains exactly `{"heading":true}` or `{"heading":false}`.
+Metadata remains Element / Font / Weight / Previous / Next / JSON.
+Temperature 0. Thinking disabled. Max tokens 256. No existing tag,
+role adapter, ancestry, source type, R2, category, GT, locator, bbox
+coordinates, confidence, or reason in the prompt.
+
+Do not replace the marked-image sentence. Do not write a text-only
+prompt. Do not use `out/adapter-verify-text`. The only intended
+Arm-B variable is whether image tensors are supplied.
+
+### Arm A — frozen marked reference
+
+Not regenerated. Parse 47/47, TP 19/20, FN 1/20, TN 27/27, FP 0/27.
+Only error: `17-visitor-brief:14` Workshop floor, GT H4,
+`heading:false`. Critical corrected row: `18-sample-receipt:21`
+Receipts by hour, GT P chart-title, Part-22 true → Part-24 marked
+false.
+
+### Registered predictions (frozen before Arm B)
+
+1. `[H]` Arm B parses every one of the 47 frozen validation rows.
+2. `[H]` At least one Part-24 prediction changes when the image is
+   removed.
+3. `[H]` Receipts by hour benefits from the marked image.
+4. `[H]` The quiet-H4 error on Workshop floor is either
+   image-dependent or remains unchanged, providing direct evidence
+   about the remaining preservation failure.
+5. `[H]` If flips exist, Arm C can distinguish target-marker
+   dependence from generic page-image dependence without training.
+6. `[H]` No new data, QLoRA, prompt edit, crop, vision-layer
+   training, larger model, role model, structural rule, or holdout
+   evaluation is required.
+
+### Arm B plan
+
+Same 47 cards, same Part-24 adapter, same `MARKED_ELIGIBILITY_STEM`
+prompt, image omitted. Gate is causal dependence, not beating the
+marked arm. Outcome A if all 47 identical (stop; no Arm C). Outcome
+B/C/D if flips exist; Arm C then runs on flip rows only
+(unmarked full page, magenta rectangle removed, no crop).
+
+Do not train a new adapter. Do not interpret zero image dependence
+as proof that vision cannot solve the task. Do not interpret
+nonzero dependence as an eligibility pass.
+
 
 
