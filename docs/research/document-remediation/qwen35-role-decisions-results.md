@@ -4834,4 +4834,57 @@ QLoRA under this configuration. Role-training coverage moved H3/H4
 detection and some exact levels, and it did not buy semantic heading
 safety on two untouched development documents.
 
+## Part 21 — can the existing marked verifier cleanly own heading eligibility?
+
+**Date:** 2026-09-11. Same branch. Inference only. No QLoRA. No
+fixture edits. No new examples. No prompt change. No crop. No
+`--train-vision`. No larger model. No Holdout-1 / Holdout-2. No
+production integration. Neither role adapter is invoked.
+
+Part 20: joint role coverage improved detection and did not solve
+semantic safety or hierarchy. This Part isolates eligibility from
+level on the same untouched docs 17/18 surface.
+
+### The one question
+
+> Can the already-trained marked-page eligibility verifier cleanly
+> separate document headings from non-headings on the untouched
+> Part-19 validation documents, independent of heading-level
+> classification?
+
+Score the verifier itself on all 47 frozen cards. Direct binary
+semantic scoring: `gt_heading = expect.role in H1..H6` against
+`verify_heading = parsed["heading"]`. An already-bad ODL tag gives
+no credit. No role adapter, R2, source-type, ancestry, or selective
+invocation.
+
+### Registered predictions (frozen before the 47 verifier calls)
+
+1. `[H]` The frozen marked verifier executes and parses all 47 rows
+   without retraining or source modification.
+2. `[H]` It accepts all 20 genuine headings, including all 14 H3/H4
+   headings.
+3. `[H]` It rejects all 27 GT non-headings.
+4. `[H]` It rejects the three represented hard-negative classes the
+   expanded role adapter promoted: callout, running footer, and chart
+   title.
+5. `[H]` Its heading/non-heading boundary is materially cleaner than
+   either role adapter’s joint role boundary on this validation set.
+6. `[H]` No role-model invocation, R2, structural gate, crop,
+   retraining, or larger model is required to answer this question.
+7. `[H]` Holdout 1 and Holdout 2 are not run.
+
+### Frozen objects (verified before inference)
+
+| file | expected SHA-256 | verified |
+|---|---|---|
+| `role-expanded-valid.json` | `207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f` | match. 47 cards, docs 17/18 only, H1 2 / H2 4 / H3 6 / H4 8 / P 27. 20 GT headings, 27 GT non-headings. No box fields (role-layer freeze). |
+| `out/adapter-verify-marked/adapters.safetensors` | `7cecddda6e546dfcc4366daf2ab920a299dd14731d4d8b239afa8d043c0824a8` | match. |
+| `out/adapter-verify-marked/adapter_config.json` | `51518b19e2a1ec53f75a40c119de15da988dca39344e05b7e917ecacc6d31d82` | match. |
+| `MARKED_ELIGIBILITY_STEM` | `e5f8d312b57c3c9a7b9a4ab0b30269bcfd009d4ce7d216c2dcd2176b09f39902` | match. |
+| `Mark.java` | `6ed6bea4f3d49cb8e7170b7b61abad655a4ded21076ddba7e76a31538379a650` | match. |
+| `src/integrations/documents/java/Preview.java` | `1d6b11023107a1683dd842c9cde6918486c4240ea2be0ff62ea2b1a89916b348` | match. |
+
+Frozen validation locators all exist in the Part-19 `out/role-expanded/blocks.json` dump (47/47). Tagged PDFs are absent from disk and must be reproduced from the frozen HTML through the same `generate-corpus.mjs` → `run-opendataloader.mjs` → `Cards.java` path. Evaluation population remains the frozen 47-card JSON, joined by locator. `--eval-verify-marked` is not used: that path calls a role adapter. This Part scores eligibility only.
+
 
