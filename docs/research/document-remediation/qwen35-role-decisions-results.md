@@ -4685,4 +4685,153 @@ prompt.
 `8cfa9e1c60c314a8a8318bb347ec8907b0c5fb47bba5e4a2f0e1c7a3a8035d88`
 (gitignored). Recorded before training.
 
+### Training health (one run, configuration held with Part 6)
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft-role-expanded \
+  --split train \
+  --batch-size 1 \
+  --lora-rank 8 \
+  --epochs 6 \
+  --steps-per-report 10 \
+  --steps-per-save 1000 \
+  --train-on-completions \
+  --output-path out/adapter-role-expanded
+```
+
+`[V]` `TRAIN_EXIT:0`. Iterations **822** (137 × 6). Learning rate
+`2.000e-05`. `#trainable params: 16.232448 M || all params: 4539.264 M
+|| trainable%: 0.358%`. Language-side LoRA, rank 8, no vision. Loss
+0.257 (iter 10) → **0.000015** (iter 822). No NaN, no crash. Peak mem
+9.707 GB. Adapter 62 MiB. `out/adapter-role` hash unchanged
+(`8178c345…8dfdb`). Base checkpoint hashes unchanged.
+
+| artifact | SHA-256 |
+|---|---|
+| `out/adapter-role-expanded/adapters.safetensors` | `a4b7460e6464c8149b10483d00f49b088eb825983a4ba38f188b2116d6d7567a` |
+| `out/adapter-role-expanded/adapter_config.json` | `51518b19e2a1ec53f75a40c119de15da988dca39344e05b7e917ecacc6d31d82` |
+
+Loss is not a gate. The training set was not scored as evidence of
+generalization.
+
+### Gate 2 — expanded adapter on frozen docs 17/18
+
+Same role-only invocation as Gate 1.
+`--adapter-path out/adapter-role-expanded`. `qwen_skipped` 0.
+R2 / source-type / ancestry / marked verifier not applied.
+
+| metric | old role adapter | expanded role adapter |
+|---|---|---|
+| parse | 47/47 | 47/47 |
+| exact role /47 | 31/47 | 33/47 |
+| heading exact /20 | 6/20 | **9/20** |
+| heading detection /20 | 18/20 | **20/20** |
+| H1 /2 | 2/2 | 2/2 |
+| H2 /4 | 4/4 | 4/4 |
+| H3 /6 | 0/6 | **1/6** |
+| H4 /8 | 0/8 | **2/8** |
+| H3+H4 /14 | 0/14 | **3/14** |
+| false-heading predictions /27 | 2/27 | **3/27** |
+| heading demotions | 2 | 0 |
+| unsafe_retag (informational) | 1 | 2 |
+| derived-action accuracy | 31/47 | 33/47 |
+
+Expanded heading confusion (GT → pred): H1→H1 2; H2→H2 4; H3→H3 1;
+H3→H2 5; H4→H4 2; H4→H3 6. P→pred: P 24, H2 2, H4 1.
+
+H3/H4 did not collapse to P (detection 6/6 and 8/8). Exact deeper
+levels remain far below the gate (3/14, need ≥11/14). Heading exact
+9/20, need ≥16/20.
+
+False-heading predictions on the expanded adapter:
+
+1. `17-visitor-brief:3` callout “Do not enter the machine hall
+   unescorted.” GT P → H2. Existing ODL tag H2, action `keep`.
+   **Represented category** (train 13 callout; original 02-callout).
+   Failed. Same error as the old adapter.
+2. `17-visitor-brief:22` running-footer “Host copy — not for
+   visitors.” GT P → H4, action `retag`. **Represented category**
+   (train 13 and 14 running-footers; original furniture). Failed.
+   **New** vs the old adapter, which predicted P.
+3. `18-sample-receipt:21` chart-title “Receipts by hour.” GT P → H2.
+   Existing H1, action `retag`. **Represented category** (original
+   `train.json` 12-chart-title). Failed. Same error as the old adapter.
+
+None is an unrepresented development category. None is a bridge
+ligature/merge. Ordinary represented hard-negatives that simply
+failed.
+
+Changed predictions (old → expanded):
+
+| id | GT | old | expanded |
+|---|---|---|---|
+| `17-visitor-brief:6` Reception | H3 | H2 | H3 |
+| `17-visitor-brief:8` Badges | H4 | P | H3 |
+| `17-visitor-brief:10` Cloakroom | H4 | H2 | H3 |
+| `17-visitor-brief:14` Workshop floor | H4 | H2 | H3 |
+| `17-visitor-brief:20` Forms | H4 | P | H3 |
+| `17-visitor-brief:22` Host copy — not for visitors | P | P | **H4** |
+| `18-sample-receipt:4` Paper forms | H3 | H1 | H2 |
+| `18-sample-receipt:6` Batch numbers | H4 | H2 | H4 |
+| `18-sample-receipt:8` Time of receipt | H4 | H2 | H4 |
+| `18-sample-receipt:12` Unique ids | H4 | H2 | H3 |
+| `18-sample-receipt:18` Shelf map | H4 | H2 | H3 |
+
+Deeper headings moved closer (P/H2 → H3/H4) but overshot a
+represented footer into H4. Validation differences were not used to
+retrain.
+
+**Gate 2: FAIL.** Parse complete. False-heading predictions **3/27**,
+not 0. Heading exact 9/20 (<16). H3+H4 3/14 (<11). Detection 20/20
+clears that one sub-gate and H3/H4 do not collapse to P.
+
+Gate 3 was not run. Known-development regression is only asked if
+primary validation passes.
+
+### Predictions vs evidence
+
+1. `[H]` Old adapter reproduces shallow hierarchy on 17/18. **HIT.**
+   H3+H4 exact 0/14; H1 2/2.
+2. `[H]` Largest heading errors in H3/H4 rather than H1. **HIT.**
+3. `[H]` Expanded 137-card set materially improves deeper
+   heading-level accuracy. **MISS** against the registered bar.
+   H3+H4 exact 0→3/14; heading exact 6→9/20. Directionally up, not
+   to ≥11/14 or ≥16/20.
+4. `[H]` Expanded training also reduces false non-heading→H*.
+   **MISS.** 2→3. A new running-footer false heading appeared.
+5. `[H]` Zero false-heading predictions and ≥80% heading exact.
+   **MISS.** 3 false headings; 9/20 = 45%.
+6. `[H]` H3+H4 exact ≥11/14 and detection does not collapse. **MISS**
+   on exact (3/14). Detection 20/20, no collapse-to-P.
+7. `[H]` Previously passing development behavior does not regress.
+   **Not evaluated.** Gate 3 is gated on Gate 2.
+8. `[H]` No vision, verifier, larger model, structural-rule change,
+   holdout, or production integration. **HIT.**
+
+### Outcome
+
+**Outcome C — expanded adapter still produces a false heading.**
+
+STOP.
+
+Training-data expansion alone did not solve role safety. The three
+false headings are represented hard-negative categories that simply
+failed (callout, running-footer, chart-title). One of them is new
+relative to the old adapter.
+
+Hierarchy also remains below Gate 2 even after setting safety aside
+(9/20 exact, 3/14 H3+H4). That is additional evidence, not a second
+run. Do not add epochs. Do not oversample H4. Do not add the failing
+row and retrain. Do not blend adapters.
+
+`out/adapter-role` was not replaced. The marked verifier was not
+combined with this adapter. Holdout 1 / Holdout 2 were not scored.
+
+The next earned step is not a holdout evaluation and not a second
+QLoRA under this configuration. Role-training coverage moved H3/H4
+detection and some exact levels, and it did not buy semantic heading
+safety on two untouched development documents.
+
 
