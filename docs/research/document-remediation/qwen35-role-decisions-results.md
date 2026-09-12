@@ -5998,13 +5998,13 @@ Parse 7/7.
 
 | id | text | marked | unmarked | no-image | class |
 |---|---|---|---|---|---|
-| `17-visitor-brief:10` Cloakroom | true | true | false | page-image, not marker |
-| `17-visitor-brief:14` Workshop floor | false | true | true | **target-marker** |
-| `18-sample-receipt:6` Batch numbers | true | true | false | page-image, not marker |
-| `18-sample-receipt:8` Time of receipt | true | true | false | page-image, not marker |
-| `18-sample-receipt:16` FRIDGE | true | true | false | page-image, not marker |
-| `18-sample-receipt:18` Shelf map | true | true | false | page-image, not marker |
-| `18-sample-receipt:21` Receipts by hour | false | true | true | **target-marker** |
+| `17-visitor-brief:10` | Cloakroom | true | true | false | page-image, not marker |
+| `17-visitor-brief:14` | Workshop floor | false | true | true | **target-marker** |
+| `18-sample-receipt:6` | Batch numbers | true | true | false | page-image, not marker |
+| `18-sample-receipt:8` | Time of receipt | true | true | false | page-image, not marker |
+| `18-sample-receipt:16` | FRIDGE | true | true | false | page-image, not marker |
+| `18-sample-receipt:18` | Shelf map | true | true | false | page-image, not marker |
+| `18-sample-receipt:21` | Receipts by hour | false | true | true | **target-marker** |
 
 The two rows whose Part-24 marked decision differs from both
 unmarked-page and no-image are the chart-title correction and the
