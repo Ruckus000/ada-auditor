@@ -5449,6 +5449,125 @@ the trainer saw.
 `12-chart-title` alone. Data construction is earned. Another QLoRA
 is not run in this Part.
 
+### Data construction (only because Gate 0 was sparse)
+
+Three new whole training documents after 18. Docs 01–18 were not
+modified. Validation pages were not inspected. No Holdout-1 /
+Holdout-2 strings.
+
+| stem | family | layout | prominent non-chart |
+|---|---|---|---|
+| `19-quay-roster` | Courier memo | A4 portrait, typewriter | stamp `UNCONTROLLED COPY` |
+| `20-tank-soundings` | Verdana | A4 landscape, teal banner | banner `Ops desk — not for customs` |
+| `21-ice-window` | Didot editorial | A4 portrait, centered display | kicker `Harbour master circular` |
+
+Authored headings: 3 H1 + 3 H2 + 3 H3 = 9.
+Authored chart-title negatives: 6.
+Additional chart-labels: legend `Tied up`, subtitle `By tank, this watch`, axis `Wait in hours`.
+
+Contrast structure:
+
+* genuine heading immediately before chart: `Night allocation` → `Berth occupancy`; `East bank` → `Stored volume`
+* similar size/weight: `East bank` and `Stored volume` both dump at 18pt bold
+* chart title louder than a deeper heading: `Delay mix` 21pt / `Ullage change` 24pt / `Wait times` 26pt vs H3 12–16pt
+* heading-like wording: `Berth occupancy`, `Stored volume`, `Channel status` (not “chart of …”)
+* neighboring text insufficient: `Channel status` sits after ordinary prose about the channel, not after a caption word
+
+Chart titles are HTML blocks beside graphics with **no SVG text**, so
+segmentation does not depend on tick merging. `MARKED_ELIGIBILITY_STEM`
+unchanged.
+
+Mechanical fixture edit before freeze (same semantic documents):
+after the first bridge already mapped every target, the east-bank /
+night-allocation body paragraphs were moved so the H2 is immediately
+followed by the chart title. No Cards.java / ODL change. Ligature
+spacing was authored up front (`liga` 0, letter-spacing). No second
+extractor pass.
+
+### Real-PDF bridge
+
+Path: new HTML only → Chromium `page.pdf()` (`printBackground`,
+`preferCSSPageSize`, file: only; same options as `generate-corpus.mjs`)
+→ `run-opendataloader.mjs` defaults (`ODL_OPTS` unset) →
+`run.py --dump-dir` / Cards.java. No `--predict`. No adapter.
+
+| | authored | standalone BLOCK | in-scope after source-type / ancestry / R2 |
+|---|---:|---:|---:|
+| H1 / H2 / H3 | 3 / 3 / 3 | 9/9 | 9/9 |
+| chart-title | 6 | 6/6 | 6/6 |
+| chart-legend / subtitle / axis | 1 / 1 / 1 | 3/3 | 3/3 |
+| other hard negatives (stamp/banner/kicker) | 3 | 3/3 | 3/3 |
+
+37 evaluable BLOCK cards, 0 `empty_text` / `missing_font`. Ancestry
+`Document` on every target. R2 exclusions: 0. No duplicated
+chart-title cards. No 17/18 locators. No copied failure string.
+
+ODL’s own tags on the six chart titles are H3/H1/H2/H1/H3/H1 — that
+is the false-heading pattern, not credit.
+
+**Bridge gate: PASS.**
+
+### Frozen surfaces
+
+`experiments/qwen-role-decisions/role-expanded/chart-title-extension-train.json`
+
+* documents 19–21 only
+* 37 in-scope cards: 9 headings, 12 hard negatives, 16 paragraphs
+* SHA-256 `0a99068ce9944a1beb8328b5b3ab0be448ff01fc20604b82b8a730fcfaef2474`
+
+`chart-title-extension-split.json` SHA-256
+`f9fdfaffa066453cc535424216d047eb05ad4f11b9d8e881f5eafb62f478ed2f`
+
+`verifier-chart-title-extension-manifest.json` SHA-256
+`091ac19e28b66c00b19607218fde66ba88c91aa9f0a44238901383e786697868`
+
+Proposed verifier-training population: frozen 124 + 37 new = **161**.
+Not trained.
+
+`chart-title-extension-freeze.json` SHA-256
+`2ab1619617aa73ca300b74924d0c7435dd73b567c0b5466844e2aa90002b9b35`
+
+Fixture SHA-256 (HTML / GT):
+
+| file | SHA-256 |
+|---|---|
+| 19-quay-roster.html | `fc40a1164aa6d5372bf549bc349800a013923b642363d6e4cb501e74931bfaca` |
+| 19-quay-roster.ground-truth.json | `9a350757211fa95f59058e7ae5317eb3823e3d8d23bdd2b1f04c3c35ed5846db` |
+| 20-tank-soundings.html | `15d156c67820abcfcf6b3440a7ab2089bcf7573c115ea8e675e101ba2ec33885` |
+| 20-tank-soundings.ground-truth.json | `7b5daaab8acc10bc9fbaee2d5d62578634159d062126050e395c75509226413f` |
+| 21-ice-window.html | `71289707728f713b49ff4fac99357a322113741d875cfa5f5d1dfeafe89d4d6e` |
+| 21-ice-window.ground-truth.json | `6b9094d8ffff2c377f3b2bbde6590787707829683410d448cb7b579dfb2cfccc` |
+
+Frozen validation and adapters unchanged:
+`role-expanded-valid.json` `207d77b342…4df07f`;
+`out/adapter-verify-marked-expanded` `7fdd591e…6c9d90`;
+`out/adapter-verify-marked` `7cecddda…c0824a8`;
+`out/adapter-role` `8178c345…8dfdb`.
+Docs 17/18 HTML/GT hashes match the Part-19 freeze.
+
+### Predictions vs evidence
+
+1. `[H]` Chart-title diversity thinner than 66 negatives. **HIT.** 1 of 66.
+2. `[H]` Persistent FP consistent with thin within-class coverage. **HIT.**
+3. `[H]` Three documents add ≥6 independent chart-title negatives. **HIT.** 6.
+4. `[H]` Real-PDF bridge preserves them. **HIT.** 6/6 + 3/3 labels.
+5. `[H]` Genuine headings colocated with charts stay in scope. **HIT.** 9/9.
+6. `[H]` No model execution required. **HIT.**
+
+### Outcome
+
+**PASS.** Gate 0 was sparse, and the new evidence passed every
+bridge/data gate.
+
+STOP.
+
+The verifier’s remaining specificity category was represented but
+under-covered across documents and visual contexts. One subsequent
+expanded marked-verifier QLoRA run is earned, using development
+training documents only and keeping docs 17/18 completely frozen.
+
+Do not train that adapter in Part 23.
+
 ### Future semantic-safety requirement (recorded, not executed)
 
 A later verifier architecture must score every in-scope element that

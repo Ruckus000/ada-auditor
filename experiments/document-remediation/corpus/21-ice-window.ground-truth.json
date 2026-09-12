@@ -1,0 +1,34 @@
+{
+  "document": "21-ice-window",
+  "tests": "Part 23 chart-title coverage train fixture. Didot editorial circular. Quiet heading-like chart title plus a title louder than H3. Axis label is the extra chart-label. Marked page needed when title matches body size.",
+  "adversarial": false,
+  "title": "Ice Window Brief",
+  "language": "en",
+  "split": "train",
+  "headingHierarchy": [
+    { "level": 1, "text": "Ice Window Brief" },
+    { "level": 2, "text": "Open water" },
+    { "level": 3, "text": "Tug cover" }
+  ],
+  "nonHeadings": [
+    { "text": "Harbour master circular", "role": "P", "category": "kicker" },
+    { "text": "Channel status", "role": "P", "category": "chart-title" },
+    { "text": "Wait times", "role": "P", "category": "chart-title" },
+    { "text": "Wait in hours", "role": "P", "category": "chart-axis" }
+  ],
+  "readingOrder": [
+    "kicker", "H1", "intro",
+    "H2 Open water", "paragraph",
+    "chart-title Channel status", "dot plot", "paragraph",
+    "H3 Tug cover", "paragraph",
+    "chart-title Wait times", "columns", "axis Wait in hours", "paragraph",
+    "running footer"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": ["SVG channel dots", "SVG wait columns"],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": []
+}
