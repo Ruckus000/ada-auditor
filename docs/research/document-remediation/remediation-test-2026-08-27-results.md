@@ -1,5 +1,26 @@
 # The 120-document test: what conversion earns, and what repair only appears to
 
+> **CORRECTED, 2026-08-31.** Two of the four real-corpus fidelity numbers were
+> instrument artifacts, not document defects. **Tables are 31/31, not 29/31;
+> figures are 31/31, not 30/31.** Headings (31/31) and lists (27/31) stand
+> unchanged, and no verdict, conformance count or invented-claims figure moves.
+> Both artifacts were in the `.doc` engine-derived oracle in
+> `extract-docx-truth.mjs`, found by the production instrument graduated from
+> it. Full account:
+> [source-fidelity-in-production.md](source-fidelity-in-production.md);
+> restatement at the end of this document.
+
+> **FURTHER CORRECTED, 2026-09-11 — the last of the four fell too.**
+> **Lists are 31/31, not 27/31.** The banner above was written on 2026-08-31
+> and says the list drifts stand; they do not. All four were the same
+> instrument counting its own source wrongly — numbered headings counted twice
+> as both headings and list items, and a content-free structural list wrapper
+> counted as an item. **All four real-corpus fidelity numbers are now 31/31,
+> and the corpus reports zero omissions on all 31 documents.** The export was
+> never shown to drop or invent anything. See the note on the list-drift
+> section below, and
+> [source-fidelity-in-production.md](source-fidelity-in-production.md).
+
 **Date:** 2026-08-27. The test
 [the predictions file](remediation-test-predictions-2026-08-27.md) was
 registered for: **120 documents** — 61 through Arm A (conversion, the
@@ -153,7 +174,9 @@ Committed before the runner started, same discipline as the original test.
    column cannot recur.
 5. **Fidelity (real):** headings 31/31, tables 29/31, lists 27/31,
    figures 30/31 — unchanged from the Phase-5 measurement, same reasoning
-   as (2).
+   as (2). **[CORRECTED 2026-08-31: tables 31/31, figures 31/31 — see the
+   banner and the restatement below.]** **[FURTHER CORRECTED 2026-09-11:
+   lists 31/31 too. All four are 31/31.]**
 6. **Production parity subset (10):** identical summaries local vs deployed,
    including the filename-derived titles this campaign added.
 
@@ -190,6 +213,18 @@ fidelity: headings **31/31**, tables 29/31, lists 27/31, figures 30/31 (the
 table/list drifts are all inside the labeled `.doc` engine-derived-oracle
 caveat from the alignment phase).
 
+> **CORRECTED 2026-08-31 — tables 31/31 and figures 31/31.** The instinct in
+> the parenthesis above was right and the conclusion drawn from it was too
+> generous to the oracle: the drifts were not a *caveat* about a weaker
+> reading, they were **defects in it**. The three table and figure drifts do
+> not exist. The four list drifts do. See the restatement below.
+
+> **FURTHER CORRECTED 2026-09-11 — lists 31/31.** "The four list drifts do"
+> was the same mistake one field over: they were defects in the oracle too,
+> numbered headings and a structural wrapper counted as list items. The
+> sentence above got the diagnosis right for tables and figures and then
+> stopped one column short.
+
 Every real shortfall, itemized — this is the punch list working:
 
 | documents | UA-1 clause | the item a person gets |
@@ -219,7 +254,10 @@ Every real shortfall, itemized — this is the punch list working:
    gap rather than chased.
 4. **Held.** With both graders on veraPDF's JSON report, no UA-1-red document
    anywhere has an empty `failedRules`.
-5. **Held exactly** — all four fidelity numbers as registered.
+5. **Held exactly** — all four fidelity numbers as registered. **[The
+   numbers held; two of them were wrong. Predicting a wrong number and
+   matching it is the failure mode a registered prediction cannot catch —
+   see the restatement below.]**
 6. **Could not run — and the reason is its own finding.** Production's
    `AUDITOR_RUN_TOKEN` was rotated ~21 hours before this run (Vercel env
    metadata; the value is sensitive-typed and readable by no one), and the
@@ -304,3 +342,116 @@ ever: conformance identity, not byte identity — macOS resolves fonts through
 CoreText and the PDFs still differ in timestamps and font programs; every
 field the summary carries is what agrees.
 
+
+---
+
+# Restatement, 2026-08-31 — two fidelity numbers were the instrument
+
+Found while graduating the fidelity comparator into production
+([source-fidelity-in-production.md](source-fidelity-in-production.md)). The
+graduated instrument disagreed with this document on three documents; the
+instrument was right and this document was wrong.
+
+## What moves
+
+| | as published | corrected | |
+|---|---|---|---|
+| headings (real) | 31/31 | 31/31 | unchanged |
+| **tables (real)** | **29/31** | **31/31** | both drifts were artifacts |
+| lists (real) | 27/31 | 27/31 | unchanged — **the drifts are real** — **[FURTHER CORRECTED 2026-09-11: 31/31. The drifts were this instrument counting numbered headings and a structural wrapper as list items; see the note below.]** |
+| **figures (real)** | **30/31** | **31/31** | the drift was an artifact |
+
+Nothing else moves. Verdicts, UA-1 conformance counts, the 23/31 both-green
+figure, and **invented claims: 0 across all 64 delivered documents** all stand —
+those come from the product's own `Inspect` reading and veraPDF, neither of
+which touches this oracle.
+
+## The two defects, both in `extract-docx-truth.mjs`
+
+Both live only in `extractDocTruthViaFodt`, the fallback oracle for legacy
+`.doc`. The `.docx` path reads OOXML directly and was never affected, which is
+why 24 of the 31 real documents were always scored correctly.
+
+**1. A word boundary counted table cells as tables.**
+
+```js
+tables: [...xml.matchAll(/<table:table\b/g)].length   // wrong
+```
+
+`\b` sits between `table` and the hyphen of `table:table-cell`, so this counted
+every cell, row and column. Measured:
+
+| | reported | actually | delivered |
+|---|---:|---:|---:|
+| r02 | 66 | **2** | 2 |
+| r09 | 24 | **1** | 1 |
+
+Both "drifts" were the oracle counting cells. `<text:list\b` had it worse —
+r20 read **414** list groups against a true 1 — but `lists` is not what fidelity
+compares. The comparison uses `listItems`, and `<text:list-item\b` has no
+hyphenated sibling, so **the list numbers were never affected by this bug.**
+
+**2. Only raster images counted as figures.**
+
+r09's sole graphic is a `draw:custom-shape` — a drawn vector shape, with no
+binary image data anywhere in the file — which exports as one honest `/Figure`.
+An image-only filter read that as the pipeline inventing a graphic. It is
+backwards: the author drew it. That single miscount is the entire
+`figures 30/31`.
+
+Both are fixed, with the same `[ >]` idiom and shape counting already carried by
+`src/domain/source-truth.ts`. All seven `.doc` documents now agree with their
+delivered PDFs on tables, figures and headings.
+
+## The list drifts are real, and now localized
+
+> **FURTHER CORRECTED, 2026-09-11 — this section is wrong, and it is the last
+> of the four numbers to fall.** The drifts are not real and the export dropped
+> nothing. All four were this instrument miscounting its own source: r21, r24
+> and r26 counted **numbered headings twice**, once as headings and once as
+> list items, because their `Heading1` style definition carries `w:numPr`; r02
+> counted a **structural list wrapper** — the content-free outer item ODF uses
+> for a list that starts indented — as an item. The heading/item overlap
+> equalled the recorded loss on every affected document.
+>
+> The reasoning below is sound and the measurement honest; the flat ODF really
+> does carry 74, because ODF wraps a numbered heading in `text:list-item` too.
+> The inference from it was wrong. **`lists` is 31/31**, and the corpus now
+> reports zero omissions on all 31 documents. Account in
+> [source-fidelity-in-production.md](source-fidelity-in-production.md).
+>
+> Left standing below rather than rewritten, per this document's own practice:
+> what was believed on 2026-08-31, and why, is the record.
+
+`lists 27/31` stands. Four documents lose list items, and the production run
+localized the loss that this campaign left unexplained:
+
+| | source | delivered |
+|---|---:|---:|
+| r21 | 74 | 69 |
+| r24 | 66 | 61 |
+| r26 | 61 | 56 |
+| r02 | 43 | 42 |
+
+**The import is faithful and the export is not — verified on all four.** Each
+document's flat ODF carries exactly the source's item count (74, 66, 61, 43);
+the PDF LibreOffice exports from that same flat ODF carries fewer (69, 61, 56,
+42). Tracked changes, `numId="0"`, empty paragraphs and table-nested items were
+each checked and excluded. Root cause unprobed.
+
+## What this says about the method
+
+Prediction 5 in this document reads **"Held exactly — all four fidelity numbers
+as registered."** It did hold. Two of the numbers were wrong.
+
+A registered prediction catches drift between what you expected and what you
+measured. It cannot catch an instrument that is wrong in a stable way, because
+the prediction and the measurement come from the same broken reading and agree
+perfectly. That is the second time this project has hit it —
+[instrument-correction.md](instrument-correction.md) is the first — and both
+times the fix came from a *different* instrument looking at the same documents,
+not from a better prediction.
+
+The generalisable version: **an instrument's own agreement with itself is not
+evidence.** What found this was graduating the comparator into production, where
+it ran beside `Inspect` and veraPDF and had to agree with them per document.
