@@ -5137,6 +5137,25 @@ SHA-256 `d151f392359360aeada16a28469b4a557942392646cb772a6bf3d911be15896b`
 
 **Gate 0: PASS.** Population reproduced. No model call yet.
 
+### Gate 0B — marked-image reproduction
+
+Tagged copies of train docs 02/04/05/06/10/12/13–16 reproduced from
+the already-generated frozen-HTML corpus PDFs through default
+`run-opendataloader.mjs` (`ODL_OPTS` unset). Three `empty_text` dump
+blocks recur exactly as Part 13 (`05:0`, `05:7`, `06:10`); they are
+not train rows.
+
+All 124 semantic rows mapped once: Pool A via `attach_probe_expect`
+(`by_doc=True`); Pool B by frozen locator + `text_norm`. Box present.
+Marked full-page PNG present. No nearby-BLOCK substitution.
+
+SFT `out/gen-sft-verify-expanded/train.json` (gitignored): 124 rows,
+58 `{"heading":true}` / 66 `{"heading":false}`. Prompt is
+`MARKED_ELIGIBILITY_STEM` + Element/Font/Weight/Previous/Next/JSON.
+No existing tag. SHA-256
+`79c510e9226269365f843adea50344af7c8952bebc395e04efadad2e02ce678f`
+recorded before the training run.
+
 ### Registered predictions (frozen before the one training run)
 
 1. `[H]` The expanded development-only verifier population materially
