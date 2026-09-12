@@ -6049,5 +6049,151 @@ nonzero dependence is not a reason to promote the Part-24 adapter.
 A later experiment may test whether adapting the vision side
 changes the marker-harm on quiet H4s. That is not this Part.
 
+---
+
+## Part 26 — semantic final-heading contract audit (zero generation)
+
+**Date:** 2026-09-12 · same branch. No Qwen call. No `--train-vision`.
+No new LoRA. Holdout 1 and Holdout 2 remain spent. Docs 17/18 remain
+development evidence. Adapters, stems, marker, PDF bridge, source-type
+gate, ancestry gate, and R2 are not modified.
+
+### The one question
+
+> Under the architecture we have actually been evaluating, does the
+> current candidate-selection and fail-close contract measure whether
+> false headings remain in the final document, and what is the complete
+> label-independent verifier candidate universe once safety is defined
+> semantically rather than as mutation-only safety?
+
+Zero-generation audit first. No model generation unless a later
+registered rung is reached. It should normally stop after the audit.
+
+### Why this Part exists
+
+Part 25 established that the visual channel is causally load-bearing.
+A later vision-side training experiment is earned in principle. Do not
+train it yet. Before another model experiment, correct the
+scoring/invocation contract so the architecture is evaluated on the
+semantic state of the final document rather than only on whether it
+performs an unsafe mutation.
+
+### Freeze
+
+Do not modify or retrain: `out/adapter-role`,
+`out/adapter-role-expanded`, `out/adapter-verify-marked`,
+`out/adapter-verify-marked-expanded`,
+`out/adapter-verify-marked-chart-expanded`, the base Qwen checkpoint,
+`ROLE_ONLY_STEM`, `MARKED_ELIGIBILITY_STEM`, marker appearance, PDF
+bridge, source-type gate, Table/Figure ancestry gate, R2.
+
+Do not: rerun Holdout 1 or 2; generate a new holdout; train vision;
+train another language LoRA; add examples; edit docs 17/18; add a
+semantic regex; change prompt wording; change marker geometry; build a
+crop; change structural thresholds; production-integrate.
+
+### Registered predictions (written before the audit)
+
+1. `[H]` The current implementation still selects verifier candidates
+   primarily from heading mutations rather than all would-finish-H*
+   rows.
+2. `[H]` `07-chart-title` proves the old `unsafe_retag == 0` metric can
+   coexist with a semantic false heading in the final document.
+3. `[H]` Expanding the candidate universe to every would-finish-H* row
+   adds same-level existing-H* candidates on spent H1 and/or H2.
+4. `[H]` `semantic_false_heading` is strictly greater than
+   `legacy_unsafe_mutation` on at least one recorded surface.
+5. `[H]` Some corrected verifier candidates lack frozen marked-verifier
+   predictions because historical invocation was mutation-only.
+6. `[H]` No new model generation is required to establish the contract
+   problem and enumerate the missing inference surface.
+7. `[H]` Holdout 1 and Holdout 2 remain spent; no new blind claim is
+   made.
+
+### Frozen integration policy (written before the rescore)
+
+If `preverify_final_role` is in H1–H6 and the verifier returns
+`heading: false`, experimental `final_role = P`.
+
+Caveat: the binary verifier establishes “not a document heading,” not
+necessarily semantic paragraphhood. `P` here is an experimental
+remediation target consistent with `Headings.java` heading demotion
+(`setStructureType("P")`), not a claim that every rejected element is
+intrinsically a paragraph.
+
+Verifier parse failure is not counted as `heading:false`, not counted
+as successful remediation, reported separately, and must not silently
+keep H* and score that as safe.
+
+Audit outputs go under gitignored `out/part26/`. Historical JSON is
+not overwritten. The corrected contract is not wired into production
+eval paths.
+
+### Step 0 — traced contract (from `run.py`, not from results prose)
+
+Traced 2026-09-12 against `experiments/qwen-role-decisions/run.py`.
+
+1. **Candidate selection for the eligibility verifier.**
+   `needs_page_verify` (lines 861–870): requires `pred` and
+   `qwen_called`; skips `r2_veto`; requires `role in HEADING`; then
+   `exist not in HEADING or exist != role`. Same-level existing H*
+   returns false. `mutation_locators` (1318–1345) and
+   `rescore_frozen` (2119) both key invocation on this predicate.
+   `eval_verify_marked` (1223) uses the same function.
+2. **`verify_applied`.** `eval_verify_marked` line 1223:
+   `applied = decided is not None and needs_page_verify(decided, case)`.
+   Written to the jsonl as `verify_applied`.
+3. **Fail-close when verifier returns false.** `apply_page_verify`
+   (873–889): `heading is True` leaves the decided role unchanged;
+   otherwise `out["role"] = existing_tag` and `out["action"] = "keep"`.
+   A rejected existing H* remains that H*.
+4. **`final_role`.** `prediction_record` (307–333):
+   `final_role = pred.get("role")`. Eval path (1250) reads
+   `decided.get("role")` after the optional `apply_page_verify`.
+5. **Deterministic action.** `decide_card` (288–289) and
+   `apply_r2_veto` (82): `"keep" if role == existing_tag else "retag"`.
+6. **Current unsafe scoring.** Holdout `score_holdout` (397–401):
+   GT non-heading AND `final_role in HEADING` AND
+   `derived_action == "retag"`. Card `score` (544–564):
+   `unsafe = trap and auto_heading` where
+   `auto_heading = role in HEADING and action == "retag"`.
+7. **`pre-existing_bad_heading_kept`.** Named in Part 17 results
+   (~line 4063). **Not a function in `run.py`.** Must be reconstructed
+   from artifacts.
+8. **Same-level existing H\* bypass.** `needs_page_verify` last line
+   (869–870). `self_check` (1846–1848) **asserts** that
+   `{role: H1, qwen_called, existing H1}` does **not** need page
+   verify.
+
+`HEADING = {"H1","H2","H3","H4","H5","H6"}` at line 29.
+
+Upstream, still frozen: `source_eligible` (90–92), `ancestry_eligible`
+(95–97), `apply_structural_scope` (100–129), `apply_r2_veto` (72–83),
+`verifier_skip_reason` (919–928).
+
+#### 07-chart-title current behavior (frozen artifact)
+
+`out/verify-07/verify-marked.jsonl`:
+
+| field | value |
+|---|---|
+| id | `07-chart-title` |
+| locator | `07-complex-chart:2` |
+| GT / expect | P (non-heading); `trap: heading` |
+| existing_tag | H2 |
+| model_role | H2 |
+| heading (verifier) | false |
+| verify_applied | **false** |
+| final_role | H2 |
+| action | keep |
+| unsafe | false |
+
+Matches the expected historical state. Selective verifier skipped
+because there is no heading mutation (`exist == role == H2`). Legacy
+unsafe mutation is false. Semantic false heading is true.
+
+The current implementation has **not** already been corrected
+(Outcome B is not available from the trace).
+
 
 
