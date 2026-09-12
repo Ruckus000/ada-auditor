@@ -49,9 +49,10 @@ export type RevokableReport = {
  * string, which React renders by throwing.
  *
  * `report_not_found` deliberately does not say "try again". It answers three
- * states — no such report, another client's report, and one whose run has aged
- * out of the fifty this screen lists — and repeating the request changes none
- * of them. The screen in front of the operator is stale, so reloading it is
+ * states — no such report, another client's report, and one whose run is no
+ * longer stored — and repeating the request changes none of them. (Not a run
+ * aged past the fifty this screen lists: the route looks runs up by id, with
+ * no bound, so such a report revokes fine — it just has no row to click.) The screen in front of the operator is stale, so reloading it is
  * the move.
  */
 export function describeRevokeFailure(code: string | undefined): string {

@@ -34,7 +34,9 @@ export async function GET(
     return Response.json({ error: 'client_not_found', requestId }, { status: 404 });
   }
 
-  const journeys = await platform.listJourneys(clientId);
+  // Archived journeys included: their links still resolve, and a listing that
+  // hides them hides the ids DELETE needs. See `buildReports`.
+  const journeys = await platform.listJourneys(clientId, { includeArchived: true });
   const runs = await Promise.all(
     journeys.map((journey) => getRunStore().list({ journeyId: journey.id, limit: 100 })),
   );
