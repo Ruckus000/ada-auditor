@@ -61,17 +61,21 @@ export async function buildReports(deps: ReportDeps): Promise<ReportRow[]> {
 
   const runsByClient = await Promise.all(
     clients.map(async (client) => {
-      const journeys = await deps.journeys.listJourneys(client.id);
+      // Archived journeys included. Reports are found through journeys, and
+      // this screen is the only surface that offers `RevokeReportButton`, while
+      // `buildSharedReport` reads a journey with no archive filter and links
+      // never expire — so filtering archived journeys out here made every
+      // report on one unrevocable from the product the moment it was archived.
+      const journeys = await deps.journeys.listJourneys(client.id, { includeArchived: true });
       // **This bound decides which reports can be revoked, and that is a
       // recorded gap.** Reports are found through their runs, so a report
       // whose run has fallen past the newest 50 of its journey — about seven
-      // weeks of nightly audits — has no row on the Reports screen, and the
-      // Reports screen is the only surface that offers `RevokeReportButton`.
-      // `buildSharedReport` fetches a run by id with no such bound and nothing
-      // deletes run rows, so `/r/<token>` keeps serving that report for good.
-      // Raising or removing the bound is a product decision about how much of
-      // the history that screen holds; until then, an operator who needs an
-      // old link revoked has the API and nothing else.
+      // weeks of nightly audits — has no row on the Reports screen. `/r/<token>`
+      // keeps serving it: nothing deletes run rows. Raising or removing the
+      // bound is a product decision about how much of the history that screen
+      // holds; until then, an operator who needs an old link revoked has the
+      // API and nothing else. `[V]` 2026-09-12: no live link in production sits
+      // outside it (two live links in all).
       const runs = await Promise.all(
         journeys.map((journey) => deps.runs.list({ journeyId: journey.id, limit: 50 })),
       );

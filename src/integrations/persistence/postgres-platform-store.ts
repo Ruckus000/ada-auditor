@@ -533,8 +533,9 @@ export class PostgresPlatformStore implements PlatformStore {
     // screen that forgets the filter would show journeys an operator retired,
     // and the archive would read as a no-op.
     //
-    // `includeArchived` exists for one caller — minting a new journey's id —
-    // which needs archived ids in the "taken" set too. This driver's tagged
+    // `includeArchived` is for the callers that need retired rows too — minting
+    // a journey id, and listing reports whose links still resolve (see the
+    // interface). This driver's tagged
     // template has no fragment composition, so the predicate is a branch
     // rather than a value.
     const includeArchived = options?.includeArchived ?? false;

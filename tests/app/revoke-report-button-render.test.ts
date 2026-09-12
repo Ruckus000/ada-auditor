@@ -96,7 +96,7 @@ describe('RevokeReportButton', () => {
 describe('describeRevokeFailure', () => {
   it('does not tell anyone to try again when the report is already gone', () => {
     // `report_not_found` answers three states — no such report, another
-    // client's, and one whose run has aged out — and none of them changes by
+    // client's, and one whose run is no longer stored — and none of them changes by
     // repeating the request. "Try again" is the one instruction this refusal
     // makes wrong, which is the rule `discovery-copy.ts` states.
     const copy = describeRevokeFailure('report_not_found');

@@ -9,7 +9,7 @@ vi.mock('../../src/app/api/_lib/principal', () => ({ principalFromRequest }));
 
 const OPERATOR = { kind: 'operator' as const, id: 'op-1', name: 'Alex Reed', email: 'alex@example.com' };
 
-const { DELETE, POST } = await import(
+const { DELETE, GET, POST } = await import(
   '../../src/app/api/platform/clients/[clientId]/reports/route'
 );
 const {
@@ -20,7 +20,7 @@ const {
   setPlatformStore,
   setRunStore,
 } = await import('../../src/integrations/persistence');
-const { buildSharedReport } = await import('../../src/services/report-view');
+const { buildReports, buildSharedReport } = await import('../../src/services/report-view');
 
 const TOKEN = 'test-token-16chars';
 
@@ -168,6 +168,39 @@ describe('/api/platform/clients/[clientId]/reports', () => {
     const revoked = await DELETE(fromBrowser({ id: report.id }, 'DELETE'), params('acme'));
     expect(revoked.status).toBe(200);
 
+    expect(await buildSharedReport(report.shareToken, deps())).toBeNull();
+  });
+
+  it("keeps an archived journey's live links on the list that can revoke them", async () => {
+    // Archiving hides a journey from the catalog, and reports were found
+    // through the catalog — so every report on it vanished from the Reports
+    // screen and this listing at once, while `/r/<token>` kept serving it
+    // (links never expire). The one control that turns a public link off had
+    // nothing to render against.
+    const { report } = await (
+      await POST(fromBrowser({ requestId: 'r1' }), params('acme'))
+    ).json();
+    await platform.archiveJourney('acme-checkout');
+    expect(await buildSharedReport(report.shareToken, deps())).not.toBeNull();
+
+    const rows = await buildReports(deps());
+    expect(rows.find((row) => row.id === report.id)).toMatchObject({
+      shareToken: report.shareToken,
+      clientId: 'acme',
+    });
+
+    principalFromRequest.mockResolvedValue(OPERATOR);
+    const listed = await GET(
+      new Request('http://localhost/api/platform/clients/acme/reports', {
+        headers: { origin: 'http://localhost', 'sec-fetch-site': 'same-origin' },
+      }),
+      params('acme'),
+    );
+    expect(listed.status).toBe(200);
+    expect((await listed.json()).reports.map((row: { id: string }) => row.id)).toContain(report.id);
+
+    // And the control still works on it.
+    expect((await DELETE(fromBrowser({ id: report.id }, 'DELETE'), params('acme'))).status).toBe(200);
     expect(await buildSharedReport(report.shareToken, deps())).toBeNull();
   });
 
