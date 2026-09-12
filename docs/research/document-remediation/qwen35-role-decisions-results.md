@@ -5038,5 +5038,124 @@ The next possible rung, if any, is expanded development-only
 marked-verifier training using train documents only, with docs 17/18
 remaining frozen validation. Not this Part.
 
+## Part 22 — does deeper development coverage fix the marked eligibility verifier?
+
+**Date:** 2026-09-11. Same branch. Eligibility-data experiment. No
+role adapter on the primary gate. No Holdout-1 / Holdout-2. No docs
+17/18 edits. No Part-21 failure rows added to training. No prompt or
+marker change. No crop. No `--train-vision`. No production
+integration.
+
+Part 21 Outcome D: frozen marked verifier 43/47, FN 3/20 (quiet H4s
+on doc 17), FP 1/27 (chart-title). The Part-13 trainer saw 31 rows
+from docs 02/04/05/06/10/12. Part 19 added train docs 13–16.
+
+### The one question
+
+> Does expanding the marked-page eligibility verifier’s
+> development-only training coverage, while holding its task, visual
+> representation, model, QLoRA configuration, and validation set
+> fixed, produce a clean heading/non-heading boundary on docs 17/18?
+
+### Frozen validation (not modified)
+
+`role-expanded/role-expanded-valid.json` SHA-256
+`207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f`
+
+47 cards, docs 17/18 only, H1 2 / H2 4 / H3 6 / H4 8 / P 27.
+Part-21 scores are the frozen baseline. The old adapter is not rerun.
+
+| metric | Part 21 old marked verifier |
+|---|---|
+| parse | 47/47 |
+| accuracy | 43/47 |
+| TP | 17/20 |
+| FN | 3/20 |
+| TN | 26/27 |
+| FP | 1/27 |
+| H1 / H2 / H3 / H4 recall | 2/2, 4/4, 6/6, 5/8 |
+| H3+H4 recall | 11/14 |
+
+### Frozen contract (verified before dataset emission)
+
+`MARKED_ELIGIBILITY_STEM` SHA-256
+`e5f8d312b57c3c9a7b9a4ab0b30269bcfd009d4ce7d216c2dcd2176b09f39902`
+
+`Mark.java` `6ed6bea4f3d49cb8e7170b7b61abad655a4ded21076ddba7e76a31538379a650`
+
+`Preview.java` `1d6b11023107a1683dd842c9cde6918486c4240ea2be0ff62ea2b1a89916b348`
+
+`role-expanded-new-train.json` SHA-256
+`abb2bc78f915ea6c657b699d39c1d6a43bda9455dc532df497b5987c389359df`
+
+### Gate 0 — expanded verifier-training population (no model call)
+
+Pool A: exact Part-13 31 semantic rows, reconstructed from
+`PART13_VERIFY_TRAIN_IDS` + `train.json`, byte-checked against
+`out/gen-sft-verify/train.json` (element text and heading label match
+in ID order). 18 `heading:true` / 13 `heading:false`. Docs
+02/04/05/06/10/12. Roles H1 6 / H2 12 / P 11 / Artifact 2. No H3/H4.
+
+Pool B: frozen 94 Part-19 new-train cards, then frozen `r2_ornament`.
+**R2 exclusions: 1** — `16-shift-handover:21` text `3`, category
+decorative-numeral. Not replaced. Remaining **93**.
+
+Combined: Pool A + Pool B-after-R2. No oversampling, no class
+weighting, no duplication, no validation or holdout rows.
+
+| | n |
+|---|---:|
+| total | **124** |
+| heading true | 58 |
+| heading false | 66 |
+| H1 true | 10 |
+| H2 true | 20 |
+| H3 true | 12 |
+| H4 true | 16 |
+| R2 exclusions | 1 |
+
+Documents: 02, 04, 05, 06, 10, 12, 13, 14, 15, 16.
+
+Authored hard-negative categories in Pool B after R2: running-header,
+status-line, callout, running-footer, group-label, table-title,
+definition-term, body-label (decorative-numeral excluded by R2).
+Pool A already contains `12-chart-title` and `12-table-caption`.
+The Part-21 chart-title FP is a **represented** old-training
+category, not a missing one.
+
+Quiet / near-body-size H4s are now in training:
+
+* doc 14: 15pt regular vs body 14pt regular (four H4s)
+* doc 15: **14pt regular, same size and weight as body** (four H4s)
+* doc 16: 16pt regular vs body 14pt regular (four H4s)
+* doc 13: 14pt bold vs body 14pt regular (four H4s; size-quiet, weight-loud)
+
+Semantic-row manifest
+`experiments/qwen-role-decisions/role-expanded/verifier-expanded-train-manifest.json`
+
+SHA-256 `d151f392359360aeada16a28469b4a557942392646cb772a6bf3d911be15896b`
+
+**Gate 0: PASS.** Population reproduced. No model call yet.
+
+### Registered predictions (frozen before the one training run)
+
+1. `[H]` The expanded development-only verifier population materially
+   adds quiet H3/H4 heading coverage while preserving the existing
+   negative categories.
+2. `[H]` Stock MLX-VLM can train the expanded marked verifier with the
+   same language-side QLoRA configuration used in Part 13.
+3. `[H]` On frozen docs 17/18, the expanded verifier reaches parse
+   47/47, FN 0/20, and FP 0/27.
+4. `[H]` H4 eligibility improves from 5/8 to 8/8 without reducing
+   H1–H3 recall.
+5. `[H]` The represented chart-title `18-sample-receipt:21` is
+   rejected without adding it to training.
+6. `[H]` Callout and running-footer negatives that already passed
+   remain rejected.
+7. `[H]` Known older development behavior does not materially regress.
+8. `[H]` No prompt change, marker change, crop, vision-layer training,
+   larger model, role-model change, holdout example, or production
+   integration is required.
+
 
 
