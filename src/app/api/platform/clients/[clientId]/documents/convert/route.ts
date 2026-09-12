@@ -200,25 +200,6 @@ async function answersFor(
   };
 }
 
-/** Both halves named separately, because the fixes differ. */
-function refuseWithoutToolchain(requestId: string): Response | null {
-  const soffice = resolveLibreOffice();
-  if (!soffice.available) {
-    return Response.json(
-      { error: 'converter_unavailable', detail: soffice.reason, requestId },
-      { status: 503 },
-    );
-  }
-  const java = resolveJavaRuntime();
-  if (!java.available) {
-    return Response.json(
-      { error: 'document_toolchain_unavailable', detail: java.reason, requestId },
-      { status: 503 },
-    );
-  }
-  return null;
-}
-
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ clientId: string }> },
@@ -235,9 +216,17 @@ export async function POST(
   const capped = await documentBudgetRefusal(requestId);
   if (capped) return refusalResponse(capped, requestId);
 
-  // Before the fetch — no point pulling a document this host cannot convert.
-  const refused = refuseWithoutToolchain(requestId);
-  if (refused) return refused;
+  // Before the fetch, the JVM only: both lanes need it. The converter waits
+  // until the bytes say the work is a conversion — a repair needs none, and
+  // probing for it here refused PDF repairs this host could do. PUT below
+  // makes the same split.
+  const java = resolveJavaRuntime();
+  if (!java.available) {
+    return refusalResponse(
+      { status: 503, error: 'document_toolchain_unavailable', detail: java.reason },
+      requestId,
+    );
+  }
 
   const { clientId } = await params;
   const platform = getPlatformStore();
@@ -271,6 +260,15 @@ export async function POST(
   // stages see is a request id and says nothing.
   const sourceName = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '');
   const repairing = fetched.kind === 'pdf';
+  if (!repairing) {
+    const soffice = resolveLibreOffice();
+    if (!soffice.available) {
+      return refusalResponse(
+        { status: 503, error: 'converter_unavailable', detail: soffice.reason },
+        requestId,
+      );
+    }
+  }
   const inputSha256 = sha256(fetched.bytes);
 
   // What a person declared for these bytes, if the row is on record. Read
