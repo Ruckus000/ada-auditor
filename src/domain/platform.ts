@@ -488,12 +488,14 @@ export interface ClientStore {
 
 export interface JourneyStore {
   /**
-   * `includeArchived` exists for one caller: minting a new journey's id. An
+   * `includeArchived` exists for two needs. Minting a new journey's id: an
    * archived journey's id is retired, not vacant — `upsertJourney`'s
    * on-conflict update preserves `archived_at`, so reusing the id would
    * resurrect the old row as a journey that is born archived, invisible and
-   * unrunnable from the moment it is "created". Every other caller wants the
-   * default: archived journeys hidden from the catalog.
+   * unrunnable from the moment it is "created". And listing reports
+   * (`buildReports`, the reports GET): a report link on an archived journey
+   * still resolves, so it has to stay where it can be revoked. Every other
+   * caller wants the default: archived journeys hidden from the catalog.
    */
   listJourneys(
     clientId?: string,
