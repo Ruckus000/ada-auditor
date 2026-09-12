@@ -6419,5 +6419,224 @@ This Part does not decide whether the current verifier is good enough.
 
 No Part 27 in this run.
 
+---
+
+## Part 27 — does training the vision side fix the marker-specific eligibility tradeoff?
+
+**Date:** 2026-09-12. Same branch. One registered upstream `--train-vision`
+run on the frozen Part-24 161-row population. No new rows. No prompt
+change. No marker change. No crop. No role-adapter training. No R2 /
+source-type / ancestry change. No Holdout-1 / Holdout-2. Docs 17/18
+remain frozen development validation. No production integration.
+
+Part 24 trained the latest language-side marked eligibility verifier
+and left one error on docs 17/18: `17-visitor-brief:14` Workshop floor
+(GT H4, `heading:false`). Chart-title `18-sample-receipt:21` Receipts
+by hour stayed correctly false. Part 25 then showed those two critical
+decisions are target-marker dependent, with the same magenta rectangle
+rejecting the chart title and the quiet H4. Part 26 corrected the
+safety contract: later integration must score
+`semantic_false_heading = gt_nonheading && final_role in H1..H6` and
+must verify every would-finish-H* element. This Part does **not**
+perform that integration. It answers the cheaper component question
+with direct semantic eligibility on all 47 frozen cards.
+
+Mutation selection cannot hide either error type here. There is no
+existing-tag credit. There is no `unsafe_retag` gate.
+
+### The one question
+
+> With the exact Part-24 161-row marked-page training population and
+> all other training/inference choices held fixed, does enabling the
+> upstream MLX-VLM `--train-vision` path eliminate the marker-specific
+> heading/non-heading tradeoff on docs 17/18 without introducing
+> another false positive or false negative?
+
+This is a vision-training ablation, not an architecture claim.
+
+### Freeze (not modified)
+
+Do not modify: base checkpoint; `MARKED_ELIGIBILITY_STEM`; marker
+appearance; marker rectangle geometry; `Mark.java`; `Preview.java`;
+image resize shape 560×800; Part-24 161-row semantic population;
+docs 17/18; source-type gate; ancestry gate; R2; either role adapter;
+Holdout 1; Holdout 2.
+
+Do not: add or delete training rows; oversample; class-weight; add
+Workshop floor or Receipts by hour; change epochs, LoRA rank, or
+learning rate; alter the prompt; add a crop; change marker color or
+thickness; add confidence or a threshold; prompt-sweep; train a
+larger model; retrain the role classifier; production-integrate.
+
+Holdout 1 and Holdout 2 are spent and are not run.
+
+### Gate 0 — what `--train-vision` actually trains
+
+Inspected **before** the training run. Installed `mlx_vlm==0.7.0`.
+Not patched. No custom trainer. No vision-LoRA wrapper.
+
+File: `.venv/lib/python3.12/site-packages/mlx_vlm/lora.py`.
+
+1. **Language-side LoRA when `--train-vision` is absent.**
+   `setup_model_for_training` (`lora.py:100–123`) calls
+   `find_all_linear_names(model.language_model)`
+   (`trainer/utils.py:257–276`) then `get_peft_model`
+   (`trainer/utils.py:186–220`). `get_peft_model` first
+   `freeze_model` (`trainer/utils.py:223–254`:
+   `language_model`, `vision_model`, `vision_tower`, `aligner`,
+   `connector`, `multi_modal_projector`, `mm_projector`, …), then
+   wraps matching `nn.Linear` / `nn.QuantizedLinear` last-names
+   under `model.language_model` via `_apply_language_lora_layers`
+   (`trainer/utils.py:118–130`). `lm_head` is excluded.
+   Multimodal name fragments (`mm_projector`, `vision_tower`,
+   `vision_resampler`, `aligner`) are skipped inside
+   `find_all_linear_names`.
+
+   On this Qwen3.5-4B checkpoint the language last-names are:
+   `q_proj`, `k_proj`, `v_proj`, `o_proj`, `up_proj`, `down_proj`,
+   `gate_proj`, `in_proj_qkv`, `in_proj_z`, `in_proj_b`,
+   `in_proj_a`, `out_proj`. Trainable after this step:
+   **16.232448 M / 4539.264 M (0.358%)**, 496 tensors, all under
+   `language_model`. This matches Part 24.
+
+2. **Additional modules when `--train-vision` is present.**
+   After LoRA setup, `setup_model_for_training` (`lora.py:125–138`)
+   calls `unfreeze_modules` (`trainer/utils.py:346–364`) with:
+   `vision_model`, `vision_tower`, `mm_projector`,
+   `multi_modal_projector`, `aligner`, `connector`,
+   `vision_resampler`.
+
+   This checkpoint’s top-level modules are only `language_model`
+   and `vision_tower`. There is no `vision_model`. The matching
+   unfreeze is **`vision_tower` in full**: `patch_embed`,
+   `pos_embed`, `blocks.*`, `merger`. 297 additional trainable
+   tensors. Vision `nn.Linear` count: 98. **Not QuantizedLinear.**
+   Not LoRA-wrapped.
+
+3. **Language-side LoRA remains trainable.** 496 language LoRA
+   tensors stay trainable. `model.config.lora` is unchanged and
+   still lists only `language_model.*` keys (248 modules).
+
+4. **Vision tower modification.** Fully **unfrozen**, not
+   LoRA-adapted. `--train-vision` is not a vision-LoRA flag on
+   this installed stack. It is a full-weight unfreeze of the
+   vision tower plus the already-attached language LoRA.
+
+5. **Serialization.** `save_adapter` (`trainer/utils.py:367–379`)
+   writes `model.config.lora` to `adapter_config.json` and dumps
+   **all** `model.trainable_parameters()` to
+   `adapters.safetensors`. After `--train-vision` that file
+   therefore contains language LoRA tensors **and** full
+   `vision_tower.*` weights. The config still does not name the
+   vision keys.
+
+6. **Ordinary adapter inference.** `mlx_vlm.utils.load`
+   (`utils.py:1289–1290`) and `run.generate --adapter-path` both
+   call `apply_lora_layers` (`trainer/utils.py:312–343`): freeze
+   the base, wrap the language LoRA keys from
+   `adapter_config.json`, then
+   `model.load_weights(..., strict=False)`. Every
+   `--train-vision` trainable vision key is present in
+   `model.parameters()`, so those tensors load through the
+   existing adapter path. No custom loader. Non-training
+   inspection confirmed 297/297 vision keys match.
+
+7. **Expected trainable count with the flag.** Inspection print:
+   `#trainable params: 349.746688 M || all params: 4539.264 M || trainable%: 7.705%`.
+   Language LoRA 16.232448 M remains inside that total.
+
+Seed: installed `mlx_vlm.lora` has **no `--seed` argument**. Part 24
+did not set one. This run does not add one.
+
+`qwen3_5` is not in `not_supported_for_training` (`gemma3n`,
+`qwen3_omni` only).
+
+**Gate 0: PASS.** Upstream `--train-vision` is a supported
+adapter-serialized vision-training path on this checkpoint. It is
+full vision-tower unfreeze plus language LoRA, not vision LoRA.
+Continue. Do not write a custom trainer.
+
+### Frozen data — reproduced, not redefined
+
+Primary SFT still exists and hashes:
+
+| artifact | SHA-256 |
+|---|---|
+| `out/gen-sft-verify-chart-expanded/train.json` | `9c4fda12537881b619616004ecd128d3139129e0dd96a6d2e6785b6d69420b45` |
+| `role-expanded/role-expanded-valid.json` | `207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f` |
+| Part-24 `out/part24/gate1.jsonl` | `b08ceefc6e5cf58a154259055c0f57c8bd41e6a491a9a853407af705e56911bc` |
+
+Train: **161** rows, 67 `heading:true`, 94 `heading:false`, 161 unique
+marked images. Families: 02, 04, 05, 06, 10, 12, 13, 14, 15, 16, 19,
+20, 21. No 17/18. No Holdout 1. No Holdout 2.
+
+Valid: **47** rows, docs 17/18 only. GT headings 20 / non-headings 27.
+H1 2 / H2 4 / H3 6 / H4 8 / P 27.
+
+Part 24 is not rerun. Frozen reference: parse 47/47, TP 19/20, FN 1/20,
+TN 27/27, FP 0/27, H4 7/8. Only error: Workshop floor
+`heading:false`. Critical correct row: Receipts by hour
+`heading:false`.
+
+The only intended training variable relative to Part 24 is
+`--train-vision` and the unfrozen `vision_tower` that flag entails.
+
+Direct semantic scorer fixture (`part27_score.py`, no mutation, no
+existing tag): GT H4 + true → TP; GT H4 + false → FN; GT P + false →
+TN; GT P + true → FP. Perfect pass requires FN == 0 and FP == 0.
+Runnable: `python part27_score.py` → `part27_score_ok`.
+
+### Registered predictions (frozen before the one training run)
+
+1. `[H]` Installed MLX-VLM exposes a supported `--train-vision` path
+   that can train this checkpoint without source modification.
+2. `[H]` The exact 161-row Part-24 population can be trained with the
+   same QLoRA settings plus `--train-vision`.
+3. `[H]` Direct semantic eligibility on docs 17/18 reaches 47/47
+   parse, FN 0/20, and FP 0/27.
+4. `[H]` `17-visitor-brief:14` Workshop floor changes from false to
+   true.
+5. `[H]` `18-sample-receipt:21` Receipts by hour remains false.
+6. `[H]` No other validation row regresses.
+7. `[H]` H1/H2/H3/H4 eligibility becomes 2/2, 4/4, 6/6, 8/8.
+8. `[H]` If the marked arm passes, an image ablation of the new
+   adapter shows that at least one validation decision still depends
+   on visual input; the pass is not merely a new text-only boundary.
+9. `[H]` Known older development eligibility does not materially
+   regress.
+10. `[H]` No new data, prompt, marker, crop, model size, role model,
+    structural rule, holdout, or production integration is needed.
+
+### Training configuration (registered; not yet launched)
+
+Part-24 CLI exactly, plus `--train-vision` only. Destination
+`out/adapter-verify-marked-chart-expanded-vision`. Does not overwrite
+any existing adapter. Learning rate left at CLI default `2e-5`.
+`--lora-alpha` left at CLI default 16. No seed.
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft-verify-chart-expanded \
+  --split train \
+  --batch-size 1 \
+  --lora-rank 8 \
+  --epochs 6 \
+  --steps-per-report 10 \
+  --steps-per-save 1000 \
+  --train-on-completions \
+  --grad-checkpoint \
+  --image-resize-shape 560 800 \
+  --train-vision \
+  --output-path out/adapter-verify-marked-chart-expanded-vision
+```
+
+One registered run. One mechanical correction allowed only if it is
+an existing upstream memory switch already used in this experiment
+(`--grad-checkpoint` is already on). Do not lower resolution. Do not
+shrink the population.
+
+Training has not started at the time this subsection was committed.
+
 
 
