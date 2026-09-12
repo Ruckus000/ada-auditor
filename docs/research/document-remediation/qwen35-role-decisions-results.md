@@ -5578,5 +5578,193 @@ separately. `semantic_false_heading == 0` is the remediation safety
 target. An existing H* that the verifier rejects must not be counted
 safe by keep; demotion vs unresolved is a later integration choice.
 
+---
+
+## Part 24 — does independent chart-context coverage close eligibility?
+
+**Date:** 2026-09-12. Same branch. One marked-verifier QLoRA run.
+No role-adapter training. No prompt change. No marker change. No
+crop. No `--train-vision`. No larger model. No Holdout-1 /
+Holdout-2. Docs 17/18 remain frozen validation. No validation row,
+wording, locator, image, or GT record enters training.
+
+Part 22 solved heading preservation on docs 17/18 (TP 20/20, FN 0,
+H4 8/8) and left one false positive: `18-sample-receipt:21`
+“Receipts by hour”, GT P, category `chart-title`, verifier
+`heading:true`. Part 23 then measured that the 124-row trainer
+contained one chart-title negative from one development document,
+and constructed three independent chart-context development
+documents (19–21) that passed the real-PDF bridge.
+
+This Part is an eligibility experiment, not an end-to-end
+role-system experiment. `unsafe_retag == 0` is not semantic-
+remediation safety. Scoring is `gt_heading` vs `verify_heading`
+directly, before mutation semantics.
+
+### The one question
+
+> Does adding the frozen Part-23 chart-context development documents
+> to the frozen Part-22 marked-verifier training population eliminate
+> the remaining chart-title false positive without reintroducing
+> genuine-heading vetoes?
+
+### Frozen primary validation (not modified)
+
+`role-expanded/role-expanded-valid.json` SHA-256
+`207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f`
+
+Docs 17/18 only. 47 cards: H1 2 / H2 4 / H3 6 / H4 8 / P 27.
+GT headings 20, GT non-headings 27. Docs 17/18 were not edited.
+
+Part-22 expanded marked verifier is the frozen baseline:
+
+| metric | Part 22 expanded marked verifier |
+|---|---|
+| parse | 47/47 |
+| TP | 20/20 |
+| FN | 0/20 |
+| TN | 26/27 |
+| FP | 1/27 |
+| H1 / H2 / H3 / H4 | 2/2, 4/4, 6/6, 8/8 |
+
+Only error: `18-sample-receipt:21` — Receipts by hour — GT P —
+chart-title — verifier `heading:true`.
+
+### Frozen verifier contract (unchanged)
+
+`MARKED_ELIGIBILITY_STEM` SHA-256
+`e5f8d312b57c3c9a7b9a4ab0b30269bcfd009d4ce7d216c2dcd2176b09f39902`
+
+Completion only `{"heading":true}` or `{"heading":false}`.
+Label: `heading = expect.role in H1..H6`. Prompt is the stem then
+Element / Font / Weight / Previous / Next / JSON. No existing tag,
+source type, ancestry, GT category, locator, bounding-box
+coordinates, confidence, or reason. The marked full-page image is
+the only visual input.
+
+### Gate 0 — reproduce the 161-row population
+
+Verified hashes before mapping:
+
+| file | SHA-256 |
+|---|---|
+| `role-expanded-valid.json` | `207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f` |
+| Part-22 manifest `verifier-expanded-train-manifest.json` | `d151f392359360aeada16a28469b4a557942392646cb772a6bf3d911be15896b` |
+| Part-23 `chart-title-extension-train.json` | `0a99068ce9944a1beb8328b5b3ab0be448ff01fc20604b82b8a730fcfaef2474` |
+| Part-22 SFT `out/gen-sft-verify-expanded/train.json` | `79c510e9226269365f843adea50344af7c8952bebc395e04efadad2e02ce678f` |
+
+Concatenated the frozen 124 rows and the frozen 37 rows. No
+oversampling. No duplicate chart-title rows. All three complete
+development documents 19–21, not the six chart titles alone.
+
+| | n |
+|---|---:|
+| total unique semantic rows | **161** |
+| heading true | 67 |
+| heading false | 94 |
+| Pool A | 31 |
+| Pool B | 93 |
+| Pool C (docs 19–21) | 37 |
+| chart-title negatives | 6 |
+
+Documents (mapped PDF stems): 02-two-column, 04-difficult-table,
+05-images-captioned, 06-images-uncaptioned, 10-metadata-problems,
+12-kitchen-sink, 13-workshop-induction, 14-pump-overhaul,
+15-archive-transfer, 16-shift-handover, 19-quay-roster,
+20-tank-soundings, 21-ice-window. No doc 17/18. No Holdout-1 /
+Holdout-2. No 01/03/07/08/11.
+
+Every row mapped to exactly one real-PDF BLOCK and one marked page
+image via the established dump → box → `Mark.java` bridge. Three
+recurring `empty_text` dump blocks from Part 13 (`05:0`, `05:7`,
+`06:10`) are not train rows. Architecture filter
+(`source_type` / ancestry / R2) excluded none of the 161.
+
+SFT `out/gen-sft-verify-chart-expanded/train.json` (gitignored):
+161 rows, 67 `{"heading":true}` / 94 `{"heading":false}`, 161 unique
+marked images. Prompt starts with unchanged
+`MARKED_ELIGIBILITY_STEM`. Zero `Existing tag` leaks.
+
+SHA-256 `9c4fda12537881b619616004ecd128d3139129e0dd96a6d2e6785b6d69420b45`
+recorded **before** the training run.
+
+**Gate 0: PASS.** Population reproduced. Do not train a different
+population.
+
+### Registered predictions (frozen before the one training run)
+
+1. `[H]` The frozen 161-row development population reproduces exactly
+   and stock MLX-VLM trains it with the Part-22 configuration.
+2. `[H]` Primary validation remains parse 47/47.
+3. `[H]` Genuine-heading preservation remains 20/20, including H4 8/8.
+4. `[H]` GT non-heading rejection improves from 26/27 to 27/27.
+5. `[H]` `18-sample-receipt:21` changes from `heading:true` to
+   `heading:false` without entering training.
+6. `[H]` No new FP or FN appears elsewhere on docs 17/18.
+7. `[H]` Previously known development behavior does not materially
+   regress.
+8. `[H]` No prompt/marker/crop/vision-layer/model-size/structural-
+   rule/holdout change is required.
+
+### Training command (registered; not yet run)
+
+One QLoRA. Expected iterations: 161 × 6 = 966. No second
+configuration. No epoch extension. No oversampling. No class
+weighting. No `--train-vision`. Destination
+`out/adapter-verify-marked-chart-expanded` — do not overwrite
+`out/adapter-verify-marked` or `out/adapter-verify-marked-expanded`.
+
+```
+HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 python -m mlx_vlm.lora \
+  --model-path mlx-community/Qwen3.5-4B-MLX-4bit \
+  --dataset out/gen-sft-verify-chart-expanded \
+  --split train \
+  --batch-size 1 \
+  --lora-rank 8 \
+  --epochs 6 \
+  --steps-per-report 10 \
+  --steps-per-save 1000 \
+  --train-on-completions \
+  --grad-checkpoint \
+  --image-resize-shape 560 800 \
+  --output-path out/adapter-verify-marked-chart-expanded
+```
+
+A mechanical interruption without an adapter may be restarted with
+the exact command and recorded as such. A completed run that misses
+the gates is experimental evidence, not a reason to rerun.
+
+Loss is training health only.
+
+### Gate 1 plan (after training)
+
+Exact Part-21/22 direct semantic eligibility over all 47 cards. No
+role adapter. No R2 rescue. No structural-gate rescue.
+`gt_heading = expect.role in H1..H6` against `verify_heading`.
+
+Hard requirements: parse 47/47, TP 20/20, FN 0, TN 27/27, FP 0,
+H1 2/2, H2 4/4, H3 6/6, H4 8/8, H3+H4 14/14.
+
+Critical rows: `17-visitor-brief:10` Cloakroom; `:14` Workshop
+floor; `:20` Forms; `:3` callout; `:22` running footer;
+`18-sample-receipt:21` Receipts by hour.
+
+Gate 1 PASS only if all 47 semantic eligibility labels are correct.
+Any FP → STOP (Outcome B if the chart-title remains; Outcome C if a
+new FP). Any FN → STOP (Outcome D). Do not add the validation row,
+oversample chart titles, change the prompt, crop, train vision, or
+rerun.
+
+### Gate 2 plan (earned only if Gate 1 passes)
+
+Regression evidence, not an optimization surface. Frozen doc-07
+mapped verifier rows `07-h1`, `07-intro`, `07-chart-title`,
+`07-cap`: parse 4/4, heading recall 1/1, non-heading rejection 3/3.
+Frozen probes 01/03/08/11: apply upstream R2 before interpreting
+verifier eligibility. `08-numeral-3` is R2-owned; verifier output
+is diagnostic only and receives no architectural credit.
+
+Do not run Holdout 1 or Holdout 2. Both are spent.
+
 
 
