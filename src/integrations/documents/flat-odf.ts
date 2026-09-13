@@ -1,4 +1,5 @@
 import { isPlaceholderTitle, type TitleOutcome } from '../../domain/document-remediation';
+import { odfReadableText } from '../../domain/source-truth';
 
 /**
  * Reading and repairing a flat ODF source, as pure string transforms.
@@ -46,26 +47,9 @@ function encodeEntities(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-/**
- * What is left of a fragment once its tags are gone — the text a reader
- * meets, plus an image's `svg:desc` / `svg:title`, which are text to a reader
- * too.
- *
- * A flat ODF embeds every image inline as base64 inside `office:binary-data`,
- * and that payload is not text: with it left in, a heading holding nothing
- * but an image read as thousands of characters long, and `[V]` a planted
- * undescribed image-only heading was delivered as a heading over an
- * undescribed figure — the exact structure this file exists to keep honest.
- */
-function readableText(fragment: string): string {
-  return fragment
-    .replace(/<office:binary-data>[\s\S]*?<\/office:binary-data>/g, '')
-    .replace(/<[^>]+>/g, '');
-}
-
 /** Strips tags and collapses whitespace, leaving the readable text. */
 function textOf(fragment: string): string {
-  return decodeEntities(readableText(fragment)).replace(/\s+/g, ' ').trim();
+  return decodeEntities(odfReadableText(fragment)).replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -222,7 +206,8 @@ function writeTitle(xml: string, title: string): string | null {
  * test must agree with this one; r28 is the document that showed it did not.
  *
  * A heading whose only run is an UNDESCRIBED image strips to nothing (once
- * the image's inline base64 is discounted — see `readableText`; before that
+ * the image's inline base64 is discounted — see `odfReadableText`, which the
+ * fidelity reading shares so the two cannot disagree; before that
  * discount the payload read as text and `[V]` w20's undescribed image-only
  * heading was delivered as a heading, three against a key of two). Deleting
  * it would delete the author's figure with it — the one figure most in need
@@ -239,7 +224,7 @@ export function removeEmptyHeadings(xml: string): { xml: string; removed: number
       return '';
     })
     .replace(/<text:h\b([^>]*)>([\s\S]*?)<\/text:h>/g, (whole, attrs: string, inner: string) => {
-      if (readableText(inner).trim() !== '') return whole;
+      if (odfReadableText(inner).trim() !== '') return whole;
       if (/<draw:frame\b/.test(inner)) {
         // The outline level AND the style name go. `[V]` A `text:p` still
         // styled `Heading_20_2` is exported as /H2 anyway, because the style

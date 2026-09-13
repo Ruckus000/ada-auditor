@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { languageToCarry } from '../../src/domain/document-structure';
 import { docxDeclaredLanguage } from '../../src/domain/docx-language';
 import { sourceTruthFromDocx, sourceTruthFromFodt } from '../../src/domain/source-truth';
+import { removeEmptyHeadings } from '../../src/integrations/documents/flat-odf';
 import { para, styleDef, wordCore, wordDocument, wordStyles, zip } from '../support/docx-fixture';
 
 /**
@@ -91,6 +92,54 @@ describe('headings, in all three dialects municipalities actually use', () => {
       ]),
     );
     expect(truth.headingLevels).toEqual([1]);
+  });
+
+  it('counts a heading whose only content is a DESCRIBED image, as the pipeline keeps it', () => {
+    // `[V]` Blind corpus w20. `removeEmptyHeadings` decides emptiness after the
+    // importer lands Word's `descr` in `svg:desc` (and `title` in `svg:title`),
+    // so a heading holding only a described image says something and is
+    // delivered as one. This reader looked at `w:t` alone, counted 1 where 2
+    // were delivered, and fidelity told the client "check the extra structure
+    // is the author's" about a heading the author wrote.
+    const imageHeading = (docPr: string) =>
+      `<w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:drawing><wp:inline>${docPr}</wp:inline></w:drawing></w:r></w:p>`;
+    const truth = readable(
+      zip([
+        [
+          'word/document.xml',
+          wordDocument(
+            para('Site Photographs', { style: 'Heading1' }) +
+              imageHeading('<wp:docPr id="1" name="Figure 1" descr="The east basin after the storm"/>') +
+              imageHeading('<wp:docPr id="2" name="Figure 2" title="Aerial view"/>'),
+          ),
+        ],
+        ['word/styles.xml', wordStyles('en-US')],
+      ]),
+    );
+    expect(truth.headingLevels).toEqual([1, 2, 2]);
+  });
+
+  it('does not count a heading whose only content is an UNDESCRIBED image — the pipeline demotes it', () => {
+    // The figure stays and reaches the punch list as undescribed; the heading
+    // it announced does not. A `name` is the producer's label, not a
+    // description, and a blank `descr` says nothing.
+    const imageHeading = (docPr: string) =>
+      `<w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:drawing><wp:inline>${docPr}</wp:inline></w:drawing></w:r></w:p>`;
+    const truth = readable(
+      zip([
+        [
+          'word/document.xml',
+          wordDocument(
+            para('Site Photographs', { style: 'Heading1' }) +
+              imageHeading('<wp:docPr id="1" name="Figure 1"/>') +
+              imageHeading('<wp:docPr id="2" name="Figure 2" descr="   "/>'),
+          ),
+        ],
+        ['word/styles.xml', wordStyles('en-US')],
+      ]),
+    );
+    expect(truth.headingLevels).toEqual([1]);
+    expect(truth.figures).toBe(2);
   });
 
   it('does not mistake a pPr block for a paragraph', () => {
@@ -715,6 +764,27 @@ describe('the flat-ODF fallback, for legacy .doc', () => {
     );
     if (!truth.readable) throw new Error('expected readable');
     expect(truth.headingLevels).toEqual([1, 3]);
+  });
+
+  it('decides an image-only heading exactly as removeEmptyHeadings does', () => {
+    // A flat ODF embeds every image as inline base64. Stripping tags alone
+    // left that payload behind as "text", so an UNDESCRIBED image-only heading
+    // counted here while the pipeline demoted it — a heading "that did not
+    // survive conversion" which the pipeline removed on purpose. One definition
+    // of readable text, shared with the pipeline, rather than a second copy.
+    const truth = sourceTruthFromFodt(
+      fodt(
+        '<text:h text:outline-level="1">Site Photographs</text:h>' +
+          '<text:h text:outline-level="2"><draw:frame><draw:image><office:binary-data>iVBORw0KGgoAAAANSUhEUg</office:binary-data></draw:image></draw:frame></text:h>' +
+          '<text:h text:outline-level="2"><draw:frame><draw:image><office:binary-data>iVBORw0KGgoAAAANSUhEUg</office:binary-data></draw:image><svg:desc>The east basin</svg:desc></draw:frame></text:h>',
+      ),
+      null,
+    );
+    if (!truth.readable) throw new Error('expected readable');
+    expect(truth.headingLevels).toEqual([1, 2]);
+    expect(removeEmptyHeadings(
+      '<text:h text:outline-level="2"><draw:frame><draw:image><office:binary-data>iVBORw0KGgoAAAANSUhEUg</office:binary-data></draw:image></draw:frame></text:h>',
+    ).xml).not.toMatch(/<text:h\b/);
   });
 
   it('takes its language from the caller, never parsing one itself', () => {
