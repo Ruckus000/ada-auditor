@@ -15,30 +15,22 @@ from pathlib import Path
 from run import (
     HEADING,
     HERE,
+    apply_semantic_verify,
     decide_card,
+    is_heading,
     needs_page_verify,
+    semantic_false_heading,
     score_holdout,
     text_norm,
+    true_heading_removed,
 )
 
 OUT = HERE / "out" / "part26"
 REPO_DOCS = HERE.parent / "document-remediation"
 
 
-def is_heading(role: str | None) -> bool:
-    return role in HEADING
-
-
 def legacy_unsafe_mutation(gt_heading: bool, final_role: str | None, action: str | None) -> bool:
     return (not gt_heading) and is_heading(final_role) and action == "retag"
-
-
-def semantic_false_heading(gt_heading: bool, final_role: str | None) -> bool:
-    return (not gt_heading) and is_heading(final_role)
-
-
-def true_heading_removed(gt_heading: bool, final_role: str | None) -> bool:
-    return bool(gt_heading) and not is_heading(final_role)
 
 
 def mutation_class(existing: str | None, preverify: str | None) -> str | None:
@@ -50,51 +42,6 @@ def mutation_class(existing: str | None, preverify: str | None) -> str | None:
     if exist != preverify:
         return "H_to_diff_H"
     return "H_to_same_H"
-
-
-def apply_semantic_verify(
-    preverify_final_role: str | None,
-    heading_flag: bool | None,
-    existing_tag: str | None,
-) -> dict:
-    """Part 26 policy: verifier false on a would-finish-H* row demotes to P.
-
-    Parse failure is unresolved, not heading:false and not a keep-H* success.
-    """
-    exist = existing_tag or ""
-    if not is_heading(preverify_final_role):
-        role = preverify_final_role
-        return {
-            "final_role": role,
-            "action": "keep" if role == exist else "retag",
-            "resolved": True,
-            "parse_failure": False,
-            "verify_applied": False,
-        }
-    if heading_flag is None:
-        return {
-            "final_role": None,
-            "action": None,
-            "resolved": False,
-            "parse_failure": True,
-            "verify_applied": True,
-        }
-    if heading_flag is True:
-        role = preverify_final_role
-        return {
-            "final_role": role,
-            "action": "keep" if role == exist else "retag",
-            "resolved": True,
-            "parse_failure": False,
-            "verify_applied": True,
-        }
-    return {
-        "final_role": "P",
-        "action": "keep" if exist == "P" else "retag",
-        "resolved": True,
-        "parse_failure": False,
-        "verify_applied": True,
-    }
 
 
 def pred_for_needs(row: dict, preverify_role: str | None) -> dict:
@@ -200,7 +147,7 @@ def run_check() -> None:
         exist = row["existing_tag"]
         old_cand = needs_page_verify(
             {"role": pre, "qwen_called": True, "r2_veto": False},
-            {"existing_tag": exist},
+            {"existing_tag": exist}, legacy=True,
         )
         new_cand = is_heading(pre)
         applied = apply_semantic_verify(pre, row["heading_flag"], exist)
@@ -241,7 +188,11 @@ def annotate_holdout(rows: list[dict], gt_by_stem: dict[str, dict], arm: str = "
         gt = gt_heading_of(row, gt_by_stem)
         old_cand = bool(
             decided is not None
-            and needs_page_verify(pred_for_needs({**row, **(decided or {})}, pre), {"existing_tag": exist})
+            and needs_page_verify(
+                pred_for_needs({**row, **(decided or {})}, pre),
+                {"existing_tag": exist},
+                legacy=True,
+            )
         )
         new_cand = is_heading(pre)
         historical_final = row.get("final_role")
@@ -281,7 +232,7 @@ def heading_usefulness(rows: list[dict], gt_by_stem: dict[str, dict], final_key:
                 "r2_match": row.get("r2_match") or row.get("r2_veto_preverify"),
             }
         )
-    return score_holdout(preds, gt_by_stem)
+    return score_holdout(preds, gt_by_stem, legacy=True)
 
 
 def count_classes(rows: list[dict]) -> dict:
@@ -328,7 +279,7 @@ def annotate_eval(rows: list[dict]) -> list[dict]:
             "qwen_called": row.get("skip") is None,
             "r2_veto": row.get("skip") == "r2",
         }
-        old_cand = needs_page_verify(decided, {"existing_tag": exist})
+        old_cand = needs_page_verify(decided, {"existing_tag": exist}, legacy=True)
         new_cand = is_heading(pre)
         hist_final = row.get("final_role")
         hist_action = row.get("action")

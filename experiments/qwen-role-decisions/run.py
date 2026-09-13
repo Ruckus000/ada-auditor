@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -26,7 +27,12 @@ import base64
 
 HERE = Path(__file__).resolve().parent
 PROBES_PATH = HERE / "probes.json"
+ROLE_EXPANDED = HERE / "role-expanded"
+CHART_EXPANDED_MANIFEST = ROLE_EXPANDED / "verifier-chart-title-extension-manifest.json"
+CHART_EXPANDED_LABELS = (67, 94)
 HEADING = {"H1", "H2", "H3", "H4", "H5", "H6"}
+ROLE = HEADING | {"P", "LI", "Table", "Figure", "Artifact"}
+ACTION = {"keep", "retag", "abstain"}
 NEEDED = ("role",)
 ROLE_ONLY_STEM = (
     "You assign one PDF tag role. Return ONLY JSON with key role. "
@@ -37,6 +43,64 @@ ROLE_ONLY_STEM = (
     "headers, running footers, stamps, watermarks, table labels, and other "
     "page furniture are not headings. Do not invent facts."
 )
+
+
+def is_heading(role: str | None) -> bool:
+    return role in HEADING
+
+
+def semantic_false_heading(gt_heading: bool, final_role: str | None) -> bool:
+    """A false heading is unsafe whether the existing tag changed or not."""
+    return (not gt_heading) and is_heading(final_role)
+
+
+def true_heading_removed(gt_heading: bool, final_role: str | None) -> bool:
+    return bool(gt_heading) and not is_heading(final_role)
+
+
+def apply_semantic_verify(
+    preverify_final_role: str | None,
+    heading_flag: bool | None,
+    existing_tag: str | None,
+) -> dict:
+    """Apply the current final-state eligibility contract.
+
+    A verifier failure leaves the card unresolved. A false eligibility decision
+    demotes a would-finish heading to P; retaining an already-incorrect H* is
+    not a safe fallback.
+    """
+    exist = existing_tag or ""
+    if not is_heading(preverify_final_role):
+        return {
+            "final_role": preverify_final_role,
+            "action": "keep" if preverify_final_role == exist else "retag",
+            "resolved": True,
+            "parse_failure": False,
+            "verify_applied": False,
+        }
+    if heading_flag is None:
+        return {
+            "final_role": None,
+            "action": None,
+            "resolved": False,
+            "parse_failure": True,
+            "verify_applied": True,
+        }
+    if heading_flag:
+        return {
+            "final_role": preverify_final_role,
+            "action": "keep" if preverify_final_role == exist else "retag",
+            "resolved": True,
+            "parse_failure": False,
+            "verify_applied": True,
+        }
+    return {
+        "final_role": "P",
+        "action": "keep" if exist == "P" else "retag",
+        "resolved": True,
+        "parse_failure": False,
+        "verify_applied": True,
+    }
 
 
 def card_prompt(
@@ -333,8 +397,14 @@ def prediction_record(case: dict, pred: dict | None, raw: str) -> dict:
     }
 
 
-def score_holdout(preds: list[dict], gt_by_stem: dict[str, dict]) -> dict:
-    """Score frozen predictions against headingHierarchy. No confidence."""
+def score_holdout(
+    preds: list[dict], gt_by_stem: dict[str, dict], legacy: bool = False
+) -> dict:
+    """Score predictions against headingHierarchy under the selected contract.
+
+    ``legacy=True`` exists only to replay the historical mutation-only gate.
+    New acceptance measurements use final semantic heading safety.
+    """
     heading_rows: list[dict] = []
     nonheading_rows: list[dict] = []
     unmatched_gt: list[dict] = []
@@ -394,17 +464,25 @@ def score_holdout(preds: list[dict], gt_by_stem: dict[str, dict]) -> dict:
                 hierarchy += 1
             else:
                 heading_demote += 1
-    unsafe = [
+    semantic_unsafe = [
+        p for p in nonheading_rows if semantic_false_heading(False, p.get("final_role"))
+    ]
+    legacy_unsafe = [
         p
         for p in nonheading_rows
         if p.get("final_role") in HEADING and p.get("derived_action") == "retag"
     ]
+    unsafe = legacy_unsafe if legacy else semantic_unsafe
     model_unsafe = [
         p
         for p in nonheading_rows
         if p.get("model_role") in HEADING and p.get("model_role") != p.get("existing_tag")
     ]
-    evaluable = [p for p in preds if p.get("parsed")]
+    evaluable = [
+        p
+        for p in preds
+        if p.get("parsed") and not p.get("verification_failure")
+    ]
     role_exact = 0
     for p in heading_rows:
         stem = str(p.get("locator") or "").rsplit(":", 1)[0]
@@ -417,7 +495,12 @@ def score_holdout(preds: list[dict], gt_by_stem: dict[str, dict]) -> dict:
         if want and p.get("final_role") == want:
             role_exact += 1
     nonheading_role_ok = sum(
-        1 for p in nonheading_rows if p.get("parsed") and p.get("final_role") not in HEADING
+        1
+        for p in nonheading_rows
+        if p.get("parsed")
+        and not p.get("verification_failure")
+        and p.get("final_role") is not None
+        and p.get("final_role") not in HEADING
     )
     final_role_n = len(heading_rows) + len(nonheading_rows)
     final_role_ok = role_exact + nonheading_role_ok
@@ -430,9 +513,10 @@ def score_holdout(preds: list[dict], gt_by_stem: dict[str, dict]) -> dict:
         want_action = "keep" if p.get("final_role") == p.get("existing_tag") else "retag"
         if p.get("derived_action") == want_action:
             action_ok += 1
-    parse_fail = sum(1 for p in preds if not p.get("parsed"))
+    parse_fail = len(preds) - len(evaluable)
     usefulness_ok = heading_n > 0 and heading_exact * 10 >= heading_n * 8
     return {
+        "interpretation": "legacy_mutation" if legacy else "semantic_final_state",
         "evaluable": len(preds),
         "parsed": len(evaluable),
         "parse_fail": parse_fail,
@@ -444,6 +528,10 @@ def score_holdout(preds: list[dict], gt_by_stem: dict[str, dict]) -> dict:
         "unmatched_gt_headings": unmatched_gt,
         "unsafe": len(unsafe),
         "unsafe_locators": [u.get("locator") for u in unsafe],
+        "semantic_false_headings": len(semantic_unsafe),
+        "semantic_false_heading_locators": [u.get("locator") for u in semantic_unsafe],
+        "legacy_unsafe_mutations": len(legacy_unsafe),
+        "legacy_unsafe_mutation_locators": [u.get("locator") for u in legacy_unsafe],
         "model_unsafe": len(model_unsafe),
         "r2_matches": len(r2_matches),
         "r2_match_locators": [r.get("locator") for r in r2_matches],
@@ -527,6 +615,19 @@ def parse_json(text: str) -> dict | None:
     if not isinstance(data, dict):
         return None
     if any(k not in data for k in NEEDED):
+        return None
+    if not isinstance(data["role"], str) or data["role"] not in ROLE:
+        return None
+    if "action" in data and (
+        not isinstance(data["action"], str) or data["action"] not in ACTION
+    ):
+        return None
+    if "confidence" in data and (
+        isinstance(data["confidence"], bool)
+        or not isinstance(data["confidence"], (int, float))
+        or not math.isfinite(data["confidence"])
+        or not 0 <= data["confidence"] <= 1
+    ):
         return None
     return data
 
@@ -858,7 +959,13 @@ def check_box_map() -> dict:
     return {"locator": block["locator"], **mapped}
 
 
-def needs_page_verify(pred: dict | None, case: dict) -> bool:
+def needs_page_verify(pred: dict | None, case: dict, legacy: bool = False) -> bool:
+    """Select every current would-finish-H* card for eligibility verification.
+
+    The legacy mutation-only selection is retained strictly for historical
+    replays; it skips an unchanged existing H*, which is the defect Part 26
+    demonstrated.
+    """
     if not pred or not pred.get("qwen_called"):
         return False
     if pred.get("r2_veto"):
@@ -866,6 +973,8 @@ def needs_page_verify(pred: dict | None, case: dict) -> bool:
     role = pred.get("role")
     if role not in HEADING:
         return False
+    if not legacy:
+        return True
     exist = case.get("existing_tag") or ""
     return exist not in HEADING or exist != role
 
@@ -875,17 +984,24 @@ def apply_page_verify(
     case: dict,
     heading: bool | None,
     verify_input: str = "full",
+    legacy: bool = False,
 ) -> dict:
     out = dict(pred)
     out["page_verify"] = heading
     out["page_verify_parsed"] = heading is not None
     out["verify_input"] = verify_input
     out["verification_failure"] = heading is None
-    if heading is True:
+    if legacy and heading is True:
         return out
-    tag = case.get("existing_tag") or ""
-    out["role"] = tag
-    out["action"] = "keep"
+    if legacy:
+        tag = case.get("existing_tag") or ""
+        out["role"] = tag
+        out["action"] = "keep"
+        return out
+    applied = apply_semantic_verify(pred.get("role"), heading, case.get("existing_tag"))
+    out["role"] = applied["final_role"]
+    out["action"] = applied["action"]
+    out["verification_resolved"] = applied["resolved"]
     return out
 
 
@@ -963,15 +1079,70 @@ def ensure_marked_png(
     return marked
 
 
+def chart_expanded_verifier_cases() -> list[dict]:
+    """Reconstruct Part 24's 161 development-only verifier rows from source.
+
+    The manifest fixes both membership and order; the three tracked datasets
+    supply the card metadata used by the existing PDF-to-marked-image bridge.
+    This deliberately does not read a previous ignored SFT artifact.
+    """
+    manifest = json.loads(CHART_EXPANDED_MANIFEST.read_text())
+    ids = manifest.get("combined_ids")
+    if not isinstance(ids, list) or len(ids) != 161 or len(set(ids)) != 161:
+        raise SystemExit("dataset-reproduction failure: invalid chart-expanded ID manifest")
+    source_paths = (
+        HERE / "train.json",
+        ROLE_EXPANDED / "role-expanded-new-train.json",
+        ROLE_EXPANDED / "chart-title-extension-train.json",
+    )
+    cards_by_id: dict[str, dict] = {}
+    for path in source_paths:
+        payload = json.loads(path.read_text())
+        rows = payload.get("cases") if isinstance(payload, dict) else payload
+        if not isinstance(rows, list):
+            raise SystemExit(f"dataset-reproduction failure: {path} has no cases list")
+        for row in rows:
+            cid = row.get("id") if isinstance(row, dict) else None
+            if not isinstance(cid, str):
+                raise SystemExit(f"dataset-reproduction failure: {path} has card without ID")
+            if cid in cards_by_id:
+                raise SystemExit(f"dataset-reproduction failure: duplicate card ID {cid}")
+            cards_by_id[cid] = row
+    missing = [cid for cid in ids if cid not in cards_by_id]
+    if missing:
+        raise SystemExit(f"dataset-reproduction failure: missing cards {missing}")
+    cases = [cards_by_id[cid] for cid in ids]
+    expected_true, expected_false = CHART_EXPANDED_LABELS
+    actual_true = sum(gt_heading(case) for case in cases)
+    if actual_true != expected_true or len(cases) - actual_true != expected_false:
+        raise SystemExit(
+            "dataset-reproduction failure: chart-expanded labels do not match "
+            f"manifest ({actual_true}/{len(cases) - actual_true})"
+        )
+    return cases
+
+
 def emit_verify_sft(
     pdf_dir: Path,
     match_path: Path,
     out_dir: Path,
     pages_dir: Path,
 ) -> dict:
+    payload = json.loads(match_path.read_text())
+    probes = payload.get("cases") if isinstance(payload, dict) else None
+    if not isinstance(probes, list):
+        raise SystemExit(f"dataset-reproduction failure: {match_path} has no cases list")
+    return emit_verify_sft_cases(pdf_dir, probes, out_dir, pages_dir)
+
+
+def emit_verify_sft_cases(
+    pdf_dir: Path,
+    probes: list[dict],
+    out_dir: Path,
+    pages_dir: Path,
+) -> dict:
     dumps = dump_dir(pdf_dir)
     cards, failed = dumps_to_cards(dumps)
-    probes = json.loads(match_path.read_text())["cases"]
     matched, missing = attach_probe_expect(cards, probes, by_doc=True)
     png_cache: dict[tuple[str, int], Path] = {}
     rows: list[dict] = []
@@ -1045,6 +1216,16 @@ def emit_verify_sft(
     }
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     return manifest
+
+
+def emit_chart_expanded_verify_sft(pdf_dir: Path, out_dir: Path, pages_dir: Path) -> dict:
+    """Build the frozen Part 24 training SFT without an ignored input file."""
+    result = emit_verify_sft_cases(
+        pdf_dir, chart_expanded_verifier_cases(), out_dir, pages_dir
+    )
+    if result["n"] != 161 or result["heading_true"] != 67:
+        raise SystemExit(f"dataset-reproduction failure: unexpected Part 24 SFT {result}")
+    return result
 
 
 def emit_verify_text_sft(source: Path, out_dir: Path) -> dict:
@@ -1548,6 +1729,9 @@ def self_check() -> None:
     assert think == parsed
     assert short == {"role": "H2", "action": "retag"}
     assert parse_json("not json") is None
+    assert parse_json('{"role":"banana"}') is None
+    assert parse_json('{"role":"H2","action":false}') is None
+    assert parse_json('{"role":"H2","confidence":2}') is None
     assert low["ok"] is False and low["auto_heading"] is True
     assert timid["ok"] is True and timid["auto_heading"] is False
     assert timid["timid"] is True
@@ -1723,6 +1907,35 @@ def self_check() -> None:
     assert unsafe_hold["unsafe"] == 1
     assert unsafe_hold["pass"] is False
     assert unsafe_hold["unmatched_gt_headings"][0]["text"] == "Real Title"
+    same_level = [
+        {
+            "locator": "doc:0",
+            "text": "Title",
+            "existing_tag": "H1",
+            "model_role": "H1",
+            "r2_match": False,
+            "final_role": "H1",
+            "derived_action": "keep",
+            "parsed": True,
+        },
+        {
+            "locator": "doc:1",
+            "text": "DRAFT",
+            "existing_tag": "H2",
+            "model_role": "H2",
+            "r2_match": False,
+            "final_role": "H2",
+            "derived_action": "keep",
+            "parsed": True,
+        },
+    ]
+    same_level_gt = {"doc": {"headingHierarchy": [{"level": 1, "text": "Title"}]}}
+    semantic_same_level = score_holdout(same_level, same_level_gt)
+    legacy_same_level = score_holdout(same_level, same_level_gt, legacy=True)
+    assert semantic_same_level["interpretation"] == "semantic_final_state"
+    assert semantic_same_level["unsafe"] == 1 and semantic_same_level["pass"] is False
+    assert legacy_same_level["interpretation"] == "legacy_mutation"
+    assert legacy_same_level["unsafe"] == 0 and legacy_same_level["pass"] is True
     assert source_eligible("P") is True
     assert source_eligible("none") is True
     assert source_eligible("H4") is True
@@ -1843,9 +2056,14 @@ def self_check() -> None:
         {"role": "H2", "qwen_called": True, "r2_veto": False},
         {"existing_tag": "P"},
     )
+    assert needs_page_verify(
+        {"role": "H1", "qwen_called": True, "r2_veto": False},
+        {"existing_tag": "H1"},
+    )
     assert not needs_page_verify(
         {"role": "H1", "qwen_called": True, "r2_veto": False},
         {"existing_tag": "H1"},
+        legacy=True,
     )
     assert not needs_page_verify(
         {"role": "P", "qwen_called": True, "r2_veto": True},
@@ -1874,8 +2092,9 @@ def self_check() -> None:
     assert parse_miss["page_verify_parsed"] is False
     assert parse_miss["verification_failure"] is True
     assert parse_miss["verify_input"] == "marked"
-    assert parse_miss["role"] == "H2"
-    assert parse_miss["action"] == "keep"
+    assert parse_miss["role"] is None
+    assert parse_miss["action"] is None
+    assert parse_miss["verification_resolved"] is False
     assert "outlined rectangle" in MARKED_VERIFY_STEM
     assert "H1" not in MARKED_VERIFY_STEM
     assert len(PART10_VERIFY_LOCATORS) == 14
@@ -1982,8 +2201,8 @@ def self_check() -> None:
         None,
     )
     assert fail["verification_failure"] is True
-    assert fail["role"] == "H2"
-    assert fail["action"] == "keep"
+    assert fail["role"] is None
+    assert fail["action"] is None
     assert mutation_locators(
         [
             {
@@ -2012,6 +2231,12 @@ def self_check() -> None:
         },
         "B",
     ) == ["dev:1"]
+    chart_cases = chart_expanded_verifier_cases()
+    assert len(chart_cases) == 161
+    assert len({case["id"] for case in chart_cases}) == 161
+    assert sum(gt_heading(case) for case in chart_cases) == 67
+    assert chart_cases[0]["id"] == "02-h1"
+    assert chart_cases[-1]["id"] == "21-ice-window:12"
 
 
 def load_block_dumps() -> list[dict] | None:
@@ -2233,6 +2458,23 @@ if __name__ == "__main__":
         if not pdf_dir:
             raise SystemExit("--emit-verify-sft requires --pdf-dir or --dump-dir")
         print(json.dumps(emit_verify_sft(pdf_dir, match_path, out_dir, pages_dir), indent=2, default=str))
+        raise SystemExit(0)
+
+    if "--emit-chart-expanded-verify-sft" in sys.argv:
+        pdf_dir = Path(flag_value("--pdf-dir") or flag_value("--dump-dir") or "")
+        out_dir = Path(
+            flag_value("--out-dir") or (HERE / "out" / "gen-sft-verify-chart-expanded")
+        )
+        pages_dir = Path(flag_value("--pages-dir") or (out_dir / "pages"))
+        if not pdf_dir:
+            raise SystemExit("--emit-chart-expanded-verify-sft requires --pdf-dir or --dump-dir")
+        print(
+            json.dumps(
+                emit_chart_expanded_verify_sft(pdf_dir, out_dir, pages_dir),
+                indent=2,
+                default=str,
+            )
+        )
         raise SystemExit(0)
 
     if "--emit-verify-text-sft" in sys.argv:

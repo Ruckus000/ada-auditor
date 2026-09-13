@@ -6832,5 +6832,53 @@ not produce a vision-trained adapter.
 
 STOP. No Part 28.
 
+---
+
+## Part 28 — reduced native-processor input retry: mechanical pass, eligibility fail
+
+**Date:** 2026-09-12. This continuation corrects Part 27's *mechanical* end
+state; it does not reinterpret its 560×800 result. The native Qwen processor
+ignored the registered `--image-resize-shape` on the trainer path. Rather than
+patching the trainer, a processor-only probe used its existing `max_pixels`
+control to materialize the same 161 marked pages at 408 image tokens each
+(instead of 1,750), preserving every prompt, label, marker, train/validation
+membership, and no-holdout boundary. The unmodified upstream trainer then saw
+those physical copies at its default preprocessing.
+
+One bounded update completed at a 9.810 GB peak, changed saved vision tensors,
+and ordinary MLX-VLM reload worked. The registered six-epoch run also completed
+and saved `out/adapter-part29-vision-408` (698 MiB adapter; SHA-256
+`ec3c2711…2730b0e8`). This disproves only the broad claim that full vision
+training is mechanically impossible; it does not make the original input
+contract valid or the result deployable.
+
+### Registered direct eligibility gate
+
+The exact 47 frozen docs-17/18 binary eligibility cards were re-rendered through
+the existing marker bridge and scored directly with the same binary prompt.
+The historical role adapter is not present in this checkout, so no combined
+role-plus-verifier claim is made. All 47 responses parsed:
+
+| metric | Part 24 | Part 28 reduced-input vision |
+|---|---:|---:|
+| TP /20 | 19 | **20** |
+| FN /20 | 1 | **0** |
+| TN /27 | 27 | **26** |
+| FP /27 | 0 | **1** |
+| Workshop floor | false | **true** |
+| Receipts by hour | false | **true** |
+
+The strict gate required both FN=0 and FP=0. It therefore **fails**: the quiet
+H4 is recovered but the chart-title regression returns. A generic development
+helper labels the rows pass because it tolerates FPs; that helper is not the
+registered all-or-nothing gate and cannot soften it.
+
+### Outcome
+
+**F — full vision training at 408 tokens is mechanically runnable but not a
+safe eligibility component.** Do not tune, change prompts, alter data, crop,
+change markers, reopen either holdout, or integrate it. The model remains
+experimental. The product's source/structure-preserving conversion and
+readback-verified PDF repair remain the only shipping paths.
 
 
