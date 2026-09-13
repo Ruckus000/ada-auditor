@@ -307,7 +307,19 @@ export function sourceTruthFromDocx(bytes: Uint8Array): SourceTruth {
       numberingGroups.add(numId ?? `style:${style ?? ''}`);
     }
 
-    if (text.trim() === '') continue;
+    // "Says something" is the pipeline's test, not `w:t` alone. The importer
+    // lands a drawing's `descr` in `svg:desc` and its `title` in `svg:title`,
+    // and `removeEmptyHeadings` reads both as text — so a heading holding only
+    // a described image is kept and delivered as one. `[V]` Blind corpus w20:
+    // reading `w:t` alone counted 1 heading where 2 were delivered, and told
+    // the client to check a heading the author wrote. An undescribed image
+    // (a `name`, a blank `descr`) says nothing and is demoted, so it is not
+    // counted. VML `alt=` is not read here: nothing has measured how the
+    // importer lands it.
+    const describesAnImage = [...para.matchAll(/<wp:docPr [^>]*>/g)].some((tag) =>
+      [...tag[0].matchAll(/\s(?:descr|title)="([^"]*)"/g)].some((attr) => (attr[1] ?? '').trim() !== ''),
+    );
+    if (text.trim() === '' && !describesAnImage) continue;
 
     if (level !== null) headingLevels.push(level);
   }
@@ -401,13 +413,39 @@ export function sourceTruthFromDocx(bytes: Uint8Array): SourceTruth {
  * Running LibreOffice a second time would cost a second import and buy
  * literally nothing: the same engine reading the same file.
  */
+/**
+ * What is left of a flat-ODF fragment once its tags are gone — the text a
+ * reader meets, plus an image's `svg:desc` / `svg:title`, which are text to a
+ * reader too.
+ *
+ * A flat ODF embeds every image inline as base64 inside `office:binary-data`,
+ * and that payload is not text: with it left in, a heading holding nothing
+ * but an image read as thousands of characters long, and `[V]` a planted
+ * undescribed image-only heading was delivered as a heading over an
+ * undescribed figure.
+ *
+ * Lives here, not in `integrations/documents/flat-odf.ts`, because BOTH sides
+ * of the fidelity comparison need the one definition: `removeEmptyHeadings`
+ * decides which headings the pipeline keeps with it, and the engine-derived
+ * reading below decides which headings the source had. `[V]` They were two
+ * copies, and the reading's copy kept the base64 — so an undescribed
+ * image-only heading counted as a source heading the pipeline had demoted on
+ * purpose. `domain` cannot import `integrations`; the integration imports this.
+ */
+export function odfReadableText(fragment: string): string {
+  return fragment
+    .replace(/<office:binary-data>[\s\S]*?<\/office:binary-data>/g, '')
+    .replace(/<[^>]+>/g, '');
+}
+
 export function sourceTruthFromFodt(xml: string, language: string | null): SourceTruth {
   const body = /<office:text\b[\s\S]*?<\/office:text>/.exec(xml)?.[0];
   if (body === undefined) return UNREADABLE;
 
-  // Same rule as the OOXML path: a heading that says nothing is not a heading.
+  // Same rule as the OOXML path, and the pipeline's own: a heading that says
+  // nothing is not a heading.
   const headingLevels = [...body.matchAll(/<text:h\b([^>]*)>([\s\S]*?)<\/text:h>/g)]
-    .filter((m) => (m[2] ?? '').replace(/<[^>]+>/g, '').trim() !== '')
+    .filter((m) => odfReadableText(m[2] ?? '').trim() !== '')
     .map((m) => Number(/text:outline-level="(\d+)"/.exec(m[1] ?? '')?.[1] ?? 1));
 
   // What becomes a `/Figure` on export, which is more than raster images.
