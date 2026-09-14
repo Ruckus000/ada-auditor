@@ -15,13 +15,21 @@ is refused, so a model output (e.g. ``model-draft``) cannot become a label by
 being copied into the wrong file.
 
     python3 -B eligibility_eval.py --self-check
-    python3 -B eligibility_eval.py split --labels L.jsonl --salt S --out DIR
+    python3 -B eligibility_eval.py split --labels L.jsonl --salt S --out DIR \
+        [--keep PRIOR/split.json]
     python3 -B eligibility_eval.py evaluate --split DIR/split.json \
         --labels L.jsonl --predictions P.jsonl [--on validation|test]
 
 Evaluating ``test`` writes ``test.spent`` beside the manifest; a second test
 evaluation of the same manifest is refused. A new test set needs new labels
 and a new split, never a re-draw over the old ones.
+
+``--keep`` extends a prior split rather than re-drawing it: an id in the prior
+split keeps its split, a new row takes the split of any kept row in its
+component (shared document, template or client), and only components with no
+kept id are assigned by the new salt. A component holding kept ids from two
+prior splits is refused as a leak. The output records ``salt``, ``kept_from``
+(the prior file's sha256) and ``kept_salt`` (the prior split's salt).
 """
 
 from __future__ import annotations
@@ -149,21 +157,42 @@ def overlaps(rows: list[dict], membership: dict[str, str]) -> list[str]:
     return sorted(k for k, splits in by_key.items() if len(splits) > 1)
 
 
-def split(rows: list[dict], salt: str) -> dict:
+def kept_membership(rows: list[dict], comp: dict[str, str], keep: dict, salt: str) -> dict[str, str]:
+    """S3/S7: a prior id keeps its split, a new row joins its component's kept split,
+    and only components with no kept id are drawn by the new salt."""
+    prior = {rid: name for name, ids in keep["ids"].items() for rid in ids}
+    kept: dict[str, set[str]] = {}
+    for rid, c in comp.items():
+        if rid in prior:
+            kept.setdefault(c, set()).add(prior[rid])
+    mixed = {c: splits for c, splits in kept.items() if len(splits) > 1}
+    if mixed:
+        detail = []
+        for c, splits in sorted(mixed.items()):
+            keys = sorted({f"{k}:{row[k]}" for row in rows if comp[row["id"]] == c for k in GROUP_KEYS})
+            detail.append(f"component {c} holds kept ids from {sorted(splits)}; group keys {keys}")
+        raise ValueError("--keep would leak across splits:\n" + "\n".join(detail))
+    return {rid: next(iter(kept[c])) if c in kept else assign(c, salt) for rid, c in comp.items()}
+
+
+def split(rows: list[dict], salt: str, keep: dict | None = None) -> dict:
     bad = refusals(rows)
     if bad:
         raise ValueError("labels refused:\n" + "\n".join(bad))
     comp = components(rows)
-    membership = {rid: assign(c, salt) for rid, c in comp.items()}
+    membership = kept_membership(rows, comp, keep, salt) if keep else {rid: assign(c, salt) for rid, c in comp.items()}
     leaks = overlaps(rows, membership)
     if leaks:
         raise AssertionError(f"split leaked across groups: {leaks[:5]}")
-    return {
+    result = {
         "salt": salt,
         "group_keys": list(GROUP_KEYS),
         "components": len(set(comp.values())),
         "ids": {name: sorted(r for r, s in membership.items() if s == name) for name, _ in SPLIT},
     }
+    if keep:
+        result["kept_salt"] = keep.get("salt")
+    return result
 
 
 def binom_cdf(k: int, n: int, p: float) -> float:
@@ -307,8 +336,11 @@ def sha256_file(path: Path) -> str:
 
 
 def cmd_split(args: argparse.Namespace) -> None:
-    result = split(load_jsonl(args.labels), args.salt)
+    keep = json.loads(args.keep.read_text()) if args.keep else None
+    result = split(load_jsonl(args.labels), args.salt, keep=keep)
     result["labels_sha256"] = sha256_file(args.labels)
+    if args.keep:
+        result["kept_from"] = sha256_file(args.keep)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "split.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({k: len(v) for k, v in result["ids"].items()}))
@@ -369,6 +401,29 @@ def self_check() -> None:
     assert overlaps(rows[:2], {"q0": "train", "q1": "train"}) == []
     assert overlaps([rows[0], {**rows[1], "client_id": "client0"}], {"q0": "train", "q1": "test"})
 
+    # --keep (S3/S7): prior assignments survive a re-draw; new rows follow their component.
+    def keyed(i: int, host: str, doc: str) -> dict:
+        return {**label(i, True, host, host), "id": f"k{i}", "document_sha256": hashlib.sha256(doc.encode()).hexdigest()}
+
+    prior = {"salt": "old", "ids": {"train": ["k1"], "validation": ["k2", "k3"], "test": []}}
+    kept_rows = [keyed(1, "a.gov", "d1"), keyed(2, "b.gov", "d2"), keyed(3, "c.gov", "d3"), keyed(4, "b.gov", "d4"), keyed(5, "new.gov", "d5")]
+    for salt in ("s", "t", "u"):
+        got = split(kept_rows, salt, keep=prior)
+        where = {rid: name for name, ids in got["ids"].items() for rid in ids}
+        assert where["k1"] == "train" and where["k2"] == where["k3"] == "validation", where  # kept ids stay
+        assert where["k4"] == "validation", where  # shares b.gov with kept k2
+        assert where["k5"] == assign(components(kept_rows)["k5"], salt), where  # new host: by salt
+        assert got["salt"] == salt and got["kept_salt"] == "old"
+    assert "kept_salt" not in split(kept_rows, "s")
+    # k6 shares a document with train's k1 and a host with validation's k2: a leak, refused.
+    mixed = kept_rows + [{**keyed(6, "b.gov", "d1")}]
+    try:
+        split(mixed, "s", keep=prior)
+    except ValueError as err:
+        assert "b.gov" in str(err) and "kept ids from" in str(err), err
+    else:
+        raise AssertionError("a component mixing two prior splits must be refused")
+
     # Exact bound: zero errors in 299 is the smallest n whose 95% bound is <= 1%.
     assert upper_bound(0, 299) <= 0.01 < upper_bound(0, 298)
 
@@ -421,6 +476,7 @@ def main() -> None:
     s.add_argument("--labels", type=Path, required=True)
     s.add_argument("--salt", required=True)
     s.add_argument("--out", type=Path, required=True)
+    s.add_argument("--keep", type=Path, help="prior split.json whose assignments are kept (S3/S7)")
     e = sub.add_parser("evaluate")
     e.add_argument("--split", type=Path, required=True)
     e.add_argument("--labels", type=Path, required=True)
