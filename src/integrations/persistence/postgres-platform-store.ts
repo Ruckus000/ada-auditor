@@ -1334,9 +1334,10 @@ export class PostgresPlatformStore implements PlatformStore {
         and not data ? 'revokedAt' returning delivery_bundles.id`;
     return rows.length > 0;
   }
-  async revokeDeliveryBundle(id: string, at: string): Promise<void> {
-    await this.sql`update delivery_bundles set token = null, data = (data - 'token') || ${JSON.stringify({revokedAt: at})}::jsonb
-      where id = ${id} and data ? 'issuedAt' and not data ? 'revokedAt'`;
+  async revokeDeliveryBundle(id: string, at: string): Promise<boolean> {
+    const rows = await this.sql`update delivery_bundles set token = null, data = (data - 'token') || ${JSON.stringify({revokedAt: at})}::jsonb
+      where id = ${id} and data ? 'issuedAt' and not data ? 'revokedAt' returning id`;
+    return rows.length > 0;
   }
 
   async documentWorkLog(clientId: string, documentIds: string[]): Promise<DocumentWorkEvent[]> {

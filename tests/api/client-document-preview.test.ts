@@ -30,6 +30,20 @@ describe('inventory preview isolation', () => {
     expect((await GET(request(), context)).status).toBe(401);
     expect(deps.documents).not.toHaveBeenCalled(); expect(deps.fetchBytes).not.toHaveBeenCalled();
   });
+  it('charges the document budget for a preview it renders from fetched bytes', async () => {
+    // Every page turn in the reader launches the Preview JVM. The upload path
+    // charged; this path did not, so the reader was the one free document door.
+    process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR = '1';
+    try {
+      expect((await GET(request(), context)).status).toBe(200);
+      const refused = await GET(request(), context);
+      expect(refused.status).toBe(429);
+      expect(deps.render).toHaveBeenCalledOnce();
+    } finally {
+      delete process.env.AUDITOR_MAX_DOCUMENTS_PER_HOUR;
+    }
+  });
+
   it('refuses an obsolete reading before fetching source bytes', async () => {
     const response = await GET(request('old'), context);
     expect(response.status).toBe(409); expect((await response.json()).error).toBe('preview_reading_changed');

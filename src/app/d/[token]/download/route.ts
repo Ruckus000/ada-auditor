@@ -5,7 +5,9 @@ import { createRequestId } from '../../../api/_lib/request-id';
 import { logWarn } from '../../../../services/logger';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
-const headers = {'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow', 'referrer-policy': 'no-referrer'};
+// `private` as well as `no-store`, matching `/r`: a client's documents behind a
+// token must not be retained by anything between the function and the reader.
+const headers = {'cache-control': 'private, no-store', 'x-robots-tag': 'noindex, nofollow', 'referrer-policy': 'no-referrer'};
 export async function GET(_request: Request, {params}: {params: Promise<{token: string}>}) {
   const requestId = createRequestId();
   const {token} = await params;

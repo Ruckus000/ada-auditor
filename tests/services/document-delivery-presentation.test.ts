@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { deliveryError, inDeliveryQueue, selectableForDelivery, type DeliveryRow } from '../../src/services/presentation/document-delivery';
-const row: DeliveryRow = { documentId: 'd1', url: 'https://example.test/a.pdf', reason: null, excluded: false, signedOff: false, delivered: false, eligible: true };
+const row: DeliveryRow = { documentId: 'd1', url: 'https://example.test/a.pdf', reason: null, excluded: false, signedOff: false, delivered: false, eligible: true, fingerprint: 'f'.repeat(64), knownDifferences: [] };
 describe('delivery queues', () => {
   it('requires a current eligible signoff for bundle selection', () => {
     expect(selectableForDelivery(row)).toBe(false);

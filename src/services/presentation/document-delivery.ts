@@ -2,6 +2,10 @@
 export type DeliveryRow = {
   documentId: string; url: string; reason: string | null; excluded: boolean;
   exclusionReason?: string; signedOff: boolean; delivered: boolean; eligible: boolean;
+  /** The state this row was shown in; a sign-off must name it. */
+  fingerprint: string;
+  /** Fidelity items that travel with the file. Count-only sentences. */
+  knownDifferences: Array<{criterion: string; detail: string}>;
 };
 export type DeliveryQueue = 'all' | 'work' | 'signoff' | 'delivery' | 'delivered' | 'excluded';
 export function inDeliveryQueue(row: DeliveryRow, queue: DeliveryQueue): boolean {

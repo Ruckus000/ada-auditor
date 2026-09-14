@@ -12,11 +12,13 @@ import { getRunCounter } from './run-counter';
 /**
  * A spent ceiling, as the refusal a route hands back.
  *
- * Two ceilings answer this way. Document work has eight doors — four uploads
- * that share `readDocumentUpload`, and four that fetch or catalog by URL —
- * and discovery has two crawl routes; every one asks here after the caller
- * is authorised and before anything is buffered, probed, fetched or
- * launched. A refused request is therefore not a document, not a row, not a
+ * Two ceilings answer this way. Document work asks here at every door that
+ * launches a stage — uploads through `readDocumentUpload`, the URL and intake
+ * routes, the inventory preview, and delivery (`deliveryDependencies`) — and
+ * discovery at its two crawl routes; every one asks after the caller is
+ * authorised and before anything is buffered, probed, fetched or launched.
+ * Not counted by hand any more: `browser-routes-are-packaged.test.ts` requires
+ * every route that reaches `stage.ts` to reach this file. A refused request is therefore not a document, not a row, not a
  * crawl and not an event: the caller was told, which is the rule a refused
  * audit run already follows.
  *

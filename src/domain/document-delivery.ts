@@ -34,7 +34,17 @@ export type DeliveryEntry = {
   verificationSha256: string;
   signedBy: string;
   signedAt: string;
+  /**
+   * What the fidelity check found and nobody can answer: a count the delivered
+   * PDF and its source disagree on. It does not block sign-off (no one can
+   * supply the list item an export dropped), so it has to travel with the file
+   * instead — a client told only "verification passed" would be told less than
+   * we know. Count-only sentences. Absent on bundles prepared before it existed.
+   */
+  knownDifferences?: KnownDifference[];
 };
+
+export type KnownDifference = {criterion: string; detail: string};
 
 export type DeliveryBundle = {
   id: string;
@@ -69,5 +79,6 @@ export interface DocumentDeliveryStore {
   getDeliveryBundle(id: string): Promise<DeliveryBundle | null>;
   getDeliveryByToken(token: string): Promise<DeliveryBundle | null>;
   issueDeliveryBundle(id: string, expectedRevision: string, token: string, actor: string, at: string): Promise<boolean>;
-  revokeDeliveryBundle(id: string, at: string): Promise<void>;
+  /** True only when this call revoked a live link; an unissued or already-revoked bundle answers false. */
+  revokeDeliveryBundle(id: string, at: string): Promise<boolean>;
 }

@@ -849,9 +849,11 @@ export class MemoryPlatformStore implements PlatformStore {
     if (!r.issuedAt) Object.assign(r, { token, issuedAt: at, issuedBy: actor });
     return true;
   }
-  async revokeDeliveryBundle(id: string, at: string): Promise<void> {
+  async revokeDeliveryBundle(id: string, at: string): Promise<boolean> {
     const r = this.bundles.get(id);
-    if (r?.issuedAt && !r.revokedAt) { r.revokedAt = at; delete r.token; }
+    if (!r?.issuedAt || r.revokedAt) return false;
+    r.revokedAt = at; delete r.token;
+    return true;
   }
 
   async documentWorkLog(clientId: string, documentIds: string[]): Promise<DocumentWorkEvent[]> {
