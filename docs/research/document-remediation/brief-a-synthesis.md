@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-25 · Written in the coordinating chat, which is where synthesis
 happens under [briefs/README.md](briefs/README.md) rule 9. Brief A's own results
-are at [source-export-results.md](source-export-results.md) on branch
+are at [source-export-results.md](https://github.com/Ruckus000/ada-auditor/blob/d9ea7cc6d4171e25a52b14b92f8944fd5a68a9d1/docs/research/document-remediation/source-export-results.md) on branch
 `claude/brief-a-source-export` and are not edited here.
 
 ## Every number in Brief A reproduces

@@ -5,9 +5,10 @@
 
 **Date:** 2026-08-25 · Written in the coordinating chat under
 [briefs/README.md](briefs/README.md) rule 9. Source results are
-[source-export-results.md](source-export-results.md) on
+[source-export-results.md](https://github.com/Ruckus000/ada-auditor/blob/d9ea7cc6d4171e25a52b14b92f8944fd5a68a9d1/docs/research/document-remediation/source-export-results.md) on
 `claude/brief-a-source-export` and
-[vlm-scale-results.md](vlm-scale-results.md) on `claude/vlm-scale-b`. Neither is
+`vlm-scale-results.md` on `claude/vlm-scale-b`, which is not pushed (see the
+[index](README.md)). Neither is
 edited here. Brief A's verification is in
 [brief-a-synthesis.md](brief-a-synthesis.md).
 

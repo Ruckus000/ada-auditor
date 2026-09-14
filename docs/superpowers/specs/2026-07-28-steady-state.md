@@ -53,4 +53,4 @@ Each audit run emits one JSON log line (`type: audit_run_log`) with:
 - `GET /api/health` — liveness (always OK when process is up)
 - `GET /api/ready` — readiness requires `AUDITOR_RUN_TOKEN` configured (503 otherwise)
 
-See also: [Environment variables](env.md)
+See also: [Environment variables](../../env.md)

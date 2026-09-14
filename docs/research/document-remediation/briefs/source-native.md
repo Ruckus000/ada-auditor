@@ -21,7 +21,7 @@ omit.**
 [position-2026-08-25.md](../position-2026-08-25.md) records the measurement that
 makes this the only live path: **`[V]` zero of nine real documents is reachable
 under zero human input.** Five are blocked by alt text, closed by
-[Brief B](../vlm-scale-results.md). Four are blocked by a document title that
+Brief B. Four are blocked by a document title that
 cannot be copied, because those four produce **zero headings**.
 
 [briefs-synthesis.md](../briefs-synthesis.md) records why the source path is
