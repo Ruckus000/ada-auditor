@@ -47,7 +47,12 @@ Round 4 separates the two things round 3 mixed: real depth from harvest, and pla
     **Hygiene finding.** The source key element is not suspect in these cases, because the key tree has the text once. The retagged candidate copy (ODL) duplicates text objects, mostly under Figure. K34 removes the duplicated labels, but the candidate pool still carries the duplicate cards as unmatched.
     - `existing_tag` is not used by the SFT prompt, so the Figure tag on a kept copy does not reach the model.
     - On identical-box ties, K34 keeps the first card in input order, which may be the Figure-tagged copy. Its box and image are identical, so the label is unaffected.
-    - Open question for a later round: whether the candidate stage should collapse identical-box duplicates before selection (it would also change per-document candidate caps).
+    - **K35, reviewer ruling, applied from keys-c6 onward (be46806).** `build_keys` drops later cards whose (page, box rounded to 1 pt, normalised text) equals an earlier card's, before candidate selection. The first copy is kept, and drops are counted per document in `report.json` (`duplicate_cards_dropped`).
+      - This stops Figure copies from consuming a document's 150-card cap.
+      - K34 remains the backstop for the same text at a different box.
+      - keys-all-3 stays pinned and was built without K35, so its 93 K34 rows are removed by K34 in keys-all-4, not by K35.
+      - c7 iteration 2 was built without K35; c7 iteration 3 is built with it.
+      - K35 changes the input to the candidate selector, so per-page medians, repeat counts and the random-slice draws shift for any document that had duplicates.
   - Consequence for P8: the 6 validation drops shrink the fixed comparison set. Pass/fail is judged on the **intersection** of round 3's 279 validation ids and keys-all-4's validation ids, expected to be 273. r2 and r3 are re-scored on exactly that set, and the dropped ids are listed in the results.
 - **c5 excluded.** c5 stays on disk and never enters an SFT again (P9).
 - **c7 surface facts.** Measured with `labels/surface_facts.py`, against pooled real train H and with c5 for reference. Pass rule: each share within ±10 points of pooled real train H.
