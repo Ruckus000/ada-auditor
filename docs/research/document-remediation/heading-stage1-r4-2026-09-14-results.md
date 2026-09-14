@@ -28,6 +28,26 @@ Round 4 separates the two things round 3 mixed: real depth from harvest, and pla
     - By type: Other 45, H 29, P 15, TH 3, Lbl 1.
     - By source, across all rows in those groups: stripped-tree 114, planted 20, word-outline 2.
     - `c3-0577` was one of these groups, not the only one.
+  - **What the double-matches are.** All 43 groups are on a single page, and 41 of 43 have `repeats_on_pages` = 1, so they are **not running heads or repeated page furniture**. Most are candidate-extraction duplicates in the retagged candidate copy, not repeated text in the source.
+
+    | Class | Groups | Extra rows |
+    |---|---|---|
+    | Identical box (same x0/y0), one or more copies tagged `Figure` by the retagger (stripped-tree) | 22 | 72 |
+    | Identical box, no Figure copy (planted 8, stripped-tree 2, word-outline 1) | 11 | 11 |
+    | Identical box + Figure copy (planted) | 2 | 2 |
+    | Different box: the same text genuinely twice on a page (stripped-tree) | 7 + 1 with a Figure copy | 8 |
+
+    Five examples, ids only:
+    1. `c4-0028`, key H: one text line at one position yields 22 cards, one retagged H2 and 21 retagged Figure. The retagger emitted the same text object once as text and 21 times inside Figure elements.
+    2. `c3-0875`, key P: one one-word line gives two cards at an identical box, retagged H3 and Figure.
+    3. `c3-0423`, key P: a single numeral gives two cards at an identical box, retagged Caption and Figure.
+    4. `c5-0006`, key P, planted: a table-cell line gives two cards at an identical box, retagged TD and P.
+    5. `c3-0577`, key H: the same heading text at two positions 28 pt apart on page 24, retagged H1 and H2. This is the only kind where the source really repeats the text.
+
+    **Hygiene finding.** The source key element is not suspect in these cases, because the key tree has the text once. The retagged candidate copy (ODL) duplicates text objects, mostly under Figure. K34 removes the duplicated labels, but the candidate pool still carries the duplicate cards as unmatched.
+    - `existing_tag` is not used by the SFT prompt, so the Figure tag on a kept copy does not reach the model.
+    - On identical-box ties, K34 keeps the first card in input order, which may be the Figure-tagged copy. Its box and image are identical, so the label is unaffected.
+    - Open question for a later round: whether the candidate stage should collapse identical-box duplicates before selection (it would also change per-document candidate caps).
   - Consequence for P8: the 6 validation drops shrink the fixed comparison set. Pass/fail is judged on the **intersection** of round 3's 279 validation ids and keys-all-4's validation ids, expected to be 273. r2 and r3 are re-scored on exactly that set, and the dropped ids are listed in the results.
 - **c5 excluded.** c5 stays on disk and never enters an SFT again (P9).
 - **c7 surface facts.** Measured with `labels/surface_facts.py`, against pooled real train H and with c5 for reference. Pass rule: each share within ±10 points of pooled real train H.
