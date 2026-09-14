@@ -48,6 +48,7 @@ SPLIT = (("train", 0.6), ("validation", 0.2), ("test", 0.2))
 GROUP_KEYS = ("document_sha256", "template_id", "client_id", "answer_id")
 MODEL_FIELDS = ("prediction", "model", "model_role", "heading_flag", "raw", "confidence")
 LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted")
+PREDICTION_TYPES = ("H", "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Other", "Unsure")
 UNKNOWN_TEMPLATE = "unknown"
 # Every development and spent-holdout document the Qwen spikes have read, by
 # stem. Real labels are keyed by bytes, so a match here means a synthetic
@@ -207,6 +208,8 @@ def read_prediction(raw: str) -> tuple[str, int | None]:
     if data is None:
         return "parse-failure", None
     level = data.get("level") if data.get("level") in range(1, 7) else None
+    if "type" in data and data.get("type") not in PREDICTION_TYPES:
+        return "parse-failure", None
     if data.get("type") == "Unsure" or (data.get("abstain") is True and "heading" not in data and "type" not in data):
         return "abstain", None
     if isinstance(data.get("type"), str):
@@ -231,7 +234,13 @@ def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
         else:
             outcome, level = read_prediction(raw)
             pd = prediction_dict(raw)
-            if row.get("type") and pd and isinstance(pd.get("type"), str) and "Other" not in (row["type"], pd["type"]):
+            if (
+                row.get("type")
+                and pd
+                and isinstance(pd.get("type"), str)
+                and pd["type"] in PREDICTION_TYPES
+                and "Other" not in (row["type"], pd["type"])
+            ):
                 type_confusion[f"{row['type']}->{pd['type']}"] += 1
         if outcome in ("abstain", "parse-failure"):
             confusion[outcome] += 1
@@ -386,6 +395,9 @@ def self_check() -> None:
     assert read_prediction('{"type":"Caption","rule":3}') == ("not-heading", None)
     assert read_prediction('{"type":"H","level":2,"rule":1}') == ("heading", 2)
     assert read_prediction('{"type":"Unsure"}') == ("abstain", None)
+    assert read_prediction('{"type":"Heading","rule":1}') == ("parse-failure", None)
+    assert read_prediction('{"type":"h2","rule":1}') == ("parse-failure", None)
+    assert read_prediction('{"type": 3}') == ("parse-failure", None)
     typed = [{**label(0, False, "c", "t"), "id": "t1", "type": "Caption"}, {**label(1, True, "c", "t", 2), "id": "t2", "type": "H"}]
     got = evaluate(typed, {"t1": '{"type":"H","level":1,"rule":1}', "t2": '{"type":"H","level":2,"rule":1}'})
     assert got["confusion"]["fp"] == 1 and got["type_confusion"] == {"Caption->H": 1, "H->H": 1}
