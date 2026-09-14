@@ -9,7 +9,10 @@ The build refuses to start over an existing <--out>/labels.jsonl unless
 --overwrite is passed (K30). One bad file does not stop it (K31): an original
 Cards cannot read is excluded as "unreadable", and a failed ODL batch is
 recorded under odl_failed_batches while its documents are excluded as
-"tagger-batch-failed" and the other batches carry on.
+"tagger-batch-failed" and the other batches carry on. An original Strip cannot
+write is excluded as "strip-failed" (K33). Only the Cards call is guarded, so a
+Python bug in selection or matching still crashes, and a manifest path that
+does not exist is a hard error naming the id (K33).
 """
 from __future__ import annotations
 
@@ -45,6 +48,7 @@ def originals(rows: list[dict], word_pdfs: Path, staged: Path, staging_optional:
     excluded = {} if excluded is None else excluded
     if staging_optional:
         def is_original(r: dict) -> bool:
+            must_exist(r["id"], Path(r["path"]))
             try:
                 return has_tree(Path(r["path"]))
             except UNREADABLE:
@@ -70,24 +74,56 @@ def non_container_cards(cards: list[dict]) -> list[dict]:
     return [c for c in cards if c.get("existing_tag") not in CONTAINER_TAGS]
 
 
+def must_exist(doc_id: str, path: Path) -> None:
+    """K33: a missing path is a wrong manifest, not a bad file — fail loud."""
+    if not path.exists():
+        raise FileNotFoundError(f"manifest row {doc_id}: {path} does not exist")
+
+
+def read_dump(path: Path, dump: Callable) -> dict | None:
+    """Only the Cards call is guarded (K33): Python below it must still crash."""
+    try:
+        return dump(path, compile=False)
+    except UNREADABLE:
+        return None
+
+
 def key_document(d: dict, dump: Callable = dump_pdf, failures: Callable = verapdf_failures) -> tuple[list[dict] | None, list[str]]:
     """The original's key blocks if it passes hygiene, else None and the reasons."""
-    try:
-        kb = key_blocks(dump(Path(d["original"]), compile=False))
-    except UNREADABLE:
+    must_exist(d["id"], Path(d["original"]))
+    raw = read_dump(Path(d["original"]), dump)
+    if raw is None:
         return None, ["unreadable"]
+    kb = key_blocks(raw)
     ok, reasons = verdict(failures(Path(d["original"])), heading_sentence_share(kb), len(kb))
     return (kb if ok else None), reasons
 
 
-def document_cards(tagged: Path, doc_id: str, rng: random.Random, dump: Callable = dump_pdf) -> list[dict]:
-    """One tagged copy's candidate cards: containers out (K24), select, annotate, cap."""
-    cards, _ = blocks_to_cards(dump(tagged, compile=False).get("blocks") or [])
+def document_cards(tagged: Path, doc_id: str, rng: random.Random, dump: Callable = dump_pdf) -> list[dict] | None:
+    """One tagged copy's candidate cards: containers out (K24), select, annotate, cap.
+    None when Cards cannot read the tagged copy; the rng is not drawn in that case."""
+    raw = read_dump(tagged, dump)
+    if raw is None:
+        return None
+    cards, _ = blocks_to_cards(raw.get("blocks") or [])
     chosen = select_candidates(non_container_cards(cards), rng)
     for c in chosen:
         c["document_id"] = doc_id; c["kind"] = "pdf"; c["card_id"] = c["locator"]
         c["norm"] = text_norm(c["text"])
     return cap_per_document(chosen, rng)
+
+
+def strip_usable(usable: list[dict], stripped_dir: Path, excluded: dict, strip: Callable = strip_pdf) -> list[dict]:
+    """Strip each usable original; one that Strip cannot write is excluded as "strip-failed" (K33)."""
+    kept = []
+    for d in usable:
+        try:
+            strip(Path(d["original"]), stripped_dir / f"{d['id']}.pdf")
+        except UNREADABLE:
+            excluded[d["id"]] = ["strip-failed"]
+            continue
+        kept.append(d)
+    return kept
 
 
 def tagger_miss_reason(doc_id: str, failed_batches: list[dict]) -> list[str]:
@@ -184,21 +220,19 @@ def main() -> None:
     for dir_ in (stripped_dir, tagged_dir, work_dir):
         shutil.rmtree(dir_, ignore_errors=True)
         dir_.mkdir(parents=True)
-    for d in usable:
-        strip_pdf(Path(d["original"]), stripped_dir / f"{d['id']}.pdf")
+    stripped = strip_usable(usable, stripped_dir, excluded)
     odl_failed = run_odl_batches(stripped_dir, tagged_dir, work_dir, a.odl_batch)
     rng = random.Random(SEED)
     match_counts, types = Counter(), Counter()
     n_rows = n_unmatched = 0
     with_rows: set[str] = set()
     with (out_dir / "labels.jsonl").open("w") as f, (out_dir / "unmatched.jsonl").open("w") as u:
-        for d in usable:
+        for d in stripped:
             tagged = tagged_dir / f"{d['id']}.pdf"
             if not tagged.is_file():
                 excluded[d["id"]] = tagger_miss_reason(d["id"], odl_failed); continue
-            try:
-                cards = document_cards(tagged, d["id"], rng)
-            except UNREADABLE:
+            cards = document_cards(tagged, d["id"], rng)
+            if cards is None:
                 excluded[d["id"]] = ["tagger-output-unreadable"]; continue
             by_page = defaultdict(list)
             for k in keys[d["id"]]:

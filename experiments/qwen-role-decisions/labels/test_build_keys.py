@@ -38,22 +38,30 @@ def test_container_cards_are_not_candidates():
     assert [c["locator"] for c in non_container_cards(cards)] == ["b", "d", "f"]
 
 
+def pdfs(d, *names):
+    """Existing (empty) files: K33 makes a missing manifest path a hard error."""
+    for n in names:
+        (Path(d) / n).write_bytes(b"%PDF")
+    return {n: str(Path(d) / n) for n in names}
+
+
 def test_staging_optional_asks_the_tree_not_staging_json():
-    rows = [{"id": "c01", "kind": "pdf", "path": "/x/c01.pdf", "host": "a", "sha256": "1" * 64},
-            {"id": "c02", "kind": "pdf", "path": "/x/c02.pdf", "host": "b", "sha256": "2" * 64},
-            {"id": "c03", "kind": "docx", "path": "/x/c03.docx", "host": "c", "sha256": "3" * 64},
-            {"id": "c04", "kind": "docx", "path": "/x/c04.docx", "host": "d", "sha256": "4" * 64}]
     asked = []
 
     def has_tree(p):
-        asked.append(p)
+        asked.append(p.name)
         return p.name == "c01.pdf"
 
     with tempfile.TemporaryDirectory() as d:
+        at = pdfs(d, "c01.pdf", "c02.pdf")
+        rows = [{"id": "c01", "kind": "pdf", "path": at["c01.pdf"], "host": "a", "sha256": "1" * 64},
+                {"id": "c02", "kind": "pdf", "path": at["c02.pdf"], "host": "b", "sha256": "2" * 64},
+                {"id": "c03", "kind": "docx", "path": "/x/c03.docx", "host": "c", "sha256": "3" * 64},
+                {"id": "c04", "kind": "docx", "path": "/x/c04.docx", "host": "d", "sha256": "4" * 64}]
         word = Path(d) / "word-pdfs"; word.mkdir(); (word / "c03.pdf").write_bytes(b"x")
         out = originals(rows, word, Path(d) / "no-staging-here", staging_optional=True, has_tree=has_tree)
     assert [(o["id"], o["source"]) for o in out] == [("c01", "stripped-tree"), ("c03", "word-outline")]
-    assert out[0]["original"] == "/x/c01.pdf" and asked == [Path("/x/c01.pdf"), Path("/x/c02.pdf")]
+    assert out[0]["original"] == at["c01.pdf"] and asked == ["c01.pdf", "c02.pdf"]
 
 
 def test_batches_hold_at_most_the_batch_size():
@@ -118,10 +126,6 @@ def parse_args_overwrite():
 
 
 def test_unreadable_original_is_excluded_in_the_tree_check_and_the_run_goes_on():
-    rows = [{"id": "c01", "kind": "pdf", "path": "/x/c01.pdf", "host": "a", "sha256": "1" * 64},
-            {"id": "c02", "kind": "pdf", "path": "/x/c02.pdf", "host": "b", "sha256": "2" * 64},
-            {"id": "c03", "kind": "pdf", "path": "/x/c03.pdf", "host": "c", "sha256": "3" * 64}]
-
     def has_tree(p):
         if p.name == "c02.pdf":
             raise RuntimeError("Cards: encrypted")
@@ -129,21 +133,24 @@ def test_unreadable_original_is_excluded_in_the_tree_check_and_the_run_goes_on()
 
     excluded = {}
     with tempfile.TemporaryDirectory() as d:
+        at = pdfs(d, "c01.pdf", "c02.pdf", "c03.pdf")
+        rows = [{"id": i, "kind": "pdf", "path": at[f"{i}.pdf"], "host": i, "sha256": "1" * 64} for i in ("c01", "c02", "c03")]
         out = originals(rows, Path(d), Path(d), staging_optional=True, has_tree=has_tree, excluded=excluded)
     assert [o["id"] for o in out] == ["c01", "c03"] and excluded == {"c02": ["unreadable"]}
 
 
 def test_unreadable_original_is_excluded_in_the_key_step():
     from labels.build_keys import key_document
-    doc = {"id": "c01", "original": "/x/c01.pdf"}
 
     def broken(p, compile=False):
         raise RuntimeError("damaged xref")
 
-    assert key_document(doc, dump=broken, failures=lambda p: set()) == (None, ["unreadable"])
     dump = {"blocks": [{"locator": "d:0", "existing_tag": "H1", "text": "Fees", "page": 0},
                        {"locator": "d:1", "existing_tag": "P", "text": "The fee is due.", "page": 0}]}
-    kb, reasons = key_document(doc, dump=lambda p, compile=False: dump, failures=lambda p: set())
+    with tempfile.TemporaryDirectory() as d:
+        doc = {"id": "c01", "original": pdfs(d, "c01.pdf")["c01.pdf"]}
+        assert key_document(doc, dump=broken, failures=lambda p: set()) == (None, ["unreadable"])
+        kb, reasons = key_document(doc, dump=lambda p, compile=False: dump, failures=lambda p: set())
     assert [k["locator"] for k in kb] == ["d:0", "d:1"] and reasons == []
 
 
@@ -168,3 +175,65 @@ def test_the_card_path_filters_containers_before_selection():
     tags = {c["existing_tag"] for c in cards}
     assert not tags & {"Table", "L", "TOC"} and "H1" in tags, tags
     assert all(c["document_id"] == "c01" and c["kind"] == "pdf" and c["card_id"] == c["locator"] and c["norm"] for c in cards)
+
+
+def test_a_missing_manifest_path_is_a_hard_error_naming_the_id():
+    from labels.build_keys import key_document
+    rows = [{"id": "c77", "kind": "pdf", "path": "/nowhere/c77.pdf", "host": "a", "sha256": "1" * 64}]
+    for call in (lambda: originals(rows, Path("/nowhere"), Path("/nowhere"), staging_optional=True, has_tree=lambda p: True, excluded={}),
+                 lambda: key_document({"id": "c77", "original": "/nowhere/c77.pdf"}, dump=lambda p, compile=False: {"blocks": []}, failures=lambda p: set())):
+        try:
+            call()
+        except FileNotFoundError as err:
+            assert "c77" in str(err), err
+        else:
+            raise AssertionError("a missing manifest path must raise, not exclude")
+
+
+def test_a_strip_failure_excludes_the_document_and_the_rest_are_stripped():
+    from labels.build_keys import strip_usable
+
+    def strip(src, dest):
+        if src.name == "c02.pdf":
+            raise RuntimeError("Strip: owner password")
+        dest.write_bytes(b"stripped")
+
+    excluded = {}
+    with tempfile.TemporaryDirectory() as d:
+        at = pdfs(d, "c01.pdf", "c02.pdf", "c03.pdf")
+        usable = [{"id": i, "original": at[f"{i}.pdf"]} for i in ("c01", "c02", "c03")]
+        out = Path(d) / "stripped"; out.mkdir()
+        kept = strip_usable(usable, out, excluded, strip=strip)
+        assert sorted(f.name for f in out.glob("*.pdf")) == ["c01.pdf", "c03.pdf"]
+    assert [k["id"] for k in kept] == ["c01", "c03"] and excluded == {"c02": ["strip-failed"]}
+
+
+def test_a_python_bug_in_selection_is_not_an_exclusion():
+    import random
+    import labels.build_keys as bk
+
+    raised = []
+
+    def buggy(cards, rng):
+        raise raised[-1]("why")
+
+    blocks = [{"locator": "t:0", "existing_tag": "H1", "text": "Fees", "font_pt": 11, "weight": "bold", "page": 0,
+               "x0": 0, "y0": 0, "x1": 100, "y1": 10, "ancestors": []}]
+    real = bk.select_candidates
+    bk.select_candidates = buggy
+    try:
+        # ValueError too: it is in UNREADABLE, so only a try narrowed to the dump lets it through.
+        for exc in (KeyError, ValueError):
+            raised.append(exc)
+            try:
+                bk.document_cards(Path("/x/c01.pdf"), "c01", random.Random(1), dump=lambda p, compile=False: {"blocks": blocks})
+            except exc:
+                pass
+            else:
+                raise AssertionError(f"a {exc.__name__} in selection must propagate")
+    finally:
+        bk.select_candidates = real
+    # and an unreadable tagged copy is reported as None, not raised
+    def broken(p, compile=False):
+        raise RuntimeError("damaged")
+    assert bk.document_cards(Path("/x/c01.pdf"), "c01", random.Random(1), dump=broken) is None
