@@ -1,0 +1,43 @@
+# cohort 4 - yield-targeted City/County .gov DocumentCenter sweep
+# kept only: PDFs whose bytes carry /StructTreeRoot and >=1 /S /H1../S /H6, plus all .docx
+# candidate order: cohort-3 candidates.txt from offset 1300 (cohort 3 consumed the first 1246)
+# per-host id sample seeded 20260914:<host>
+# <id>.<ext>\t<url>
+# generated 2026-09-14T03:47:12
+c4-0001.pdf	https://www.athenstx.gov/DocumentCenter/View/1471
+c4-0002.pdf	https://www.athenstx.gov/DocumentCenter/View/1505
+c4-0003.pdf	https://www.athenstx.gov/DocumentCenter/View/233
+c4-0004.pdf	https://www.athenstx.gov/DocumentCenter/View/414
+c4-0005.pdf	https://www.athenstx.gov/DocumentCenter/View/1621
+c4-0006.pdf	https://www.athenstx.gov/DocumentCenter/View/1054
+c4-0007.pdf	https://www.welltonaz.gov/DocumentCenter/View/364
+c4-0008.pdf	https://www.mountairymd.gov/DocumentCenter/View/800
+c4-0009.pdf	https://www.greenwichct.gov/DocumentCenter/View/1335
+c4-0010.pdf	https://www.iredellcountync.gov/DocumentCenter/View/300
+c4-0011.pdf	https://www.yatescountyny.gov/DocumentCenter/View/1200
+c4-0012.pdf	https://www.yatescountyny.gov/DocumentCenter/View/1810
+c4-0013.pdf	https://www.falmouthma.gov/DocumentCenter/View/1126
+c4-0014.pdf	https://www.yatescountyny.gov/DocumentCenter/View/2044
+c4-0015.pdf	https://www.stuartfl.gov/DocumentCenter/View/567
+c4-0016.pdf	https://www.tetoncountywy.gov/DocumentCenter/View/3003
+c4-0017.pdf	https://www.stuartfl.gov/DocumentCenter/View/2124
+c4-0018.pdf	https://www.tetoncountywy.gov/DocumentCenter/View/3993
+c4-0019.pdf	https://www.stuartfl.gov/DocumentCenter/View/3099
+c4-0020.pdf	https://www.stuartfl.gov/DocumentCenter/View/932
+c4-0021.pdf	https://www.cityofaventura.gov/DocumentCenter/View/3306
+c4-0022.pdf	https://www.jerseyvillage.gov/DocumentCenter/View/1292
+c4-0023.pdf	https://www.jerseyvillage.gov/DocumentCenter/View/1537
+c4-0024.pdf	https://www.coldwatermi.gov/DocumentCenter/View/3459
+c4-0025.pdf	https://www.coldwatermi.gov/DocumentCenter/View/1468
+c4-0026.pdf	https://www.shrewsburyma.gov/DocumentCenter/View/2004
+c4-0027.pdf	https://www.coldwatermi.gov/DocumentCenter/View/2359
+c4-0028.pdf	https://www.jerseyvillage.gov/DocumentCenter/View/454
+c4-0029.pdf	https://www.shrewsburyma.gov/DocumentCenter/View/984
+c4-0030.pdf	https://www.antiochca.gov/DocumentCenter/View/520
+c4-0031.pdf	https://www.antiochca.gov/DocumentCenter/View/1536
+c4-0032.pdf	https://www.hardeevillesc.gov/DocumentCenter/View/300
+c4-0033.pdf	https://www.antiochca.gov/DocumentCenter/View/2864
+c4-0034.pdf	https://www.antiochca.gov/DocumentCenter/View/1517
+c4-0035.pdf	https://www.antiochca.gov/DocumentCenter/View/529
+c4-0036.pdf	https://www.antiochca.gov/DocumentCenter/View/1189
+c4-0037.pdf	https://www.hardeevillesc.gov/DocumentCenter/View/1086
