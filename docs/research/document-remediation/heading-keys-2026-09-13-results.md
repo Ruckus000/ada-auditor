@@ -65,7 +65,7 @@ to a fresh tagger run, so the labels produced against it hold; the build
 code now clears the folder before tagging.
 
 ## Split
-- Salt `1789352483-c15bc8bc`; train/validation/test = 892/86/76 rows;
+- (build 3) Salt `1789352483-c15bc8bc`; train/validation/test = 892/86/76 rows;
   documents 30/6/8; hosts 26/6/6; H 209/16/6; non-H 683/70/70. Leakage
   check: none. `test.spent` absent.
 - Test split against the evaluator's floors: documents 8 (< 30, no); clients
@@ -74,7 +74,7 @@ code now clears the folder before tagging.
   labelled rows.
 
 ## Reproduction (ruling K21)
-The salt alone does not reproduce the split, because row groups are named
+(build 3) The salt alone does not reproduce the split, because row groups are named
 by random `answer_id`s. The untracked `out/keys/labels.jsonl`, whose sha256
 is recorded in `labels/split-keys-2026-09-13.json`, is the only
 reproduction path and must be archived. The evaluator's component naming
@@ -94,13 +94,13 @@ Stripped tagged PDFs skew toward better producers; transfer to untagged
 documents in the wild is measured at the Stage 2→3 audit (~400 blind cards,
 `labels.serve`), never here.
 
-- Cards.java's block set means keys never produce TH, TOCI, Lbl,
+- (build 3) Cards.java's block set means keys never produce TH, TOCI, Lbl,
   BlockQuote or Artifact; table cells and list items arrive as Other
   (rulings K7, K13).
 - Word keys are soffice's direct tagged export. They skip the product's
   flat-ODF repair and heading renumbering, so levels are the author's raw
   outline (ruling K11).
-- Stripped copies keep heading-named marked content (18 of 47) and
+- (build 3) Stripped copies keep heading-named marked content (18 of 47) and
   `/Outlines` (22 of 47). Renaming and dropping these on n41, r12 and n36
   left the tagger's headings identical (21/21, 95/95, 14/14) — that is no
   leak found on 3 documents, not a proof (ruling K22).
@@ -121,3 +121,80 @@ decisions:
   down-weighted, or a human-audited subset anchoring them — the roadmap's
   own kill remedy);
 - the harvest round, to reach the card and host floors.
+
+## Build 4 (review decisions)
+Peer review accepted Stage 0 as measured and decided four recorded items.
+Code commit 457fe6b; split commit fa91322. Nothing had been evaluated, so a
+rebuild and a new split were allowed. The build ran once and one split was
+drawn and kept.
+
+### The four decisions
+1. **Hygiene requires at least one heading (K19).** A key with no H block
+   with text is excluded as `no-headings`. An author who wrote no headings
+   has not made the heading/not-heading distinction the labels teach, so
+   that key's P rows say nothing about headings.
+2. **The split no longer groups by `answer_id` (K21).** Every key row has
+   its own random `answer_id`, so the key linked no rows. It only made
+   component names, and so the split, depend on random ids. `GROUP_KEYS` is
+   now document, template, client. `answer_id` is still required on a row.
+3. **Cards.java emits TH, TD, TOCI, Lbl and BlockQuote (K7, K13).** The key
+   vocabulary had types the candidate universe could not represent.
+   `StructText.find` recurses into every match, so cells and list labels
+   inside Table / L / LI are reached. Artifact stays out. On one staged
+   original, the change added Lbl 278, TH 360 and TD 464 blocks, and left
+   every existing type's count unchanged.
+4. **Strip.java also removes `/Outlines` (K22).** Bookmarks name headings,
+   so a stripped copy that keeps them can leak the answer.
+
+### Numbers
+- Population: 70 tagged originals, as before.
+- Hygiene: 23 usable, 47 excluded (67 %). **The kill threshold (> 50 %)
+  fires on this build.**
+  - Excluded by reason (a document can carry more than one): `no-headings`
+    37, `untagged-content (7.1-3)` 19, `level-skip (7.4.2)` 7,
+    `prose-headings (>=0.30)` 1, `checker-failed` 0.
+  - The 24 newly excluded documents are the 24 build-3 usable keys that
+    carried zero headings.
+- Report: `{"documents": 70, "usable": 23, "cards": 834, "unmatched": 489,
+  "match_rate": 0.630, "match": {"exact": 727, "contains": 64, "box": 43,
+  "none": 489}, "documents_with_rows": 23, "hosts": 20}`.
+  - All 23 usable documents contribute labelled rows, across 20 hosts.
+- Types: H 231 (H1 36, H2 102, H3 80, H4 13), P 364, Other 153, Lbl 40,
+  TH 38, TOCI 4, Caption 4. BlockQuote 0, Artifact 0.
+- Label sources: stripped-tree 487, word-outline 347.
+- Stripped copies: 23 of 23 carry no `/Outlines`. This was checked on the
+  raw bytes and on the catalog through qpdf. Heading-named marked content
+  still remains in content streams, which Strip does not rewrite.
+
+### Split
+- The **build-3 split is discarded before any evaluation.** `test.spent` is
+  absent.
+- Salt `1789354356-055bad5c`; labels sha256 `b5b1dbb6…85fdd7`; 20
+  components. Leakage check: none.
+- Train/validation/test:
+
+  | | train | validation | test |
+  |---|---|---|---|
+  | rows | 368 | 146 | 320 |
+  | documents | 15 | 3 | 5 |
+  | hosts | 13 | 3 | 4 |
+  | H | 115 | 59 | 57 |
+  | non-H | 253 | 87 | 263 |
+
+- Test split against the evaluator's floors: documents 5 (< 30, no); clients
+  4 (< 5, no); templates 4 (< 10, no); non-headings 263 (< 299, no).
+- **The split is reproducible from salt + labels sha, and that was
+  verified.** Running `eligibility_eval.py split` again on the same
+  `out/keys/labels.jsonl`, with the same salt and into a separate
+  directory, gave identical ids for all three parts. The labels file stays
+  untracked and must still be archived; only its sha is committed.
+
+### What else this changes
+- The Cards.java change also changes candidate cards for the manual
+  labelling pass and for any re-run of the Qwen spike Parts 8–28. Those
+  Parts dump through Cards.java, so their earlier results reproduce only
+  from Cards.java at 201eb80.
+- Heading-named marked content remains in content streams (not rewritten).
+- The match-rate gate miss stands: 0.630 vs ≥ 95 %. The matcher was not
+  tuned. The Stage 0 gate is still not met on all three counts: labelled
+  cards 834 vs ≥ 20,000, hosts 20 vs ≥ 60, match rate 0.630 vs ≥ 95 %.
