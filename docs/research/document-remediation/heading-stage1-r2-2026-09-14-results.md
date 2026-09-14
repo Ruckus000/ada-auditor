@@ -229,3 +229,33 @@ This section states what was measured. The data gap on deep headings is the lead
 **No-brace regression: did not persist.** 0 of 173 model outputs lack a brace, and parse failures are 0 on both populations. The smoke adapter's prose regression did not recur after one full pass over the SFT (S9's coverage verdict stands).
 
 The Stage 1 kill ("after three rounds with error analysis applied, validation accuracy flat below 97 %") is not yet reachable. This is the first measured round.
+
+## State at hand-off (2026-09-14 early morning)
+
+### What exists
+- **Adapters.** adapter-r2, sha256 `648c4063…d175c`. The Part 28 and Part 29 spike adapters are untouched.
+- **Splits.** split-keys-2026-09-13 (build 4); split-keys-all-2026-09-13 (round 2, the split used for this record's training and evaluation); split-keys-all-2-2026-09-14, which adds cohort 4 — rows 1877/279/519, documents 67/12/21, hosts 47/10/12. No training has run on it yet.
+- **Cohorts, with counts.** Build 4: 23 usable originals. Cohort 3: 963 harvested, 441 tagged, 55 usable, 37 hosts with rows. Cohort 4: 37 kept of 531 downloaded, 15 hosts, 23 usable, 12 hosts with rows, match rate 0.586.
+- **Combined TRUST/YIELD.** TRUST 37.0 % (203/548); YIELD 66.1 % (362/548).
+- **Test split.** Not evaluated anywhere (no `test.spent`). split-keys-all-2's test split fails only the 30-document floor (21).
+
+### Integrity (R7)
+The volume hit 0 bytes free at 03:36. Everything was verified intact afterward: the adapter-r2 sha, the 196 prediction lines, the SFT sha, the labels-vs-split sha, the build-4 labels sha, and `git fsck`. The likely cause was this session's own review scratch-copying `out/` (it reported briefly filling the disk), not the training run, which had already finished at 02:56. The harvester had attributed the fill to training; that attribution does not hold.
+
+### Queued, ready to launch: round 3
+- Train adapter-r3 on split-keys-all-2's train rows under the S10/S15 config: 408-contract images, grad checkpointing, one epoch over the emitted SFT, `--steps-per-save` equal to iters, and the 3 h gate with the 600 cap.
+- Evaluate adapter-r3 and adapter-r2 on the three fixed validation populations (build 4, cohort 3, cohort 4), with the S16 no-brace count and S18 by-decider confusion.
+- Skipped tonight by ruling: cohort 4 is too thin to move a 196-row validation beyond noise, and the hand-off time had arrived.
+
+### Open decisions for the user
+1. **The kill definition.** The Stage 0 kill as written counts TRUST and YIELD exclusions together. The TRUST share is 37 %, the YIELD share 66–71 %. Decide which share the kill measures.
+2. **The §5 numeral ruling.** ISO, and the rules in front of the model, call a bare number `Lbl`, while the key authors tagged 22 validation rows `P`.
+3. **Disk.** Whether to keep the Part 28/29 adapters (2.1 GiB, not regenerable) and whether to delete the regenerable `out/labels/pages` (1.8 GiB). Nothing has been deleted: ruling R6 holds deletion for the user.
+
+### Yield finding from cohort 4
+As the harvester measured it, and stated so:
+- the keep gate needs FlateDecode inflation, since a byte grep finds only 3 of 37 heading-bearing PDFs;
+- the live keep rate was 7.0 %, against 14.8 % simulated;
+- untagged PDFs numbered 166, against 87 tagged with no headings.
+
+Conclusion: municipal DocumentCenter PDFs are the wrong population for a heading dataset, and the next source has to change.
