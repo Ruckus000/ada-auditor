@@ -166,7 +166,7 @@ drawn and kept.
     - TRUST (7.1-3, 7.4.2, 7.4.4, prose-headings, checker-failed): 27
       exclusions over 70 = 39 %, counted as reason instances (19 + 7 + 1).
       Counted as distinct documents, it is 23 of 70 = 33 %, because n05,
-      n15 and r17 each carry two trust reasons.
+      n15, n50 and r17 each carry two trust reasons.
     - YIELD (no-headings): 37 of 70 = 53 %.
     - Both were recounted from `out/keys/report.json`'s `excluded` map. A
       document excluded for both kinds counts in both shares; 13 documents
@@ -226,7 +226,8 @@ drawn and kept.
   - Ruling K25 fixes the tie-break by the definition's §4 order (rule-3
     types, then H, then P, then Other, then IoU) in round 2's rebuild.
   - Build 4's labels and split are left as built.
-- `run.py`'s `OUT_OF_FLOW` and `CONTAINERS` do not know TD, TH or Lbl. A
+- `run.py`'s `OUT_OF_FLOW` and `CONTAINERS` do not know TD, TH, Lbl, TOCI or
+  BlockQuote. A
   re-run of spike Parts 8–28 against the widened Cards.java would therefore
   change which cards those arms can promote.
 - The match-rate gate miss stands: 0.630 vs ≥ 95 %. The matcher was not
