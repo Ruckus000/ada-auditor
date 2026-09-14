@@ -51,3 +51,28 @@ def test_label_and_row_contract():
     assert row["label_source"] == "stripped-tree" and row["actor"] == "key:stripped-tree"
     assert "text" not in row and row["existing_tag"] == "H1"
     assert refusals([row]) == []  # after Task 6 widens the evaluator; before it, this line fails
+
+
+def test_ties_break_by_section_4_order_not_list_order():
+    card = box(0, 0, 100, 10, norm="fee")
+    td = box(0, 0, 100, 10, norm="fee", type="Other", level=None, locator="k:td")
+    p = box(0, 0, 100, 10, norm="fee", type="P", level=None, locator="k:p")
+    assert match_candidate(card, [td, p]) == (p, "exact")
+    th = box(0, 0, 100, 10, norm="fee", type="TH", level=None, locator="k:th")
+    h2 = box(0, 0, 100, 10, norm="fee", type="H", level=2, locator="k:h2")
+    assert match_candidate(card, [h2, th]) == (th, "exact")
+    assert match_candidate(card, [td, h2]) == (h2, "exact")
+    # containment and box ties follow the same order
+    k, how = match_candidate(box(0, 0, 60, 10, norm="fe"), [box(0, 0, 100, 10, norm="feeschedule", type="Other", locator="k:o"), box(0, 0, 100, 10, norm="feeschedule", type="H", level=1, locator="k:h")])
+    assert how == "contains" and k["locator"] == "k:h"
+    k, how = match_candidate(box(2, 1, 98, 9, norm="glyph"), [box(0, 0, 100, 10, norm="x", type="Other", locator="k:o"), box(0, 0, 100, 10, norm="y", type="Caption", locator="k:c")])
+    assert how == "box" and k["locator"] == "k:c"
+
+
+def test_rank_then_iou_and_single_candidate_unchanged():
+    card = box(0, 0, 100, 10, norm="fee")
+    near = box(0, 0, 100, 10, norm="fee", type="P", locator="k:near")
+    far = box(0, 0, 200, 10, norm="fee", type="P", locator="k:far")
+    unknown = box(0, 0, 100, 10, norm="fee", type="Figure", locator="k:u")
+    assert match_candidate(card, [far, near, unknown])[0]["locator"] == "k:near"
+    assert match_candidate(card, [far])[0]["locator"] == "k:far"

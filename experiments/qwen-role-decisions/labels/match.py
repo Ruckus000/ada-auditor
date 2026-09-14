@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 CONTAIN_IOU = 0.3
 BOX_IOU = 0.5
 BOX_INSIDE = 0.9
+TIE_RANK = {"TH": 0, "Caption": 0, "TOCI": 0, "Lbl": 0, "BlockQuote": 0, "H": 1, "P": 2, "Other": 3}
+UNKNOWN_RANK = 3
 
 
 def intersection(a: dict, b: dict) -> float:
@@ -32,18 +34,24 @@ def iou(a: dict, b: dict) -> float:
     return inter / union if union > 0 else 0.0
 
 
+def preferred(card: dict, qualifying: list[dict]) -> dict:
+    """K25: the definition's §4 order governs a tie (rule-3 types, then H, then P, then Other), then IoU."""
+    return min(qualifying, key=lambda k: (TIE_RANK.get(k.get("type"), UNKNOWN_RANK), -iou(card, k)))
+
+
 def match_candidate(card: dict, keys_on_page: list[dict]) -> tuple[dict | None, str]:
     n = card.get("norm") or ""
     if n:
         exact = [k for k in keys_on_page if k.get("norm") == n]
         if exact:
-            return max(exact, key=lambda k: iou(card, k)), "exact"
+            return preferred(card, exact), "exact"
         contains = [k for k in keys_on_page if k.get("norm") and n in k["norm"] and iou(card, k) >= CONTAIN_IOU]
         if contains:
-            return max(contains, key=lambda k: iou(card, k)), "contains"
-    best = max(keys_on_page, key=lambda k: iou(card, k), default=None)
-    if best is not None and iou(card, best) >= BOX_IOU and inside_share(card, best) >= BOX_INSIDE:
-        return best, "box"
+            return preferred(card, contains), "contains"
+    best = max((iou(card, k) for k in keys_on_page), default=0.0)
+    boxed = [k for k in keys_on_page if iou(card, k) == best and best >= BOX_IOU and inside_share(card, k) >= BOX_INSIDE]
+    if boxed:
+        return preferred(card, boxed), "box"
     return None, "none"
 
 
