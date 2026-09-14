@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { inertWhen } from '../lib/inert-button';
 import { FONT, T } from '../lib/tokens';
 import { PASSKEY_LABEL_MAX_LENGTH } from '../../../domain/platform';
 import { browserSupportsPasskeys, registerPasskey, removePasskey } from '../../components/passkey-client';
@@ -139,9 +140,11 @@ export function PasskeysCard({
               </span>
               <button
                 type="button"
-                onClick={() => remove(passkey.credentialId)}
-                disabled={busy}
+                // Inert rather than `disabled`, so the press does not drop
+                // focus to `<body>` (`lib/inert-button`).
+                {...inertWhen(busy, () => void remove(passkey.credentialId))}
                 style={{
+                  color: busy ? T.inkMuted : undefined,
                   fontFamily: FONT.sans,
                   fontSize: 12,
                   padding: '5px 10px',
@@ -210,10 +213,21 @@ export function PasskeysCard({
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="submit" disabled={busy || !password || !label.trim()}>
+            {/* `inertWhen`'s `preventDefault` is what stops the form submitting
+                while inert; `add` also refuses, for Enter in a field. */}
+            <button
+              type="submit"
+              {...inertWhen(busy || !password || !label.trim(), () => {})}
+              aria-label="Add passkey"
+              style={{ color: busy || !password || !label.trim() ? T.inkMuted : undefined }}
+            >
               {busy ? 'Waiting for your device…' : 'Add passkey'}
             </button>
-            <button type="button" onClick={() => setAdding(false)} disabled={busy}>
+            <button
+              type="button"
+              {...inertWhen(busy, () => setAdding(false))}
+              style={{ color: busy ? T.inkMuted : undefined }}
+            >
               Cancel
             </button>
           </div>

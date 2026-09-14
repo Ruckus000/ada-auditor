@@ -11,6 +11,7 @@ import { VerdictLegend, VerdictPanel } from './verdict-panel';
 import { FindingsList, RunDetails } from './findings-list';
 import { UnlockCard } from './unlock-card';
 import { PRACTICE_SCENARIOS } from './practice-scenarios';
+import { inertWhen } from '../platform/lib/inert-button';
 
 type AuthState = 'checking' | 'locked' | 'unlocked';
 
@@ -299,8 +300,9 @@ export function ControlPlane() {
                     key={item.scenario}
                     type="button"
                     className={`ghost-btn practice-${item.outcome}`}
-                    disabled={submitting || status.state !== 'ok'}
-                    onClick={() => runAudit(item.scenario)}
+                    // Inert rather than `disabled`: a failed run leaves focus on
+                    // the button pressed instead of `<body>` (`lib/inert-button`).
+                    {...inertWhen(submitting || status.state !== 'ok', () => void runAudit(item.scenario))}
                   >
                     Show me {item.label}
                   </button>

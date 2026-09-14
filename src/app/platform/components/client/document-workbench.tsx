@@ -11,6 +11,7 @@ import {
   documentStateNote,
   scopeLine,
 } from '../../../../services/presentation/document-verdict';
+import { inertWhen } from '../../lib/inert-button';
 import { documentStateChip } from '../../lib/verdict-chip';
 import { figureContextLine } from '../../lib/stateless-answers';
 import { FONT, T } from '../../lib/tokens';
@@ -528,18 +529,28 @@ export function DocumentWorkbench({
         ))}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-          <button type="submit" disabled={saving || pending.length === 0} style={{ ...buttonStyle, ...disabledStyle(saving || pending.length === 0) }}>
+          {/* All three are inert while a save or run is in flight, never
+              `disabled`: each is pressed to start that work, and `disabled`
+              would drop focus to `<body>` (`lib/inert-button`). On the submit,
+              `inertWhen`'s `preventDefault` is also what stops Enter in a field
+              saving twice. Names hold still while the text reads "…ing". */}
+          <button
+            type="submit"
+            {...inertWhen(saving || pending.length === 0, () => {})}
+            aria-label={`Save ${pending.length === 0 ? 'answers' : `${pending.length} answer${pending.length === 1 ? '' : 's'}`}`}
+            style={{ ...buttonStyle, ...disabledStyle(saving || pending.length === 0) }}
+          >
             {saving ? 'Saving…' : `Save ${pending.length === 0 ? 'answers' : `${pending.length} answer${pending.length === 1 ? '' : 's'}`}`}
           </button>
           <button
             type="button"
-            onClick={() => void applyAndRun()}
-            disabled={saving || run.state === 'running'}
+            {...inertWhen(saving || run.state === 'running', () => void applyAndRun())}
+            aria-label="Apply answers and run"
             style={{ ...buttonStyle, ...disabledStyle(saving || run.state === 'running') }}
           >
             {run.state === 'running' ? 'Running… (up to 5 minutes)' : 'Apply answers and run'}
           </button>
-          <button type="button" onClick={() => void saveAndNext()} disabled={saving} style={{ ...buttonStyle, ...disabledStyle(saving) }}>
+          <button type="button" {...inertWhen(saving, () => void saveAndNext())} style={{ ...buttonStyle, ...disabledStyle(saving) }}>
             {nextDocumentId === null ? 'Save and back to the inventory' : 'Save and open the next'}
           </button>
           {saved ? <span role="status" style={{ ...noteStyle, color: T.accent }}>{saved}</span> : null}

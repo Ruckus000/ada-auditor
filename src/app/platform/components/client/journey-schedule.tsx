@@ -121,8 +121,14 @@ export function JourneySchedule({
       <select
         id={selectId}
         value={schedule}
-        disabled={busy}
-        onChange={(event) => change(event.target.value)}
+        // Announced inert and refused rather than `disabled`: the change is
+        // what sets `busy`, and an arrow key is a change in some browsers, so
+        // `disabled` would take focus off the select mid-choice
+        // (`lib/inert-button`). Controlled, so a refused change snaps back.
+        aria-disabled={busy || undefined}
+        onChange={(event) => {
+          if (!busy) void change(event.target.value);
+        }}
         style={{
           fontFamily: FONT.sans,
           fontSize: 12.5,
@@ -130,7 +136,7 @@ export function JourneySchedule({
           borderRadius: 8,
           border: `1px solid ${T.rule}`,
           background: busy ? T.surfaceSunk : T.surface,
-          color: T.ink,
+          color: busy ? T.inkMuted : T.ink,
         }}
       >
         {OPTIONS.map((option) => (

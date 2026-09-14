@@ -54,13 +54,20 @@ import type { MouseEvent } from 'react';
  * Suppressed rather than designed around, because every way around it splits
  * the attribute from the guard, and keeping those two together is the entire
  * reason this function exists.
+ *
+ * Generic over the element for the one non-button that needs it: a file input
+ * opens its picker as the default action of a click — Enter and Space included
+ * — so the same `preventDefault` is what stops a second file being chosen while
+ * the first is read. A `<select>` or checkbox is different: its change is not a
+ * click, so those guard their `onChange` by hand (`tests/app/controls-keep-focus`
+ * holds every one of them).
  */
-export function inertWhen(
+export function inertWhen<Element extends HTMLElement = HTMLButtonElement>(
   isInert: boolean,
-  onClick: (event: MouseEvent<HTMLButtonElement>) => void,
+  onClick: (event: MouseEvent<Element>) => void,
 ): {
   'aria-disabled': true | undefined;
-  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
+  onClick: (event: MouseEvent<Element>) => void;
 } {
   return {
     // Omitted rather than `aria-disabled="false"`, so the DOM of a live control

@@ -213,7 +213,6 @@ export function FirstRunControl({
           border: 'none',
           background: busy ? T.accentDeep : T.accent,
           color: '#fff',
-          opacity: busy ? 0.85 : 1,
           cursor: busy ? 'default' : 'pointer',
         }}
       >

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react';
 import type { DocumentState } from '../../../../services/document-state';
+import { inertWhen } from '../../lib/inert-button';
 import { clientHref } from '../../lib/params';
 import { FONT, T } from '../../lib/tokens';
 import { DocumentIntake } from './document-intake';
@@ -349,8 +350,13 @@ export function ClientDocuments({
           {unreviewedPdfs > 0 ? (
             <button
               type="button"
-              onClick={() => void inspectAllUnreviewed()}
-              disabled={batch !== null}
+              // Inert, not `disabled`, so the press keeps focus for the whole
+              // batch (`lib/inert-button`). The name holds the count the batch
+              // started with while the text counts up: a focused control
+              // renamed per document would be read out over everything else,
+              // two hundred times. Idle, the name is the visible text.
+              {...inertWhen(batch !== null, () => void inspectAllUnreviewed())}
+              aria-label={`Inspect all unreviewed PDFs (${batch === null ? unreviewedPdfs : batch.total})`}
               style={{ ...buttonStyle, ...disabledStyle(batch !== null) }}
             >
               {batch === null
@@ -418,8 +424,8 @@ export function ClientDocuments({
       {hasMore ? (
         <button
           type="button"
-          onClick={() => void loadMore()}
-          disabled={loadingMore}
+          {...inertWhen(loadingMore, () => void loadMore())}
+          aria-label="Load more"
           style={{ ...buttonStyle, alignSelf: 'flex-start', ...disabledStyle(loadingMore) }}
         >
           {loadingMore ? 'Loading…' : 'Load more'}

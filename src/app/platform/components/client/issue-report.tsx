@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -77,17 +78,19 @@ export function IssueReport({ clientId, requestId }: { clientId: string; request
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <button
         type="button"
-        onClick={issue}
-        disabled={busy}
+        // Inert rather than `disabled`, so a failed issue leaves focus on
+        // the button beside its error (`lib/inert-button`).
+        {...inertWhen(busy, () => void issue())}
+        aria-label="Issue a shareable report"
         style={{
           padding: '7px 13px',
-          border: 'none',
+          border: busy ? `1px solid ${T.ruleStrong}` : 'none',
           borderRadius: 8,
-          background: T.accent,
+          background: busy ? T.surfaceSunk : T.accent,
           fontFamily: FONT.sans,
           fontSize: 12.5,
           fontWeight: 650,
-          color: '#fff',
+          color: busy ? T.inkMuted : '#fff',
           cursor: busy ? 'not-allowed' : 'pointer',
         }}
       >

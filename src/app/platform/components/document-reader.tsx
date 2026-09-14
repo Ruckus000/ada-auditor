@@ -4,7 +4,8 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { figureGroups } from '../../../domain/document-answers';
 import { documentPreviewSchema, isDocumentWideAsk, type DocumentPreview } from '../../../domain/document-preview';
-import { buttonStyle, noteStyle, type Summary } from './client/document-shared';
+import { buttonStyle, disabledStyle, noteStyle, type Summary } from './client/document-shared';
+import { inertWhen } from '../lib/inert-button';
 import { T } from '../lib/tokens';
 import styles from './document-reader.module.css';
 
@@ -82,9 +83,10 @@ export function DocumentReader({ summary, endpoint, file, expectedSha, children 
   return <div className={styles.reader}>
     <section className={styles.canvas} aria-label="Document page preview">
       <div className={styles.controls}>
-        <button type="button" style={buttonStyle} disabled={page <= 1 || loading} onClick={() => setPage(page - 1)}>Previous page</button>
+        {/* Inert, not `disabled`: each press starts a render that would otherwise take focus off the button pressed (`lib/inert-button`). */}
+        <button type="button" style={{ ...buttonStyle, ...disabledStyle(page <= 1 || loading) }} {...inertWhen(page <= 1 || loading, () => setPage(page - 1))}>Previous page</button>
         <span aria-live="polite">Page {page}{preview ? ` of ${preview.pages}` : ''}</span>
-        <button type="button" style={buttonStyle} disabled={!preview || page >= preview.pages || loading} onClick={() => setPage(page + 1)}>Next page</button>
+        <button type="button" style={{ ...buttonStyle, ...disabledStyle(!preview || page >= preview.pages || loading) }} {...inertWhen(!preview || page >= preview.pages || loading, () => setPage(page + 1))}>Next page</button>
         <button type="button" style={buttonStyle} aria-expanded={!folded} aria-controls={`${id}-page`} onClick={() => setFolded(!folded)}>{folded ? 'Show page' : 'Fold page'}</button>
       </div>
       {documentIssues.length ? <><strong style={{ fontSize: 12 }}>Whole document</strong><div className={styles.strip}>{documentIssues.map((ask) => issueButton(ask.id))}</div></> : null}

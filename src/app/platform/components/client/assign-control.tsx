@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FONT, T } from '../../lib/tokens';
 
@@ -36,6 +36,8 @@ export function AssignControl({
   const [operators, setOperators] = useState<Array<{ id: string; name: string }> | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** The value the in-flight request is saving, restored over a refused change. */
+  const sending = useRef('');
 
   useEffect(() => {
     let cancelled = false;
@@ -114,8 +116,23 @@ export function AssignControl({
       <select
         id={selectId}
         defaultValue=""
-        disabled={busy || operators === null}
-        onChange={(event) => assign(event.target.value)}
+        // `operators === null` is loading, a precondition nobody's action
+        // caused, so it stays `disabled`. `busy` is caused by this select's own
+        // change — an arrow key is a change in some browsers — and `disabled`
+        // would take focus off it mid-choice (`lib/inert-button`). So it is
+        // announced inert and the change is refused, putting back the value
+        // that is actually being saved: this select is uncontrolled, and a
+        // refused change it kept showing would be a choice nobody made.
+        disabled={operators === null}
+        aria-disabled={busy || undefined}
+        onChange={(event) => {
+          if (busy) {
+            event.currentTarget.value = sending.current;
+            return;
+          }
+          sending.current = event.target.value;
+          void assign(event.target.value);
+        }}
         style={{
           fontFamily: FONT.sans,
           fontSize: 11.5,
@@ -123,7 +140,7 @@ export function AssignControl({
           borderRadius: 6,
           border: `1px solid ${T.rule}`,
           background: busy ? T.surfaceSunk : T.surface,
-          color: T.ink,
+          color: busy ? T.inkMuted : T.ink,
         }}
       >
         <option value="">Nobody</option>

@@ -3,8 +3,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { DeliveryBundle } from '../../../../domain/document-delivery';
 import { deliveryError, inDeliveryQueue, selectableForDelivery, type DeliveryRow, type DeliveryQueue } from '../../../../services/presentation/document-delivery';
+import { inertWhen } from '../../lib/inert-button';
 import { T } from '../../lib/tokens';
-import { buttonStyle, noteStyle, pathOf } from './document-shared';
+import { buttonStyle, disabledStyle, noteStyle, pathOf } from './document-shared';
 
 type PublicBundle = Pick<DeliveryBundle, 'id' | 'preparedAt' | 'issuedAt' | 'revokedAt' | 'entries' | 'omissions' | 'bytes' | 'token'>;
 type Overview = { rows: DeliveryRow[]; counts: { signedOff: number; delivered: number; excluded: number; eligible: number }; bundles: PublicBundle[] };
@@ -74,7 +75,9 @@ export function DocumentDeliveryPanel({ clientId, revision }: { clientId: string
   return <section aria-label="Document delivery" style={{ border: `1px solid ${T.rule}`, background: T.surface, borderRadius: 12, padding: 18, display: 'grid', gap: 14 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
       <div><h3 style={{ margin: 0, fontSize: 18 }}>Delivery</h3><p style={noteStyle}>Verified outputs, attributed sign-off, and the evidence that travels with each file.</p></div>
-      <button type="button" style={buttonStyle} disabled={busy || !selected.length} onClick={() => { returnFocus.current = document.activeElement as HTMLElement; void act('/delivery', { documentIds: selected }, body => { setAnswer(''); setModal({ kind: 'bundle', bundle: body.bundle }); }); }}>{busy ? 'Working…' : `Prepare bundle${selected.length ? ` (${selected.length})` : ''}`}</button>
+      {/* `aria-label` holds the name still while the text reads "Working…": focus stays on an inert control, so renaming it would be announced (`discover-pages.tsx` records why). */}
+      {/* eslint-disable-next-line react-hooks/refs -- see lib/inert-button */}
+      <button type="button" style={{ ...buttonStyle, ...disabledStyle(busy || !selected.length) }} {...inertWhen(busy || !selected.length, () => { returnFocus.current = document.activeElement as HTMLElement; void act('/delivery', { documentIds: selected }, body => { setAnswer(''); setModal({ kind: 'bundle', bundle: body.bundle }); }); })} aria-label={`Prepare bundle${selected.length ? ` (${selected.length})` : ''}`}>{busy ? 'Working…' : `Prepare bundle${selected.length ? ` (${selected.length})` : ''}`}</button>
     </div>
     {error && !modal ? <p role="alert" style={{ ...noteStyle, color: T.fail }}>{error} <button type="button" style={buttonStyle} onClick={() => { setError(null); void refresh(); }}>Refresh</button></p> : null}
     {overview ? <>
@@ -83,11 +86,12 @@ export function DocumentDeliveryPanel({ clientId, revision }: { clientId: string
       </dl>
       <label style={{ fontSize: 13 }}>Action queue{' '}<select value={queue} onChange={event => setQueue(event.target.value as DeliveryQueue)} style={{ ...buttonStyle, padding: 8 }}>{QUEUES.map(([value, label]) => <option key={value} value={value}>{label} ({overview.rows.filter(row => inDeliveryQueue(row, value)).length})</option>)}</select></label>
       <div style={{ maxHeight: 420, overflow: 'auto' }}>
+        {/* eslint-disable-next-line react-hooks/refs -- the handler runs on click, never in render; see lib/inert-button */}
         {overview.rows.filter(row => inDeliveryQueue(row, queue)).map(row => <div key={row.documentId} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '12px 0', borderTop: `1px solid ${T.ruleFaint}` }}>
-          <input type="checkbox" aria-label={`Include ${pathOf(row.url)} in delivery`} disabled={!selectableForDelivery(row) || busy} checked={selected.includes(row.documentId)} onChange={event => setSelected(current => event.target.checked ? [...current, row.documentId] : current.filter(id => id !== row.documentId))} />
+          <input type="checkbox" aria-label={`Include ${pathOf(row.url)} in delivery`} disabled={!selectableForDelivery(row)} aria-disabled={busy || undefined} checked={selected.includes(row.documentId)} onChange={event => { if (busy) return; setSelected(current => event.target.checked ? [...current, row.documentId] : current.filter(id => id !== row.documentId)); }} />
           <div style={{ flex: '1 1 220px', minWidth: 0 }}><a href={`/clients/${encodeURIComponent(clientId)}/documents/${encodeURIComponent(row.documentId)}`} style={{ color: T.ink, fontSize: 13, fontWeight: 650, overflowWrap: 'anywhere' }}>{pathOf(row.url)}</a><p style={noteStyle}>{row.excluded ? `Excluded: ${row.exclusionReason ?? 'Reason recorded'}` : row.reason ?? (row.delivered ? 'Current output delivered' : row.signedOff ? 'Signed off — ready for delivery' : 'Ready for verified sign-off')}</p></div>
-          {!row.excluded && row.eligible && !row.signedOff ? <button style={buttonStyle} type="button" disabled={busy} onClick={() => open({ kind: 'signoff', row })}>Sign off</button> : null}
-          <button style={buttonStyle} type="button" disabled={busy} onClick={() => row.excluded ? void act(`/documents/${encodeURIComponent(row.documentId)}/exclusion`, { reverse: true }) : open({ kind: 'exclude', row })}>{row.excluded ? 'Reopen' : 'Exclude'}</button>
+          {!row.excluded && row.eligible && !row.signedOff ? <button style={{ ...buttonStyle, ...disabledStyle(busy) }} type="button" {...inertWhen(busy, () => open({ kind: 'signoff', row }))}>Sign off</button> : null}
+          <button style={{ ...buttonStyle, ...disabledStyle(busy) }} type="button" {...inertWhen(busy, () => row.excluded ? void act(`/documents/${encodeURIComponent(row.documentId)}/exclusion`, { reverse: true }) : open({ kind: 'exclude', row }))}>{row.excluded ? 'Reopen' : 'Exclude'}</button>
         </div>)}
         {!overview.rows.some(row => inDeliveryQueue(row, queue)) ? <p style={noteStyle}>No documents in this queue.</p> : null}
       </div>
@@ -103,8 +107,10 @@ export function DocumentDeliveryPanel({ clientId, revision }: { clientId: string
           <p style={noteStyle}>Issuing creates a client-accessible link. A prepared bundle alone is not a delivery.</p>
         </> : <><p style={{ ...noteStyle, overflowWrap: 'anywhere' }}>{pathOf(modal.row.url)}</p><label style={{ display: 'grid', gap: 8, margin: '14px 0', fontSize: 13 }}>{modal.kind === 'exclude' ? 'Reason (required, shown to the client in the delivery)' : 'Private operator note (optional)'}<textarea value={answer} onChange={event => setAnswer(event.target.value)} maxLength={2000} rows={4} style={{ padding: 10, font: 'inherit', border: `1px solid ${T.rule}`, borderRadius: 8 }} /></label>{modal.kind === 'signoff' ? <p style={noteStyle}>The server rechecks the output, source identity, verification, and outstanding answers before recording your sign-off.</p> : null}</>}
         {error ? <p role="alert" style={{ ...noteStyle, color: T.fail }}>{error}</p> : null}
-        <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}><button type="button" style={buttonStyle} disabled={busy} onClick={close}>Close</button>
-          {modal.kind === 'bundle' ? !modal.bundle.issuedAt ? <button type="button" style={buttonStyle} disabled={busy} onClick={() => void act(`/delivery/${encodeURIComponent(modal.bundle.id)}`, { action: 'issue' })}>Issue delivery link</button> : !modal.bundle.revokedAt ? <button type="button" style={buttonStyle} disabled={busy} onClick={() => void act(`/delivery/${encodeURIComponent(modal.bundle.id)}`, { action: 'revoke' })}>Revoke link</button> : null : <button type="button" style={buttonStyle} disabled={busy || (modal.kind === 'exclude' && !answer.trim())} onClick={() => void act(`/documents/${encodeURIComponent(modal.row.documentId)}/${modal.kind === 'signoff' ? 'signoff' : 'exclusion'}`, modal.kind === 'signoff' ? { fingerprint: modal.row.fingerprint, ...(answer.trim() ? { note: answer.trim() } : {}) } : { reason: answer.trim() })}>{busy ? 'Working…' : modal.kind === 'signoff' ? 'Verify and sign off' : 'Record exclusion'}</button>}
+        {/* eslint-disable-next-line react-hooks/refs -- the handler runs on click, never in render; see lib/inert-button */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}><button type="button" style={{ ...buttonStyle, ...disabledStyle(busy) }} {...inertWhen(busy, close)}>Close</button>
+          {/* eslint-disable-next-line react-hooks/refs -- the handler runs on click, never in render; see lib/inert-button */}
+          {modal.kind === 'bundle' ? !modal.bundle.issuedAt ? <button type="button" style={{ ...buttonStyle, ...disabledStyle(busy) }} {...inertWhen(busy, () => void act(`/delivery/${encodeURIComponent(modal.bundle.id)}`, { action: 'issue' }))}>Issue delivery link</button> : !modal.bundle.revokedAt ? <button type="button" style={{ ...buttonStyle, ...disabledStyle(busy) }} {...inertWhen(busy, () => void act(`/delivery/${encodeURIComponent(modal.bundle.id)}`, { action: 'revoke' }))}>Revoke link</button> : null : <button type="button" style={{ ...buttonStyle, ...disabledStyle(busy || (modal.kind === 'exclude' && !answer.trim())) }} {...inertWhen(busy || (modal.kind === 'exclude' && !answer.trim()), () => void act(`/documents/${encodeURIComponent(modal.row.documentId)}/${modal.kind === 'signoff' ? 'signoff' : 'exclusion'}`, modal.kind === 'signoff' ? { fingerprint: modal.row.fingerprint, ...(answer.trim() ? { note: answer.trim() } : {}) } : { reason: answer.trim() }))} aria-label={modal.kind === 'signoff' ? 'Verify and sign off' : 'Record exclusion'}>{busy ? 'Working…' : modal.kind === 'signoff' ? 'Verify and sign off' : 'Record exclusion'}</button>}
         </div>
       </> : null}
     </dialog>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { InfoTip } from './info-tip';
+import { inertWhen } from '../platform/lib/inert-button';
 import { browserSupportsPasskeys, signInWithPasskey } from './passkey-client';
 
 const MESSAGES: Record<string, string> = {
@@ -145,8 +146,10 @@ export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
           <button
             className="submit-btn"
             type="button"
-            onClick={usePasskey}
-            disabled={submitting}
+            // Inert, not `disabled` (`lib/inert-button`): a cancelled or
+            // refused passkey leaves focus on this button, not `<body>`.
+            {...inertWhen(submitting, usePasskey)}
+            aria-label="Sign in with a passkey"
           >
             {submitting ? 'Waiting for your device…' : 'Sign in with a passkey'}
           </button>
@@ -223,7 +226,12 @@ export function UnlockCard({ onUnlocked }: { onUnlocked: () => void }) {
           </p>
         )}
 
-        <button className="submit-btn" type="submit" disabled={submitting || !canSubmit}>
+        <button
+          className="submit-btn"
+          type="submit"
+          {...inertWhen(submitting || !canSubmit, () => {})}
+          aria-label="Sign in"
+        >
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
       </form>

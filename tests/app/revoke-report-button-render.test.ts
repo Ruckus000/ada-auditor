@@ -66,8 +66,8 @@ describe('RevokeReportButton', () => {
     // mid-interaction, dropping the operator at `<body>` to tab back through
     // the whole workspace nav. `inert-button.ts` exists for exactly this, was
     // found by reading the flow as a keyboard user, and axe cannot see it —
-    // the markup is valid either way. Eight call sites use it; this is the
-    // ninth.
+    // the markup is valid either way. `controls-keep-focus.test.ts` now holds
+    // the whole tree to it; this pins the one component it was built for.
     const source = readFileSync('src/app/platform/components/revoke-report-button.tsx', 'utf8');
 
     expect(source).toMatch(/inertWhen\(/);

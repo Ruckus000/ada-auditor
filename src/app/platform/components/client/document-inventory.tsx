@@ -7,6 +7,7 @@ import {
   documentStateLabel,
   documentStateNote,
 } from '../../../../services/presentation/document-verdict';
+import { inertWhen } from '../../lib/inert-button';
 import { documentStateChip } from '../../lib/verdict-chip';
 import { FONT, T } from '../../lib/tokens';
 import { Pill, TableShell } from '../ui';
@@ -293,8 +294,13 @@ export function DocumentInventory({
                           {doc.kind === 'pdf' ? (
                             <button
                               type="button"
-                              onClick={() => onInspect(doc)}
-                              disabled={running}
+                              // All four row actions are inert while the row
+                              // runs, not `disabled`: the one pressed would
+                              // otherwise drop focus to `<body>`
+                              // (`lib/inert-button`). Each name holds still
+                              // while its text reads "…ing".
+                              {...inertWhen(running, () => onInspect(doc))}
+                              aria-label={hasRecord ? 'Inspect again' : 'Inspect'}
                               style={{ ...buttonStyle, ...disabledStyle(running) }}
                             >
                               {own.state === 'running' ? 'Inspecting…' : hasRecord ? 'Inspect again' : 'Inspect'}
@@ -303,8 +309,8 @@ export function DocumentInventory({
                           {doc.sourceAvailable && converterAvailable ? (
                             <button
                               type="button"
-                              onClick={() => onConvert(doc.sourceAvailable!)}
-                              disabled={running}
+                              {...inertWhen(running, () => onConvert(doc.sourceAvailable!))}
+                              aria-label="Convert the Word source"
                               style={{ ...buttonStyle, ...disabledStyle(running) }}
                             >
                               {sourceOutcome.state === 'running'
@@ -320,8 +326,8 @@ export function DocumentInventory({
                           {repairable && doc.kind === 'pdf' ? (
                             <button
                               type="button"
-                              onClick={() => onConvert(doc)}
-                              disabled={running}
+                              {...inertWhen(running, () => onConvert(doc))}
+                              aria-label="Repair this PDF"
                               style={{ ...buttonStyle, ...disabledStyle(running) }}
                             >
                               {own.state === 'running' ? 'Repairing… (up to 5 minutes)' : 'Repair this PDF'}
@@ -330,8 +336,8 @@ export function DocumentInventory({
                           {doc.kind !== 'pdf' && converterAvailable ? (
                             <button
                               type="button"
-                              onClick={() => onConvert(doc)}
-                              disabled={running}
+                              {...inertWhen(running, () => onConvert(doc))}
+                              aria-label="Convert to tagged PDF"
                               style={{ ...buttonStyle, ...disabledStyle(running) }}
                             >
                               {own.state === 'running' ? 'Converting… (up to 5 minutes)' : 'Convert to tagged PDF'}
