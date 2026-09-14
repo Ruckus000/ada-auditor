@@ -1,0 +1,41 @@
+{
+  "document": "15-archive-transfer",
+  "tests": "Part 19 role-coverage train fixture. Italic H3, lighter H4. Definition-like term is a non-heading.",
+  "adversarial": false,
+  "title": "Archive Transfer Note",
+  "language": "en",
+  "split": "train",
+  "headingHierarchy": [
+    { "level": 1, "text": "Archive Transfer Note" },
+    { "level": 2, "text": "Incoming boxes" },
+    { "level": 3, "text": "Paper series" },
+    { "level": 4, "text": "Minutes" },
+    { "level": 4, "text": "Correspondence" },
+    { "level": 3, "text": "Photographs" },
+    { "level": 4, "text": "Prints" },
+    { "level": 2, "text": "Outgoing boxes" },
+    { "level": 3, "text": "Digital copies" },
+    { "level": 4, "text": "Checksums" }
+  ],
+  "nonHeadings": [
+    { "text": "Records office · transfer note", "role": "P", "category": "running-header" },
+    { "text": "Draft list — boxes not yet sealed", "role": "P", "category": "status-line" },
+    { "text": "Series. A run of records kept together because they were created by the same activity, not because they share a subject heading.", "role": "P", "category": "definition-term" }
+  ],
+  "readingOrder": [
+    "running header", "status line", "H1", "intro",
+    "H2 Incoming boxes", "paragraph",
+    "H3 Paper series", "paragraph", "H4 Minutes", "paragraph", "H4 Correspondence", "paragraph",
+    "H3 Photographs", "paragraph", "H4 Prints", "paragraph",
+    "H2 Outgoing boxes", "paragraph",
+    "H3 Digital copies", "paragraph", "H4 Checksums", "paragraph",
+    "definition"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": ["running header"],
+  "intentionalProblems": []
+}

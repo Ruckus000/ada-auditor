@@ -1,0 +1,34 @@
+{
+  "document": "20-tank-soundings",
+  "tests": "Part 23 chart-title coverage train fixture. Verdana landscape web-report. One chart title matches H2 size/weight; one is louder than H3. Subtitle is an extra chart-label.",
+  "adversarial": false,
+  "title": "Tank Soundings Sheet",
+  "language": "en",
+  "split": "train",
+  "headingHierarchy": [
+    { "level": 1, "text": "Tank Soundings Sheet" },
+    { "level": 2, "text": "East bank" },
+    { "level": 3, "text": "West bank" }
+  ],
+  "nonHeadings": [
+    { "text": "Ops desk — not for customs", "role": "P", "category": "banner" },
+    { "text": "Stored volume", "role": "P", "category": "chart-title" },
+    { "text": "By tank, this watch", "role": "P", "category": "chart-subtitle" },
+    { "text": "Ullage change", "role": "P", "category": "chart-title" }
+  ],
+  "readingOrder": [
+    "banner", "H1", "intro",
+    "H2 East bank",
+    "chart-title Stored volume", "chart-subtitle", "line chart", "paragraph",
+    "H3 West bank", "paragraph",
+    "chart-title Ullage change", "line chart", "paragraph",
+    "running footer"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": ["SVG stored-volume line", "SVG ullage line"],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": []
+}

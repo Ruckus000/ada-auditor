@@ -1,0 +1,125 @@
+{
+  "model": "mlx-community/Qwen3.5-4B-MLX-4bit",
+  "prompt_stem": "You assign one PDF tag role. Return ONLY JSON with keys role, action, confidence, reason. role is one of H1,H2,H3,H4,H5,H6,P,LI,Table,Figure,Artifact. action is retag, keep, or abstain. confidence is 0..1. Abstain when the role is not determined by the evidence. Do not invent facts.",
+  "cases": [
+    {
+      "id": "easy-h1",
+      "text": "Quarterly Operations Summary",
+      "font_pt": 20,
+      "weight": "bold",
+      "prev": "Northwind Logistics · Internal · Page 1 of 1",
+      "next": "This document is the control case for the remediation corpus.",
+      "existing_tag": "none",
+      "expect": { "role": "H1" },
+      "source": "corpus/01-simple-text.html"
+    },
+    {
+      "id": "easy-h2",
+      "text": "Throughput",
+      "font_pt": 14,
+      "weight": "bold",
+      "prev": "Anything that fails here fails on the easy case.",
+      "next": "Depot throughput rose across all three regions during the period under review.",
+      "existing_tag": "none",
+      "expect": { "role": "H2" },
+      "source": "corpus/01-simple-text.html"
+    },
+    {
+      "id": "easy-p",
+      "text": "Depot throughput rose across all three regions during the period under review. The gain is attributed to the revised loading sequence introduced in the previous quarter rather than to any change in fleet size.",
+      "font_pt": 11,
+      "weight": "regular",
+      "prev": "Throughput",
+      "next": "Regional detail",
+      "existing_tag": "none",
+      "expect": { "role": "P" },
+      "source": "corpus/01-simple-text.html"
+    },
+    {
+      "id": "easy-li",
+      "text": "Re-time the evening dispatch window at the northern depot.",
+      "font_pt": 11,
+      "weight": "regular",
+      "bullet": true,
+      "prev": "Actions carried forward",
+      "next": "Retire the two remaining diesel shunters.",
+      "existing_tag": "none",
+      "expect": { "role": "LI" },
+      "source": "corpus/01-simple-text.html"
+    },
+    {
+      "id": "easy-h3",
+      "text": "Regional detail",
+      "font_pt": 12,
+      "weight": "bold",
+      "style": "italic",
+      "prev": "The gain is attributed to the revised loading sequence.",
+      "next": "The northern depot absorbed most of the additional volume.",
+      "existing_tag": "none",
+      "expect": { "role": "H3" },
+      "source": "corpus/01-simple-text.html"
+    },
+    {
+      "id": "trap-address",
+      "text": "CITY HALL, 1300 PERDIDO STREET",
+      "font_pt": 14,
+      "weight": "bold",
+      "centered": true,
+      "prev": "PUBLIC HEARING",
+      "next": "New Orleans, Louisiana",
+      "existing_tag": "P",
+      "expect": { "role": "P" },
+      "trap": "heading",
+      "source": "heading-promotion-options.md nola-cpc-notice"
+    },
+    {
+      "id": "trap-column-header",
+      "text": "Fee",
+      "font_pt": 11,
+      "weight": "bold",
+      "prev": "Permit type",
+      "next": "$25.00",
+      "existing_tag": "P",
+      "expect": { "role": "P" },
+      "trap": "heading",
+      "note": "Table column header. Gold is not H*; Table is acceptable. H1–H6 is the kill.",
+      "source": "heading-promotion-options.md orono-fee-schedule"
+    },
+    {
+      "id": "trap-fake-heading",
+      "text": "Looks Structured",
+      "font_pt": 24,
+      "weight": "bold",
+      "prev": "none",
+      "next": "A paragraph that is merely large and bold.",
+      "existing_tag": "P",
+      "expect": { "role": "P" },
+      "trap": "heading",
+      "source": "blind-corpus w04-fake-headings"
+    },
+    {
+      "id": "trap-running-header",
+      "text": "Northwind Logistics · Internal · Page 1 of 1",
+      "font_pt": 8,
+      "weight": "regular",
+      "prev": "none",
+      "next": "Quarterly Operations Summary",
+      "existing_tag": "none",
+      "expect": { "role": "Artifact" },
+      "source": "corpus/01-simple-text.html"
+    },
+    {
+      "id": "abstain-stamp",
+      "text": "DRAFT",
+      "font_pt": 72,
+      "weight": "bold",
+      "centered": true,
+      "prev": "none",
+      "next": "Ordinance 2024-17",
+      "existing_tag": "none",
+      "expect": { "role": "Artifact", "allow_abstain": true },
+      "trap": "abstain",
+      "source": "holdout h13 analogue — watermark, not a heading"
+    }
+  ]
+}

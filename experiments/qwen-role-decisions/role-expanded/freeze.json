@@ -1,0 +1,133 @@
+{
+  "split": {
+    "train": [
+      "13-workshop-induction",
+      "14-pump-overhaul",
+      "15-archive-transfer",
+      "16-shift-handover"
+    ],
+    "validation": [
+      "17-visitor-brief",
+      "18-sample-receipt"
+    ],
+    "note": "Frozen before any model sees the documents. Do not reshuffle."
+  },
+  "original_train_json": {
+    "rows": 43,
+    "expect_roles": {
+      "H1": 6,
+      "H2": 15,
+      "H3": 1,
+      "P": 17,
+      "Artifact": 4
+    },
+    "documents": [
+      "02",
+      "04",
+      "05",
+      "06",
+      "10",
+      "12"
+    ]
+  },
+  "new_train": {
+    "rows": 94,
+    "documents": {
+      "13-workshop-induction": 24,
+      "14-pump-overhaul": 24,
+      "15-archive-transfer": 23,
+      "16-shift-handover": 23
+    },
+    "expect_roles": {
+      "P": 54,
+      "H1": 4,
+      "H2": 8,
+      "H3": 12,
+      "H4": 16
+    },
+    "kinds": {
+      "hard-negative": 12,
+      "heading": 40,
+      "paragraph": 42
+    },
+    "categories": {
+      "running-header": 2,
+      "status-line": 2,
+      "H1": 4,
+      "P": 42,
+      "H2": 8,
+      "H3": 12,
+      "H4": 16,
+      "callout": 1,
+      "running-footer": 2,
+      "group-label": 1,
+      "table-title": 1,
+      "definition-term": 1,
+      "body-label": 1,
+      "decorative-numeral": 1
+    }
+  },
+  "new_valid": {
+    "rows": 47,
+    "documents": {
+      "17-visitor-brief": 23,
+      "18-sample-receipt": 24
+    },
+    "expect_roles": {
+      "P": 27,
+      "H1": 2,
+      "H2": 4,
+      "H3": 6,
+      "H4": 8
+    },
+    "kinds": {
+      "hard-negative": 6,
+      "heading": 20,
+      "paragraph": 21
+    },
+    "categories": {
+      "running-header": 1,
+      "H1": 2,
+      "P": 21,
+      "callout": 1,
+      "H2": 4,
+      "H3": 6,
+      "H4": 8,
+      "running-footer": 1,
+      "body-label": 1,
+      "chart-title": 1,
+      "status-line": 1
+    }
+  },
+  "combined_if_concatenated": {
+    "rows": 137,
+    "expect_roles": {
+      "H1": 10,
+      "H2": 23,
+      "H3": 13,
+      "P": 71,
+      "Artifact": 4,
+      "H4": 16
+    },
+    "note": "Hypothetical concatenation only. Part 19 does not train and does not choose the mixture."
+  },
+  "sha256": {
+    "role-expanded-new-train.json": "abb2bc78f915ea6c657b699d39c1d6a43bda9455dc532df497b5987c389359df",
+    "role-expanded-valid.json": "207d77b3421438f673de188e88d3168328ef533139cefe51477c88b31c4df07f",
+    "split.json": "87dc5e69c85fc5ddd9458e96a2847c49c2f47a7609b65f2d82d94119b667d1f9",
+    "fixtures": {
+      "../document-remediation/corpus/13-workshop-induction.html": "61db700ba563fa2ea19f7169ff6363e8e188502324db0ce28ccba4fb944ddf82",
+      "../document-remediation/corpus/13-workshop-induction.ground-truth.json": "b3ff6e83bacd96944db8f97064bc2f6c11fd93eee380fd7c197c637faf3b8237",
+      "../document-remediation/corpus/14-pump-overhaul.html": "b307dda2c08ee72815bbded39d75dd88cb1503376ab8cb40881e79a9b77102d4",
+      "../document-remediation/corpus/14-pump-overhaul.ground-truth.json": "41d3e27ea03abced86231e0b78cd38e074e0745b85c26569fe5608e166c28f5d",
+      "../document-remediation/corpus/15-archive-transfer.html": "2727daf5f455e772cd5a38e17ba3478980942134bd7e1a9aa33ffaebd6be3514",
+      "../document-remediation/corpus/15-archive-transfer.ground-truth.json": "d9d4245a42b74e3218be39c614efde57f9f5a2f179b381af992404d7b98855a7",
+      "../document-remediation/corpus/16-shift-handover.html": "d2233e1af0caccaf659d4cc11b71304bab780c41438e76baa5cda5b44c9da688",
+      "../document-remediation/corpus/16-shift-handover.ground-truth.json": "3c9cd1d3b24af59a9dfc7064f87a315a4f508afd501f16af2629c32b537620a3",
+      "../document-remediation/corpus/17-visitor-brief.html": "3da381bfc3b5d878bcdb12a877a9f0488295429f00530d5577703ef91f05e355",
+      "../document-remediation/corpus/17-visitor-brief.ground-truth.json": "298f8ae362c62377dbf78e9d0871502ac66bc668d098d6816e464b6077e81a83",
+      "../document-remediation/corpus/18-sample-receipt.html": "50c8499ac50a70121da54e8eb580a0033577331f6104936e04dc17a221040248",
+      "../document-remediation/corpus/18-sample-receipt.ground-truth.json": "68cc418b338ef243dc18caedaf5db59c742e60afe2b8cea1bfc888c6d89bf04b"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "part": 23,
+  "documents": [
+    "19-quay-roster",
+    "20-tank-soundings",
+    "21-ice-window"
+  ],
+  "extension_cards": 37,
+  "verifier_new_rows": 37,
+  "proposed_combined": 161,
+  "kinds": {
+    "hard-negative": 12,
+    "heading": 9,
+    "paragraph": 16
+  },
+  "categories": {
+    "stamp": 1,
+    "H1": 3,
+    "P": 16,
+    "H2": 3,
+    "chart-title": 6,
+    "chart-legend": 1,
+    "H3": 3,
+    "banner": 1,
+    "chart-subtitle": 1,
+    "kicker": 1,
+    "chart-axis": 1
+  },
+  "heading_true": 9,
+  "heading_false": 28,
+  "chart_title": 6,
+  "chart_label_other": 3,
+  "sha256": {
+    "chart-title-extension-train.json": "0a99068ce9944a1beb8328b5b3ab0be448ff01fc20604b82b8a730fcfaef2474",
+    "chart-title-extension-split.json": "f9fdfaffa066453cc535424216d047eb05ad4f11b9d8e881f5eafb62f478ed2f",
+    "verifier-chart-title-extension-manifest.json": "091ac19e28b66c00b19607218fde66ba88c91aa9f0a44238901383e786697868",
+    "fixtures": {
+      "document-remediation/corpus/19-quay-roster.html": "fc40a1164aa6d5372bf549bc349800a013923b642363d6e4cb501e74931bfaca",
+      "document-remediation/corpus/19-quay-roster.ground-truth.json": "9a350757211fa95f59058e7ae5317eb3823e3d8d23bdd2b1f04c3c35ed5846db",
+      "document-remediation/corpus/20-tank-soundings.html": "15d156c67820abcfcf6b3440a7ab2089bcf7573c115ea8e675e101ba2ec33885",
+      "document-remediation/corpus/20-tank-soundings.ground-truth.json": "7b5daaab8acc10bc9fbaee2d5d62578634159d062126050e395c75509226413f",
+      "document-remediation/corpus/21-ice-window.html": "71289707728f713b49ff4fac99357a322113741d875cfa5f5d1dfeafe89d4d6e",
+      "document-remediation/corpus/21-ice-window.ground-truth.json": "6b9094d8ffff2c377f3b2bbde6590787707829683410d448cb7b579dfb2cfccc"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Tank Soundings Sheet</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 14mm; }
+  html { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
+  body { font: 10pt/1.45 Verdana, Geneva, sans-serif; color: #102018;
+         letter-spacing: 0.02em; }
+  .banner { background: #0b5c4a; color: #f4fff9; font-size: 11pt; font-weight: 700;
+            padding: 6pt 8pt; margin: 0 0 12pt; display: block; }
+  h1 { font-size: 22pt; font-weight: 700; color: #0b5c4a; margin: 0 0 8pt; display: block; }
+  h2 { font-size: 14pt; font-weight: 700; margin: 16pt 0 8pt; display: block; }
+  h3 { font-size: 12pt; font-weight: 400; margin: 16pt 0 8pt; display: block; }
+  p { margin: 8pt 0; }
+  .chart-title { font-size: 14pt; font-weight: 700; margin: 16pt 0 4pt; display: block; }
+  .chart-title.loud { font-size: 18pt; font-weight: 700; margin: 16pt 0 8pt; }
+  .chart-sub { font-size: 9pt; font-weight: 400; margin: 0 0 8pt; display: block; }
+  .panel { border-left: 6pt solid #0b5c4a; padding: 4pt 0 4pt 10pt; margin: 0 0 8pt; }
+  .runfoot { font-size: 8pt; color: #4a5c54; margin-top: 14pt; display: block; }
+</style>
+</head>
+<body>
+<p class="banner">Ops desk — not for customs</p>
+
+<h1>Tank Soundings Sheet</h1>
+<p>Readings are taken at the start of the watch. They are not a cargo
+account and they are not sent to the jetty clerk.</p>
+
+<h2>East bank</h2>
+<p class="chart-title">Stored volume</p>
+<p class="chart-sub">By tank, this watch</p>
+<div class="panel">
+  <svg width="420" height="90" viewBox="0 0 420 90" xmlns="http://www.w3.org/2000/svg">
+    <polyline fill="none" stroke="#0b5c4a" stroke-width="3"
+              points="20,70 120,52 220,58 320,34 400,40"/>
+    <circle cx="20" cy="70" r="3" fill="#0b5c4a"/>
+    <circle cx="120" cy="52" r="3" fill="#0b5c4a"/>
+    <circle cx="220" cy="58" r="3" fill="#0b5c4a"/>
+    <circle cx="320" cy="34" r="3" fill="#0b5c4a"/>
+    <circle cx="400" cy="40" r="3" fill="#0b5c4a"/>
+  </svg>
+</div>
+<p>East bank tanks are sounded in the same order each watch. Skip a tank
+only when it is isolated.</p>
+
+<h3>West bank</h3>
+<p>West bank is smaller. The same method is used. The numbers are not
+copied across from the east sheet.</p>
+
+<p class="chart-title loud">Ullage change</p>
+<div class="panel">
+  <svg width="420" height="70" viewBox="0 0 420 70" xmlns="http://www.w3.org/2000/svg">
+    <polyline fill="none" stroke="#8a3b12" stroke-width="3"
+              points="20,28 140,36 260,22 400,48"/>
+  </svg>
+</div>
+<p>The line is the change since last watch. It does not open a new
+section of this sheet.</p>
+
+<div class="runfoot">Northwind Logistics · tank farm · watch copy</div>
+</body>
+</html>

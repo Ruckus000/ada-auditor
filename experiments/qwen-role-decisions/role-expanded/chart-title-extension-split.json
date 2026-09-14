@@ -1,0 +1,9 @@
+{
+  "train": [
+    "19-quay-roster",
+    "20-tank-soundings",
+    "21-ice-window"
+  ],
+  "validation": [],
+  "note": "Part 23 extension only. Does not reshuffle frozen Part-19 split.json. Docs 17/18 remain validation-only there."
+}

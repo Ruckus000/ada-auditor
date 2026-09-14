@@ -1,0 +1,42 @@
+{
+  "document": "13-workshop-induction",
+  "tests": "Part 19 role-coverage train fixture. Conventional decreasing heading sizes, two independent branches, running furniture and a status line.",
+  "adversarial": false,
+  "title": "Workshop Induction Pack",
+  "language": "en",
+  "split": "train",
+  "headingHierarchy": [
+    { "level": 1, "text": "Workshop Induction Pack" },
+    { "level": 2, "text": "First day" },
+    { "level": 3, "text": "Arrival" },
+    { "level": 4, "text": "Sign-in desk" },
+    { "level": 4, "text": "Locker keys" },
+    { "level": 3, "text": "Safety briefing" },
+    { "level": 4, "text": "Fire exits" },
+    { "level": 2, "text": "After week one" },
+    { "level": 3, "text": "Mentor pairing" },
+    { "level": 4, "text": "Review notes" }
+  ],
+  "nonHeadings": [
+    { "text": "Northwind Logistics · Workshop · Page 1 of 1", "role": "P", "category": "running-header" },
+    { "text": "Internal draft — not a controlled copy", "role": "P", "category": "status-line" },
+    { "text": "Note. PPE is issued at the locker, not at the machine.", "role": "P", "category": "callout" },
+    { "text": "Northwind Logistics · Induction · Prepared 2026-09-11", "role": "P", "category": "running-footer" }
+  ],
+  "readingOrder": [
+    "running header", "status line", "H1", "intro",
+    "H2 First day", "paragraph",
+    "H3 Arrival", "paragraph", "H4 Sign-in desk", "paragraph", "H4 Locker keys", "paragraph",
+    "H3 Safety briefing", "paragraph", "H4 Fire exits", "paragraph",
+    "H2 After week one", "paragraph",
+    "H3 Mentor pairing", "paragraph", "H4 Review notes", "paragraph",
+    "callout", "running footer"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": ["running header", "running footer"],
+  "intentionalProblems": []
+}
