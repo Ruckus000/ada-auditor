@@ -18,9 +18,12 @@ EXPORT_FILTER = "pdf:writer_pdf_Export:" + json.dumps({
 
 def convert_docx(src: Path, out_dir: Path) -> Path | None:
     out_dir.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as profile:
-        subprocess.run([SOFFICE, f"-env:UserInstallation=file://{profile}", "--headless", "--convert-to", EXPORT_FILTER, "--outdir", str(out_dir), str(src)], capture_output=True, text=True, timeout=300)
     pdf = out_dir / (src.stem + ".pdf")
+    pdf.unlink(missing_ok=True)
+    with tempfile.TemporaryDirectory() as profile:
+        proc = subprocess.run([SOFFICE, f"-env:UserInstallation=file://{profile}", "--headless", "--convert-to", EXPORT_FILTER, "--outdir", str(out_dir), str(src)], capture_output=True, text=True, timeout=300)
+    if proc.returncode != 0:
+        return None
     if not pdf.is_file():
         return None
     return pdf if dump_pdf(pdf, compile=False).get("hasStructTree") else None
