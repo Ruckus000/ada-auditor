@@ -1,4 +1,4 @@
-from labels.match import iou, label_for, make_key_row, match_candidate
+from labels.match import iou, label_for, make_key_row, match_candidate, resolve_exact_duplicates
 from eligibility_eval import refusals
 
 
@@ -95,6 +95,20 @@ def test_every_rule_3_type_outranks_h_and_p():
     for t in ("TH", "Caption", "TOCI", "Lbl", "BlockQuote"):
         rule3 = box(0, 0, 100, 10, norm="fee", type=t, locator=f"k:{t}")
         assert match_candidate(card, [h, p, rule3])[0]["locator"] == f"k:{t}", t
+
+
+def test_resolve_exact_duplicates_keeps_larger_iou_and_ties_keep_first():
+    key = box(0, 0, 100, 10, norm="fee", type="H", level=1, locator="k:1")
+    big = box(0, 0, 100, 10, norm="fee")  # IoU 1.0
+    small = box(0, 0, 100, 20, norm="fee")  # IoU 0.5
+    result = resolve_exact_duplicates([(small, key, "exact"), (big, key, "exact")])
+    assert result[0] == (small, None, "none")
+    assert result[1] == (big, key, "exact")
+    tied_a = box(0, 0, 100, 10, norm="fee")
+    tied_b = box(0, 0, 100, 10, norm="fee")
+    result = resolve_exact_duplicates([(tied_a, key, "exact"), (tied_b, key, "exact")])
+    assert result[0] == (tied_a, key, "exact")
+    assert result[1] == (tied_b, None, "none")
 
 
 def test_tie_window_is_exactly_tie_iou():

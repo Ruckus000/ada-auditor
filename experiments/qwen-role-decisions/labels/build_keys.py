@@ -29,7 +29,7 @@ from typing import Callable
 from run import blocks_to_cards, compile_cards, dump_pdf, text_norm
 from labels.hygiene import verapdf_failures, verdict
 from labels.keys import CONTAINER_TAGS, heading_sentence_share, key_blocks
-from labels.match import make_key_row, match_candidate
+from labels.match import make_key_row, match_candidate, resolve_exact_duplicates
 from labels.pdf_cards import SEED, cap_per_document, select_candidates
 from labels.stage_pdfs import MAIN, ODL_RUNNER, has_struct_tree
 from labels.strip import strip_pdf
@@ -253,8 +253,9 @@ def main() -> None:
             by_page = defaultdict(list)
             for k in keys[d["id"]]:
                 by_page[k.get("page")].append(k)
-            for c in cards:
-                key, how = match_candidate(c, by_page.get(c.get("page"), []))
+            doc_matches = [(c, *match_candidate(c, by_page.get(c.get("page"), []))) for c in cards]
+            doc_matches = resolve_exact_duplicates(doc_matches)
+            for c, key, how in doc_matches:
                 match_counts[how] += 1
                 if how == "none":
                     u.write(json.dumps(unmatched_row(c)) + "\n"); n_unmatched += 1

@@ -59,6 +59,26 @@ def match_candidate(card: dict, keys_on_page: list[dict]) -> tuple[dict | None, 
     return None, "none"
 
 
+def resolve_exact_duplicates(matches: list[tuple[dict, dict | None, str]]) -> list[tuple[dict, dict | None, str]]:
+    """K34: within one document, when two or more cards exact-match the same key element
+    (same key locator), keep the card with the larger iou(card, key); every other such card
+    becomes unmatched (key=None, how="none"). Ties keep the card that comes first in the
+    input order. Only the "exact" tier is in scope."""
+    by_locator: dict = {}
+    for i, (card, key, how) in enumerate(matches):
+        if how == "exact" and key is not None:
+            by_locator.setdefault(key.get("locator"), []).append(i)
+    result = list(matches)
+    for idxs in by_locator.values():
+        if len(idxs) <= 1:
+            continue
+        best_i = max(idxs, key=lambda i: iou(matches[i][0], matches[i][1]))
+        for i in idxs:
+            if i != best_i:
+                result[i] = (result[i][0], None, "none")
+    return result
+
+
 def label_for(card: dict, key: dict | None, how: str) -> tuple[str, int | None]:
     if how == "none" or key is None:
         raise ValueError("an unmatched card is not a label (K14)")
