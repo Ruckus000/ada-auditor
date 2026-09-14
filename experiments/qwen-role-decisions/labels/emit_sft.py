@@ -13,13 +13,14 @@ OUT = Path("out/keys")
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--keys-dir", type=Path, default=OUT, help="holds labels.jsonl, cards.jsonl, key-headings.json")
     p.add_argument("--split", type=Path, default=OUT / "split" / "split.json")
     p.add_argument("--on", default="train")
     p.add_argument("--out", type=Path, default=Path("out/stage1/sft"))
     a = p.parse_args()
-    rows = [json.loads(l) for l in (OUT / "labels.jsonl").read_text().splitlines() if l.strip()]
-    cards = {c["card_id"]: c for c in (json.loads(l) for l in (OUT / "cards.jsonl").read_text().splitlines() if l.strip())}
-    keys = json.loads((OUT / "key-headings.json").read_text())
+    rows = [json.loads(l) for l in (a.keys_dir / "labels.jsonl").read_text().splitlines() if l.strip()]
+    cards = {c["card_id"]: c for c in (json.loads(l) for l in (a.keys_dir / "cards.jsonl").read_text().splitlines() if l.strip())}
+    keys = json.loads((a.keys_dir / "key-headings.json").read_text())
     ids = set(json.loads(a.split.read_text())["ids"][a.on])
     sft, held = emit(rows, cards, keys, lambda c: c.get("image"), ids)
     a.out.mkdir(parents=True, exist_ok=True)
