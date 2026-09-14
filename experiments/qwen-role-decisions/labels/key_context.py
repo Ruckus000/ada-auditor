@@ -58,6 +58,17 @@ def original_of(build: Path, entry: dict, word_pdfs: Path | None = None) -> Path
     return (word_pdfs if word_pdfs is not None else build / "word-pdfs") / f"{entry['id']}.pdf"
 
 
+def stripped_of(build: Path, doc_id: str) -> Path:
+    """The stripped copy: ``stripped/<id>.pdf``, or ``stripped/batch-NNN/<id>.pdf`` where
+    build_keys' ODL batching moved it. Exactly one must exist."""
+    hits = [p for p in [build / "stripped" / f"{doc_id}.pdf", *sorted((build / "stripped").glob(f"batch-*/{doc_id}.pdf"))] if p.is_file()]
+    if not hits:
+        raise FileNotFoundError(f"{doc_id}: no stripped copy under {build / 'stripped'}")
+    if len(hits) > 1:
+        raise ValueError(f"{doc_id}: {len(hits)} stripped copies under {build / 'stripped'}")
+    return hits[0]
+
+
 def marked_image(card: dict, pdf: Path, pages: Path = OUT / "pages") -> Path | None:
     if any(card.get(k) is None for k in ("page", "x0", "y0", "x1", "y1")):
         return None
@@ -98,7 +109,7 @@ def main() -> None:
         for doc_id, ids in sorted(wanted.items()):
             (build, _, word_pdfs), entry = resolved[doc_id]
             tagged = build / "tagged" / f"{doc_id}.pdf"
-            stripped = build / "stripped" / f"{doc_id}.pdf"
+            stripped = stripped_of(build, doc_id)
             original = original_of(build, entry, word_pdfs)
             for path in (tagged, stripped, original):
                 if not path.is_file():

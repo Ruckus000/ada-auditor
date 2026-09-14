@@ -62,3 +62,30 @@ def test_parse_source_takes_an_optional_word_pdfs_dir_for_builds_that_reused_ano
     build, manifest, word = parse_source("out/keys-b4r2:out/labels/manifest.json:out/keys/word-pdfs")
     assert (build, manifest, word) == (Path("out/keys-b4r2"), Path("out/labels/manifest.json"), Path("out/keys/word-pdfs"))
     assert original_of(build, {"id": "w1", "kind": "docx", "path": "/x/w1.docx"}, word) == Path("out/keys/word-pdfs/w1.pdf")
+
+
+def test_stripped_copy_is_found_flat_or_in_the_one_odl_batch_dir_it_was_moved_to():
+    from labels.key_context import stripped_of
+    with tempfile.TemporaryDirectory() as d:
+        build = Path(d)
+        (build / "stripped").mkdir()
+        (build / "stripped" / "n01.pdf").write_bytes(b"%PDF-")
+        (build / "stripped" / "batch-001").mkdir()
+        (build / "stripped" / "batch-001" / "c3-0008.pdf").write_bytes(b"%PDF-")
+        assert stripped_of(build, "n01") == build / "stripped" / "n01.pdf"
+        assert stripped_of(build, "c3-0008") == build / "stripped" / "batch-001" / "c3-0008.pdf"
+        for bad in ("absent",):
+            try:
+                stripped_of(build, bad)
+            except FileNotFoundError:
+                pass
+            else:
+                raise AssertionError("expected FileNotFoundError")
+        (build / "stripped" / "batch-000").mkdir()
+        (build / "stripped" / "batch-000" / "c3-0008.pdf").write_bytes(b"%PDF-")
+        try:
+            stripped_of(build, "c3-0008")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("expected ValueError for two copies")
