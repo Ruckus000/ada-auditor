@@ -4,6 +4,12 @@
 Nothing is copied into labels/ unless --split-copy names the path (K28): a
 Stage 0-style run passes --split-copy labels/split-keys-<date>.json explicitly.
 --word-pdfs defaults to <--out>/word-pdfs.
+
+The build refuses to start over an existing <--out>/labels.jsonl unless
+--overwrite is passed (K30). One bad file does not stop it (K31): an original
+Cards cannot read is excluded as "unreadable", and a failed ODL batch is
+recorded under odl_failed_batches while its documents are excluded as
+"tagger-batch-failed" and the other batches carry on.
 """
 from __future__ import annotations
 
@@ -27,14 +33,23 @@ from labels.strip import strip_pdf
 
 OUT = Path("out/keys")
 ODL_BATCH = 50
+# What Cards.java raises on a PDF it cannot read (non-zero exit), or its unparsable output.
+UNREADABLE = (RuntimeError, ValueError)
 
 
 def originals(rows: list[dict], word_pdfs: Path, staged: Path, staging_optional: bool = False,
-              has_tree: Callable[[Path], bool] = has_struct_tree) -> list[dict]:
+              has_tree: Callable[[Path], bool] = has_struct_tree, excluded: dict | None = None) -> list[dict]:
     """Key sources. Stage 0 reads staging.json; with staging_optional a manifest PDF
-    is a stripped-tree key iff its own bytes carry a structure tree (no ODL on originals)."""
+    is a stripped-tree key iff its own bytes carry a structure tree (no ODL on originals).
+    A PDF the tree check cannot read goes into `excluded` as "unreadable" (K31)."""
+    excluded = {} if excluded is None else excluded
     if staging_optional:
-        is_original = lambda r: has_tree(Path(r["path"]))  # noqa: E731
+        def is_original(r: dict) -> bool:
+            try:
+                return has_tree(Path(r["path"]))
+            except UNREADABLE:
+                excluded[r["id"]] = ["unreadable"]
+                return False
     else:
         staging = {s["id"]: s for s in json.loads((staged / "staging.json").read_text())}
         is_original = lambda r: staging.get(r["id"], {}).get("source") == "original"  # noqa: E731
@@ -53,6 +68,38 @@ UNMATCHED_FIELDS = ("card_id", "document_id", "page", "x0", "y0", "x1", "y1", "f
 def non_container_cards(cards: list[dict]) -> list[dict]:
     """K24: container cards duplicate their cells' text; the cells are the candidates."""
     return [c for c in cards if c.get("existing_tag") not in CONTAINER_TAGS]
+
+
+def key_document(d: dict, dump: Callable = dump_pdf, failures: Callable = verapdf_failures) -> tuple[list[dict] | None, list[str]]:
+    """The original's key blocks if it passes hygiene, else None and the reasons."""
+    try:
+        kb = key_blocks(dump(Path(d["original"]), compile=False))
+    except UNREADABLE:
+        return None, ["unreadable"]
+    ok, reasons = verdict(failures(Path(d["original"])), heading_sentence_share(kb), len(kb))
+    return (kb if ok else None), reasons
+
+
+def document_cards(tagged: Path, doc_id: str, rng: random.Random, dump: Callable = dump_pdf) -> list[dict]:
+    """One tagged copy's candidate cards: containers out (K24), select, annotate, cap."""
+    cards, _ = blocks_to_cards(dump(tagged, compile=False).get("blocks") or [])
+    chosen = select_candidates(non_container_cards(cards), rng)
+    for c in chosen:
+        c["document_id"] = doc_id; c["kind"] = "pdf"; c["card_id"] = c["locator"]
+        c["norm"] = text_norm(c["text"])
+    return cap_per_document(chosen, rng)
+
+
+def tagger_miss_reason(doc_id: str, failed_batches: list[dict]) -> list[str]:
+    if any(doc_id in b["ids"] for b in failed_batches):
+        return ["tagger-batch-failed"]
+    return ["tagger-produced-nothing"]
+
+
+def refuse_existing_labels(out_dir: Path, overwrite: bool) -> None:
+    """K30: an existing labels.jsonl may be the only reproduction of a committed split."""
+    if (out_dir / "labels.jsonl").exists() and not overwrite:
+        raise SystemExit(f"{out_dir / 'labels.jsonl'} exists; pass --overwrite to rebuild over it, or choose another --out")
 
 
 def unmatched_row(card: dict) -> dict:
@@ -108,6 +155,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--split-copy", type=Path, default=None,
                    help="copy split.json here; default: no copy (K28). A Stage 0-style run passes labels/split-keys-<date>.json explicitly")
     p.add_argument("--odl-batch", type=int, default=ODL_BATCH)
+    p.add_argument("--overwrite", action="store_true", help="rebuild over an existing <--out>/labels.jsonl (K30)")
     a = p.parse_args(argv)
     if a.word_pdfs is None:
         a.word_pdfs = a.out / "word-pdfs"
@@ -117,17 +165,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main() -> None:
     a = parse_args()
     out_dir = a.out
+    refuse_existing_labels(out_dir, a.overwrite)
     compile_cards()
     rows = json.loads(a.manifest.read_text())
-    docs = originals(rows, a.word_pdfs, a.staged, staging_optional=a.staging_optional)
     excluded: dict[str, list[str]] = {}
+    docs = originals(rows, a.word_pdfs, a.staged, staging_optional=a.staging_optional, excluded=excluded)
     usable: list[dict] = []
     keys: dict[str, list[dict]] = {}
     for d in docs:
-        dump = dump_pdf(Path(d["original"]), compile=False)
-        kb = key_blocks(dump)
-        ok, reasons = verdict(verapdf_failures(Path(d["original"])), heading_sentence_share(kb), len(kb))
-        if not ok:
+        kb, reasons = key_document(d)
+        if kb is None:
             excluded[d["id"]] = reasons
             continue
         keys[d["id"]] = kb
@@ -148,16 +195,15 @@ def main() -> None:
         for d in usable:
             tagged = tagged_dir / f"{d['id']}.pdf"
             if not tagged.is_file():
-                excluded[d["id"]] = ["tagger-produced-nothing"]; continue
-            cards, _ = blocks_to_cards(dump_pdf(tagged, compile=False).get("blocks") or [])
-            chosen = select_candidates(non_container_cards(cards), rng)
-            for c in chosen:
-                c["document_id"] = d["id"]; c["kind"] = "pdf"; c["card_id"] = c["locator"]
-                c["norm"] = text_norm(c["text"])
+                excluded[d["id"]] = tagger_miss_reason(d["id"], odl_failed); continue
+            try:
+                cards = document_cards(tagged, d["id"], rng)
+            except UNREADABLE:
+                excluded[d["id"]] = ["tagger-output-unreadable"]; continue
             by_page = defaultdict(list)
             for k in keys[d["id"]]:
                 by_page[k.get("page")].append(k)
-            for c in cap_per_document(chosen, rng):
+            for c in cards:
                 key, how = match_candidate(c, by_page.get(c.get("page"), []))
                 match_counts[how] += 1
                 if how == "none":
