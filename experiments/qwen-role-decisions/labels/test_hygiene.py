@@ -23,7 +23,8 @@ def test_parse_failures_flags_a_report_with_no_jobs():
 def test_verdict_reasons():
     assert verdict(set(), 0.1, 40) == (True, [])
     assert verdict({"7.1-3"}, 0.0, 40) == (False, ["untagged-content (7.1-3)"])
-    assert verdict({"7.4.2-1", "7.4.4-2"}, None, 40)[1] == ["level-skip (7.4.2)", "mixed-structure (7.4.4)"]
+    assert verdict({"7.4.2-1", "7.4.4-2"}, 0.0, 40)[1] == ["level-skip (7.4.2)", "mixed-structure (7.4.4)"]
     assert verdict({"7.18.1-2"}, 0.31, 40) == (False, ["prose-headings (>=0.30)"])
-    assert verdict(set(), None, 0) == (False, ["no-blocks"])
-    assert verdict({"checker-failed"}, None, 40) == (False, ["checker-failed"])
+    assert verdict(set(), None, 0) == (False, ["no-blocks", "no-headings"])
+    assert verdict(set(), None, 40) == (False, ["no-headings"])
+    assert verdict({"checker-failed"}, 0.0, 40) == (False, ["checker-failed"])

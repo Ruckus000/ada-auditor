@@ -45,7 +45,7 @@ MIN_TEST_DOCUMENTS = 30
 MIN_TEST_CLIENTS = 5
 MIN_TEST_TEMPLATES = 10
 SPLIT = (("train", 0.6), ("validation", 0.2), ("test", 0.2))
-GROUP_KEYS = ("document_sha256", "template_id", "client_id", "answer_id")
+GROUP_KEYS = ("document_sha256", "template_id", "client_id")
 MODEL_FIELDS = ("prediction", "model", "model_role", "heading_flag", "raw", "confidence")
 LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted")
 PREDICTION_TYPES = ("H", "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Other", "Unsure")
@@ -108,7 +108,11 @@ def refusals(rows: list[dict]) -> list[str]:
 
 
 def components(rows: list[dict]) -> dict[str, str]:
-    """Union rows sharing any document, template, client or correction event."""
+    """Union rows sharing any document, template or client.
+
+    ``answer_id`` is not a group key: every row carries its own, so it links
+    nothing and would only make the split's names depend on random ids.
+    """
     parent: dict[str, str] = {}
 
     def find(x: str) -> str:
@@ -359,6 +363,9 @@ def self_check() -> None:
         assert all(result["ids"][name] for name, _ in SPLIT)
         assert not overlaps(rows, membership)
         assert membership["q900"] == membership["q901"] == membership["q0"] == membership["q1"]
+        # Answer ids name no group: fresh ones with the same salt draw the same split.
+        fresh = [{**row, "answer_id": f"fresh-{row['id']}"} for row in rows]
+        assert split(fresh, salt)["ids"] == result["ids"]
     assert overlaps(rows[:2], {"q0": "train", "q1": "train"}) == []
     assert overlaps([rows[0], {**rows[1], "client_id": "client0"}], {"q0": "train", "q1": "test"})
 

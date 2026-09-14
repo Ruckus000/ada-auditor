@@ -39,10 +39,14 @@ import org.apache.pdfbox.text.TextPosition;
  */
 public final class Cards {
 
-    /** Same universe Inspect.order uses. */
+    /**
+     * Inspect.order's universe plus the key vocabulary's inner types (TH, TD,
+     * TOCI, Lbl, BlockQuote). StructText.find recurses into every match, so
+     * cells and labels inside Table / L / LI are reached. Artifact stays out.
+     */
     private static final Set<String> BLOCK = Set.of(
         "H1", "H2", "H3", "H4", "H5", "H6", "P", "Figure", "Table", "L", "LI",
-        "Caption", "Formula");
+        "Caption", "Formula", "TH", "TD", "TOCI", "Lbl", "BlockQuote");
 
     /** Subset-embedded fonts arrive as "DAAAAA+Georgia-Bold"; Tables.java:142. */
     private static final Pattern SUBSET_TAG = Pattern.compile("^[A-Z]{6}\\+");

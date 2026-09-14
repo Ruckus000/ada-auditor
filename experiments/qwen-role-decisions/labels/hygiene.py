@@ -54,6 +54,8 @@ def verdict(failures: set[str], sentence_share: float | None, n_blocks: int) -> 
     reasons = []
     if n_blocks == 0:
         reasons.append("no-blocks")
+    if sentence_share is None:
+        reasons.append("no-headings")
     if "checker-failed" in failures:
         reasons.append("checker-failed")
     if "7.1-3" in failures:

@@ -7,8 +7,9 @@ import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 
 /**
  * Experiment-only: drop the structure tree so a tagged document can stand in
- * for an untagged one. Catalog entries only; page content streams are not
- * rewritten. Usage: Strip <in.pdf> <out.pdf>
+ * for an untagged one. The outline goes too, because bookmarks name headings.
+ * Catalog entries only; page content streams are not rewritten, so
+ * heading-named marked content stays. Usage: Strip <in.pdf> <out.pdf>
  */
 public final class Strip {
     public static void main(String[] args) throws Exception {
@@ -18,6 +19,7 @@ public final class Strip {
             boolean had = cat.getStructureTreeRoot() != null;
             cat.getCOSObject().removeItem(COSName.STRUCT_TREE_ROOT);
             cat.getCOSObject().removeItem(COSName.MARK_INFO);
+            cat.getCOSObject().removeItem(COSName.OUTLINES);
             doc.save(new File(args[1]));
             System.out.println(String.format(Locale.ROOT, "{\"pages\":%d,\"hadTree\":%s}", doc.getNumberOfPages(), had));
         }
