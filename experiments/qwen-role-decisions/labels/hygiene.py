@@ -11,8 +11,16 @@ PROSE_SHARE = 0.30
 
 
 def parse_failures(report: dict) -> set[str]:
+    jobs = report.get("report", {}).get("jobs", [])
+    if not jobs:
+        return {"checker-failed"}
+    for job in jobs:
+        if job.get("taskException"):
+            return {"checker-failed"}
+        if "validationResult" not in job:
+            return {"checker-failed"}
     out: set[str] = set()
-    for job in report.get("report", {}).get("jobs", []):
+    for job in jobs:
         results = job.get("validationResult") or []
         if isinstance(results, dict):
             results = [results]
@@ -24,16 +32,30 @@ def parse_failures(report: dict) -> set[str]:
 
 
 def verapdf_failures(pdf: Path) -> set[str]:
-    proc = subprocess.run([str(VERAPDF), "-f", "ua1", "--format", "json", str(pdf)], capture_output=True, text=True)
+    try:
+        proc = subprocess.run(
+            [str(VERAPDF), "-f", "ua1", "--format", "json", str(pdf)],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except subprocess.TimeoutExpired:
+        return {"checker-failed"}
     if not proc.stdout.strip():
-        raise RuntimeError(f"verapdf produced no output for {pdf}: {proc.stderr[-500:]}")
-    return parse_failures(json.loads(proc.stdout))
+        return {"checker-failed"}
+    try:
+        report = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return {"checker-failed"}
+    return parse_failures(report)
 
 
 def verdict(failures: set[str], sentence_share: float | None, n_blocks: int) -> tuple[bool, list[str]]:
     reasons = []
     if n_blocks == 0:
         reasons.append("no-blocks")
+    if "checker-failed" in failures:
+        reasons.append("checker-failed")
     if "7.1-3" in failures:
         reasons.append("untagged-content (7.1-3)")
     if any(f.startswith("7.4.2-") for f in failures):
