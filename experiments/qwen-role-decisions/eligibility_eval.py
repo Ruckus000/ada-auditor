@@ -280,9 +280,15 @@ def read_prediction(raw: str) -> tuple[str, int | None]:
     return ("heading" if flag else "not-heading"), level
 
 
-def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
+def evaluate(rows: list[dict], predictions: dict[str, str], decided_by: dict[str, str] | None = None) -> dict:
+    """``decided_by`` is an optional row id -> ``"rule"``/``"model"`` map. When given,
+    the result gains ``type_confusion_by_decider``: the same entries as ``type_confusion``
+    (Other excluded, in-vocabulary predicted types only), split by decider. It does not
+    change ``type_confusion`` or any binary metric.
+    """
     confusion = Counter()
     type_confusion = Counter()
+    type_confusion_by_decider = {"rule": Counter(), "model": Counter()} if decided_by is not None else None
     level_n = level_exact = 0
     missing = []
     for row in rows:
@@ -302,6 +308,10 @@ def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
                 and "Other" not in (row["type"], pd["type"])
             ):
                 type_confusion[f"{row['type']}->{pd['type']}"] += 1
+                if decided_by is not None:
+                    decider = decided_by.get(row["id"])
+                    if decider in ("rule", "model"):
+                        type_confusion_by_decider[decider][f"{row['type']}->{pd['type']}"] += 1
         if outcome in ("abstain", "parse-failure"):
             confusion[outcome] += 1
         elif outcome == "heading":
@@ -338,7 +348,7 @@ def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
         blockers.append(f"fewer than {MIN_TEST_TEMPLATES} known templates")
     if UNKNOWN_TEMPLATE in templates:
         blockers.append("template provenance incomplete; template leakage cannot be ruled out")
-    return {
+    result = {
         "n": n,
         "positives": n - negatives,
         "negatives": negatives,
@@ -356,6 +366,9 @@ def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
         "blockers": blockers,
         "target_met": not blockers,
     }
+    if decided_by is not None:
+        result["type_confusion_by_decider"] = {k: dict(v) for k, v in type_confusion_by_decider.items()}
+    return result
 
 
 def sha256_file(path: Path) -> str:
@@ -390,8 +403,16 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         raise SystemExit(f"test set already evaluated ({spent}); it is spent")
     wanted = set(manifest["ids"][args.on])
     rows = [r for r in load_jsonl(args.labels) if r["id"] in wanted]
-    predictions = {p["id"]: p["raw"] for p in load_jsonl(args.predictions)}
-    result = {"on": args.on, "predictions_sha256": sha256_file(args.predictions), **evaluate(rows, predictions)}
+    pred_rows = load_jsonl(args.predictions)
+    predictions = {p["id"]: p["raw"] for p in pred_rows}
+    decided_by = None
+    if any("decided_by" in p for p in pred_rows):
+        decided_by = {p["id"]: p["decided_by"] for p in pred_rows if "decided_by" in p}
+    result = {
+        "on": args.on,
+        "predictions_sha256": sha256_file(args.predictions),
+        **evaluate(rows, predictions, decided_by=decided_by),
+    }
     if args.on == "test":
         spent.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))
@@ -551,6 +572,20 @@ def self_check() -> None:
     typed = [{**label(0, False, "c", "t"), "id": "t1", "type": "Caption"}, {**label(1, True, "c", "t", 2), "id": "t2", "type": "H"}]
     got = evaluate(typed, {"t1": '{"type":"H","level":1,"rule":1}', "t2": '{"type":"H","level":2,"rule":1}'})
     assert got["confusion"]["fp"] == 1 and got["type_confusion"] == {"Caption->H": 1, "H->H": 1}
+
+    # decided_by (S18): a rule-decided P->Lbl and a model-decided H->P separate into
+    # per-decider tables while type_confusion still holds both.
+    by_decider_rows = [
+        {**label(0, False, "c", "t"), "id": "d1", "type": "P"},
+        {**label(1, True, "c", "t"), "id": "d2", "type": "H"},
+    ]
+    by_decider_preds = {"d1": '{"type":"Lbl","rule":1}', "d2": '{"type":"P","rule":1}'}
+    no_decider = evaluate(by_decider_rows, by_decider_preds)
+    assert "type_confusion_by_decider" not in no_decider
+    got = evaluate(by_decider_rows, by_decider_preds, decided_by={"d1": "rule", "d2": "model"})
+    assert got["type_confusion"] == {"P->Lbl": 1, "H->P": 1}, got["type_confusion"]
+    assert got["type_confusion_by_decider"] == {"rule": {"P->Lbl": 1}, "model": {"H->P": 1}}, got["type_confusion_by_decider"]
+    assert got["confusion"] == no_decider["confusion"] and got["accuracy"] == no_decider["accuracy"]
     print("eligibility_eval_self_check_ok")
 
 
