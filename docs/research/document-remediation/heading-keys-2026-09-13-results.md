@@ -17,12 +17,14 @@
     n50, r17, r19, r21; prose-headings (≥ 0.30 sentence share) 1 — n50;
     checker-failed 0. (n05, n15, n17 [r17] each carry two reasons, so the
     per-reason counts sum to more than 23 excluded documents.)
-- Candidates on stripped copies: 1,669 cards over 44 of 47 usable documents
-  (n02, n18 and n43 produced none); 38 hosts carry rows. (The build's own
-  `report.json` states 40 hosts because it counts hygiene-usable documents
-  rather than documents with rows; that counting bug is fixed in code, and
-  the dataset was not rebuilt against the fix.) Per-document cap (150
-  non-random cards) binds on r05, r04 and r12.
+- Candidates on stripped copies: 1,669 cards over all 47 usable documents —
+  n02, n18 and n43 each produced candidate cards (1, 8 and 4 respectively)
+  but every one of theirs went unmatched, so 44 of 47 documents contribute
+  labelled rows, covering 38 hosts. (The build's own `report.json` states
+  40 hosts because it counts hygiene-usable documents rather than documents
+  with labelled rows; that counting bug is fixed in code, and the dataset
+  was not rebuilt against the fix.) Per-document cap (150 non-random cards)
+  binds on r05, r04 and r12.
 - Matching (final build): exact 943, contains 87, box 24, unmatched 615 —
   of 1,669 cards, match rate 0.632.
   - Unmatched cards are not written as Artifact (see "How the matcher
@@ -31,15 +33,17 @@
   - By-eye checks on card ids: build 1, five `none` rows — 5 of 5 were body
     content (4 tagger-merged lines, 1 split word), 0 furniture; this
     falsified the plan's original "no match → Artifact" rule. Build 2, five
-    `box` rows — 2 true, 3 a merged card over a smaller key. Final build:
-    5 of 5 `box` true, 3 of 3 `contains` true; five unmatched checked —
-    0 furniture, 4 merged, 1 split. Among 8 true matches checked, 3
-    (n04:0, n19:41, n03:252) are headings the original tags as P.
+    `box` rows — 2 true, 3 a merged card over a smaller key; build 2 also
+    checked five unmatched rows — 0 furniture, 4 merged, 1 split. Final
+    build: five `box` rows, 5 of 5 true; three `contains` rows, 3 of 3
+    true. The final build's unmatched set was not itself checked by eye.
+    Among 8 true matches checked, 3 (n04:0, n19:41, n03:252) are headings
+    the original tags as P.
 - Types: H 231 (H1 35, H2 106, H3 79, H4 11), P 680, Other 139, Caption 4.
   Artifact, TH, TOCI, Lbl and BlockQuote: 0 — see "What a key cannot say".
 - Label sources: stripped-tree 650, word-outline 404.
-- Usable documents whose key carries **zero** headings: 24 of 47 (14
-  stripped-tree, 10 word-outline).
+- Usable documents whose key carries **zero** headings: 24 of 47 (13
+  stripped-tree, 11 word-outline).
 
 ## How the matcher changed, and why
 - Unmatched cards are not labelled as Artifact (ruling K14): the plan's
@@ -66,8 +70,8 @@ code now clears the folder before tagging.
   check: none. `test.spent` absent.
 - Test split against the evaluator's floors: documents 8 (< 30, no); clients
   6 (≥ 5, yes); templates 6 (< 10, no); non-headings 70 (< 299, no). No salt
-  can meet the documents floor on this corpus — only 44 documents produced
-  any rows at all.
+  can meet the documents floor on this corpus — only 44 documents contribute
+  labelled rows.
 
 ## Reproduction (ruling K21)
 The salt alone does not reproduce the split, because row groups are named
