@@ -30,6 +30,12 @@ def test_containment_runs_one_way_only():
     assert match_candidate(card, keys) == (None, "none")
 
 
+def test_box_requires_the_card_inside_the_key():
+    keys = [box(0, 0, 60, 10, norm="applicantowner", type="Other", level=None, locator="k:1")]
+    card = box(0, 0, 100, 10, norm="glyphsoupmerged")  # IoU 0.6, but the key covers 60% of the card
+    assert match_candidate(card, keys) == (None, "none")
+
+
 def test_label_and_row_contract():
     assert label_for({}, {"type": "H", "level": 2}, "exact") == ("H", 2)
     try:
