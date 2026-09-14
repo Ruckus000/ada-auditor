@@ -86,3 +86,23 @@ def test_rank_applies_only_inside_the_iou_window():
     td = box(0, 0, 100, 10.2, norm="fee", type="Other", locator="k:td")  # IoU ~0.98
     p = box(0, 0, 100, 10.5, norm="fee", type="P", locator="k:p")  # IoU ~0.95
     assert match_candidate(card, [td, p])[0]["locator"] == "k:p"
+
+
+def test_every_rule_3_type_outranks_h_and_p():
+    card = box(0, 0, 100, 10, norm="fee")
+    h = box(0, 0, 100, 10, norm="fee", type="H", level=2, locator="k:h")
+    p = box(0, 0, 100, 10, norm="fee", type="P", locator="k:p")
+    for t in ("TH", "Caption", "TOCI", "Lbl", "BlockQuote"):
+        rule3 = box(0, 0, 100, 10, norm="fee", type=t, locator=f"k:{t}")
+        assert match_candidate(card, [h, p, rule3])[0]["locator"] == f"k:{t}", t
+
+
+def test_tie_window_is_exactly_tie_iou():
+    from labels.match import TIE_IOU
+    assert TIE_IOU == 0.05
+    card = box(0, 0, 100, 10, norm="fee")
+    best = box(0, 0, 100, 10, norm="fee", type="P", locator="k:p")  # IoU 1.0
+    inside = box(0, 0, 100, 10 / (1 - 0.049), norm="fee", type="TOCI", locator="k:in")  # IoU 0.951
+    outside = box(0, 0, 100, 10 / (1 - 0.051), norm="fee", type="TOCI", locator="k:out")  # IoU 0.949
+    assert match_candidate(card, [best, inside])[0]["locator"] == "k:in"
+    assert match_candidate(card, [best, outside])[0]["locator"] == "k:p"
