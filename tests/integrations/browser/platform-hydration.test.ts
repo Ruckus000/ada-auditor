@@ -669,7 +669,71 @@ describe('platform hydration', () => {
       await page.getByRole('button', { name: 'Issue delivery link', exact: true }).click();
       await expect.poll(() => issued).toBe(true);
       await expect.poll(() => page.getByRole('dialog').isVisible()).toBe(false);
-      await expect.poll(() => page.evaluate(() => document.activeElement?.textContent)).toContain('Prepare bundle');
+      // By element, not by text. `activeElement.textContent` read "Prepare
+      // bundle" off `<body>` too — the body contains the button — so this
+      // passed whether focus came back or fell to the top of the document.
+      const prepare = page.getByRole('button', { name: /^Prepare bundle/ });
+      await expect.poll(() => prepare.evaluate((node) => node === document.activeElement)).toBe(true);
+      // And the result is said, not only drawn: the dialog that showed it is gone.
+      await expect.poll(() => page.getByRole('status').filter({ hasText: 'Delivery link issued.' }).count()).toBe(1);
+    } finally { await page.close(); }
+  });
+
+  it('leaves focus on Reopen, which opens no dialog and so has nothing to return to', async () => {
+    const page = await openAuthenticatedPage();
+    let excluded = true;
+    await page.route(`**/api/platform/clients/${CLIENT}/delivery`, async route => {
+      await route.fulfill({ json: {
+        rows: [{ documentId: 'reopen-doc', url: 'https://example.test/reopen.pdf', reason: null, excluded, exclusionReason: 'Archived', signedOff: false, delivered: false, eligible: true,
+          fingerprint: 'd'.repeat(64), knownDifferences: [] }],
+        counts: { signedOff: 0, delivered: 0, eligible: 1, excluded: excluded ? 1 : 0 }, bundles: [],
+      } });
+    });
+    await page.route(`**/api/platform/clients/${CLIENT}/documents/reopen-doc/exclusion`, async route => {
+      excluded = false;
+      await route.fulfill({ json: { exclusion: { documentId: 'reopen-doc' } } });
+    });
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+      const reopen = page.getByRole('button', { name: 'Reopen', exact: true });
+      await reopen.focus();
+      const control = await reopen.elementHandle();
+      await page.keyboard.press('Enter');
+      await expect.poll(() => page.getByRole('status').filter({ hasText: 'Document reopened.' }).count()).toBe(1);
+      // Same node, now reading "Exclude". A restore aimed at a dialog that
+      // never opened once sent this to the panel heading.
+      await expect.poll(() => control!.evaluate((node) => node === document.activeElement && node.textContent === 'Exclude')).toBe(true);
+    } finally { await page.close(); }
+  });
+
+  it('returns focus to the panel when the control that opened the dialog is gone, and lists known differences before sign-off', async () => {
+    const page = await openAuthenticatedPage();
+    let signed = false;
+    await page.route(`**/api/platform/clients/${CLIENT}/delivery`, async route => {
+      await route.fulfill({ json: {
+        rows: [{ documentId: 'differs-doc', url: 'https://example.test/differs.pdf', reason: null, excluded: false, signedOff: signed, delivered: false, eligible: true,
+          fingerprint: 'e'.repeat(64), knownDifferences: [{ criterion: '1.3.1', detail: '2 list items in the source are not in the output' }] }],
+        counts: { signedOff: signed ? 1 : 0, delivered: 0, eligible: 1, excluded: 0 }, bundles: [],
+      } });
+    });
+    await page.route(`**/api/platform/clients/${CLIENT}/documents/differs-doc/signoff`, async route => {
+      signed = true;
+      await route.fulfill({ json: { signoff: { id: 's1' } } });
+    });
+    try {
+      await page.goto(`${BASE}/clients/${CLIENT}/documents`, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('button', { name: 'Sign off', exact: true }).click();
+      await expect.poll(() => page.getByRole('dialog').isVisible()).toBe(true);
+      // Disclosed where the attestation is made, not only in the bundle after it.
+      await expect.poll(() => page.getByRole('dialog').innerText()).toContain('2 list items in the source are not in the output');
+      await expect.poll(() => axeViolations(page), AXE_SETTLE).toBe('');
+      await page.getByRole('button', { name: 'Verify and sign off', exact: true }).click();
+      await expect.poll(() => page.getByRole('dialog').isVisible()).toBe(false);
+      // The Sign off button this dialog would return to no longer renders —
+      // the row is signed. Focus goes to the panel's heading, not `<body>`.
+      const heading = page.getByRole('heading', { name: 'Delivery', exact: true });
+      await expect.poll(() => heading.evaluate((node) => node === document.activeElement)).toBe(true);
+      await expect.poll(() => page.getByRole('status').filter({ hasText: 'Signed off.' }).count()).toBe(1);
     } finally { await page.close(); }
   });
 
