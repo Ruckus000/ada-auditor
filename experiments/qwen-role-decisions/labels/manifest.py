@@ -18,7 +18,7 @@ PROVENANCE_FILES = ("real-names.txt", "new-names.txt")
 
 
 def host_of(url: str) -> str:
-    return re.sub(r"^https?://(www\.)?", "", url.strip()).split("/")[0].lower()
+    return re.sub(r"^https?://(www\.)?", "", url.strip()).split("/")[0].split(":")[0].lower()
 
 
 def read_provenance(corpus: Path) -> dict[str, str]:

@@ -7,6 +7,7 @@ from labels.manifest import build_manifest, host_of
 def test_host_of_strips_scheme_and_www():
     assert host_of("https://www.fnsb.gov/DocumentCenter/View/1308") == "fnsb.gov"
     assert host_of("http://policies.osu.edu/x.pdf") == "policies.osu.edu"
+    assert host_of("https://www.acf.gov:443/sites/x.docx") == "acf.gov"  # a port is not another host (S28)
 
 
 def test_build_manifest_reads_both_provenance_files_and_hashes_bytes():
