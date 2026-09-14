@@ -2,7 +2,7 @@
 
 **Roadmap:** `docs/superpowers/plans/2026-09-13-staged-autonomy-roadmap.md` (Stage 1). **Registration:** `2026-09-13-stage1-round1.md` (worktree sleepy-mclaren-b8ba9e), amended by the round-2 rulings S10–S18 and the 2026-09-14 rulings P1–P7 in the SDD ledger (`.superpowers/sdd/2026-09-13-stage1-round1/progress.md`). **Definition:** `heading-definition-2026-09-13.md` (frozen). **Previous record:** `heading-stage1-r2-2026-09-14-results.md`. **Branch/head at record time:** `claude/heading-labelling-pass` @ 6a9c54c (split-keys-all-3).
 
-**Status:** REGISTRATION — written and committed before round 3 training; results sections are empty until the run.
+**Status:** RESULTS — registration committed before training (f8b6bc1); results below appended after the run without editing the registered sections. **Outcome: 3 of 4 registered predictions falsified (P-a, P-b, P-d); P-c held.** r3 is a regression against r2 on the real validation populations.
 
 ## Why this round
 Round 2 measured the training gap as depth, not just volume. The SFT had 255 H rows from 40 documents, but only 25 were H3 and 1 was H4. All 39 H3/H4 headings in validation are in a single document, r12, and 11 of its 15 H4 headings were missed (H→P citing rule 4). On this validation set a heading-depth data gap and an r12-specific gap could not be separated, because every deep heading is in r12 and r12 is almost every heading — more data was the fix that would separate them.
@@ -33,7 +33,7 @@ Unchanged from round 2's S10/S15 configuration:
 - default learning rate (2e-5);
 - output path `out/stage1/adapter-r3`.
 
-The SFT is emitted from `split-keys-all-3`'s train rows (3,186 rows before rule/vocabulary holdback). SFT row count: to be recorded at emit time.
+The SFT is emitted from `split-keys-all-3`'s train rows (3,186 rows before rule/vocabulary holdback). SFT row count: to be recorded at emit time. *(Recorded after emit: 2,516 rows — see Training.)*
 
 ## Registered prediction
 Judged pass/fail as written below, not against the Stage 1 bar's 99 %/1 % thresholds. Both `adapter-r2` and `adapter-r3` are evaluated on the same rows in every comparison.
@@ -52,19 +52,100 @@ Judged pass/fail as written below, not against the Stage 1 bar's 99 %/1 % thresh
 - A statement that a synthetic-only (planted) improvement means nothing on its own — only movement on the three real populations bears on P-a through P-d.
 
 ## Results
-*(to be filled after the run)*
+
+Numbers below come from `out/stage1/eval-r3set-{r2,r3}*.json` and `analysis-r3.json` (not committed). The controller recomputed the headline accuracy, FP rate and no-brace count from the raw prediction files and got the same figures.
 
 ### Training
-*(to be filled after the run)*
+- Inputs: cards 4,165 (all with images, 198 documents). Images reduced to the 408 contract: 4,165 images, 405–432 tokens (S12).
+- SFT `out/stage1/sft-r3`: 2,516 rows, with 670 train rows held back by emit (rule-decided 366, other 304).
+  - By source: planted 1,135, real 1,381.
+  - By type: P 1,380, H 1,021, TH 96, TOCI 14, Lbl 3, Caption 2.
+  - Headings by level: H1 212, H2 339, H3 326, H4 144. Round 2 had 25 H3 and 1 H4.
+- Leak checks:
+  - All 2,516 rows map to train ids, and no train document is in validation or test (controller-verified).
+  - The S2 stack leak check found no own-element leaks.
+- Run: `--iters 2516 --steps-per-save 2516 --grad-checkpoint`, everything else as registered.
+  - Step 50: 0.244 it/s. The projection of about 2.86 h is under the 3 h gate, so there was no cap.
+  - The observed rate later fell to 0.18–0.22 it/s. Ruling S21: the gate is judged once, at step 50.
+  - Loss: 0.155 at step 50, 0.045 at step 500, 0.017 at step 2516. Peak memory was 11.25 GB.
 
 ### Prediction
-*(to be filled after the run)*
+- Both adapters predicted the same 279 validation rows, with the same keys-all-3 cards and images (P8). Round 2's old prediction file was not reused.
+- r2: 279 rows; 30 decided by rule, 249 by the model.
+- r3: 279 rows, the same ids; 30 rule, 249 model.
+- Incident during the r3 run:
+  - After 12 rows, the interpreter's host worktree (`.claude/worktrees/qwen35-role-decisions`) was removed by an actor outside this task, and prediction crashed.
+  - Ruling S22: the interpreter was rebuilt at `~/.venvs/qwen-role-decisions` with the recorded pins (mlx 0.32.2, mlx-vlm 0.7.0, transformers 5.17.0). It was accepted only after reproducing the old outputs byte-for-byte on 5 model rows per adapter (5/5 and 5/5).
+  - The remaining 267 rows were then resumed. Both logs are kept.
+- S16 no-brace count: 0 of 249 model outputs for each adapter.
 
 ### Evaluator results
-*(to be filled after the run)*
+Real validation populations only. Planted: none drawn (P6).
+
+| Population | Adapter | n | TP/FP/TN/FN | Accuracy (95 % LB) | FP rate (95 % UB) | FN rate |
+|---|---|---|---|---|---|---|
+| Combined | r2 | 279 | 59/23/159/38 | 0.781 (0.737) | 0.126 (0.174) | 0.392 |
+| Combined | r3 | 279 | 21/2/180/76 | 0.720 (0.673) | 0.011 (0.034) | 0.784 |
+| Build 4 | r2 | 128 | 35/4/67/22 | 0.797 (0.730) | 0.056 (0.124) | 0.386 |
+| Build 4 | r3 | 128 | 11/0/71/46 | 0.641 (0.565) | 0.000 (0.041) | 0.807 |
+| Cohort 3 | r2 | 68 | 7/9/49/3 | 0.824 (0.730) | 0.155 (0.255) | 0.300 |
+| Cohort 3 | r3 | 68 | 1/2/56/9 | 0.838 (0.747) | 0.034 (0.105) | 0.900 |
+| Cohort 4 | r2 | 83 | 17/10/43/13 | 0.723 (0.631) | 0.189 (0.299) | 0.433 |
+| Cohort 4 | r3 | 83 | 9/0/53/21 | 0.747 (0.657) | 0.000 (0.055) | 0.700 |
+| Planted | — | 0 | none drawn | — | — | — |
+
+r2's combined accuracy here (0.781 on 279 rows) differs from round 2's record (0.806 on 196 rows). The row set is different and larger, with a different rule/model mix; it is not a discrepancy.
+
+**Level exactness by true depth (combined):**
+
+| Level | r2 | r3 |
+|---|---|---|
+| H1 | 22/42 | 6/42 |
+| H2 | 6/16 | 1/16 |
+| H3 | 7/24 | 5/24 |
+| H4 | 3/15 | 3/15 |
+
+**Type confusion by decider (combined):**
+- Rule-decided (identical for both adapters): P→Lbl 27, Lbl→Lbl 1.
+- Model-decided, r2: H→H 59, H→P 37, H→TOCI 1, P→P 89, P→H 21, Caption→P 2, TH→P 1, Lbl→Lbl 1.
+- Model-decided, r3: H→H 21, H→P 76, P→P 108, P→H 2, Caption→P 2, TH→P 1, Lbl→Lbl 1.
+
+**Errors by rule, as (truth, predicted, cited rule, decider) → count:**
+- r2: (H,P,4,model) 37; (P,H,1,model) 21; (Other,H,1,model) 2; (H,TOCI,3,model) 1.
+- r3: (H,P,4,model) 76; (P,H,1,model) 2.
+
+**r12 (91 rows, all in build 4):**
+
+| Adapter | True H4 | H4 missed | True H3 | H3 recalled |
+|---|---|---|---|---|
+| r2 | 15 | 11 | 24 | 17 (0.708) |
+| r3 | 15 | 12 | 24 | 7 (0.292) |
 
 ### Prediction check
-*(to be filled after the run)*
+- **P-a — FALSIFIED.** Combined accuracy: r3 0.720 against r2 0.781.
+- **P-b — FALSIFIED on both clauses.**
+  - r3 missed 12 of 15 H4, against r2's 11.
+  - r3's H3 recall on r12 is 7/24, against r2's 17/24.
+- **P-c — HELD in every population.**
+  - Combined: r3 0.011 ≤ r2 0.126.
+  - Build 4: 0.000 ≤ 0.056.
+  - Cohort 3: 0.034 ≤ 0.155.
+  - Cohort 4: 0.000 ≤ 0.189.
+  - No population has a higher r3 FP rate. It holds because r3 almost stopped predicting H, not because it discriminates better: combined FN rate rose from 0.392 to 0.784.
+- **P-d — FALSIFIED.**
+  - H3: r3 5/24 against r2 7/24.
+  - H4: tied at 3/15, which satisfies "at least".
+  - The prediction needs both H3 and H4, so it fails.
+- **Not predicted:** the Stage 1 bar (accuracy ≥ 0.99, FP ≤ 1 %, level exactness ≥ 95 %) is not met by either adapter.
+
+The registered risk (P4) was the opposite direction: that the planted cohort's higher heading share would raise real-population false positives. Instead, r3 under-predicts headings on real documents. The dominant error is H→P citing rule 4, which doubled from 37 to 76.
+
+A plausible cause is that planted headings teach a surface form real headings lack, so real headings stop looking like headings to the model. This is **not tested here** and is recorded only as a hypothesis. By ruling P3, the planted cohort's effect is judged only on the three real populations, and there it made the adapter worse.
 
 ### Stop decision
-*(to be filled after the run)*
+Stop, per the instruction to report after E. adapter-r3 is **not adopted**; adapter-r2 remains the better adapter on real validation. The validation set was used as registered, and test was not evaluated.
+
+What round 4 changes, and on what data, is for the reviewing chat and the user to decide. Candidates the data points to, none of them run:
+- training without the planted cohort, or with it down-weighted;
+- a planted/real ablation on the same split;
+- inspecting a sample of r3's 76 H→P errors against their planted nearest neighbours.
