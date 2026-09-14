@@ -1934,11 +1934,13 @@ Read this before claiming something works.
   download has no rate limit beyond the token's entropy; activity actions are
   dotted codes (`delivery.issued`) where the rest of the trail uses phrases —
   append-only history, so renaming is its own decision; `requested` answers
-  appear in `attestations.json`; prepare holds up to 100 MB beside the JVM. **Not
-  proven: that a bundle over 4.5 MB downloads on Vercel** — both download routes
-  and `remediationResponse` return buffered bodies, Vercel documents a 4.5 MB
-  response cap, and whether its default Node streaming exempts a buffered
-  `Response` is being measured on production before anything changes.
+  appear in `attestations.json`; prepare holds up to 100 MB beside the JVM. **Measured, 2026-09-13: a response
+  over 4.5 MB is not capped here.** Both download routes and `remediationResponse`
+  return buffered bodies, and Vercel's limits page documents a 4.5 MB response
+  cap. A probe route on a real `ada-auditor` preview returned 6 MB both buffered
+  and as a `ReadableStream`: 200, all 6,291,456 bytes, no `content-length` —
+  the default Node runtime sends a buffered body chunked. So nothing was changed
+  to stream.
 
 ## Agent behavior
 

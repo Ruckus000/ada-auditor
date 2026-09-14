@@ -10,7 +10,7 @@ have the whole picture.**
 |---|---|
 | **[legal-standard.md](legal-standard.md)** | What the law actually requires, what it does not, the deadlines, the market rate, and the definition of good remediation. **The authoritative statement of what we are aiming at.** |
 | **[working-agreement.md](working-agreement.md)** | How the project spent two experiments measuring the wrong thing, and the mechanisms that stop it recurring. |
-| **[position-2026-08-25.md](position-2026-08-25.md)** | **The current position.** Zero of nine real documents reachable without a human, the options that leaves, and the recommendation. Supersedes `decision-2026-08-24.md`. |
+| **[position-2026-08-25.md](position-2026-08-25.md)** | **The position on 2026-08-25**, not today's — later runs below converted real Word documents to conformance, and `AGENTS.md` carries current status. Zero of nine real documents reachable without a human, the options that leaves, and the recommendation. Supersedes `decision-2026-08-24.md`. |
 | **[build-status-2026-08-26.md](build-status-2026-08-26.md)** | **Where the product is**, as opposed to what the pipeline can reach: which stages have graduated into `src/`, which of the seven legal criteria they cover, and what to build next. The first status about shipping code rather than measurements. |
 | [decision-2026-08-24.md](decision-2026-08-24.md) | Superseded. Predates the zero-human constraint and both briefs. Carries a banner. |
 
@@ -102,15 +102,21 @@ measurements; synthesis is in [briefs-synthesis.md](briefs-synthesis.md) and
 [brief-a-synthesis.md](brief-a-synthesis.md). **Neither drifted, and every number
 in both reproduced when re-derived from raw output.**
 
+**Where the results files are.** The protocol kept each brief on its own branch
+(rule 12), so none of the three results files is on master. A and C link to
+their commits. **B's is on `claude/vlm-scale-b` (commit `195e489`) on one
+machine only and is not pushed:** it quotes a model's output built from a real
+municipal document, and this repository is public.
+
 | | question |
 |---|---|
 | **[briefs/README.md](briefs/README.md)** | **The protocol. Binding on both.** One question, a registered prediction, a fixed instrument, an explicit "not doing" list, and a stopping condition. |
 | [briefs/source-document.md](briefs/source-document.md) | **A** — does the structure we cannot reconstruct from a PDF survive an export from its source? Our own corpus is authored as HTML with correct semantics and rendered by an exporter that deletes them. |
 | [briefs/vlm-scale.md](briefs/vlm-scale.md) | **B** — is the alt-text wall the model, or the input? A falsification test of our own recorded conclusion, which came from a 256M model given no document context. |
-| [source-export-results.md](source-export-results.md) | **A, result.** The exporter loses the H1 — but on an HTML-import quirk in our fixtures. `[V]` A native source exports `/H1 /H2 /H3` intact. |
-| [vlm-scale-results.md](vlm-scale-results.md) | **B, result.** `[V]` 7B scores 6/6 content facts on bare pixels **and** fabricates a regulatory requirement under a real department's name. **Scale makes alt text more dangerous, not safer.** |
+| [source-export-results.md](https://github.com/Ruckus000/ada-auditor/blob/d9ea7cc6d4171e25a52b14b92f8944fd5a68a9d1/docs/research/document-remediation/source-export-results.md) | **A, result.** The exporter loses the H1 — but on an HTML-import quirk in our fixtures. `[V]` A native source exports `/H1 /H2 /H3` intact. |
+| `vlm-scale-results.md` (local only, see above) | **B, result.** `[V]` 7B scores 6/6 content facts on bare pixels **and** fabricates a regulatory requirement under a real department's name. **Scale makes alt text more dangerous, not safer.** |
 | [briefs-synthesis.md](briefs-synthesis.md) | **The joint finding: the source path omits, every inference path asserts.** Only one clears a gate set at zero assertions. |
-| [source-native-results.md](source-native-results.md) | **C, result.** `[V]` Ten probes, zero assertions — the exporter does not infer. One systematic exception: it stamps `Scope=Column` on any header-styled cell. |
+| [source-native-results.md](https://github.com/Ruckus000/ada-auditor/blob/39ef85aa050455098930f190833e5889389a3566/docs/research/document-remediation/source-native-results.md) | **C, result.** `[V]` Ten probes, zero assertions — the exporter does not infer. One systematic exception: it stamps `Scope=Column` on any header-styled cell. |
 | **[real-tables-results.md](real-tables-results.md)** | **The scope repair fired 0 times on every real document.** Word holds up and is conformant; **Excel produces 0 header cells across 151 real tables** — no better than the incumbent. |
 | [real-docx-results.md](real-docx-results.md) | A real municipal Word agenda, UA-1 conformant, zero human input. The title survives where clients' own toolchains lose it. |
 | [tagged-reality.md](tagged-reality.md) | What "already tagged" means on real files: 8,504 elements of pure paragraphs, 0 header cells across 145 tables. |
