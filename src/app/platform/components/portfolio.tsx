@@ -114,8 +114,8 @@ export function PortfolioScreen({ clients }: { clients: PortfolioRow[] }) {
                     <span style={{ fontSize: 13.5, fontWeight: 650 }}>{client.name}</span>
                     <span style={{ fontFamily: FONT.mono, fontSize: 11, color: T.inkMuted }}>
                       {CLIENT_CONTRACT_LABELS[client.contractType]}
-                      {client.contractType !== 'remediation-only' ? ` · ${client.journeyCount} journeys` : ''}
-                      {client.deliveredDocumentCount === undefined ? '' : ` · ${client.deliveredDocumentCount} documents delivered`}
+                      {client.contractType !== 'remediation-only' ? ` · ${client.journeyCount} ${client.journeyCount === 1 ? 'journey' : 'journeys'}` : ''}
+                      {client.deliveredDocumentCount === undefined ? '' : ` · ${client.deliveredDocumentCount} ${client.deliveredDocumentCount === 1 ? 'document' : 'documents'} delivered`}
                     </span>
                     {client.setupIncomplete ? (
                       /* Text, not a link — the row is already a <button>, and a
