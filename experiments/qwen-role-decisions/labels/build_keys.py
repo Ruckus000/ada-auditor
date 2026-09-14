@@ -66,6 +66,19 @@ def originals(rows: list[dict], word_pdfs: Path, staged: Path, staging_optional:
     return out
 
 
+LABEL_SOURCES = ("auto", "planted")
+
+
+def with_label_source(docs: list[dict], label_source: str) -> list[dict]:
+    """--label-source: 'auto' keeps each document's own source (stripped-tree for
+    PDFs, word-outline for docx); 'planted' overrides every document's source to
+    'planted', which the evaluator already accepts, so make_key_row's actor
+    becomes key:planted for every row from this run."""
+    if label_source == "planted":
+        return [{**d, "source": "planted"} for d in docs]
+    return docs
+
+
 UNMATCHED_FIELDS = ("card_id", "document_id", "page", "x0", "y0", "x1", "y1", "font_pt", "weight", "in_table_box", "why", "existing_tag")
 
 
@@ -192,6 +205,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                    help="copy split.json here; default: no copy (K28). A Stage 0-style run passes labels/split-keys-<date>.json explicitly")
     p.add_argument("--odl-batch", type=int, default=ODL_BATCH)
     p.add_argument("--overwrite", action="store_true", help="rebuild over an existing <--out>/labels.jsonl (K30)")
+    p.add_argument("--label-source", choices=LABEL_SOURCES, default="auto",
+                   help="'planted' sets every row's label_source/actor to key:planted; default 'auto' keeps stripped-tree/word-outline")
     a = p.parse_args(argv)
     if a.word_pdfs is None:
         a.word_pdfs = a.out / "word-pdfs"
@@ -206,6 +221,7 @@ def main() -> None:
     rows = json.loads(a.manifest.read_text())
     excluded: dict[str, list[str]] = {}
     docs = originals(rows, a.word_pdfs, a.staged, staging_optional=a.staging_optional, excluded=excluded)
+    docs = with_label_source(docs, a.label_source)
     usable: list[dict] = []
     keys: dict[str, list[dict]] = {}
     for d in docs:

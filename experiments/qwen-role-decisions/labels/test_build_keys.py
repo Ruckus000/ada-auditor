@@ -26,6 +26,21 @@ def test_unmatched_row_carries_geometry_and_hash_but_no_text():
     assert "Page 4" not in json.dumps(row) and "page4" not in json.dumps(row)
 
 
+def test_label_source_planted_overrides_every_document_source():
+    from labels.build_keys import with_label_source
+    docs = [{"id": "c01", "source": "stripped-tree"}, {"id": "c34", "source": "word-outline"}]
+    assert with_label_source(docs, "auto") == docs
+    planted = with_label_source(docs, "planted")
+    assert [(d["id"], d["source"]) for d in planted] == [("c01", "planted"), ("c34", "planted")]
+    assert [(d["id"], d["source"]) for d in docs] == [("c01", "stripped-tree"), ("c34", "word-outline")]  # not mutated
+
+
+def test_cli_label_source_defaults_to_auto():
+    from labels.build_keys import parse_args
+    assert parse_args(["--salt", "s"]).label_source == "auto"
+    assert parse_args(["--salt", "s", "--label-source", "planted"]).label_source == "planted"
+
+
 def test_hosts_count_only_documents_that_wrote_rows():
     usable = [{"id": "n01", "host": "a"}, {"id": "n02", "host": "b"}, {"id": "n03", "host": "a"}, {"id": "n04", "host": "c"}]
     assert row_coverage(usable, {"n01", "n03", "n04"}) == {"documents_with_rows": 3, "hosts": 2}
