@@ -19,6 +19,13 @@ document's approved stack is allowed.
 keydown firing two in-flight requests would otherwise let the second one,
 arriving after the first's write advances `next_card`, silently label a
 card the reviewer never saw.
+
+Cards are shown in tree reading order within a document (the integer after
+':' in a PDF card's locator; a Word card's paragraph index), so the approved
+stack is built in the order the headings occur. PDF cards whose marked page
+image is missing are not queued; the page shows how many were left out.
+Skipping a document asks for confirmation and writes `skipped: true` rows
+(still `unsure: true`) so skips are counted apart from real unsure decisions.
 """
 from __future__ import annotations
 
@@ -26,6 +33,7 @@ import argparse
 import hashlib
 import html
 import json
+import os
 import random
 import uuid
 from datetime import datetime, timezone
@@ -53,7 +61,7 @@ def order_cards(cards: list[dict], manifest: list[dict], rng: random.Random) -> 
     rank = {d: i for i, d in enumerate(docs)}
 
     def key(c: dict):
-        pos = (int(c.get("page") or 0), -float(c.get("y0") or 0)) if "index" not in c else (int(c["index"]), 0)
+        pos = int(c["index"]) if "index" in c else int(c.get("locator", c["card_id"]).rsplit(":", 1)[1])
         return (rank.get(c["document_id"], len(rank)), pos)
 
     return sorted(cards, key=key)
@@ -63,9 +71,9 @@ def next_card(cards: list[dict], done: set[str]) -> dict | None:
     return next((c for c in cards if c["card_id"] not in done), None)
 
 
-def make_row(card: dict, doc: dict, actor: str, type_: str, level: int | None) -> dict:
+def make_row(card: dict, doc: dict, actor: str, type_: str, level: int | None, skipped: bool = False) -> dict:
     heading = type_ == "H"
-    return {
+    row = {
         "id": card["card_id"],
         "label_source": "human-answer",
         "answer_id": str(uuid.uuid4()),
@@ -89,6 +97,9 @@ def make_row(card: dict, doc: dict, actor: str, type_: str, level: int | None) -
         "existing_tag": card.get("existing_tag"),
         "labelled_at": datetime.now(timezone.utc).isoformat(),
     }
+    if skipped:
+        row["skipped"] = True
+    return row
 
 
 class State:
@@ -103,8 +114,18 @@ class State:
             sampled = random.Random(7).sample(ordered, min(sample, len(ordered)))
             sampled_ids = {c["card_id"] for c in sampled}
             ordered = [c for c in ordered if c["card_id"] in sampled_ids]
-        self.cards = ordered
-        self.rows: list[dict] = [json.loads(l) for l in self.path.read_text().splitlines() if l.strip()] if self.path.is_file() else []
+        self.no_image = sum(1 for c in ordered if c.get("kind") == "pdf" and not image_path(c).is_file())
+        self.cards = [c for c in ordered if c.get("kind") != "pdf" or image_path(c).is_file()]
+        lines = [l for l in self.path.read_text().splitlines() if l.strip()] if self.path.is_file() else []
+        self.rows: list[dict] = []
+        for n, line in enumerate(lines):
+            try:
+                self.rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                if n + 1 < len(lines):
+                    raise
+                print(f"dropped an unparseable final line from {self.path}")
+                self.rewrite(self.rows)  # else the next append would glue onto the torn line
 
     def done(self) -> set[str]:
         return {r["id"] for r in self.rows}
@@ -121,21 +142,27 @@ class State:
             return [1, 2, 3, 4, 5, 6]
         return allowed_levels(self.stack_for(doc_id))
 
-    def record(self, card: dict, type_: str, level: int | None) -> None:
-        row = make_row(card, self.docs[card["document_id"]], self.actor, type_, level)
+    def record(self, card: dict, type_: str, level: int | None, skipped: bool = False) -> None:
+        row = make_row(card, self.docs[card["document_id"]], self.actor, type_, level, skipped)
         self.rows.append(row)
         with self.path.open("a") as f:
             f.write(json.dumps(row) + "\n")
 
+    def rewrite(self, rows: list[dict]) -> None:
+        tmp = self.path.with_name(self.path.name + ".tmp")
+        tmp.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        os.replace(tmp, self.path)  # atomic: a crash leaves the old file or the new one
+
     def undo(self) -> None:
         if self.rows:
-            self.rows.pop()
-            self.path.write_text("".join(json.dumps(r) + "\n" for r in self.rows))
+            rows = self.rows[:-1]
+            self.rewrite(rows)
+            self.rows = rows
 
     def skip_document(self, doc_id: str) -> None:
         for c in self.cards:
             if c["document_id"] == doc_id and c["card_id"] not in self.done():
-                self.record(c, "Unsure", None)
+                self.record(c, "Unsure", None, skipped=True)
 
 
 PAGE = """<!doctype html><meta charset=utf-8><title>label</title>
@@ -144,7 +171,7 @@ img{{max-width:100%;border:1px solid #ccc}} .t{{font-size:20px;font-weight:600}}
 .dim{{color:#666}} .stack{{font-family:monospace}}</style>
 <div>{image}</div>
 <div>
-<p class=dim>{progress} · {doc} · {kind}</p>
+<p class=dim>{progress} · {doc} · {kind} · {no_image} PDF card(s) skipped: no page image</p>
 <p class=dim>prev: {prev}</p><p class=t>{text}</p><p class=dim>next: {next}</p>
 <p>repeats on <b>{repeats}</b> page(s) · in table: <b>{in_table}</b> · {font}</p>
 <p class=stack>approved stack: {stack}</p>
@@ -153,11 +180,12 @@ img{{max-width:100%;border:1px solid #ccc}} .t{{font-size:20px;font-weight:600}}
 </div>
 <script>
 let pendingH=false;const allowed={levels_json};const cardId={card_id_json};
-document.addEventListener('keydown',e=>{{const k=e.key.toUpperCase();
+document.addEventListener('keydown',e=>{{if(e.metaKey||e.ctrlKey||e.altKey||e.repeat)return;const k=e.key.toUpperCase();
  if(e.key==='Backspace'){{location.href='/undo';return;}}
+ if(e.key==='Escape'){{if(pendingH){{pendingH=false;document.querySelector('.t').style.color='';}}return;}}
  if(pendingH){{const n=parseInt(k);if(allowed.includes(n))location.href='/answer?type=H&level='+n+'&c='+encodeURIComponent(cardId);return;}}
  if(k==='H'){{pendingH=true;document.querySelector('.t').style.color='#06c';return;}}
- if(k==='S'){{location.href='/skip?c='+encodeURIComponent(cardId);return;}}
+ if(k==='S'){{if(confirm('Skip the rest of this document? Every remaining card is written as skipped.'))location.href='/skip?c='+encodeURIComponent(cardId);return;}}
  const m={{P:'P',A:'Artifact',C:'Caption',T:'TH',O:'TOCI',L:'Lbl',B:'BlockQuote',U:'Unsure'}};
  if(m[k])location.href='/answer?type='+m[k]+'&c='+encodeURIComponent(cardId);}});
 </script>"""
@@ -206,7 +234,7 @@ def make_handler(state: State):
             font = f"{card.get('font_pt', card.get('size_pt'))} pt · {card.get('weight', 'bold' if card.get('bold') else 'regular')}"
             self.send_html(PAGE.format(
                 image='<img src="/img?c=%s">' % html.escape(card["card_id"]) if has_img else "<p class=dim>(no page image for this card)</p>",
-                progress=f"{len(state.done())}/{len(state.cards)}", doc=html.escape(card["document_id"]), kind=card.get("kind"),
+                progress=f"{len(state.done())}/{len(state.cards)}", no_image=state.no_image, doc=html.escape(card["document_id"]), kind=card.get("kind"),
                 prev=html.escape(str(card.get("prev"))), text=html.escape(card["text"]), next=html.escape(str(card.get("next"))),
                 repeats=card.get("repeats_on_pages", 1), in_table=bool(card.get("in_table_box")), font=html.escape(font),
                 stack=" > ".join(f"H{l}" for l in stack) or "(none yet)", levels="/".join(map(str, levels)), levels_json=json.dumps(levels),
@@ -228,7 +256,7 @@ def main() -> None:
         if p.is_file():
             cards += [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
     state = State(cards, manifest, args.actor, args.sample)
-    print(f"http://127.0.0.1:{args.port}/  ({len(state.cards)} cards, {len(state.rows)} already labelled)")
+    print(f"http://127.0.0.1:{args.port}/  ({len(state.cards)} cards, {len(state.rows)} already labelled, {state.no_image} PDF cards skipped: no page image)")
     HTTPServer(("127.0.0.1", args.port), make_handler(state)).serve_forever()
 
 

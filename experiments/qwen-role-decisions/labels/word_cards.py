@@ -61,8 +61,11 @@ def paragraphs(docx: Path) -> list[dict]:
         doc = z.read("word/document.xml")
         styles = z.read("word/styles.xml") if "word/styles.xml" in z.namelist() else None
     levels = style_levels(styles)
+    root = ET.fromstring(doc)
+    # ElementTree has no parent pointers: collect table-cell paragraphs first.
+    in_cell = {id(p) for tc in root.iter(f"{{{NS['w']}}}tc") for p in tc.iter(f"{{{NS['w']}}}p")}
     out: list[dict] = []
-    for i, p in enumerate(ET.fromstring(doc).iter(f"{{{NS['w']}}}p")):
+    for i, p in enumerate(root.iter(f"{{{NS['w']}}}p")):
         text = "".join(t.text or "" for t in p.iter(f"{{{NS['w']}}}t")).strip()
         if not text:
             continue
@@ -78,7 +81,7 @@ def paragraphs(docx: Path) -> list[dict]:
         bold = any(r.find("w:rPr/w:b", NS) is not None for r in runs) and runs != []
         sizes = [int(s.get(f"{{{NS['w']}}}val")) / 2 for r in runs for s in r.findall("w:rPr/w:sz", NS)]
         out.append({"index": i, "text": text, "style": style, "outline_level": level, "bold": bold,
-                    "size_pt": max(sizes) if sizes else None})
+                    "size_pt": max(sizes) if sizes else None, "in_table_box": id(p) in in_cell})
     for j, row in enumerate(out):
         row["prev"] = out[j - 1]["text"] if j else "none"
         row["next"] = out[j + 1]["text"] if j + 1 < len(out) else "none"
@@ -95,9 +98,11 @@ def select_word_candidates(paras: list[dict], rng: random.Random) -> list[dict]:
         if p["outline_level"] is not None:
             why.append("source_h")
         words = p["text"].split()
-        if 0 < len(words) <= MAX_WORDS and p["text"][-1:] not in TERMINAL:
+        # A table-cell paragraph enters only as source_h or random, as pdf_cards.reasons/contained.
+        cell = bool(p.get("in_table_box"))
+        if not cell and 0 < len(words) <= MAX_WORDS and p["text"][-1:] not in TERMINAL:
             why.append("short")
-        if (median and p["size_pt"] is not None and p["size_pt"] >= OUTLIER_RATIO * median) or (p["bold"] and not mostly_bold):
+        if not cell and ((median and p["size_pt"] is not None and p["size_pt"] >= OUTLIER_RATIO * median) or (p["bold"] and not mostly_bold)):
             why.append("outlier")
         if not why and rng.random() < RANDOM_SHARE:
             why = ["random"]

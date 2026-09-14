@@ -48,3 +48,33 @@ def test_select_word_candidates_flags_levels_and_formatting():
     assert "source_h" in out["Title"] and "source_h" in out["Direct level"]
     assert "short" in out["Contents"] and "source_h" not in out["Contents"]
     assert "outlier" in out["Bold Big"]
+
+
+TABLE_DOC = f'''<w:document {W}><w:body>
+<w:p><w:r><w:t>Before the table</w:t></w:r></w:p>
+<w:tbl><w:tr>
+<w:tc><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Cell label</w:t></w:r></w:p></w:tc>
+<w:tc><w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Cell heading</w:t></w:r></w:p></w:tc>
+</w:tr></w:tbl>
+<w:p><w:r><w:t>After the table</w:t></w:r></w:p>
+</w:body></w:document>'''
+
+
+def test_table_cell_paragraphs_are_marked_and_enter_only_as_source_h_or_random():
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "t.docx"
+        with zipfile.ZipFile(p, "w") as z:
+            z.writestr("word/document.xml", TABLE_DOC)
+            z.writestr("word/styles.xml", STYLES)
+        ps = paragraphs(p)
+    by = {x["text"]: x for x in ps}
+    assert by["Cell label"]["in_table_box"] is True and by["Cell heading"]["in_table_box"] is True
+    assert by["Before the table"]["in_table_box"] is False and by["After the table"]["in_table_box"] is False
+
+    class NoRandom(random.Random):
+        def random(self):
+            return 1.0
+    out = {c["text"]: c["why"] for c in select_word_candidates(ps, NoRandom())}
+    assert "Cell label" not in out  # short and bold, but in a cell
+    assert out["Cell heading"] == ["source_h"]
+    assert "short" in out["Before the table"]
