@@ -16,10 +16,10 @@ Round 4 separates the two things round 3 mixed: real depth from harvest, and pla
    - Configuration: S10/S15 as in rounds 2–3. That means upstream `mlx_vlm.lora`, batch 1, rank 8, `--train-on-completions`, `--grad-checkpoint`, the 408-token image contract and the default learning rate. It also means one epoch: `--iters` equals the SFT row count and `--steps-per-save` equals `--iters`. Output: `adapter-r4a`.
    - **Time gate (S27, replaces the S10 3 h gate / 600-iteration cap for this round).** That cap was sized for a roughly 900-row SFT; here it would train on under a tenth of the data.
      - r4a runs one full epoch with no iteration cap.
-     - The wall-time gate is **10 h, judged once at iteration 100** from the measured it/s (S21's judge-once rule). At about 0.2 it/s on about 5,500 rows, the projection is about 7–8 h.
+     - The wall-time gate is **10 h, judged once at iteration 100** from the measured it/s (S21's judge-once rule). sft-r4a has 4,403 rows; at about 0.2–0.24 it/s the projection is about 5–6 h.
      - If the projection exceeds 10 h, training stops and the number goes to the reviewing session. It is not capped.
    - **Prediction budget.** Round 3 took about 1 h per adapter for 279 rows, about 13 s per row including rule-decided rows.
-     - r4a on the fixed ∩ set (about 273 rows) plus cohort 6 validation (about 600 rows): roughly 900 rows, about 3–3.5 h.
+     - r4a on the ∩ set (273 rows) plus cohort 6 validation (1,252 rows): 1,525 rows, about 5.5 h.
      - r2 on cohort 6 validation is run before training, as part of data preparation.
      - r2 and r3 on the ∩ set are restated from round 3's prediction files, not re-run (S25/S26).
 2. **r4b — r4a's data + varied planted cohort c7, capped.** Runs **only if** r4a's H3 or H4 recall on real validation is still below r2's on the same rows.
