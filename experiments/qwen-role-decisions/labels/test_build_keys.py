@@ -1,7 +1,7 @@
 # labels/test_build_keys.py
 import json, tempfile
 from pathlib import Path
-from labels.build_keys import originals, unmatched_row
+from labels.build_keys import originals, row_coverage, unmatched_row
 
 
 def test_originals_excludes_tagger_output_and_adds_word_conversions():
@@ -24,3 +24,8 @@ def test_unmatched_row_carries_geometry_and_hash_but_no_text():
     assert list(row) == ["card_id", "document_id", "page", "x0", "y0", "x1", "y1", "font_pt", "weight", "in_table_box", "why", "existing_tag", "text_sha256"]
     assert row["card_id"] == "n01:7" and row["page"] == 3 and len(row["text_sha256"]) == 64
     assert "Page 4" not in json.dumps(row) and "page4" not in json.dumps(row)
+
+
+def test_hosts_count_only_documents_that_wrote_rows():
+    usable = [{"id": "n01", "host": "a"}, {"id": "n02", "host": "b"}, {"id": "n03", "host": "a"}, {"id": "n04", "host": "c"}]
+    assert row_coverage(usable, {"n01", "n03", "n04"}) == {"documents_with_rows": 3, "hosts": 2}

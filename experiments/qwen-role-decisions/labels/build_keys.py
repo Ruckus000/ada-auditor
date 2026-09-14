@@ -6,8 +6,8 @@ import argparse
 import hashlib
 import json
 import random
+import shutil
 import subprocess
-import tempfile
 from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
@@ -44,6 +44,11 @@ def unmatched_row(card: dict) -> dict:
     return row
 
 
+def row_coverage(usable: list[dict], with_rows: set[str]) -> dict:
+    """Documents and hosts that wrote at least one label row."""
+    return {"documents_with_rows": len(with_rows), "hosts": len({d["host"] for d in usable if d["id"] in with_rows})}
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--manifest", type=Path, default=Path("out/labels/manifest.json"))
@@ -66,15 +71,18 @@ def main() -> None:
             continue
         keys[d["id"]] = kb
         usable.append(d)
-    stripped_dir = OUT / "stripped"
+    stripped_dir, tagged_dir = OUT / "stripped", OUT / "tagged"
+    # Start clean: stale tagger output masks a failed or changed tagging.
+    for dir_ in (stripped_dir, tagged_dir):
+        shutil.rmtree(dir_, ignore_errors=True)
+        dir_.mkdir(parents=True)
     for d in usable:
         strip_pdf(Path(d["original"]), stripped_dir / f"{d['id']}.pdf")
-    tagged_dir = OUT / "tagged"
-    tagged_dir.mkdir(parents=True, exist_ok=True)
     subprocess.run(["node", str(ODL_RUNNER), str(stripped_dir.resolve()), str(tagged_dir.resolve())], cwd=MAIN, check=True)
     rng = random.Random(SEED)
     match_counts, types = Counter(), Counter()
     n_rows = n_unmatched = 0
+    with_rows: set[str] = set()
     with (OUT / "labels.jsonl").open("w") as f, (OUT / "unmatched.jsonl").open("w") as u:
         for d in usable:
             tagged = tagged_dir / f"{d['id']}.pdf"
@@ -95,11 +103,11 @@ def main() -> None:
                     u.write(json.dumps(unmatched_row(c)) + "\n"); n_unmatched += 1
                     continue
                 row = make_key_row(c, d, key, how, d["source"])
-                types[row["type"]] += 1; n_rows += 1
+                types[row["type"]] += 1; n_rows += 1; with_rows.add(d["id"])
                 f.write(json.dumps(row) + "\n")
     report = {"documents": len(docs), "usable": len(usable) - sum(1 for d in usable if d["id"] in excluded), "excluded": excluded,
               "cards": n_rows, "unmatched": n_unmatched,
-              "match_rate": n_rows / (n_rows + n_unmatched) if n_rows + n_unmatched else None, "match": dict(match_counts), "types": dict(types), "hosts": len({d["host"] for d in usable if d["id"] not in excluded})}
+              "match_rate": n_rows / (n_rows + n_unmatched) if n_rows + n_unmatched else None, "match": dict(match_counts), "types": dict(types), **row_coverage(usable, with_rows)}
     (OUT / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report))
     subprocess.run(["python3", "-B", "eligibility_eval.py", "split", "--labels", str(OUT / "labels.jsonl"), "--salt", a.salt, "--out", str(OUT / "split")], check=True)
