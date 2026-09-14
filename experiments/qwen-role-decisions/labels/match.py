@@ -10,6 +10,7 @@ BOX_IOU = 0.5
 BOX_INSIDE = 0.9
 TIE_RANK = {"TH": 0, "Caption": 0, "TOCI": 0, "Lbl": 0, "BlockQuote": 0, "H": 1, "P": 2, "Other": 3}
 UNKNOWN_RANK = 3
+TIE_IOU = 0.05
 
 
 def intersection(a: dict, b: dict) -> float:
@@ -35,7 +36,10 @@ def iou(a: dict, b: dict) -> float:
 
 
 def preferred(card: dict, qualifying: list[dict]) -> dict:
-    """K25: the definition's §4 order governs a tie (rule-3 types, then H, then P, then Other), then IoU."""
+    """K25: the definition's §4 order governs a tie (rule-3 types, then H, then P, then Other), then IoU.
+    K27: only keys within TIE_IOU of the best qualifying IoU tie; any further below are out."""
+    best = max(iou(card, k) for k in qualifying)
+    qualifying = [k for k in qualifying if iou(card, k) >= best - TIE_IOU]
     return min(qualifying, key=lambda k: (TIE_RANK.get(k.get("type"), UNKNOWN_RANK), -iou(card, k)))
 
 

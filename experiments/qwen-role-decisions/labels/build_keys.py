@@ -1,5 +1,10 @@
 # labels/build_keys.py
-"""Stage 0: labels from keys. Strip, re-tag, match, score, split — no person."""
+"""Stage 0: labels from keys. Strip, re-tag, match, score, split — no person.
+
+Nothing is copied into labels/ unless --split-copy names the path (K28): a
+Stage 0-style run passes --split-copy labels/split-keys-<date>.json explicitly.
+--word-pdfs defaults to <--out>/word-pdfs.
+"""
 from __future__ import annotations
 
 import argparse
@@ -9,7 +14,6 @@ import random
 import shutil
 import subprocess
 from collections import Counter, defaultdict
-from datetime import date
 from pathlib import Path
 from typing import Callable
 
@@ -93,17 +97,25 @@ def row_coverage(usable: list[dict], with_rows: set[str]) -> dict:
     return {"documents_with_rows": len(with_rows), "hosts": len({d["host"] for d in usable if d["id"] in with_rows})}
 
 
-def main() -> None:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--manifest", type=Path, default=Path("out/labels/manifest.json"))
-    p.add_argument("--word-pdfs", type=Path, default=Path("out/keys/word-pdfs"))
+    p.add_argument("--word-pdfs", type=Path, default=None, help="default <--out>/word-pdfs")
     p.add_argument("--staged", type=Path, default=Path("out/labels"))
     p.add_argument("--salt", required=True)
     p.add_argument("--staging-optional", action="store_true", help="a manifest PDF is a key iff it has a structure tree; no staging.json")
     p.add_argument("--out", type=Path, default=OUT)
-    p.add_argument("--split-copy", default=None, help="where to copy split.json (default labels/split-keys-<date>.json; '' skips)")
+    p.add_argument("--split-copy", type=Path, default=None,
+                   help="copy split.json here; default: no copy (K28). A Stage 0-style run passes labels/split-keys-<date>.json explicitly")
     p.add_argument("--odl-batch", type=int, default=ODL_BATCH)
-    a = p.parse_args()
+    a = p.parse_args(argv)
+    if a.word_pdfs is None:
+        a.word_pdfs = a.out / "word-pdfs"
+    return a
+
+
+def main() -> None:
+    a = parse_args()
     out_dir = a.out
     compile_cards()
     rows = json.loads(a.manifest.read_text())
@@ -161,9 +173,8 @@ def main() -> None:
     (out_dir / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report))
     subprocess.run(["python3", "-B", "eligibility_eval.py", "split", "--labels", str(out_dir / "labels.jsonl"), "--salt", a.salt, "--out", str(out_dir / "split")], check=True)
-    copy = Path("labels") / f"split-keys-{date.today().isoformat()}.json" if a.split_copy is None else (Path(a.split_copy) if a.split_copy else None)
-    if copy is not None:
-        copy.write_bytes((out_dir / "split" / "split.json").read_bytes())
+    if a.split_copy is not None:
+        a.split_copy.write_bytes((out_dir / "split" / "split.json").read_bytes())
 
 
 if __name__ == "__main__":

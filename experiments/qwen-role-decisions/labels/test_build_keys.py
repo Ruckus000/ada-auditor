@@ -86,3 +86,11 @@ def test_odl_batches_gather_outputs_and_record_a_failed_batch():
         assert failed == [{"batch": "batch-001", "ids": [f"c{i:03d}" for i in range(50, 100)]}]
         assert len(list(tagged.glob("*.pdf"))) == 70 and not (tagged / "c050.pdf").exists() and (tagged / "c119.pdf").is_file()
         assert all(len(list((stripped / b).glob("*.pdf"))) <= 50 for b in calls)
+
+
+def test_cli_defaults_follow_out_and_copy_nothing():
+    from labels.build_keys import parse_args
+    a = parse_args(["--salt", "s", "--out", "out/keys-c3"])
+    assert a.word_pdfs == Path("out/keys-c3/word-pdfs") and a.split_copy is None
+    a = parse_args(["--salt", "s", "--word-pdfs", "w", "--split-copy", "labels/split-keys-x.json"])
+    assert a.out == Path("out/keys") and a.word_pdfs == Path("w") and a.split_copy == Path("labels/split-keys-x.json")

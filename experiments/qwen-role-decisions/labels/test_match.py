@@ -76,3 +76,13 @@ def test_rank_then_iou_and_single_candidate_unchanged():
     unknown = box(0, 0, 100, 10, norm="fee", type="Figure", locator="k:u")
     assert match_candidate(card, [far, near, unknown])[0]["locator"] == "k:near"
     assert match_candidate(card, [far])[0]["locator"] == "k:far"
+
+
+def test_rank_applies_only_inside_the_iou_window():
+    card = box(0, 0, 100, 10, norm="fee")
+    th_far = box(200, 0, 300, 10, norm="fee", type="TH", locator="k:th")  # IoU 0.0
+    h_near = box(0, 0, 100, 11.11, norm="fee", type="H", level=2, locator="k:h")  # IoU ~0.9
+    assert match_candidate(card, [th_far, h_near])[0]["locator"] == "k:h"
+    td = box(0, 0, 100, 10.2, norm="fee", type="Other", locator="k:td")  # IoU ~0.98
+    p = box(0, 0, 100, 10.5, norm="fee", type="P", locator="k:p")  # IoU ~0.95
+    assert match_candidate(card, [td, p])[0]["locator"] == "k:p"
