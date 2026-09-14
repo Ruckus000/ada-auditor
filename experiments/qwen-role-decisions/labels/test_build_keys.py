@@ -29,3 +29,10 @@ def test_unmatched_row_carries_geometry_and_hash_but_no_text():
 def test_hosts_count_only_documents_that_wrote_rows():
     usable = [{"id": "n01", "host": "a"}, {"id": "n02", "host": "b"}, {"id": "n03", "host": "a"}, {"id": "n04", "host": "c"}]
     assert row_coverage(usable, {"n01", "n03", "n04"}) == {"documents_with_rows": 3, "hosts": 2}
+
+
+def test_container_cards_are_not_candidates():
+    from labels.build_keys import non_container_cards
+    cards = [{"locator": "a", "existing_tag": "Table"}, {"locator": "b", "existing_tag": "TD"}, {"locator": "c", "existing_tag": "L"},
+             {"locator": "d", "existing_tag": "LI"}, {"locator": "e", "existing_tag": "TOC"}, {"locator": "f", "existing_tag": None}]
+    assert [c["locator"] for c in non_container_cards(cards)] == ["b", "d", "f"]

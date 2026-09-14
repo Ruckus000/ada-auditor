@@ -6,6 +6,8 @@ import re
 from run import HEADING, text_norm
 
 VOCAB = ("H", "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote")
+# K24: a container is not a block; its cells and items are.
+CONTAINER_TAGS = ("Table", "L", "TOC")
 SENTENCE_END = re.compile(r"[.!?;]\s*$")
 
 
@@ -21,6 +23,8 @@ def key_type(existing_tag: str) -> tuple[str, int | None]:
 def key_blocks(dump: dict) -> list[dict]:
     out = []
     for b in dump.get("blocks") or []:
+        if b.get("existing_tag") in CONTAINER_TAGS:
+            continue
         t, level = key_type(b.get("existing_tag") or "")
         row = {k: b.get(k) for k in ("locator", "page", "x0", "y0", "x1", "y1", "existing_tag")}
         row.update({"text": b.get("text") or "", "norm": text_norm(b.get("text") or ""), "type": t, "level": level})

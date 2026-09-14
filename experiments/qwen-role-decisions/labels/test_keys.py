@@ -18,3 +18,14 @@ def test_key_blocks_and_sentence_share():
     assert ks[0]["norm"] == "title"
     assert heading_sentence_share(ks) == 0.5
     assert heading_sentence_share([ks[2]]) is None
+
+
+def test_key_blocks_drop_containers_and_keep_their_cells():
+    dump = {"blocks": [
+        {"locator": "d:0", "existing_tag": "Table", "text": "Fee Amount"},
+        {"locator": "d:1", "existing_tag": "TH", "text": "Fee"},
+        {"locator": "d:2", "existing_tag": "TD", "text": "Amount"},
+        {"locator": "d:3", "existing_tag": "L", "text": "One Two"},
+        {"locator": "d:4", "existing_tag": "TOC", "text": "Intro 1"},
+    ]}
+    assert [k["locator"] for k in key_blocks(dump)] == ["d:1", "d:2"]

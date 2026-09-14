@@ -14,7 +14,7 @@ from pathlib import Path
 
 from run import blocks_to_cards, compile_cards, dump_pdf, text_norm
 from labels.hygiene import verapdf_failures, verdict
-from labels.keys import heading_sentence_share, key_blocks
+from labels.keys import CONTAINER_TAGS, heading_sentence_share, key_blocks
 from labels.match import make_key_row, match_candidate
 from labels.pdf_cards import SEED, cap_per_document, select_candidates
 from labels.stage_pdfs import MAIN, ODL_RUNNER
@@ -35,6 +35,11 @@ def originals(rows: list[dict], word_pdfs: Path, staged: Path) -> list[dict]:
 
 
 UNMATCHED_FIELDS = ("card_id", "document_id", "page", "x0", "y0", "x1", "y1", "font_pt", "weight", "in_table_box", "why", "existing_tag")
+
+
+def non_container_cards(cards: list[dict]) -> list[dict]:
+    """K24: container cards duplicate their cells' text; the cells are the candidates."""
+    return [c for c in cards if c.get("existing_tag") not in CONTAINER_TAGS]
 
 
 def unmatched_row(card: dict) -> dict:
@@ -89,7 +94,7 @@ def main() -> None:
             if not tagged.is_file():
                 excluded[d["id"]] = ["tagger-produced-nothing"]; continue
             cards, _ = blocks_to_cards(dump_pdf(tagged, compile=False).get("blocks") or [])
-            chosen = select_candidates(cards, rng)
+            chosen = select_candidates(non_container_cards(cards), rng)
             for c in chosen:
                 c["document_id"] = d["id"]; c["kind"] = "pdf"; c["card_id"] = c["locator"]
                 c["norm"] = text_norm(c["text"])
