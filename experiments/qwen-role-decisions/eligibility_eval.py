@@ -7,10 +7,12 @@ existing helper can say what the claim needs: ``verifier_gate`` counts TP/FP
 on development rows but carries no provenance, no leakage check, no interval,
 no level or abstention reporting, and no notion of a spent test set.
 
-Labels and predictions live in separate files on purpose. A label row must be
-a human answer from the correction workflow — ``label_source: "human-answer"``
-with the answer row's id and actor — and any model field on it is refused, so
-a model output cannot become a label by being copied into the wrong file.
+Labels and predictions live in separate files on purpose. A label row must
+come from a human answer from the correction workflow — ``label_source:
+"human-answer"`` with the answer row's id and actor — or from a key source
+(``stripped-tree``, ``word-outline``, ``planted``), and any model field on it
+is refused, so a model output (e.g. ``model-draft``) cannot become a label by
+being copied into the wrong file.
 
     python3 -B eligibility_eval.py --self-check
     python3 -B eligibility_eval.py split --labels L.jsonl --salt S --out DIR
@@ -45,6 +47,7 @@ MIN_TEST_TEMPLATES = 10
 SPLIT = (("train", 0.6), ("validation", 0.2), ("test", 0.2))
 GROUP_KEYS = ("document_sha256", "template_id", "client_id", "answer_id")
 MODEL_FIELDS = ("prediction", "model", "model_role", "heading_flag", "raw", "confidence")
+LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted")
 UNKNOWN_TEMPLATE = "unknown"
 # Every development and spent-holdout document the Qwen spikes have read, by
 # stem. Real labels are keyed by bytes, so a match here means a synthetic
@@ -77,8 +80,8 @@ def refusals(rows: list[dict]) -> list[str]:
             out.append(f"{where}: duplicate id")
         else:
             seen.add(rid)
-        if row.get("label_source") != "human-answer":
-            out.append(f"{where}: label_source must be 'human-answer'")
+        if row.get("label_source") not in LABEL_SOURCES:
+            out.append(f"{where}: label_source must be one of {LABEL_SOURCES}")
         for key in ("answer_id", "actor", "client_id", "template_id"):
             if not isinstance(row.get(key), str) or not row[key]:
                 out.append(f"{where}: missing {key}")
@@ -185,23 +188,38 @@ def upper_bound(k: int, n: int, confidence: float = CONFIDENCE) -> float | None:
     return hi
 
 
-def read_prediction(raw: str) -> tuple[str, int | None]:
-    """``heading`` | ``not-heading`` | ``abstain`` | ``parse-failure``, and a level."""
-    flag = parse_heading_flag(raw)
+def prediction_dict(raw: str) -> dict | None:
     try:
         data = json.loads(raw[raw.index("{") : raw.rindex("}") + 1])
     except ValueError:
-        data = None
-    if flag is None:
-        if isinstance(data, dict) and data.get("abstain") is True and "heading" not in data:
-            return "abstain", None
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def read_prediction(raw: str) -> tuple[str, int | None]:
+    """``heading`` | ``not-heading`` | ``abstain`` | ``parse-failure``, and a level.
+
+    Two output shapes: the binary ``{"heading": bool}`` and the typed
+    ``{"type": <vocab>, "level": n, "rule": r}`` the staged-autonomy roadmap
+    trains toward. ``Unsure`` and ``{"abstain": true}`` are abstentions.
+    """
+    data = prediction_dict(raw)
+    if data is None:
         return "parse-failure", None
-    level = data.get("level") if isinstance(data, dict) else None
-    return ("heading" if flag else "not-heading"), (level if level in range(1, 7) else None)
+    level = data.get("level") if data.get("level") in range(1, 7) else None
+    if data.get("type") == "Unsure" or (data.get("abstain") is True and "heading" not in data and "type" not in data):
+        return "abstain", None
+    if isinstance(data.get("type"), str):
+        return ("heading" if data["type"] == "H" else "not-heading"), level
+    flag = parse_heading_flag(raw)
+    if flag is None:
+        return "parse-failure", None
+    return ("heading" if flag else "not-heading"), level
 
 
 def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
     confusion = Counter()
+    type_confusion = Counter()
     level_n = level_exact = 0
     missing = []
     for row in rows:
@@ -212,6 +230,9 @@ def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
             outcome, level = "parse-failure", None
         else:
             outcome, level = read_prediction(raw)
+            pd = prediction_dict(raw)
+            if row.get("type") and pd and isinstance(pd.get("type"), str) and "Other" not in (row["type"], pd["type"]):
+                type_confusion[f"{row['type']}->{pd['type']}"] += 1
         if outcome in ("abstain", "parse-failure"):
             confusion[outcome] += 1
         elif outcome == "heading":
@@ -260,6 +281,7 @@ def evaluate(rows: list[dict], predictions: dict[str, str]) -> dict:
         "false_positive_rate_upper_bound": fpr_upper,
         "false_negative_rate": None if n == negatives else confusion["fn"] / (n - negatives),
         "heading_level": {"n": level_n, "exact": level_exact},
+        "type_confusion": dict(type_confusion),
         "uncertainty": {"abstentions": confusion["abstain"], "confidence": CONFIDENCE, "bound": "one-sided Clopper-Pearson"},
         "diversity": {"documents": len(documents), "clients": len(clients), "templates": len(templates)},
         "blockers": blockers,
@@ -355,6 +377,18 @@ def self_check() -> None:
     few_negatives = [label(i, i >= 100, f"c{i % 6}", f"t{i % 12}") for i in range(1200)]
     thin = evaluate(few_negatives, {r["id"]: json.dumps({"heading": r["label"]["heading"]}) for r in few_negatives})
     assert thin["blockers"] == [f"{CONFIDENCE:.0%} upper bound on false-positive rate above target"], thin["blockers"]
+
+    # key sources are labels; a model source is not
+    k = {**label(5, True, "c", "t"), "label_source": "stripped-tree", "actor": "key:stripped-tree"}
+    assert refusals([k]) == []
+    assert refusals([{**k, "label_source": "model-draft"}])
+    # type-shaped predictions
+    assert read_prediction('{"type":"Caption","rule":3}') == ("not-heading", None)
+    assert read_prediction('{"type":"H","level":2,"rule":1}') == ("heading", 2)
+    assert read_prediction('{"type":"Unsure"}') == ("abstain", None)
+    typed = [{**label(0, False, "c", "t"), "id": "t1", "type": "Caption"}, {**label(1, True, "c", "t", 2), "id": "t2", "type": "H"}]
+    got = evaluate(typed, {"t1": '{"type":"H","level":1,"rule":1}', "t2": '{"type":"H","level":2,"rule":1}'})
+    assert got["confusion"]["fp"] == 1 and got["type_confusion"] == {"Caption->H": 1, "H->H": 1}
     print("eligibility_eval_self_check_ok")
 
 
