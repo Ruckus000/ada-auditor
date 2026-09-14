@@ -23,7 +23,12 @@ Round 4 separates the two things round 3 mixed: real depth from harvest, and pla
 ## Data changes carried into this round
 - **K34.** When two or more cards exact-match the same key element within a document, the card with the larger IoU keeps the match and the others are unmatched (08c9662). Round 3's known instance was `c3-0577:164`/`:165`, both train rows from one document, so no train/validation leak was possible. `:164` is kept and `:165` drops out when keys-all-4 is built.
   - keys-all-3's labels file is not edited; its sha is pinned by `split-keys-all-3`.
-  - Any other K34 drops in the rebuilt pool are counted and listed here *(pending)*.
+  - Counted, not applied: had K34 applied to keys-all-3, it would have unmatched **93 rows in 43 (document, key element) groups**.
+    - By split: 82 train, 6 validation, 5 test.
+    - By type: Other 45, H 29, P 15, TH 3, Lbl 1.
+    - By source, across all rows in those groups: stripped-tree 114, planted 20, word-outline 2.
+    - `c3-0577` was one of these groups, not the only one.
+  - Consequence for P8: the 6 validation drops shrink the fixed comparison set. Pass/fail is judged on the **intersection** of round 3's 279 validation ids and keys-all-4's validation ids, expected to be 273. r2 and r3 are re-scored on exactly that set, and the dropped ids are listed in the results.
 - **c5 excluded.** c5 stays on disk and never enters an SFT again (P9).
 - **c7 surface facts.** Measured with `labels/surface_facts.py`, against pooled real train H and with c5 for reference. Pass rule: each share within ±10 points of pooled real train H.
 
@@ -45,8 +50,10 @@ About c7 (generator commit 202f6e4):
 - **Iterations:** 2 of 3. The first failed Title Case at +12.
 - **P facts:** planted P bold is 0.38, against 0.44 real (c5: 0.53).
 
+**Added gate (reviewer): planted H median words must be within ±1 of pooled real (3).** The c7 build above (iteration 2) has median words 2. It is renamed to `-it2` and kept on disk. c7 is regenerated with wider heading text pools, not padded strings, and re-measured *(pending — iteration 3)*.
+
 Known residual cues, not gated by the spec:
-- Median words is 2 against 3 real, because the text pools are reused from c5.
+- Median words is 2 against 3 real, because the text pools are reused from c5. Now gated; see above.
 - ALL CAPS (0.24) sits slightly above both real sources.
 - Ends punct (0.01) sits below both.
 
@@ -63,13 +70,17 @@ Emitter (202f6e4):
   - Pass/fail below is judged on the **279 rows fixed since round 3**. That keeps r2, r3 and r4 comparable (P8). The cohort 6 population is reported alongside.
 - Test floors are reported; test is not evaluated.
 
-## Registered prediction *(proposed by the executing session; to be confirmed by the reviewing session and finalised before r4a trains)*
-The same 279 real validation rows are used for r2, r3 and r4a in every comparison, with each adapter re-run on keys-all-4 cards.
+## Registered prediction *(confirmed by the reviewing session with edits; figures are finalised before r4a trains)*
+Comparison set: the fixed real validation set, meaning round 3's 279 ids intersected with keys-all-4's validation ids (see K34). r2, r3 and r4a are each re-run on keys-all-4 cards over exactly that set. The r2 reference figures below come from the 279-row set and are restated on the intersection before training.
 
-- **Q-a.** r4a's accuracy on the 279 rows is greater than r2's (0.781).
-- **Q-b.** r4a's FN rate on the 279 rows is below r3's (0.784) and at most r2's (0.392).
-- **Q-c.** r4a's FP rate on the 279 rows is at most r2's (0.126).
+- **Q-a.** r4a's accuracy is greater than r2's (0.781 on 279 rows).
+- **Q-b.** r4a's FN rate is at most r2's (0.392).
+- **Q-c.** r4a's FP rate is at most r2's (0.126).
 - **Q-d.** On r12, r4a's H3 recall is at least r2's (17/24), and r4a misses at most 11 of 15 H4.
+- **Q-e.** r4a has 0 no-brace outputs and 0 parse failures across all predicted rows.
+- **Q-f.** On cohort 6's validation rows, a new population neither adapter trained on, r4a's accuracy is greater than r2's.
+  - Both adapters are scored on the same rows.
+  - This is a prediction, not a pass/fail gate for the arm decision. It is the only real out-of-distribution test available.
 - **Arm decision (not a prediction).** r4b runs iff r4a's H3 recall or H4 recall on the 279 rows is below r2's.
 - **Not predicted:** the Stage 1 bar (accuracy ≥ 0.99, FP ≤ 1 %, level exactness ≥ 95 %).
 
