@@ -14,11 +14,18 @@
   (`{"original": 44, "tagged_by_odl": 8, "failed": []}`)
 - Candidates: PDF 4,453 of 31,320 blocks, over 51 of 52 PDFs — `n22`'s
   structure tree reaches only 2 blocks, so it contributes no cards. Word
-  1,455 of 2,514 paragraphs over 26 documents.
+  1,007 of 2,514 paragraphs over 26 documents
+  (`{"paragraphs": 2514, "candidates": 1007}`), rebuilt after table-cell
+  paragraphs were marked `in_table_box` and given the PDF containment policy
+  (enter only as source H* or random); the earlier 1,455 showed 557 cell
+  paragraphs as "in table: False". Changed before any label existed.
 - Images: 4,453 PDF cards carry a box, so 4,453 marked images are expected
   and 0 have no box — expected from the cards file; the render job's own
   count is confirmed below.
   Render confirmation: pending
+- The labelling tool does not show a PDF card whose marked image is missing;
+  it prints and displays how many it left out. Any such card is therefore not
+  labelled, and the count left out is recorded with the labelling session.
 - Filter as fixed 2026-09-13 (`pdf_cards.py`: source H*, ≤15 words
   unterminated, ≥1.15× page median or bold on a regular page, 5% random,
   seed 20260913; Table/TOC/List-contained blocks only as source H* or
@@ -33,7 +40,16 @@
 - Second reviewer labels a 200-card sample; if type agreement < 99%,
   disagreeing cases are adjudicated by adding §5 rows, then the sample is
   re-labelled. The disagreeing classes are reported, never dropped.
-- Unsure rows are excluded from the split and counted here.
+- Unsure rows are excluded from the split and counted here. Rows written by
+  "skip document" carry `skipped: true` (and `unsure: true`, so they are also
+  excluded); skipped rows are counted apart from unsure rows, and the unsure
+  count reports only real "cannot decide" answers.
+- Capped documents: 13 PDF and 1 Word document reach the 150 non-random card
+  cap, which drops cards at random within a reason class. Their approved
+  heading stacks may miss dropped headings, so the one-level-deeper rule can
+  force a level there. Level accuracy on capped documents is reported
+  separately from uncapped documents; eligibility (heading or not) is
+  unaffected. The filter and cap are not changed.
 - Test split is sealed by `eligibility_eval.py split --salt <salt>`; the
   salt is recorded below only after the split is drawn.
 - Second reviewer's sample (`--sample`): cards are re-sorted into reading
