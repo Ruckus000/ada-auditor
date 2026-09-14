@@ -30,7 +30,7 @@ from run import blocks_to_cards, compile_cards, dump_pdf, text_norm
 from labels.hygiene import verapdf_failures, verdict
 from labels.keys import CONTAINER_TAGS, heading_sentence_share, key_blocks
 from labels.match import make_key_row, match_candidate, resolve_exact_duplicates
-from labels.pdf_cards import SEED, cap_per_document, select_candidates
+from labels.pdf_cards import SEED, cap_per_document, drop_duplicate_cards, select_candidates
 from labels.stage_pdfs import MAIN, ODL_RUNNER, has_struct_tree
 from labels.strip import strip_pdf
 
@@ -112,13 +112,17 @@ def key_document(d: dict, dump: Callable = dump_pdf, failures: Callable = verapd
     return (kb if ok else None), reasons
 
 
-def document_cards(tagged: Path, doc_id: str, rng: random.Random, dump: Callable = dump_pdf) -> list[dict] | None:
-    """One tagged copy's candidate cards: containers out (K24), select, annotate, cap.
+def document_cards(tagged: Path, doc_id: str, rng: random.Random, dump: Callable = dump_pdf,
+                   duplicates: Counter | None = None) -> list[dict] | None:
+    """One tagged copy's candidate cards: duplicate copies out (K35), containers out (K24), select, annotate, cap.
     None when Cards cannot read the tagged copy; the rng is not drawn in that case."""
     raw = read_dump(tagged, dump)
     if raw is None:
         return None
     cards, _ = blocks_to_cards(raw.get("blocks") or [])
+    cards, n_dup = drop_duplicate_cards(cards)
+    if duplicates is not None and n_dup:
+        duplicates[doc_id] += n_dup
     chosen = select_candidates(non_container_cards(cards), rng)
     for c in chosen:
         c["document_id"] = doc_id; c["kind"] = "pdf"; c["card_id"] = c["locator"]
@@ -239,7 +243,7 @@ def main() -> None:
     stripped = strip_usable(usable, stripped_dir, excluded)
     odl_failed = run_odl_batches(stripped_dir, tagged_dir, work_dir, a.odl_batch)
     rng = random.Random(SEED)
-    match_counts, types = Counter(), Counter()
+    match_counts, types, duplicates = Counter(), Counter(), Counter()
     n_rows = n_unmatched = 0
     with_rows: set[str] = set()
     with (out_dir / "labels.jsonl").open("w") as f, (out_dir / "unmatched.jsonl").open("w") as u:
@@ -247,7 +251,7 @@ def main() -> None:
             tagged = tagged_dir / f"{d['id']}.pdf"
             if not tagged.is_file():
                 excluded[d["id"]] = tagger_miss_reason(d["id"], odl_failed); continue
-            cards = document_cards(tagged, d["id"], rng)
+            cards = document_cards(tagged, d["id"], rng, duplicates=duplicates)
             if cards is None:
                 excluded[d["id"]] = ["tagger-output-unreadable"]; continue
             by_page = defaultdict(list)
@@ -266,6 +270,7 @@ def main() -> None:
     report = {"documents": len(docs), "usable": len(usable) - sum(1 for d in usable if d["id"] in excluded), "excluded": excluded,
               "cards": n_rows, "unmatched": n_unmatched,
               "match_rate": n_rows / (n_rows + n_unmatched) if n_rows + n_unmatched else None, "match": dict(match_counts), "types": dict(types), **row_coverage(usable, with_rows),
+              "duplicate_cards_dropped": {"total": sum(duplicates.values()), "by_document": dict(sorted(duplicates.items()))},
               "odl_failed_batches": odl_failed}
     (out_dir / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report))

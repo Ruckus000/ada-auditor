@@ -1,5 +1,5 @@
 import random
-from labels.pdf_cards import repeats_on_pages, select_candidates
+from labels.pdf_cards import drop_duplicate_cards, repeats_on_pages, select_candidates
 
 
 def card(i, text, tag="P", pt=11, weight="regular", page=0, y0=700):
@@ -50,3 +50,12 @@ def test_cap_per_document_keeps_best_reasons_and_all_random_rows():
     assert len(a) == 10 + 7 and sum(r["why"] == ["source_h"] for r in a) == 5
     assert sum(r["why"] == ["random"] for r in a) == 7
     assert [r["n"] for r in out if r["document_id"] == "b"] == [2000]
+
+
+def test_drop_duplicate_cards_keeps_first_copy_at_one_box_only():
+    first = card(0, "Agenda", tag="H2", y0=74)
+    copy = {**card(1, "AGENDA", tag="Figure", y0=74.3)}  # same page, box rounds to the same points, same norm
+    elsewhere = card(2, "Agenda", y0=102)  # same text, different box: K34's case, kept here
+    other_page = card(3, "Agenda", page=1, y0=74)
+    kept, dropped = drop_duplicate_cards([first, copy, elsewhere, other_page])
+    assert [c["locator"] for c in kept] == ["d:0", "d:2", "d:3"] and dropped == 1

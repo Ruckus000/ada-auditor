@@ -95,6 +95,24 @@ def reasons(c: dict, medians: dict) -> list[str]:
     return why
 
 
+def drop_duplicate_cards(cards: list[dict]) -> tuple[list[dict], int]:
+    """K35: keep the first card for each (page, box rounded to 1 pt, normalised text); drop later copies.
+
+    A retagger can emit one text object many times (c4-0028: one line as 22 cards,
+    21 of them under Figure). The copies eat a document's CAP and double-label one
+    key element; K34 stays the backstop for the same text at a different box.
+    """
+    seen: set[tuple] = set()
+    kept = []
+    for c in cards:
+        k = (c.get("page"), *(round(float(c[b])) for b in ("x0", "y0", "x1", "y1")), text_norm(c.get("text") or ""))
+        if k in seen:
+            continue
+        seen.add(k)
+        kept.append(c)
+    return kept, len(cards) - len(kept)
+
+
 def select_candidates(cards: list[dict], rng: random.Random) -> list[dict]:
     medians = page_medians(cards)
     repeats = repeats_on_pages(cards)
