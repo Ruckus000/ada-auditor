@@ -16,7 +16,7 @@ being copied into the wrong file.
 
     python3 -B eligibility_eval.py --self-check
     python3 -B eligibility_eval.py split --labels L.jsonl --salt S --out DIR \
-        [--keep PRIOR/split.json]
+        [--keep PRIOR/split.json --keep-labels PRIOR/labels.jsonl]
     python3 -B eligibility_eval.py evaluate --split DIR/split.json \
         --labels L.jsonl --predictions P.jsonl [--on validation|test]
 
@@ -24,12 +24,15 @@ Evaluating ``test`` writes ``test.spent`` beside the manifest; a second test
 evaluation of the same manifest is refused. A new test set needs new labels
 and a new split, never a re-draw over the old ones.
 
-``--keep`` extends a prior split rather than re-drawing it: an id in the prior
-split keeps its split, a new row takes the split of any kept row in its
-component (shared document, template or client), and only components with no
-kept id are assigned by the new salt. A component holding kept ids from two
-prior splits is refused as a leak. The output records ``salt``, ``kept_from``
-(the prior file's sha256) and ``kept_salt`` (the prior split's salt).
+``--keep`` extends a prior split rather than re-drawing it (S3, K29). The
+prior labels must hash to the prior split's ``labels_sha256`` and its
+``group_keys`` must match. Every prior row's document, client and template is
+pinned to that row's split — documents, not ids, because a rebuild can change
+every id of a document. A new row whose component touches a pin joins that
+split; a component touching pins from two splits is refused as a leak; only
+unpinned components are assigned by the new salt. The overlap check runs over
+all rows. The output records ``salt``, ``kept_from`` (the prior split file's
+sha256), ``kept_labels`` (the prior labels' sha256) and ``kept_salt``.
 """
 
 from __future__ import annotations
@@ -157,30 +160,54 @@ def overlaps(rows: list[dict], membership: dict[str, str]) -> list[str]:
     return sorted(k for k, splits in by_key.items() if len(splits) > 1)
 
 
-def kept_membership(rows: list[dict], comp: dict[str, str], keep: dict, salt: str) -> dict[str, str]:
-    """S3/S7: a prior id keeps its split, a new row joins its component's kept split,
-    and only components with no kept id are drawn by the new salt."""
+def pins(keep: dict, prior_rows: list[dict] | None) -> dict[str, str]:
+    """K29: every prior row's document, client and template, pinned to that row's split.
+
+    Ids are not pinned: a rebuild can change every id of a prior document, and an
+    id-only keep would then re-draw it by salt — the leak S3 exists to stop."""
+    if prior_rows is None:
+        raise ValueError("--keep needs the prior labels (--keep-labels) to pin documents")
+    if list(keep.get("group_keys") or []) != list(GROUP_KEYS):
+        raise ValueError(f"prior split group_keys {keep.get('group_keys')} differ from {list(GROUP_KEYS)}")
     prior = {rid: name for name, ids in keep["ids"].items() for rid in ids}
-    kept: dict[str, set[str]] = {}
-    for rid, c in comp.items():
-        if rid in prior:
-            kept.setdefault(c, set()).add(prior[rid])
-    mixed = {c: splits for c, splits in kept.items() if len(splits) > 1}
+    missing = sorted(r["id"] for r in prior_rows if r["id"] not in prior)
+    if missing:
+        raise ValueError(f"prior labels hold rows the prior split does not place: {missing[:5]}")
+    pinned: dict[str, set[str]] = {}
+    for row in prior_rows:
+        for k in GROUP_KEYS:
+            pinned.setdefault(f"{k}:{row[k]}", set()).add(prior[row["id"]])
+    torn = sorted(k for k, splits in pinned.items() if len(splits) > 1)
+    if torn:
+        raise ValueError(f"prior split already leaks across group keys: {torn[:5]}")
+    return {k: next(iter(splits)) for k, splits in pinned.items()}
+
+
+def pinned_membership(rows: list[dict], comp: dict[str, str], pinned: dict[str, str], salt: str) -> dict[str, str]:
+    """S3/K29: a component touching a pinned key takes that split; a component touching
+    pins from two splits is refused; only unpinned components are drawn by the new salt."""
+    touched: dict[str, dict[str, str]] = {}
+    for row in rows:
+        for k in GROUP_KEYS:
+            key = f"{k}:{row[k]}"
+            if key in pinned:
+                touched.setdefault(comp[row["id"]], {})[key] = pinned[key]
+    mixed = {c: keys for c, keys in touched.items() if len(set(keys.values())) > 1}
     if mixed:
-        detail = []
-        for c, splits in sorted(mixed.items()):
-            keys = sorted({f"{k}:{row[k]}" for row in rows if comp[row["id"]] == c for k in GROUP_KEYS})
-            detail.append(f"component {c} holds kept ids from {sorted(splits)}; group keys {keys}")
+        detail = [f"component {c} touches pins from {sorted(set(keys.values()))}: {dict(sorted(keys.items()))}" for c, keys in sorted(mixed.items())]
         raise ValueError("--keep would leak across splits:\n" + "\n".join(detail))
-    return {rid: next(iter(kept[c])) if c in kept else assign(c, salt) for rid, c in comp.items()}
+    return {rid: next(iter(touched[c].values())) if c in touched else assign(c, salt) for rid, c in comp.items()}
 
 
-def split(rows: list[dict], salt: str, keep: dict | None = None) -> dict:
+def split(rows: list[dict], salt: str, keep: dict | None = None, prior_rows: list[dict] | None = None) -> dict:
     bad = refusals(rows)
     if bad:
         raise ValueError("labels refused:\n" + "\n".join(bad))
     comp = components(rows)
-    membership = kept_membership(rows, comp, keep, salt) if keep else {rid: assign(c, salt) for rid, c in comp.items()}
+    if keep:
+        membership = pinned_membership(rows, comp, pins(keep, prior_rows), salt)
+    else:
+        membership = {rid: assign(c, salt) for rid, c in comp.items()}
     leaks = overlaps(rows, membership)
     if leaks:
         raise AssertionError(f"split leaked across groups: {leaks[:5]}")
@@ -336,11 +363,19 @@ def sha256_file(path: Path) -> str:
 
 
 def cmd_split(args: argparse.Namespace) -> None:
-    keep = json.loads(args.keep.read_text()) if args.keep else None
-    result = split(load_jsonl(args.labels), args.salt, keep=keep)
+    keep = prior_rows = None
+    if args.keep:
+        if not args.keep_labels:
+            raise SystemExit("--keep needs --keep-labels <prior labels.jsonl> (K29)")
+        keep = json.loads(args.keep.read_text())
+        if sha256_file(args.keep_labels) != keep.get("labels_sha256"):
+            raise SystemExit(f"{args.keep_labels} is not the labels {args.keep} was drawn from (labels_sha256 differs)")
+        prior_rows = load_jsonl(args.keep_labels)
+    result = split(load_jsonl(args.labels), args.salt, keep=keep, prior_rows=prior_rows)
     result["labels_sha256"] = sha256_file(args.labels)
     if args.keep:
         result["kept_from"] = sha256_file(args.keep)
+        result["kept_labels"] = sha256_file(args.keep_labels)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "split.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({k: len(v) for k, v in result["ids"].items()}))
@@ -401,28 +436,81 @@ def self_check() -> None:
     assert overlaps(rows[:2], {"q0": "train", "q1": "train"}) == []
     assert overlaps([rows[0], {**rows[1], "client_id": "client0"}], {"q0": "train", "q1": "test"})
 
-    # --keep (S3/S7): prior assignments survive a re-draw; new rows follow their component.
+    # --keep (S3/K29): prior documents, clients and templates are pinned, not ids.
     def keyed(i: int, host: str, doc: str) -> dict:
         return {**label(i, True, host, host), "id": f"k{i}", "document_sha256": hashlib.sha256(doc.encode()).hexdigest()}
 
-    prior = {"salt": "old", "ids": {"train": ["k1"], "validation": ["k2", "k3"], "test": []}}
+    def placed(result: dict) -> dict[str, str]:
+        return {rid: name for name, ids in result["ids"].items() for rid in ids}
+
+    prior_rows = [keyed(1, "a.gov", "d1"), keyed(2, "b.gov", "d2"), keyed(3, "c.gov", "d3")]
+    prior = {"salt": "old", "group_keys": list(GROUP_KEYS), "ids": {"train": ["k1"], "validation": ["k2", "k3"], "test": []}}
     kept_rows = [keyed(1, "a.gov", "d1"), keyed(2, "b.gov", "d2"), keyed(3, "c.gov", "d3"), keyed(4, "b.gov", "d4"), keyed(5, "new.gov", "d5")]
     for salt in ("s", "t", "u"):
-        got = split(kept_rows, salt, keep=prior)
-        where = {rid: name for name, ids in got["ids"].items() for rid in ids}
-        assert where["k1"] == "train" and where["k2"] == where["k3"] == "validation", where  # kept ids stay
-        assert where["k4"] == "validation", where  # shares b.gov with kept k2
-        assert where["k5"] == assign(components(kept_rows)["k5"], salt), where  # new host: by salt
+        got = split(kept_rows, salt, keep=prior, prior_rows=prior_rows)
+        where = placed(got)
+        assert where["k1"] == "train" and where["k2"] == where["k3"] == "validation", where  # kept rows stay
+        assert where["k4"] == "validation", where  # new document on b.gov, pinned by k2's host
+        assert where["k5"] == assign(components(kept_rows)["k5"], salt), where  # unpinned host: by salt
         assert got["salt"] == salt and got["kept_salt"] == "old"
     assert "kept_salt" not in split(kept_rows, "s")
+    # The review's failure: a prior document rebuilt with none of its ids. It keeps its split;
+    # id-only keeping would have re-drawn it by salt.
+    rebuilt = [keyed(30, "c.gov", "d3"), keyed(31, "c.gov", "d3")]
+    moved = [salt for salt in (f"r{i}" for i in range(50)) if placed(split(rebuilt, salt)).get("k30") != "validation"]
+    assert moved, "no salt re-draws d3 away from validation; the case proves nothing"
+    for salt in moved[:3]:
+        assert placed(split(rebuilt, salt))["k30"] != "validation"  # what id-only logic did: no surviving id
+        assert set(split(rebuilt, salt, keep=prior, prior_rows=prior_rows)["ids"]["validation"]) == {"k30", "k31"}
     # k6 shares a document with train's k1 and a host with validation's k2: a leak, refused.
-    mixed = kept_rows + [{**keyed(6, "b.gov", "d1")}]
+    for bad_input, needle in (
+        ((kept_rows + [keyed(6, "b.gov", "d1")], prior, prior_rows), "client_id:b.gov"),
+        ((kept_rows, {**prior, "group_keys": ["document_sha256"]}, prior_rows), "group_keys"),
+        ((kept_rows, prior, None), "prior labels"),
+        ((kept_rows, prior, prior_rows + [keyed(9, "z.gov", "d9")]), "k9"),
+    ):
+        rows_, keep_, prior_ = bad_input
+        try:
+            split(rows_, "s", keep=keep_, prior_rows=prior_)
+        except ValueError as err:
+            assert needle in str(err), (needle, err)
+        else:
+            raise AssertionError(f"--keep must refuse ({needle})")
+    # Overlaps run over every row, kept ones included: a leaky membership between a kept
+    # row (k2, validation) and a new one (k4) must be caught even though k4 alone is clean.
+    real = globals()["pinned_membership"]
+    globals()["pinned_membership"] = lambda rows_, comp, pins_, salt_: {**real(rows_, comp, pins_, salt_), "k4": "test"}
     try:
-        split(mixed, "s", keep=prior)
-    except ValueError as err:
-        assert "b.gov" in str(err) and "kept ids from" in str(err), err
+        split(kept_rows, "s", keep=prior, prior_rows=prior_rows)
+    except AssertionError as err:
+        assert "client_id:b.gov" in str(err), err
     else:
-        raise AssertionError("a component mixing two prior splits must be refused")
+        raise AssertionError("overlaps must run over all rows")
+    finally:
+        globals()["pinned_membership"] = real
+    # The command: kept_from hashes the prior split file, kept_labels the prior labels;
+    # stale prior labels and --keep alone are refused.
+    import tempfile
+    from types import SimpleNamespace
+
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        (t / "prior.jsonl").write_text("".join(json.dumps(r) + "\n" for r in prior_rows))
+        (t / "prior-split.json").write_text(json.dumps({**prior, "labels_sha256": sha256_file(t / "prior.jsonl")}))
+        (t / "new.jsonl").write_text("".join(json.dumps(r) + "\n" for r in kept_rows))
+        args = SimpleNamespace(labels=t / "new.jsonl", salt="s", out=t / "out", keep=t / "prior-split.json", keep_labels=t / "prior.jsonl")
+        cmd_split(args)
+        written = json.loads((t / "out" / "split.json").read_text())
+        assert written["kept_from"] == sha256_file(t / "prior-split.json") != sha256_file(t / "prior.jsonl")
+        assert written["kept_labels"] == sha256_file(t / "prior.jsonl") and written["kept_salt"] == "old"
+        (t / "stale.jsonl").write_text((t / "prior.jsonl").read_text() + "\n")
+        for bad in ({"keep_labels": t / "stale.jsonl"}, {"keep_labels": None}):
+            try:
+                cmd_split(SimpleNamespace(**{**vars(args), **bad}))
+            except SystemExit:
+                pass
+            else:
+                raise AssertionError(f"cmd_split must refuse {bad}")
 
     # Exact bound: zero errors in 299 is the smallest n whose 95% bound is <= 1%.
     assert upper_bound(0, 299) <= 0.01 < upper_bound(0, 298)
@@ -476,7 +564,8 @@ def main() -> None:
     s.add_argument("--labels", type=Path, required=True)
     s.add_argument("--salt", required=True)
     s.add_argument("--out", type=Path, required=True)
-    s.add_argument("--keep", type=Path, help="prior split.json whose assignments are kept (S3/S7)")
+    s.add_argument("--keep", type=Path, help="prior split.json whose documents, clients and templates stay put (S3/K29)")
+    s.add_argument("--keep-labels", type=Path, help="the prior labels.jsonl that split was drawn from; required with --keep")
     e = sub.add_parser("evaluate")
     e.add_argument("--split", type=Path, required=True)
     e.add_argument("--labels", type=Path, required=True)
