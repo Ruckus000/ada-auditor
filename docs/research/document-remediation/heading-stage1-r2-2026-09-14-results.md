@@ -7,12 +7,12 @@ This is the first real measurement of the model. Everything below is as measured
 ## Stated plainly
 - **The Stage 1 bar was not met.** Accuracy 0.806 (95 % lower bound 0.754) against ≥ 0.99. FP rate 0.101 (95 % upper bound 0.155) against ≤ 1 %. Level exactness 22/42 = 0.524 against ≥ 95 %. Parse failures 0 and abstentions 0 do meet the bar.
 - **The test split was not evaluated.** `out/keys-all/split/test.spent` does not exist.
-- **The test split fails two of the evaluator's floors.** It has 15 documents (floor 30) and 9 templates (floor 10). It meets the clients floor with 9 and the non-heading floor with 309. A single test evaluation could not certify the bar even if validation met it.
+- **The test split fails two of the evaluator's floors.** It has 15 documents (`MIN_TEST_DOCUMENTS` 30) and 9 templates (`MIN_TEST_TEMPLATES` 10). It meets `MIN_TEST_CLIENTS` 5 with 9. The evaluator has no explicit non-heading floor; the 309 non-headings enter only through the FP rate's 95 % upper bound, which must be ≤ 1 %. A single test evaluation could not certify the bar even if validation met it.
 - **Validation is small.** It has 10 documents and 9 hosts. One document, r12, is 91 of 196 rows and holds 20 of 38 errors. The bounds are wide, and the population means say more about r12 than about a web population.
-- **The smoke adapter's numbers are not quoted here or anywhere** (ruling S5). No round 1 comparison is reported, because round 1 was skipped as a quality round (S17).
+- **The smoke adapter's evaluation numbers are not quoted here or anywhere** (ruling S5). Its training speed and peak memory appear only as the timing and memory context behind S10. No round 1 comparison is reported, because round 1 was skipped as a quality round (S17).
 
 ## Population
-- **How the data came to be.** Build 4 (70 tagged originals from the corpus) fired the Stage 0 kill at 67 % excluded. Of that, 53 % was YIELD (keys with no headings) and 39 % was TRUST, by reason instance (S4). The peer ruled that round 1 would not train on the build-4 pool as a quality round, and a plumbing smoke ran instead (S5). The smoke was diagnosed through the S9 overfit probe: 10/10 seen rows parsed, and the masked span was correct, so the cause was coverage and not masking.
+- **How the data came to be.** Build 4 (70 tagged originals from the corpus) fired the Stage 0 kill at 67 % excluded (47 of 70). Over the 70 tagged originals, YIELD (keys with no headings) was 37/70 = 53 % and TRUST was 23/70 = 33 % as distinct documents, or 27/70 = 39 % counted by reason instance (S4). The peer ruled that round 1 would not train on the build-4 pool as a quality round, and a plumbing smoke ran instead (S5). The smoke was diagnosed through the S9 overfit probe: 10/10 seen rows parsed, and the masked span was correct, so the cause was coverage and not masking.
   - Round 2's pool combines two parts (R1). The first is build 4's documents, rebuilt under K24 (container types excluded), K25/K27 (the §4 tie-break) and K28.
   - The second is cohort 3: a .gov web sweep of 963 documents from 120 hosts, all one CMS. 441 of its originals were tagged, 55 were usable and 54 contributed rows.
   - Combined: 1,697 rows, 77 documents, 57 hosts. On the combined pool TRUST is 189/511 = **37.0 %**, which is ≤ 50 %, so S8 allowed training. YIELD is 362/511 = **70.8 %**.
@@ -50,6 +50,8 @@ HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 nohup <venv>/bin/python -m mlx_vlm.lora \
 The model is `mlx-vlm 0.7.0`, language-side LoRA only, with the default learning rate (2e-5).
 
 **Amendments to the registration, all made before any result:**
+- **S1 (code deviation).** The prior stack excludes the card's own key element (matched by `key_locator`, with a 2 pt same-page guard). Without it, every heading card would have shown its own answer in the prompt.
+- **S11 (code deviation).** `key_context` and `emit_sft` gained `--out` and a repeatable `--source <build dir>:<manifest>[:<word_pdfs>]`, so the combined pool's tagged and stripped copies resolve from their own builds (keys-b4r2 and keys-c3).
 - **S10.** The registration assumed about 1.0–1.1 it/s, which put 2 epochs at about 2 h. The smoke measured 0.079 it/s, so 2 epochs × 1,120 rows would have taken about 7.9 h. That falsified the timing assumption before any validation number existed. S10 made three changes:
   1. Images use Part 28's 408-token contract: reduced copies under `out/keys-all/pages/marked-408/`, used by both the SFT rows and `cards.jsonl`. 1,697 were reduced to 1,697.
   2. `--grad-checkpoint` was turned off, on the premise of the smoke's 14.4 GB peak out of 36 GB.
@@ -150,7 +152,7 @@ All type mismatches (the bit errors above, plus type errors that leave the bit c
 
 **Where the errors sit.**
 - **By document** (fp / fn): r12 0/20, n07 4/1, n10 0/1, c3-0073 4/1, c3-0551 3/0, c3-0502 2/0, c3-0424 0/1, c3-0919 0/1; c3-0056 and c3-0399 have 0/0.
-- **r12 alone holds 20 of 25 false negatives.** r12 is the build-4 document capped at 150 cards.
+- **r12 alone holds 20 of 25 false negatives** (19 H→P, 1 H→TOCI). The per-document cap of 150 bound on r12 at candidate selection; the 91 validation rows are what remained after matching.
 - **False negatives by true level:** H1 5, H2 2, H3 7, H4 11.
 - **Level on the 42 true positives, as (truth, predicted) counts:** exact at H1 6, H2 6, H3 7 and H4 3; off by one 20 times: (3,2) 7, (2,3) 6, (3,4) 3, (1,2) 2, (2,1) 1, (4,3) 1.
 - **Match kind** of the 38 bit errors: exact 37, contains 1. None is a box match.
@@ -173,17 +175,24 @@ All type mismatches (the bit errors above, plus type errors that leave the bit c
 ## Stop decision — what round 3 addresses
 The evidence comes from the errors-by-rule table above.
 
-1. **Data gap (primary): more cohorts.**
-   - **False negatives.** The largest class is H→P citing rule 4 (24 of 38 bit errors). It is concentrated in one build-4 document (r12: 20 of those 25 misses) and at deep levels (H3/H4: 18 of 25).
-   - **False positives.** The second class, P→H citing rule 1 (13), is mostly cohort 3 (9), spread over three documents.
-   - **Not a facts gap.** Neither class involves a table box (0/38), a repeat or a numeral, so no existing card fact is being ignored and no missing fact is evident.
-   - **Not a definition gap.** Both are the model's §4 judgement on shapes that training saw few of: 255 H rows across 52 documents, one CMS for cohort 3. The definition names these cases, so they are not ones it fails to place.
-   - With 10 validation documents, one document driving half the errors cannot be separated from a genuine shape gap without more documents. More cohorts are the only fix that also narrows the bounds.
-2. **Definition gap (secondary): a §5 ruling on numerals.**
+This section states what was measured. The data gap on deep headings is the leading hypothesis, not a finding.
+
+1. **Leading hypothesis: a data gap on deep headings, addressed by more cohorts.**
+   - **False negatives.** The largest class is H→P citing rule 4 (24 of 38 bit errors). r12 holds 20 of the 25 false negatives (19 H→P and 1 H→TOCI). By true level, 18 of the 25 are H3/H4.
+   - **Training depth.** The SFT's 255 H rows come from 40 documents; the SFT as a whole spans 51. By level they are H1 107, H2 122, **H3 25, H4 1**.
+   - **Validation depth.** Validation has 24 H3 and 15 H4 headings. **All 39 are in r12**, and r12 holds 55 of validation's 67 headings. 11 of the 15 H4s were missed.
+   - **Confounded.** On this validation set a heading-depth data gap and an r12-specific gap cannot be separated: every deep heading is in r12, and r12 is almost every heading. More cohorts are the fix that would separate them and narrow the bounds.
+   - **False positives.** The second class, P→H citing rule 1 (13), is mostly cohort 3 (9), spread over three documents. Cohort 3 is one CMS.
+   - **Facts: only one fact was checked.** The in-table-box fact is involved in 0 of the 38 errors.
+     - The repeat and numeral facts are 0 by construction: the rules in front decide those rows before the model sees them, so their zeros say nothing about ignored facts.
+     - Font size, weight, existing tag and ancestors were not examined against the errors.
+     - A facts gap is not indicated by the one fact checked, and is not ruled out.
+   - **Definition.** No definition-level cause was found for the model's errors. None was looked for beyond the numeral item below, which is the only definition-level item found.
+2. **Definition item: a §5 ruling on numerals.**
    - The no-letters rule in front labels 22 of 23 rule-fired rows `Lbl` where the key says `P`.
    - §4 rule 3 says "a list marker or bare numeral is Lbl"; the keys' authors tagged these numerals as paragraph content. The bit is unaffected.
    - A §5 ruling is needed on which is right: a bare numeral in running content, versus a list marker. Without it, every typed metric for Lbl/P is at odds with the keys by construction.
-3. **Facts gap: none indicated this round.**
+3. **Facts gap: not indicated by the one fact checked (table box), and not examined for the others.**
 
 **No-brace regression: did not persist.** 0 of 173 model outputs lack a brace, and parse failures are 0 on both populations. The smoke adapter's prose regression did not recur after one full pass over the SFT (S9's coverage verdict stands).
 
