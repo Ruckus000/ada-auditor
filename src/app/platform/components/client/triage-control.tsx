@@ -9,6 +9,7 @@ import {
   triageNotePrompt,
   type TriageDecisionState,
 } from '../../../../services/presentation/triage';
+import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 
 /**
@@ -94,10 +95,12 @@ export function TriageControl({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button
           type="button"
-          disabled={busy}
-          onClick={() => send({ findingKey: finding.key }, 'DELETE')}
+          // Inert rather than `disabled`, so the press keeps focus
+          // (`lib/inert-button`). The name above already holds still while
+          // the text reads "Reopening…".
+          {...inertWhen(busy, () => void send({ findingKey: finding.key }, 'DELETE'))}
           aria-label={`Reopen ${finding.code}${pageUrl ? ` on ${pageUrl}` : ''}`}
-          style={link}
+          style={{ ...link, ...(busy ? { color: T.inkMuted, cursor: 'default' } : {}) }}
         >
           {busy ? 'Reopening…' : 'Reopen this finding'}
         </button>
@@ -220,8 +223,12 @@ export function TriageControl({
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button
           type="submit"
-          disabled={busy || state === null || note.trim() === ''}
-          style={primary}
+          // Inert, not `disabled`: the submit sets `busy`, and `disabled`
+          // would drop focus to `<body>` (`lib/inert-button`). Its
+          // `preventDefault` stops the submit; `onSubmit` refuses as well.
+          {...inertWhen(busy || state === null || note.trim() === '', () => {})}
+          aria-label="Record decision"
+          style={{ ...primary, ...(busy || state === null || note.trim() === '' ? { background: T.surfaceSunk, color: T.inkMuted, border: `1px solid ${T.ruleStrong}`, cursor: 'default' } : {}) }}
         >
           {busy ? 'Saving…' : 'Record decision'}
         </button>

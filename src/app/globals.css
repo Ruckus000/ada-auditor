@@ -638,10 +638,14 @@ code {
   transition: background 0.15s, transform 0.1s;
 }
 
-.submit-btn:hover:not(:disabled) { background: var(--accent-deep); }
-.submit-btn:active:not(:disabled) { transform: translateY(1px); }
+/* `[aria-disabled]` beside `:disabled`: controls that their own press makes
+   unavailable are inert rather than disabled, so they keep focus
+   (`platform/lib/inert-button.ts`), and must still look it. */
+.submit-btn:hover:not(:disabled, [aria-disabled="true"]) { background: var(--accent-deep); }
+.submit-btn:active:not(:disabled, [aria-disabled="true"]) { transform: translateY(1px); }
 
-.submit-btn:disabled {
+.submit-btn:disabled,
+.submit-btn[aria-disabled="true"] {
   background: var(--surface-sunk);
   color: var(--ink-muted);
   border: 1px solid var(--rule-strong);
@@ -671,12 +675,15 @@ code {
   cursor: pointer;
 }
 
-.ghost-btn:hover:not(:disabled) {
+.ghost-btn:hover:not(:disabled, [aria-disabled="true"]) {
   border-color: var(--accent);
   color: var(--accent);
 }
 
 .ghost-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Muted by colour, not opacity: an inert control keeps focus, and opacity
+   would fade its focus ring below 3:1. */
+.ghost-btn[aria-disabled="true"] { color: var(--ink-muted); border-color: var(--rule); cursor: not-allowed; }
 
 /* Practice mode */
 
@@ -688,9 +695,9 @@ code {
   gap: 0.4rem;
 }
 
-.practice-pass:hover:not(:disabled) { border-color: var(--pass); color: var(--pass); }
-.practice-fail:hover:not(:disabled) { border-color: var(--fail); color: var(--fail); }
-.practice-inconclusive:hover:not(:disabled) { border-color: var(--incon); color: var(--incon); }
+.practice-pass:hover:not(:disabled, [aria-disabled="true"]) { border-color: var(--pass); color: var(--pass); }
+.practice-fail:hover:not(:disabled, [aria-disabled="true"]) { border-color: var(--fail); color: var(--fail); }
+.practice-inconclusive:hover:not(:disabled, [aria-disabled="true"]) { border-color: var(--incon); color: var(--incon); }
 
 /* ---------------- Info tips ---------------- */
 

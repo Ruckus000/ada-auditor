@@ -3,6 +3,7 @@
 import { useId, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { MAX_ANSWER_TEXT, figureGroups, suggestionOn, type Ask } from '../../../domain/document-answers';
 import { languageTagSchema } from '../../../domain/document-structure';
+import { inertWhen } from '../lib/inert-button';
 import { declaredAnswersFrom, figureContextLine } from '../lib/stateless-answers';
 import { FONT, T } from '../lib/tokens';
 import { DocumentRunResult } from './client/document-run-result';
@@ -177,8 +178,11 @@ export function StatelessAnswersForm({
                     value={descriptions[lead.id] ?? ''}
                     onChange={(event) => onDescription(lead.id, event.target.value)}
                     onKeyDown={advance}
-                    disabled={busy}
-                    style={{ ...inputStyle, fontFamily: FONT.sans, resize: 'vertical' }}
+                    // Read-only rather than disabled while the file converts:
+                    // the text stays reachable and readable, and nothing typed
+                    // now could reach a request already sent.
+                    readOnly={busy}
+                    style={{ ...inputStyle, fontFamily: FONT.sans, resize: 'vertical', ...(busy ? { background: T.surfaceSunk, color: T.inkMuted } : {}) }}
                   />
                 </li>
               );
@@ -205,7 +209,9 @@ export function StatelessAnswersForm({
       ) : null}
 
       <span>
-        <button type="submit" disabled={busy} style={{ ...buttonStyle, ...disabledStyle(busy) }}>
+        {/* Inert, so the press keeps focus (`lib/inert-button`); its
+            `preventDefault` is also what stops the form submitting twice. */}
+        <button type="submit" {...inertWhen(busy, () => {})} aria-label="Remediate" style={{ ...buttonStyle, ...disabledStyle(busy) }}>
           {busy ? 'Remediating… (up to 5 minutes)' : 'Remediate'}
         </button>
       </span>
@@ -312,14 +318,26 @@ export function RemediateFileScreen({ toolchain, converter }: { toolchain: Toolc
               id={fileId}
               type="file"
               accept={accept}
-              disabled={busy}
+              // Choosing a file starts the reading, so `disabled` here would
+              // take focus off the control just used. Inert instead: the
+              // click's default action is what opens the picker, and
+              // `inertWhen` prevents it.
+              {...inertWhen<HTMLInputElement>(busy, () => {})}
               onChange={(event) => {
+                // A file dropped onto the control arrives with no click, so
+                // the inert click guard never sees it; `disabled` used to
+                // refuse the drop. Refused here, and the input cleared, so a
+                // second file cannot reset the reading under a run in flight.
+                if (busy) {
+                  event.currentTarget.value = '';
+                  return;
+                }
                 const next = event.target.files?.[0];
                 if (next) void choose(next);
               }}
               // A pointer target of at least 24px: the browser's own file
               // control is shorter than that at this font size.
-              style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.ink, minHeight: 28, padding: '4px 0' }}
+              style={{ fontFamily: FONT.sans, fontSize: 12.5, color: busy ? T.inkMuted : T.ink, minHeight: 28, padding: '4px 0' }}
             />
             <p style={noteStyle}>
               {converter
@@ -363,8 +381,8 @@ export function RemediateFileScreen({ toolchain, converter }: { toolchain: Toolc
               <span>
                 <button
                   type="button"
-                  onClick={() => void remediate()}
-                  disabled={busy}
+                  {...inertWhen(busy, () => void remediate())}
+                  aria-label="Convert"
                   style={{ ...buttonStyle, ...disabledStyle(busy) }}
                 >
                   {busy ? 'Converting… (up to 5 minutes)' : 'Convert'}

@@ -200,14 +200,13 @@ export function NewClientScreen({ existingNames }: { existingNames: string[] }) 
             className="ph-primary"
             style={{
               padding: '9px 18px',
-              border: 'none',
+              border: blocked ? `1px solid ${T.ruleStrong}` : 'none',
               borderRadius: 9,
-              background: T.accent,
-              color: '#fff',
+              background: blocked ? T.surfaceSunk : T.accent,
+              color: blocked ? T.inkMuted : '#fff',
               fontFamily: FONT.sans,
               fontSize: 12.5,
               fontWeight: 650,
-              opacity: blocked ? 0.55 : 1,
               cursor: blocked ? 'not-allowed' : 'pointer',
             }}
           >

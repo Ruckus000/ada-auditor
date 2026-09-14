@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react';
 import { describeDiscoveryFailure } from '../../lib/discovery-copy';
+import { inertWhen } from '../../lib/inert-button';
 import { FONT, T } from '../../lib/tokens';
 import { DocumentRunResult } from './document-run-result';
 import {
@@ -205,8 +206,10 @@ export function DocumentIntake({
           </span>
           <button
             type="button"
-            onClick={scan}
-            disabled={scanning || targetUrl.trim() === ''}
+            // Inert rather than `disabled` (`lib/inert-button`), with the name
+            // held still while the text reads "Scanning…".
+            {...inertWhen(scanning || targetUrl.trim() === '', () => void scan())}
+            aria-label="Scan the site"
             style={{ ...buttonStyle, ...disabledStyle(scanning || targetUrl.trim() === '') }}
           >
             {scanning ? 'Scanning…' : 'Scan the site'}
@@ -254,8 +257,8 @@ export function DocumentIntake({
             />
             <button
               type="button"
-              onClick={addByUrl}
-              disabled={addState.state === 'running' || addUrl.trim() === ''}
+              {...inertWhen(addState.state === 'running' || addUrl.trim() === '', () => void addByUrl())}
+              aria-label="Add"
               style={{
                 ...buttonStyle,
                 ...disabledStyle(addState.state === 'running' || addUrl.trim() === ''),

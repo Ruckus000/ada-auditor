@@ -1,6 +1,7 @@
 'use client';
 
 import { FieldLabel, InfoTip } from './info-tip';
+import { inertWhen } from '../platform/lib/inert-button';
 import { GLOSSARY, type GlossaryKey } from './glossary';
 import type { ReadyState } from './status-rail';
 
@@ -207,7 +208,15 @@ export function RunForm({
           </div>
         </details>
 
-        <button className="submit-btn" type="submit" disabled={submitting || blocked !== null}>
+        {/* Inert, not `disabled` (`lib/inert-button`): a run that fails leaves
+            focus here rather than on `<body>`, and `preventDefault` is what
+            stops a second submit. The name holds while the text reads "Running…". */}
+        <button
+          className="submit-btn"
+          type="submit"
+          {...inertWhen(submitting || blocked !== null, () => {})}
+          aria-label={config.runMode === 'browser' ? 'Run the demo audit' : 'Check this HTML'}
+        >
           {submitting
             ? 'Running…'
             : config.runMode === 'browser'

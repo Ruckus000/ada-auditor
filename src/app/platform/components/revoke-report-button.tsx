@@ -127,8 +127,8 @@ export function RevokeReportButton({ report }: { report: RevokableReport }) {
          * that its own click disables takes focus off itself mid-interaction,
          * dropping the operator at `<body>` to tab back through the whole
          * workspace nav to reach the row they were on. `inert-button.ts`
-         * records the finding and why axe cannot see it. Eight other controls
-         * in this workspace do the same; this is the ninth.
+         * records the finding and why axe cannot see it, and
+         * `tests/app/controls-keep-focus.test.ts` holds every control to it.
          */
         {...inertWhen(busy, () => void revoke())}
         /*
@@ -147,7 +147,7 @@ export function RevokeReportButton({ report }: { report: RevokableReport }) {
           fontFamily: FONT.sans,
           fontSize: 12.5,
           fontWeight: 600,
-          color: T.failDeep,
+          color: busy ? T.inkMuted : T.failDeep,
           background: 'none',
           border: 'none',
           padding: '4px 0',
@@ -160,8 +160,9 @@ export function RevokeReportButton({ report }: { report: RevokableReport }) {
           alignItems: 'center',
           cursor: busy ? 'default' : 'pointer',
           // An inert control that still looks live is its own defect, which is
-          // the pairing `inert-button.ts` asks every call site for.
-          opacity: busy ? 0.6 : 1,
+          // the pairing `inert-button.ts` asks every call site for. Muted by
+          // the colour above, not `opacity`, which would fade the focus ring
+          // this control keeps.
         }}
       >
         {busy ? 'Revoking…' : 'Revoke link'}
