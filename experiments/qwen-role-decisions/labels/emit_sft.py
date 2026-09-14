@@ -6,23 +6,40 @@ import hashlib
 import json
 from pathlib import Path
 
-from labels.sft import emit
+from labels.sft import cap_planted_headings, emit
 
 OUT = Path("out/keys")
 
 
-def main() -> None:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--keys-dir", type=Path, default=OUT, help="holds labels.jsonl, cards.jsonl, key-headings.json")
     p.add_argument("--split", type=Path, default=OUT / "split" / "split.json")
     p.add_argument("--on", default="train")
     p.add_argument("--out", type=Path, default=Path("out/stage1/sft"))
-    a = p.parse_args()
+    p.add_argument("--exclude-doc-prefix", action="append", default=[],
+                   help="drop label rows whose document_id starts with this, before emit (repeatable)")
+    p.add_argument("--max-planted-heading-share", type=float, default=None,
+                   help="after emit, drop planted H rows (sha256(id) order) until they are at most this share of H rows")
+    return p.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> None:
+    a = parse_args(argv)
     rows = [json.loads(l) for l in (a.keys_dir / "labels.jsonl").read_text().splitlines() if l.strip()]
     cards = {c["card_id"]: c for c in (json.loads(l) for l in (a.keys_dir / "cards.jsonl").read_text().splitlines() if l.strip())}
     keys = json.loads((a.keys_dir / "key-headings.json").read_text())
     ids = set(json.loads(a.split.read_text())["ids"][a.on])
-    sft, held = emit(rows, cards, keys, lambda c: c.get("image"), ids)
+    extra = {}
+    if a.exclude_doc_prefix:
+        prefixes = tuple(a.exclude_doc_prefix)
+        before = len(rows)
+        rows = [r for r in rows if not r["document_id"].startswith(prefixes)]
+        extra["excluded_doc_prefix"] = {"prefixes": list(prefixes), "rows": before - len(rows)}
+    sources: list[dict] = []
+    sft, held = emit(rows, cards, keys, lambda c: c.get("image"), ids, sources)
+    if a.max_planted_heading_share is not None:
+        sft, sources, extra["planted_cap"] = cap_planted_headings(sft, sources, a.max_planted_heading_share)
     a.out.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(sft, indent=1) + "\n"
     (a.out / "train.json").write_text(payload)
@@ -30,7 +47,7 @@ def main() -> None:
     for r in sft:
         t = json.loads(r["messages"][1]["content"])["type"]
         types[t] = types.get(t, 0) + 1
-    manifest = {"n": len(sft), "held_back": held, "types": types, "split": a.on, "sha256": hashlib.sha256(payload.encode()).hexdigest()}
+    manifest = {"n": len(sft), "held_back": held, "types": types, "split": a.on, "sha256": hashlib.sha256(payload.encode()).hexdigest(), **extra}
     (a.out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest))
 

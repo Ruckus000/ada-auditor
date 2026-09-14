@@ -13,6 +13,7 @@ import hashlib
 import json
 import random
 from collections import defaultdict
+from fractions import Fraction
 from pathlib import Path
 
 from labels.keys import VOCAB
@@ -73,7 +74,9 @@ def target_for(row: dict) -> str:
     return json.dumps({"type": t, "rule": RULE_OF[t]}, separators=(",", ":"))
 
 
-def emit(rows: list[dict], cards_by_id: dict[str, dict], key_headings: dict[str, list[dict]], image_of, split_ids: set[str]) -> tuple[list[dict], dict]:
+def emit(rows: list[dict], cards_by_id: dict[str, dict], key_headings: dict[str, list[dict]], image_of, split_ids: set[str],
+         sources: list[dict] | None = None) -> tuple[list[dict], dict]:
+    """``sources``, when a list, receives one ``{id, label_source, type}`` per emitted row, index-aligned with the output."""
     out, held = [], defaultdict(int)
     for r in rows:
         if r["id"] not in split_ids:
@@ -90,4 +93,34 @@ def emit(rows: list[dict], cards_by_id: dict[str, dict], key_headings: dict[str,
             held["no_image"] += 1; continue
         stack = stack_before(card, key_headings.get(r["document_id"], []), r.get("key_locator"))
         out.append({"messages": [{"role": "user", "content": prompt_for(card, stack)}, {"role": "assistant", "content": target_for(r)}], "image": str(img)})
+        if sources is not None:
+            sources.append({"id": r["id"], "label_source": r.get("label_source"), "type": r["type"]})
     return out, dict(held)
+
+
+def cap_planted_headings(sft: list[dict], sources: list[dict], max_share: float) -> tuple[list[dict], list[dict], dict]:
+    """Drop planted H rows until they are at most ``max_share`` of the emitted H rows (ruling P9).
+
+    Rows to drop are taken in sha256(id) order, so the cut is deterministic and
+    independent of emit order; every other row keeps its place. Raises when the
+    cap cannot be met: a share outside [0, 1), or planted H rows with no other
+    H rows to stand beside.
+    """
+    if len(sft) != len(sources):
+        raise ValueError(f"{len(sft)} rows but {len(sources)} sources")
+    share = Fraction(str(max_share))
+    if not 0 <= share < 1:
+        raise ValueError(f"--max-planted-heading-share must be in [0, 1), got {max_share}")
+    planted = [i for i, s in enumerate(sources) if s["type"] == "H" and s["label_source"] == "planted"]
+    total_h = sum(1 for s in sources if s["type"] == "H")
+    other_h = total_h - len(planted)
+    if planted and other_h == 0 and share > 0:
+        raise ValueError(f"cannot cap planted headings: {len(planted)} planted H rows and no other H rows")
+    keep = len(planted)
+    while keep and Fraction(keep, other_h + keep) > share:
+        keep -= 1
+    drop = set(sorted(planted, key=lambda i: hashlib.sha256(sources[i]["id"].encode()).hexdigest())[:len(planted) - keep])
+    stats = {"max_share": max_share, "planted_h": len(planted), "total_h": total_h, "dropped": len(drop),
+             "planted_h_after": keep, "total_h_after": other_h + keep}
+    kept = [i for i in range(len(sft)) if i not in drop]
+    return [sft[i] for i in kept], [sources[i] for i in kept], stats

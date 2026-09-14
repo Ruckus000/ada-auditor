@@ -12,8 +12,17 @@
  * taken from any corpus document. The builders are imported from the main
  * checkout by absolute path and never edited.
  *
- * Usage: node planted_cohort.mjs --out <dir> --count 100 --seed-base <int>
- * Output: <out>/real/c5-NNNN.docx and <out>/real-names.txt (P2 URL shape).
+ * Usage: node planted_cohort.mjs --out <dir> --count 100 --seed-base <int> [--cohort c5|c7]
+ * Output: <out>/real/<cohort>-NNNN.docx and <out>/real-names.txt (P2 URL shape).
+ *
+ * c5 (the default) is the round-3 cohort and regenerates byte-for-byte from
+ * its original arguments. Its heading surfaces were uniform (bold 0.99, Title
+ * Case 0.87, ALL CAPS 0.00, 12 pt) and the adapter learned that form (S23).
+ * c7 keeps c5's structure — ladder, declaration mechanisms, distractors — and
+ * draws every heading's surface per template family: bold or not, 11-18 pt,
+ * Title/Sentence/ALL CAPS, family numbering (`3.2`, `ARTICLE IV`, `Section
+ * 4.1`, `(a)`), carried as run properties that override the style's rPr.
+ * Distractors get the same surfaces, so bold does not imply heading.
  * Same arguments give byte-identical files: a seeded PRNG, and the builders'
  * FIXED_MTIME plus `zip -X` for the package.
  */
@@ -35,17 +44,19 @@ import {
 // ------------------------------------------------------------------ arguments
 
 function parseArgs(argv) {
-  const out = { out: null, count: 100, seedBase: null };
+  const out = { out: null, count: 100, seedBase: null, cohort: 'c5' };
   for (let i = 0; i < argv.length; i += 1) {
     const k = argv[i];
     if (k === '--out') out.out = argv[++i];
     else if (k === '--count') out.count = Number(argv[++i]);
     else if (k === '--seed-base') out.seedBase = Number(argv[++i]);
+    else if (k === '--cohort') out.cohort = argv[++i];
     else throw new Error(`unknown argument ${k}`);
   }
   if (!out.out || !Number.isInteger(out.count) || out.count < 1 || !Number.isInteger(out.seedBase)) {
-    throw new Error('usage: planted_cohort.mjs --out <dir> --count <n> --seed-base <int>');
+    throw new Error('usage: planted_cohort.mjs --out <dir> --count <n> --seed-base <int> [--cohort c5|c7]');
   }
+  if (!Object.hasOwn(COHORTS, out.cohort)) throw new Error(`unknown cohort ${out.cohort}`);
   return out;
 }
 
@@ -239,6 +250,106 @@ const FAMILIES = [
 
 const CUSTOM_IDS = ['SectionTitle', 'contactheading', 'SubsectionHead', 'ArticleHeading', 'TopicHeading'];
 
+// ----------------------------------------------------------- c7 surfaces
+
+/**
+ * Per-family heading surface for c7. `bold` and `pt` ([lo, hi]) are per level
+ * H1..H4; `cases` is [Title, Sentence, ALL CAPS] weights per level; `scheme`
+ * is the family's numbering, used in a `numbered` share of its documents;
+ * `colon` is the share of headings written with a trailing colon.
+ * Calibrated so the matched H rows pool to the real train rows (r4-T2).
+ */
+const SURFACE_C7 = {
+  'meeting-minutes': {
+    numbered: 0.6, scheme: 'roman-alpha', colon: 0.08,
+    bold: [1, 0.75, 0.55, 0.35], pt: [[14, 16], [12, 14], [11, 13], [11, 12]],
+    cases: [[0.4, 0, 0.6], [0.2, 0.2, 0.6], [0.45, 0.4, 0.15], [0.35, 0.55, 0.1]],
+  },
+  ordinance: {
+    numbered: 0.9, scheme: 'article', colon: 0.02,
+    bold: [1, 0.95, 0.75, 0.4], pt: [[14, 18], [13, 16], [12, 14], [11, 12]],
+    cases: [[0.3, 0, 0.7], [0.1, 0.1, 0.8], [0.6, 0.3, 0.1], [0.3, 0.7, 0]],
+  },
+  'policy-manual': {
+    numbered: 0.7, scheme: 'decimal', colon: 0,
+    bold: [1, 0.9, 0.8, 0.6], pt: [[16, 18], [14, 16], [12, 14], [11, 13]],
+    cases: [[0.9, 0, 0.1], [0.7, 0.2, 0.1], [0.45, 0.35, 0.2], [0.4, 0.5, 0.1]],
+  },
+  'annual-report': {
+    numbered: 0.1, scheme: 'decimal', colon: 0,
+    bold: [0.8, 0.7, 0.65, 0.55], pt: [[17, 18], [16, 18], [14, 16], [12, 14]],
+    cases: [[0.6, 0, 0.4], [0.4, 0.2, 0.4], [0.4, 0.4, 0.2], [0.4, 0.5, 0.1]],
+  },
+  'procurement-notice': {
+    numbered: 0.8, scheme: 'section', colon: 0.03,
+    bold: [1, 0.95, 0.8, 0.55], pt: [[14, 16], [12, 14], [11, 13], [11, 12]],
+    cases: [[0.3, 0, 0.7], [0.2, 0.1, 0.7], [0.55, 0.35, 0.1], [0.4, 0.6, 0]],
+  },
+  'employee-handbook': {
+    numbered: 0.3, scheme: 'decimal', colon: 0.05,
+    bold: [0.9, 0.75, 0.65, 0.5], pt: [[16, 18], [14, 16], [13, 14], [12, 13]],
+    cases: [[0.7, 0, 0.3], [0.3, 0.4, 0.3], [0.2, 0.6, 0.2], [0.2, 0.65, 0.15]],
+  },
+  'capital-plan': {
+    numbered: 0.5, scheme: 'decimal', colon: 0,
+    bold: [1, 0.85, 0.7, 0.5], pt: [[16, 18], [14, 17], [13, 15], [12, 14]],
+    cases: [[0.8, 0, 0.2], [0.7, 0.1, 0.2], [0.45, 0.35, 0.2], [0.45, 0.4, 0.15]],
+  },
+  'emergency-plan': {
+    numbered: 0.6, scheme: 'section', colon: 0.03,
+    bold: [1, 0.8, 0.6, 0.35], pt: [[14, 18], [13, 16], [12, 14], [11, 12]],
+    cases: [[0.3, 0, 0.7], [0.25, 0.1, 0.65], [0.5, 0.4, 0.1], [0.35, 0.6, 0.05]],
+  },
+};
+
+/** Distractors that look like headings: the same surface space, no outline level. */
+const DISTRACTOR_SURFACE_C7 = { bold: 0.6, pt: [11, 20], cases: [0.45, 0.25, 0.3] };
+
+const COHORTS = {
+  c5: { id: 'c5', header: '# cohort 5 - planted Word cohort for heading-type training (synthetic; ruling P1-P3)', surface: null },
+  c7: { id: 'c7', header: '# cohort 7 - planted Word cohort with varied heading surfaces (synthetic; ruling P1-P3, P9, S23)', surface: SURFACE_C7 },
+};
+
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+const ALPHA = 'abcdefghij';
+
+const sentenceCase = (t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+
+function weighted(rng, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let roll = rng.next() * total;
+  for (let i = 0; i < weights.length; i += 1) {
+    roll -= weights[i];
+    if (roll < 0) return i;
+  }
+  return weights.length - 1;
+}
+
+/** Apply a case to the heading words; ALL CAPS also takes the number with it. */
+function cased(caseIdx, prefix, words) {
+  const w = caseIdx === 1 ? sentenceCase(words) : words;
+  const full = prefix ? `${prefix} ${w}` : w;
+  return caseIdx === 2 ? full.toUpperCase() : full;
+}
+
+/** A family's number for a heading at `level` (2-4) at position s.u.l. */
+function numberFor(scheme, level, s, u, l) {
+  const forms = {
+    article: [() => `ARTICLE ${ROMAN[s - 1]}`, () => `Section ${s}.${u}`, () => `(${ALPHA[l - 1]})`],
+    section: [() => `Section ${s}`, () => `${s}.${u}`, () => `(${ALPHA[l - 1]})`],
+    'roman-alpha': [() => `${ROMAN[s - 1]}.`, () => `${ALPHA[u - 1].toUpperCase()}.`, () => `${l}.`],
+    decimal: [() => `${s}.`, () => `${s}.${u}`, () => `${s}.${u}.${l}`],
+  };
+  return forms[scheme][level - 2]();
+}
+
+/** Run properties that override whatever the paragraph's style says. */
+const rPr = ({ bold, pt }) =>
+  `<w:rPr>${bold ? '<w:b/><w:bCs/>' : '<w:b w:val="0"/><w:bCs w:val="0"/>'}<w:sz w:val="${pt * 2}"/><w:szCs w:val="${pt * 2}"/></w:rPr>`;
+
+/** Put the surface on every text run of a builder-made paragraph. */
+const withSurface = (xml, surface) => (surface ? xml.replace(/<w:r><w:t/g, `<w:r>${rPr(surface)}<w:t`) : xml);
+
 // ------------------------------------------------------------- XML helpers
 
 const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -271,8 +382,11 @@ function tocBlock(entries, titleStyle) {
 
 // --------------------------------------------------------------- one document
 
-function buildDocument(i, seed, workRoot, realDir) {
+function buildDocument(i, seed, workRoot, realDir, cohort) {
   const rng = prng(seed);
+  // c7 surface draws come from their own stream, so c5's draws are untouched.
+  const srng = prng((seed ^ 0x7c7c7c7) >>> 0);
+  const profile = cohort.surface ? cohort.surface[FAMILIES[i % FAMILIES.length].slug] : null;
   const family = FAMILIES[i % FAMILIES.length];
   const town = `${rng.pick(TOWN_A)}${rng.pick(TOWN_B)}`;
   const kind = rng.pick(KIND);
@@ -293,7 +407,7 @@ function buildDocument(i, seed, workRoot, realDir) {
   const bodyLevelText = drawer(rng, BODY_LEVEL_TEXT);
 
   // Per-document switches.
-  const numbered = rng.chance(0.4);
+  const numbered = profile ? (rng.chance(0.4), srng.chance(profile.numbered)) : rng.chance(0.4);
   const customLevel = rng.chance(0.7) ? rng.int(2, 4) : null;
   const customId = customLevel ? rng.pick(CUSTOM_IDS) : null;
   const directShare = rng.pick([0.1, 0.25, 0.5]);
@@ -307,35 +421,59 @@ function buildDocument(i, seed, workRoot, realDir) {
   const distractors = {
     fakeHeading: 0, headerTable: 0, toc: 0, imageHeadingDescribed: 0, imageHeadingUndescribed: 0,
     bodyLevelStyle: 0, bodyLevelDirect: 0, emptyHeading: 0, list: 0,
+    ...(profile ? { boldSentence: 0 } : {}),
   };
   let figureId = 0;
 
   /** Declare one text heading through one of the three mechanisms. */
-  const headingPara = (level, text) => {
+  const headingPara = (level, text, surface = null) => {
     declared[`H${level}`] += 1;
     if (customLevel === level && rng.chance(0.4)) {
       mechanism.custom += 1;
-      return para(text, customId);
+      return withSurface(para(text, customId), surface);
     }
     if (rng.chance(directShare)) {
       mechanism.direct += 1;
-      return outlinePara(level, text);
+      return withSurface(outlinePara(level, text), surface);
     }
     mechanism.style += 1;
-    return heading(level, text);
+    return withSurface(heading(level, text), surface);
+  };
+
+  /** c7: one heading's text and surface, drawn from the family profile. */
+  const surfaced = (level, words, prefix) => {
+    if (!profile) return { text: prefix ? `${prefix} ${words}` : words, surface: null };
+    const [lo, hi] = profile.pt[level - 1];
+    const surface = { bold: srng.chance(profile.bold[level - 1]), pt: srng.int(lo, hi) };
+    let text = cased(weighted(srng, profile.cases[level - 1]), prefix, words);
+    if (level > 1 && srng.chance(profile.colon)) text += ':';
+    return { text, surface };
+  };
+  /** c7: a distractor that wears a heading surface. */
+  const distractorSurface = (words) => {
+    const d = DISTRACTOR_SURFACE_C7;
+    return { text: cased(weighted(srng, d.cases), null, words), surface: { bold: srng.chance(d.bold), pt: srng.int(d.pt[0], d.pt[1]) } };
   };
 
   // Plan the outline first so a TOC can list it.
   const sections = [];
   const nSections = rng.int(3, 6);
+  const scheme = profile ? profile.scheme : null;
+  const num = (level, s, u, l) => (numbered && profile ? numberFor(scheme, level, s, u, l) : null);
   for (let s = 1; s <= nSections; s += 1) {
-    const sec = { text: numbered ? `${s}. ${h2Text()}` : h2Text(), subs: [] };
+    const sec = profile
+      ? { ...surfaced(2, h2Text(), num(2, s)), subs: [] }
+      : { text: numbered ? `${s}. ${h2Text()}` : h2Text(), subs: [] };
     const nSubs = rng.int(1, 3);
     for (let u = 1; u <= nSubs; u += 1) {
-      const sub = { text: numbered ? `${s}.${u} ${h3Text()}` : h3Text(), subs: [] };
+      const sub = profile
+        ? { ...surfaced(3, h3Text(), num(3, s, u)), subs: [] }
+        : { text: numbered ? `${s}.${u} ${h3Text()}` : h3Text(), subs: [] };
       if (rng.chance(0.4)) {
         const nLeaf = rng.int(1, 2);
-        for (let l = 1; l <= nLeaf; l += 1) sub.subs.push(numbered ? `${s}.${u}.${l} ${h4Text()}` : h4Text());
+        for (let l = 1; l <= nLeaf; l += 1) {
+          sub.subs.push(profile ? surfaced(4, h4Text(), num(4, s, u, l)) : numbered ? `${s}.${u}.${l} ${h4Text()}` : h4Text());
+        }
       }
       sec.subs.push(sub);
     }
@@ -344,7 +482,8 @@ function buildDocument(i, seed, workRoot, realDir) {
 
   const body = [];
   const title = family.title(place, year);
-  body.push(headingPara(1, title));
+  const top = surfaced(1, title, null);
+  body.push(headingPara(1, top.text, top.surface));
   body.push(bodyPara());
 
   if (withToc) {
@@ -365,7 +504,10 @@ function buildDocument(i, seed, workRoot, realDir) {
     const roll = rng.next();
     if (roll < 0.14) {
       distractors.fakeHeading += 1;
-      body.push(fakeHeading(fakeText()), bodyPara());
+      if (profile) {
+        const d = distractorSurface(fakeText());
+        body.push(`<w:p><w:r>${rPr(d.surface)}<w:t xml:space="preserve">${esc(d.text)}</w:t></w:r></w:p>`, bodyPara());
+      } else body.push(fakeHeading(fakeText()), bodyPara());
     } else if (roll < 0.26) {
       distractors.headerTable += 1;
       const cols = rng.int(2, 4);
@@ -381,13 +523,24 @@ function buildDocument(i, seed, workRoot, realDir) {
       for (let k = 0; k < rng.int(2, 4); k += 1) body.push(listItem(numId, fill(sentence())));
     } else if (roll < 0.37 && bodyLevelStyle && !withToc) {
       distractors.bodyLevelStyle += 1;
-      body.push(para(bodyLevelText(), bodyLevelStyle.id), bodyPara());
+      if (profile) {
+        const d = distractorSurface(bodyLevelText());
+        body.push(withSurface(para(d.text, bodyLevelStyle.id), d.surface), bodyPara());
+      } else body.push(para(bodyLevelText(), bodyLevelStyle.id), bodyPara());
     } else if (roll < 0.41) {
       distractors.bodyLevelDirect += 1;
-      body.push(styledBodyOverride(`Heading${rng.int(2, 4)}`, bodyLevelText()), bodyPara());
+      if (profile) {
+        const style = `Heading${rng.int(2, 4)}`;
+        const d = distractorSurface(bodyLevelText());
+        body.push(withSurface(styledBodyOverride(style, d.text), d.surface), bodyPara());
+      } else body.push(styledBodyOverride(`Heading${rng.int(2, 4)}`, bodyLevelText()), bodyPara());
     } else if (roll < 0.44) {
       distractors.emptyHeading += 1;
       body.push(emptyOutlinePara(rng.int(2, 4)));
+    } else if (profile && roll < 0.54) {
+      // c7 only: a bold (or plain) one-sentence body paragraph, so bold is not a heading cue.
+      distractors.boldSentence += 1;
+      body.push(withSurface(para(fill(sentence())), { bold: srng.chance(0.7), pt: srng.int(11, 12) }), bodyPara());
     }
   };
 
@@ -406,24 +559,24 @@ function buildDocument(i, seed, workRoot, realDir) {
   };
 
   for (const sec of sections) {
-    body.push(headingPara(2, sec.text), bodyPara());
+    body.push(headingPara(2, sec.text, sec.surface), bodyPara());
     maybeDistractor();
     maybeImageHeading(2);
     for (const sub of sec.subs) {
-      body.push(headingPara(3, sub.text), bodyPara());
+      body.push(headingPara(3, sub.text, sub.surface), bodyPara());
       maybeDistractor();
       maybeImageHeading(3);
       for (const leaf of sub.subs) {
-        body.push(headingPara(4, leaf), bodyPara());
+        body.push(profile ? headingPara(4, leaf.text, leaf.surface) : headingPara(4, leaf), bodyPara());
         if (rng.chance(0.5)) body.push(bodyPara());
         maybeDistractor();
       }
     }
   }
 
-  const name = `c5-${String(i + 1).padStart(4, '0')}.docx`;
+  const name = `${cohort.id}-${String(i + 1).padStart(4, '0')}.docx`;
   writeDocx(join(workRoot, `${name}.parts`), join(realDir, name), {
-    title,
+    title: top.text,
     body,
     image: figureId > 0,
     ...(customId ? { customHeading: { id: customId, basedOn: `Heading${customLevel}` } } : {}),
@@ -444,12 +597,13 @@ function main() {
   mkdirSync(workRoot, { recursive: true });
 
   const docs = [];
-  for (let i = 0; i < args.count; i += 1) docs.push(buildDocument(i, args.seedBase + i, workRoot, realDir));
+  const cohort = COHORTS[args.cohort];
+  for (let i = 0; i < args.count; i += 1) docs.push(buildDocument(i, args.seedBase + i, workRoot, realDir, cohort));
   rmSync(workRoot, { recursive: true, force: true });
 
   const names = [
-    '# cohort 5 - planted Word cohort for heading-type training (synthetic; ruling P1-P3)',
-    `# <id>.docx\\t<url>; url is https://planted-<family>.invalid/<seed>; --count ${args.count} --seed-base ${args.seedBase}`,
+    cohort.header,
+    `# <id>.docx\\t<url>; url is https://planted-<family>.invalid/<seed>; --count ${args.count} --seed-base ${args.seedBase}${cohort.id === 'c5' ? '' : ` --cohort ${cohort.id}`}`,
     ...docs.map((d) => `${d.name}\thttps://planted-${d.family}.invalid/${d.seed}`),
   ];
   writeFileSync(join(out, 'real-names.txt'), `${names.join('\n')}\n`);
