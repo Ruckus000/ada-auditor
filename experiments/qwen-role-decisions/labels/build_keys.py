@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import subprocess
@@ -31,6 +32,16 @@ def originals(rows: list[dict], word_pdfs: Path, staged: Path) -> list[dict]:
         elif r["kind"] == "docx" and (word_pdfs / f"{r['id']}.pdf").is_file():
             out.append({**r, "source": "word-outline", "original": str(word_pdfs / f"{r['id']}.pdf")})
     return out
+
+
+UNMATCHED_FIELDS = ("card_id", "document_id", "page", "x0", "y0", "x1", "y1", "font_pt", "weight", "in_table_box", "why", "existing_tag")
+
+
+def unmatched_row(card: dict) -> dict:
+    """An unmatched card is not a label (K14): geometry and a text hash, no text."""
+    row = {k: card.get(k) for k in UNMATCHED_FIELDS}
+    row["text_sha256"] = hashlib.sha256((card.get("text") or "").encode()).hexdigest()
+    return row
 
 
 def main() -> None:
@@ -63,8 +74,8 @@ def main() -> None:
     subprocess.run(["node", str(ODL_RUNNER), str(stripped_dir.resolve()), str(tagged_dir.resolve())], cwd=MAIN, check=True)
     rng = random.Random(SEED)
     match_counts, types = Counter(), Counter()
-    n_rows = 0
-    with (OUT / "labels.jsonl").open("w") as f:
+    n_rows = n_unmatched = 0
+    with (OUT / "labels.jsonl").open("w") as f, (OUT / "unmatched.jsonl").open("w") as u:
         for d in usable:
             tagged = tagged_dir / f"{d['id']}.pdf"
             if not tagged.is_file():
@@ -79,11 +90,16 @@ def main() -> None:
                 by_page[k.get("page")].append(k)
             for c in cap_per_document(chosen, rng):
                 key, how = match_candidate(c, by_page.get(c.get("page"), []))
+                match_counts[how] += 1
+                if how == "none":
+                    u.write(json.dumps(unmatched_row(c)) + "\n"); n_unmatched += 1
+                    continue
                 row = make_key_row(c, d, key, how, d["source"])
-                match_counts[how] += 1; types[row["type"]] += 1; n_rows += 1
+                types[row["type"]] += 1; n_rows += 1
                 f.write(json.dumps(row) + "\n")
     report = {"documents": len(docs), "usable": len(usable) - sum(1 for d in usable if d["id"] in excluded), "excluded": excluded,
-              "cards": n_rows, "match": dict(match_counts), "types": dict(types), "hosts": len({d["host"] for d in usable if d["id"] not in excluded})}
+              "cards": n_rows, "unmatched": n_unmatched,
+              "match_rate": n_rows / (n_rows + n_unmatched) if n_rows + n_unmatched else None, "match": dict(match_counts), "types": dict(types), "hosts": len({d["host"] for d in usable if d["id"] not in excluded})}
     (OUT / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report))
     subprocess.run(["python3", "-B", "eligibility_eval.py", "split", "--labels", str(OUT / "labels.jsonl"), "--salt", a.salt, "--out", str(OUT / "split")], check=True)

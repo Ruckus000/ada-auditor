@@ -25,7 +25,7 @@ def match_candidate(card: dict, keys_on_page: list[dict]) -> tuple[dict | None, 
         exact = [k for k in keys_on_page if k.get("norm") == n]
         if exact:
             return max(exact, key=lambda k: iou(card, k)), "exact"
-        contains = [k for k in keys_on_page if k.get("norm") and (n in k["norm"] or k["norm"] in n) and iou(card, k) >= CONTAIN_IOU]
+        contains = [k for k in keys_on_page if k.get("norm") and n in k["norm"] and iou(card, k) >= CONTAIN_IOU]
         if contains:
             return max(contains, key=lambda k: iou(card, k)), "contains"
     best = max(keys_on_page, key=lambda k: iou(card, k), default=None)
@@ -36,7 +36,7 @@ def match_candidate(card: dict, keys_on_page: list[dict]) -> tuple[dict | None, 
 
 def label_for(card: dict, key: dict | None, how: str) -> tuple[str, int | None]:
     if how == "none" or key is None:
-        return "Artifact", None
+        raise ValueError("an unmatched card is not a label (K14)")
     return key["type"], key.get("level")
 
 

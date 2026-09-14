@@ -24,9 +24,20 @@ def test_match_prefers_text_then_containment_then_box():
     assert match_candidate(box(0, 200, 100, 210, norm="runningfooter"), keys) == (None, "none")
 
 
+def test_containment_runs_one_way_only():
+    keys = [box(0, 0, 100, 10, norm="publiccomment", type="H", level=2, locator="k:1")]
+    card = box(0, 0, 40, 10, norm="publiccommentthemeetingopens")  # IoU 0.4: over CONTAIN_IOU, under BOX_IOU
+    assert match_candidate(card, keys) == (None, "none")
+
+
 def test_label_and_row_contract():
     assert label_for({}, {"type": "H", "level": 2}, "exact") == ("H", 2)
-    assert label_for({}, None, "none") == ("Artifact", None)
+    try:
+        label_for({}, None, "none")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unmatched card is not a label")
     card = {"card_id": "n01:5", "document_id": "n01", "kind": "pdf", "text": "Public Comment", "existing_tag": "H1", "why": ["source_h"], "repeats_on_pages": 1, "in_table_box": False, "font_pt": 14, "weight": "bold", "page": 0}
     doc = {"id": "n01", "sha256": "b" * 64, "host": "example.gov"}
     row = make_key_row(card, doc, {"type": "H", "level": 2, "locator": "k:9"}, "exact", "stripped-tree")
