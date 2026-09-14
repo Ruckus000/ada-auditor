@@ -9,7 +9,8 @@
   n12, n14, n31, r08, r16, r20).
 - Hygiene (fixed before scoring: 7.1-3, 7.4.2 and 7.4.4 clean; heading
   sentence share < 0.30; checker failure excludes): 47 usable, 23 excluded
-  (33 %). Kill threshold (> 50 %) not fired.
+  (33 %). Kill threshold (> 50 %) not fired (build 3; build 4 fires it, see
+  below).
   - By reason, recounted from the report JSON (`out/keys/report.json`,
     quoted in the plan's progress file): untagged-content (7.1-3) **19**
     documents — n05, n06, n15, n21, n22, n23, n24, n28, n29, n30, n33, r06,
@@ -39,9 +40,9 @@
     true. The final build's unmatched set was not itself checked by eye.
     Among 8 true matches checked, 3 (n04:0, n19:41, n03:252) are headings
     the original tags as P.
-- Types: H 231 (H1 35, H2 106, H3 79, H4 11), P 680, Other 139, Caption 4.
+- (build 3) Types: H 231 (H1 35, H2 106, H3 79, H4 11), P 680, Other 139, Caption 4.
   Artifact, TH, TOCI, Lbl and BlockQuote: 0 — see "What a key cannot say".
-- Label sources: stripped-tree 650, word-outline 404.
+- (build 3) Label sources: stripped-tree 650, word-outline 404.
 - Usable documents whose key carries **zero** headings: 24 of 47 (13
   stripped-tree, 11 word-outline).
 
@@ -55,8 +56,9 @@
 - A box match requires the card inside the key at intersection / card area
   ≥ 0.9 (ruling K17).
 - The build ran three times. The first two splits were discarded before any
-  evaluation because the labels changed under them (ruling K16). The final
-  split was drawn once and kept (ruling K18).
+  evaluation because the labels changed under them (ruling K16). The build-3
+  split was drawn once and kept (ruling K18) until build 4 discarded it
+  before any evaluation.
 
 ## Tagging was reused (ruling K20)
 Fix rounds 1 and 2 matched against build 1's tagger output because the
@@ -81,7 +83,7 @@ reproduction path and must be archived. The evaluator's component naming
 must drop `answer_id` before Stage 1 draws a split.
 
 ## Stage 0 gate (roadmap)
-Not met, on all three counts:
+(build 3) Not met, on all three counts:
 - cards 1,054 (labelled) vs ≥ 20,000;
 - hosts 38 vs ≥ 60;
 - match rate 0.632 vs ≥ 95 %.
@@ -108,7 +110,9 @@ documents in the wild is measured at the Stage 2→3 audit (~400 blind cards,
   P in the original, and 24 of 47 keys carry zero headings. Hygiene
   (7.1-3, 7.4.2, 7.4.4, sentence share) does not detect a missing heading,
   so the Stage 0 premise that hygiene makes keys trustworthy is weakened
-  for the heading class specifically (ruling K19).
+  for the heading class specifically (ruling K19). (build 3; build 4 excludes
+  zero-H keys, though a heading tagged P in a key that has other headings
+  still goes undetected.)
 
 ## Stop decision
 Stage 0's gate is not met. Nothing here evaluates a model. Before Stage 1
@@ -117,9 +121,10 @@ three things must be settled — stated here as open questions, not
 decisions:
 - a many-to-one matcher (or a line-level candidate unit) to raise the match
   rate;
-- a key-trust step for headings (for example, keys with zero H excluded or
+- (build 3) a key-trust step for headings (for example, keys with zero H excluded or
   down-weighted, or a human-audited subset anchoring them — the roadmap's
-  own kill remedy);
+  own kill remedy); build 4 decided the zero-H exclusion, and the audited
+  subset remains open;
 - the harvest round, to reach the card and host floors.
 
 ## Build 4 (review decisions)
@@ -155,6 +160,20 @@ drawn and kept.
     `prose-headings (>=0.30)` 1, `checker-failed` 0.
   - The 24 newly excluded documents are the 24 build-3 usable keys that
     carried zero headings.
+  - Two shares. The kill as written ("hygiene excludes more than half the
+    tagged pool") counts every exclusion, so it fires at 47 of 70. It was
+    written about trust, and the exclusions split into two kinds:
+    - TRUST (7.1-3, 7.4.2, 7.4.4, prose-headings, checker-failed): 27
+      exclusions over 70 = 39 %, counted as reason instances (19 + 7 + 1).
+      Counted as distinct documents, it is 23 of 70 = 33 %, because n05,
+      n15 and r17 each carry two trust reasons.
+    - YIELD (no-headings): 37 of 70 = 53 %.
+    - Both were recounted from `out/keys/report.json`'s `excluded` map. A
+      document excluded for both kinds counts in both shares; 13 documents
+      do, so the distinct shares sum to 23 + 37 − 13 = 47.
+  - Because the kill fired, training on this pool is held (ruling B4). Round
+    1 is skipped as a quality round, and a plumbing smoke runs in its place;
+    its numbers are not a measurement.
 - Report: `{"documents": 70, "usable": 23, "cards": 834, "unmatched": 489,
   "match_rate": 0.630, "match": {"exact": 727, "contains": 64, "box": 43,
   "none": 489}, "documents_with_rows": 23, "hosts": 20}`.
@@ -163,8 +182,7 @@ drawn and kept.
   TH 38, TOCI 4, Caption 4. BlockQuote 0, Artifact 0.
 - Label sources: stripped-tree 487, word-outline 347.
 - Stripped copies: 23 of 23 carry no `/Outlines`. This was checked on the
-  raw bytes and on the catalog through qpdf. Heading-named marked content
-  still remains in content streams, which Strip does not rewrite.
+  raw bytes and on the catalog through qpdf.
 
 ### Split
 - The **build-3 split is discarded before any evaluation.** `test.spent` is
@@ -195,6 +213,22 @@ drawn and kept.
   Parts dump through Cards.java, so their earlier results reproduce only
   from Cards.java at 201eb80.
 - Heading-named marked content remains in content streams (not rewritten).
+- The widened block set changes labels through the matcher's tie-break
+  (`labels/match.py`, best by IoU, first block wins). A parent block (TD,
+  TH) and its child (P, H2) can tie on exact text and box, and
+  `StructText.find` emits the parent first, so the parent's type wins.
+  - Re-matching the same 834 candidates against the old block set's keys,
+    127 rows differ. They include P→Other 40 (a TD key over an inner P),
+    P→TH 35, unmatched→Lbl 36, and H→non-H 3: `n41:20`, `n41:28` (H2 inside
+    TD, now Other) and `n41:79` (H2 inside TH).
+  - The remaining 13 are small moves (P→TOCI 3, P→Lbl 3, unmatched→Other 3,
+    unmatched→TH 2, unmatched→TOCI 1, Other→Lbl 1).
+  - Ruling K25 fixes the tie-break by the definition's §4 order (rule-3
+    types, then H, then P, then Other, then IoU) in round 2's rebuild.
+  - Build 4's labels and split are left as built.
+- `run.py`'s `OUT_OF_FLOW` and `CONTAINERS` do not know TD, TH or Lbl. A
+  re-run of spike Parts 8–28 against the widened Cards.java would therefore
+  change which cards those arms can promote.
 - The match-rate gate miss stands: 0.630 vs ≥ 95 %. The matcher was not
   tuned. The Stage 0 gate is still not met on all three counts: labelled
   cards 834 vs ≥ 20,000, hosts 20 vs ≥ 60, match rate 0.630 vs ≥ 95 %.
