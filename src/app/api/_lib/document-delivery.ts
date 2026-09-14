@@ -16,7 +16,7 @@ import { documentBudgetRefusal } from './budget-refusal';
  */
 async function charged(): Promise<void> {
   const capped = await documentBudgetRefusal();
-  if (capped) throw new DeliveryRefusal(capped.error, capped.status);
+  if (capped) throw new DeliveryRefusal(capped.error, capped.status, capped.message);
 }
 
 export function deliveryDependencies(): DeliveryDependencies {
@@ -38,5 +38,6 @@ export function bundleResponse(bundle: DeliveryBundle) {
 export function deliveryFailure(error: unknown, requestId: string): Response {
   const refusal = error instanceof DeliveryRefusal ? error : new DeliveryRefusal('delivery_failed', 500);
   logWarn('document_delivery_failed', {requestId, code: refusal.code});
-  return Response.json({error: refusal.code, requestId, retry: refusal.code === 'document_changed' ? 'refresh' : 'none'}, {status: refusal.status});
+  return Response.json({error: refusal.code, requestId, retry: refusal.code === 'document_changed' ? 'refresh' : 'none',
+    ...(refusal.sentence ? {message: refusal.sentence} : {})}, {status: refusal.status});
 }

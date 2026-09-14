@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { deliveryError, inDeliveryQueue, selectableForDelivery, type DeliveryRow } from '../../src/services/presentation/document-delivery';
 const row: DeliveryRow = { documentId: 'd1', url: 'https://example.test/a.pdf', reason: null, excluded: false, signedOff: false, delivered: false, eligible: true, fingerprint: 'f'.repeat(64), knownDifferences: [] };
+describe('a spent document budget', () => {
+  it("says the server's own sentence, and never tells anyone to try again", () => {
+    const message = 'Document work has reached its hourly limit. It resets at 14:00.';
+    const copy = deliveryError('document_budget_exceeded', 'req-1', message);
+    expect(copy).toContain(message);
+    expect(copy).not.toMatch(/try again/i);
+  });
+});
+
 describe('delivery queues', () => {
   it('requires a current eligible signoff for bundle selection', () => {
     expect(selectableForDelivery(row)).toBe(false);

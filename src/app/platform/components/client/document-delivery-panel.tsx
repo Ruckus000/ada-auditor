@@ -64,7 +64,7 @@ export function DocumentDeliveryPanel({ clientId, revision }: { clientId: string
     try {
       const response = await fetch(`${base}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const payload = await response.json();
-      if (!response.ok) { setError(deliveryError(payload.error ?? 'unknown', payload.requestId)); return; }
+      if (!response.ok) { setError(deliveryError(payload.error ?? 'unknown', payload.requestId, payload.message)); return; }
       await refresh();
       if (done) done(payload); else close();
     } catch { setError(deliveryError('network')); }

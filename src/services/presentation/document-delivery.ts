@@ -20,7 +20,10 @@ export function inDeliveryQueue(row: DeliveryRow, queue: DeliveryQueue): boolean
 export function selectableForDelivery(row: DeliveryRow): boolean {
   return row.eligible && row.signedOff && !row.excluded;
 }
-export function deliveryError(code: string, requestId?: string): string {
+export function deliveryError(code: string, requestId?: string, message?: string): string {
+  // A spent budget is an answer, not a failure: the server's sentence says when
+  // the window resets, and "try again" is the one instruction it makes wrong.
+  if (code === 'document_budget_exceeded' && message) return message;
   const messages: Record<string, string> = {
     document_changed: 'The documents changed. Refresh and review the current evidence before trying again.',
     signoff_not_eligible: 'This output is not eligible. Apply outstanding answers and verify the remediated file first.',

@@ -162,7 +162,11 @@ describe('delivery routes', () => {
     await signedBundle(); // the one unit this hour allows
     const refused = await deliveryRoute.POST(post({ documentIds: [documentId] }), clientParams());
     expect(refused.status).toBe(429);
-    expect((await refused.json()).error).toBe('document_budget_exceeded');
+    const body = await refused.json();
+    expect(body.error).toBe('document_budget_exceeded');
+    // The sentence that says when the window resets — every other document
+    // door forwards it, and without it a screen can only guess.
+    expect(body.message).toMatch(/\S/);
     expect(await platform.listDeliveryBundles('acme')).toHaveLength(1);
   });
 

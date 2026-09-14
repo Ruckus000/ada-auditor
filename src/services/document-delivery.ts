@@ -9,7 +9,12 @@ import { logInfo } from './logger';
 export const MAX_DELIVERY_DOCUMENTS = 100;
 export const MAX_DELIVERY_BYTES = 100 * 1024 * 1024;
 export class DeliveryRefusal extends Error {
-  constructor(public readonly code: string, public readonly status = 409) { super(code); }
+  /**
+   * `sentence` is for a refusal that is a true answer rather than a failure —
+   * a spent budget, whose sentence says when the window resets. It travels to
+   * the screen as `message`, the field every other document door uses.
+   */
+  constructor(public readonly code: string, public readonly status = 409, public readonly sentence?: string) { super(code); }
 }
 export const digest = (bytes: Uint8Array | string): string => createHash('sha256').update(bytes).digest('hex');
 export type DeliveryDependencies = {
