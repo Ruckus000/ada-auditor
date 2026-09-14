@@ -140,7 +140,19 @@ r2's combined accuracy here (0.781 on 279 rows) differs from round 2's record (0
 
 The registered risk (P4) was the opposite direction: that the planted cohort's higher heading share would raise real-population false positives. Instead, r3 under-predicts headings on real documents. The dominant error is H→P citing rule 4, which doubled from 37 to 76.
 
-A plausible cause is that planted headings teach a surface form real headings lack, so real headings stop looking like headings to the model. This is **not tested here** and is recorded only as a hypothesis. By ruling P3, the planted cohort's effect is judged only on the three real populations, and there it made the adapter worse.
+A plausible cause is that planted headings teach a surface form real headings lack, so real headings stop looking like headings to the model. This is **not tested here** and is recorded only as a hypothesis.
+
+**Reading — S23 (measured by the reviewing session after the run).** Training headings were 653 planted against 377 real, and the planted ones share one surface form:
+
+| Heading population | Bold | Title Case | ALL CAPS | Median size | Median words |
+|---|---|---|---|---|---|
+| Planted, train | 0.99 | 0.87 | 0.00 | 12 pt | 2 |
+| Real, train | 0.69 | 0.46 | 0.21 | 14 pt | — |
+| Real, validation | 0.80 | 0.34 | 0.10 | 13 pt | — |
+
+The model learned the planted form, real headings stopped matching it, and predictions collapsed to P. Depth coverage itself worked: H3/H4 training examples rose from 26 to 470. The uniform surface undid it.
+
+This replaces the hypothesis above with a measured difference in the training data. It is a correlation with the collapse, not an ablation. Round 4 arm r4a tests it by training on real data only. By ruling P3, the planted cohort's effect is judged only on the three real populations, and there it made the adapter worse.
 
 ### Stop decision
 Stop, per the instruction to report after E. adapter-r3 is **not adopted**; adapter-r2 remains the better adapter on real validation. The validation set was used as registered, and test was not evaluated.
