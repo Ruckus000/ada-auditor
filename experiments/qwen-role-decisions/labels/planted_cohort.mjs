@@ -263,44 +263,99 @@ const SURFACE_C7 = {
   'meeting-minutes': {
     numbered: 0.6, scheme: 'roman-alpha', colon: 0.08,
     bold: [1, 0.75, 0.55, 0.35], pt: [[14, 16], [12, 14], [11, 13], [11, 12]],
-    cases: [[0.4, 0, 0.6], [0.2, 0.2, 0.6], [0.45, 0.4, 0.15], [0.35, 0.55, 0.1]],
+    cases: [[0.4, 0, 0.6], [0.2, 0.2, 0.6], [0.6, 0.25, 0.15], [0.5, 0.4, 0.1]],
   },
   ordinance: {
     numbered: 0.9, scheme: 'article', colon: 0.02,
     bold: [1, 0.95, 0.75, 0.4], pt: [[14, 18], [13, 16], [12, 14], [11, 12]],
-    cases: [[0.3, 0, 0.7], [0.1, 0.1, 0.8], [0.6, 0.3, 0.1], [0.3, 0.7, 0]],
+    cases: [[0.3, 0, 0.7], [0.1, 0.1, 0.8], [0.75, 0.15, 0.1], [0.45, 0.55, 0]],
   },
   'policy-manual': {
     numbered: 0.7, scheme: 'decimal', colon: 0,
     bold: [1, 0.9, 0.8, 0.6], pt: [[16, 18], [14, 16], [12, 14], [11, 13]],
-    cases: [[0.9, 0, 0.1], [0.7, 0.2, 0.1], [0.45, 0.35, 0.2], [0.4, 0.5, 0.1]],
+    cases: [[0.9, 0, 0.1], [0.7, 0.2, 0.1], [0.6, 0.2, 0.2], [0.55, 0.35, 0.1]],
   },
   'annual-report': {
     numbered: 0.1, scheme: 'decimal', colon: 0,
     bold: [0.8, 0.7, 0.65, 0.55], pt: [[17, 18], [16, 18], [14, 16], [12, 14]],
-    cases: [[0.6, 0, 0.4], [0.4, 0.2, 0.4], [0.4, 0.4, 0.2], [0.4, 0.5, 0.1]],
+    cases: [[0.6, 0, 0.4], [0.4, 0.2, 0.4], [0.55, 0.25, 0.2], [0.55, 0.35, 0.1]],
   },
   'procurement-notice': {
     numbered: 0.8, scheme: 'section', colon: 0.03,
     bold: [1, 0.95, 0.8, 0.55], pt: [[14, 16], [12, 14], [11, 13], [11, 12]],
-    cases: [[0.3, 0, 0.7], [0.2, 0.1, 0.7], [0.55, 0.35, 0.1], [0.4, 0.6, 0]],
+    cases: [[0.3, 0, 0.7], [0.2, 0.1, 0.7], [0.7, 0.2, 0.1], [0.55, 0.45, 0]],
   },
   'employee-handbook': {
     numbered: 0.3, scheme: 'decimal', colon: 0.05,
     bold: [0.9, 0.75, 0.65, 0.5], pt: [[16, 18], [14, 16], [13, 14], [12, 13]],
-    cases: [[0.7, 0, 0.3], [0.3, 0.4, 0.3], [0.2, 0.6, 0.2], [0.2, 0.65, 0.15]],
+    cases: [[0.7, 0, 0.3], [0.3, 0.4, 0.3], [0.35, 0.45, 0.2], [0.35, 0.5, 0.15]],
   },
   'capital-plan': {
     numbered: 0.5, scheme: 'decimal', colon: 0,
     bold: [1, 0.85, 0.7, 0.5], pt: [[16, 18], [14, 17], [13, 15], [12, 14]],
-    cases: [[0.8, 0, 0.2], [0.7, 0.1, 0.2], [0.45, 0.35, 0.2], [0.45, 0.4, 0.15]],
+    cases: [[0.8, 0, 0.2], [0.7, 0.1, 0.2], [0.6, 0.2, 0.2], [0.6, 0.25, 0.15]],
   },
   'emergency-plan': {
     numbered: 0.6, scheme: 'section', colon: 0.03,
     bold: [1, 0.8, 0.6, 0.35], pt: [[14, 18], [13, 16], [12, 14], [11, 12]],
-    cases: [[0.3, 0, 0.7], [0.25, 0.1, 0.65], [0.5, 0.4, 0.1], [0.35, 0.6, 0.05]],
+    cases: [[0.3, 0, 0.7], [0.25, 0.1, 0.65], [0.65, 0.25, 0.1], [0.5, 0.45, 0.05]],
   },
 };
+
+/**
+ * c7's longer headings (2-6 words), written for the families, drawn beside the
+ * c5 pools so heading length matches real documents (median 3 words) rather
+ * than c5's 2. Keyed by family slug; GENERIC rows join every family's H3/H4.
+ */
+/** Every word capitalised, the "Title Case" Word's Change Case writes. */
+const allCaps1 = (pools) => Object.fromEntries(Object.entries(pools).map(([k, v]) => [k, v.map((t) => t.replace(/(^|[\s-])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase()))]));
+
+const LONG_C7 = Object.fromEntries(Object.entries({
+  'meeting-minutes': {
+    h2: ['Presentations and Special Recognitions', 'Reports of Standing Committees', 'Items Removed From the Consent Agenda', 'Public Hearing on Proposed Rezoning', 'Closed Session Report Out', 'Future Agenda Items and Scheduling'],
+    h3: ['Motion to Award the Paving Contract', 'Update on the Downtown Parking Study', 'Request to Waive Permit Fees', 'Second Reading of the Noise Ordinance', 'Report From the Finance Director', 'Appointment to the Planning Commission', 'Discussion of Summer Event Permits'],
+    h4: ['Roll Call Vote Results', 'Comments From the Public', 'Staff Answers to Council Questions', 'Direction Given to Staff'],
+  },
+  ordinance: {
+    h2: ['Purpose and Legislative Intent', 'Administration and Enforcement Authority', 'Permit Application and Review', 'Appeals to the Board of Adjustment', 'Transitional Provisions for Existing Uses', 'Conflicts With Other Ordinances'],
+    h3: ['Duties of the Code Official', 'Contents of a Complete Application', 'Schedule of Permit Fees', 'Right of Entry for Inspections', 'Issuance of Stop Work Orders', 'Expiration and Renewal of Permits', 'Standards for Granting a Variance'],
+    h4: ['Notice to the Property Owner', 'Time Allowed to Correct', 'Civil Penalties for Continuing Violations', 'Filing an Appeal'],
+  },
+  'policy-manual': {
+    h2: ['Purchasing Thresholds and Bid Requirements', 'Acceptable Use of Technology Resources', 'Travel Authorization and Reimbursement', 'Records Retention and Public Requests', 'Use of Municipal Vehicles', 'Communications With the News Media'],
+    h3: ['Who May Approve a Purchase', 'Emergency Purchases Without Bids', 'Expenses That Are Not Reimbursed', 'Protecting Sensitive Personal Data', 'Responding to a Records Request', 'Posting on Official Social Accounts', 'Assignment of Take-Home Vehicles'],
+    h4: ['Daily Meal Allowance Rates', 'Password and Login Rules', 'Lost or Stolen Devices', 'Required Receipts and Forms'],
+  },
+  'annual-report': {
+    h2: ['A Letter From the Mayor', 'Where Your Tax Dollars Went', 'Keeping Our Community Safe', 'Investing in Roads and Utilities', 'Programs for Families and Seniors', 'Growing the Local Economy'],
+    h3: ['General Fund Revenue by Source', 'Spending by Department', 'Police Calls for Service', 'Fire Department Response Times', 'Streets Resurfaced This Year', 'New Park Facilities Opened', 'Business Licenses Issued'],
+    h4: ['Comparison to Last Year', 'How We Measure Results', 'Goals for the Coming Year', 'Resident Survey Highlights'],
+  },
+  'procurement-notice': {
+    h2: ['Background and Project Goals', 'Minimum Qualifications of Proposers', 'Contents of the Proposal Package', 'Evaluation and Selection Process', 'Tentative Schedule of Key Dates', 'General Terms and Conditions'],
+    h3: ['Description of Required Services', 'Expected Project Deliverables', 'Key Personnel and Experience', 'Cost Proposal Format', 'Client References From Similar Work', 'Oral Interviews With Finalists', 'Notice of Intent to Award'],
+    h4: ['Required Insurance Limits', 'Formatting and Page Limits', 'Where to Deliver Proposals', 'Conflict of Interest Disclosure'],
+  },
+  'employee-handbook': {
+    h2: ['About Working for Us', 'Hiring and Employment Status', 'Pay Periods and Timekeeping', 'Health and Retirement Benefits', 'Time Off and Leaves of Absence', 'Standards of Workplace Conduct'],
+    h3: ['Your Introductory Period', 'Recording Hours Worked', 'When Overtime Is Paid', 'Enrolling in Health Coverage', 'Using Vacation Leave', 'Family and Medical Leave', 'How to Report Harassment'],
+    h4: ['How Leave Accrues', 'Carrying Over Unused Leave', 'What Happens After a Report', 'Leave Payout When You Leave'],
+  },
+  'capital-plan': {
+    h2: ['How Projects Are Selected', 'Five-Year Funding Summary', 'Street and Bridge Projects', 'Water and Wastewater Improvements', 'Public Building Renovations', 'Needs Without Identified Funding'],
+    h3: ['Criteria Used to Rank Projects', 'Outstanding Debt and Borrowing Capacity', 'State and Federal Grant Sources', 'Main Street Bridge Repairs', 'Citywide Sidewalk Gap Program', 'Treatment Plant Capacity Upgrade', 'Renovation of Fire Station Two'],
+    h4: ['Total Estimated Project Cost', 'Annual Operating Cost Impact', 'Design and Engineering Phase', 'Sources of Project Funding'],
+  },
+  'emergency-plan': {
+    h2: ['Purpose, Scope and Assumptions', 'How This Plan Is Activated', 'Roles of Each Department', 'Emergency Public Information', 'Resource Management and Logistics', 'Training, Exercises and Updates'],
+    h3: ['Hazards Most Likely to Occur', 'Levels of Plan Activation', 'Opening the Operations Center', 'Evacuation Routes and Procedures', 'Opening Emergency Shelters', 'Sending Public Warnings', 'Requesting Mutual Aid'],
+    h4: ['Severe Storm Response', 'Flood Warning Procedures', 'Chemical Spill Notification', 'After-Action Report Process'],
+  },
+  GENERIC: {
+    h3: ['Purpose of This Section', 'Who This Applies To', 'Roles and Responsibilities', 'Steps in the Process', 'Reporting and Recordkeeping'],
+    h4: ['Required Notices', 'Who Approves Changes', 'How to Appeal', 'Contact for Questions'],
+  },
+}).map(([slug, pools]) => [slug, allCaps1(pools)]));
 
 /** Distractors that look like headings: the same surface space, no outline level. */
 const DISTRACTOR_SURFACE_C7 = { bold: 0.6, pt: [11, 20], cases: [0.45, 0.25, 0.3] };
@@ -400,9 +455,10 @@ function buildDocument(i, seed, workRoot, realDir, cohort) {
     .replace(/\{kind\}/g, kind.toLowerCase());
   const sentence = drawer(rng, [...family.sentences, ...family.sentences, ...GENERIC_SENTENCES]);
   const bodyPara = () => para(Array.from({ length: rng.int(2, 3) }, () => fill(sentence())).join(' '));
-  const h2Text = drawer(rng, family.h2);
-  const h3Text = drawer(rng, [...family.h3, ...GENERIC_H3]);
-  const h4Text = drawer(rng, [...family.h4, ...GENERIC_H4]);
+  const long = profile ? LONG_C7[family.slug] : null;
+  const h2Text = drawer(rng, long ? [...family.h2, ...long.h2] : family.h2);
+  const h3Text = drawer(rng, long ? [...family.h3, ...long.h3, ...long.h3, ...LONG_C7.GENERIC.h3] : [...family.h3, ...GENERIC_H3]);
+  const h4Text = drawer(rng, long ? [...family.h4, ...long.h4, ...long.h4, ...LONG_C7.GENERIC.h4] : [...family.h4, ...GENERIC_H4]);
   const fakeText = drawer(rng, FAKE_HEADINGS);
   const bodyLevelText = drawer(rng, BODY_LEVEL_TEXT);
 
