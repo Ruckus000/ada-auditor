@@ -22,7 +22,10 @@
 - Images: 4,453 PDF cards carry a box, so 4,453 marked images are expected
   and 0 have no box — expected from the cards file; the render job's own
   count is confirmed below.
-  Render confirmation: pending
+  Render confirmation: the render re-run printed
+  `{"rendered": 4453, "no_box": 0, "failed": 0, "failed_card_ids": []}`; the
+  decode check found 4,453 of 4,453 marked images complete PNGs; all 4,453
+  PDF cards have a valid image.
 - The labelling tool does not show a PDF card whose marked image is missing;
   it prints and displays how many it left out. Any such card is therefore not
   labelled, and the count left out is recorded with the labelling session.
