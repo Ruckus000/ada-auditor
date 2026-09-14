@@ -126,6 +126,38 @@ The full JSON is in `out/stage1/eval-validation-r2.json`, `eval-validation-r2-bu
 - **On type, though, the rules are wrong on 22 of 23 rows.** The no-letters rule (`Lbl`, rule 3) fired on 22 rows the key labels `P` (16 build-4, 6 cohort-3) and on 1 row the key labels `Lbl`. The `Artifact`-by-repeat rule fired on 0 validation rows.
 - The bit is unaffected, since both types are non-H.
 
+## §5 candidate (for the user)
+ISO 32000's definition of `Lbl` is a bare number, and the no-letters rule follows it:
+on validation it labels 22 rows `Lbl` where the key authors instead tagged `P`. Per
+ruling S18 this is not a label rewrite — the keys stand as recorded, and which reading
+is right (a bare numeral as running content, versus a list marker) is left to the user
+to decide. What S18 changes is reporting: rule-decided type confusion is now split out
+from model-decided type confusion (`eligibility_eval.evaluate`'s `decided_by` argument
+and CLI support), so this candidate's 22 rows are visible apart from the model's own
+errors rather than folded into one `type_confusion` table.
+
+**Rule-decided type confusion** (truth→predicted, `out/stage1/eval-validation-r2-bydecider.json`):
+
+| truth→predicted | count |
+|---|---|
+| P→Lbl | 22 |
+| Lbl→Lbl | 1 |
+
+**Model-decided type confusion** (truth→predicted):
+
+| truth→predicted | count |
+|---|---|
+| H→H | 42 |
+| H→P | 24 |
+| H→TOCI | 1 |
+| P→P | 80 |
+| P→H | 13 |
+| Caption→P | 2 |
+| TH→P | 1 |
+| Lbl→Lbl | 1 |
+
+**Facts gap: open (S19).** Font, weight and ancestors were not examined against the errors.
+
 ## Top confusions
 There are only 3 distinct bit-error shapes and 8 distinct type-mismatch shapes, so the full lists are given. Each entry is (truth type, predicted type, cited rule, decider) with its count.
 
