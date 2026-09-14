@@ -8,6 +8,7 @@ import { latestReading } from '../../../../../../../../services/document-state';
 import { authorizePrincipal } from '../../../../../../_lib/authorize';
 import { createRequestId } from '../../../../../../_lib/request-id';
 import { fetchDocumentBytes } from '../../../../../../_lib/document-fetch';
+import { documentBudgetRefusal } from '../../../../../../_lib/budget-refusal';
 import { maxDocumentBytes, readDocumentUpload, refusalResponse } from '../../../../../../_lib/document-upload';
 import { previewHeaders, previewPage, previewPdfBytes } from '../../../../../../_lib/document-preview';
 
@@ -33,6 +34,13 @@ async function preview(request: Request, { params }: Context) {
   // A refreshed workbench may have a different reading. Never place its old
   // asks against that new page merely because the document id stayed the same.
   if (new URL(request.url).searchParams.get('reading') !== reading.at) return fail('preview_reading_changed', 409);
+  // Every page turn launches the Preview JVM. An upload is charged inside
+  // `readDocumentUpload`; the two GET paths — stored output and fetched source —
+  // are charged here, before either reads a byte.
+  if (request.method !== 'POST') {
+    const capped = await documentBudgetRefusal(requestId);
+    if (capped) return refusalResponse(capped, requestId);
+  }
   if (reading.conversionId) {
     const conversion = await store.getDocumentConversion(reading.conversionId);
     if (!conversion?.artifactUrl || conversion.clientId !== clientId) return fail('artifact_not_stored', 404);

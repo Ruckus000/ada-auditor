@@ -649,7 +649,8 @@ describe('platform hydration', () => {
         prepared = true;
         await route.fulfill({ json: { bundle } });
       } else await route.fulfill({ json: {
-        rows: [{ documentId: 'review-doc', url: 'https://example.test/review.pdf', reason: null, excluded: false, signedOff: true, delivered: issued, eligible: true }],
+        rows: [{ documentId: 'review-doc', url: 'https://example.test/review.pdf', reason: null, excluded: false, signedOff: true, delivered: issued, eligible: true,
+          fingerprint: 'f'.repeat(64), knownDifferences: [] }],
         counts: { signedOff: 1, delivered: issued ? 1 : 0, eligible: 1, excluded: 0 }, bundles: prepared ? [{ ...bundle, ...(issued ? { issuedAt: '2026-09-07T12:01:00Z' } : {}) }] : [],
       } });
     });

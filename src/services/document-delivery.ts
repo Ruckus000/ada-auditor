@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { ArtifactStore } from '../domain/artifacts';
-import type { DeliveryBundle, DocumentSignoff } from '../domain/document-delivery';
+import type { DeliveryBundle, DocumentSignoff, KnownDifference } from '../domain/document-delivery';
 import type { ClientDocumentRecord, PlatformStore, StoredDocumentAnswer } from '../domain/platform';
 import type { Conformance } from '../domain/document-remediation';
 import { pairDocuments } from './document-pairing';
@@ -9,7 +9,12 @@ import { logInfo } from './logger';
 export const MAX_DELIVERY_DOCUMENTS = 100;
 export const MAX_DELIVERY_BYTES = 100 * 1024 * 1024;
 export class DeliveryRefusal extends Error {
-  constructor(public readonly code: string, public readonly status = 409) { super(code); }
+  /**
+   * `sentence` is for a refusal that is a true answer rather than a failure —
+   * a spent budget, whose sentence says when the window resets. It travels to
+   * the screen as `message`, the field every other document door uses.
+   */
+  constructor(public readonly code: string, public readonly status = 409, public readonly sentence?: string) { super(code); }
 }
 export const digest = (bytes: Uint8Array | string): string => createHash('sha256').update(bytes).digest('hex');
 export type DeliveryDependencies = {
@@ -77,7 +82,23 @@ function currentDocument(record: ClientDocumentRecord, records: ClientDocumentRe
   else if (conversion.summary.conformance?.checker !== 'verapdf-ua1' || !conversion.summary.conformance.compliant) reason = 'The output has not passed veraPDF verification.';
   else if (conversion.summary.gaps.length || (conversion.summary.needs ?? []).some((_, i) => conversion.summary.asks?.[i]?.answerable !== 'none')) reason = 'The output still has unresolved remediation gaps.';
   else if (currentAnswers.some(a => a.disposition === 'declared' && !conversion.answerIds?.includes(a.id))) reason = 'Answers are waiting to be applied and verified.';
-  return {record, source, conversion, fingerprint, currentAnswers, reason};
+  return {record, source, conversion, fingerprint, currentAnswers, reason, knownDifferences: knownDifferencesOf(conversion)};
+}
+
+/**
+ * The fidelity items an output carries into delivery.
+ *
+ * Eligibility above lets `answerable: 'none'` needs through, which is right: a
+ * dropped list item is nobody's to supply, and blocking on it would make the
+ * document undeliverable forever. But passing the gate is not the same as
+ * saying nothing. These are disclosed wherever the delivery speaks. Assertions
+ * never reach a stored conversion (the gate refuses them), so only omissions and
+ * unverified counts can appear.
+ */
+function knownDifferencesOf(conversion: ClientDocumentRecord['latestConversion']): KnownDifference[] {
+  const fidelity = conversion?.summary.fidelity;
+  if (!fidelity?.checked) return [];
+  return fidelity.defects.filter(d => d.kind !== 'assertion').map(d => ({criterion: d.criterion, detail: d.detail}));
 }
 
 export async function deliveryOverview(platform: PlatformStore, clientId: string) {
@@ -92,7 +113,8 @@ export async function deliveryOverview(platform: PlatformStore, clientId: string
     const current = currentDocument(record, records, answers, pairs);
     const exclusion = exclusions.find(e => e.documentId === record.id && !e.reversedAt);
     const signoff = signoffs.find(s => s.documentId === record.id && s.fingerprint === current.fingerprint);
-    const delivered = !exclusion && !current.reason && Boolean(signoff && bundles.some(b => b.issuedAt && b.entries.some(e => e.signoffId === signoff.id)));
+    // A revoked link delivers nothing, so it does not count.
+    const delivered = !exclusion && !current.reason && Boolean(signoff && bundles.some(b => b.issuedAt && !b.revokedAt && b.entries.some(e => e.signoffId === signoff.id)));
     return {...current, exclusion, signoff, delivered};
   });
   return {revision, records, answers, bundles, rows,
@@ -102,10 +124,19 @@ export async function deliveryOverview(platform: PlatformStore, clientId: string
     eligible: rows.filter(r => !r.exclusion && !r.reason).length};
 }
 
-export async function signDocument(deps: DeliveryDependencies, clientId: string, documentId: string, actor: DeliveryActor, note?: string): Promise<DocumentSignoff> {
+/**
+ * `shown.fingerprint` is the state the operator's screen displayed. Without it
+ * the server would sign whatever conversion is current at click time, so a
+ * re-remediation landing between page load and click would be attested on
+ * the operator's name without their having seen it. The revision check below
+ * only covers changes DURING this request.
+ */
+export async function signDocument(deps: DeliveryDependencies, clientId: string, documentId: string, actor: DeliveryActor, shown: {fingerprint: string; note?: string}): Promise<DocumentSignoff> {
+  const {note} = shown;
   const view = await deliveryOverview(deps.platform, clientId);
   const row = view.rows.find(r => r.record.id === documentId);
   if (!row) throw new DeliveryRefusal('document_not_found', 404);
+  if (row.fingerprint !== shown.fingerprint) throw new DeliveryRefusal('document_changed');
   if (row.exclusion || row.reason || !row.conversion) throw new DeliveryRefusal('signoff_not_eligible');
   const conversion = row.conversion;
   const output = await deliveryBytes(deps.artifacts, conversion.artifactUrl, conversion.outputSha256);
@@ -170,7 +201,7 @@ export async function prepareDelivery(deps: DeliveryDependencies, clientId: stri
     add(`verification/${name}.json`, await deliveryBytes(deps.artifacts, s.verificationArtifactUrl, s.verificationSha256, MAX_DELIVERY_BYTES - bytes));
     entries.push({documentId: r.record.id, conversionId: c.id, signoffId: s.id, source: sourceLabel(r.record.url),
       inputSha256: c.inputSha256, outputSha256: c.outputSha256, verificationSha256: s.verificationSha256,
-      signedBy: s.actor, signedAt: s.signedAt});
+      signedBy: s.actor, signedAt: s.signedAt, ...(r.knownDifferences.length ? {knownDifferences: r.knownDifferences} : {})});
     const relevantAnswers = r.currentAnswers.filter(a => c.answerIds?.includes(a.id) || a.disposition !== 'declared');
     for (const a of relevantAnswers) {
       attestations.push({document: name, askId: a.askId, disposition: a.disposition, value: a.value, actor: a.actor, at: a.declaredAt});
@@ -180,9 +211,12 @@ export async function prepareDelivery(deps: DeliveryDependencies, clientId: stri
     for (const event of events) work.push([name, event.action, event.actor, event.at]);
     if (!events.some(e => e.conversionId === c.id)) work.push([name, c.kind ?? 'conversion', 'Not recorded', c.convertedAt]);
     if (!events.some(e => e.action === 'document.signed-off' && e.actor === s.actor)) work.push([name, 'signed-off', s.actor, s.signedAt]);
-    // Only the content-free account goes into the public manifest.
+    // The account of how this file was produced. Not content-free: `title` is
+    // the title outcome, which can carry the document's own title. Known
+    // differences are count-only sentences.
     add(`provenance/${name}.json`, Buffer.from(JSON.stringify({kind: c.kind ?? 'conversion', instrumentVersion: c.instrumentVersion,
-      title: c.summary.title, conformance: c.summary.conformance, scope: c.summary.scope, inputSha256: c.inputSha256, outputSha256: c.outputSha256})));
+      title: c.summary.title, conformance: c.summary.conformance, scope: c.summary.scope, inputSha256: c.inputSha256, outputSha256: c.outputSha256,
+      knownDifferences: r.knownDifferences})));
   }
   const omissions = view.rows.filter(r => !documentIds.includes(r.record.id)).map(r => ({documentId: r.record.id, source: sourceLabel(r.record.url),
     reason: r.exclusion?.reason ?? r.reason ?? (!r.signoff ? 'Not signed off.' : 'Not selected for this delivery.')}));
@@ -213,8 +247,29 @@ export async function issueDelivery(deps: DeliveryDependencies, bundle: Delivery
     await deliveryBytes(deps.artifacts, r.conversion!.artifactUrl, e.outputSha256);
     await deliveryBytes(deps.artifacts, r.signoff!.verificationArtifactUrl, e.verificationSha256);
   }
-  if (!await deps.platform.issueDeliveryBundle(bundle.id, view.revision, randomBytes(32).toString('hex'), actor.name, new Date().toISOString())) throw new DeliveryRefusal('document_changed');
-  await deps.platform.recordEvent({clientId: bundle.clientId, actor: actor.name, actorOperatorId: actor.id, action: 'delivery.issued', subject: bundle.id});
-  logInfo('delivery_issued', {clientId: bundle.clientId, bundleId: bundle.id});
+  const token = randomBytes(32).toString('hex');
+  if (!await deps.platform.issueDeliveryBundle(bundle.id, view.revision, token, actor.name, new Date().toISOString())) throw new DeliveryRefusal('document_changed');
+  const issued = (await deps.platform.getDeliveryBundle(bundle.id))!;
+  // Two concurrent calls both succeed and the store keeps the first token. Only
+  // the call whose token won issued anything, so only it is recorded.
+  if (issued.token === token) {
+    await deps.platform.recordEvent({clientId: bundle.clientId, actor: actor.name, actorOperatorId: actor.id, action: 'delivery.issued', subject: bundle.id});
+    logInfo('delivery_issued', {clientId: bundle.clientId, bundleId: bundle.id});
+  }
+  return issued;
+}
+
+/**
+ * Turns a client's link off. A bundle that was never issued has no link, so
+ * revoking it is refused rather than recorded — the trail used to say
+ * "revoked" while nothing had changed. An already-revoked bundle is answered
+ * as it stands, with nothing recorded twice.
+ */
+export async function revokeDelivery(deps: DeliveryDependencies, bundle: DeliveryBundle, actor: DeliveryActor): Promise<DeliveryBundle> {
+  if (!bundle.issuedAt) throw new DeliveryRefusal('delivery_not_issued');
+  if (await deps.platform.revokeDeliveryBundle(bundle.id, new Date().toISOString())) {
+    await deps.platform.recordEvent({clientId: bundle.clientId, actor: actor.name, actorOperatorId: actor.id, action: 'delivery.revoked', subject: bundle.id});
+    logInfo('delivery_revoked', {clientId: bundle.clientId, bundleId: bundle.id});
+  }
   return (await deps.platform.getDeliveryBundle(bundle.id))!;
 }

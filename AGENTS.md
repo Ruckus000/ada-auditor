@@ -1658,11 +1658,16 @@ Read this before claiming something works.
   every caller inherits it. It **fails open**: a cost control that becomes an
   outage has made things worse. **Document work is capped the same way, at
   its own ceiling** (`AUDITOR_MAX_DOCUMENTS_PER_HOUR` / `_PER_DAY`, default
-  500 / 2000): all eight doors — the four uploads through
-  `readDocumentUpload` and the four URL and intake routes — ask
-  `documentBudgetRefusal` after authorisation and before anything is
-  buffered, probed or fetched, so a refused request mints no row and no
-  event. **Discovery crawls are capped at a fourth ceiling**
+  500 / 2000): every door that launches a document stage asks
+  `documentBudgetRefusal` before it does — the uploads through
+  `readDocumentUpload`, the URL and intake routes after authorisation and
+  before anything is fetched, the inventory preview's GET paths before a page
+  renders, and delivery at the seam that spawns veraPDF or the Archive stage
+  (`deliveryDependencies`). A refused request mints no row and no event. The
+  doors used to be counted by hand ("all eight"), which is how three delivery
+  doors and the preview shipped uncharged; `browser-routes-are-packaged.test.ts`
+  now requires every route that reaches `stage.ts` to reach `budget-refusal.ts`
+  — file-level, so each route's own test holds the branch. **Discovery crawls are capped at a fourth ceiling**
   (`AUDITOR_MAX_DISCOVERIES_PER_HOUR` / `_PER_DAY`, default 60 / 300) —
   never the run budget's, for the reason `platform/discover/route.ts`
   records — consumed after the body is validated and before the browser
@@ -1885,6 +1890,55 @@ Read this before claiming something works.
   that was answered carries no answers to that run and the row then reads
   `stale`, which is the existing rule doing its job rather than a check on the
   screen. `Inspect all` walks only what it can fetch and says how many it left.
+- **Delivery: what a client receives, and what it claims.** (2026-09-07 build,
+  reviewed 2026-09-13.) An operator signs off a verified output
+  (`…/documents/[documentId]/signoff`), may exclude a document with a reason
+  (`…/exclusion`), prepares a bundle (`…/delivery`, a zip built by the Archive
+  JVM stage: each PDF, its veraPDF report, provenance, `manifest.json`,
+  `attestations.json`, `work-log.csv`), and issues a link to `/d/[token]`
+  (256-bit, revocable; revoked, unknown and malformed tokens answer the same
+  404). `services/document-delivery.ts` holds the rules; the stores hold them
+  atomically against a per-client `document_revision`, contract-tested on both.
+  **It landed as a direct push to master with no PR or review**, which is why
+  this entry is late. The review found and fixed:
+  - **A sign-off is bound to what the operator was shown.** The listing hands
+    out each row's `fingerprint` (document, source hash, conversion, answers);
+    the sign-off must name it or answers `document_changed`. Before, the server
+    signed whatever conversion was current at click time, so a re-remediation
+    between page load and click was attested on a person's name unseen.
+  - **Fidelity items travel with the file.** Eligibility lets
+    `answerable: 'none'` needs through — right for `identifier`, and for
+    `fidelity` because nobody can supply a list item an export dropped — but
+    passing the gate is not silence: each entry's `knownDifferences` goes into
+    `provenance/*.json`, the manifest, and the `/d` page. Before, the client read
+    only "PDF/UA-1 verification passed". Count-only sentences.
+  - **Revoke is honest.** `revokeDeliveryBundle` reports whether it revoked; a
+    never-issued bundle answers `delivery_not_issued` and records nothing (it
+    used to record `delivery.revoked` and return 200 while nothing changed); a
+    revoked bundle no longer counts its documents as delivered; racing issues
+    record one event.
+  - **The exclusion reason is published** (manifest and `/d`), deliberately —
+    it is disclosure about the client's own documents — and the field now says
+    so, beside the sign-off note that is private.
+  - **The budget** — see the runs-capped entry.
+  - **Tests the doors never had:** `tests/api/platform-delivery.test.ts` (auth,
+    machine principal, stale fingerprint, cross-client, revoke semantics,
+    revoked-link 404, budget, no URL path in logs) and
+    `toolchain/java-delivery-archive.test.ts`, the first test to open a delivery
+    zip: every manifest hash matches the bytes beside it, on the real stage.
+  **Recorded, not fixed** (none a false claim or trust-boundary breach): a blob
+  written before a failed save is orphaned; the oversize check runs after the
+  archive stage; a crawl sighting bumps `document_revision`, so a prepared bundle
+  can go stale without any change to its documents; zip DOS timestamps take the
+  JVM's timezone; tokens are stored unhashed (as report tokens are); the public
+  download has no rate limit beyond the token's entropy; activity actions are
+  dotted codes (`delivery.issued`) where the rest of the trail uses phrases —
+  append-only history, so renaming is its own decision; `requested` answers
+  appear in `attestations.json`; prepare holds up to 100 MB beside the JVM. **Not
+  proven: that a bundle over 4.5 MB downloads on Vercel** — both download routes
+  and `remediationResponse` return buffered bodies, Vercel documents a 4.5 MB
+  response cap, and whether its default Node streaming exempts a buffered
+  `Response` is being measured on production before anything changes.
 
 ## Agent behavior
 

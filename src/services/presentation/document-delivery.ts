@@ -2,6 +2,10 @@
 export type DeliveryRow = {
   documentId: string; url: string; reason: string | null; excluded: boolean;
   exclusionReason?: string; signedOff: boolean; delivered: boolean; eligible: boolean;
+  /** The state this row was shown in; a sign-off must name it. */
+  fingerprint: string;
+  /** Fidelity items that travel with the file. Count-only sentences. */
+  knownDifferences: Array<{criterion: string; detail: string}>;
 };
 export type DeliveryQueue = 'all' | 'work' | 'signoff' | 'delivery' | 'delivered' | 'excluded';
 export function inDeliveryQueue(row: DeliveryRow, queue: DeliveryQueue): boolean {
@@ -16,7 +20,10 @@ export function inDeliveryQueue(row: DeliveryRow, queue: DeliveryQueue): boolean
 export function selectableForDelivery(row: DeliveryRow): boolean {
   return row.eligible && row.signedOff && !row.excluded;
 }
-export function deliveryError(code: string, requestId?: string): string {
+export function deliveryError(code: string, requestId?: string, message?: string): string {
+  // A spent budget is an answer, not a failure: the server's sentence says when
+  // the window resets, and "try again" is the one instruction it makes wrong.
+  if (code === 'document_budget_exceeded' && message) return message;
   const messages: Record<string, string> = {
     document_changed: 'The documents changed. Refresh and review the current evidence before trying again.',
     signoff_not_eligible: 'This output is not eligible. Apply outstanding answers and verify the remediated file first.',

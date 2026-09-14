@@ -24,6 +24,10 @@ export default async function DeliveryPage({params}: {params: Promise<{token: st
       <ul style={{listStyle: 'none', padding: 0}}>{bundle.entries.map((entry, i) => <li key={entry.documentId} style={{padding: '16px 0', borderBottom: `1px solid ${T.rule}`, overflowWrap: 'anywhere'}}>
         <strong>Document {i + 1} · {entry.source}</strong>
         <p>Signed off by {entry.signedBy} on {entry.signedAt.slice(0, 10)}. PDF/UA-1 verification passed.</p>
+        {entry.knownDifferences?.length ? <>
+          <p>Known differences from the source document:</p>
+          <ul>{entry.knownDifferences.map((difference, j) => <li key={j}>{difference.criterion}: {difference.detail}</li>)}</ul>
+        </> : null}
         <details><summary>File identity</summary><p style={{fontFamily: FONT.mono, fontSize: 12}}>SHA-256: {entry.outputSha256}</p></details>
       </li>)}</ul>
     </section>

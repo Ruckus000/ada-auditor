@@ -16,6 +16,7 @@ export async function GET(request: Request, context: Context) {
     if (!await deps.platform.getClient(clientId)) throw new DeliveryRefusal('client_not_found', 404);
     const v = await deliveryOverview(deps.platform, clientId);
     return Response.json({rows: v.rows.map(r => ({documentId: r.record.id, url: r.record.url, reason: r.reason,
+      fingerprint: r.fingerprint, knownDifferences: r.knownDifferences,
       excluded: Boolean(r.exclusion), exclusionReason: r.exclusion?.reason,
       signedOff: Boolean(r.signoff && !r.reason && !r.exclusion), delivered: r.delivered,
       eligible: !r.reason && !r.exclusion})), counts: {signedOff: v.signedOff, delivered: v.delivered, excluded: v.excluded, eligible: v.eligible},

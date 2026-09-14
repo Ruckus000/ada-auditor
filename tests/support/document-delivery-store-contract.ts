@@ -33,11 +33,16 @@ export function documentDeliveryStoreContract(makeStore: () => Promise<PlatformS
       expect(await store.saveDeliveryBundle({...bundle, bytes: 999}, bundle.revision)).toBe(true);
       expect(await store.getDeliveryBundle(bundle.id)).toEqual(bundle);
       expect(await store.getDeliveryByToken(`${prefix}-token`)).toBeNull();
+      // Nothing issued, nothing to revoke — and the answer says so, so a caller
+      // cannot record a revocation that did not happen.
+      expect(await store.revokeDeliveryBundle(bundle.id, '2026-09-02T12:00:00.000Z')).toBe(false);
+      expect((await store.getDeliveryBundle(bundle.id))?.revokedAt).toBeUndefined();
       expect(await store.issueDeliveryBundle(bundle.id, bundle.revision, `${prefix}-token`, 'Alex', '2026-09-03T00:00:00.000Z')).toBe(true);
       expect(await store.issueDeliveryBundle(bundle.id, bundle.revision, `${prefix}-other-token`, 'Someone else', '2026-09-04T00:00:00.000Z')).toBe(true);
       expect((await store.getDeliveryByToken(`${prefix}-token`))?.issuedBy).toBe('Alex');
       expect(await store.getDeliveryByToken(`${prefix}-other-token`)).toBeNull();
-      await store.revokeDeliveryBundle(bundle.id, '2026-09-05T00:00:00.000Z');
+      expect(await store.revokeDeliveryBundle(bundle.id, '2026-09-05T00:00:00.000Z')).toBe(true);
+      expect(await store.revokeDeliveryBundle(bundle.id, '2026-09-05T01:00:00.000Z')).toBe(false);
       expect(await store.getDeliveryByToken(`${prefix}-token`)).toBeNull();
       expect((await store.getDeliveryBundle(bundle.id))?.entries).toEqual(bundle.entries);
       expect(await store.issueDeliveryBundle(bundle.id, bundle.revision, `${prefix}-revive`, 'Alex', '2026-09-06T00:00:00.000Z')).toBe(false);

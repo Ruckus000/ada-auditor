@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { deliveryBytes, issueDelivery, DeliveryRefusal } from '../../../../../../../services/document-delivery';
+import { deliveryBytes, issueDelivery, revokeDelivery, DeliveryRefusal } from '../../../../../../../services/document-delivery';
 import { bundleResponse, deliveryDependencies, deliveryFailure } from '../../../../../_lib/document-delivery';
 import { authorizePrincipal } from '../../../../../_lib/authorize';
 import { createRequestId } from '../../../../../_lib/request-id';
@@ -35,8 +35,6 @@ export async function POST(request: Request, context: Context) {
     if (input.data.action === 'issue') {
       return Response.json({bundle: bundleResponse(await issueDelivery(deps, bundle, actor)), requestId});
     }
-    await deps.platform.revokeDeliveryBundle(bundleId, new Date().toISOString());
-    await deps.platform.recordEvent({clientId, actor: actor.name, actorOperatorId: actor.id, action: 'delivery.revoked', subject: bundleId});
-    return Response.json({bundle: bundleResponse((await deps.platform.getDeliveryBundle(bundleId))!), requestId});
+    return Response.json({bundle: bundleResponse(await revokeDelivery(deps, bundle, actor)), requestId});
   } catch (error) { return deliveryFailure(error, requestId); }
 }

@@ -290,6 +290,14 @@ const JVM_SPAWN = join(SRC_ROOT, 'integrations', 'documents', 'stage.ts');
 const jvmRoutes = routeFiles(API_DIR).filter((file) => reachesFrom(file, JVM_SPAWN, SRC_ROOT));
 
 /**
+ * Where the document budget is charged. Every document door asks here before it
+ * launches anything, and the budget's own docblock counted those doors by hand —
+ * which is how three delivery doors that spawn veraPDF and the Archive stage
+ * shipped without it. The walk counts them instead.
+ */
+const DOCUMENT_BUDGET = join(SRC_ROOT, 'app', 'api', '_lib', 'budget-refusal.ts');
+
+/**
  * The third binary, and the one whose absence is quietest.
  *
  * A route that converts spawns `soffice` as well as a JVM, and the two are
@@ -537,6 +545,15 @@ describe('routes that spawn a JVM', () => {
   // would pass by covering nothing.
   it('are actually found by the import walk', () => {
     expect(jvmRoutes.length, 'no route reaches java-runtime.ts').toBeGreaterThan(0);
+  });
+
+  /**
+   * File-level, and honest about it: this catches a door that never charges,
+   * not a door with one uncharged branch. The branch-level half is each route's
+   * own test (e.g. `platform-delivery.test.ts`, `client-document-preview.test.ts`).
+   */
+  it.each(jvmRoutes)('%s charges the document budget before it launches a stage', (file) => {
+    expect(reachesFrom(file, DOCUMENT_BUDGET, SRC_ROOT), `${file} reaches stage.ts but not budget-refusal.ts`).toBe(true);
   });
 
   it.each(jvmRoutes)('%s has the Java runtime packaged beside it', (file) => {
