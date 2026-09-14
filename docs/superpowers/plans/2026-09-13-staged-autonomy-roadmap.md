@@ -113,13 +113,32 @@ cards on real untagged documents, once, about an hour. That is the only
 human labelling on this roadmap, and the labelling tool built for the
 manual pass is kept for exactly that.
 
+**Planted depth cohort (rung 2 of the ladder, added 2026-09-14).** The
+blind-corpus generator (`docx-builders.mjs`: `heading(level, text)`, direct
+`w:outlineLvl`, `basedOn` inheritance, the level-9 body override, image-only
+headings, bold-but-not-heading paragraphs) already builds Word documents with
+perfect keys and controllable depth. Round 2 measured the training gap as
+depth (25 H3 / 1 H4), so the next data comes from there — converted through
+the product's own exporter, `label_source: "planted"` — before any further
+real harvest. Validation stays real, so synthetic-green/real-red is measured
+(Arm B's lesson), not assumed. Bare numerals: the front rule asserts only
+"not a heading"; its ISO type is not scored (rule rows are binary-only in the
+evaluator). Real untagged PDFs harvested but not keys (cohort 3: 522) are the
+Stage 2→3 audit population — kept, not waste.
+
 **Human hours:** 0 in Stage 0.
 **Gate to Stage 1:** ≥ 20,000 key-labelled cards from ≥ 60 hosts after
 hygiene, match rate (candidate ↔ key element) ≥ 95 % with unmatched
 candidates reported by cause, split by host, `test.spent` absent.
-**Kill:** hygiene excludes more than half the tagged pool — the keys are not
-trustworthy at scale and a human-audited subset has to anchor them before
-training.
+**Kill:** TRUST exclusions — `7.1-3`, `7.4.2`/`7.4.4`, prose headings,
+checker-failed — exceed half the tagged pool: the keys are not trustworthy at
+scale and a human-audited subset has to anchor them before training. YIELD
+exclusions (a key with no headings) are a cost, reported beside it, never a
+kill. (Ruled 2026-09-14: the ≥ 1-H rule was added after this kill was
+written and tripped it on yield alone — combined pool trust 37 %, yield 66 %.
+The rule stays; its ceiling: it drops every headingless key, and the upgrade
+path is a per-row rule keeping their non-short rows once a measurement shows
+those rows are clean.)
 
 ## Stage 1 — the model exists and is measured (a person verifies everything)
 

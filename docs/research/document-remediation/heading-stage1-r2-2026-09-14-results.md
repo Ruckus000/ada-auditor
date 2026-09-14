@@ -134,7 +134,9 @@ is right (a bare numeral as running content, versus a list marker) is left to th
 to decide. What S18 changes is reporting: rule-decided type confusion is now split out
 from model-decided type confusion (`eligibility_eval.evaluate`'s `decided_by` argument
 and CLI support), so this candidate's 22 rows are visible apart from the model's own
-errors rather than folded into one `type_confusion` table.
+errors rather than folded into one `type_confusion` table. Closed 2026-09-14 by the
+user: recorded, no change — no definition change and no label rewrite; the front rule
+asserts only "not a heading", and rule-decided rows are scored binary-only.
 
 **Rule-decided type confusion** (truth→predicted, `out/stage1/eval-validation-r2-bydecider.json`):
 
@@ -249,8 +251,16 @@ The volume hit 0 bytes free at 03:36. Everything was verified intact afterward: 
 
 ### Open decisions for the user
 1. **The kill definition.** The Stage 0 kill as written counts TRUST and YIELD exclusions together. The TRUST share is 37 %, the YIELD share 66–71 %. Decide which share the kill measures.
+   Resolved 2026-09-14 by the user: the Stage 0 kill counts TRUST exclusions only
+   (7.1-3, 7.4.2/7.4.4, prose, checker-failed). YIELD is reported but never a kill.
+   The at-least-one-H rule stays, with its ceiling recorded in the roadmap.
 2. **The §5 numeral ruling.** ISO, and the rules in front of the model, call a bare number `Lbl`, while the key authors tagged 22 validation rows `P`.
 3. **Disk.** Whether to keep the Part 28/29 adapters (2.1 GiB, not regenerable) and whether to delete the regenerable `out/labels/pages` (1.8 GiB). Nothing has been deleted: ruling R6 holds deletion for the user.
+   Resolved (R8): with the user's explicit approval, the peer coordinating session
+   deleted `out/labels/pages` (regenerable), `adapter-part28-vision-408`,
+   `adapter-part29-vision-408` and `adapter-smoke`. That leaves 14 GiB free. This
+   session verified the directories are absent and did not run the deletion.
+   Cohort 3's untagged PDFs are kept as the Stage 2→3 audit population.
 
 ### Yield finding from cohort 4
 As the harvester measured it, and stated so:
