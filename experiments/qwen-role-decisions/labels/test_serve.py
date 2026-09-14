@@ -1,6 +1,12 @@
 # labels/test_serve.py
+import json
 import random
-from labels.serve import State, allowed_levels, apply_heading, make_row, next_card, order_cards
+import threading
+from http.client import HTTPConnection
+from http.server import HTTPServer
+from pathlib import Path
+
+from labels.serve import State, allowed_levels, apply_heading, make_handler, make_row, next_card, order_cards
 from eligibility_eval import refusals
 
 
@@ -51,3 +57,35 @@ def test_sample_mode_waives_the_skip_refusal_and_keeps_reading_order():
 
     normal_state = State(cards, manifest, "reviewer-a", sample=None)
     assert normal_state.allowed_levels_for("a") == [1]
+
+
+def test_answer_refuses_a_replay_carrying_a_stale_card_id():
+    cards = [{"card_id": "a:1", "document_id": "a", "page": 0, "y0": 700, "text": "t", "kind": "pdf"},
+             {"card_id": "a:2", "document_id": "a", "page": 0, "y0": 500, "text": "t", "kind": "pdf"}]
+    manifest = [{"id": "a", "kind": "pdf", "sha256": "a" * 64, "host": "a.gov"}]
+    path = Path("out/labels/labels-guard-test.jsonl")
+    if path.is_file():
+        path.unlink()
+    state = State(cards, manifest, "guard-test", sample=None)
+    server = HTTPServer(("127.0.0.1", 0), make_handler(state))
+    port = server.server_address[1]
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        conn = HTTPConnection("127.0.0.1", port)
+        # First /answer for the shown card (a:1): recorded.
+        conn.request("GET", "/answer?type=P&c=a:1")
+        conn.getresponse().read()
+        # Replaying the exact same request: by now the current card has
+        # advanced to a:2, so the stale c=a:1 must be refused, not recorded
+        # as a decision on a:2.
+        conn.request("GET", "/answer?type=P&c=a:1")
+        conn.getresponse().read()
+        rows = [json.loads(l) for l in path.read_text().splitlines() if l.strip()]
+        assert len(rows) == 1
+        assert rows[0]["card_id"] == "a:1"
+    finally:
+        server.shutdown()
+        thread.join()
+        if path.is_file():
+            path.unlink()

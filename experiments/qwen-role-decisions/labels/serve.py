@@ -13,6 +13,12 @@ refusal (only level 1 allowed on an empty stack) is waived — the sampled
 stack is necessarily partial, so a real per-document ladder cannot be
 enforced. Normal mode is unchanged: only the level that continues the
 document's approved stack is allowed.
+
+`/answer` and `/skip` carry the shown card's id (`c=`) and are refused
+(redirect without writing) unless it matches the current card — a double
+keydown firing two in-flight requests would otherwise let the second one,
+arriving after the first's write advances `next_card`, silently label a
+card the reviewer never saw.
 """
 from __future__ import annotations
 
@@ -146,14 +152,14 @@ img{{max-width:100%;border:1px solid #ccc}} .t{{font-size:20px;font-weight:600}}
 <kbd>T</kbd> TH &nbsp; <kbd>O</kbd> TOCI &nbsp; <kbd>L</kbd> Lbl &nbsp; <kbd>B</kbd> blockquote &nbsp; <kbd>U</kbd> unsure &nbsp; <kbd>⌫</kbd> undo &nbsp; <kbd>S</kbd> skip document</p>
 </div>
 <script>
-let pendingH=false;const allowed={levels_json};
+let pendingH=false;const allowed={levels_json};const cardId={card_id_json};
 document.addEventListener('keydown',e=>{{const k=e.key.toUpperCase();
  if(e.key==='Backspace'){{location.href='/undo';return;}}
- if(pendingH){{const n=parseInt(k);if(allowed.includes(n))location.href='/answer?type=H&level='+n;return;}}
+ if(pendingH){{const n=parseInt(k);if(allowed.includes(n))location.href='/answer?type=H&level='+n+'&c='+encodeURIComponent(cardId);return;}}
  if(k==='H'){{pendingH=true;document.querySelector('.t').style.color='#06c';return;}}
- if(k==='S'){{location.href='/skip';return;}}
+ if(k==='S'){{location.href='/skip?c='+encodeURIComponent(cardId);return;}}
  const m={{P:'P',A:'Artifact',C:'Caption',T:'TH',O:'TOCI',L:'Lbl',B:'BlockQuote',U:'Unsure'}};
- if(m[k])location.href='/answer?type='+m[k];}});
+ if(m[k])location.href='/answer?type='+m[k]+'&c='+encodeURIComponent(cardId);}});
 </script>"""
 
 
@@ -181,9 +187,14 @@ def make_handler(state: State):
             if card is None:
                 self.send_html(f"<p>Done: {len(state.rows)} rows in {state.path}</p>"); return
             if url.path == "/skip":
+                q = parse_qs(url.query)
+                if q.get("c", [""])[0] != card["card_id"]:
+                    self.redirect(); return
                 state.skip_document(card["document_id"]); self.redirect(); return
             if url.path == "/answer":
                 q = parse_qs(url.query)
+                if q.get("c", [""])[0] != card["card_id"]:
+                    self.redirect(); return
                 type_ = q.get("type", [""])[0]
                 level = int(q["level"][0]) if "level" in q else None
                 if type_ not in TYPES.values() or (type_ == "H" and level not in state.allowed_levels_for(card["document_id"])):
@@ -198,7 +209,8 @@ def make_handler(state: State):
                 progress=f"{len(state.done())}/{len(state.cards)}", doc=html.escape(card["document_id"]), kind=card.get("kind"),
                 prev=html.escape(str(card.get("prev"))), text=html.escape(card["text"]), next=html.escape(str(card.get("next"))),
                 repeats=card.get("repeats_on_pages", 1), in_table=bool(card.get("in_table_box")), font=html.escape(font),
-                stack=" > ".join(f"H{l}" for l in stack) or "(none yet)", levels="/".join(map(str, levels)), levels_json=json.dumps(levels)))
+                stack=" > ".join(f"H{l}" for l in stack) or "(none yet)", levels="/".join(map(str, levels)), levels_json=json.dumps(levels),
+                card_id_json=json.dumps(card["card_id"])))
 
     return H
 
