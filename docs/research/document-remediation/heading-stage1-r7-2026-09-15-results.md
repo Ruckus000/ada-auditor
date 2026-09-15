@@ -57,9 +57,6 @@ Also recorded as audit disagreements, not new definition shapes:
 - column and lettered subsection headings the author left as P (c6-0009 ×6, c4-0020 ×2, c3-0919:13, c6-0134:195);
 - a table caption keyed H (c6-0102:248).
 
-## Training-set measurement
-*(pending — the seeded 400-row samples in both directions are running with the r4a adapter and r5 rules: key non-H rows called H, and key H rows called non-H. The counts are lower bounds, because r4a trained on these rows. Under the reviewing session's rule, a direction at ≥ 5 % continues to its full set.)*
-
 ## Training-set probe: seeded 400-row samples (r4a + r5 rules, real train, rows no rule decides)
 Lower bounds, because r4a trained on these rows. 0 no-brace outputs.
 
@@ -69,7 +66,19 @@ Lower bounds, because r4a trained on these rows. 0 no-brace outputs.
 | Key H → called non-H | 96 / 400 | **24.0 %** | 60 | 6 (c6-0259) | c6 71/315, c3 11/29, b4 8/35, c4 6/21 |
 
 - **Reading, non-H → H:** the probe echoes the model's own training labels, so it cannot size under-tagging. That direction stops under the reviewing session's 5 % rule. The audit rate (13/99) and the 639 proxy remain the handles on it.
-- **Reading, H → non-H:** a quarter of key-H rows are called non-H even though the model has seen them. That is either under-fitting or key over-calling, and only an audit can separate the two. This direction continues to the full set of 1,671.
+- **Reading, H → non-H:** a quarter of key-H rows are called non-H even though the model has seen them. That is either under-fitting or key over-calling, and only an audit can separate the two. This direction continued to the full set of 1,671.
+
+**Full key-H set (1,671 real train rows no rule decides), lower bound:**
+- **366 called non-H (0.219)**: 361 as P, 2 TH, 2 TOCI, 1 Caption.
+- **Documents:** 133, most concentrated c6-0179 24, c6-0073 16, c6-0259 14, c3-0577 13, c6-0417 11.
+- **By cohort:** c6 260/1,326, c3 54/135, c4 35/96, b4 17/114.
+- **By key level:** H1 214/675 (0.32), H2 96/728 (0.13), H3 41/200 (0.21), H4 15/46 (0.33), H5 0/21, H6 0/1.
+- H1 carries most of the flips, the same shape as r4a's page-0 title misses on validation.
+
+**Audit sets built (seed 20260915):**
+- **A:** 100 rows from the 366, document round-robin with a cap of 5. Actual: 100 documents, 1 per document.
+- **B:** 120 rows from the proxy, recounted under r5 rules and `cards-r5` as 658 (the 639 used round 4 rules). Actual: 92 documents, at most 2 per document.
+- **Blind file:** both sets shuffled together in `out/labels/audit-r7AB-cards.jsonl`, with groups in `out/labels/audit-r7AB-groups.json`.
 
 ## Round 7 plan (registered before any audit, relabel or training)
 1. **Two audit sets, both sampled by document with a cap of 5 rows per document.** Card files hold ids only, and group files are kept apart so the judge stays blind.
