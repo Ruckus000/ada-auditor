@@ -130,3 +130,5 @@ Judged blind from `out/labels/audit-r7AB-cards.jsonl` into `out/labels/audit-r7A
   - By source (H / non-H): stripped-tree 1,181 / 1,666; word-outline 390 / 539; claude-audit 174 / 43, which is 217 of 220, with 3 held by rules.
   - **Leak check:** all 3,993 rows are train ids; 0 c5 rows; 0 of the 538 excluded; 0 train documents in validation or test; 0 ambiguous or missing images.
 - **Configuration:** S10/S15 as in r4a, with `--iters 7986` (two epochs) and `--steps-per-save 7986`. The 13 h gate is judged at step 100.
+
+**Step 100:** loss 0.088, 0.215 it/s (window), peak 11.25 GB. The projection is 7,986 / 0.215 ≈ 37,140 s ≈ **10.3 h**, under the 13 h gate, so the run continues to 7,986.
