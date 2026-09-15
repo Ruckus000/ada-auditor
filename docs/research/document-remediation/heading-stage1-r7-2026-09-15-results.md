@@ -1,0 +1,61 @@
+# Heading-type adapter — Stage 1 round 7: two-sided audit and training-set pollution (no training)
+
+> **Graded against Claude-audited labels** (Ruling R9). Every number in this record comes from judgements by the reviewing Claude session (`label_source` "claude-audit", actor "claude-coordinator"), not from a human relabel. A `human-answer` row on the same id outranks it.
+
+**Previous record:** `heading-stage1-r6-2026-09-15-results.md`. **Adapter / rules:** r4a with round 5 rules, predictions in `out/stage1/pred-validation-r5.jsonl`. **Ledger:** `.superpowers/sdd/2026-09-13-stage1-round1/progress.md`.
+
+## Why
+Round 6's audit examined only the rows r4a got wrong: its false positives and page-0 H1 misses. An audit like that can only raise the score. This round audits a random sample of the rows it got **right**, blind to group, so the audited accuracy gets a two-sided estimate.
+
+## Sample
+- **Draw:** 100 TP + 100 TN, seed 20260915, from r5 validation predictions scored against `labels-audited.jsonl`, excluding the 70 ids audited in round 6. The pools held 312 TP and 1,008 TN.
+- **Files:** `out/labels/audit-r7-correct-sample-cards.jsonl` (shuffled ids) and, kept apart for blind judging, `out/labels/audit-r7-correct-sample-groups.json`.
+- **By cohort:** TP c6 85 / b4 10 / c4 5; TN c6 84 / c3 8 / c4 4 / b4 4.
+- **Judgements:** `out/labels/audit-r7-claude.jsonl`, 200 rows, judged from the marked-408 images, with 1 Unsure (TN group).
+
+## Result (the controller recomputed the disagreement lists from the files)
+- **TN group (key non-H, model non-H):** **13 of 99** decided rows are headings in the audit, so they are hidden misses. Exact 95 % interval **0.072–0.214**.
+  - c3-0919:13
+  - c4-0020:35, :37 (lettered subsections)
+  - c6-0009:15, :33, :71, :257, :553, :2074 (column subsection headings)
+  - c6-0134:195
+  - c6-0224:11 (an FAQ question heading its answer)
+  - c6-0381:317, :318 (form section labels)
+- **TP group (key H, model H):** **4 of 100** are not headings in the audit, so they are hidden false positives. Exact 95 % interval **0.011–0.099**.
+  - c6-0024:70, :351 (chapter running-head bands at the page top → Artifact)
+  - c6-0102:248 (a table caption → Caption)
+  - c6-0026:304 (a spanning group-header row in a checklist table → TH)
+- **Agreement:** binary agreement 182/199. Non-H type agreement is loose (key P against audit Other or BlockQuote on list items and quotes), which does not affect the binary. Type-confusion tables exclude Other as before.
+- **Clustering caveat.** The draw sampled rows, not documents. c6-0009 supplies 19 of the 99 decided TN rows and 6 of the 13 hidden misses. Without that document the TN rate is 7/80 = 0.088. The exact binomial intervals assume independent rows, so they are too narrow for a clustered sample.
+
+## Two-sided estimate for r4a + r5 rules on validation (1,525), graded against Claude-audited labels
+Round 6's audited counts were TP 343, FP 1, TN 1,012, FN 169. The hidden-miss rate is applied to the 1,008-row TN pool and the hidden-FP rate to the 312-row TP pool. The 70 round-6 ids are already audited.
+
+| Rates used | Hidden misses | Hidden FPs | Accuracy | FN rate | FP rate |
+|---|---|---|---|---|---|
+| Point (13/99, 4/100) | ≈ 132 | ≈ 12 | **≈ 0.79** | ≈ 0.48 | ≈ 0.015 |
+| Both rates at their interval's low end | ≈ 72 | ≈ 3 | ≈ 0.84 | ≈ 0.42 | ≈ 0.005 |
+| Both rates at their interval's high end | ≈ 216 | ≈ 31 | ≈ 0.73 | ≈ 0.55 | ≈ 0.039 |
+
+- The low and high rows pair the two interval ends to show a range. They are not a joint confidence interval, and clustering widens them.
+- **Reading:** the round 6 figure (0.889) was upper-biased, as its caveat said. The two-sided estimate puts r4a with r5 rules near 0.8 accuracy with FN near 0.5.
+- **The dominant error is under-calling headings:** hidden misses outnumber hidden false positives roughly ten to one.
+
+## Train pollution: an independent rough estimate
+- **Extrapolation:** the 13/99 hidden-miss rate among key-P rows the model also calls P suggests about 0.13 × 3,498 ≈ 455 real train rows keyed non-H that are headings.
+- **Candidate proxy:** 639 train rows are retagger-H*, bold and ≤ 7 words, a count consistent in size with the extrapolation.
+- **Caveat:** the validation TN population is conditioned on model-P, and train rows differ from validation rows. This is an order-of-magnitude cross-check, not a measurement.
+- The measurement itself is below.
+
+## §5 definition cases raised by the audit (need rulings; no label changed by this record)
+1. **Running-head bands.** A chapter title repeated in the page-top band on chapter pages (c6-0024:70, :351). The audit reads Artifact; the key says H. Related: round 5's c6-0102 top-band repeats, which rule 2 kept as Artifact.
+2. **Form section labels.** Short labels that head a group of form fields (c6-0381:317, :318). The audit reads H; the key says P.
+3. **FAQ questions.** A question line heading its answer paragraph (c6-0224:11). The audit reads H; the key says P.
+4. **Spanning group-header rows in tables.** A row spanning a checklist table that heads the rows beneath it (c6-0026:304). The audit reads TH; the key says H.
+
+Also recorded as audit disagreements, not new definition shapes:
+- column and lettered subsection headings the author left as P (c6-0009 ×6, c4-0020 ×2, c3-0919:13, c6-0134:195);
+- a table caption keyed H (c6-0102:248).
+
+## Training-set measurement
+*(pending — the seeded 400-row samples in both directions are running with the r4a adapter and r5 rules: key non-H rows called H, and key H rows called non-H. The counts are lower bounds, because r4a trained on these rows. Under the reviewing session's rule, a direction at ≥ 5 % continues to its full set.)*
