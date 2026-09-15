@@ -48,9 +48,10 @@ import html
 import json
 import os
 import random
+import threading
 import uuid
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
@@ -270,6 +271,10 @@ document.addEventListener('keydown',e=>{{if(e.metaKey||e.ctrlKey||e.altKey||e.re
 
 
 def make_handler(state: State):
+    # The server is threaded (see main), so the c= check and the write must not
+    # interleave: two in-flight answers for one card would both pass the check.
+    lock = threading.Lock()
+
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):  # quiet
             pass
@@ -282,6 +287,10 @@ def make_handler(state: State):
             self.send_response(303); self.send_header("Location", "/"); self.end_headers()
 
         def do_GET(self):
+            with lock:
+                self.handle_get()
+
+        def handle_get(self):
             url = urlparse(self.path)
             card = next_card(state.cards, state.done())
             if url.path == "/img" and card is not None:
@@ -342,7 +351,10 @@ def main() -> None:
                 cards += [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
         state = State(cards, manifest, args.actor, args.sample)
     print(f"http://127.0.0.1:{args.port}/  ({len(state.cards)} cards, {len(state.rows)} already labelled, {state.no_image} PDF cards skipped: no page image)")
-    HTTPServer(("127.0.0.1", args.port), make_handler(state)).serve_forever()
+    # Threading, not the single-threaded HTTPServer: Safari opens speculative
+    # keep-alive connections that send nothing, and a one-connection server
+    # blocks on them forever, so the page loads once and every click hangs.
+    ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(state)).serve_forever()
 
 
 if __name__ == "__main__":

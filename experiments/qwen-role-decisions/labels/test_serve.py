@@ -238,3 +238,28 @@ def test_answer_buttons_hit_the_same_urls_as_the_keys():
     for t in ("P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Unsure"):
         assert f'href="/answer?type={t}&amp;c=c6-0001%3A7%20x"' in out
     assert 'href="/undo"' in out and 'href="/skip?c=c6-0001%3A7%20x"' in out and "confirm(" in out
+
+
+def test_two_concurrent_answers_for_one_card_write_one_row_under_a_threading_server():
+    import time
+    from http.server import ThreadingHTTPServer
+    cards = [{"card_id": "c:1", "document_id": "c", "index": 1, "text": "t", "kind": "docx"},
+             {"card_id": "c:2", "document_id": "c", "index": 2, "text": "t", "kind": "docx"}]
+    manifest = [{"id": "c", "kind": "docx", "sha256": "c" * 64, "host": "c.gov"}]
+    path = fresh("race-test")
+    state = State(cards, manifest, "race-test", sample=None)
+    real = state.record
+    def slow(*a, **k):
+        time.sleep(0.2); real(*a, **k)
+    state.record = slow
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(state))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        def hit():
+            conn = HTTPConnection("127.0.0.1", srv.server_address[1], timeout=5)
+            conn.request("GET", "/answer?type=P&c=c%3A1"); conn.getresponse().read()
+        ts = [threading.Thread(target=hit) for _ in range(2)]
+        [t.start() for t in ts]; [t.join() for t in ts]
+        assert len(path.read_text().splitlines()) == 1
+    finally:
+        srv.shutdown(); srv.server_close(); fresh("race-test")
