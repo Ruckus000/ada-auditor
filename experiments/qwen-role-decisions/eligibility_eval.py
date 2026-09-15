@@ -10,9 +10,18 @@ no level or abstention reporting, and no notion of a spent test set.
 Labels and predictions live in separate files on purpose. A label row must
 come from a human answer from the correction workflow — ``label_source:
 "human-answer"`` with the answer row's id and actor — or from a key source
-(``stripped-tree``, ``word-outline``, ``planted``), and any model field on it
-is refused, so a model output (e.g. ``model-draft``) cannot become a label by
-being copied into the wrong file.
+(``stripped-tree``, ``word-outline``, ``planted``), or from a Claude-audited
+judgement (``claude-audit``) — a reviewing Claude session's ruling on a card
+under R9 (round 6, 2026-09-15), always disclosed on every number reported
+from it with the line "graded against Claude-audited labels" — and any model
+field on it is refused, so a model output (e.g. ``model-draft``) cannot
+become a label by being copied into the wrong file. A ``human-answer`` row on
+the same id outranks a ``claude-audit`` row: a later human correction wins,
+never the other way around. This module does not enforce that ordering
+itself (it takes one row per id, whichever the caller assembled); the caller
+building an overlay of ``claude-audit`` rows over a labels file must check
+each id's existing ``label_source`` first and skip any that are already
+``human-answer``.
 
     python3 -B eligibility_eval.py --self-check
     python3 -B eligibility_eval.py split --labels L.jsonl --salt S --out DIR \
@@ -58,7 +67,7 @@ MIN_TEST_TEMPLATES = 10
 SPLIT = (("train", 0.6), ("validation", 0.2), ("test", 0.2))
 GROUP_KEYS = ("document_sha256", "template_id", "client_id")
 MODEL_FIELDS = ("prediction", "model", "model_role", "heading_flag", "raw", "confidence")
-LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted")
+LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted", "claude-audit")
 PREDICTION_TYPES = ("H", "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Other", "Unsure")
 UNKNOWN_TEMPLATE = "unknown"
 # Every development and spent-holdout document the Qwen spikes have read, by
@@ -562,6 +571,10 @@ def self_check() -> None:
     k = {**label(5, True, "c", "t"), "label_source": "stripped-tree", "actor": "key:stripped-tree"}
     assert refusals([k]) == []
     assert refusals([{**k, "label_source": "model-draft"}])
+    # claude-audit is a label source too (R9): a reviewing Claude session's ruling
+    a = {**label(6, True, "c", "t"), "label_source": "claude-audit", "actor": "claude-coordinator"}
+    assert refusals([a]) == []
+    assert refusals([{**a, "label_source": "claude-draft"}])
     # type-shaped predictions
     assert read_prediction('{"type":"Caption","rule":3}') == ("not-heading", None)
     assert read_prediction('{"type":"H","level":2,"rule":1}') == ("heading", 2)
