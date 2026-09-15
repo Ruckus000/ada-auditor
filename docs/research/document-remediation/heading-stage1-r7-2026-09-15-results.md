@@ -59,3 +59,30 @@ Also recorded as audit disagreements, not new definition shapes:
 
 ## Training-set measurement
 *(pending — the seeded 400-row samples in both directions are running with the r4a adapter and r5 rules: key non-H rows called H, and key H rows called non-H. The counts are lower bounds, because r4a trained on these rows. Under the reviewing session's rule, a direction at ≥ 5 % continues to its full set.)*
+
+## Training-set probe: seeded 400-row samples (r4a + r5 rules, real train, rows no rule decides)
+Lower bounds, because r4a trained on these rows. 0 no-brace outputs.
+
+| Direction | Flipped | Rate | Documents | Max per document | By cohort (flipped / sampled) |
+|---|---|---|---|---|---|
+| Key non-H → called H | 12 / 400 | 3.0 % | 11 | 2 (c6-0365) | c6 10/245, c3 1/63, b4 1/29, c4 0/63 |
+| Key H → called non-H | 96 / 400 | **24.0 %** | 60 | 6 (c6-0259) | c6 71/315, c3 11/29, b4 8/35, c4 6/21 |
+
+- **Reading, non-H → H:** the probe echoes the model's own training labels, so it cannot size under-tagging. That direction stops under the reviewing session's 5 % rule. The audit rate (13/99) and the 639 proxy remain the handles on it.
+- **Reading, H → non-H:** a quarter of key-H rows are called non-H even though the model has seen them. That is either under-fitting or key over-calling, and only an audit can separate the two. This direction continues to the full set of 1,671.
+
+## Round 7 plan (registered before any audit, relabel or training)
+1. **Two audit sets, both sampled by document with a cap of 5 rows per document.** Card files hold ids only, and group files are kept apart so the judge stays blind.
+   - **A:** 100 rows from the full key-H → called-non-H set.
+   - **B:** 120 rows from the 639-row proxy (train key non-H, retagger H*, bold, ≤ 7 words).
+2. **The reviewing session audits both sets** (label_source claude-audit).
+3. **Round 7 SFT:**
+   - Audited rows take their audited labels.
+   - The un-audited remainder of the 639 proxy is **excluded** if B's heading precision is ≥ 0.8, **kept** if it is < 0.5, and audited in full before deciding if it falls in between.
+   - Key-H rows that A shows are over-calls take their audited labels.
+   - Nothing else changes.
+4. **Configuration:** if A shows under-fitting (≥ 70 % of the flagged key-H rows are real headings), round 7 trains **two epochs**. That configuration change is justified by this pre-run measurement and stated as such. Otherwise it trains one epoch. Everything else is S10/S15.
+5. **Evaluation:**
+   - Score on the fixed populations against `labels-audited.jsonl`, plus any A/B corrections that touch validation (none expected; they are train rows).
+   - Report the round 7 two-sided calibration beside the point numbers, and per-document concentration beside every rate.
+   - Test stays untouched.
