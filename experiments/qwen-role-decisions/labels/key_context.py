@@ -15,6 +15,7 @@ from pathlib import Path
 
 from run import blocks_to_cards, compile_cards, dump_pdf, mark_page_png, render_page_png, text_norm
 from labels.keys import key_blocks
+from labels.margin_band import in_margin_band, page_extents
 from labels.pdf_cards import repeats_on_pages
 
 OUT = Path("out/keys")
@@ -114,13 +115,16 @@ def main() -> None:
             for path in (tagged, stripped, original):
                 if not path.is_file():
                     raise FileNotFoundError(f"{doc_id}: {path}")
-            cards, _ = blocks_to_cards(dump_pdf(tagged, compile=False).get("blocks") or [])
+            blocks = dump_pdf(tagged, compile=False).get("blocks") or []
+            cards, _ = blocks_to_cards(blocks)
             reps = repeats_on_pages(cards)
+            extents = page_extents(blocks)
             for c in cards:
                 if c["locator"] not in ids:
                     continue
                 c["card_id"] = c["locator"]; c["document_id"] = doc_id; c["kind"] = "pdf"
                 c["repeats_on_pages"] = reps.get(c["locator"], 1); c["norm"] = text_norm(c["text"])
+                c["in_margin_band"] = in_margin_band(c, extents)
                 img = marked_image(c, stripped, pages)
                 c["image"] = None if img is None else str(img.resolve())
                 n_img += img is not None; n_cards += 1

@@ -45,7 +45,7 @@ def generate(python: str, prompt: str, image: str | None, adapter: str | None) -
 
 
 def post_rules(raw: str, card: dict) -> str:
-    """A model H inside a table box is not a document heading (definition §4 rule 3)."""
+    """A model H under a Table in the tag tree is not a document heading (definition §4 rule 3)."""
     if not forbids_heading(card):
         return raw
     try:
@@ -53,7 +53,7 @@ def post_rules(raw: str, card: dict) -> str:
     except ValueError:
         return raw
     if isinstance(data, dict) and data.get("type") == "H":
-        return json.dumps({"type": "TH", "rule": 3, "vetoed": "in_table_box"}, separators=(",", ":"))
+        return json.dumps({"type": "TH", "rule": 3, "vetoed": "table_ancestor"}, separators=(",", ":"))
     return raw
 
 

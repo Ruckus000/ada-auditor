@@ -6,9 +6,10 @@ def test_rule_prediction_and_table_veto():
     assert json.loads(rule_prediction({"text": "12", "repeats_on_pages": 1})) == {"type": "Lbl", "rule": 3}
     assert rule_prediction({"text": "Public Comment", "repeats_on_pages": 1}) is None
     raw = '{"type":"H","level":2,"rule":1}'
-    assert post_rules(raw, {"in_table_box": False}) == raw
-    assert json.loads(post_rules(raw, {"in_table_box": True}))["type"] == "TH"
-    assert post_rules('{"type":"P","rule":4}', {"in_table_box": True}) == '{"type":"P","rule":4}'
+    assert post_rules(raw, {"in_table_box": False, "ancestors": ["Document"]}) == raw
+    assert post_rules(raw, {"in_table_box": True, "ancestors": ["Document"]}) == raw
+    assert json.loads(post_rules(raw, {"in_table_box": False, "ancestors": ["TD", "TR", "Table"]}))["type"] == "TH"
+    assert post_rules('{"type":"P","rule":4}', {"ancestors": ["Table"]}) == '{"type":"P","rule":4}'
 
 
 def test_prompt_for_row_excludes_cards_own_key_heading():

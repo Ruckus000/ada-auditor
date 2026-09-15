@@ -16,7 +16,14 @@ def r2_no_letters(card: dict) -> tuple[str, int] | None:
 
 
 def artifact_by_repeat(card: dict) -> tuple[str, int] | None:
-    if (card.get("repeats_on_pages") or 1) >= MIN_REPEATS:
+    # "In the same place": a repeat is pagination only in the page's top or
+    # bottom margin band (labels/margin_band.py). A card without the fact is
+    # refused, never guessed — a legacy cards file must be enriched first.
+    if (card.get("repeats_on_pages") or 1) < MIN_REPEATS:
+        return None
+    if "in_margin_band" not in card:
+        raise ValueError(f"{card.get('card_id') or card.get('id') or card.get('locator')}: repeats on {card['repeats_on_pages']} pages but has no in_margin_band fact")
+    if card["in_margin_band"]:
         return "Artifact", 2
     return None
 
@@ -36,4 +43,6 @@ def decide(card: dict) -> tuple[str, int] | None:
 
 
 def forbids_heading(card: dict) -> bool:
-    return bool(card.get("in_table_box"))
+    # Tree ancestry, not the geometric table box: the box also covers true
+    # headings laid out in a grid. in_table_box stays a prompt fact.
+    return "Table" in (card.get("ancestors") or [])
