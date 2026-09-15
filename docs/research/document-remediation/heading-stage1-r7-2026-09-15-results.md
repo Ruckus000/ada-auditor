@@ -95,3 +95,38 @@ Lower bounds, because r4a trained on these rows. 0 no-brace outputs.
    - Score on the fixed populations against `labels-audited.jsonl`, plus any A/B corrections that touch validation (none expected; they are train rows).
    - Report the round 7 two-sided calibration beside the point numbers, and per-document concentration beside every rate.
    - Test stays untouched.
+
+## Audit results for A and B (graded against Claude-audited labels)
+Judged blind from `out/labels/audit-r7AB-cards.jsonl` into `out/labels/audit-r7AB-claude.jsonl` (220 rows, 0 Unsure). The controller recomputed both counts.
+
+- **A (key H, called non-H by r4a on train):** **85/100 are real headings** (exact 95 % interval 0.765–0.914).
+  - The 15 non-headings: letterhead lines 3, table captions or titles 3, running head or logo fragment 2, TH cells 2, list lead-ins 2, metadata or form-number lines 2, a menu item 1.
+  - Verdict: **under-fit**, not key over-call. By the registered rule (≥ 70 %), round 7 trains **two epochs**.
+- **B (proxy: train key non-H, retagger H*, bold, ≤ 7 words):** **89/120 are real headings**, precision 0.74 (exact 95 % interval 0.654–0.817). 92 documents, at most 2 per document, so no cluster.
+  - Key type of the 89: P 81, Other 5, Caption 2, TH 1.
+- **None of the 220 r7AB ids is a validation or test id** (controller assertion). Training and evaluation labels share no row. The 270 audit rows from round 6 (70) and round 7 (200) are all validation ids.
+
+## Rulings made after the A/B results (reviewing session), before training
+1. **B, a registration change made after seeing B's number, not the rule's outcome.** Precision 0.74 fell in the between band, where the registered rule said to audit all 658. The un-audited remainder of **538** is instead **excluded** from training. Reason, verbatim:
+
+   > "The registered between-band resolution (audit all 658) costs ~540 more hand-read cards; excluding the un-audited remainder is the conservative choice on both axes the loop cares about (no label is fabricated, and no row with a ~74 % wrong-label rate trains the model). The 538 remain queued for audit in audit-r7-proxy-ids.json and are not labels."
+
+2. **Level policy.** Where key and audit both say H, the key's level is kept, because it comes from the author's whole-document ladder while the audit's comes from one page image. Audited levels are used only where the key had no heading. Reason: audit and key levels agreed on only **32 of 85** A rows where both say H.
+3. **Evaluation.** Score against `labels-audited.jsonl` plus the 200 round-7 validation audit rows directly. Apply the 13/99 and 4/100 calibration only to the un-audited remainder of each pool (TN 1,008 − 99 − 1 Unsure; TP 312 − 100). Report the direct number beside the calibrated point estimate, each tagged "graded against Claude-audited labels".
+4. **Time gate (S27 raised for this run).** The gate is **13 h**, judged at step 100 from the measured it/s. Reason: "two epochs is the registered consequence of A ≥ 70 %". If step 100 projects past 13 h, training stops and reports. The projection is recorded below.
+
+## Round 7 data
+- **`out/keys-all-7/labels.jsonl`** (sha `ba8a9085…ded96e`, 10,363 rows) is `keys-all-4/labels.jsonl` (sha `28fb043a…e74c2`) with two changes:
+  - the 220 r7AB rows take their audited type, under the level policy above, with the original kept under `superseded`;
+  - the 538 proxy-remainder rows are removed.
+  - Cards are `cards-r5`; ladders unchanged; split `split-keys-all-4` (ids unchanged, excluded rows absent). Manifest: `out/keys-all-7/manifest-r7.json`.
+- **Exclusion arithmetic.** Train rows **7,051 = 5,214 entering emit + 538 excluded + 1,299 c5**.
+  - Of the 538 excluded, **503 would have been emitted** under today's rules with their key labels: P 489, TOCI 11, TH 2, Caption 1. The other 35 are held by emit as "other".
+  - Today's rules with key labels and no exclusion emit 4,493. Removing those 503 gives 3,990, and the audit's type changes move 3 held rows into emittable types, giving **3,993**.
+  - The 90-row difference from sft-r4a (4,403) is the r5 margin-band rule deciding fewer rows plus cards-r5.
+- **`out/stage1/sft-r7`:** **3,993 rows** (sha `43e38f27…bfa2`; held back: rule_decided 547, other 674).
+  - By type: H 1,745 · P 2,058 · TH 84 · TOCI 62 · Lbl 34 · Caption 8 · Artifact 2 (H share 0.44).
+  - H by level: L1 682, L2 767, L3 228, L4 46, L5 21, L6 1.
+  - By source (H / non-H): stripped-tree 1,181 / 1,666; word-outline 390 / 539; claude-audit 174 / 43, which is 217 of 220, with 3 held by rules.
+  - **Leak check:** all 3,993 rows are train ids; 0 c5 rows; 0 of the 538 excluded; 0 train documents in validation or test; 0 ambiguous or missing images.
+- **Configuration:** S10/S15 as in r4a, with `--iters 7986` (two epochs) and `--steps-per-save 7986`. The 13 h gate is judged at step 100.
