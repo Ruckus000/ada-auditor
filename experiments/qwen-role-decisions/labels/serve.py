@@ -52,7 +52,7 @@ import uuid
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 from labels.render import image_path
 
@@ -229,10 +229,22 @@ class State:
                 self.record(c, "Unsure", None, skipped=True)
 
 
+def answer_buttons(card_id: str, levels: list[int]) -> str:
+    """Links to the same URLs the keys send, for browsers where keydown never reaches the page."""
+    c = quote(card_id, safe="")
+    link = lambda href, label, extra="": f'<a class=btn href="{html.escape(href)}"{extra}>{label}</a>'  # noqa: E731
+    heads = [link(f"/answer?type=H&level={n}&c={c}", f"H{n}") for n in levels]
+    others = [link(f"/answer?type={t}&c={c}", t) for t in ("P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Unsure")]
+    skip = link(f"/skip?c={c}", "Skip document", " onclick=\"return confirm('Skip the rest of this document? Every remaining card is written as skipped.')\"")
+    return "<p>" + " ".join(heads) + "</p><p>" + " ".join(others) + "</p><p>" + link("/undo", "Undo") + " " + skip + "</p>"
+
+
 PAGE = """<!doctype html><meta charset=utf-8><title>label</title>
 <style>body{{font:15px system-ui;margin:16px;display:grid;grid-template-columns:1fr 420px;gap:16px}}
 img{{max-width:100%;border:1px solid #ccc}} .t{{font-size:20px;font-weight:600}} kbd{{border:1px solid #999;padding:1px 5px;border-radius:3px}}
-.dim{{color:#666}} .stack{{font-family:monospace}}</style>
+.dim{{color:#666}} .stack{{font-family:monospace}}
+.btn{{display:inline-block;margin:2px;padding:4px 9px;border:1px solid #888;border-radius:4px;text-decoration:none;color:#000;background:#f4f4f4}}</style>
+<body tabindex=-1>
 <div>{image}</div>
 <div>
 <p class=dim>{progress} · {doc} · {kind} · {no_image} PDF card(s) skipped: no page image</p>
@@ -241,8 +253,10 @@ img{{max-width:100%;border:1px solid #ccc}} .t{{font-size:20px;font-weight:600}}
 <p class=stack>approved stack: {stack}</p>
 <p><kbd>H</kbd> heading → then level {levels} &nbsp; <kbd>P</kbd> paragraph &nbsp; <kbd>A</kbd> artifact &nbsp; <kbd>C</kbd> caption<br>
 <kbd>T</kbd> TH &nbsp; <kbd>O</kbd> TOCI &nbsp; <kbd>L</kbd> Lbl &nbsp; <kbd>B</kbd> blockquote &nbsp; <kbd>U</kbd> unsure &nbsp; <kbd>⌫</kbd> undo &nbsp; <kbd>S</kbd> skip document</p>
+{buttons}
 </div>
 <script>
+document.body.focus();
 let pendingH=false;const allowed={levels_json};const cardId={card_id_json};
 document.addEventListener('keydown',e=>{{if(e.metaKey||e.ctrlKey||e.altKey||e.repeat)return;const k=e.key.toUpperCase();
  if(e.key==='Backspace'){{location.href='/undo';return;}}
@@ -302,7 +316,7 @@ def make_handler(state: State):
                 prev=html.escape(str(card.get("prev"))), text=html.escape(card["text"]), next=html.escape(str(card.get("next"))),
                 repeats=card.get("repeats_on_pages", 1), in_table=bool(card.get("in_table_box")), font=html.escape(font),
                 stack=" > ".join(f"H{l}" for l in stack) or "(none yet)", levels="/".join(map(str, levels)), levels_json=json.dumps(levels),
-                card_id_json=json.dumps(card["card_id"])))
+                card_id_json=json.dumps(card["card_id"]), buttons=answer_buttons(card["card_id"], levels)))
 
     return H
 

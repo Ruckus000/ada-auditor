@@ -227,3 +227,14 @@ def test_answer_refuses_a_replay_carrying_a_stale_card_id():
         thread.join()
         if path.is_file():
             path.unlink()
+
+
+def test_answer_buttons_hit_the_same_urls_as_the_keys():
+    from labels.serve import answer_buttons
+    out = answer_buttons("c6-0001:7 x", [1, 2])
+    assert 'href="/answer?type=H&amp;level=1&amp;c=c6-0001%3A7%20x"' in out
+    assert 'href="/answer?type=H&amp;level=2&amp;c=c6-0001%3A7%20x"' in out
+    assert "level=3" not in out  # only allowed levels are offered
+    for t in ("P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Unsure"):
+        assert f'href="/answer?type={t}&amp;c=c6-0001%3A7%20x"' in out
+    assert 'href="/undo"' in out and 'href="/skip?c=c6-0001%3A7%20x"' in out and "confirm(" in out
