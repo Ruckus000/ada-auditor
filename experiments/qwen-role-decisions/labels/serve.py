@@ -14,6 +14,19 @@ stack is necessarily partial, so a real per-document ladder cannot be
 enforced. Normal mode is unchanged: only the level that continues the
 document's approved stack is allowed.
 
+Fixed-set mode (`--cards-file PATH`, an audit reviewer): the file is a JSONL
+list of `{"id": ...}` rows naming a pre-picked, fixed card set. Cards are
+loaded from `out/keys-all-4/cards-r5.jsonl` (by `card_id`) and served in the
+exact order the file lists them — not resorted into reading order, since the
+file's own order (interleaving unrelated groups) is the point. An unknown id
+is a loud, immediate error, never a silent skip. Like sample mode, the skip
+refusal is waived (levels 1-6 always allowed) since the fixed set does not
+form a per-document ladder. The document manifest (sha256, host) needed for
+each row is pulled from `out/keys-all-4/labels.jsonl`, never from document
+text. Rows are written to `out/labels/audit-r6-<actor>.jsonl`. Each card's
+own `image` field (a marked-408 PNG) is used instead of the path `serve.py`
+would otherwise compute from the card id.
+
 `/answer` and `/skip` carry the shown card's id (`c=`) and are refused
 (redirect without writing) unless it matches the current card — a double
 keydown firing two in-flight requests would otherwise let the second one,
@@ -45,6 +58,49 @@ from labels.render import image_path
 
 TYPES = {"H": "H", "P": "P", "A": "Artifact", "C": "Caption", "T": "TH", "O": "TOCI", "L": "Lbl", "B": "BlockQuote", "U": "Unsure"}
 OUT = Path("out/labels")
+CARDS_FILE_SOURCE = Path("out/keys-all-4/cards-r5.jsonl")
+CARDS_FILE_KEY_LABELS = Path("out/keys-all-4/labels.jsonl")
+
+
+def card_image_path(card: dict) -> Path:
+    """Marked-page PNG for a card: the card's own `image` field if it has
+    one (fixed-set mode, sourced from keys-all-4), else the path serve.py
+    computes and renders under out/labels/pages/marked (normal/sample mode)."""
+    img = card.get("image")
+    return Path(img) if img else image_path(card)
+
+
+def read_ids(path: Path) -> list[str]:
+    return [json.loads(l)["id"] for l in path.read_text().splitlines() if l.strip()]
+
+
+def load_fixed_cards(ids: list[str], cards_path: Path = CARDS_FILE_SOURCE) -> list[dict]:
+    """Cards named by `ids`, in that order. Unknown ids refuse loudly."""
+    all_cards = [json.loads(l) for l in cards_path.read_text().splitlines() if l.strip()]
+    by_id = {c["card_id"]: c for c in all_cards}
+    missing = [i for i in ids if i not in by_id]
+    if missing:
+        raise ValueError(f"--cards-file: unknown card id(s) not in {cards_path}: {missing}")
+    return [by_id[i] for i in ids]
+
+
+def manifest_for_fixed_cards(cards: list[dict], labels_path: Path = CARDS_FILE_KEY_LABELS) -> list[dict]:
+    """Minimal manifest (id, kind, sha256, host) for the given cards' documents,
+    built from keys-all-4/labels.jsonl — never from document text."""
+    needed = {c["document_id"] for c in cards}
+    kind_of = {c["document_id"]: c.get("kind") for c in cards}
+    found: dict[str, dict] = {}
+    for line in labels_path.read_text().splitlines():
+        if not line.strip() or len(found) == len(needed):
+            break
+        row = json.loads(line)
+        did = row["document_id"]
+        if did in needed and did not in found:
+            found[did] = {"id": did, "kind": kind_of.get(did, row.get("kind")), "sha256": row["document_sha256"], "host": row["client_id"]}
+    missing = needed - found.keys()
+    if missing:
+        raise ValueError(f"no manifest info in {labels_path} for document id(s): {missing}")
+    return list(found.values())
 
 
 def allowed_levels(stack: list[int]) -> list[int]:
@@ -103,19 +159,27 @@ def make_row(card: dict, doc: dict, actor: str, type_: str, level: int | None, s
 
 
 class State:
-    def __init__(self, cards: list[dict], manifest: list[dict], actor: str, sample: int | None):
+    def __init__(self, cards: list[dict], manifest: list[dict], actor: str, sample: int | None = None,
+                 fixed_order: list[str] | None = None, out_path: Path | None = None):
         self.docs = {m["id"]: m for m in manifest}
         self.actor = actor
-        self.sample = sample
-        self.path = OUT / f"labels-{actor}.jsonl"
-        rng = random.Random(20260913)
-        ordered = order_cards(cards, manifest, rng)
-        if sample:
-            sampled = random.Random(7).sample(ordered, min(sample, len(ordered)))
-            sampled_ids = {c["card_id"] for c in sampled}
-            ordered = [c for c in ordered if c["card_id"] in sampled_ids]
-        self.no_image = sum(1 for c in ordered if c.get("kind") == "pdf" and not image_path(c).is_file())
-        self.cards = [c for c in ordered if c.get("kind") != "pdf" or image_path(c).is_file()]
+        # Fixed-set mode reuses sample mode's "no per-document ladder" waiver
+        # (allowed_levels_for below), since a pre-picked card set is not a
+        # real per-document reading-order ladder either.
+        self.sample = sample or bool(fixed_order)
+        self.path = out_path or (OUT / f"labels-{actor}.jsonl")
+        if fixed_order is not None:
+            by_id = {c["card_id"]: c for c in cards}
+            ordered = [by_id[i] for i in fixed_order]  # exact file order, not reading order
+        else:
+            rng = random.Random(20260913)
+            ordered = order_cards(cards, manifest, rng)
+            if sample:
+                sampled = random.Random(7).sample(ordered, min(sample, len(ordered)))
+                sampled_ids = {c["card_id"] for c in sampled}
+                ordered = [c for c in ordered if c["card_id"] in sampled_ids]
+        self.no_image = sum(1 for c in ordered if c.get("kind") == "pdf" and not card_image_path(c).is_file())
+        self.cards = [c for c in ordered if c.get("kind") != "pdf" or card_image_path(c).is_file()]
         lines = [l for l in self.path.read_text().splitlines() if l.strip()] if self.path.is_file() else []
         self.rows: list[dict] = []
         for n, line in enumerate(lines):
@@ -207,7 +271,7 @@ def make_handler(state: State):
             url = urlparse(self.path)
             card = next_card(state.cards, state.done())
             if url.path == "/img" and card is not None:
-                p = image_path(card)
+                p = card_image_path(card)
                 data = p.read_bytes() if p.is_file() else b""
                 self.send_response(200); self.send_header("Content-Type", "image/png"); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data); return
             if url.path == "/undo":
@@ -230,7 +294,7 @@ def make_handler(state: State):
                 state.record(card, type_, level); self.redirect(); return
             stack = state.stack_for(card["document_id"])
             levels = state.allowed_levels_for(card["document_id"])
-            has_img = card.get("kind") == "pdf" and image_path(card).is_file()
+            has_img = card.get("kind") == "pdf" and card_image_path(card).is_file()
             font = f"{card.get('font_pt', card.get('size_pt'))} pt · {card.get('weight', 'bold' if card.get('bold') else 'regular')}"
             self.send_html(PAGE.format(
                 image='<img src="/img?c=%s">' % html.escape(card["card_id"]) if has_img else "<p class=dim>(no page image for this card)</p>",
@@ -247,15 +311,22 @@ def main() -> None:
     a = argparse.ArgumentParser(description=__doc__)
     a.add_argument("--actor", required=True)
     a.add_argument("--sample", type=int, default=None, help="label a fixed random sample (second reviewer)")
+    a.add_argument("--cards-file", type=Path, default=None, help="serve exactly these card ids (JSONL of {id}), in file order — a fixed audit set")
     a.add_argument("--port", type=int, default=8765)
     args = a.parse_args()
-    manifest = json.loads((OUT / "manifest.json").read_text())
-    cards = []
-    for name in ("cards-pdf.jsonl", "cards-word.jsonl"):
-        p = OUT / name
-        if p.is_file():
-            cards += [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
-    state = State(cards, manifest, args.actor, args.sample)
+    if args.cards_file:
+        ids = read_ids(args.cards_file)
+        cards = load_fixed_cards(ids)
+        manifest = manifest_for_fixed_cards(cards)
+        state = State(cards, manifest, args.actor, fixed_order=ids, out_path=OUT / f"audit-r6-{args.actor}.jsonl")
+    else:
+        manifest = json.loads((OUT / "manifest.json").read_text())
+        cards = []
+        for name in ("cards-pdf.jsonl", "cards-word.jsonl"):
+            p = OUT / name
+            if p.is_file():
+                cards += [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+        state = State(cards, manifest, args.actor, args.sample)
     print(f"http://127.0.0.1:{args.port}/  ({len(state.cards)} cards, {len(state.rows)} already labelled, {state.no_image} PDF cards skipped: no page image)")
     HTTPServer(("127.0.0.1", args.port), make_handler(state)).serve_forever()
 
