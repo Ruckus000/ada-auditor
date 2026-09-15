@@ -2,7 +2,7 @@
 
 **Roadmap:** `docs/superpowers/plans/2026-09-13-staged-autonomy-roadmap.md` (Stage 1). **Registration base:** round 3's record `heading-stage1-r3-2026-09-14-results.md` (configuration S10/S15, P8 comparison rule). **Rulings:** S21–S23, K34, P9 in the SDD ledger (`.superpowers/sdd/2026-09-13-stage1-round1/progress.md`). **Definition:** `heading-definition-2026-09-13.md` (frozen).
 
-**Status:** REGISTRATION (final, pending the reviewing session's acknowledgement). Data prepared and committed before r4a trains; nothing is trained.
+**Status:** RESULTS — registration final at 87101c8 and acknowledged by the reviewing session before training; results appended below. **Outcome: r4a is adopted over r2. Q-a, Q-c, Q-d, Q-e and Q-f held; Q-b (FN rate) failed. r4b does not run.**
 
 ## Why this round
 Round 3 added a planted Word cohort (c5) for H3/H4 depth and regressed on real validation: accuracy fell from 0.781 to 0.720, and the FN rate rose from 0.392 to 0.784. The measured cause (S23) is surface uniformity. The 653 planted training headings were bold 0.99 / Title Case 0.87 / ALL CAPS 0.00 / 12 pt, against real training headings at 0.69 / 0.46 / 0.21 / 14 pt. The adapter learned the planted form.
@@ -165,7 +165,7 @@ Emitter (202f6e4):
   - cohort 4: **77** / 2 docs from 1 host (83 − 6 K34 drops).
   - **cohort 6: 1,252 / 55 docs / 36 hosts, H 386** (L1 87, L2 181, L3 64, L4 51, L5 3).
 - **∩ set:** 273 ids. Dropped from round 3's 279 were c4-0019:5, :69, :150, :180, :202 and :229, all negatives that both adapters scored TN. Every ∩ id's card, image and ladder is identical to keys-all-3's, so no re-prediction was needed.
-- **Test floors:** 90 documents, 48 clients and 48 templates, all passing. Test is not evaluated.
+- **Test floors:** 90 documents, 48 clients and 48 templates, all passing. This is **the first split in the project whose test set passes every floor**; round 3's real test failed the documents floor at 21. Test is not evaluated.
 - **SFT `out/stage1/sft-r4a`:** 4,403 rows, sha `3a2ac327…913f`, rebuild byte-identical, `--exclude-doc-prefix c5-`. 0 planted rows, 0 train documents in validation or test, 0 own-element leaks (controller recomputed rows→train and the planted count).
   - H by level: L1 675, L2 728, **L3 200, L4 46**, L5 21, L6 1. Round 2's SFT had 25 H3 and 1 H4; round 3's had 326/144, mostly planted.
 
@@ -217,4 +217,83 @@ The comparison set is ∩ (273 rows), with r2 and r3 as restated above. r4a pred
 - The surface-facts table of sft-r4a's H and P rows by source.
 
 ## Results
-*(to be filled after the run)*
+
+Numbers below come from `out/stage1/eval-r4a-*.json` and `analysis-r4.json` (not committed). The controller recomputed accuracy, FP rate, FN rate and parse failures from the raw prediction files on ∩, cohort 6 validation and all 1,525 rows, and got the same figures.
+
+### Training
+- **Data:** `sft-r4a`, 4,403 rows, `--iters 4403 --steps-per-save 4403 --grad-checkpoint`, everything else as registered.
+- **Speed and gate:** 0.182 it/s at iteration 100 projected about 6.7 h, under S27's 10 h gate, so the run went to completion. The observed rate was 0.18–0.22 it/s.
+- **Loss:** 0.086 at 100, 0.034 at 1,000, 0.030 at 3,000, 0.053 at 4,403. Peak memory was 14.16 GB.
+- **Attempt 1** failed at import, before any step, because the rebuilt interpreter lacked mlx-vlm's train extra. S29 added `mlx-vlm[train]==0.7.0` with mlx and transformers pins unchanged; the log is kept.
+
+### Prediction
+- All 1,525 validation rows in one run, with no crash: 271 decided by rule, 1,254 by the model.
+- 0 no-brace outputs and 0 parse failures anywhere.
+
+### Evaluator results
+
+| Population | Adapter | n | TP/FP/TN/FN | Accuracy (95 % LB) | FP rate (95 % UB) | FN rate |
+|---|---|---|---|---|---|---|
+| ∩ | r2 | 273 | 59/23/153/38 | 0.777 | 0.131 | 0.392 |
+| ∩ | r3 | 273 | 21/2/174/76 | 0.714 | 0.011 | 0.784 |
+| ∩ | **r4a** | 273 | 51/2/174/46 | **0.824 (0.782)** | **0.011 (0.035)** | 0.474 |
+| Build 4 | r2 | 128 | 35/4/67/22 | 0.797 | 0.056 | 0.386 |
+| Build 4 | r4a | 128 | 35/0/71/22 | 0.828 (0.764) | 0.000 (0.041) | 0.386 |
+| Cohort 3 | r2 | 68 | 7/9/49/3 | 0.824 | 0.155 | 0.300 |
+| Cohort 3 | r4a | 68 | 1/1/57/9 | 0.853 (0.763) | 0.017 (0.079) | 0.900 |
+| Cohort 4 | r2 | 77 | 17/10/37/13 | 0.701 | 0.213 | 0.433 |
+| Cohort 4 | r4a | 77 | 15/1/46/15 | 0.792 (0.702) | 0.021 (0.097) | 0.500 |
+| **Cohort 6 validation** | r2 | 1,252 | 314/99/767/72 | 0.863 | 0.114 | 0.187 |
+| **Cohort 6 validation** | **r4a** | 1,252 | 249/29/837/137 | **0.867 (0.851)** | **0.033 (0.045)** | 0.355 |
+| All validation | r4a | 1,525 | 300/31/1,011/183 | 0.860 (0.844) | 0.030 (0.040) | 0.379 |
+
+**Level exactness by true depth** (n / recalled as H / exact level):
+
+| Depth | ∩ r2 | ∩ r4a | Cohort 6 r2 | Cohort 6 r4a |
+|---|---|---|---|---|
+| H1 | 42 / 24 / 22 | 42 / 16 / 16 | 87 / 71 / 59 | 87 / 41 / 36 |
+| H2 | 16 / 14 / 6 | 16 / 12 / 10 | 181 / 159 / 144 | 181 / 134 / 125 |
+| H3 | 24 / 17 / 7 | 24 / 19 / 12 | 64 / 54 / **18** | 64 / 49 / **42** |
+| H4 | 15 / 4 / 3 | 15 / 4 / 3 | 51 / 27 / **13** | 51 / 23 / **21** |
+| H5 | — | — | 3 / 3 / 2 | 3 / 2 / 2 |
+
+- **Exact level given recalled, cohort 6:** H3 went from 18/54 (0.33) to 42/49 (0.86), and H4 from 13/27 (0.48) to 21/23 (0.91).
+- **Exact level over all true H3/H4 on cohort 6:** H3 from 18/64 to 42/64, and H4 from 13/51 to 21/51.
+- **r12:** r4a's H3 recall is 19/24 and it misses 11/15 H4 (r2: 17/24 and 11/15).
+
+**Errors (heading-involving) by rule:**
+- **∩:**
+  - r4a: H→P rule 4 (model) 45; P→H rule 1 (model) 2; H→Caption 1. That is 48 errors.
+  - r2: 37 + 21 + 2 + 1 = 61 errors.
+- **Cohort 6 validation:**
+  - r4a: H→P rule 4 (model) 110; P→H rule 1 (model) 28; **H→Artifact rule 2 (rule) 15**; H→TH 10; small others.
+  - r2: P→H 93; H→P 44; H→Artifact 15 (rule, identical); H→TH 8; small others.
+- **Type confusion by decider, cohort 6 validation, r4a:**
+  - Rule: P→Lbl 138, Lbl→Lbl 58, H→Artifact 15, TH→Lbl 24, others ≤1.
+  - Model: H→H 249, P→P 410, H→P 110, P→H 28, TH→P 30, H→TH 10, others small.
+
+### Prediction check
+- **Q-a — HELD.** ∩ accuracy is 0.824 for r4a against 0.777 for r2.
+- **Q-b — FAILED.** ∩ FN rate is 0.474 for r4a against 0.392 for r2 (46 against 38 missed of 97).
+- **Q-c — HELD.** ∩ FP rate is 0.011 for r4a against 0.131 for r2 (2 against 23 of 176).
+- **Q-d — HELD.** On r12, H3 recall is 19/24 (bound 17/24) and 11/15 H4 are missed, exactly at the bound.
+- **Q-e — HELD.** 0 no-brace outputs and 0 parse failures on all 1,525 rows.
+- **Q-f — HELD, narrowly.** Cohort 6 validation accuracy is 0.867 for r4a against 0.863 for r2, a difference of 5 rows in 1,252. r4a's lower bound (0.851) does not clear r2's point estimate, so this is a tie-level result, not a demonstrated gain.
+- **Arm rule:** r4a's H3 recall on ∩ is 19/24 (not below 17/24) and H4 recall is 4/15 (equal to r2's, not below). **r4b does not run**, so c7's P10 failure is moot this round.
+  - Caution: the H4 comparison is a tie on 15 rows, and one row would have flipped it.
+- **Not predicted:** the Stage 1 bar is not met. Best accuracy is 0.867, the FP rate is 0.030 over all validation rows (bar 1 %), and level exactness is below 95 % at every depth except H5.
+
+### Reading
+- **The trade moved, it did not disappear.** Real depth data fixed levels: on cohort 6, exact H3 went from 18 to 42 of 64 and exact H4 from 13 to 21 of 51. It also cut false headings about fourfold (99 to 29).
+- **Recall paid for it.** r4a under-calls headings, with cohort 6 FN rising from 0.187 to 0.355, H1 recall falling from 71 to 41 of 87, and H→P at 110.
+- **The net accuracy gain is small on the out-of-distribution population** (+0.004) and larger on ∩ (+0.047).
+- **r4a is adopted over r2** because it wins accuracy on both registered sets, the FP rate by an order of magnitude, and level exactness at H2–H4, the definition's hard part. The FN regression is the recorded cost.
+- **Round 3's collapse did not recur.** r3's FN on ∩ was 0.784; r4a's is 0.474, on 0 planted rows.
+- **Unchanged by any adapter:** the rules-in-front false Artifacts (15) on cohort 6, queued for the rule review with the cases listed in the ledger.
+
+### Stop decision
+Stop and report to the reviewing session. Round 5's direction is for the reviewing session and the user. The data points at four things, none of them run:
+1. H1 recall on cohort 6 (41/87).
+2. The rules-in-front false Artifacts, 15 rows, a fix proposed.
+3. H→P rule 4 under-calling, possibly a decision-threshold or class-balance question now that non-H outnumbers H 2:1 in sft-r4a.
+4. Whether to spend the test set, which passes all floors for the first time. The reviewing session decides; this session will not evaluate test.
