@@ -147,7 +147,9 @@ H3, H4 and H5 are untouched by the audit on every population (no audited id sits
 
 ## `labels.serve` Safari fixes (one line)
 
-Two fixes landed on `labels.serve` during the audit session: `15357a9` made answer links beside the keys clickable (a Safari-specific link-target bug), and `6368d5e` made the server threaded with one lock around each request (a Safari double-request race that otherwise corrupted the served card order).
+Two fixes landed on `labels.serve` during the audit session.
+- `15357a9` added clickable answer links beside the keyboard shortcuts.
+- `6368d5e` fixed the real cause of the Safari failure. The single-threaded server blocked on Safari's idle keep-alive connections, so every request after the first page load hung. The server is now threaded. One lock around each request keeps the card-id check atomic, so that two in-flight answers for one card cannot both be written.
 
 ## Training-set measurement
 
@@ -155,6 +157,8 @@ Two fixes landed on `labels.serve` during the audit session: `15357a9` made answ
 
 ## Concerns
 
+- **The audit only examined rows r4a got wrong, so the gain is one-sided.** The 70 cards are the model's false positives and its page-0 H1 misses. No row the model got right was audited. Corrections can therefore only move errors toward correct, or correct H1s toward non-H, never a correct prediction toward wrong. The audited accuracy (c6 0.900, all 0.889) is an upper-leaning figure until a random sample of correctly-scored rows is audited the same way.
+  - Measured FN, graded against Claude-audited labels: ∩ 0.474 → 0.459; c6 0.324 → 0.300; all 0.354 → 0.330 (the controller recomputed these).
 - **The overlay is validation-only in this population.** All 70 audited ids sit in ∩ or c6 validation; none touch train or test, so this re-score changes nothing about what the model was trained on — it only changes what r5's already-frozen predictions are graded against.
 - **The 8 ∩ audited ids are a small population inside an already-small ∩ (273).** A single-digit id count moving FP from 2→0 on ∩ is a large relative swing (−100%) on a thin base; the same pattern (1–2 FP removed) repeats on cohort 3 and cohort 4. Treat the ∩ accuracy delta (+0.011) as consistent with, not independent confirmation of, the c6-validation delta (+0.024), since both come from the same 70-card audit batch and the same underlying error mode (P→H false positives the audit judged as true H, and a few key-H1 the audit judged as P).
 - **This measures the audit's effect on *grading*, not the model.** r5's predictions were never re-run; every delta above is entirely a change in what counts as correct, not a change in what the adapter outputs. A P→H prediction that used to be scored FP is now scored TP wherever the audit agreed with the model, and a few key-H1→P audit flips remove predictions that used to be scored (correctly, by the old key) as recalled H1.
