@@ -91,3 +91,16 @@ Details:
   - Other load on the machine: a Cursor extension host at about 46 % CPU and a Virtualization.framework VM at about 26 %.
   - r7 measured 0.215 it/s at its step 100 on the same data pipeline, and r4a measured 0.182 before rising to about 0.21.
 - **Reported to the reviewing session for a decision.** Nothing was relaunched.
+
+## Registration change after the step-100 reading: gate raised to 15 h for this run
+Ruled by the reviewing session after seeing the 13.97 h projection. The configuration is unchanged. Reason, verbatim:
+
+> "r9 has 12 % more iterations than r7 (8,950 vs 7,986); at r7's measured 0.215 it/s it is 11.6 h, inside the original gate. The step-100 window rate under-reads the run rate by ~15 % (r4a: 0.182 at step 100, ~0.21 later), and the machine carries external load that is the user's and is not stopped. The 13 h gate was set to catch a runaway run, not a 7 % overshoot from contention; 15 h keeps that purpose."
+
+Rejected alternatives:
+- **Relaunch unchanged under the 13 h gate.** It would most likely project about 14 h again and stop again.
+- **Change the iteration count.** That is a configuration change against the registration.
+
+**Step-100 readings:**
+- Attempt 1: 0.178 it/s → 13.97 h (stopped under the 13 h gate). Log kept as `train-r9-attempt1-gate13.log`.
+- Attempt 2: *(below)*
