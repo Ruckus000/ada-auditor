@@ -62,12 +62,14 @@ Only rows whose rule decision changes are re-predicted; everything else keeps r7
 | Rule | Hits | Audited hits | Audited as H (harm) | Audited as the rule claims | Δ FP | Δ FN | Verdict |
 |---|---|---|---|---|---|---|---|
 | TOCI | 3 | 0 | 0 | — | 0 | 0 | keep, inert |
-| Caption | 4 | 2 | 0 | 2 Caption | −2 | +2 | keep, provisional |
+| Caption | 4 | 4 | 0 | 4 Caption | −2 | 0 | keep |
 | List-item body | 2 | 1 | 0 | 1 Other | 0 | 0 | keep, inert |
 
 No rule harms an audited heading, so none is reverted.
 
-**Effect on the whole set: a wash.** All 1,525 rows, graded against Claude-audited labels: accuracy 0.9462 direct and 0.863 estimated, unchanged to four decimals. FP falls by 2 rows and FN rises by 2.
+**Effect on the whole set, after the two corrections: two false positives removed and nothing else.** All 1,525 rows, graded against Claude-audited labels (r7 → r8): direct accuracy 0.9449 → 0.9475, direct FP 0.031 → 0.027, FN unchanged at 0.097; estimated accuracy 0.8618 → 0.8644, estimated FP 0.0443 → 0.0397, estimated FN unchanged at 0.258. On cohort 6: direct 0.9441 → 0.9473, estimated 0.8591 → 0.8623.
+
+The step closes as a **negative result** all the same: three rules written from the audit's error shapes reach 1 of the ~9 rows they were aimed at, and the measurable gain comes from two rows in one document.
 
 ### Why the rules miss the rows they were written for
 - The audited TOCI rows have **no dot leaders**, so the pattern never fires on them.
@@ -75,15 +77,17 @@ No rule harms an audited heading, so none is reverted.
 - The audited list rows carry the bullet **fused into the card's own text** (a private-use glyph), not as a separate card to the left, so the neighbour test cannot see it.
 - The list rule is also under-fed by construction: `cards-r8` enriches `cards-r5`, which holds only labelled cards, so unlabelled bullets are invisible as neighbours. `key_context` computes the fact over every card in a document, so a rebuilt cards file would set it on more rows.
 
-### The one measurable effect is a label contradiction, not a model change
-All four Caption hits are in `c6-0102`:
-- `:161` and `:248` were audited as Caption, so the rule scores −2 FP;
-- `:131` and `:212` have the same shape but are un-audited key H, so the same rule scores +2 FN.
+### The one measurable effect was a label contradiction, now resolved
+All four Caption hits are in `c6-0102`. `:161` and `:248` were audited as Caption; `:131` and `:212` had the same shape but were still keyed H, so the rule appeared to trade 2 FP for 2 FN. Both were then audited as **Caption** — numbered table titles sitting directly above their tables — and folded in (`audit-r8-claude.jsonl` is now 218 rows, 215 applied).
 
-The graded labels disagree with themselves on four rows of one shape in one document. **Those two ids are the next audit rows**, and the Caption rule's verdict stays provisional until they are judged.
+With those two corrected, **the Caption rule is −2 FP and 0 FN**, and the key was wrong on both rows. The rule is kept; TOCI and list-item body are kept but inert.
 
 ### Reading
 Three deterministic rules written from the audit's own error shapes changed 9 rows and moved no metric. The remaining error mass is not reachable by surface patterns of this kind: it is under-tagged headings in the keys (about 138 estimated hidden headings in the TN pool) and shapes whose cues are inside the card text rather than in its neighbours or its form.
 
 ## Stop decision
-*(round 8's options go to the user; this session does not choose a retrain)*
+Round 8's options go to the user; this session does not choose a retrain. **r7 remains the current candidate**, and the test split stays untouched.
+
+What the round establishes for that decision:
+- Deterministic surface rules of this kind are spent. The remaining error mass is under-tagged headings in the keys — about 138 estimated hidden headings in the validation TN pool alone, and the same disease in train — plus shapes whose cue lies inside the card text.
+- The levers left are more audit, rules written against the actual strings rather than guessed shapes, or accepting the key's ceiling and measuring only against audited labels.
