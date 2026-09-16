@@ -72,3 +72,13 @@ Details:
 2. **H3 more than doubles, 228 → 490, almost entirely from restored proxy rows.** Their levels come from the audit, because the key had no heading: L3 265, L2 145, L1 29, L4 15.
    - Round 7 recorded audit levels as weak: 32 of 85 A rows agreed with the key.
    - The level target of about 265 training rows therefore rests on single-page level judgements.
+
+**Rulings on the two observations (reviewing session, before training):**
+1. **Accepted and recorded.** r9 differs from r7 in the rules-in-front as well as in labels.
+   - The rules decide those rows at inference, so holding them out of training is consistent, and `cards-r5` is what the registration names.
+   - The list-item rule is inert on train, because `cards-r5` has no `after_inline_label`. It was also near-inert on validation (2 hits in round 8).
+   - The rules difference is therefore **38 TOCI + 5 P + 3 TH rows**. The cards file is not switched mid-round.
+2. **Proceed.** The registered prediction is on the heading bit only (estimated FN ≤ 0.20, FP ≤ 0.05).
+   - Level exactness is reported with the caveat that about 450 restored rows carry single-page audit levels.
+   - The H3 rise from 228 to 490 is named as the reason for any level shift.
+   - A level-free target would be a new SFT format, and it is not in the plan.
