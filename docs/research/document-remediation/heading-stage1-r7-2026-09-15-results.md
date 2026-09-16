@@ -132,3 +132,44 @@ Judged blind from `out/labels/audit-r7AB-cards.jsonl` into `out/labels/audit-r7A
 - **Configuration:** S10/S15 as in r4a, with `--iters 7986` (two epochs) and `--steps-per-save 7986`. The 13 h gate is judged at step 100.
 
 **Step 100:** loss 0.088, 0.215 it/s (window), peak 11.25 GB. The projection is 7,986 / 0.215 ≈ 37,140 s ≈ **10.3 h**, under the 13 h gate, so the run continues to 7,986.
+
+## Results — adapter-r7 on validation
+Training finished all 7,986 iterations in about 10.5 h (final loss 0.0152, peak 14.37 GB, 0 errors). Prediction covered all 1,525 validation rows: 260 decided by rule, 1,265 by the model, 0 parse failures and 0 no-brace outputs.
+
+> Graded against Claude-audited labels: `labels-audited-r7.jsonl` = round 6's overlay plus the 200 round 7 validation audit rows (the 1 Unsure keeps its previous label). r5 is re-scored on these same labels, so its figures differ from the r5 and r6 records by design.
+
+| Population | Run | n | Accuracy | FP rate | FN rate | Calibrated accuracy | Calibrated FP | Calibrated FN |
+|---|---|---|---|---|---|---|---|---|
+| ∩ | r5 | 273 | 0.824 | 0.000 | 0.475 | 0.743 | 0.009 | 0.571 |
+| ∩ | **r7** | 273 | **0.854** | 0.157 | **0.129** | **0.781** | 0.188 | **0.261** |
+| Cohort 6 validation | r5 | 1,252 | 0.889 | 0.006 | 0.319 | 0.805 | 0.016 | 0.455 |
+| Cohort 6 validation | **r7** | 1,252 | **0.910** | 0.067 | **0.136** | **0.829** | 0.087 | **0.297** |
+| All validation | r5 | 1,525 | 0.877 | 0.005 | 0.349 | 0.794 | 0.015 | 0.477 |
+| All validation | **r7** | 1,525 | **0.900** | 0.083 | **0.134** | **0.820** | 0.105 | **0.290** |
+
+The controller recomputed every direct figure from the raw files.
+
+**Calibration.** The 13/99 hidden-miss and 4/100 hidden-FP rates are applied only to each run's un-audited TN and TP rows. r5's pool (TN 908, TP 212) reproduces the r7 record's worked numbers. **r7's calibration borrows r4a's rates**, which is an assumption: r7's own hidden-error rates are unmeasured, and given its direct FP jump the calibrated FP probably understates reality.
+
+**Level exactness by true depth (n / recalled / exact), all 1,525:**
+
+| Level | r5 | r7 |
+|---|---|---|
+| H1 | 112 / 54 / 49 | 112 / 94 / 88 |
+| H2 | 260 / 199 / 136 | 260 / 241 / 168 |
+| H3 | 94 / 65 / 42 | 94 / 74 / 48 |
+| H4 | 53 / 20 / 16 | 53 / 40 / 18 |
+| H5 | 2 / 1 / 1 | 2 / 2 / 1 |
+
+H1 recall nearly doubles (54 → 94 of 112), which is the page-0 title failure the profile and the A audit both pointed at.
+
+**Errors by rule, all 1,525.** The dominant channel swaps: `H→P rule 4 (model)` falls 171 → 62, and `P→H rule 1 (model)` rises from absent to 65. Rule-decided confusion is byte-identical between the runs, as expected.
+
+**Per-document concentration.** r7's errors are diffuse on the large populations: FN top document r12 9 of 70 (0.13), FP top document c3-0073 9 of 83 (0.11). On the thin populations one document dominates: build 4 FN r12 9 of 11; cohort 4 FP c4-0019 7 of 8; cohort 3 FP c3-0073 9 of 14.
+
+### Reading
+- **The registered response to A worked.** Two epochs and the 538-row exclusion cut missed headings from 0.349 to 0.134 and lifted H1 recall from 54 to 94 of 112.
+- **It bought that with false positives:** 5 → 83 rows. Some are certainly real headings the key still calls P — the audit measured that error at about 13 % of key-P rows — but the size of the jump suggests the correction also overshot into over-calling.
+- **Calibrated, r7 sits at about 0.82 accuracy with FN near 0.29**, against r5's 0.79 and 0.48. Better on both, and still far from the Stage 1 bar of 0.99 accuracy with FP ≤ 1 %.
+- **What is not known:** r7's own hidden-error rates. A two-sided audit of r7's TP and TN rows, like round 7's, is the next measurement, and the FP side matters most this time.
+- Cohort 3's calibrated figures rest on pools of 4 and 35 rows and should not be read as evidence.
