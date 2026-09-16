@@ -5,7 +5,24 @@ definition rule number, or None. Order matters and is the definition's §7.
 """
 from __future__ import annotations
 
+import re
+
 MIN_REPEATS = 3  # same text, same band, on three or more pages: pagination, not content
+
+# §4 rule 3: a more specific ISO type wins over H. Three shapes, registered in
+# the round 8 record before implementation, each written to the letter of that
+# registration and no wider.
+#
+# Dot leaders then a page number: ">= 3 dots, optionally separated by spaces,
+# optional whitespace, then 1-4 digits at end of text". Only the ASCII full stop
+# counts as a dot, so an ellipsis ("Introduction … 12") is not a leader.
+TOCI_TAIL = re.compile(r"\.(?:[ \t]*\.){2,}\s*\d{1,4}$")
+# "Table|Figure|Chart|Exhibit", whitespace, a number with an optional single
+# letter suffix, then one of : . - en-dash em-dash. Case as written. The
+# whitespace before that punctuation is optional because the standard
+# typographic form spaces the dash ("Figure 2 — Site plan"); nothing else in the
+# pattern is loosened.
+CAPTION_HEAD = re.compile(r"^(?:Table|Figure|Chart|Exhibit)\s+\d+[A-Za-z]?\s*[:.\-–—]")
 
 
 def r2_no_letters(card: dict) -> tuple[str, int] | None:
@@ -34,8 +51,26 @@ def in_table(card: dict) -> tuple[str, int] | None:
     return None
 
 
+def toci_by_leaders(card: dict) -> tuple[str, int] | None:
+    # A contents entry, not a heading: dot leaders carrying a page number.
+    return ("TOCI", 3) if TOCI_TAIL.search((card.get("text") or "").strip()) else None
+
+
+def caption_by_prefix(card: dict) -> tuple[str, int] | None:
+    # "Table 3: ...", "Figure 2a — ...": a numbered caption, not a heading.
+    return ("Caption", 3) if CAPTION_HEAD.match((card.get("text") or "").strip()) else None
+
+
+def list_item_body(card: dict) -> tuple[str, int] | None:
+    # A bullet or number sits on this card's line, to its left: the card is the
+    # list item's text. The neighbour fact is computed once per document in
+    # labels/inline_label.py and written onto the card; it is never recomputed
+    # here, and a card without it is simply not decided by this rule.
+    return ("Other", 3) if card.get("after_inline_label") is True else None
+
+
 def decide(card: dict) -> tuple[str, int] | None:
-    for rule in (r2_no_letters, artifact_by_repeat):
+    for rule in (r2_no_letters, artifact_by_repeat, toci_by_leaders, caption_by_prefix, list_item_body):
         hit = rule(card)
         if hit:
             return hit

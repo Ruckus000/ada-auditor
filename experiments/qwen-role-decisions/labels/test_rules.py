@@ -1,4 +1,50 @@
-from labels.rules import decide, forbids_heading
+from labels.rules import caption_by_prefix, decide, forbids_heading, list_item_body, toci_by_leaders
+
+
+def test_toci_needs_three_dots_and_a_trailing_page_number():
+    assert toci_by_leaders({"text": "Introduction ... 12"}) == ("TOCI", 3)
+    assert toci_by_leaders({"text": "Appendix A . . . . . 7"}) == ("TOCI", 3)
+    assert toci_by_leaders({"text": "Budget..........103"}) == ("TOCI", 3)
+    assert decide({"text": "Introduction ... 12", "repeats_on_pages": 1}) == ("TOCI", 3)
+
+
+def test_toci_near_misses():
+    assert toci_by_leaders({"text": "Introduction … 12"}) is None   # ellipsis, not leaders
+    assert toci_by_leaders({"text": "Introduction 12"}) is None          # no leaders at all
+    assert toci_by_leaders({"text": "Section 4.. 12"}) is None           # only two dots
+    assert toci_by_leaders({"text": "Introduction ... 12345"}) is None   # five digits
+    assert toci_by_leaders({"text": "Introduction ... 12 and more"}) is None  # not at the end
+
+
+def test_caption_needs_a_number_then_punctuation():
+    assert caption_by_prefix({"text": "Table 3: Revenue"}) == ("Caption", 3)
+    assert caption_by_prefix({"text": "Figure 2a — Site plan"}) == ("Caption", 3)
+    assert caption_by_prefix({"text": "Chart 10. Trend"}) == ("Caption", 3)
+    assert caption_by_prefix({"text": "Exhibit 4-B"}) == ("Caption", 3)
+    assert decide({"text": "Table 3: Revenue", "repeats_on_pages": 1}) == ("Caption", 3)
+
+
+def test_caption_near_misses():
+    assert caption_by_prefix({"text": "Figure it out:"}) is None      # no number
+    assert caption_by_prefix({"text": "Table of Contents"}) is None
+    assert caption_by_prefix({"text": "Tables 3: Revenue"}) is None   # not one of the four words
+    assert caption_by_prefix({"text": "Figure 12 Site plan"}) is None  # no punctuation after the number
+    assert caption_by_prefix({"text": "See Table 3: Revenue"}) is None  # not at the start
+
+
+def test_list_item_body_reads_the_neighbour_fact_and_never_recomputes_it():
+    assert list_item_body({"text": "Submit the form", "after_inline_label": True}) == ("Other", 3)
+    assert list_item_body({"text": "Submit the form", "after_inline_label": False}) is None
+    assert list_item_body({"text": "Submit the form"}) is None
+    assert decide({"text": "Submit the form", "repeats_on_pages": 1, "after_inline_label": False}) is None
+    assert decide({"text": "Submit the form", "repeats_on_pages": 1, "after_inline_label": True}) == ("Other", 3)
+
+
+def test_the_existing_rules_still_win_first():
+    # A no-letters card that also looks like a contents line stays Lbl.
+    assert decide({"text": "... 12", "repeats_on_pages": 1}) == ("Lbl", 3)
+    # A margin repeat stays Artifact even beside a bullet.
+    assert decide({"text": "Town of X", "repeats_on_pages": 4, "in_margin_band": True, "after_inline_label": True}) == ("Artifact", 2)
 
 
 def test_rules_in_front():

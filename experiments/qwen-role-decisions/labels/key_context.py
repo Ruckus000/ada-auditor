@@ -14,6 +14,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from run import blocks_to_cards, compile_cards, dump_pdf, mark_page_png, render_page_png, text_norm
+from labels.inline_label import after_inline_label
 from labels.keys import key_blocks
 from labels.margin_band import in_margin_band, page_extents
 from labels.pdf_cards import repeats_on_pages
@@ -119,12 +120,16 @@ def main() -> None:
             cards, _ = blocks_to_cards(blocks)
             reps = repeats_on_pages(cards)
             extents = page_extents(blocks)
+            # Over every card of the document, not only the labelled ones: the
+            # bullet that marks a list item is usually not itself labelled.
+            inline = after_inline_label(cards)
             for c in cards:
                 if c["locator"] not in ids:
                     continue
                 c["card_id"] = c["locator"]; c["document_id"] = doc_id; c["kind"] = "pdf"
                 c["repeats_on_pages"] = reps.get(c["locator"], 1); c["norm"] = text_norm(c["text"])
                 c["in_margin_band"] = in_margin_band(c, extents)
+                c["after_inline_label"] = inline[c["locator"]]
                 img = marked_image(c, stripped, pages)
                 c["image"] = None if img is None else str(img.resolve())
                 n_img += img is not None; n_cards += 1
