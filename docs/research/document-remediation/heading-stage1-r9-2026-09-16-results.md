@@ -82,3 +82,12 @@ Details:
    - Level exactness is reported with the caveat that about 450 restored rows carry single-page audit levels.
    - The H3 rise from 228 to 490 is named as the reason for any level shift.
    - A level-free target would be a new SFT format, and it is not in the plan.
+
+## Training (Task 3) — stopped at the gate
+- **Launch:** the registered command, `--iters 8950` (2 × 4,475), `--steps-per-save 8950`, output `out/stage1/adapter-r9`.
+- **Step 100:** loss 0.071, **0.178 it/s** (window), peak 9.52 GB.
+- **Projection:** 8,950 / 0.178 ≈ 50,280 s ≈ **13.97 h**, over the registered 13 h gate. The process was killed at about step 100, as the plan requires. No adapter was saved, because `--steps-per-save` equals `--iters`.
+- **Conditions at the gate:** lid open (`AppleClamshellState` No) and on AC power, so this was not a clamshell-sleep artefact.
+  - Other load on the machine: a Cursor extension host at about 46 % CPU and a Virtualization.framework VM at about 26 %.
+  - r7 measured 0.215 it/s at its step 100 on the same data pipeline, and r4a measured 0.182 before rising to about 0.21.
+- **Reported to the reviewing session for a decision.** Nothing was relaunched.
