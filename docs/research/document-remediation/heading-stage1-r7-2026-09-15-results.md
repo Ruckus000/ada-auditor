@@ -173,3 +173,19 @@ H1 recall nearly doubles (54 → 94 of 112), which is the page-0 title failure t
 - **Calibrated, r7 sits at about 0.82 accuracy with FN near 0.29**, against r5's 0.79 and 0.48. Better on both, and still far from the Stage 1 bar of 0.99 accuracy with FP ≤ 1 %.
 - **What is not known:** r7's own hidden-error rates. A two-sided audit of r7's TP and TN rows, like round 7's, is the next measurement, and the FP side matters most this time.
 - Cohort 3's calibrated figures rest on pools of 4 and 35 rows and should not be read as evidence.
+
+## Stop decision — pending audit-r8
+No round 8 change is chosen here. The next measurement grades r7's own error rows directly, so that the borrowed calibration can be retired.
+
+`out/labels/audit-r8-cards.jsonl` holds 216 ids, shuffled, with no prediction in the file. `out/labels/audit-r8-groups.json` carries the groups and r7's prediction for each id.
+
+| Group | Rows | Selection | Documents | Max per document |
+|---|---|---|---|---|
+| FP_all | 77 of 83 | all, minus 6 already audited | 32 | 9 (c3-0073) |
+| FN_all (model-decided) | 39 of 70 | all, minus 25 already audited and 6 rule-decided | 16 | 9 (r12) |
+| TP_sample | 60 | document-capped, seed 20260915 | 39 | 2 |
+| TN_sample | 40 | document-capped, seed 20260915 | 40 | 1 |
+
+The 6 rule-decided FN rows are listed separately in the groups file under `FN_rule_decided`; they are H→Artifact and H→Lbl decisions the rules made before the model ran.
+
+After that audit, r7 and r5 are evaluated directly against `labels-audited-r8` with **no calibration on any audited pool**. Calibration stays only for rows no audit has touched, and every table says which is which.
