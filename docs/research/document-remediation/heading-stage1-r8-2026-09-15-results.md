@@ -52,8 +52,38 @@ Deterministic, definition-derived, no model involvement. Each is a **type assign
 
 Only rows whose rule decision changes are re-predicted; everything else keeps r7's prediction.
 
-## Results
-*(to be filled after the run)*
+## Results — the three rules (commit 4caa7cb, 115 tests pass)
+
+**The registered prediction did not land.** The rules were expected to remove roughly the 9 audited false positives of these three shapes; they reach **one** of them.
+
+- **Cards:** `out/keys-all-4/cards-r8.jsonl` adds `after_inline_label` to all 10,901 cards; 121 are True.
+- **Changed rows:** 9 of 1,525, all previously model-decided. The other 1,516 predictions are byte-identical to r7's.
+
+| Rule | Hits | Audited hits | Audited as H (harm) | Audited as the rule claims | Δ FP | Δ FN | Verdict |
+|---|---|---|---|---|---|---|---|
+| TOCI | 3 | 0 | 0 | — | 0 | 0 | keep, inert |
+| Caption | 4 | 2 | 0 | 2 Caption | −2 | +2 | keep, provisional |
+| List-item body | 2 | 1 | 0 | 1 Other | 0 | 0 | keep, inert |
+
+No rule harms an audited heading, so none is reverted.
+
+**Effect on the whole set: a wash.** All 1,525 rows, graded against Claude-audited labels: accuracy 0.9462 direct and 0.863 estimated, unchanged to four decimals. FP falls by 2 rows and FN rises by 2.
+
+### Why the rules miss the rows they were written for
+- The audited TOCI rows have **no dot leaders**, so the pattern never fires on them.
+- The audited captions are **unnumbered**, so "Table" plus a number never matches.
+- The audited list rows carry the bullet **fused into the card's own text** (a private-use glyph), not as a separate card to the left, so the neighbour test cannot see it.
+- The list rule is also under-fed by construction: `cards-r8` enriches `cards-r5`, which holds only labelled cards, so unlabelled bullets are invisible as neighbours. `key_context` computes the fact over every card in a document, so a rebuilt cards file would set it on more rows.
+
+### The one measurable effect is a label contradiction, not a model change
+All four Caption hits are in `c6-0102`:
+- `:161` and `:248` were audited as Caption, so the rule scores −2 FP;
+- `:131` and `:212` have the same shape but are un-audited key H, so the same rule scores +2 FN.
+
+The graded labels disagree with themselves on four rows of one shape in one document. **Those two ids are the next audit rows**, and the Caption rule's verdict stays provisional until they are judged.
+
+### Reading
+Three deterministic rules written from the audit's own error shapes changed 9 rows and moved no metric. The remaining error mass is not reachable by surface patterns of this kind: it is under-tagged headings in the keys (about 138 estimated hidden headings in the TN pool) and shapes whose cues are inside the card text rather than in its neighbours or its form.
 
 ## Stop decision
 *(round 8's options go to the user; this session does not choose a retrain)*
