@@ -109,3 +109,34 @@ Rejected alternatives:
 - Attempt 2 ran all **8,950** iterations in a wall time of about **12.1 h** (43,613 s, log creation to last write).
 - Final loss 0.0416 (at the 8,950 report window); peak memory 14.37 GB; 0 errors.
 - `out/stage1/adapter-r9/adapters.safetensors` sha256 `0506f49b…feedc9f`.
+
+## Prediction (Task 4 Step 1)
+`out/stage1/pred-validation-r9.jsonl`: 1,525 rows (rule 267 / model 1,258), 0 parse failures, using the plan's command (`cards-r5`, `keys-all-9`). `test.spent` does not exist.
+
+**r7 reference.** `pred-validation-r8.jsonl` is the r7 adapter under round 8's rules, so both adapters are graded with the same rules in front. Its cards were `cards-r8`, where the list-item rule fired on 2 rows, **c3-0073:27** and **c4-0019:75** (both labelled Other). With r9's `cards-r5` the rule is inert. If either row is scored differently between the two runs, the comparison can be corrected by hand. `pred-validation-r7.jsonl` (r7 under round 5 rules) belongs only in an appendix, for continuity with the r7 record.
+
+## Provisional evaluation on labels-audited-r8 (Task 4 Step 2) — superseded by Step 5
+> Graded against Claude-audited labels. **The direct column is biased against r9 here**: r7's error rows were audited exhaustively in round 8, and r9's are not yet. Estimated = r8's rates (TP 2/60, TN 6/40) on rows no audit has touched.
+
+Each cell is accuracy / FP / FN.
+
+| Population | r7 reference, direct | r7 reference, estimated | r9, direct | r9, estimated |
+|---|---|---|---|---|
+| ∩ 273 | 0.949 / 0.050 / 0.053 | 0.874 / 0.069 / 0.189 | 0.949 / 0.056 / 0.044 | 0.877 / 0.075 / 0.177 |
+| Cohort 6 validation | 0.947 / 0.022 / 0.108 | 0.862 / 0.034 / 0.275 | 0.947 / 0.026 / 0.101 | 0.863 / 0.038 / 0.268 |
+| All 1,525 | 0.948 / 0.027 / 0.097 | 0.864 / 0.040 / 0.258 | 0.948 / 0.031 / 0.090 | 0.866 / 0.044 / 0.251 |
+
+The controller computed these. At this provisional stage r9 is almost indistinguishable from r7: estimated FN is 0.251 against 0.258, and estimated FP 0.044 against 0.040.
+
+## audit-r9v (Task 4 Step 3)
+**Cards:** `out/labels/audit-r9v-cards.jsonl`, 116 ids, shuffled with seed 20260916, no prediction. **Groups:** `out/labels/audit-r9v-groups.json`, which also carries r9's prediction per id. Deduped against r6, r7, r7AB, r8 and r9.
+
+| Group | Carded | Pool | Documents | Top documents |
+|---|---|---|---|---|
+| FP_all | 10 | 30 (20 already audited) | 9 | c3-0073 2 |
+| FN_all_model | 6 | 44 (38 already audited) | 4 | c6-0065 3 |
+| FN_rule_decided | listed, not carded | 6 | — | — |
+| TP_sample | 60 (document-capped) | — | 25 | c6-0398, c6-0258, c6-0447 at 3 each |
+| TN_sample | 40 (document-capped) | — | 40 | 1 each |
+
+Because most of r9's errors fall on rows already audited, the un-audited error surface is small: 16 cards.
