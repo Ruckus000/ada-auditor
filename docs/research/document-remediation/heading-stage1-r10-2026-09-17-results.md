@@ -68,3 +68,5 @@ These are direct figures on audited labels. The un-audited-row estimate used in 
 - **Against the plan's expectation** (about 4,475 + 430): 467 were added, in range. The bold share of H falls to 0.65, close to validation's 0.66.
 - **Risk to watch:** the H share rises to 0.53, above P for the first time. The registered revert condition (FP above 0.05 → r9 stays the candidate) is the guard.
 - **Configuration:** round 9's command with `--dataset out/stage1/sft-r10`, `--iters 9884` (2 × 4,942), `--steps-per-save 9884`, output `out/stage1/adapter-r10`; 15 h gate judged at step 100.
+
+**Step 100:** loss 0.086, 0.197 it/s (window), peak 11.26 GB. Projection: 9,884 / 0.197 ≈ 50,170 s ≈ **13.9 h**, under the 15 h gate, so the run continues to 9,884.
