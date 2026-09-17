@@ -48,3 +48,23 @@ These are direct figures on audited labels. The un-audited-row estimate used in 
 - **Caveats:**
   - 14 abstained rows are audit-Unsure and are graded on their earlier label.
   - These bounds are two-sided; earlier records used one-sided bounds for the Stage 1 bar. `coverage-r9.json` has the counts to recompute either.
+
+**Task 1 as recorded by the reviewing session.** The registered prediction missed by one row, and the kill did not fire. The confidence score is a usable abstention channel, but no threshold reaches the bar on its own. The reviewing session recomputed the curve independently and matched it at every threshold. The 219 rows abstained at 0.9 hold 48 of the 75 errors.
+
+## Task 2 — oversample regular-weight headings (sft-r10)
+- **Code:** `emit_sft --oversample-regular-h N` (commit 9ba0597, 118 label tests pass). Every emitted H row whose card weight is `regular` is written N times in total. The copies carry `#dup{k}` ids in the sources list only, never in labels. The default of 1 leaves behaviour unchanged.
+- **Emit:** `--keys-dir out/keys-all-9 --split out/keys-all-4/split/split.json --on train --exclude-doc-prefix c5 --oversample-regular-h 2`, giving **`out/stage1/sft-r10`, 4,942 rows** (sha `6e1e7db6…bb33`).
+
+| | sft-r9 | sft-r10 |
+|---|---|---|
+| Rows | 4,475 | **4,942** (+467 duplicated regular-weight H) |
+| H | 2,166 (0.484) | 2,633 (**0.533**) |
+| H bold / regular | 1,699 / 467 (bold 0.78) | 1,699 / 934 (bold **0.65**) |
+| H by level | 690 / 904 / 490 / 60 / 21 / 1 | 814 / 1,140 / 571 / 73 / 33 / 2 |
+| Non-H | P 2,109 · TH 100 · Caption 36 · Lbl 34 · TOCI 27 · Artifact 3 | unchanged |
+| Held back | rule_decided 599, other 678 | unchanged |
+
+- **Leak check, sft-r10:** all 4,942 rows are train ids; 0 c5 rows; 0 train documents in validation or test; 0 missing or ambiguous images.
+- **Against the plan's expectation** (about 4,475 + 430): 467 were added, in range. The bold share of H falls to 0.65, close to validation's 0.66.
+- **Risk to watch:** the H share rises to 0.53, above P for the first time. The registered revert condition (FP above 0.05 → r9 stays the candidate) is the guard.
+- **Configuration:** round 9's command with `--dataset out/stage1/sft-r10`, `--iters 9884` (2 × 4,942), `--steps-per-save 9884`, output `out/stage1/adapter-r10`; 15 h gate judged at step 100.
