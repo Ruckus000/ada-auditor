@@ -103,4 +103,4 @@ Rejected alternatives:
 
 **Step-100 readings:**
 - Attempt 1: 0.178 it/s → 13.97 h (stopped under the 13 h gate). Log kept as `train-r9-attempt1-gate13.log`.
-- Attempt 2: *(below)*
+- Attempt 2: loss 0.091, **0.206 it/s**, peak 11.25 GB → 8,950 / 0.206 ≈ 43,450 s ≈ **12.1 h**. That is under the 15 h gate, and also under the original 13 h one, so the run continues to 8,950.
