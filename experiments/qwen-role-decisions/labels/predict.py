@@ -8,7 +8,13 @@ parses. Never writes into a label file.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import importlib
+import io
 import json
+import math
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -32,16 +38,119 @@ def prompt_for_row(card: dict, row: dict, keys: dict) -> str:
     return prompt_for(card, stack)
 
 
-def generate(python: str, prompt: str, image: str | None, adapter: str | None) -> str:
-    cmd = [python, "-m", "mlx_vlm.generate", "--model", MODEL, "--prompt", prompt, "--max-tokens", "64", "--temperature", "0", "--thinking-mode", "disabled", "--no-verbose"]
+def cli_args(prompt: str, image: str | None, adapter: str | None) -> list[str]:
+    """The ``mlx_vlm.generate`` arguments, shared by the subprocess and the in-process scoring path."""
+    args = ["--model", MODEL, "--prompt", prompt, "--max-tokens", "64", "--temperature", "0", "--thinking-mode", "disabled", "--no-verbose"]
     if adapter:
-        cmd += ["--adapter-path", adapter]
+        args += ["--adapter-path", adapter]
     if image:
-        cmd += ["--image", image]
+        args += ["--image", image]
+    return args
+
+
+def generate(python: str, prompt: str, image: str | None, adapter: str | None) -> str:
+    cmd = [python, "-m", "mlx_vlm.generate", *cli_args(prompt, image, adapter)]
     proc = subprocess.run(cmd, capture_output=True, text=True, env={**__import__("os").environ, "HF_HUB_OFFLINE": "1"})
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr[-1500:])
     return proc.stdout
+
+
+VALID_TYPES = ("H", "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote")
+TYPE_VALUE_OPENS = re.compile(r'"type"\s*:\s*"$')
+
+
+def first_token_ids(encode) -> dict[str, int]:
+    """Each valid type's first token id as it is tokenised after ``"type":"`` (``encode`` is text -> ids)."""
+    prefix = '{"type":"'
+    head = encode(prefix)
+    out = {}
+    for t in VALID_TYPES:
+        ids = encode(prefix + t + '"')
+        if ids[: len(head)] != head:
+            raise ValueError(f"type {t!r} merges across the type-value boundary: {ids}")
+        out[t] = ids[len(head)]
+    return out
+
+
+def shared_first_tokens(first_ids: dict[str, int]) -> list[list[str]]:
+    """Groups of types that begin with the same token (they cannot be told apart at the type step)."""
+    by_id: dict[int, list[str]] = {}
+    for t, i in first_ids.items():
+        by_id.setdefault(i, []).append(t)
+    return [g for g in by_id.values() if len(g) > 1]
+
+
+def heading_score(first_ids: dict[str, int], logprobs: dict[int, float]) -> tuple[float, float]:
+    """``p_H`` = p(H's first token) / sum of p over the distinct valid first tokens; ``score`` = max(p_H, 1 - p_H).
+
+    Types sharing a first token are one group: the shared token is counted once in
+    the denominator, and if H is in such a group its whole mass counts as H.
+    """
+    ids = sorted(set(first_ids.values()))
+    top = max(logprobs[i] for i in ids)
+    total = sum(math.exp(logprobs[i] - top) for i in ids)
+    p_h = math.exp(logprobs[first_ids["H"]] - top) / total
+    return p_h, max(p_h, 1.0 - p_h)
+
+
+class ScoringGenerator:
+    """``mlx_vlm.generate``'s CLI ``main`` run in-process: model and adapter loaded once, and the
+    log-probabilities at the step that emits the first token of the type value captured."""
+
+    def __init__(self) -> None:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        import mlx.core as mx
+        dispatch = importlib.import_module("mlx_vlm.generate.dispatch")
+
+        self.mx, self.dispatch = mx, dispatch
+        self.loaded = None
+        self.first_ids: dict[str, int] | None = None
+        self.capture: dict | None = None
+        real_load, real_stream = dispatch.load, dispatch.stream_generate
+
+        def load_once(*a, **k):
+            if self.loaded is None:
+                self.loaded = real_load(*a, **k)
+                tok = self.tokenizer()
+                self.first_ids = first_token_ids(lambda s: tok.encode(s, add_special_tokens=False))
+            return self.loaded
+
+        def recording_stream(*a, **k):
+            tok, ids = self.tokenizer(), []
+            for r in real_stream(*a, **k):
+                if r.finish_reason is None and r.token is not None:
+                    if self.capture is not None and "logprobs" not in self.capture and TYPE_VALUE_OPENS.search(tok.decode(ids)):
+                        cand = sorted(set(self.first_ids.values()))
+                        vals = r.logprobs[self.mx.array(cand)].tolist()
+                        self.capture.update(logprobs=dict(zip(cand, vals)), token=int(r.token))
+                    ids.append(int(r.token))
+                yield r
+
+        dispatch.load, dispatch.stream_generate = load_once, recording_stream
+
+    def tokenizer(self):
+        proc = self.loaded[1]
+        return proc.tokenizer if hasattr(proc, "tokenizer") else proc
+
+    def __call__(self, prompt: str, image: str | None, adapter: str | None) -> tuple[str, dict]:
+        self.capture = {}
+        buf = io.StringIO()
+        argv = sys.argv
+        sys.argv = ["mlx_vlm.generate", *cli_args(prompt, image, adapter)]
+        try:
+            with contextlib.redirect_stdout(buf):
+                self.dispatch.main()
+        finally:
+            sys.argv = argv
+        cap, self.capture = self.capture, None
+        if "logprobs" not in cap:
+            return buf.getvalue(), {"p_H": None, "score": None, "score_method": "logprob_missing"}
+        p_h, score = heading_score(self.first_ids, cap["logprobs"])
+        extra = {"p_H": p_h, "score": score, "score_method": "logprob"}
+        if cap["token"] not in self.first_ids.values():
+            extra["type_token_invalid"] = True
+        return buf.getvalue(), extra
 
 
 def post_rules(raw: str, card: dict) -> str:
@@ -67,7 +176,10 @@ def main() -> None:
     p.add_argument("--adapter", default=None)
     p.add_argument("--python", required=True, help="interpreter with mlx_vlm")
     p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--scores", action="store_true", help="generate in-process (run under the mlx_vlm interpreter) and write p_H, score, score_method per row")
+    p.add_argument("--limit-model", type=int, default=None, help="with --scores: stop after this many model-decided rows (parity check)")
     a = p.parse_args()
+    scorer = ScoringGenerator() if a.scores else None
     wanted = set(json.loads(a.split.read_text())["ids"][a.on])
     cards = {c["card_id"]: c for c in (json.loads(l) for l in a.cards.read_text().splitlines() if l.strip())}
     keys = json.loads(a.keys.read_text())
@@ -80,12 +192,22 @@ def main() -> None:
                 continue
             card = cards[r["id"]]
             raw = rule_prediction(card)
+            if scorer is not None and raw is None and a.limit_model is not None and n_model >= a.limit_model:
+                break
+            extra = {}
             if raw is not None:
                 by = "rule"; n_rule += 1
+                if scorer is not None:
+                    extra = {"p_H": None, "score": 1.0, "score_method": "rule"}
+            elif scorer is not None:
+                model_raw, extra = scorer(prompt_for_row(card, r, keys), card.get("image"), a.adapter)
+                raw = post_rules(model_raw, card)
+                extra["vetoed"] = raw != model_raw
+                by = "model"; n_model += 1
             else:
                 raw = post_rules(generate(a.python, prompt_for_row(card, r, keys), card.get("image"), a.adapter), card)
                 by = "model"; n_model += 1
-            f.write(json.dumps({"id": r["id"], "raw": raw, "decided_by": by}) + "\n")
+            f.write(json.dumps({"id": r["id"], "raw": raw, "decided_by": by, **extra}) + "\n")
             f.flush()
     print(json.dumps({"rule": n_rule, "model": n_model, "out": str(a.out)}))
 
