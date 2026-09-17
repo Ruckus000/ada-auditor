@@ -72,3 +72,19 @@ def test_max_planted_heading_share_fails_loudly_and_writes_nothing():
         else:
             raise AssertionError("cap with no real headings did not fail")
         assert not (root / "sft").exists()
+
+
+def test_oversample_regular_h_duplicates_only_regular_weight_heading_rows():
+    assert parse_args([]).oversample_regular_h == 1
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        keys = _keys_dir(root)
+        cards = [json.loads(l) for l in (keys / "cards.jsonl").read_text().splitlines()]
+        for c in cards:  # n01:0 regular heading, n01:1 bold heading, n01:p regular body
+            c["weight"] = "bold" if c["card_id"] == "n01:1" else "regular"
+        (keys / "cards.jsonl").write_text("".join(json.dumps(c) + "\n" for c in cards))
+        base = _run(root, "--exclude-doc-prefix", "c5", "--exclude-doc-prefix", "c7")
+        m = _run(root, "--exclude-doc-prefix", "c5", "--exclude-doc-prefix", "c7", "--oversample-regular-h", "2")
+        assert base["n"] == 3 and base["types"] == {"H": 2, "P": 1}
+        assert m["n"] == 4 and m["types"] == {"H": 3, "P": 1}
+        assert m["oversample_regular_h"] == {"factor": 2, "regular_h": 1, "bold_h": 1, "added": 1, "ids": ["n01:0#dup1"]}
