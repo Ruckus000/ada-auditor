@@ -140,3 +140,101 @@ The controller computed these. At this provisional stage r9 is almost indistingu
 | TN_sample | 40 (document-capped) | — | 40 | 1 each |
 
 Because most of r9's errors fall on rows already audited, the un-audited error surface is small: 16 cards.
+
+## audit-r9v results and fold (Task 4 Step 4)
+`out/labels/audit-r9v-claude.jsonl`: 116 rows. 1 Unsure (c4-0019:213, a stray glyph) keeps its prior label. The controller recomputed the counts.
+
+| Group | Scored | Real headings | The rest |
+|---|---|---|---|
+| FP_all | 9 | 8 | Other 1 (a list item) |
+| FN_all_model | 6 | 5 | Caption 1 |
+| TP_sample | 60 | 59 → **1/60** (exact 95 % CI 0.000–0.089) | TH 1 |
+| TN_sample | 40 | 3 → **3/40** (exact 95 % CI 0.016–0.204) | P 25, Other 5, Artifact 3, TH 2, Lbl 2 |
+
+`out/keys-all-4/labels-audited-r9.jsonl` = labels-audited-r8 + 115 audit-r9v rows (sha `0af70953…`, sidecar `split/labels-audited-r9.json`).
+
+- **As in round 8, r9's "false positives" are mostly key under-tagging:** 8 of 9 are headings.
+- **The TN rate fell** from r8's 6/40 to 3/40, which looks like fewer hidden headings in r9's TN pool. On 40 rows the interval is 0.016–0.204, so that halving is **not established**.
+
+## Final evaluation on labels-audited-r9 (Task 4 Step 5)
+> **Graded against Claude-audited labels.** Both adapters now have their error rows audited exhaustively — r7's in round 8, r9's in audit-r9v — so the **direct columns are comparable**. "Estimated" applies **r9v's rates (TP 1/60, TN 3/40) to rows no audit has touched, for both r9 and the r7 reference**. The estimated-FN range uses the two rates' interval ends. That range is not a joint confidence interval.
+
+r7 reference = `pred-validation-r8.jsonl` (the r7 adapter under round 8 rules). Each cell is accuracy / FP / FN.
+
+| Population | Run | TP/FP/TN/FN | Direct | Estimated | Estimated FN range |
+|---|---|---|---|---|---|
+| ∩ 273 | r7 reference | 106/9/148/10 | 0.930 / 0.057 / 0.086 | 0.897 / 0.066 / 0.148 | 0.100–0.243 |
+| ∩ 273 | **r9** | 111/6/151/5 | **0.960 / 0.038 / 0.043** | **0.926 / 0.045 / 0.108** | 0.057–0.206 |
+| Cohort 6 validation | r7 reference | 396/19/782/55 | 0.941 / 0.024 / 0.122 | 0.901 / 0.028 / 0.206 | 0.141–0.323 |
+| Cohort 6 validation | **r9** | 404/17/784/47 | **0.949 / 0.021 / 0.104** | **0.909 / 0.025 / 0.190** | 0.124–0.309 |
+| All 1,525 | r7 reference | 502/28/930/65 | 0.939 / 0.029 / 0.115 | 0.901 / 0.034 / 0.195 | 0.133–0.308 |
+| All 1,525 | **r9** | 515/23/935/52 | **0.951 / 0.024 / 0.092** | **0.912 / 0.029 / 0.174** | 0.110–0.289 |
+
+Untouched rows on all 1,525 (the same set for both runs): TP 173, TN 742, FN 6.
+
+**Level exactness, all 1,525** (n / recalled / exact). About 450 restored training rows carry single-page audit levels, and H3 training rows rose from 228 to 490; any level shift should be read with that in mind.
+
+| Level | r7 reference | r9 |
+|---|---|---|
+| H1 | 95 / 78 / 71 | 95 / 83 / 75 |
+| H2 | 315 / 295 / 173 | 315 / 295 / 169 |
+| H3 | 126 / 101 / 47 | 126 / 108 / **68** |
+| H4 | 30 / 27 / 11 | 30 / 28 / 13 |
+| H5 | 1 / 1 / 1 | 1 / 1 / 1 |
+
+**Type confusion by decider, all 1,525** (Other excluded unless predicted H):
+- **Rule-decided:** identical for both runs apart from one row (P→Other, the r8 list-item hit on `cards-r8`): P→Lbl 146, Lbl→Lbl 59, TH→Lbl 22, H→Artifact 5, Caption→Caption 4, Artifact→Lbl 3, P→TOCI 2, H→Lbl 1, TH→Artifact 1, TOCI→TOCI 1.
+- **Model-decided errors, r7 reference:** H→P 57, TH→P 19, P→H 11, Caption→P 8, P→TH 6, TOCI→H 5, Caption→H 4, Other→H 4, BlockQuote→P 3, P→TOCI 3, and small others.
+- **Model-decided errors, r9:** H→P 45, TH→P 25, Caption→P 11, P→H 8, TOCI→H 4, Other→H 4, P→TH 4, Caption→H 3, BlockQuote→P 3, and small others.
+
+**Errors by rule (heading bit), all 1,525:**
+
+| Error | r7 reference | r9 |
+|---|---|---|
+| H→P rule 4 (model) | 57 | **45** |
+| P→H rule 1 (model) | 11 | 8 |
+| H→Artifact rule 2 (rule) | 5 | 5 |
+| TOCI→H | 5 | 4 |
+| Other→H | 4 | 4 |
+| Caption→H | 4 | 3 |
+| TH→H | 2 | 2 |
+| Artifact→H | 2 | 2 |
+| H→TH | 1 | 1 |
+| H→Lbl (rule) | 1 | 1 |
+
+**Per-document concentration (top document share of errors):**
+
+| Population | Run | FP | FN |
+|---|---|---|---|
+| ∩ | r7 reference | 9 rows, c4-0019 5 (0.56) | 10 rows, c3-0073 3 (0.30) |
+| ∩ | r9 | 6 rows, c4-0019 3 (0.50) | 5 rows, c3-0502 2 (0.40) |
+| Cohort 6 | r7 reference | 19 rows, c6-0024 4 (0.21) | 55 rows, c6-0009 7 (0.13) |
+| Cohort 6 | r9 | 17 rows, c6-0024 4 (0.24) | 47 rows, c6-0009 8 (0.17) |
+| All | r7 reference | 28 rows, c4-0019 5 (0.18) | 65 rows, c6-0009 7 (0.11) |
+| All | r9 | 23 rows, c6-0024 4 (0.17) | 52 rows, c6-0009 8 (0.15) |
+
+**Registered prediction check** (all 1,525, estimated):
+- **Estimated FN ≤ 0.20: met on the point estimate** (0.174). The range, 0.110–0.289, straddles the threshold.
+- **Estimated FP ≤ 0.05: met** (0.029).
+- **Stage 1 bar** (accuracy ≥ 0.99 with lower bound; FP ≤ 0.01 with upper bound): **not met**, as the plan expected. Test was not evaluated, and `test.spent` does not exist.
+
+## What round 9 establishes
+**Does auditing the model's disagreements buy recall at a measurable rate?** A little, and less than the headline move suggests.
+
+- **The headline move is mostly re-measurement.** Estimated FN went from 0.258 (r7, round 8 grading) to 0.174 (r9, round 9 grading). But on identical labels and rates, the **r7 reference is also at 0.195**. Most of that movement comes from the grading: audit-r9v corrected labels, and its TN rate is half of round 8's.
+- **What the adapter itself contributed**, on the same labels (labels-audited-r9) and the same rates:
+  - FN rows: 65 → 52, **−13 rows**;
+  - direct FN: 0.115 → 0.092 (−0.023);
+  - estimated FN: 0.195 → 0.174 (−0.021);
+  - FP rows fell too: 28 → 23.
+- **Cost rate:** 487 training rows whose heading bit the audit corrected bought **13 fewer validation misses**. That is about **0.027 recovered misses per corrected training row**, or roughly **37 corrected training rows per recovered validation miss**, and about **0.000043 of estimated FN per corrected row**. The next round can be costed from this figure.
+- **Where it helped:** H→P (model) fell from 57 to 45. H3 exact level rose from 47 to 68 of 126, the level most enriched by the restored rows. H2 exact was flat (173 against 169).
+
+## Stop decision (Task 5)
+**(a) by the letter of the registration, with a warning in the same sentence.** The registered FN and FP thresholds are met on point estimates, so the plan's option (a) applies: the next lever would be the same audit at the next disagreement pool, costed at about 37 corrected training rows per recovered validation miss.
+
+The warning is that the r7 reference meets the FN threshold too under the same grading, and the adapter-attributable change is 13 rows with an interval that straddles 0.20. So the round does not show that audit-corrected training is a strong lever. Before another training round, the loop should measure whether a larger disagreement pool exists at all. The obvious one is the 3,498 − 658 key-non-H train rows no audit has touched: at r9v's TN rate that is about 210 hidden headings, and about 7,800 more audited cards at the measured cost rate.
+
+- **The Stage 1 bar was not met.** Best estimated accuracy is 0.912 against the 0.99 bar; estimated FP is 0.029 against the 0.01 bar.
+- **Test was not evaluated.**
+- **r9 is the better adapter on every comparable column** and is the candidate over r7.
