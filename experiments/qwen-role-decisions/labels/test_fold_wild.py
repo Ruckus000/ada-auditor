@@ -135,3 +135,27 @@ def test_cli_writes_three_files_and_prints_counts_and_writes_nothing_when_refuse
         else:
             raise AssertionError("the CLI must refuse")
         assert not out.exists()
+
+
+def test_accepts_the_handover_shapes_with_their_extra_keys():
+    # The shapes the judging session writes (confirmed 2026-09-18): full label keys and votes.by on consensus rows;
+    # type null, no label keys, on no-consensus rows.
+    base = _inputs()
+    rows = []
+    for r in base["consensus"]:
+        by = {"low": r.get("type"), "medium": r.get("type"), "high": r.get("type"), "fable": r.get("type")}
+        if r.get("label") is None:
+            rows.append({"id": r["id"], "type": None, "label": None, "votes": {**r["votes"], "by": by}, "note": ""})
+        else:
+            rows.append({"id": r["id"], "answer_id": f"consensus:{r['id']}", "actor": "consensus-4judge",
+                         "label_source": "claude-consensus", "type": r["type"], "unsure": False, "label": r["label"],
+                         "votes": {**r["votes"], "by": by}, "note": "", "labelled_at": "2026-09-18T12:00:00Z"})
+    labels, _, _, counts = _fold(consensus=rows)
+    plain, _, _, plain_counts = _fold()
+    assert counts == plain_counts
+    assert [r["answer_id"] for r in labels][:1] == ["consensus:w-0001:0"]
+    assert all(r["votes"].keys() == {"judges", "agree"} for r in labels)  # votes.by is not carried into labels
+    assert refusals(labels) == []
+    unsure = copy.deepcopy(rows)
+    next(r for r in unsure if r.get("label"))["unsure"] = True
+    _refused("unsure", consensus=unsure)

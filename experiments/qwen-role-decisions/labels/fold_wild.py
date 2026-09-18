@@ -13,6 +13,9 @@ Consensus input, one row per sidecar card::
     {"id", "type", "label": {"heading", "level"}, "votes": {"judges", "agree"},
      ["actor": "consensus-4judge"], ["answer_id"], ["labelled_at"]}
 
+Other keys (``label_source``, ``unsure: false``, ``note``, ``votes.by``) are
+accepted and not carried into the labels.
+
 A no-consensus card is a row whose ``label`` is null (or absent); it is left
 out of the labels and counted. Every sidecar card must have a row, and every
 row must name a sidecar card: a partial or foreign file is refused, never
@@ -95,6 +98,8 @@ def consensus_problems(row: dict) -> list[str]:
         out.append(f"{where}: actor {row['actor']!r} is not {ACTOR!r}")
     if row.get("label_source", LABEL_SOURCE) != LABEL_SOURCE:
         out.append(f"{where}: label_source {row['label_source']!r} is not {LABEL_SOURCE!r}")
+    if row.get("unsure", False) is not False:
+        out.append(f"{where}: unsure must be false on a consensus row")
     present = [k for k in MODEL_FIELDS if k in row]
     if present:
         out.append(f"{where}: model fields {present}")
