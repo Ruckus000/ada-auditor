@@ -116,3 +116,34 @@ That is itself a finding for the product: **more than half of the untagged marke
 - **Asks:** 182 across 50 pages. 36 are proposed H, 41 are below-threshold H, and **105 are below-threshold non-H** (P 95, TH 8, Lbl 2).
 - **Rules are heavy on two documents:** they decide 159 of 243 cards on c3-0827 and 118 of 273 on c3-0429.
 - **Audit set:** 222 blind cards — ASKED_ALL 182 and NHC_SAMPLE 40 (4 per document; 29 model-decided and 11 rule-decided, so the "confidently not a heading" rate is scored both with and without the rule rows). Files: `out/labels/audit-s2wild-cards.jsonl` (ids only), `audit-s2wild-groups.json` (r10's predictions) and `audit-s2wild-source.jsonl` (card facts and images; contains text, gitignored, never quoted).
+
+### Task 5 — results (claude-audit, disclosed; not labels)
+`out/labels/audit-s2wild-claude.jsonl` holds 222 rows, judged by the reviewing Claude session from the images. These are **not** human-answer labels, and they never enter labels-audited or any split. The controller recomputed every count below.
+
+- **17 rows are Unsure, all on c3-0489**, and are excluded from every count. c3-0489 is a scanned form whose text layer is OCR garbage: the tagger produced blocks for it, but neither the model nor the judge could read them. It is recorded as a document that has a text layer and is still unreadable.
+
+**Registered predictions — both HELD.**
+- **Proposed-H precision: 36 / 36 = 1.00** (exact 95 % lower bound 0.903) against ≥ 0.90. Every proposed heading, across the 6 documents that proposed any, is a real heading.
+- **Hidden-heading rate in NHC_SAMPLE: 0 / 37** (0/27 model-decided, 0/10 rule-decided; exact 95 % upper bound 0.095) against ≤ 0.05. The point estimate holds. On 37 cards the upper bound does not reach 0.05.
+
+**The asked pool, where the reviewer's work lands:**
+
+| Asked group | Judged | Real headings | The rest |
+|---|---|---|---|
+| Proposed H | 36 | 36 | — |
+| Below-threshold H | 41 | **39** | P 2 |
+| Below-threshold non-H | 91 | **26** | TH 35, P 17, Artifact 4, Caption 3, Lbl 3, Other 3 |
+
+- r10's uncertain heading calls are almost all right, 39 of 41, so a one-action accept on them is well founded.
+- The 26 under-called headings, mostly form section headings and roman-numbered policy sections, all sit **in the asked pool**, and none sit in the confident-not-heading pool. The asks catch the misses, at the cost of 65 non-heading asks, 35 of them table-header cells.
+
+**Reading.** On this wild sample the operating point transfers: there is no confident error in either direction, and the whole error mass is under-calling below the threshold, exactly where the asks route it. **The population, not the model, sets the ceiling.**
+- 56 % of untagged cohort 3 candidates are image-only and need OCR.
+- 1 document in 10 has a text layer that is OCR garbage.
+- 5 of the draw's candidates could not be processed.
+- About 2.8 s per model card.
+- TH cells dominate the false asks.
+
+**Registered for a later plan, not built now:**
+- (a) **A TH veto at ask time**, from the existing table-ancestry fact. It would remove up to 35 of the 91 non-H asks here.
+- (b) **An OCR-quality gate before `suggest` runs**, so c3-0489-style documents are refused with a reason instead of asked about.

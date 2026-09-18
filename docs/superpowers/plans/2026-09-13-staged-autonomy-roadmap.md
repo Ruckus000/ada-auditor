@@ -196,6 +196,9 @@ merge; `labels/export_answers.py` turns decided answers into label rows grouped
 by host. **Zero real human-answer labels exist yet; the Stage 2 gate is
 unchanged until a person answers in the workbench.** Record:
 `heading-stage2-2026-09-18-results.md`.
+The operating point was measured on 10 wild untagged documents (claude-audit):
+proposed precision 36/36, NHC hidden 0/37. 56 % of untagged candidates are
+image-only and need OCR first.
 
 **What:** decided cards are applied without review; `Unsure` cards go to the
 reviewer. The delivered PDF carries the model's decisions through the
