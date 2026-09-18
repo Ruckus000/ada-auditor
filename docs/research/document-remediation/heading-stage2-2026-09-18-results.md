@@ -76,3 +76,17 @@ Branch **`claude/heading-suggestion-asks`** in the product repository, from mast
 - **Product path:** built and gated, awaiting `test:db` and a merge decision.
 - **Label path:** built and proven on a synthetic fixture.
 - **Real human-answer labels: 0.** The next step is a person answering heading-card asks in the workbench on real untagged documents. The exporter then folds those answers, and the Stage 2 gate is re-measured on them (plan Task 4).
+
+## Task 5 — r10 on untagged PDFs from the wild (registered before measurement)
+Every validation number so far comes from **stripped copies of tagged PDFs**, which skew toward good producers. The market is untagged PDFs. This task measures r10's suggestions on that population. It involves no training, no product code and no test data.
+
+- **Population:** 10 untagged cohort 3 PDFs whose hosts appear in no split — c3-0128 plus 9 more, chosen with seed 20260918 from cohort 3 files that have no structure tree and ≤ 600 blocks, so `--all-blocks` applies. The host list is recorded.
+- **Run:** `labels.suggest --all-blocks`, adapter-r10, threshold 0.9933, per document. Record cards, proposed, asked, `not_heading_confident` and wall time.
+- **Audit cards:** blind, ids only, images rendered from the same pages the sidecars used. Groups (r10's type, level, score and `proposed` are recorded in the groups file only):
+  - **ASKED_ALL** — every asked card: predicted H at any score, plus every below-threshold card;
+  - **NHC_SAMPLE** — 4 `not_heading_confident` cards per document (40), to test the "confidently not a heading" claim in the wild.
+- **Judged as claude-audit** and disclosed as such. These are **not** human-answer labels, and they never enter labels-audited or any split.
+- **Registered prediction:**
+  - precision of proposed-H suggestions **≥ 0.90**;
+  - hidden-heading rate in NHC_SAMPLE **≤ 0.05** (≤ 2 of 40).
+- **If either fails,** the record states that the wild population differs from the stripped one and by how much, and Stage 2's operating point is marked "measured on stripped PDFs only".
