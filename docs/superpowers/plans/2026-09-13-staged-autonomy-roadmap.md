@@ -150,7 +150,13 @@ documents with zero covered errors. **The Stage 2 gate is not met:** the
 accuracy lower bound (0.981) is under 0.99, the FP upper bound (0.0113) is
 over 0.01, and abstention (25.1 %) is over 10 %. Every number is graded
 against Claude-audited labels (Ruling R9). **Test has never been evaluated.**
-Records: `heading-stage1-r{7,8,9,10,11}-*.md`.
+Records: `heading-stage1-r{7,8,9,10,11,12}-*.md`.
+**Status 2026-09-18 (round 12): the loop is paused on adapter-r10 at its
+operating point (score ≥ 0.9933), pending product approval data.** A third
+epoch (r12) made errors confident and was reverted. With surface rules (r8),
+more audited train labels (r9) and more epochs (r12) measured as dead ends,
+the Stage 2 gate needs a larger held-out set for its bounds or human approval
+data for both the bounds and the abstention rate.
 
 **What:**
 1. Fine-tune round 1 on the train split with the type+rule target; register

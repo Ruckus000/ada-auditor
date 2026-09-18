@@ -73,4 +73,6 @@ The audit is therefore offered to the reviewing session as optional rather than 
 - A third epoch over the same data does not trade abstention for coverage. It sharpens confidence indiscriminately, and the errors become confident.
 - **r10 and its registered operating point (score ≥ 0.9933, 0.749 coverage, accuracy 0.9886 [0.9806–0.9939], FP 0.0039 [0.0008–0.0113]) remain the Stage 1 state**. The Stage 2 gate is not met.
 - `adapter-r12` is kept on disk and not used.
+- **audit-r12v was not built** (reviewing session's ruling). No outcome of those 19 rows changes the verdict, so reading them would only spend review time on a reverted adapter.
+- **The levers this loop can pull without new labels are exhausted.** "More epochs" is now a measured dead end: 34 confident errors at score ≥ 0.99, 30 of them H → P. It joins "more audited train labels" (round 9) and "surface rules" (round 8). The Stage 2 gate — accuracy lower bound ≥ 0.99, FP upper bound ≤ 0.01, abstention ≤ 10 % — needs either a **larger held-out set**, to tighten the bounds, or **human approval data**, for both the bounds and the abstention rate.
 - **Test was not evaluated**, and `test.spent` does not exist.
