@@ -142,6 +142,16 @@ those rows are clean.)
 
 ## Stage 1 — the model exists and is measured (a person verifies everything)
 
+**Status 2026-09-18 (round 11).** Candidate **adapter-r10** (`sft-r10`, regular-weight
+headings oversampled ×2). Operating point, registered in round 11 Task 2 on
+`labels-audited-r10`: **score ≥ 0.9933 → 74.9 % coverage, accuracy 0.9886
+[0.9806–0.9939], FP 0.0039 [0.0008–0.0113], FN 0.0271**, 52 of 59 validation
+documents with zero covered errors. **The Stage 2 gate is not met:** the
+accuracy lower bound (0.981) is under 0.99, the FP upper bound (0.0113) is
+over 0.01, and abstention (25.1 %) is over 10 %. Every number is graded
+against Claude-audited labels (Ruling R9). **Test has never been evaluated.**
+Records: `heading-stage1-r{7,8,9,10,11}-*.md`.
+
 **What:**
 1. Fine-tune round 1 on the train split with the type+rule target; register
    the run before launch (population, prompt SHA, config, adapter SHA).
