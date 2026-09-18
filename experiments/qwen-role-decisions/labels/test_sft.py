@@ -1,5 +1,5 @@
 import json
-from labels.sft import cap_planted_headings, emit, prompt_for, stack_before, target_for
+from labels.sft import after_h1_from_ladder, cap_planted_headings, emit, prompt_for, stack_before, target_for
 
 
 def test_stack_before_is_the_approved_ladder_in_reading_order():
@@ -72,3 +72,44 @@ def test_cap_planted_headings_fails_loudly_when_it_cannot_be_met():
         except ValueError:
             continue
         raise AssertionError(f"no error for share {share}")
+
+
+def _page_cards():
+    return [{"card_id": "a:1", "page": 0, "y0": 10.0}, {"card_id": "a:2", "page": 0, "y0": 30.0},
+            {"card_id": "a:3", "page": 0, "y0": 50.0}, {"card_id": "a:4", "page": 1, "y0": 20.0}]
+
+
+def test_after_h1_is_the_card_directly_under_a_level_1_heading_in_the_ladder():
+    cards = _page_cards()
+    hs = [{"page": 0, "y0": 10.2, "level": 1, "text": "Title"}, {"page": 0, "y0": 30.0, "level": 2, "text": "Sub"},
+          {"page": 1, "y0": 60.0, "level": 1, "text": "Later"}]
+    assert after_h1_from_ladder(cards[1], cards, hs) is True    # the card above it is the H1
+    assert after_h1_from_ladder(cards[2], cards, hs) is False   # the card above it is an H2
+    assert after_h1_from_ladder(cards[0], cards, hs) is False   # first card on the page
+    assert after_h1_from_ladder(cards[3], cards, hs) is False   # first card on page 1; the H1 is on page 0
+    assert after_h1_from_ladder(cards[1], cards, []) is False   # no ladder, no fact
+
+
+def test_prompt_carries_after_h1_read_from_the_ladder_not_the_label():
+    rows = [{"id": "a:1", "document_id": "a", "type": "H", "label": {"heading": True, "level": 1}},
+            {"id": "a:2", "document_id": "a", "type": "P", "label": {"heading": False, "level": None}},
+            {"id": "a:3", "document_id": "a", "type": "P", "label": {"heading": False, "level": None}}]
+    cards = {"a:1": {"card_id": "a:1", "text": "Annual Report", "page": 0, "y0": 10.0, "repeats_on_pages": 1},
+             "a:2": {"card_id": "a:2", "text": "Effective January 1", "page": 0, "y0": 30.0, "repeats_on_pages": 1},
+             "a:3": {"card_id": "a:3", "text": "Body text here", "page": 0, "y0": 50.0, "repeats_on_pages": 1}}
+    keys = {"a": [{"page": 0, "y0": 10.0, "level": 1, "text": "Annual Report", "locator": "k:1"}]}
+    out, _ = emit(rows, cards, keys, lambda c: "/img.png", {"a:1", "a:2", "a:3"})
+    prompts = [o["messages"][0]["content"] for o in out]
+    assert len(prompts) == 3
+    assert "\nafter_h1: no\n" in prompts[0]   # the H1 itself is the page's first card
+    assert "\nafter_h1: yes\n" in prompts[1]  # the under-title line
+    assert "\nafter_h1: no\n" in prompts[2]   # the card above it is the under-title line, not the H1
+    # exactly one new line, and it sits with the other facts
+    assert prompts[1].count("after_h1:") == 1
+    assert prompts[1].index("after_h1:") < prompts[1].index("Approved headings so far:")
+
+
+def test_prompt_for_takes_the_fact_as_given():
+    card = {"text": "x", "font_pt": 10, "weight": "regular"}
+    assert "after_h1: no" in prompt_for(card, [])
+    assert "after_h1: yes" in prompt_for(card, [], True)

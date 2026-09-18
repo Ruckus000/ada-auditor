@@ -35,6 +35,42 @@ TYPED_STEM = (
 RULE_OF = {"H": 1, "Artifact": 2, "Caption": 3, "TH": 3, "TOCI": 3, "Lbl": 3, "BlockQuote": 3, "P": 4}
 
 
+# A heading's key element and its card can sit a fraction of a point apart
+# (rounding between the original and the tagged copy); within this, they are the
+# same element.
+SAME_ELEMENT_PT = 2.0
+
+
+def cards_by_document(rows: list[dict], cards_by_id: dict[str, dict]) -> dict[str, list[dict]]:
+    """Each document's cards in reading order (page, then y0 top-origin)."""
+    by: dict[str, list[dict]] = defaultdict(list)
+    for r in rows:
+        card = cards_by_id.get(r["id"])
+        if card is not None and card.get("page") is not None and card.get("y0") is not None:
+            by[r["document_id"]].append(card)
+    for cs in by.values():
+        cs.sort(key=lambda c: (c["page"], c["y0"]))
+    return dict(by)
+
+
+def previous_card(card: dict, cards_in_doc: list[dict]) -> dict | None:
+    """The nearest card above this one on the same page, or None for the page's first card."""
+    page, y0 = card.get("page"), card.get("y0")
+    if page is None or y0 is None:
+        return None
+    above = [c for c in cards_in_doc if c["page"] == page and c["y0"] < y0]
+    return max(above, key=lambda c: c["y0"]) if above else None
+
+
+def after_h1_from_ladder(card: dict, cards_in_doc: list[dict], headings_in_order: list[dict]) -> bool:
+    """Is the card directly under a level-1 heading? Read from the key ladder, never from the card's own label."""
+    prev = previous_card(card, cards_in_doc)
+    if prev is None:
+        return False
+    return any(h["level"] == 1 and h["page"] == prev["page"] and abs(h["y0"] - prev["y0"]) <= SAME_ELEMENT_PT
+               for h in headings_in_order)
+
+
 def stack_before(card_row: dict, headings_in_order: list[dict], own_locator: str | None = None) -> list[dict]:
     """Approved headings before this card in reading order (page, then y0 top-origin).
 
@@ -51,7 +87,7 @@ def stack_before(card_row: dict, headings_in_order: list[dict], own_locator: str
     for h in headings_in_order:
         if own_locator is not None and h.get("locator") == own_locator:
             continue
-        if h["page"] == card_page and card_y0 is not None and abs(h["y0"] - card_y0) <= 2.0:
+        if h["page"] == card_page and card_y0 is not None and abs(h["y0"] - card_y0) <= SAME_ELEMENT_PT:
             continue
         if (h["page"], h["y0"]) >= pos:
             break
@@ -59,10 +95,11 @@ def stack_before(card_row: dict, headings_in_order: list[dict], own_locator: str
     return stack
 
 
-def prompt_for(card: dict, stack: list[dict]) -> str:
+def prompt_for(card: dict, stack: list[dict], after_h1: bool = False) -> str:
     bits = [TYPED_STEM, f"Element: {card['text']!r}", f"Font: {card.get('font_pt')}pt", f"Weight: {card.get('weight')}",
             f"Previous: {card.get('prev')}", f"Next: {card.get('next')}",
             f"Repeats on pages: {card.get('repeats_on_pages', 1)}", f"Inside a table: {bool(card.get('in_table_box'))}",
+            f"after_h1: {'yes' if after_h1 else 'no'}",
             "Approved headings so far: " + (" > ".join(f"H{s['level']} {s['text']!r}" for s in stack) or "none"), "JSON:"]
     return "\n".join(bits)
 
@@ -78,6 +115,7 @@ def emit(rows: list[dict], cards_by_id: dict[str, dict], key_headings: dict[str,
          sources: list[dict] | None = None) -> tuple[list[dict], dict]:
     """``sources``, when a list, receives one ``{id, label_source, type}`` per emitted row, index-aligned with the output."""
     out, held = [], defaultdict(int)
+    doc_cards = cards_by_document(rows, cards_by_id)
     for r in rows:
         if r["id"] not in split_ids:
             continue
@@ -91,8 +129,10 @@ def emit(rows: list[dict], cards_by_id: dict[str, dict], key_headings: dict[str,
         img = image_of(card)
         if img is None:
             held["no_image"] += 1; continue
-        stack = stack_before(card, key_headings.get(r["document_id"], []), r.get("key_locator"))
-        out.append({"messages": [{"role": "user", "content": prompt_for(card, stack)}, {"role": "assistant", "content": target_for(r)}], "image": str(img)})
+        headings = key_headings.get(r["document_id"], [])
+        stack = stack_before(card, headings, r.get("key_locator"))
+        under_h1 = after_h1_from_ladder(card, doc_cards.get(r["document_id"], []), headings)
+        out.append({"messages": [{"role": "user", "content": prompt_for(card, stack, under_h1)}, {"role": "assistant", "content": target_for(r)}], "image": str(img)})
         if sources is not None:
             sources.append({"id": r["id"], "label_source": r.get("label_source"), "type": r["type"]})
     return out, dict(held)

@@ -1,5 +1,5 @@
 import json
-from labels.predict import post_rules, rule_prediction, prompt_for_row
+from labels.predict import after_h1_from_decisions, is_h1, post_rules, rule_prediction, prompt_for_row
 
 
 def test_rule_prediction_and_table_veto():
@@ -66,3 +66,29 @@ def test_first_token_ids_rejects_a_token_merged_across_the_boundary():
     else:
         raise AssertionError("expected a merge across the boundary to be refused")
     assert first_token_ids(lambda s: [ord(c) for c in s])["BlockQuote"] == ord("B")
+
+
+def test_is_h1_reads_only_a_level_1_heading_decision():
+    assert is_h1('{"type":"H","level":1,"rule":1}')
+    assert is_h1('some preamble {"type":"H","level":1,"rule":1} tail')
+    assert not is_h1('{"type":"H","level":2,"rule":1}')
+    assert not is_h1('{"type":"P","rule":4}')
+    assert not is_h1("no json here")
+
+
+def test_after_h1_at_inference_follows_the_models_own_prior_decision_not_the_label():
+    prev = {"card_id": "c1", "page": 0, "y0": 10.0}
+    card = {"card_id": "c2", "page": 0, "y0": 30.0, "text": "Effective January 1", "font_pt": 10, "weight": "regular"}
+    doc = [prev, card]
+    row = {"id": "c2", "document_id": "doc1"}
+    ladder_says_h1 = {"doc1": [{"page": 0, "y0": 10.0, "level": 1, "text": "Annual Report", "locator": "k1"}]}
+    # the label ladder calls the card above an H1; the model did not, so the fact is no
+    assert after_h1_from_decisions(card, doc, set()) is False
+    assert "\nafter_h1: no\n" in prompt_for_row(card, row, ladder_says_h1, after_h1_from_decisions(card, doc, set()))
+    # the reverse: no H1 in the ladder at all, but the model called the card above one
+    assert after_h1_from_decisions(card, doc, {"c1"}) is True
+    assert "\nafter_h1: yes\n" in prompt_for_row(card, row, {"doc1": []}, after_h1_from_decisions(card, doc, {"c1"}))
+    # the page's first card is never after an H1, whatever was decided
+    assert after_h1_from_decisions(prev, doc, {"c1", "c2"}) is False
+    # a decision on another page does not carry over
+    assert after_h1_from_decisions({"card_id": "c3", "page": 1, "y0": 30.0}, doc + [{"card_id": "c3", "page": 1, "y0": 30.0}], {"c1"}) is False

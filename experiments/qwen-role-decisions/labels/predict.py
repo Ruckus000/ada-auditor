@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 from labels.rules import decide, forbids_heading
-from labels.sft import prompt_for, stack_before
+from labels.sft import cards_by_document, previous_card, prompt_for, stack_before
 
 MODEL = "mlx-community/Qwen3.5-4B-MLX-4bit"
 
@@ -33,9 +33,29 @@ def rule_prediction(card: dict) -> str | None:
     return json.dumps({"type": t, "rule": rule}, separators=(",", ":"))
 
 
-def prompt_for_row(card: dict, row: dict, keys: dict) -> str:
+def prompt_for_row(card: dict, row: dict, keys: dict, after_h1: bool = False) -> str:
     stack = stack_before(card, keys.get(row["document_id"], []), row.get("key_locator"))
-    return prompt_for(card, stack)
+    return prompt_for(card, stack, after_h1)
+
+
+def parsed(raw: str) -> dict | None:
+    """The JSON object inside a raw prediction, or None when there is none."""
+    try:
+        data = json.loads(raw[raw.index("{") : raw.rindex("}") + 1])
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def is_h1(raw: str) -> bool:
+    data = parsed(raw)
+    return bool(data) and data.get("type") == "H" and data.get("level") == 1
+
+
+def after_h1_from_decisions(card: dict, cards_in_doc: list[dict], decided_h1: set[str]) -> bool:
+    """The inference-side fact: the card above this one on the page was called H1 by the model itself."""
+    prev = previous_card(card, cards_in_doc)
+    return prev is not None and prev.get("card_id") in decided_h1
 
 
 def cli_args(prompt: str, image: str | None, adapter: str | None) -> list[str]:
@@ -157,11 +177,8 @@ def post_rules(raw: str, card: dict) -> str:
     """A model H under a Table in the tag tree is not a document heading (definition §4 rule 3)."""
     if not forbids_heading(card):
         return raw
-    try:
-        data = json.loads(raw[raw.index("{") : raw.rindex("}") + 1])
-    except ValueError:
-        return raw
-    if isinstance(data, dict) and data.get("type") == "H":
+    data = parsed(raw)
+    if data is not None and data.get("type") == "H":
         return json.dumps({"type": "TH", "rule": 3, "vetoed": "table_ancestor"}, separators=(",", ":"))
     return raw
 
@@ -184,13 +201,26 @@ def main() -> None:
     cards = {c["card_id"]: c for c in (json.loads(l) for l in a.cards.read_text().splitlines() if l.strip())}
     keys = json.loads(a.keys.read_text())
     rows = [json.loads(l) for l in a.labels.read_text().splitlines() if l.strip()]
-    done = {json.loads(l)["id"] for l in a.out.read_text().splitlines() if l.strip()} if a.out.is_file() else set()
+    # Reading order, so the fact below can only ever read a decision already made.
+    doc_cards = cards_by_document(rows, cards)
+    rows.sort(key=lambda r: (r["document_id"], cards.get(r["id"], {}).get("page", 10**9) or 0,
+                             cards.get(r["id"], {}).get("y0", 0.0) or 0.0))
+    done, decided_h1 = set(), set()
+    if a.out.is_file():
+        for l in a.out.read_text().splitlines():
+            if not l.strip():
+                continue
+            prior = json.loads(l)
+            done.add(prior["id"])
+            if is_h1(prior["raw"]):
+                decided_h1.add(prior["id"])
     n_rule = n_model = 0
     with a.out.open("a") as f:
         for r in rows:
             if r["id"] not in wanted or r["id"] in done:
                 continue
             card = cards[r["id"]]
+            under_h1 = after_h1_from_decisions(card, doc_cards.get(r["document_id"], []), decided_h1)
             raw = rule_prediction(card)
             if scorer is not None and raw is None and a.limit_model is not None and n_model >= a.limit_model:
                 break
@@ -200,13 +230,15 @@ def main() -> None:
                 if scorer is not None:
                     extra = {"p_H": None, "score": 1.0, "score_method": "rule"}
             elif scorer is not None:
-                model_raw, extra = scorer(prompt_for_row(card, r, keys), card.get("image"), a.adapter)
+                model_raw, extra = scorer(prompt_for_row(card, r, keys, under_h1), card.get("image"), a.adapter)
                 raw = post_rules(model_raw, card)
                 extra["vetoed"] = raw != model_raw
                 by = "model"; n_model += 1
             else:
-                raw = post_rules(generate(a.python, prompt_for_row(card, r, keys), card.get("image"), a.adapter), card)
+                raw = post_rules(generate(a.python, prompt_for_row(card, r, keys, under_h1), card.get("image"), a.adapter), card)
                 by = "model"; n_model += 1
+            if is_h1(raw):
+                decided_h1.add(r["id"])
             f.write(json.dumps({"id": r["id"], "raw": raw, "decided_by": by, **extra}) + "\n")
             f.flush()
     print(json.dumps({"rule": n_rule, "model": n_model, "out": str(a.out)}))
