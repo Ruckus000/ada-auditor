@@ -276,7 +276,7 @@ Coverage curve (threshold: coverage, accuracy [lower–upper], FP):
   This is the second population on which r10's proposed H is clean.
 - **The accuracy side does not transfer on the raw labels.** At 0.9933 the accuracy lower bound is 0.969, below the rule's 0.98 and the gate's 0.99. Every covered error is a **missed heading**: 22 of the 58 covered consensus H, in 4 of 10 documents (c3-0794 13, c3-0128 6, c3-0489 2, c3-0252 1).
 - **What the 22 covered misses are** (counted after measurement: a diagnosis, not a re-score):
-  - **9 are enumerator-only cards** ("I.", "A.", "C."). **This is a labelling-convention conflict, not a model miss.** The judge protocol said a section heading's numeral is H even when the box covers only the numeral. The training keys never label it that way: all 185 enumerator-only cards in `out/keys-all-4/labels.jsonl` are non-H (Lbl 166, P 11, TH 7, Other 1), because the stripped trees tag the numeral as Lbl inside the H. r10 follows its training and calls these Lbl at score ≈ 1.0. In the wild set the consensus calls 20 enumerator-only cards H and 95 Lbl. Those rows are **left as labelled**: the consensus stands and is not edited by hand.
+  - **9 are enumerator-only cards** ("I.", "A.", "C."). **This is a labelling-convention conflict, not a model miss.** The judge protocol said a section heading's numeral is H even when the box covers only the numeral. The training keys never label it that way: all 185 enumerator-only cards in `out/keys-all-4/labels.jsonl` are non-H (Lbl 166, P 11, TH 7, Other 1), because the stripped trees tag the numeral as Lbl inside the H. r10 follows its training and calls these Lbl at score ≈ 1.0. *(Corrected below, under Wild round 2: this holds only in c3-0794; in c3-0128 and c3-0094 r10 says H on roman-numeral cards.)* In the wild set the consensus calls 20 enumerator-only cards H and 95 Lbl. Those rows are **left as labelled**: the consensus stands and is not edited by hand.
   - **8 are enumerated headings merged with their paragraph**, as in "A. Plans All tanks shall be installed…". The model says P and the consensus says H, but neither label fits the block. **The boundary comes from the product's auto-tagger (ODL), and the card builder inherits it:**
     - The tagger's list detection turns enumerated headings into L/LI/Lbl. Of the 15 merged-heading H cards in c3-0128, c3-0794 and c3-0094, 14 are `existing_tag: LI` with ancestors `[L, Document]`, and the numeral-only card beside each is that LI's `Lbl`. The one exception is c3-0128:153, tagged H3 and merged with its next sentence.
     - `pdftotext -bbox-layout` shows "A. Plans" is its own physical line, followed by the paragraph line at the same 12 pt size.
@@ -392,6 +392,25 @@ Coverage curve, round 2 raw (threshold: coverage, accuracy [lower–upper], FP):
   - At 1,084 covered cards, the convention-net view needs ≤ 4 covered errors to pass and has 7.
   - Five of the seven are genuine or noise; two are the merged-block residuals.
   - The lever is population size, which is round 3 (`2026-09-18-stage2-wild-population-growth.md`), together with the two known residual shapes.
+
+### Correction (found after the review): r10 does not call every enumerator-only card Lbl
+- **What the record said:** the enumerator-only miss anatomy, in Task 8 and above, says r10 "follows its training and calls these Lbl". **That holds only in c3-0794.**
+- **What r10 actually does:** in c3-0128 and c3-0094, r10 predicts **H** on roman-numeral-only cards ("II.", "III.", "VII.", "XI.", "XII.", "XIII.").
+  - Of the 115 enumerator-only cards with a consensus label, r10 says H on 10 in round 1 and 12 in round 2.
+  - 5 of those are covered at ≥ 0.9933 in round 1, and 7 in round 2. All sit in those two documents, and all are rows the round-1 consensus labelled H.
+  - Graded against the consensus as labelled, they count as **correct**. That is why the raw and convention-net views above show FP 0.
+- **Under the fixed convention — enumerator-only = Lbl, protocol v2 — they are confident false positives.** This is an analysis view: every enumerator-only card is read as non-H, and no label is edited.
+
+| At 0.9933 | Covered | Accuracy [exact 95 %] | FP (upper bound) | FN |
+|---|---|---|---|---|
+| Round 1, v2-convention view | 1,081 | 0.9833 [0.9738–0.9901] | **5 (0.0112)** | 13 |
+| Round 2, v2-convention view | 1,098 | 0.9872 [0.9787–0.9930] | **7 (0.0137)** | 7 |
+
+  The round 2 FP ids are c3-0094:58 and :60, and c3-0128:7, :10, :181, :188 and :196.
+- **Consequence 1: the FP gate fails under the convention round 3 is judged by.** The FP upper bound is 0.0137, over the 0.01 bar. The convention-net view excludes these rows on both sides, so it neither rewards nor penalises them; it stands, but it is not the whole picture.
+- **Consequence 2: round 3's labels use protocol v2,** so any r10 H on an enumerator-only card in the new documents will grade as FP there.
+- **Consequence 3: "the FP side transfers"** (Task 8) holds under the consensus as labelled. It does not hold under the v2 convention.
+- **Candidate fix, not applied:** a rule that decides an enumerator-only card as Lbl before the model. It would be registered and measured on validation first. The training keys already label all 185 of these cards non-H, so the rule matches the training convention.
 
 ### Gaps recorded, not fixed here
 - **`candidate_pool` drops a one-item list's only item.** It de-duplicates before it drops containers, so the LI goes as a duplicate of its L, and then the L goes as a container. This affects training keys too, and the keys were left untouched.
