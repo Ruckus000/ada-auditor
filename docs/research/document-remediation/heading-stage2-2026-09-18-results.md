@@ -193,3 +193,4 @@ That is itself a finding for the product: **more than half of the untagged marke
   - the table-cells count `table_not_heading_confident` is stored but not shown;
   - the known gaps listed under Task 2 stand;
   - **zero real human-answer labels exist yet.**
+- **Hydration flake fixed** in its own commit, 6fdf5ad, which changes the test file only. "a persisted document inspection survives a reload" now reads the row with two `expect.poll` checks making the same assertions. `test:hydration` passed twice, 53/53 both times. `test:db` at 550bc3e still covers this head: 6fdf5ad touches only the browser hydration suite, which `test:db` does not run. **Branch head is 6fdf5ad: unmerged and unpushed; the merge is the user's decision.**
