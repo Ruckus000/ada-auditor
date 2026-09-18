@@ -42,6 +42,7 @@ Both ladder variants fail the ≥ 5 condition, so **Task 1 closes as "not traine
 - **Abstained: 383 rows** — H 219, P 117, Other 28, Caption 8, TOCI 5, TH 4, Artifact 2; 203 bold and 180 regular; the H are L1 52, L2 86, L3 69, L4 12.
 - At the lower thresholds the rule fails: at 0.99 the accuracy lower bound is 0.9783, below 0.98.
 - **Every document has at least one abstained row**, so no document is delivered end-to-end without a person looking at something. 52 of 59 have no *error* among the rows the model does answer.
+- **Correction (2026-09-18, found in Stage 2 Task 8):** the two document rows above are wrong. The original computation left out the 8 documents with no abstained row. Recounted over the same predictions and labels, validation holds **67** documents: **60 of 67** have zero covered errors, and **8 of 67** are fully covered with zero errors (c3-0919, c6-0055, c6-0128, c6-0136, c6-0235, c6-0319, c6-0350, c6-0442). So some documents *are* delivered end-to-end without a person. The threshold, the row counts and the bounds are unaffected. `out/stage1/operating-point-r10.json` carries the same wrong document fields.
 
 ## Stop decision — (b): r10 stays the candidate, and the operating point is registered
 - The fact was not trained, so the false-positive shape is unchanged.
