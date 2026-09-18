@@ -147,3 +147,33 @@ That is itself a finding for the product: **more than half of the untagged marke
 **Registered for a later plan, not built now:**
 - (a) **A TH veto at ask time**, from the existing table-ancestry fact. It would remove up to 35 of the 91 non-H asks here.
 - (b) **An OCR-quality gate before `suggest` runs**, so c3-0489-style documents are refused with a reason instead of asked about.
+
+## Task 6 — the table-box veto at ask time
+**Rule (registered and ruled before implementation).** A card inside a table box whose predicted type is not H raises **no ask**, whatever its score. It counts in `coverage.not_heading_confident` and in the sub-count `coverage.table_vetoed`. A card inside a table box that the model predicts H is still asked: the model's H overrides the veto. That branch fires on no wild row, and is kept and tested for the case the next sample may contain.
+
+**Premise correction, recorded.** The veto was proposed on the belief that the one real heading among the in-table asks would survive through the H-override branch. It does not: r10 predicted all 32 in-table asks non-H, including that heading.
+
+**Measured on the 10 wild documents**, recomputed from the stored predictions with no model run:
+
+| Document | Asks before | Asks after | `table_vetoed` |
+|---|---|---|---|
+| c3-0128 | 22 | 22 | 0 |
+| c3-0429 | 50 | **26** | 162 |
+| c3-0252 | 23 | 23 | 0 |
+| c3-0825 | 15 | 15 | 0 |
+| c3-0094 | 16 | 16 | 0 |
+| c3-0794 | 15 | 15 | 4 |
+| c3-0650 | 3 | 3 | 6 |
+| c3-0489 | 21 | 21 | 0 |
+| c3-0827 | 10 | **2** | 221 |
+| c3-0437 | 7 | 7 | 0 |
+| **Total** | **182** | **150** | **393** |
+
+- **Removed:** 32 asks — 31 table-header cells and **1 real heading, c3-0827:4**, a census table-title row that r10 called P at score 0.728.
+  - That is 31 of the 65 non-heading asks gone (48 %), for **1 heading lost out of 222**. The other 100 of the 101 audited-heading asks survive.
+  - §4 rule 3 makes that row Caption-adjacent. A reviewer answering the remaining asks never sees it, and it never becomes a label.
+- **`table_vetoed` (393)** counts every in-table non-H card, including ones already proposed and never asked. The number of asks the veto actually removed is 32.
+- **Code:**
+  - experiment side 4a31235: the sidecar gains `in_table_box` per card and `coverage.table_vetoed`; 167 label tests pass;
+  - product side a7ea856 on `claude-heading-suggestion-asks`: `needsIn` mirrors the rule, with tests on all three branches. Lint 0, typecheck 0, `npm test` 2,522, hydration 53.
+- **Open, not fixed:** the ask rule now lives in two places, Python (`suggest.py`) and TypeScript (`needsIn`), and nothing checks them against each other. The workbench's "J table cells not asked" line is untested at any level. `test:db` is still owed before merge.
