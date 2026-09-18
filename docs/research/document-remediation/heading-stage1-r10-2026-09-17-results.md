@@ -150,3 +150,60 @@ What the round establishes:
 | TN_sample | 40, document-capped | 903 | 40 | 1 |
 
 Fresh TP and TN samples were drawn because the FP pool moved by more than 20 rows. That every model-decided miss is already audited is itself a finding: r10's remaining misses are all on rows an earlier audit has already judged.
+
+## audit-r10v results and the folded evaluation
+`out/labels/audit-r10v-claude.jsonl`: 127 rows, 0 Unsure. The controller recomputed the counts.
+
+| Group | Scored | Real headings | The rest |
+|---|---|---|---|
+| FP_all | 27 | **20 (0.74)** | P 6, Other 1 |
+| TP_sample | 60 | 59 → **1/60** | Artifact 1 (a running header) |
+| TN_sample | 40 | 2 → **2/40** | P 23, Lbl 7, Other 4, TH 3, TOCI 1 |
+
+- Three quarters of r10's new false positives are key under-tagging, the same pattern as every earlier round.
+- **The 6 genuine P errors share one shape:** a line directly under a title — cover dates (c6-0258 twice), a submit-to line (c6-0056), effective dates (c3-0502), a department/date block (c3-0424), a reference line (c6-0196). That is a §5 candidate, not random noise.
+- `out/keys-all-4/labels-audited-r10.jsonl` applies all 127 (sha `4d120c07…`).
+
+### Evaluation on labels-audited-r10
+Estimated applies **r10v's own rates (TP 1/60, TN 2/40)** to rows no audit has touched. Each cell is accuracy / FP / FN.
+
+| Population | Run | TP/FP/TN/FN | Direct | Estimated |
+|---|---|---|---|---|
+| ∩ 273 | r7 reference | 106/9/142/16 | 0.908 / 0.060 / 0.131 | 0.889 / 0.066 / 0.165 |
+| ∩ 273 | r9 | 111/6/145/11 | 0.938 / 0.040 / 0.090 | 0.918 / 0.045 / 0.125 |
+| ∩ 273 | **r10** | 117/12/139/5 | 0.938 / 0.079 / **0.041** | 0.918 / 0.086 / **0.077** |
+| Cohort 6 | r9 | 403/18/768/63 | 0.935 / 0.023 / 0.135 | 0.911 / 0.025 / 0.186 |
+| Cohort 6 | **r10** | 435/24/762/31 | **0.956** / 0.031 / **0.067** | **0.932** / 0.033 / **0.122** |
+| All 1,525 | r7 reference | 501/29/908/87 | 0.924 / 0.031 / 0.148 | 0.901 / 0.034 / 0.195 |
+| All 1,525 | r9 | 514/24/913/74 | 0.936 / 0.026 / 0.126 | 0.912 / 0.029 / 0.174 |
+| All 1,525 | **r10** | 552/36/901/36 | **0.953** / 0.038 / **0.061** | **0.929** / 0.042 / **0.113** |
+
+**Recall by weight** (true H on the folded labels): r9 bold 358/387 (0.925), regular 156/201 (0.776); **r10 bold 367/387 (0.948), regular 185/201 (0.920)**.
+
+### Coverage curves on the folded labels (`out/stage1/coverage-audited-r10.json`)
+
+| Score ≥ | r9 coverage | r9 accuracy | r9 FP | r10 coverage | r10 accuracy | r10 FP |
+|---|---|---|---|---|---|---|
+| 0.5 | 1.000 | 0.936 | 0.026 | 1.000 | 0.953 | 0.038 |
+| 0.8 | 0.908 | 0.963 | 0.011 | 0.941 | 0.964 | 0.028 |
+| 0.9 | 0.856 | 0.972 | 0.010 | 0.908 | 0.973 | 0.020 |
+| 0.95 | 0.776 | 0.978 | 0.007 | 0.873 | 0.978 | 0.012 |
+| 0.99 | 0.590 | 0.988 | 0.004 | 0.784 | 0.987 | 0.006 |
+
+r10 matches r9's accuracy at every threshold while covering 5–19 points more of the population.
+
+### Registered prediction check, on the audited labels
+- **Regular-weight recall ≥ 0.88: MET** (0.920, from 0.776 for r9 on the same labels).
+- **Bold recall not below 0.94: MET** (0.948).
+- **Estimated FN ≤ 0.16: MET** (0.113, from r9's 0.174).
+- **FP ≤ 0.05: MET after the fold.** Direct 0.038, estimated 0.042. The pre-audit trip (0.057 / 0.064) was three-quarters key under-tagging, exactly as the reviewing session predicted.
+
+## Stop decision — (a): r10 becomes the candidate
+All four registered conditions hold on the audited labels, so the (c) revert is **lifted** and **r10 replaces r9 as the candidate**.
+
+- **The regular-weight gap was sample count.** Doubling those rows moved regular-weight recall from 0.78 to 0.92 with bold recall rising too, and misses fell from 74 rows to 36.
+- **The FP guard was nearly tripped by the labels, not the model.** 20 of the 27 audited new false positives are headings the author never tagged.
+- **Abstention now buys coverage rather than accuracy.** At score ≥ 0.99 both adapters sit at about 0.987, but r10 covers 78 % of rows against r9's 59 %.
+- **A new §5 candidate:** the line directly under a title (cover date, effective date, submit-to, reference line). It is r10's only systematic genuine false positive.
+- **The Stage 1 bar is still not met** at full coverage: 0.953 accuracy direct, 0.929 estimated, against 0.99, with FP 0.038 against 0.01. At score ≥ 0.99 accuracy reaches 0.987 on 78 % of rows, still short of the bar.
+- **Test was not evaluated**, and `test.spent` does not exist.
