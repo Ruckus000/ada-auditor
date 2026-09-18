@@ -117,6 +117,9 @@ public final class Cards {
                 json.append("    {\"locator\": ").append(q(stem + ":" + i));
                 json.append(", \"existing_tag\": ").append(q(type == null ? "" : type));
                 json.append(", \"text\": ").append(q(t));
+                FirstLine fl = firstLineOf(gs);
+                json.append(", \"first_line\": ").append(q(fl.text()));
+                json.append(", \"line_count\": ").append(fl.lines());
                 if (face == null) {
                     json.append(", \"font_pt\": null, \"weight\": null");
                 } else {
@@ -234,6 +237,33 @@ public final class Cards {
             prev = g;
         }
         return sb.toString().replaceAll("\\s+", " ").trim();
+    }
+
+    /** The glyphs up to the first line change, joined like wordsOf; and the line count. */
+    record FirstLine(String text, int lines) {}
+
+    /**
+     * A line change is the same test wordsOf uses (dy over half an em). Blocks with
+     * no glyphs report ("", 0). Stage 2 round 2: the split of an enumerated heading
+     * line out of an auto-tagged list item reads these.
+     */
+    static FirstLine firstLineOf(List<Glyph> glyphs) {
+        if (glyphs.isEmpty()) return new FirstLine("", 0);
+        int lines = 1;
+        int firstEnd = glyphs.size();
+        Glyph prev = null;
+        for (int i = 0; i < glyphs.size(); i++) {
+            Glyph g = glyphs.get(i);
+            if (prev != null) {
+                float em = g.fontPt > 0 ? g.fontPt : prev.fontPt;
+                if (Math.abs(g.y - prev.y) > 0.5f * em) {
+                    if (lines == 1) firstEnd = i;
+                    lines++;
+                }
+            }
+            prev = g;
+        }
+        return new FirstLine(wordsOf(glyphs.subList(0, firstEnd)), lines);
     }
 
     /**

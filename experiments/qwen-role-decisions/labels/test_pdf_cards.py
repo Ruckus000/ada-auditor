@@ -59,3 +59,65 @@ def test_drop_duplicate_cards_keeps_first_copy_at_one_box_only():
     other_page = card(3, "Agenda", page=1, y0=74)
     kept, dropped = drop_duplicate_cards([first, copy, elsewhere, other_page])
     assert [c["locator"] for c in kept] == ["d:0", "d:2", "d:3"] and dropped == 1
+
+
+# Task 1 (Stage 2 round 2): Cards.java reports each block's first physical line.
+import tempfile
+from pathlib import Path
+from run import dump_pdf
+
+WILD_0794 = Path("out/suggest/wild/c3-0794/odl-out/c3-0794.pdf")  # the ODL-tagged copy; gitignored
+
+
+def _tagged_pdf(path: Path, lines: list[str]) -> None:
+    """A one-page tagged PDF, written by hand: Document > L > LI, the LI holding one MCID
+    whose text is ``lines`` set 14 pt apart in 12 pt Helvetica, then a one-line P. Synthetic text only."""
+    shows = "".join(f"1 0 0 1 72 {700 - 14 * i} Tm ({t}) Tj\n" for i, t in enumerate(lines))
+    content = (f"/LI <</MCID 0>> BDC\nBT /F1 12 Tf\n{shows}ET\nEMC\n"
+               "/P <</MCID 1>> BDC\nBT /F1 12 Tf 1 0 0 1 72 600 Tm (One line only) Tj ET\nEMC\n")
+    objs = [
+        "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> "
+        "/Contents 9 0 R /StructParents 0 >>",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+        "<< /Type /StructTreeRoot /K 6 0 R /ParentTree 10 0 R >>",
+        "<< /Type /StructElem /S /Document /P 5 0 R /K [7 0 R 11 0 R] >>",
+        "<< /Type /StructElem /S /L /P 6 0 R /K [8 0 R] >>",
+        "<< /Type /StructElem /S /LI /P 7 0 R /Pg 3 0 R /K [0] >>",
+        f"<< /Length {len(content.encode('latin-1'))} >>\nstream\n{content}endstream",
+        "<< /Nums [0 [8 0 R 11 0 R]] >>",
+        "<< /Type /StructElem /S /P /P 6 0 R /Pg 3 0 R /K [1] >>",
+    ]
+    out = bytearray(b"%PDF-1.7\n")
+    offsets = []
+    for n, body in enumerate(objs, start=1):
+        offsets.append(len(out))
+        out += f"{n} 0 obj\n{body}\nendobj\n".encode("latin-1")
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode()
+    out += "".join(f"{o:010d} 00000 n \n" for o in offsets).encode()
+    out += f"trailer\n<< /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    path.write_bytes(bytes(out))
+
+
+def test_cards_dump_reports_first_line_and_line_count_on_a_synthetic_pdf():
+    with tempfile.TemporaryDirectory() as d:
+        pdf = Path(d) / "syn.pdf"
+        _tagged_pdf(pdf, ["B. Scope", "Every widget shall be", "counted twice."])
+        by = {b["existing_tag"]: b for b in dump_pdf(pdf, compile=True)["blocks"]}
+    li, p, lst = by["LI"], by["P"], by["L"]
+    assert li["text"] == "B. Scope Every widget shall be counted twice."
+    assert (li["first_line"], li["line_count"]) == ("B. Scope", 3)
+    assert (p["first_line"], p["line_count"]) == ("One line only", 1)
+    assert (lst["first_line"], lst["line_count"]) == ("B. Scope", 3)  # a container reports its gathered glyphs
+
+
+def test_cards_dump_reports_first_line_and_line_count_on_c3_0794():
+    if not WILD_0794.is_file():
+        print("skip: c3-0794's tagged copy is not on this machine"); return
+    by = {b["locator"]: b for b in dump_pdf(WILD_0794, compile=True)["blocks"]}
+    assert by["c3-0794:9"]["first_line"] == "A. Plans"
+    assert by["c3-0794:9"]["line_count"] >= 8
+    assert by["c3-0794:10"]["first_line"] == "A." and by["c3-0794:10"]["line_count"] == 1
+    assert all(("first_line" in b) and ("line_count" in b) for b in by.values())
