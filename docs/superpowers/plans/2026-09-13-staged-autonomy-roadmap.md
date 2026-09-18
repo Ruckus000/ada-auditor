@@ -203,6 +203,10 @@ are card-level shapes: 9 enumerator-only cards, a convention conflict with the
 training keys, and 8 headings merged with their paragraph. Net of the
 convention conflict, accuracy is 0.9878 [0.9793–0.9935]. The next lever is card
 building on untagged PDFs.
+**Wild rounds 2+3 (30 documents, round 3 a random card subsample; graded
+against Claude-consensus labels):** at 0.9933, accuracy 0.9903 [0.9848–0.9941]
+on 1,950 answered cards, FP 0 (upper bound 0.0020), abstention 14.2 %. The
+accuracy lower bound is 0.005 short and abstention is the furthest bar.
 **Wild round 2 (enumerated heading split, graded against Claude-consensus
 labels):** at 0.9933, accuracy 0.9872 [0.9787–0.9930], FP 0, abstention 11.0 %;
 net of the enumerator convention conflict, accuracy 0.9935 [0.9867–0.9974].
