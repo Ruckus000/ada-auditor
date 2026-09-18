@@ -309,3 +309,93 @@ Coverage curve (threshold: coverage, accuracy [lower–upper], FP):
   - **Containers still feed `prev`.** c3-0794:1's `prev` is the text of its L container, c3-0794:0 (tag L, 227 pt tall), which encloses the LI. `non_container_cards` drops containers as cards, but they are evidently still used for the `prev` context.
 
 **One-line summary for the roadmap:** on the first wild population, graded against Claude-consensus labels, the 0.9933 operating point holds FP at 0 of 1,081 answered cards. Accuracy misses the gate (lower bound 0.969 raw, 0.979 net of the enumerator convention conflict) because of two card-level shapes inherited from the auto-tagger's list detection, numeral-only Lbl cards and heading-plus-paragraph LI blocks — not because of the model's judgement on clean cards.
+
+## Wild round 2: enumerated heading split
+**Every number in this section is graded against Claude-consensus labels.**
+
+Plan: `docs/superpowers/plans/2026-09-18-stage2-enumerated-heading-split.md`.
+
+**The change.** `Cards.java` now reports each block's `first_line` and `line_count` (1050b12). `labels/split_heads.py` splits an LI or H* block with at least 2 lines whose first line is an enumerator plus at most 6 words — punctuation-only tokens don't count (a05dac8) — and doesn't end in `.;:`. The result is a head card `<locator>h` and a body card. The split is opt-in via `suggest --split-enumerated-heads`, and the training keys are byte-identical.
+
+**Before measuring:**
+- **Convention fixed:** an enumerator-only card is `Lbl`, as in all 185 training-key rows (judge protocol v2).
+- **The 20 round-1 H rows on enumerator-only cards are left as labelled.**
+- **Registered projection** (ledger, before the run):
+  - FP passes;
+  - accuracy comes near the gate but under it;
+  - abstention stays above 10 %.
+  - With the recorded Clopper-Pearson bound, a lower bound ≥ 0.99 needs n ≥ 368 answered cards at 0 covered errors, 874 at 3, 1,022 at 4, 1,164 at 5 and 1,439 at 7.
+
+**Run.** Ten sidecars were written to `out/suggest/wild-v2`, taking 2,565 s (0.99 s per card).
+- **Splits:** c3-0128 7, c3-0794 3, c3-0094 3. Of the 14 round-1 merged-heading H blocks, 12 split.
+- **Residuals that did not split:**
+  - c3-0794:1, where the heading and its first sentence share one physical line;
+  - c3-0128:12, whose first line is seven words.
+- **The changed set** (`out/labels/s2wild-v2-changed.json`) is 26 cards, and every other id's text is identical:
+  - 13 heads;
+  - 12 shortened bodies;
+  - c3-0794:96, a revived body. The whole list item was missing from round 1, because `candidate_pool` drops the only LI of a one-item list — see Gaps.
+
+**Judging.** The four blind judges ran under protocol v2 on the 26 cards only.
+- All 26 were unanimous, with pairwise agreement 1.0.
+- All 13 heads are H, and all 13 bodies are non-H (P 8, Other 5).
+- Calibration doesn't apply: the audit rows refer to the old merged text, and this is disclosed.
+- The patched consensus, `s2wild-consensus-v2.jsonl`, has 1,246 rows: 1,220 byte-identical to round 1, 12 replaced and 14 added.
+
+**Fold and split.**
+- Fold: 1,233 kept and 13 with no consensus.
+- `split --keep out/keys-all-4-wild/split/split.json --assign-new validation` puts the 14 new ids in validation. 0 kept ids moved, and test was not evaluated.
+- Output: `out/stage1/eval-wild-v2-r10.txt`.
+
+### Views at 0.9933
+| View | Rows | Covered | Abstention | Accuracy [exact 95 %] | FP (upper bound) | FN | Clean documents |
+|---|---|---|---|---|---|---|---|
+| Raw round 1 (continuity) | 1,219 | 1,081 | 0.113 | 0.9796 [0.9693–0.9872] | 0 (0.0036) | 22 | 6/10 |
+| **Raw round 2 — the headline** | 1,233 | 1,098 | 0.110 | **0.9872 [0.9787–0.9930]** | 0 (0.0036) | 14 | 6/10 |
+| Round 2, net of the 20 enumerator-only H rows (convention conflict) | 1,213 | 1,084 | 0.106 | 0.9935 [0.9867–0.9974] | 0 (0.0036) | 7 | 6/10 |
+| Round 2, shape-blind (the round-1 selector re-applied, 229 cards) | 1,004 | 887 | 0.117 | 0.9944 [0.9869–0.9982] | 0 (0.0043) | 5 | 7/10 |
+
+Coverage curve, round 2 raw (threshold: coverage, accuracy [lower–upper], FP):
+
+| Threshold | Coverage | Accuracy | FP |
+|---|---|---|---|
+| 0.5 | 1.000 | 0.9716 [0.9607–0.9802] | 5 |
+| 0.9 | 0.958 | 0.9839 [0.9750–0.9903] | 1 |
+| 0.95 | 0.945 | 0.9863 [0.9778–0.9921] | 1 |
+| 0.99 | 0.906 | 0.9875 [0.9791–0.9931] | 0 |
+| 0.9933 | 0.891 | 0.9872 [0.9787–0.9930] | 0 |
+
+- **The registered rule re-derived on this population** gives 0.99856 (coverage 0.81). It is reported, not adopted; a threshold is only ever derived on validation.
+- **Recall:** bold 58 of 65, regular 29 of 52.
+- **Level exactness among true positives:** L1 30 of 39, L2 13 of 34, L3 0 of 14.
+
+### Where the change came from (covered errors 22 → 14)
+- **The split** removed 6 covered misses (c3-0128:3, :6, :28, :153; c3-0794:9, :59). The merged blocks are now bodies, labelled non-H, and 12 of 13 are answered correctly at 0.9933.
+  - All 13 head cards are predicted H.
+  - 8 of them are covered at ≥ 0.9933.
+  - 5 abstain: c3-0094:59h just under 0.9933, c3-0128:28h at 0.952, c3-0794:9h at 0.829, c3-0794:59h at 0.974, c3-0794:96h at 0.989.
+- **The context effect.** The split changes neighbours' `prev`/`next` text, which r10 reads, and it shifted r10's answer on 33 unchanged-text cards. The effect removed 2 covered misses by abstention, not by correction (details in `out/labels/s2wild-v2-context-shift.txt`):
+  - **5 crossed into coverage, all correct:** c3-0094:58 and :60, and c3-0794:69, :105 and :156.
+  - **3 crossed out:** c3-0128:29 and c3-0794:12, both round-1 covered errors on enumerator-only H rows, and c3-0128:13, which had no consensus.
+  - **2 heading-bit flips below the threshold:** c3-0128:17 went right → wrong, and :39 went wrong → right.
+- **The 14 remaining covered misses** (counted after measurement):
+  - **7 enumerator-only cards** in c3-0794 (:2, :7, :10, :42, :60, :70, :97), labelled H in round 1. This is the convention conflict: r10 says Lbl, as trained.
+  - **2 merged-block residuals:** c3-0794:1 (same line) and c3-0128:12 (seven words).
+  - **3 genuine misses:** c3-0252:53, c3-0794:134, c3-0794:138.
+  - **2 scanned-text noise:** c3-0489:34 and :10 (the OCR-quality gap).
+
+### Gate verdict, one line per view (the gate needs accuracy lower bound ≥ 0.99, FP upper bound ≤ 0.01, abstention ≤ 0.10)
+- **Raw round 2:** not met. The lower bound is 0.979, and abstention is 0.110. FP passes.
+- **Convention-net:** not met. The lower bound is 0.987, 0.003 under the gate, and abstention is 0.106. FP passes.
+- **Shape-blind:** not met. The lower bound is 0.987, and abstention is 0.117. FP passes. It is a sensitivity bound only, and not adoptable.
+- **The registered projection held:** FP passes, accuracy comes near but under, and abstention stays above 10 %.
+  - At 1,084 covered cards, the convention-net view needs ≤ 4 covered errors to pass and has 7.
+  - Five of the seven are genuine or noise; two are the merged-block residuals.
+  - The lever is population size, which is round 3 (`2026-09-18-stage2-wild-population-growth.md`), together with the two known residual shapes.
+
+### Gaps recorded, not fixed here
+- **`candidate_pool` drops a one-item list's only item.** It de-duplicates before it drops containers, so the LI goes as a duplicate of its L, and then the L goes as a container. This affects training keys too, and the keys were left untouched.
+- **Container text still feeds `prev`.**
+- **11 overlapping locators.**
+- **OCR:** the 151 image-only candidates.
+- **The two residual merged shapes:** same-line, and a first line over six words.
