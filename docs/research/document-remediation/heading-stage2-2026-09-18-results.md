@@ -90,3 +90,29 @@ Every validation number so far comes from **stripped copies of tagged PDFs**, wh
   - precision of proposed-H suggestions **≥ 0.90**;
   - hidden-heading rate in NHC_SAMPLE **≤ 0.05** (≤ 2 of 40).
 - **If either fails,** the record states that the wild population differs from the stripped one and by how much, and Stage 2's operating point is marked "measured on stripped PDFs only".
+
+### Task 5 — population and runs (measured; judging pending)
+**Deviation from the registration, recorded before judging.** The pool was narrowed to cohort 3 PDFs with **1–600** text blocks, not "≤ 600". Of the 271 untagged, host-clean candidates the tagger could process, **151 (about 56 %) are scanned images with no text layer (0 blocks)**. A literal draw would have spent 6 of the 9 picks on documents r10 cannot read at all.
+
+That is itself a finding for the product: **more than half of the untagged market sample has no text layer**, and neither r10 nor any text-layer path can help with it without OCR. A further 5 files produced no tagged copy (4 encrypted or corrupt; 1 hung the tagger for more than 15 minutes and was killed), so a product path that runs the tagger needs a timeout.
+
+**Population:** 10 documents from 8 hosts, none in any split: westminstermd.gov, buncombenc.gov ×2, ehamptonny.gov, newberlinwi.gov ×2, nantucket-ma.gov, alpinecountyca.gov, otsegomn.gov and klamathcountyor.gov. The registration did not require distinct hosts, so the sample is not host-independent.
+
+| Document | Pages | Blocks = cards | Proposed | Asked | Not-heading-confident | Rule / model | Wall time (s) |
+|---|---|---|---|---|---|---|---|
+| c3-0128 | 6 | 185 | 174 | 22 | 163 | 19 / 166 | 405.7 |
+| c3-0429 | 10 | 273 | 237 | 50 | 223 | 118 / 155 | 474.8 |
+| c3-0252 | 9 | 196 | 175 | 23 | 173 | 24 / 172 | 503.3 |
+| c3-0825 | 1 | 53 | 38 | 15 | 38 | 1 / 52 | 116.9 |
+| c3-0094 | 4 | 60 | 50 | 16 | 44 | 0 / 60 | 137.9 |
+| c3-0794 | 8 | 135 | 122 | 15 | 120 | 30 / 105 | 253.9 |
+| c3-0650 | 1 | 17 | 15 | 3 | 14 | 0 / 17 | 47.1 |
+| c3-0489 | 6 | 47 | 26 | 21 | 26 | 6 / 41 | 107.1 |
+| c3-0827 | 4 | 243 | 233 | 10 | 233 | 159 / 84 | 331.0 |
+| c3-0437 | 1 | 23 | 16 | 7 | 16 | 0 / 23 | 58.2 |
+| **Total** | 50 | **1,232** | **1,086** | **182** | **1,050** | **357 / 875** | **2,435.9 (40.6 min)** |
+
+- **Speed:** about 2.8 s per model card including one model load per document. The cap assumed 2.1 s.
+- **Asks:** 182 across 50 pages. 36 are proposed H, 41 are below-threshold H, and **105 are below-threshold non-H** (P 95, TH 8, Lbl 2).
+- **Rules are heavy on two documents:** they decide 159 of 243 cards on c3-0827 and 118 of 273 on c3-0429.
+- **Audit set:** 222 blind cards — ASKED_ALL 182 and NHC_SAMPLE 40 (4 per document; 29 model-decided and 11 rule-decided, so the "confidently not a heading" rate is scored both with and without the rule rows). Files: `out/labels/audit-s2wild-cards.jsonl` (ids only), `audit-s2wild-groups.json` (r10's predictions) and `audit-s2wild-source.jsonl` (card facts and images; contains text, gitignored, never quoted).
