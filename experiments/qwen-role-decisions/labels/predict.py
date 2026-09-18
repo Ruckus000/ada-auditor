@@ -66,6 +66,26 @@ def heading_of_decision(raw: str, card: dict) -> dict | None:
     return {"page": card["page"], "y0": card["y0"], "level": data["level"], "text": card["text"], "locator": card["card_id"]}
 
 
+class OwnStack:
+    """``--own-stack``: the model's own H decisions per document, recorded in reading order.
+
+    ``headings`` has the key-ladder shape, so ``prompt_for_row`` reads it as it
+    reads keys; ``before`` is the same ``stack_before`` call, for a card's
+    ``depends_on``.
+    """
+
+    def __init__(self) -> None:
+        self.headings: defaultdict[str, list[dict]] = defaultdict(list)
+
+    def before(self, card: dict) -> list[dict]:
+        return stack_before(card, self.headings.get(card["document_id"], []), None)
+
+    def record(self, raw: str, card: dict) -> None:
+        h = heading_of_decision(raw, card)
+        if h is not None:
+            self.headings[card["document_id"]].append(h)
+
+
 def after_h1_from_decisions(card: dict, cards_in_doc: list[dict], decided_h1: set[str]) -> bool:
     """The inference-side fact: the card above this one on the page was called H1 by the model itself."""
     prev = previous_card(card, cards_in_doc)
@@ -215,7 +235,8 @@ def main() -> None:
     if (a.keys is None) == (not a.own_stack):
         p.error("pass exactly one of --keys and --own-stack")
     cards = {c["card_id"]: c for c in (json.loads(l) for l in a.cards.read_text().splitlines() if l.strip())}
-    keys = defaultdict(list) if a.own_stack else json.loads(a.keys.read_text())
+    own = OwnStack() if a.own_stack else None
+    keys = own.headings if own is not None else json.loads(a.keys.read_text())
     rows = ([json.loads(l) for l in a.labels.read_text().splitlines() if l.strip()] if a.labels is not None
             else [{"id": c["card_id"], "document_id": c["document_id"]} for c in cards.values()])
     wanted = set(json.loads(a.split.read_text())["ids"][a.on]) if a.split is not None else {r["id"] for r in rows}
@@ -232,8 +253,8 @@ def main() -> None:
             done.add(prior["id"])
             if is_h1(prior["raw"]):
                 decided_h1.add(prior["id"])
-            if a.own_stack and (h := heading_of_decision(prior["raw"], cards[prior["id"]])) is not None:
-                keys[cards[prior["id"]]["document_id"]].append(h)
+            if own is not None:
+                own.record(prior["raw"], cards[prior["id"]])
     n_rule = n_model = 0
     with a.out.open("a") as f:
         for r in rows:
@@ -259,8 +280,8 @@ def main() -> None:
                 by = "model"; n_model += 1
             if is_h1(raw):
                 decided_h1.add(r["id"])
-            if a.own_stack and (h := heading_of_decision(raw, card)) is not None:
-                keys[r["document_id"]].append(h)
+            if own is not None:
+                own.record(raw, card)
             f.write(json.dumps({"id": r["id"], "raw": raw, "decided_by": by, **extra}) + "\n")
             f.flush()
     print(json.dumps({"rule": n_rule, "model": n_model, "out": str(a.out)}))

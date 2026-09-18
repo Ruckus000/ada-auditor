@@ -112,22 +112,29 @@ def key_document(d: dict, dump: Callable = dump_pdf, failures: Callable = verapd
     return (kb if ok else None), reasons
 
 
-def document_cards(tagged: Path, doc_id: str, rng: random.Random, dump: Callable = dump_pdf,
-                   duplicates: Counter | None = None) -> list[dict] | None:
-    """One tagged copy's candidate cards: duplicate copies out (K35), containers out (K24), select, annotate, cap.
-    None when Cards cannot read the tagged copy; the rng is not drawn in that case."""
-    raw = read_dump(tagged, dump)
-    if raw is None:
-        return None
+def candidate_pool(raw: dict, doc_id: str, duplicates: Counter | None = None) -> list[dict]:
+    """Every text block of one tagged dump that may be a candidate: duplicate copies out (K35), containers out (K24)."""
     cards, _ = blocks_to_cards(raw.get("blocks") or [])
     cards, n_dup = drop_duplicate_cards(cards)
     if duplicates is not None and n_dup:
         duplicates[doc_id] += n_dup
-    chosen = select_candidates(non_container_cards(cards), rng)
+    return non_container_cards(cards)
+
+
+def document_cards(tagged: Path, doc_id: str, rng: random.Random, dump: Callable = dump_pdf,
+                   duplicates: Counter | None = None, select: bool = True) -> list[dict] | None:
+    """One tagged copy's candidate cards: the pool (K35, K24), then select, annotate, cap.
+    ``select=False`` skips selection and the cap: every block in the pool is a card.
+    None when Cards cannot read the tagged copy; the rng is not drawn in that case."""
+    raw = read_dump(tagged, dump)
+    if raw is None:
+        return None
+    pool = candidate_pool(raw, doc_id, duplicates)
+    chosen = select_candidates(pool, rng) if select else pool
     for c in chosen:
         c["document_id"] = doc_id; c["kind"] = "pdf"; c["card_id"] = c["locator"]
         c["norm"] = text_norm(c["text"])
-    return cap_per_document(chosen, rng)
+    return cap_per_document(chosen, rng) if select else chosen
 
 
 def strip_usable(usable: list[dict], stripped_dir: Path, excluded: dict, strip: Callable = strip_pdf) -> list[dict]:
