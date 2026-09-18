@@ -3,7 +3,7 @@
 The card path is the keys pipeline's own, for one document: OpenDataLoader tags
 a copy (``build_keys.odl``), ``build_keys.document_cards`` picks the candidates
 (K35 dedupe, containers out, selection, cap — or, with ``--all-blocks``, every
-block in that pool, uncapped), ``key_context.context_cards`` adds
+block in that pool, uncapped, up to ``ALL_BLOCKS_LIMIT``), ``key_context.context_cards`` adds
 the facts and ``marked_image`` the marked page (rendered from the input PDF),
 ``reduce_marked_408.py`` sizes the images, and ``predict.py --scores --own-stack``
 decides — rules in front, then the model, whose approved-headings stack is its
@@ -35,8 +35,12 @@ from labels.stage_pdfs import has_struct_tree
 
 SIDECAR_KEYS = ("document", "threshold", "page_base", "coverage", "cards")
 CARD_KEYS = ("card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on")
-COVERAGE_KEYS = ("blocks_total", "cards_considered", "selector")
+COVERAGE_KEYS = ("blocks_total", "cards_considered", "selector", "not_heading_confident")
 SELECTORS = {False: "likely-headings+5%", True: "all-blocks"}
+# A wall-time budget, not a quality bound: --all-blocks costs about 2.1 s per
+# model-decided card (c3-0128: 166 model cards in 397.7 s), so 600 blocks is
+# roughly 20 minutes. Above it, --all-blocks falls back to the default selector.
+ALL_BLOCKS_LIMIT = 600
 LOCATOR_KEYS = ("page", "x0", "y0", "x1", "y1")
 MODEL_SNAPSHOTS = Path.home() / ".cache/huggingface/hub/models--mlx-community--Qwen3.5-4B-MLX-4bit/snapshots"
 
@@ -77,7 +81,10 @@ def assemble_sidecar(document: str, threshold: float, cards: list[dict], predict
             "proposed": score is not None and score >= threshold,
             "depends_on": depends_on,
         })
-    coverage = {"blocks_total": blocks_total, "cards_considered": len(out), "selector": selector}
+    # Proposed and not H: recorded as considered, not a heading; the product does not ask about them.
+    not_heading_confident = sum(1 for r in out if r["proposed"] and r["type"] != "H")
+    coverage = {"blocks_total": blocks_total, "cards_considered": len(out), "selector": selector,
+                "not_heading_confident": not_heading_confident}
     return {"document": document, "threshold": threshold, "page_base": 0, "coverage": coverage, "cards": out}
 
 
@@ -100,19 +107,26 @@ def tag(pdf: Path, work: Path, stem: str) -> Path:
     return tagged
 
 
-def choose_cards(raw: dict, stem: str, all_blocks: bool) -> tuple[list[dict], int]:
-    """The cards to suggest for, with their facts, in reading order; and the pool size (``blocks_total``)."""
-    chosen = document_cards(Path(stem), stem, random.Random(SEED), dump=lambda _p, compile=False: raw, select=not all_blocks)
+def choose_cards(raw: dict, stem: str, all_blocks: bool) -> tuple[list[dict], int, str]:
+    """The cards to suggest for, with their facts, in reading order; the pool size
+    (``blocks_total``); and the selector actually used. ``all_blocks`` over a pool
+    larger than ``ALL_BLOCKS_LIMIT`` falls back to the default selector, and says so."""
+    blocks_total = len(candidate_pool(raw, stem))
+    every = all_blocks and blocks_total <= ALL_BLOCKS_LIMIT
+    selector = SELECTORS[every]
+    if all_blocks and not every:
+        selector += f" (all-blocks capped: {blocks_total} > {ALL_BLOCKS_LIMIT})"
+    chosen = document_cards(Path(stem), stem, random.Random(SEED), dump=lambda _p, compile=False: raw, select=not every)
     cards = context_cards(raw.get("blocks") or [], stem, {c["card_id"] for c in chosen})
-    return sorted(cards, key=reading_order), len(candidate_pool(raw, stem))
+    return sorted(cards, key=reading_order), blocks_total, selector
 
 
-def build_cards(pdf: Path, tagged: Path, stem: str, work: Path, all_blocks: bool) -> tuple[list[dict], int]:
-    cards, blocks_total = choose_cards(dump_pdf(tagged, compile=False), stem, all_blocks)
+def build_cards(pdf: Path, tagged: Path, stem: str, work: Path, all_blocks: bool) -> tuple[list[dict], int, str]:
+    cards, blocks_total, selector = choose_cards(dump_pdf(tagged, compile=False), stem, all_blocks)
     for c in cards:
         img = marked_image(c, pdf, work / "pages")
         c["image"] = None if img is None else str(img.resolve())
-    return cards, blocks_total
+    return cards, blocks_total, selector
 
 
 def main() -> None:
@@ -123,7 +137,8 @@ def main() -> None:
     p.add_argument("--python", required=True, help="the MLX interpreter (predict.py --scores runs under it)")
     p.add_argument("--out", type=Path, required=True, help="sidecar JSON path")
     p.add_argument("--work", type=Path, default=None, help="default: the sidecar's directory")
-    p.add_argument("--all-blocks", action="store_true", help="every text block of the pool, no selection and no cap")
+    p.add_argument("--all-blocks", action="store_true",
+                   help=f"every text block of the pool, no selection and no cap, up to {ALL_BLOCKS_LIMIT} blocks (a wall-time budget)")
     p.add_argument("--model-path", type=Path, default=None, help="local Qwen snapshot for the 408-token sizing; default the HF cache's")
     a = p.parse_args()
     started = time.monotonic()
@@ -139,7 +154,7 @@ def main() -> None:
         (work / f).unlink(missing_ok=True)
     work.mkdir(parents=True, exist_ok=True)
     tagged = tag(a.pdf, work, stem)
-    cards, blocks_total = build_cards(a.pdf, tagged, stem, work, a.all_blocks)
+    cards, blocks_total, selector = build_cards(a.pdf, tagged, stem, work, a.all_blocks)
     (work / "cards.jsonl").write_text("".join(json.dumps(c) + "\n" for c in cards))
     n_img = sum(1 for c in cards if c["image"])
     if n_img:
@@ -149,7 +164,7 @@ def main() -> None:
                     "--adapter", a.adapter, "--python", a.python, "--out", str(work / "predictions.jsonl")], check=True)
     cards = [json.loads(l) for l in (work / "cards.jsonl").read_text().splitlines() if l.strip()]
     preds = [json.loads(l) for l in (work / "predictions.jsonl").read_text().splitlines() if l.strip()]
-    sidecar = assemble_sidecar(stem, a.threshold, cards, preds, blocks_total, SELECTORS[a.all_blocks])
+    sidecar = assemble_sidecar(stem, a.threshold, cards, preds, blocks_total, selector)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(sidecar, indent=2) + "\n")
     rows = sidecar["cards"]

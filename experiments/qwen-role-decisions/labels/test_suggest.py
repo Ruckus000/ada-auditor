@@ -1,4 +1,4 @@
-from labels.suggest import CARD_KEYS, COVERAGE_KEYS, LOCATOR_KEYS, SIDECAR_KEYS, assemble_sidecar, choose_cards
+from labels.suggest import ALL_BLOCKS_LIMIT, CARD_KEYS, COVERAGE_KEYS, LOCATOR_KEYS, SIDECAR_KEYS, assemble_sidecar, choose_cards
 
 THRESHOLD = 0.9933
 
@@ -91,8 +91,8 @@ def test_depends_on_follows_the_stack_when_a_heading_closes_a_deeper_one():
 
 def test_coverage_counts():
     cov = _sidecar()["coverage"]
-    assert set(cov) == set(COVERAGE_KEYS) == {"blocks_total", "cards_considered", "selector"}
-    assert cov == {"blocks_total": 9, "cards_considered": 5, "selector": "likely-headings+5%"}
+    assert set(cov) == set(COVERAGE_KEYS) == {"blocks_total", "cards_considered", "selector", "not_heading_confident"}
+    assert cov == {"blocks_total": 9, "cards_considered": 5, "selector": "likely-headings+5%", "not_heading_confident": 1}
 
 
 def _block(i: int, tag: str, text: str, y0: float | None = None) -> dict:
@@ -109,16 +109,48 @@ FIXTURE = {"blocks": [_block(0, "H1", "Fees")] + [_block(i, "P", BODY.format(i))
 
 
 def test_blocks_total_is_the_pool_after_dedupe_and_container_removal():
-    _, total = choose_cards(FIXTURE, "doc", all_blocks=False)
+    _, total, _ = choose_cards(FIXTURE, "doc", all_blocks=False)
     assert total == 41  # 43 blocks, less the Table container and the K35 copy
 
 
 def test_all_blocks_considers_every_block_in_the_pool():
-    chosen, total = choose_cards(FIXTURE, "doc", all_blocks=False)
+    chosen, total, selector = choose_cards(FIXTURE, "doc", all_blocks=False)
     assert len(chosen) < total  # the default selects
-    every, total_all = choose_cards(FIXTURE, "doc", all_blocks=True)
+    assert selector == "likely-headings+5%"
+    every, total_all, selector_all = choose_cards(FIXTURE, "doc", all_blocks=True)
+    assert selector_all == "all-blocks"
     assert total_all == total and len(every) == total
     s = assemble_sidecar("doc", THRESHOLD, every, [{"id": c["card_id"], "raw": '{"type":"P","rule":4}', "decided_by": "model", "score": 0.99} for c in every],
                          total_all, "all-blocks")
     assert s["coverage"]["cards_considered"] == s["coverage"]["blocks_total"] == 41
     assert s["coverage"]["selector"] == "all-blocks"
+
+
+def test_not_heading_confident_counts_proposed_cards_that_are_not_h():
+    # doc:1 proposed H (not counted), doc:3 proposed rule Artifact (counted), the rest asked
+    assert _sidecar()["coverage"]["not_heading_confident"] == 1
+    cards = [_card(n, 0, n * 10.0) for n in (1, 2, 3, 4)]
+    raws = ['{"type":"P","rule":4}', '{"type":"Lbl","rule":3}', '{"type":"H","level":1,"rule":1}', '{"type":"P","rule":4}']
+    scores = [0.999, 1.0, 0.999, 0.5]  # the last P is asked, so it is not counted
+    preds = [{"id": c["card_id"], "raw": r, "decided_by": "model", "score": sc} for c, r, sc in zip(cards, raws, scores)]
+    s = assemble_sidecar("doc", THRESHOLD, cards, preds, 4, "all-blocks")
+    assert s["coverage"]["not_heading_confident"] == 2
+    assert len(s["cards"]) == 4  # the confident non-headings stay in the list
+
+
+def _body(n: int) -> dict:
+    return {"blocks": [_block(i, "P", BODY.format(i)) for i in range(n)]}
+
+
+def test_all_blocks_at_or_under_the_limit_stays_all_blocks():
+    assert ALL_BLOCKS_LIMIT == 600
+    cards, total, selector = choose_cards(_body(ALL_BLOCKS_LIMIT), "doc", all_blocks=True)
+    assert (total, len(cards), selector) == (600, 600, "all-blocks")
+
+
+def test_all_blocks_above_the_limit_falls_back_to_the_selector_and_says_so():
+    cards, total, selector = choose_cards(_body(ALL_BLOCKS_LIMIT + 1), "doc", all_blocks=True)
+    assert total == 601 and len(cards) < total
+    assert selector == "likely-headings+5% (all-blocks capped: 601 > 600)"
+    default, _, _ = choose_cards(_body(ALL_BLOCKS_LIMIT + 1), "doc", all_blocks=False)
+    assert [c["card_id"] for c in cards] == [c["card_id"] for c in default]
