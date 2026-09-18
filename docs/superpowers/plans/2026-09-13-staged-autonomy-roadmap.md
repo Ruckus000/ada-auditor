@@ -185,6 +185,18 @@ Re-plan (larger local model, or crops) with a new registration; do not tune.
 
 ## Stage 2 — the person sees only what the model abstains on
 
+**Status 2026-09-18 (Stage 2 build).** The path from a reviewer's decision to
+a `human-answer` label is built: `labels/suggest.py` writes a sidecar of
+adapter-r10 suggestions (all blocks ≤ 600, likely headings above); the
+product branch `claude/heading-suggestion-asks` raises `heading-card:` asks in
+the workbench (asks for predicted H and every below-threshold card; confident
+non-headings counted in coverage), stores no document text, keeps them off the
+client report, and passes every gate except `test:db`, which is owed before
+merge; `labels/export_answers.py` turns decided answers into label rows grouped
+by host. **Zero real human-answer labels exist yet; the Stage 2 gate is
+unchanged until a person answers in the workbench.** Record:
+`heading-stage2-2026-09-18-results.md`.
+
 **What:** decided cards are applied without review; `Unsure` cards go to the
 reviewer. The delivered PDF carries the model's decisions through the
 declared-change channel, is read back, and passes veraPDF like any delivery.
