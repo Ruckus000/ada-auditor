@@ -16,18 +16,24 @@ MAX_HEAD_WORDS = 6
 LINE_EM = 1.3
 
 
+def head_words(line: str) -> int:
+    """Tokens that carry a letter or digit; a punctuation-only token ("–", "&") is not a word."""
+    return sum(1 for t in line.split() if re.search(r"\w", t))
+
+
 def is_enumerated_head(block: dict) -> bool:
     first = (block.get("first_line") or "").strip()
     if block.get("existing_tag") not in SPLIT_TAGS or (block.get("line_count") or 0) < 2:
         return False
-    if not ENUM_HEAD.match(first) or len(first.split()) > MAX_HEAD_WORDS:
+    if not ENUM_HEAD.match(first) or head_words(first) > MAX_HEAD_WORDS:
         return False
     return not re.search(r"[.;:]$", first) and block.get("font_pt") is not None
 
 
 def split_enumerated_heads(blocks: list[dict]) -> tuple[list[dict], int]:
     """New block list and the number of blocks split. Head ``<locator>h`` (the first line,
-    ``y1`` cut at ``y0 + 1.3 em``), then the body under the original locator; other keys copied."""
+    ``y1`` cut at ``y0 + 1.3 em``), then the body under the original locator; other keys copied.
+    A block whose text does not start with its first line is left whole and not counted."""
     out, n = [], 0
     for b in blocks:
         if not is_enumerated_head(b):

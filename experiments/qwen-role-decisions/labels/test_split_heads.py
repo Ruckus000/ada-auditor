@@ -68,3 +68,11 @@ def test_training_key_builder_never_splits():
     cards = [document_cards(Path("d"), "d", random.Random(SEED), dump=lambda _p, compile=False, b=b: {"blocks": b}, select=False)
              for b in (shaped, old)]
     assert cards[0] == cards[1]
+
+
+def test_punctuation_only_tokens_do_not_count_toward_the_word_cap():
+    # "VI. Budget Process – Execution And Controls" is 7 tokens but 6 words: the dash is not a word.
+    dash = blk("d:59", "VI. Budget Process – Execution And Controls The budget shall", "VI. Budget Process – Execution And Controls", 4)
+    seven = blk("d:12", "A. Directors Heads and Deputy Directors Staff Each director shall", "A. Directors Heads and Deputy Directors Staff", 4)
+    out, n = split_enumerated_heads([dash, seven])
+    assert n == 1 and [b["locator"] for b in out] == ["d:59h", "d:59", "d:12"]
