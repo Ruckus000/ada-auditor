@@ -15,14 +15,15 @@ filter them out again; the filter is purely "was this card answered".
 The dump's field names follow the product's own ``StoredDocumentAnswer``
 (``src/domain/platform.ts``): ``id``, ``clientId``, ``documentId``,
 ``inputSha256``, ``askId``, ``kind``, ``target``, ``disposition``, ``value``,
-``note``, ``actor``, ``declaredAt``. ``value`` is one of
-``HEADING_CARD_VALUES`` (``H1``-``H6``, ``P``, ``Artifact``, ``Caption``,
-``TH``, ``TOCI``, ``Lbl``, ``BlockQuote``) -- the reviewer's type and level
-folded into one token, exactly as the workbench writes it
-(``suggestedHeadingValue``). A rejected suggestion (model proposed ``H``,
-reviewer answered ``P``) becomes the reviewer's stated type in the label --
-never silently ``H``; nothing here reads ``target.suggested`` to decide the
-label, only ``value``.
+``note``, ``actor``, ``declaredAt`` -- plus, per row, ``documentUrl`` and
+``contentSha256``, which the product's ``client_documents`` table carries for
+the original upload. ``value`` is one of ``HEADING_CARD_VALUES``
+(``H1``-``H6``, ``P``, ``Artifact``, ``Caption``, ``TH``, ``TOCI``, ``Lbl``,
+``BlockQuote``) -- the reviewer's type and level folded into one token,
+exactly as the workbench writes it (``suggestedHeadingValue``). A rejected
+suggestion (model proposed ``H``, reviewer answered ``P``) becomes the
+reviewer's stated type in the label -- never silently ``H``; nothing here
+reads ``target.suggested`` to decide the label, only ``value``.
 
 Latest-wins: when the same ``(documentId, inputSha256, askId)`` was answered
 more than once, only the row with the greatest ``(declaredAt, id)`` survives
@@ -36,11 +37,23 @@ unanswered in the dump, or was answered a non-``H`` type (rejected) --
 checked against the *latest* decided answer for that dependency, not
 against whether that dependency's own row was itself emitted.
 
-There is no template concept in the answers channel (no web host, no CMS):
-``client_id`` is the row's own ``clientId``; ``template_id`` and
-``document_stem`` take the document id, since ``document_sha256`` (from
-``inputSha256``) already carries the per-document grouping key the split
-needs and no finer template signal exists here.
+**Grouping fix (reviewer ruling):** there is no template concept in the
+answers channel (no web host, no CMS), but there *is* a URL -- the same
+provenance the keys pipeline groups web-harvested documents by
+(``labels/manifest.py``'s ``host_of``). ``client_id`` and ``template_id``
+both take ``host_of(documentUrl)`` -- the identical function, imported, not
+reimplemented -- so a document answered through the product and a document
+later harvested into the keys corpus at the same host land in the same
+split component, and ``www``/port variants of one URL never open a second
+component for the same site. ``document_sha256`` is the upload's own
+``contentSha256``, never the per-answer ``inputSha256`` (which only
+identifies *which version* of the document a card's coordinates belong to,
+for the latest-wins and dependency lookups above). A decided heading-card
+row with no ``documentUrl`` or no ``contentSha256`` is refused outright --
+``MissingProvenance``, naming every such answer id -- rather than falling
+back to the platform's own ``clientId``/``documentId``, which would silently
+put an unharvested document in its own single-document component instead of
+grouping it by site.
 
     python3 -B -m labels.export_answers --dump <json> --out <jsonl>
 """
@@ -50,12 +63,23 @@ import argparse
 import json
 from pathlib import Path
 
+from labels.manifest import host_of
+
 HEADING_CARD_PREFIX = "heading-card:"
 HEADING_CARD_VALUES = (
     "H1", "H2", "H3", "H4", "H5", "H6",
     "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote",
 )
 EXCLUSION_REASONS = ("dependency-unanswered", "dependency-rejected")
+
+
+class MissingProvenance(ValueError):
+    """A decided heading-card answer carries no documentUrl or contentSha256.
+
+    There is no fallback to the platform's clientId/documentId: without the
+    upload's own URL and hash, the row cannot be grouped by host, so it is
+    refused rather than silently isolated in its own component.
+    """
 
 
 def card_id_of(ask_id: object) -> str | None:
@@ -121,9 +145,20 @@ def exclusion_reason(row: dict, status: dict[tuple, str]) -> str | None:
     return None
 
 
+def check_provenance(rows: list[dict]) -> None:
+    """Refuse -- naming every offending answer id -- a decided row with no url or no hash (K.grouping-fix)."""
+    missing = sorted(r["id"] for r in rows if not r.get("documentUrl") or not r.get("contentSha256"))
+    if missing:
+        raise MissingProvenance(f"no documentUrl/contentSha256 for answer ids: {missing}")
+
+
 def label_row(row: dict) -> dict:
     typ, level = type_and_level(row["value"])
     card_id = card_id_of(row["askId"])
+    # The exact function the keys manifest uses (labels/manifest.py), so a document
+    # answered here and one later harvested into the keys corpus at the same host
+    # group together, and www/port variants of one URL never split a site in two.
+    host = host_of(row["documentUrl"])
     return {
         "id": card_id,
         "answer_id": row["id"],
@@ -135,17 +170,22 @@ def label_row(row: dict) -> dict:
         "note": "",
         "labelled_at": row["declaredAt"],
         # eligibility_eval's label contract (refusals()): required grouping keys.
-        "client_id": row.get("clientId"),
-        "template_id": row.get("documentId"),
-        "document_sha256": row.get("inputSha256"),
+        "client_id": host,
+        "template_id": host,
+        "document_sha256": row["contentSha256"],
         "document_stem": row.get("documentId"),
     }
 
 
 def export(dump: list[dict]) -> tuple[list[dict], dict]:
-    """Label rows, plus the counts the CLI prints: read, decided, latest, emitted, excluded by reason."""
+    """Label rows, plus the counts the CLI prints: read, decided, latest, emitted, excluded by reason.
+
+    Raises ``MissingProvenance`` -- naming every offending answer id -- before doing
+    anything else, if any decided heading-card row lacks a documentUrl or contentSha256.
+    """
     candidates = heading_card_rows(dump)
     decided = [r for r in candidates if r.get("disposition") == "decided"]
+    check_provenance(decided)
     latest = latest_per_ask(decided)
     status = dependency_status(latest)
     excluded = {reason: 0 for reason in EXCLUSION_REASONS}
@@ -171,7 +211,10 @@ def main() -> None:
     p.add_argument("--dump", type=Path, required=True, help="JSON dump of document_answers rows")
     p.add_argument("--out", type=Path, required=True, help="JSONL label rows to write")
     a = p.parse_args()
-    rows, counts = export(load_dump(a.dump))
+    try:
+        rows, counts = export(load_dump(a.dump))
+    except MissingProvenance as e:
+        raise SystemExit(str(e))
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text("".join(json.dumps(r) + "\n" for r in rows))
     print(json.dumps(counts))

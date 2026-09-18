@@ -6,9 +6,11 @@ import tempfile
 from contextlib import redirect_stdout
 from pathlib import Path
 
+from eligibility_eval import split as ee_split
 from eligibility_eval import refusals
 from labels.export_answers import (
     HEADING_CARD_PREFIX,
+    MissingProvenance,
     card_id_of,
     export,
     label_row,
@@ -16,14 +18,17 @@ from labels.export_answers import (
     load_dump,
     type_and_level,
 )
+from labels.manifest import host_of as manifest_host_of
 
 SHA = hashlib.sha256(b"doc-bytes").hexdigest()
+CONTENT_SHA = hashlib.sha256(b"upload-bytes").hexdigest()
 
 
 def _row(card: str, value: str, at: str, *, id_: str | None = None, disposition: str = "decided",
          kind: str = "heading", depends_on: list[str] | None = None, document_id: str = "doc-1",
-         client_id: str = "client-1") -> dict:
-    return {
+         client_id: str = "client-1", document_url: str | None = "https://example.test/doc-1.pdf",
+         content_sha: str | None = CONTENT_SHA) -> dict:
+    row = {
         "id": id_ or f"ans-{card}-{at}",
         "clientId": client_id,
         "documentId": document_id,
@@ -41,6 +46,11 @@ def _row(card: str, value: str, at: str, *, id_: str | None = None, disposition:
             **({"dependsOn": depends_on} if depends_on is not None else {}),
         },
     }
+    if document_url is not None:
+        row["documentUrl"] = document_url
+    if content_sha is not None:
+        row["contentSha256"] = content_sha
+    return row
 
 
 def test_type_and_level_splits_the_vocabulary_token():
@@ -84,6 +94,8 @@ def test_accept_matches_the_suggestion():
     assert row["label_source"] == "human-answer" and row["unsure"] is False
     assert row["note"] == "" and row["answer_id"] == dump[0]["id"]
     assert row["actor"] == "reviewer-1" and row["labelled_at"] == "2026-09-01T00:00:00Z"
+    assert row["client_id"] == row["template_id"] == "example.test"
+    assert row["document_sha256"] == CONTENT_SHA
 
 
 def test_correction_of_level_is_the_reviewers_level_not_the_suggestion():
@@ -182,11 +194,142 @@ def test_load_dump_accepts_a_bare_list_or_a_wrapped_object():
 def test_emitted_rows_satisfy_the_eligibility_eval_label_contract():
     dump = [
         _row("a", "H1", "2026-09-01T00:00:00Z", depends_on=[]),
-        _row("b", "P", "2026-09-01T00:00:00Z", document_id="doc-2", client_id="client-2", depends_on=[]),
+        _row("b", "P", "2026-09-01T00:00:00Z", document_id="doc-2", depends_on=[],
+             document_url="https://other.example.test/doc-2.pdf",
+             content_sha=hashlib.sha256(b"doc-2-bytes").hexdigest()),
     ]
     rows, _ = export(dump)
     assert len(rows) == 2
     assert refusals(rows) == []
+
+
+# --- Grouping fix: client_id/template_id/document_sha256 come from the upload's own
+# URL and hash (labels/manifest.py's host_of), never a fallback to clientId/documentId. ---
+
+def test_client_and_template_id_are_the_keys_manifest_host_of():
+    dump = [_row("a", "H1", "2026-09-01T00:00:00Z", depends_on=[],
+                 document_url="https://portal.example.gov/doc.pdf")]
+    rows, _ = export(dump)
+    assert rows[0]["client_id"] == rows[0]["template_id"] == manifest_host_of("https://portal.example.gov/doc.pdf")
+    assert rows[0]["client_id"] == "portal.example.gov"
+
+
+def test_export_and_manifest_host_of_agree_on_www_and_port_variants():
+    # Same site, three URL spellings a real upload and a later web harvest might carry.
+    variants = [
+        "https://example.gov/doc.pdf",
+        "https://www.example.gov/doc.pdf",
+        "http://example.gov:8080/other.pdf",
+    ]
+    hosts = set()
+    for i, url in enumerate(variants):
+        dump = [_row(f"a{i}", "H1", "2026-09-01T00:00:00Z", depends_on=[], document_id=f"doc-{i}",
+                     document_url=url, content_sha=hashlib.sha256(url.encode()).hexdigest())]
+        rows, _ = export(dump)
+        assert rows[0]["client_id"] == rows[0]["template_id"] == manifest_host_of(url)
+        hosts.add(rows[0]["client_id"])
+    assert hosts == {"example.gov"}  # export and the keys manifest agree: one host, not three
+
+
+def test_missing_url_or_sha_refuses_naming_answer_ids():
+    dump = [
+        _row("a", "H1", "2026-09-01T00:00:00Z", depends_on=[], id_="ans-no-url", document_url=None),
+        _row("b", "H1", "2026-09-01T00:00:00Z", depends_on=[], id_="ans-no-sha", content_sha=None),
+    ]
+    try:
+        export(dump)
+        assert False, "expected MissingProvenance"
+    except MissingProvenance as e:
+        assert "ans-no-url" in str(e) and "ans-no-sha" in str(e)
+
+
+def test_missing_provenance_is_checked_even_when_the_row_would_be_excluded():
+    # A row that would be excluded for a dependency reason is still refused if it
+    # itself has no provenance -- the refusal runs before dependency filtering.
+    dump = [_row("child", "H2", "2026-09-01T00:00:00Z", depends_on=["parent"], id_="ans-orphan",
+                 document_url=None)]
+    try:
+        export(dump)
+        assert False, "expected MissingProvenance"
+    except MissingProvenance as e:
+        assert "ans-orphan" in str(e)
+
+
+def test_cli_refuses_missing_provenance_naming_the_answer_id():
+    from labels import export_answers
+
+    with tempfile.TemporaryDirectory() as d:
+        dump = Path(d) / "dump.json"
+        dump.write_text(json.dumps([
+            _row("a", "H1", "2026-09-01T00:00:00Z", depends_on=[], id_="ans-missing", document_url=None),
+        ]))
+        out = Path(d) / "out.jsonl"
+        argv = sys.argv
+        sys.argv = ["export_answers", "--dump", str(dump), "--out", str(out)]
+        message = None
+        try:
+            try:
+                export_answers.main()
+            except SystemExit as e:
+                message = str(e)
+        finally:
+            sys.argv = argv
+        assert message is not None and "ans-missing" in message
+        assert not out.exists()
+
+
+def test_a_keys_host_collision_lands_in_the_hosts_existing_split_under_keep():
+    """An exported row whose URL's host already appears in the keys labels (scratch
+    copies) lands in that host's existing split under split --keep."""
+    def key_label(i: int, host: str) -> dict:
+        return {
+            "id": f"k{i}", "label_source": "planted", "answer_id": f"key-ans-{i}", "actor": "key:planted",
+            "client_id": host, "template_id": host,
+            "document_sha256": hashlib.sha256(f"keydoc{i}".encode()).hexdigest(),
+            "label": {"heading": True, "level": 1},
+        }
+
+    keys_rows = [key_label(i, "example.gov") for i in range(3)] + [key_label(i, f"other{i}.gov") for i in range(3, 9)]
+    prior = ee_split(keys_rows, salt="grouping-fix-salt")
+    membership = {rid: name for name, ids in prior["ids"].items() for rid in ids}
+    example_gov_split = membership["k0"]
+
+    # A www variant of the same host: the exported row must still be recognised as
+    # the same component as the keys rows above (host_of strips www).
+    dump = [_row("a", "H1", "2026-09-01T00:00:00Z", depends_on=[],
+                 document_url="https://www.example.gov/new-upload.pdf",
+                 content_sha=hashlib.sha256(b"new-upload-bytes").hexdigest())]
+    exported, _ = export(dump)
+    assert exported[0]["client_id"] == "example.gov"
+
+    combined = keys_rows + exported
+    result = ee_split(combined, salt="grouping-fix-salt", keep=prior, prior_rows=keys_rows)
+    new_membership = {rid: name for name, ids in result["ids"].items() for rid in ids}
+    assert new_membership["a"] == example_gov_split
+
+
+def test_a_host_seen_first_through_the_product_groups_with_a_later_keys_harvest():
+    """The reverse: a host that first appears through the product and is later
+    harvested into keys groups identically -- same host string, same component,
+    regardless of which side saw the site first."""
+    product_url = "http://newsite.gov:80/uploaded.pdf"
+    harvested_url = "https://www.newsite.gov/harvested-later.pdf"
+    assert manifest_host_of(product_url) == manifest_host_of(harvested_url) == "newsite.gov"
+
+    dump = [_row("a", "H1", "2026-09-01T00:00:00Z", depends_on=[], document_url=product_url,
+                 content_sha=hashlib.sha256(b"uploaded-bytes").hexdigest())]
+    exported, _ = export(dump)
+    key_row = {
+        "id": "k0", "label_source": "stripped-tree", "answer_id": "key-ans-0", "actor": "key:stripped-tree",
+        "client_id": manifest_host_of(harvested_url), "template_id": manifest_host_of(harvested_url),
+        "document_sha256": hashlib.sha256(b"harvested-bytes").hexdigest(),
+        "label": {"heading": False, "level": None},
+    }
+    assert exported[0]["client_id"] == key_row["client_id"]
+    combined = exported + [key_row]
+    result = ee_split(combined, salt="reverse-salt")
+    membership = {rid: name for name, ids in result["ids"].items() for rid in ids}
+    assert membership["a"] == membership["k0"]  # one component: the shared host
 
 
 def test_cli_writes_jsonl_and_prints_counts():

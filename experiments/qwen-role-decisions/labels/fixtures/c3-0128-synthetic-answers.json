@@ -1,6 +1,6 @@
 {
   "_fixture": true,
-  "_note": "synthetic test data for labels.export_answers; not a real reviewer answer; no document text",
+  "_note": "synthetic test data for labels.export_answers; not a real reviewer answer; no document text; documentUrl/contentSha256 are synthetic (grouping-fix ruling)",
   "answers": [
     {
       "id": "ans-001",
@@ -28,7 +28,9 @@
       "disposition": "decided",
       "value": "H1",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:00:00Z"
+      "declaredAt": "2026-09-17T09:00:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-002",
@@ -58,7 +60,9 @@
       "disposition": "decided",
       "value": "H1",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:01:00Z"
+      "declaredAt": "2026-09-17T09:01:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-003",
@@ -89,7 +93,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:02:00Z"
+      "declaredAt": "2026-09-17T09:02:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-004",
@@ -120,7 +126,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:03:00Z"
+      "declaredAt": "2026-09-17T09:03:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-005",
@@ -151,7 +159,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:04:00Z"
+      "declaredAt": "2026-09-17T09:04:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-006",
@@ -182,7 +192,9 @@
       "disposition": "decided",
       "value": "Lbl",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:04:30Z"
+      "declaredAt": "2026-09-17T09:04:30Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-007",
@@ -213,7 +225,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:05:00Z"
+      "declaredAt": "2026-09-17T09:05:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-008",
@@ -244,7 +258,9 @@
       "disposition": "decided",
       "value": "Lbl",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:05:30Z"
+      "declaredAt": "2026-09-17T09:05:30Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-009",
@@ -275,7 +291,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:06:00Z"
+      "declaredAt": "2026-09-17T09:06:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-010",
@@ -306,7 +324,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:07:00Z"
+      "declaredAt": "2026-09-17T09:07:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-011",
@@ -337,7 +357,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:08:00Z"
+      "declaredAt": "2026-09-17T09:08:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-012",
@@ -368,7 +390,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:09:00Z"
+      "declaredAt": "2026-09-17T09:09:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-013",
@@ -399,7 +423,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:10:00Z"
+      "declaredAt": "2026-09-17T09:10:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-014",
@@ -430,7 +456,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:15:00Z"
+      "declaredAt": "2026-09-17T09:15:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-015",
@@ -461,7 +489,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:11:00Z"
+      "declaredAt": "2026-09-17T09:11:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-016",
@@ -492,7 +522,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:12:00Z"
+      "declaredAt": "2026-09-17T09:12:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-017",
@@ -523,7 +555,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:13:00Z"
+      "declaredAt": "2026-09-17T09:13:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-018",
@@ -554,7 +588,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:13:30Z"
+      "declaredAt": "2026-09-17T09:13:30Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-019",
@@ -585,7 +621,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:14:00Z"
+      "declaredAt": "2026-09-17T09:14:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-020",
@@ -616,7 +654,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:14:30Z"
+      "declaredAt": "2026-09-17T09:14:30Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-021",
@@ -647,7 +687,9 @@
       "disposition": "decided",
       "value": "P",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:16:00Z"
+      "declaredAt": "2026-09-17T09:16:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-022",
@@ -678,7 +720,9 @@
       "disposition": "decided",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:16:30Z"
+      "declaredAt": "2026-09-17T09:16:30Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-noise-figure",
@@ -696,7 +740,9 @@
       "disposition": "decided",
       "value": "a decorative rule",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T09:00:30Z"
+      "declaredAt": "2026-09-17T09:00:30Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     },
     {
       "id": "ans-noise-declared",
@@ -726,7 +772,9 @@
       "disposition": "declared",
       "value": "H2",
       "actor": "synthetic-fixture-reviewer",
-      "declaredAt": "2026-09-17T08:59:00Z"
+      "declaredAt": "2026-09-17T08:59:00Z",
+      "documentUrl": "https://synthetic-fixture.invalid/c3-0128.pdf",
+      "contentSha256": "b931b6ba770a9d5bf4f852196d364af987bfc434c861701837ad21602d4c58ff"
     }
   ]
 }
