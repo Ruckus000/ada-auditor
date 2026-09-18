@@ -221,3 +221,64 @@ Commit **c9be7f8** on `claude/heading-suggestion-asks`, which closes the "API-on
 6. **Fold and measure:** add the rows to the labels, run `eligibility_eval.py split --keep`, and re-measure the Stage 2 gate on the new held-out rows (plan Task 4).
 
 **Real human-answer labels produced so far: 0.**
+
+## Task 8 — r10 on the wild population, graded against Claude-consensus labels
+**Every number in this section is graded against Claude-consensus labels, not human labels.**
+
+**Why this label source:** the user ruled that there is no time for human answers. The label source for the wild population is therefore a blind four-judge Claude consensus (`label_source: claude-consensus`, actor `consensus-4judge`). The reviewing session ran the judging:
+- The judges were Opus quick, Sonnet, Opus thorough and Fable medium. Each read the page image with the card marked, and none saw model predictions, other judges' votes or labels.
+- Calibration on the 222-row `audit-s2wild` heading bit was 0.966, 0.936, 0.961 and 0.961. The threshold was 0.90, so no judge was dropped.
+- Pairwise agreement ranged from 0.974 to 0.998.
+- A card has consensus when at least 3 judges agree on the heading bit (Unsure votes don't count).
+- Of 1,232 cards, 1,219 reached consensus and 13 did not. Among the consensus cards, 1,172 were unanimous.
+- Against the reviewer's 203-card audit, heading-bit agreement is 0.966, with 7 disagreements. Those are disclosed, not overridden.
+- Provenance: `out/labels/s2wild-judges/`.
+
+**Tooling:** the fold and evaluation tooling is at 863dc69 and 252ed89 (`labels/fold_wild.py`, `labels/eval_wild.py`, `split --assign-new`).
+- **Fold:** 1,232 cards from 10 documents; 1,219 kept, 13 excluded for no consensus. By type: P 404, Other 372, TH 153, Lbl 135, H 116, Artifact 21, Caption 18.
+- **Split:** `split --keep split-keys-all-4 --assign-new validation` into `out/keys-all-4-wild/split/split.json`.
+  - Train is 7,051 → 7,051 and test is 2,325 → 2,325, with every kept id unmoved.
+  - Validation is 1,525 → 2,744: all 1,219 wild rows, from 8 hosts that are in no other split.
+  - Test is untouched and was not evaluated.
+- **Output:** `out/stage1/eval-wild-r10.txt`.
+
+### Results (r10; predictions rebuilt from the Task 5/6 sidecars; no calibration column, because every card is labelled)
+| | All 1,219 | At the registered 0.9933 |
+|---|---|---|
+| Coverage | 1.000 | **0.887** (1,081) |
+| TP / FP / TN / FN | 73 / 4 / 1,099 / 43 | 36 / **0** / 1,023 / 22 |
+| Accuracy | 0.9614 [0.9491–0.9715] | **0.9796 [0.9693–0.9872]** |
+| FP rate | 0.0036 [0.0010–0.0093] | **0.0000 [0–0.0036]** |
+| FN rate | 0.371 | 0.379 |
+| Documents with zero covered errors | 2 of 10 | **6 of 10** (validation: 60 of 67) |
+| Documents fully covered with zero errors | 2 of 10 | 0 of 10 (validation: 8 of 67) |
+
+Coverage curve (threshold: coverage, accuracy [lower–upper], FP):
+
+| Threshold | Coverage | Accuracy | FP |
+|---|---|---|---|
+| 0.5 | 1.000 | 0.961 [0.949–0.972] | 4 |
+| 0.9 | 0.957 | 0.973 [0.962–0.981] | 1 |
+| 0.95 | 0.943 | 0.975 [0.964–0.983] | 1 |
+| 0.99 | 0.905 | 0.978 [0.968–0.986] | 0 |
+| 0.9933 | 0.887 | 0.980 [0.969–0.987] | 0 |
+
+**The registered rule re-derived on this population** picks 0.99999760: coverage 0.308, 375 rows, **no heading covered at all** (TP 0, FN 2). That is a degenerate point, not an operating point. It is reported, not adopted.
+
+**Recall by weight:** bold 49 of 65 (0.75), regular 24 of 51 (0.47).
+
+**Level exactness among true positives, by consensus depth:** L1 20 of 39, L2 13 of 24, L3 0 of 10. The judges assign levels from one page, so treat level as weakly labelled.
+
+### What it says
+- **The false-positive side transfers.** At 0.9933 there are 0 FP among 1,023 covered not-headings (upper bound 0.0036). Across the whole population there are 4 FP, all below 0.96, so all are abstained at the operating point:
+  - c3-0094:0 and c3-0252:1 are P;
+  - c3-0825:16 and :20 are TH row labels, which the reviewer's audit had called H.
+  This is the second population on which r10's proposed H is clean.
+- **The accuracy side does not transfer.** At 0.9933 the accuracy lower bound is 0.969, below the rule's 0.98 and the gate's 0.99. Every covered error is a **missed heading**: 22 of the 58 covered consensus H. They fall in 4 of 10 documents: c3-0794 13, c3-0128 6, c3-0489 2, c3-0252 1.
+- **20 of the 22 covered misses are segmentation-shaped, not reading errors.**
+  - **10 are bare enumerator cards** ("I.", "A.", "C.") that the block extractor split away from their heading words. The model says Lbl; the consensus says H. The same shape is labelled inconsistently: of 117 bare-enumerator cards, the consensus calls 20 H and 95 Lbl. The reviewer's own two disagreements (c3-0128:17 and :68, judges Lbl) are the same shape.
+  - **10 are run-in blocks**, a heading merged with its body paragraph ("I. Purpose This policy is intended…"). The model says P; the consensus says H. Neither label is right for the block: the fix is splitting it.
+  - **2 are ordinary misses:** c3-0252:53, a regular-weight place name, and c3-0794:134, a bold catalogue line.
+- **Abstained misses (21)** are mostly short regular-weight lines, 12 of them, plus 8 run-in blocks.
+- **Consequence:** the next lever is **block segmentation on untagged PDFs** — merge a bare enumerator into the line it labels, and split a run-in heading from its body — not more training. The error anatomy above is counted after measurement. It is a diagnosis, not a re-scored result. No sensitivity number is reported, because a length-based filter removed 719 cards, mostly ordinary paragraphs, and would misstate the effect.
+- **The Stage 2 gate is not met** on this population: accuracy lower bound 0.969 (needs 0.99), FN 0.379, and abstention 11.3 % (needs ≤ 10 %). The FP upper bound, 0.0036, meets the ≤ 0.01 bar.
