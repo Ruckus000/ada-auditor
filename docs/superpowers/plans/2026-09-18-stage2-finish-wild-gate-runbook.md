@@ -128,14 +128,26 @@ Before merging, check every judge file: line count equals its chunk length, and 
 
 ```bash
 cd experiments/qwen-role-decisions
+# The round-2 fold reads a combined source: round-1 source rows for unchanged ids plus the 26 round-2 rows. It exists; rebuild only if missing:
+python3 - <<'PY'
+import json
+v2={json.loads(l)["id"]:l for l in open("out/labels/s2wild-v2-source.jsonl")}
+with open("out/labels/s2wild-v2-all-source.jsonl","w") as f:
+    for l in open("out/labels/s2wild-all-source.jsonl"):
+        i=json.loads(l)["id"]; f.write(v2.pop(i, l))
+    f.writelines(v2.values())
+PY
 python3 -B -m labels.fold_wild --consensus out/labels/s2wild-consensus-v2.jsonl --sidecars out/suggest/wild-v2 --names labels/cohort3-names.txt --pdfs out/cohort3/real --source out/labels/s2wild-v2-all-source.jsonl --out-labels out/labels/wild-v2-labels.jsonl --out-predictions out/stage1/pred-wild-v2-r10.jsonl --out-cards out/labels/wild-v2-cards.jsonl
 python3 -B -m labels.fold_wild --consensus out/labels/s2wild-r3-consensus.jsonl --sidecars out/suggest/wild-r3 --names labels/cohort3-names.txt --pdfs out/cohort3/real --source out/labels/s2wild-r3-source.jsonl --out-labels out/labels/wild-r3-labels.jsonl --out-predictions out/stage1/pred-wild-r3-r10.jsonl --out-cards out/labels/wild-r3-cards.jsonl
-cat out/keys-all-4/labels.jsonl out/labels/wild-v2-labels.jsonl out/labels/wild-r3-labels.jsonl > out/labels/keys-all-4-plus-wild.jsonl
-python3 -B eligibility_eval.py split --labels out/labels/keys-all-4-plus-wild.jsonl --salt s2wild-2026-09-18 --out out/keys-all-4-wild/split --keep out/keys-all-4-wild/split/split.json --keep-labels out/keys-all-4/labels.jsonl --assign-new validation
+# Split: build on the round-2 split; never overwrite an existing split or labels file (they are provenance for recorded numbers).
+cat out/labels/keys-all-4-plus-wild-v2.jsonl out/labels/wild-r3-labels.jsonl > out/labels/keys-all-4-plus-wild-final.jsonl
+python3 -B eligibility_eval.py split --labels out/labels/keys-all-4-plus-wild-final.jsonl --salt s2wild-final-2026-09-18 --out out/keys-all-4-wild-final/split --keep out/keys-all-4-wild-v2/split/split.json --keep-labels out/labels/keys-all-4-plus-wild-v2.jsonl --assign-new validation
 python3 -B -m labels.eval_wild --labels out/labels/wild-r3-labels.jsonl --predictions out/stage1/pred-wild-r3-r10.jsonl --cards out/labels/wild-r3-cards.jsonl > out/stage1/eval-wild-r3-r10.txt
 cat out/labels/wild-v2-labels.jsonl out/labels/wild-r3-labels.jsonl > out/labels/wild-23-labels.jsonl; cat out/stage1/pred-wild-v2-r10.jsonl out/stage1/pred-wild-r3-r10.jsonl > out/stage1/pred-wild-23-r10.jsonl; cat out/labels/wild-v2-cards.jsonl out/labels/wild-r3-cards.jsonl > out/labels/wild-23-cards.jsonl
 python3 -B -m labels.eval_wild --labels out/labels/wild-23-labels.jsonl --predictions out/stage1/pred-wild-23-r10.jsonl --cards out/labels/wild-23-cards.jsonl > out/stage1/eval-wild-23-r10.txt
 ```
+
+Existing split directories `out/keys-all-4-wild`, `-wild-v2` and `-wild-r3` and the labels files they were built from are provenance: never overwrite them. The 20 re-judged conflict ids are already pinned to validation by the kept split, so nothing moves. Re-folding round 3 regenerates `wild-r3-labels.jsonl` in full (old 1,040 rows plus the new ones), which is why the chain above rebuilds from the round-2 labels file rather than appending.
 
 The `coverage_curve` point `t: 0.9933` in `eval-wild-23-r10.txt` holds the gate numbers: `accuracy_ci[0]` (lower bound) and `fp_rate_ci[1]` (upper bound). `coverage` there is the reported ask-rate complement. If `fold_wild` refuses a row shape, read its message; it validates every consensus row (actor `consensus-4judge`, label source `claude-consensus`; if a non-Claude judge took a seat, add that actor/source to `LABEL_SOURCES` in `eligibility_eval.py` and to the fold's accepted values before folding, and disclose it).
 
