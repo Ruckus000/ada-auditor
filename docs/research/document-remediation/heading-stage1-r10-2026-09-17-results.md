@@ -126,11 +126,27 @@ Against r9's curve, r10 holds the same accuracy at far higher coverage: 0.988 at
 - **Estimated FN ≤ 0.16: MET.** 0.174 → 0.142.
 - **FP stays ≤ 0.05: FAILED.** Estimated FP 0.029 → **0.064**; direct 0.024 → 0.057. On ∩ the direct FP rate nearly triples, 0.038 → 0.108.
 
-### Stop decision — (c)
-The plan's option (c) applies: **FP rose above 0.05, so r9 stays the candidate.** Oversampling did what it was aimed at, and the cost landed exactly where the pre-registered risk said it might: the H share of training rose to 0.53, and the model now over-calls headings.
+### Stop decision — (c) provisionally, pending audit-r10v
+The plan's option (c) is **tripped on the pre-audit labels**: FP 0.057 direct and 0.064 estimated, both above 0.05. **The revert is not applied yet.** In every previous round 74–89 % of an adapter's "false positives" were key under-tagging, and the guard is judged after the fold, on audited labels (reviewing session's ruling). The reviewing session recomputed r10's figures independently and matched them, including recall by weight (bold 359/377, regular 174/190) and the coverage curve.
+
+If the fold leaves FP above 0.05, r9 stays the candidate. Oversampling did what it was aimed at, and the cost landed exactly where the pre-registered risk said it might: the H share of training rose to 0.53, and the model now over-calls headings.
 
 What the round establishes:
 - **The regular-weight gap is a sample-count problem, not a capability problem.** Doubling those rows moved regular-weight recall 0.82 → 0.92 with bold recall unchanged, and total misses fell from 52 to 34.
 - **It was paid for in false positives**, 23 → 55 rows, which is why r9 remains the candidate.
 - **Abstention is worth more on r10 than on r9.** At score ≥ 0.99, r10 is at 0.988 accuracy with 78 % coverage, against r9's 59 %. An r10 with abstention covers more documents at the same quality than r9 with abstention does — that is the next round's obvious lever, at a threshold rather than in the weights.
+- **audit-r10v is built and handed over** (below).
 - **The Stage 1 bar is still not met** by either adapter at full coverage. Test was not evaluated and `test.spent` does not exist.
+
+## audit-r10v (round-8 method on r10's own error rows)
+**Cards:** `out/labels/audit-r10v-cards.jsonl`, 127 ids, shuffled with seed 20260918, no prediction. **Groups:** `out/labels/audit-r10v-groups.json`, carrying r10's prediction and confidence score per id. Deduped against r6, r7, r7AB, r8, r9 and r9v.
+
+| Group | Carded | Pool | Documents | Max per document |
+|---|---|---|---|---|
+| FP_all | 27 | 55 (28 already audited) | 13 | 5 (c6-0009) |
+| FN_all_model | **0** | 34 FN, of which 28 model-decided and **all already audited** | — | — |
+| FN_rule_decided | listed, not carded | 6 | — | — |
+| TP_sample | 60, document-capped | 533 | 16 | 5 |
+| TN_sample | 40, document-capped | 903 | 40 | 1 |
+
+Fresh TP and TN samples were drawn because the FP pool moved by more than 20 rows. That every model-decided miss is already audited is itself a finding: r10's remaining misses are all on rows an earlier audit has already judged.
