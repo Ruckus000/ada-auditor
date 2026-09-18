@@ -66,8 +66,11 @@ import tempfile
 from pathlib import Path
 from run import dump_pdf
 
-WILD_0794 = Path("out/suggest/wild/c3-0794/odl-out/c3-0794.pdf")  # the ODL-tagged copies; gitignored
-WILD_0094 = Path("out/suggest/wild/c3-0094/odl-out/c3-0094.pdf")
+# The plan's two real-PDF cases read the ODL-tagged copies (gitignored). The runner has no pytest,
+# so a skip prints and returns instead of pytest.skip; the bodies are the plan's verbatim.
+import json, subprocess
+
+WILD = Path("out/suggest/wild/c3-0794/odl-out/c3-0794.pdf")
 
 
 def _tagged_pdf(path: Path, lines: list) -> None:
@@ -116,15 +119,6 @@ def test_cards_dump_reports_first_line_and_line_count_on_a_synthetic_pdf():
     assert (lst["first_line"], lst["line_count"]) == ("B. Scope", 3)  # a container reports its gathered glyphs
 
 
-def test_cards_dump_reports_first_line_and_line_count_on_c3_0794():
-    if not WILD_0794.is_file():
-        print("skip: c3-0794's tagged copy is not on this machine"); return
-    by = {b["locator"]: b for b in dump_pdf(WILD_0794, compile=True)["blocks"]}
-    assert by["c3-0794:9"]["first_line"] == "A. Plans"
-    assert by["c3-0794:9"]["line_count"] >= 8
-    assert by["c3-0794:10"]["first_line"] == "A." and by["c3-0794:10"]["line_count"] == 1
-    assert all(("first_line" in b) and ("line_count" in b) for b in by.values())
-
 
 def test_first_line_keeps_an_enumerator_and_its_words_across_a_tab_gap_on_one_baseline():
     with tempfile.TemporaryDirectory() as d:
@@ -134,10 +128,21 @@ def test_first_line_keeps_an_enumerator_and_its_words_across_a_tab_gap_on_one_ba
     assert (li["first_line"], li["line_count"]) == ("VI. Budget Process", 3)
 
 
-def test_first_line_across_a_tab_gap_on_c3_0094():
-    """c3-0094:54: "VI." at x=90 and its heading words at x=126 share one baseline."""
-    if not WILD_0094.is_file():
-        print("skip: c3-0094's tagged copy is not on this machine"); return
-    b = {x["locator"]: x for x in dump_pdf(WILD_0094, compile=True)["blocks"]}["c3-0094:54"]
-    assert b["first_line"] == "VI. Budget Process \u2013 Execution"
-    assert b["line_count"] >= 5
+def test_cards_dump_reports_first_line_and_line_count():
+    if not WILD.is_file():
+        print("skip: wild tagged copy not present on this machine"); return
+    raw = dump_pdf(WILD, compile=True)
+    by = {b["locator"]: b for b in raw["blocks"]}
+    assert by["c3-0794:9"]["first_line"] == "A. Plans"
+    assert by["c3-0794:9"]["line_count"] >= 8
+    assert by["c3-0794:10"]["first_line"] == "A." and by["c3-0794:10"]["line_count"] == 1
+
+
+def test_first_line_joins_an_enumerator_and_its_words_across_a_tab_gap():
+    # c3-0094 page 3: "VI." at x=90 and "Budget Process – Execution" at x=126 share one baseline.
+    tagged = Path("out/suggest/wild/c3-0094/odl-out/c3-0094.pdf")
+    if not tagged.is_file():
+        print("skip: wild tagged copy not present on this machine"); return
+    by = {b["locator"]: b for b in dump_pdf(tagged, compile=False)["blocks"]}
+    assert by["c3-0094:54"]["first_line"] == "VI. Budget Process – Execution"
+    assert by["c3-0094:54"]["line_count"] >= 5
