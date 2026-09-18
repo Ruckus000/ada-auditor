@@ -196,6 +196,13 @@ merge; `labels/export_answers.py` turns decided answers into label rows grouped
 by host. **Zero real human-answer labels exist yet; the Stage 2 gate is
 unchanged until a person answers in the workbench.** Record:
 `heading-stage2-2026-09-18-results.md`.
+**Wild population, graded against Claude-consensus labels (Task 8, 1,219
+cards):** at 0.9933, FP 0 of 1,081 answered, but accuracy 0.9796
+[0.9693–0.9872] and abstention 11.3 % miss the gate. 17 of the 22 covered misses
+are card-level shapes: 9 enumerator-only cards, a convention conflict with the
+training keys, and 8 headings merged with their paragraph. Net of the
+convention conflict, accuracy is 0.9878 [0.9793–0.9935]. The next lever is card
+building on untagged PDFs.
 The operating point was measured on 10 wild untagged documents (claude-audit):
 proposed precision 36/36, NHC hidden 0/37. 56 % of untagged candidates are
 image-only and need OCR first.
