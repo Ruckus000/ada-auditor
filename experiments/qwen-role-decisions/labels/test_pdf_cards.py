@@ -66,13 +66,16 @@ import tempfile
 from pathlib import Path
 from run import dump_pdf
 
-WILD_0794 = Path("out/suggest/wild/c3-0794/odl-out/c3-0794.pdf")  # the ODL-tagged copy; gitignored
+WILD_0794 = Path("out/suggest/wild/c3-0794/odl-out/c3-0794.pdf")  # the ODL-tagged copies; gitignored
+WILD_0094 = Path("out/suggest/wild/c3-0094/odl-out/c3-0094.pdf")
 
 
-def _tagged_pdf(path: Path, lines: list[str]) -> None:
+def _tagged_pdf(path: Path, lines: list) -> None:
     """A one-page tagged PDF, written by hand: Document > L > LI, the LI holding one MCID
-    whose text is ``lines`` set 14 pt apart in 12 pt Helvetica, then a one-line P. Synthetic text only."""
-    shows = "".join(f"1 0 0 1 72 {700 - 14 * i} Tm ({t}) Tj\n" for i, t in enumerate(lines))
+    whose text is ``lines`` set 14 pt apart in 12 pt Helvetica, then a one-line P. A line may be
+    a list of (x, text) runs on one baseline, like a tab stop. Synthetic text only."""
+    runs = lambda line: line if isinstance(line, list) else [(72, line)]
+    shows = "".join(f"1 0 0 1 {x} {700 - 14 * i} Tm ({t}) Tj\n" for i, line in enumerate(lines) for x, t in runs(line))
     content = (f"/LI <</MCID 0>> BDC\nBT /F1 12 Tf\n{shows}ET\nEMC\n"
                "/P <</MCID 1>> BDC\nBT /F1 12 Tf 1 0 0 1 72 600 Tm (One line only) Tj ET\nEMC\n")
     objs = [
@@ -121,3 +124,20 @@ def test_cards_dump_reports_first_line_and_line_count_on_c3_0794():
     assert by["c3-0794:9"]["line_count"] >= 8
     assert by["c3-0794:10"]["first_line"] == "A." and by["c3-0794:10"]["line_count"] == 1
     assert all(("first_line" in b) and ("line_count" in b) for b in by.values())
+
+
+def test_first_line_keeps_an_enumerator_and_its_words_across_a_tab_gap_on_one_baseline():
+    with tempfile.TemporaryDirectory() as d:
+        pdf = Path(d) / "syn.pdf"
+        _tagged_pdf(pdf, [[(72, "VI."), (108, "Budget Process")], "Every widget shall be", "counted twice."])
+        li = next(b for b in dump_pdf(pdf, compile=True)["blocks"] if b["existing_tag"] == "LI")
+    assert (li["first_line"], li["line_count"]) == ("VI. Budget Process", 3)
+
+
+def test_first_line_across_a_tab_gap_on_c3_0094():
+    """c3-0094:54: "VI." at x=90 and its heading words at x=126 share one baseline."""
+    if not WILD_0094.is_file():
+        print("skip: c3-0094's tagged copy is not on this machine"); return
+    b = {x["locator"]: x for x in dump_pdf(WILD_0094, compile=True)["blocks"]}["c3-0094:54"]
+    assert b["first_line"] == "VI. Budget Process \u2013 Execution"
+    assert b["line_count"] >= 5
