@@ -1,5 +1,5 @@
 """Round 2 judging inputs: source rows + chunks for the changed cards only.
-usage: python3 v2_prep.py <changed.json> [wild_v2_dir]
+usage: python3 v2_prep.py <changed.json> [wild_v2_dir] [--source FILE] [--chunks-dir DIR]
 changed.json: {stem: {"new": [ids], "changed": [ids]}} (or {stem: [ids]})."""
 import os, sys
 from pathlib import Path
@@ -8,7 +8,9 @@ SP = str(Path(R) / "out" / "labels" / "s2wild-judges-r3")  # judge work dir (git
 import json, os, sys, glob
 
 
-changed=json.load(open(sys.argv[1])); wild=sys.argv[2] if len(sys.argv)>2 else f"{R}/out/suggest/wild-v2"
+changed=json.load(open(sys.argv[1])); wild=sys.argv[2] if len(sys.argv)>2 and not sys.argv[2].startswith("--") else f"{R}/out/suggest/wild-v2"
+source=sys.argv[sys.argv.index("--source")+1] if "--source" in sys.argv else f"{R}/out/labels/s2wild-v2-source.jsonl"
+chunks_dir=sys.argv[sys.argv.index("--chunks-dir")+1] if "--chunks-dir" in sys.argv else f"{SP}/chunks-v2"
 ids=[]
 def walk(o):
     if isinstance(o,str) and o.startswith("c3-") and ":" in o: ids.append(o)
@@ -26,9 +28,9 @@ for i in ids:
     if not c or not os.path.exists(c.get("image","")): missing.append(i); continue
     rows.append({"id":i,"text":c["text"],"prev":c.get("prev"),"next":c.get("next"),"font_pt":c.get("font_pt"),"weight":c.get("weight"),
                  "page":c.get("page"),"repeats_on_pages":c.get("repeats_on_pages"),"in_table_box":c.get("in_table_box"),"image":c["image"]})
-with open(f"{R}/out/labels/s2wild-v2-source.jsonl","w") as f:
+with open(source,"w") as f:
     for r in rows: f.write(json.dumps(r)+"\n")
-os.makedirs(f"{SP}/chunks-v2",exist_ok=True)
+os.makedirs(chunks_dir,exist_ok=True)
 for k in range(0,len(rows),62):
-    json.dump([{"n":n,**r} for n,r in enumerate(rows[k:k+62],start=k)],open(f"{SP}/chunks-v2/chunk-{k//62:02d}.json","w"))
+    json.dump([{"n":n,**r} for n,r in enumerate(rows[k:k+62],start=k)],open(f"{chunks_dir}/chunk-{k//62:02d}.json","w"))
 print("rows",len(rows),"chunks",(len(rows)+61)//62,"missing",missing)
