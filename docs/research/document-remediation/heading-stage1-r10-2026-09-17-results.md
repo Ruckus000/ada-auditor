@@ -74,3 +74,63 @@ These are direct figures on audited labels. The un-audited-row estimate used in 
 ### Training — completed
 - All **9,884** iterations in a wall time of about **13.7 h** (49,449 s), final loss 0.0151, peak memory 14.16 GB, 0 errors.
 - `out/stage1/adapter-r10/adapters.safetensors` sha256 `f9279289…`.
+
+### Prediction
+`out/stage1/pred-validation-r10.jsonl`: 1,525 rows (rule 267 / model 1,258), 0 parse failures, with `--scores`. The `--scores` path must run under the MLX interpreter; a first launch under the system python failed at import and was relaunched.
+
+## Task 2 results — graded against Claude-audited labels (`labels-audited-r9`)
+Estimated applies r9v's rates (TP 1/60, TN 3/40) to rows no audit has touched. Every figure below was computed by the controller. Each cell is accuracy / FP / FN.
+
+| Population | Run | TP/FP/TN/FN | Direct | Estimated |
+|---|---|---|---|---|
+| ∩ 273 | r7 reference | 106/9/148/10 | 0.930 / 0.057 / 0.086 | 0.897 / 0.066 / 0.148 |
+| ∩ 273 | r9 | 111/6/151/5 | 0.960 / 0.038 / 0.043 | 0.926 / 0.045 / 0.108 |
+| ∩ 273 | r10 | 112/17/140/4 | 0.923 / 0.108 / **0.034** | 0.892 / 0.118 / **0.094** |
+| Cohort 6 | r9 | 404/17/784/47 | 0.949 / 0.021 / 0.104 | 0.909 / 0.025 / 0.190 |
+| Cohort 6 | r10 | 421/38/763/30 | 0.946 / 0.047 / **0.067** | 0.907 / 0.053 / **0.154** |
+| All 1,525 | r9 | 515/23/935/52 | 0.951 / 0.024 / 0.092 | 0.912 / 0.029 / 0.174 |
+| All 1,525 | r10 | 533/55/903/34 | 0.942 / **0.057** / **0.060** | 0.905 / **0.064** / **0.142** |
+
+**Recall by weight, all 1,525 true headings:**
+
+| | Bold | Regular |
+|---|---|---|
+| r9 | 0.952 | 0.821 |
+| r10 | 0.952 | **0.916** |
+
+**Level exactness (n / recalled / exact), all 1,525:**
+
+| Level | r9 | r10 |
+|---|---|---|
+| H1 | 95 / 83 / 75 | 95 / 91 / **83** |
+| H2 | 315 / 295 / 169 | 315 / 305 / 171 |
+| H3 | 126 / 108 / 68 | 126 / 109 / **52** |
+| H4 | 30 / 28 / 13 | 30 / 27 / **25** |
+| H5 | 1 / 1 / 1 | 1 / 1 / 1 |
+
+### Coverage curve for r10 (`out/stage1/coverage-r10.json`)
+
+| Score ≥ | Coverage | TP/FP/TN/FN | Accuracy [95 % CI] | FP rate [95 % CI] | FN rate |
+|---|---|---|---|---|---|
+| 0.5 | 1.000 (1,525) | 533/55/903/34 | 0.942 [0.929–0.953] | 0.057 [0.044–0.074] | 0.060 |
+| 0.8 | 0.941 (1,435) | 512/28/871/24 | 0.964 [0.953–0.973] | 0.031 [0.021–0.045] | 0.045 |
+| 0.9 | 0.908 (1,384) | 498/18/849/19 | 0.973 [0.963–0.981] | 0.021 [0.012–0.033] | 0.037 |
+| 0.95 | 0.873 (1,332) | 476/11/828/17 | 0.979 [0.970–0.986] | 0.013 [0.007–0.023] | 0.035 |
+| 0.99 | 0.784 (1,195) | 396/5/785/9 | **0.988 [0.980–0.994]** | 0.006 [0.002–0.015] | 0.022 |
+
+Against r9's curve, r10 holds the same accuracy at far higher coverage: 0.988 at **78 %** coverage where r9 needed to drop to 59 %, and 0.979 at 87 % where r9 was at 78 %.
+
+### Registered prediction check (r9 → r10, same labels and rates)
+- **Regular-weight recall ≥ 0.88: MET.** 0.821 → 0.916.
+- **Bold recall not below 0.94: MET.** 0.952, unchanged.
+- **Estimated FN ≤ 0.16: MET.** 0.174 → 0.142.
+- **FP stays ≤ 0.05: FAILED.** Estimated FP 0.029 → **0.064**; direct 0.024 → 0.057. On ∩ the direct FP rate nearly triples, 0.038 → 0.108.
+
+### Stop decision — (c)
+The plan's option (c) applies: **FP rose above 0.05, so r9 stays the candidate.** Oversampling did what it was aimed at, and the cost landed exactly where the pre-registered risk said it might: the H share of training rose to 0.53, and the model now over-calls headings.
+
+What the round establishes:
+- **The regular-weight gap is a sample-count problem, not a capability problem.** Doubling those rows moved regular-weight recall 0.82 → 0.92 with bold recall unchanged, and total misses fell from 52 to 34.
+- **It was paid for in false positives**, 23 → 55 rows, which is why r9 remains the candidate.
+- **Abstention is worth more on r10 than on r9.** At score ≥ 0.99, r10 is at 0.988 accuracy with 78 % coverage, against r9's 59 %. An r10 with abstention covers more documents at the same quality than r9 with abstention does — that is the next round's obvious lever, at a threshold rather than in the weights.
+- **The Stage 1 bar is still not met** by either adapter at full coverage. Test was not evaluated and `test.spent` does not exist.
