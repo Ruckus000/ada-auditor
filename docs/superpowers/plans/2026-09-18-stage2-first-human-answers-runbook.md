@@ -9,15 +9,13 @@ The learning loop is blocked on one thing no chat can supply: a person answering
 - Product side: branch `claude/heading-suggestion-asks`, worktree `/Users/jphilistin/Documents/Coding/ADA Auditor/.claude/worktrees/heading-eligibility-loop-bd2a94`, on master `64a1382`, unmerged, unpushed. All gates green except `test:db`.
 - Exporter: `labels/export_answers.py` (answers → `human-answer` label rows, grouped by host).
 
-## 1. The credential step (user only)
+## 1. Merge (user only) — every gate is already green
 
-`test:db` has not run on the product branch. Create `.env.test.local` in the product worktree with `DATABASE_URL_TEST=` pointing at the **dedicated Neon test branch, never production** (see `.env.example` line ~150), then:
+`test:db` ran on the product branch (146/146, dedicated Neon test branch). Branch head `c9be7f8` on `claude/heading-suggestion-asks` is merge-ready. Merge it from the product worktree:
 
 ```bash
-cd "/Users/jphilistin/Documents/Coding/ADA Auditor/.claude/worktrees/heading-eligibility-loop-bd2a94" && npm run test:db
+cd "/Users/jphilistin/Documents/Coding/ADA Auditor" && git merge --no-ff claude/heading-suggestion-asks
 ```
-
-A green run is the last gate before the branch can be merged.
 
 ## 2. Make a sidecar for one real untagged PDF
 
@@ -29,9 +27,9 @@ cd "/Users/jphilistin/.codex/worktrees/12c6/ADA Auditor/experiments/qwen-role-de
 
 Pick a PDF with no structure tree (e.g. `c3-0128.pdf` under `out/cohort3/`; ~7 min for 185 blocks; documents over 600 blocks fall back to the likely-headings selector and say so in `coverage.selector`).
 
-## 3. Upload it beside the PDF (API-only in this build)
+## 3. Attach it on the intake screen
 
-Start the product worktree (`npm run dev`), sign in as an operator, then POST a multipart form to `/api/platform/clients/<clientId>/documents` with two parts: `file` (the PDF) and `headingSuggestions` (the sidecar JSON as text). The route validates the sidecar (400 `invalid_heading_suggestions` if the shape or the proposed/score rule fails, 413 over the size cap) and stores it in the inspection summary; no document text is stored.
+Start the app (`npm run dev`), sign in as an operator, open a client's document intake. **Choose the sidecar first** in "Heading suggestions (JSON, optional)", then choose the PDF — the PDF uploads the moment it is picked and carries the sidecar with it. A refused sidecar shows the route's reason beside the control; no document text is stored.
 
 ## 4. Answer in the workbench
 
