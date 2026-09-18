@@ -81,11 +81,12 @@ python3 - <<'EOF'
 import json; ids="c3-0794:2 c3-0794:60 c3-0128:196 c3-0794:7 c3-0094:55 c3-0794:12 c3-0794:97 c3-0128:4 c3-0094:58 c3-0128:119 c3-0794:42 c3-0128:7 c3-0094:60 c3-0794:70 c3-0128:29 c3-0794:10 c3-0128:10 c3-0128:39 c3-0128:188 c3-0128:181".split()
 json.dump({"round2":{"changed":ids}}, open("out/labels/s2wild-conflict-ids.json","w"))
 EOF
-python3 labels/judge/v2_prep.py out/labels/s2wild-conflict-ids.json out/suggest/wild-v2   # -> out/labels/s2wild-v2-source.jsonl and chunks-v2/chunk-00.json under the work dir
+python3 labels/judge/v2_prep.py out/labels/s2wild-conflict-ids.json out/suggest/wild-v2 --source out/labels/s2wild-conflict-source.jsonl --chunks-dir out/labels/s2wild-judges-r3/chunks-conflict   # never overwrite s2wild-v2-source.jsonl (round-2 provenance)
 # judge runs: seat1, seat2 (and tie-break on disagreements) -> out/labels/s2wild-judges-r3/out-conflict/<seat>/chunk-00.jsonl
 python3 labels/judge/consensus.py --judges seat1,seat2,tiebreak --min-agree 2 --no-calib \
-  --source out/labels/s2wild-v2-source.jsonl --outdir out/labels/s2wild-judges-r3/out-conflict \
-  --outfile out/labels/s2wild-v2-consensus.jsonl --write
+  --source out/labels/s2wild-conflict-source.jsonl --outdir out/labels/s2wild-judges-r3/out-conflict \
+  --outfile out/labels/s2wild-conflict-consensus.jsonl --write
+cp out/labels/s2wild-v2-consensus.jsonl out/labels/s2wild-v2-consensus.round2.jsonl && cp out/labels/s2wild-conflict-consensus.jsonl out/labels/s2wild-v2-consensus.jsonl   # v2_patch.py reads this name; the round-2 26-card file is kept as s2wild-v2-consensus.round2.jsonl first
 python3 labels/judge/v2_patch.py out/labels/s2wild-conflict-ids.json   # rewrites out/labels/s2wild-consensus-v2.jsonl: 20 rows replaced by id, all others byte-identical
 ```
 
