@@ -177,3 +177,19 @@ That is itself a finding for the product: **more than half of the untagged marke
   - experiment side 4a31235: the sidecar gains `in_table_box` per card and `coverage.table_vetoed`; 167 label tests pass;
   - product side a7ea856 on `claude-heading-suggestion-asks`: `needsIn` mirrors the rule, with tests on all three branches. Lint 0, typecheck 0, `npm test` 2,522, hydration 53.
 - **Open, not fixed:** the ask rule now lives in two places, Python (`suggest.py`) and TypeScript (`needsIn`), and nothing checks them against each other. The workbench's "J table cells not asked" line is untested at any level. `test:db` is still owed before merge.
+
+### Task 6 follow-up, and the product branch through every gate
+- **Split counts:** `coverage.table_vetoed` = asks the veto removed (**32** on the wild set). `coverage.table_not_heading_confident` = in-table non-H cards that were already confident (**361**). `not_heading_confident` stays the total of confident plus vetoed (1,082).
+- **One rule, checked in two places:** every sidecar card carries `asked`, computed by `suggest.py` — the source of truth; 150 on the wild set, matching Task 6. The product recomputes `asked` with the same rule and **refuses the whole sidecar** (400 `invalid_heading_suggestions`) if any card disagrees. Asks are raised exactly for `asked === true`, and older sidecars without the flag are derived as before.
+- **Coverage line:** the "J table cells not asked" clause appears only when J > 0, and a render test pins it exactly for J = 32.
+- **Commits:** experiment side f18d9bb (168 label tests); product side a7ea856 and 550bc3e.
+- **Product branch `claude/heading-suggestion-asks` at 550bc3e — gates:**
+  - lint 0; typecheck 0;
+  - `npm test` 2,531 passed; build 0;
+  - `test:hydration` 53 passed on rerun. The first run failed one existing case, "a persisted document inspection survives a reload", which reads a panel once instead of with `expect.poll`. It passed on the rerun and on the three earlier runs; recorded as a pre-existing flake, not fixed here.
+  - **`test:db` 146 passed (3 files, 89 s) on this exact head**, against the user's dedicated Neon test branch via a gitignored `.env.test.local` (copied from the main checkout; it holds `DATABASE_URL_TEST` only). An earlier head also passed `test:db` (146, 91.5 s).
+- **The product branch has passed every gate and is ready to merge. It is NOT merged and NOT pushed. The merge is the user's decision.**
+- **Still open:**
+  - the table-cells count `table_not_heading_confident` is stored but not shown;
+  - the known gaps listed under Task 2 stand;
+  - **zero real human-answer labels exist yet.**
