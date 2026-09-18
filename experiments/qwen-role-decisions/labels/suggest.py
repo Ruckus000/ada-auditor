@@ -8,6 +8,9 @@ the facts and ``marked_image`` the marked page (rendered from the input PDF),
 ``reduce_marked_408.py`` sizes the images, and ``predict.py --scores --own-stack``
 decides — rules in front, then the model, whose approved-headings stack is its
 own prior H decisions on the document, in reading order.
+With ``--split-enumerated-heads``, an LI/H block whose first physical line is a short
+enumerated heading ("A. Plans") becomes a head card and a body card first
+(``labels.split_heads``); the training-key builder never does this.
 
 Advisory only: writes the sidecar and a per-run work directory
 (``out/suggest/<stem>/`` by default), never modifies the PDF and never writes a
@@ -31,11 +34,12 @@ from labels.build_keys import candidate_pool, document_cards, odl
 from labels.key_context import context_cards, marked_image
 from labels.pdf_cards import SEED
 from labels.predict import OwnStack, parsed
+from labels.split_heads import split_enumerated_heads
 from labels.stage_pdfs import has_struct_tree
 
 SIDECAR_KEYS = ("document", "threshold", "page_base", "coverage", "cards")
 CARD_KEYS = ("card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on", "in_table_box", "asked")
-COVERAGE_KEYS = ("blocks_total", "cards_considered", "selector", "not_heading_confident", "table_vetoed", "table_not_heading_confident")
+COVERAGE_KEYS = ("blocks_total", "cards_considered", "selector", "not_heading_confident", "table_vetoed", "table_not_heading_confident", "split_heads")
 SELECTORS = {False: "likely-headings+5%", True: "all-blocks"}
 # A wall-time budget, not a quality bound: --all-blocks costs about 2.1 s per
 # model-decided card (c3-0128: 166 model cards in 397.7 s), so 600 blocks is
@@ -72,7 +76,7 @@ def asked(row: dict) -> bool:
 
 
 def assemble_sidecar(document: str, threshold: float, cards: list[dict], predictions: list[dict],
-                     blocks_total: int, selector: str) -> dict:
+                     blocks_total: int, selector: str, split_heads: int = 0) -> dict:
     """The sidecar from candidate cards and their prediction rows (pure; no I/O).
 
     Every card appears, in reading order, including abstentions. Type, level and
@@ -106,10 +110,10 @@ def assemble_sidecar(document: str, threshold: float, cards: list[dict], predict
         })
         out[-1]["asked"] = asked(out[-1])
     return {"document": document, "threshold": threshold, "page_base": 0,
-            "coverage": coverage_of(out, blocks_total, selector), "cards": out}
+            "coverage": coverage_of(out, blocks_total, selector, split_heads), "cards": out}
 
 
-def coverage_of(rows: list[dict], blocks_total: int, selector: str) -> dict:
+def coverage_of(rows: list[dict], blocks_total: int, selector: str, split_heads: int = 0) -> dict:
     """Counts over the rows.
 
     ``not_heading_confident`` keeps its definition: every card recorded as considered,
@@ -117,10 +121,12 @@ def coverage_of(rows: list[dict], blocks_total: int, selector: str) -> dict:
     ones. It is the complement of ``asked``. Two table sub-counts: ``table_vetoed``,
     the asks the veto removed (in table, non-H, below threshold); and
     ``table_not_heading_confident``, in-table non-H cards that were already proposed.
+    ``split_heads`` is how many blocks ``--split-enumerated-heads`` split (0 when off).
     """
     return {"blocks_total": blocks_total, "cards_considered": len(rows), "selector": selector,
             "not_heading_confident": sum(map(not_heading_confident, rows)), "table_vetoed": sum(map(table_vetoed, rows)),
-            "table_not_heading_confident": sum(1 for r in rows if in_table_non_h(r) and r["proposed"])}
+            "table_not_heading_confident": sum(1 for r in rows if in_table_non_h(r) and r["proposed"]),
+            "split_heads": split_heads}
 
 
 def default_model_path() -> Path:
@@ -142,10 +148,14 @@ def tag(pdf: Path, work: Path, stem: str) -> Path:
     return tagged
 
 
-def choose_cards(raw: dict, stem: str, all_blocks: bool) -> tuple[list[dict], int, str]:
+def choose_cards(raw: dict, stem: str, all_blocks: bool, split_heads: bool = False) -> tuple[list[dict], int, str, int]:
     """The cards to suggest for, with their facts, in reading order; the pool size
-    (``blocks_total``); and the selector actually used. ``all_blocks`` over a pool
-    larger than ``ALL_BLOCKS_LIMIT`` falls back to the default selector, and says so."""
+    (``blocks_total``); the selector actually used; and how many blocks were split.
+    ``all_blocks`` over a pool larger than ``ALL_BLOCKS_LIMIT`` falls back to the
+    default selector, and says so. ``split_heads`` splits enumerated heading lines out
+    of auto-tagged list items first (``labels.split_heads``), so the pool counts both halves."""
+    blocks, n_split = split_enumerated_heads(raw.get("blocks") or []) if split_heads else (raw.get("blocks") or [], 0)
+    raw = {**raw, "blocks": blocks}
     blocks_total = len(candidate_pool(raw, stem))
     every = all_blocks and blocks_total <= ALL_BLOCKS_LIMIT
     selector = SELECTORS[every]
@@ -153,15 +163,16 @@ def choose_cards(raw: dict, stem: str, all_blocks: bool) -> tuple[list[dict], in
         selector += f" (all-blocks capped: {blocks_total} > {ALL_BLOCKS_LIMIT})"
     chosen = document_cards(Path(stem), stem, random.Random(SEED), dump=lambda _p, compile=False: raw, select=not every)
     cards = context_cards(raw.get("blocks") or [], stem, {c["card_id"] for c in chosen})
-    return sorted(cards, key=reading_order), blocks_total, selector
+    return sorted(cards, key=reading_order), blocks_total, selector, n_split
 
 
-def build_cards(pdf: Path, tagged: Path, stem: str, work: Path, all_blocks: bool) -> tuple[list[dict], int, str]:
-    cards, blocks_total, selector = choose_cards(dump_pdf(tagged, compile=False), stem, all_blocks)
+def build_cards(pdf: Path, tagged: Path, stem: str, work: Path, all_blocks: bool,
+                split_heads: bool = False) -> tuple[list[dict], int, str, int]:
+    cards, blocks_total, selector, n_split = choose_cards(dump_pdf(tagged, compile=False), stem, all_blocks, split_heads)
     for c in cards:
         img = marked_image(c, pdf, work / "pages")
         c["image"] = None if img is None else str(img.resolve())
-    return cards, blocks_total, selector
+    return cards, blocks_total, selector, n_split
 
 
 def main() -> None:
@@ -174,6 +185,8 @@ def main() -> None:
     p.add_argument("--work", type=Path, default=None, help="default: the sidecar's directory")
     p.add_argument("--all-blocks", action="store_true",
                    help=f"every text block of the pool, no selection and no cap, up to {ALL_BLOCKS_LIMIT} blocks (a wall-time budget)")
+    p.add_argument("--split-enumerated-heads", action="store_true",
+                   help="split an LI/H block whose first physical line is a short enumerated heading into head + body cards")
     p.add_argument("--model-path", type=Path, default=None, help="local Qwen snapshot for the 408-token sizing; default the HF cache's")
     a = p.parse_args()
     started = time.monotonic()
@@ -189,7 +202,7 @@ def main() -> None:
         (work / f).unlink(missing_ok=True)
     work.mkdir(parents=True, exist_ok=True)
     tagged = tag(a.pdf, work, stem)
-    cards, blocks_total, selector = build_cards(a.pdf, tagged, stem, work, a.all_blocks)
+    cards, blocks_total, selector, n_split = build_cards(a.pdf, tagged, stem, work, a.all_blocks, a.split_enumerated_heads)
     (work / "cards.jsonl").write_text("".join(json.dumps(c) + "\n" for c in cards))
     n_img = sum(1 for c in cards if c["image"])
     if n_img:
@@ -199,7 +212,7 @@ def main() -> None:
                     "--adapter", a.adapter, "--python", a.python, "--out", str(work / "predictions.jsonl")], check=True)
     cards = [json.loads(l) for l in (work / "cards.jsonl").read_text().splitlines() if l.strip()]
     preds = [json.loads(l) for l in (work / "predictions.jsonl").read_text().splitlines() if l.strip()]
-    sidecar = assemble_sidecar(stem, a.threshold, cards, preds, blocks_total, selector)
+    sidecar = assemble_sidecar(stem, a.threshold, cards, preds, blocks_total, selector, n_split)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(sidecar, indent=2) + "\n")
     rows = sidecar["cards"]

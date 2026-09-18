@@ -92,9 +92,9 @@ def test_depends_on_follows_the_stack_when_a_heading_closes_a_deeper_one():
 def test_coverage_counts():
     cov = _sidecar()["coverage"]
     assert set(cov) == set(COVERAGE_KEYS) == {"blocks_total", "cards_considered", "selector", "not_heading_confident",
-                                              "table_vetoed", "table_not_heading_confident"}
+                                              "table_vetoed", "table_not_heading_confident", "split_heads"}
     assert cov == {"blocks_total": 9, "cards_considered": 5, "selector": "likely-headings+5%", "not_heading_confident": 1,
-                   "table_vetoed": 0, "table_not_heading_confident": 0}
+                   "table_vetoed": 0, "table_not_heading_confident": 0, "split_heads": 0}
 
 
 def _block(i: int, tag: str, text: str, y0: float | None = None) -> dict:
@@ -111,15 +111,15 @@ FIXTURE = {"blocks": [_block(0, "H1", "Fees")] + [_block(i, "P", BODY.format(i))
 
 
 def test_blocks_total_is_the_pool_after_dedupe_and_container_removal():
-    _, total, _ = choose_cards(FIXTURE, "doc", all_blocks=False)
+    _, total, _, _ = choose_cards(FIXTURE, "doc", all_blocks=False)
     assert total == 41  # 43 blocks, less the Table container and the K35 copy
 
 
 def test_all_blocks_considers_every_block_in_the_pool():
-    chosen, total, selector = choose_cards(FIXTURE, "doc", all_blocks=False)
+    chosen, total, selector, _ = choose_cards(FIXTURE, "doc", all_blocks=False)
     assert len(chosen) < total  # the default selects
     assert selector == "likely-headings+5%"
-    every, total_all, selector_all = choose_cards(FIXTURE, "doc", all_blocks=True)
+    every, total_all, selector_all, _ = choose_cards(FIXTURE, "doc", all_blocks=True)
     assert selector_all == "all-blocks"
     assert total_all == total and len(every) == total
     s = assemble_sidecar("doc", THRESHOLD, every, [{"id": c["card_id"], "raw": '{"type":"P","rule":4}', "decided_by": "model", "score": 0.99} for c in every],
@@ -146,15 +146,15 @@ def _body(n: int) -> dict:
 
 def test_all_blocks_at_or_under_the_limit_stays_all_blocks():
     assert ALL_BLOCKS_LIMIT == 600
-    cards, total, selector = choose_cards(_body(ALL_BLOCKS_LIMIT), "doc", all_blocks=True)
+    cards, total, selector, _ = choose_cards(_body(ALL_BLOCKS_LIMIT), "doc", all_blocks=True)
     assert (total, len(cards), selector) == (600, 600, "all-blocks")
 
 
 def test_all_blocks_above_the_limit_falls_back_to_the_selector_and_says_so():
-    cards, total, selector = choose_cards(_body(ALL_BLOCKS_LIMIT + 1), "doc", all_blocks=True)
+    cards, total, selector, _ = choose_cards(_body(ALL_BLOCKS_LIMIT + 1), "doc", all_blocks=True)
     assert total == 601 and len(cards) < total
     assert selector == "likely-headings+5% (all-blocks capped: 601 > 600)"
-    default, _, _ = choose_cards(_body(ALL_BLOCKS_LIMIT + 1), "doc", all_blocks=False)
+    default, _, _, _ = choose_cards(_body(ALL_BLOCKS_LIMIT + 1), "doc", all_blocks=False)
     assert [c["card_id"] for c in cards] == [c["card_id"] for c in default]
 
 
@@ -214,3 +214,36 @@ def test_asked_flag_on_every_branch():
     cov = s["coverage"]
     assert (cov["table_vetoed"], cov["table_not_heading_confident"], cov["not_heading_confident"]) == (1, 1, 3)
     assert sum(c["asked"] for c in s["cards"]) + cov["not_heading_confident"] == cov["cards_considered"]
+
+
+# Stage 2 round 2: --split-enumerated-heads. An LI whose first physical line is "B. Scope" and
+# its Lbl sibling "B.", beside the FIXTURE body. Synthetic text.
+def _enumerated(raw: dict) -> dict:
+    li = {**_block(50, "LI", "B. Scope Every widget shall be counted twice.", y0=600.0), "y1": 640.0,
+          "first_line": "B. Scope", "line_count": 3, "ancestors": ["L", "Document"]}
+    lbl = {**_block(51, "Lbl", "B.", y0=600.0), "first_line": "B.", "line_count": 1, "ancestors": ["LI", "L", "Document"]}
+    return {**raw, "blocks": raw["blocks"] + [li, lbl]}
+
+
+def test_split_enumerated_heads_is_off_by_default_and_counted_when_on():
+    raw = _enumerated(FIXTURE)
+    off, total_off, _, n_off = choose_cards(raw, "doc", all_blocks=True)
+    assert n_off == 0 and "doc:50h" not in {c["card_id"] for c in off}
+    on, total_on, selector, n_on = choose_cards(raw, "doc", all_blocks=True, split_heads=True)
+    assert n_on == 1 and total_on == total_off + 1 and selector == "all-blocks"
+    by = {c["card_id"]: c for c in on}
+    assert by["doc:50h"]["text"] == "B. Scope" and by["doc:50"]["text"] == "Every widget shall be counted twice."
+    assert by["doc:50h"]["y1"] == by["doc:50"]["y0"] == 600.0 + 1.3 * 11
+    assert by["doc:51"]["text"] == "B."  # the numeral-only Lbl sibling is untouched
+    ids = [c["card_id"] for c in on]
+    assert ids.index("doc:50h") < ids.index("doc:50")  # head before body in reading order
+    s = assemble_sidecar("doc", THRESHOLD, on, [{"id": c["card_id"], "raw": '{"type":"P","rule":4}', "decided_by": "model", "score": 0.5} for c in on],
+                         total_on, selector, split_heads=n_on)
+    assert s["coverage"]["split_heads"] == 1 and set(s["coverage"]) == set(COVERAGE_KEYS)
+
+
+def test_split_enumerated_heads_does_not_change_the_default_selection_otherwise():
+    """With nothing to split, the flag leaves the cards exactly as they were."""
+    off = choose_cards(FIXTURE, "doc", all_blocks=False)
+    on = choose_cards(FIXTURE, "doc", all_blocks=False, split_heads=True)
+    assert on == off and on[3] == 0
