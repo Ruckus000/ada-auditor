@@ -1,0 +1,10 @@
+{"id": "w-0001:0", "type": "H", "label": {"heading": true, "level": 1}, "votes": {"judges": 4, "agree": 4}}
+{"id": "w-0001:1", "type": "P", "label": {"heading": false, "level": null}, "votes": {"judges": 4, "agree": 4}}
+{"id": "w-0001:2", "type": "H", "label": {"heading": true, "level": 3}, "votes": {"judges": 4, "agree": 3}}
+{"id": "w-0001:3", "type": "Lbl", "label": {"heading": false, "level": null}, "votes": {"judges": 4, "agree": 4}}
+{"id": "w-0001:4", "type": "H", "label": {"heading": true, "level": 2}, "votes": {"judges": 4, "agree": 3}}
+{"id": "w-0001:5", "label": null, "votes": {"judges": 4, "agree": 2}}
+{"id": "w-0002:0", "type": "P", "label": {"heading": false, "level": null}, "votes": {"judges": 4, "agree": 3}, "actor": "consensus-4judge"}
+{"id": "w-0002:1", "type": "TH", "label": {"heading": false, "level": null}, "votes": {"judges": 4, "agree": 4}}
+{"id": "w-0002:2", "type": "P", "label": {"heading": false, "level": null}, "votes": {"judges": 3, "agree": 3}}
+{"id": "w-0002:3", "type": "H", "label": {"heading": true, "level": 1}, "votes": {"judges": 4, "agree": 4}}

@@ -1,0 +1,135 @@
+{
+ "document": "w-0001",
+ "threshold": 0.9933,
+ "page_base": 0,
+ "coverage": {
+  "blocks_total": 6,
+  "cards_considered": 6,
+  "selector": "all-blocks",
+  "not_heading_confident": 0,
+  "table_vetoed": 0,
+  "table_not_heading_confident": 0
+ },
+ "cards": [
+  {
+   "card_id": "w-0001:0",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 20.0,
+    "x1": 200.0,
+    "y1": 32.0
+   },
+   "text": "",
+   "type": "H",
+   "level": 1,
+   "rule": 1,
+   "score": 0.999,
+   "decided_by": "model",
+   "proposed": true,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": true
+  },
+  {
+   "card_id": "w-0001:1",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 40.0,
+    "x1": 200.0,
+    "y1": 52.0
+   },
+   "text": "",
+   "type": "P",
+   "level": null,
+   "rule": 4,
+   "score": 0.9995,
+   "decided_by": "model",
+   "proposed": true,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": false
+  },
+  {
+   "card_id": "w-0001:2",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 60.0,
+    "x1": 200.0,
+    "y1": 72.0
+   },
+   "text": "",
+   "type": "H",
+   "level": 2,
+   "rule": 1,
+   "score": 0.95,
+   "decided_by": "model",
+   "proposed": false,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": true
+  },
+  {
+   "card_id": "w-0001:3",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 80.0,
+    "x1": 200.0,
+    "y1": 92.0
+   },
+   "text": "",
+   "type": "Lbl",
+   "level": null,
+   "rule": 3,
+   "score": 1.0,
+   "decided_by": "rule",
+   "proposed": true,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": false
+  },
+  {
+   "card_id": "w-0001:4",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 100.0,
+    "x1": 200.0,
+    "y1": 112.0
+   },
+   "text": "",
+   "type": "P",
+   "level": null,
+   "rule": 4,
+   "score": 0.7,
+   "decided_by": "model",
+   "proposed": false,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": true
+  },
+  {
+   "card_id": "w-0001:5",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 120.0,
+    "x1": 200.0,
+    "y1": 132.0
+   },
+   "text": "",
+   "type": "P",
+   "level": null,
+   "rule": 4,
+   "score": 0.9,
+   "decided_by": "model",
+   "proposed": false,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": true
+  }
+ ]
+}

@@ -1,0 +1,95 @@
+{
+ "document": "w-0002",
+ "threshold": 0.9933,
+ "page_base": 0,
+ "coverage": {
+  "blocks_total": 4,
+  "cards_considered": 4,
+  "selector": "all-blocks",
+  "not_heading_confident": 0,
+  "table_vetoed": 0,
+  "table_not_heading_confident": 0
+ },
+ "cards": [
+  {
+   "card_id": "w-0002:0",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 20.0,
+    "x1": 200.0,
+    "y1": 32.0
+   },
+   "text": "",
+   "type": "H",
+   "level": 1,
+   "rule": 1,
+   "score": 0.9999,
+   "decided_by": "model",
+   "proposed": true,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": true
+  },
+  {
+   "card_id": "w-0002:1",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 40.0,
+    "x1": 200.0,
+    "y1": 52.0
+   },
+   "text": "",
+   "type": "TH",
+   "level": null,
+   "rule": 3,
+   "score": 0.99,
+   "decided_by": "model",
+   "proposed": false,
+   "depends_on": [],
+   "in_table_box": true,
+   "asked": false
+  },
+  {
+   "card_id": "w-0002:2",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 60.0,
+    "x1": 200.0,
+    "y1": 72.0
+   },
+   "text": "",
+   "type": null,
+   "level": null,
+   "rule": null,
+   "score": null,
+   "decided_by": "model",
+   "proposed": false,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": true
+  },
+  {
+   "card_id": "w-0002:3",
+   "locator": {
+    "page": 0,
+    "x0": 10.0,
+    "y0": 80.0,
+    "x1": 200.0,
+    "y1": 92.0
+   },
+   "text": "",
+   "type": "P",
+   "level": null,
+   "rule": 4,
+   "score": 0.6,
+   "decided_by": "model",
+   "proposed": false,
+   "depends_on": [],
+   "in_table_box": false,
+   "asked": true
+  }
+ ]
+}

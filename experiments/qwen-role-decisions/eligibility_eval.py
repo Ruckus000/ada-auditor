@@ -23,9 +23,22 @@ building an overlay of ``claude-audit`` rows over a labels file must check
 each id's existing ``label_source`` first and skip any that are already
 ``human-answer``.
 
+``claude-consensus`` (Stage 2 T8, 2026-09-18) is the four-judge Claude
+consensus on the wild population: four blind Claude judges (opus low, medium
+and high, plus fable medium), each calibrated against the 222 ``audit-s2wild``
+rows and dropped below 0.90 heading-bit agreement; a card is labelled when at
+least 3 of 4 agree on the heading bit, type and level by majority among the
+agreeing judges, and no-consensus cards are excluded and counted. Rows carry
+``actor: "consensus-4judge"`` and an optional ``votes: {judges, agree}`` field
+that this module ignores. Every number graded against it is disclosed with the
+line **"graded against Claude-consensus labels"**. It ranks below
+``human-answer`` exactly as ``claude-audit`` does: a human answer on the same
+id wins, and the caller assembling an overlay must skip ids that already carry
+a ``human-answer`` row.
+
     python3 -B eligibility_eval.py --self-check
     python3 -B eligibility_eval.py split --labels L.jsonl --salt S --out DIR \
-        [--keep PRIOR/split.json --keep-labels PRIOR/labels.jsonl]
+        [--keep PRIOR/split.json --keep-labels PRIOR/labels.jsonl [--assign-new validation]]
     python3 -B eligibility_eval.py evaluate --split DIR/split.json \
         --labels L.jsonl --predictions P.jsonl [--on validation|test]
 
@@ -42,6 +55,13 @@ split; a component touching pins from two splits is refused as a leak; only
 unpinned components are assigned by the new salt. The overlap check runs over
 all rows. The output records ``salt``, ``kept_from`` (the prior split file's
 sha256), ``kept_labels`` (the prior labels' sha256) and ``kept_salt``.
+
+``--assign-new validation`` (with ``--keep``) holds a new population out whole:
+after the pinning and grouping checks, every id the prior split does not place
+goes to the named split instead of being drawn by salt, and the output records
+``assigned_new``. It refuses, naming the key and its split, when any new id's
+document, client or template already sits in a different split. ``test`` is not
+an accepted target.
 """
 
 from __future__ import annotations
@@ -67,7 +87,9 @@ MIN_TEST_TEMPLATES = 10
 SPLIT = (("train", 0.6), ("validation", 0.2), ("test", 0.2))
 GROUP_KEYS = ("document_sha256", "template_id", "client_id")
 MODEL_FIELDS = ("prediction", "model", "model_role", "heading_flag", "raw", "confidence")
-LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted", "claude-audit")
+LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted", "claude-audit", "claude-consensus")
+# --assign-new targets. Never test: a held-out set is only ever grown into validation (or train).
+ASSIGNABLE = ("train", "validation")
 PREDICTION_TYPES = ("H", "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Other", "Unsure")
 UNKNOWN_TEMPLATE = "unknown"
 # Every development and spent-holdout document the Qwen spikes have read, by
@@ -208,13 +230,36 @@ def pinned_membership(rows: list[dict], comp: dict[str, str], pinned: dict[str, 
     return {rid: next(iter(touched[c].values())) if c in touched else assign(c, salt) for rid, c in comp.items()}
 
 
-def split(rows: list[dict], salt: str, keep: dict | None = None, prior_rows: list[dict] | None = None) -> dict:
+def assigned_new(rows: list[dict], membership: dict[str, str], keep: dict, pinned: dict[str, str], target: str) -> dict[str, str]:
+    """Stage 2 T8: every id the prior split does not place goes to ``target``, whatever the salt
+    drew; prior ids keep the split their pins gave them. Runs after the pinning and grouping
+    checks. A new id whose document, client or template is pinned to another split is refused."""
+    prior_ids = {rid for ids in keep["ids"].values() for rid in ids}
+    clashes = sorted(
+        f"{row['id']}: {k}:{row[k]} already sits in {pinned[f'{k}:{row[k]}']}"
+        for row in rows
+        if row["id"] not in prior_ids
+        for k in GROUP_KEYS
+        if pinned.get(f"{k}:{row[k]}", target) != target
+    )
+    if clashes:
+        raise ValueError(f"--assign-new {target} refused: a new id's document, client or template is already in another split:\n" + "\n".join(clashes[:20]))
+    return {rid: split_ if rid in prior_ids else target for rid, split_ in membership.items()}
+
+
+def split(rows: list[dict], salt: str, keep: dict | None = None, prior_rows: list[dict] | None = None,
+          assign_new: str | None = None) -> dict:
     bad = refusals(rows)
     if bad:
         raise ValueError("labels refused:\n" + "\n".join(bad))
+    if assign_new is not None and (not keep or assign_new not in ASSIGNABLE):
+        raise ValueError(f"--assign-new needs --keep and one of {ASSIGNABLE}; the test split is never grown by assignment")
     comp = components(rows)
     if keep:
-        membership = pinned_membership(rows, comp, pins(keep, prior_rows), salt)
+        pinned = pins(keep, prior_rows)
+        membership = pinned_membership(rows, comp, pinned, salt)
+        if assign_new is not None:
+            membership = assigned_new(rows, membership, keep, pinned, assign_new)
     else:
         membership = {rid: assign(c, salt) for rid, c in comp.items()}
     leaks = overlaps(rows, membership)
@@ -228,6 +273,8 @@ def split(rows: list[dict], salt: str, keep: dict | None = None, prior_rows: lis
     }
     if keep:
         result["kept_salt"] = keep.get("salt")
+    if assign_new is not None:
+        result["assigned_new"] = assign_new
     return result
 
 
@@ -393,7 +440,10 @@ def cmd_split(args: argparse.Namespace) -> None:
         if sha256_file(args.keep_labels) != keep.get("labels_sha256"):
             raise SystemExit(f"{args.keep_labels} is not the labels {args.keep} was drawn from (labels_sha256 differs)")
         prior_rows = load_jsonl(args.keep_labels)
-    result = split(load_jsonl(args.labels), args.salt, keep=keep, prior_rows=prior_rows)
+    assign_new = getattr(args, "assign_new", None)
+    if assign_new and not args.keep:
+        raise SystemExit("--assign-new needs --keep and --keep-labels")
+    result = split(load_jsonl(args.labels), args.salt, keep=keep, prior_rows=prior_rows, assign_new=assign_new)
     result["labels_sha256"] = sha256_file(args.labels)
     if args.keep:
         result["kept_from"] = sha256_file(args.keep)
@@ -518,6 +568,29 @@ def self_check() -> None:
         raise AssertionError("overlaps must run over all rows")
     finally:
         globals()["pinned_membership"] = real
+    # --assign-new (Stage 2 T8): every id the prior split does not place goes to the named
+    # split -- the wild set is held out whole, never drawn by salt; kept ids do not move; a new
+    # id whose document, client or template already sits in another split is refused.
+    wild = [keyed(40, "w1.gov", "w1"), keyed(41, "w1.gov", "w1"), keyed(42, "w2.gov", "w2"), keyed(43, "b.gov", "w3")]
+    for salt in ("s", "t", "u"):
+        got = placed(split(kept_rows[:3] + wild, salt, keep=prior, prior_rows=prior_rows, assign_new="validation"))
+        assert got["k1"] == "train" and got["k2"] == got["k3"] == "validation", got
+        assert all(got[f"k{i}"] == "validation" for i in (40, 41, 42, 43)), got
+    assert split(kept_rows[:3] + wild, "s", keep=prior, prior_rows=prior_rows, assign_new="validation")["assigned_new"] == "validation"
+    for bad_rows, needle in (([keyed(44, "a.gov", "w4")], "client_id:a.gov"), ([keyed(45, "z.gov", "d1")], "document_sha256:")):
+        try:
+            split(kept_rows[:3] + wild + bad_rows, "s", keep=prior, prior_rows=prior_rows, assign_new="validation")
+        except ValueError as err:
+            assert needle in str(err) and "train" in str(err) and "--assign-new" in str(err), err
+        else:
+            raise AssertionError(f"--assign-new must refuse a new id pinned to train ({needle})")
+    for kw in ({"assign_new": "test", "keep": prior, "prior_rows": prior_rows}, {"assign_new": "validation"}):
+        try:
+            split(kept_rows[:3] + wild, "s", **kw)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"--assign-new must refuse {kw.get('assign_new')} without --keep or into test")
     # The command: kept_from hashes the prior split file, kept_labels the prior labels;
     # stale prior labels and --keep alone are refused.
     import tempfile
@@ -533,6 +606,10 @@ def self_check() -> None:
         written = json.loads((t / "out" / "split.json").read_text())
         assert written["kept_from"] == sha256_file(t / "prior-split.json") != sha256_file(t / "prior.jsonl")
         assert written["kept_labels"] == sha256_file(t / "prior.jsonl") and written["kept_salt"] == "old"
+        (t / "wild.jsonl").write_text("".join(json.dumps(r) + "\n" for r in kept_rows[:3] + wild))
+        cmd_split(SimpleNamespace(**{**vars(args), "labels": t / "wild.jsonl", "out": t / "wild-out", "assign_new": "validation"}))
+        written = json.loads((t / "wild-out" / "split.json").read_text())
+        assert written["assigned_new"] == "validation" and written["ids"]["train"] == ["k1"] and written["ids"]["test"] == [], written
         (t / "stale.jsonl").write_text((t / "prior.jsonl").read_text() + "\n")
         for bad in ({"keep_labels": t / "stale.jsonl"}, {"keep_labels": None}):
             try:
@@ -575,6 +652,13 @@ def self_check() -> None:
     a = {**label(6, True, "c", "t"), "label_source": "claude-audit", "actor": "claude-coordinator"}
     assert refusals([a]) == []
     assert refusals([{**a, "label_source": "claude-draft"}])
+    # claude-consensus is a label source (Stage 2 T8): the four-judge consensus row, with an
+    # optional votes field the evaluator ignores.
+    cons = {**label(7, True, "c", "t", 2), "label_source": "claude-consensus", "actor": "consensus-4judge", "type": "H",
+            "votes": {"judges": 4, "agree": 3}}
+    assert refusals([cons]) == [], refusals([cons])
+    assert evaluate([cons], {cons["id"]: '{"type":"H","level":2,"rule":1}'})["confusion"]["tp"] == 1
+    assert LABEL_SOURCES.index("claude-consensus") > LABEL_SOURCES.index("human-answer")
     # type-shaped predictions
     assert read_prediction('{"type":"Caption","rule":3}') == ("not-heading", None)
     assert read_prediction('{"type":"H","level":2,"rule":1}') == ("heading", 2)
@@ -614,6 +698,7 @@ def main() -> None:
     s.add_argument("--out", type=Path, required=True)
     s.add_argument("--keep", type=Path, help="prior split.json whose documents, clients and templates stay put (S3/K29)")
     s.add_argument("--keep-labels", type=Path, help="the prior labels.jsonl that split was drawn from; required with --keep")
+    s.add_argument("--assign-new", choices=ASSIGNABLE, help="with --keep: every id the prior split does not place goes to this split, not by salt; refused if its document, client or template sits in another split")
     e = sub.add_parser("evaluate")
     e.add_argument("--split", type=Path, required=True)
     e.add_argument("--labels", type=Path, required=True)
