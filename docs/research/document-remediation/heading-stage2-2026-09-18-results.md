@@ -274,11 +274,33 @@ Coverage curve (threshold: coverage, accuracy [lower–upper], FP):
   - c3-0094:0 and c3-0252:1 are P;
   - c3-0825:16 and :20 are TH row labels, which the reviewer's audit had called H.
   This is the second population on which r10's proposed H is clean.
-- **The accuracy side does not transfer.** At 0.9933 the accuracy lower bound is 0.969, below the rule's 0.98 and the gate's 0.99. Every covered error is a **missed heading**: 22 of the 58 covered consensus H. They fall in 4 of 10 documents: c3-0794 13, c3-0128 6, c3-0489 2, c3-0252 1.
-- **20 of the 22 covered misses are segmentation-shaped, not reading errors.**
-  - **10 are bare enumerator cards** ("I.", "A.", "C.") that the block extractor split away from their heading words. The model says Lbl; the consensus says H. The same shape is labelled inconsistently: of 117 bare-enumerator cards, the consensus calls 20 H and 95 Lbl. The reviewer's own two disagreements (c3-0128:17 and :68, judges Lbl) are the same shape.
-  - **10 are run-in blocks**, a heading merged with its body paragraph ("I. Purpose This policy is intended…"). The model says P; the consensus says H. Neither label is right for the block: the fix is splitting it.
-  - **2 are ordinary misses:** c3-0252:53, a regular-weight place name, and c3-0794:134, a bold catalogue line.
-- **Abstained misses (21)** are mostly short regular-weight lines, 12 of them, plus 8 run-in blocks.
-- **Consequence:** the next lever is **block segmentation on untagged PDFs** — merge a bare enumerator into the line it labels, and split a run-in heading from its body — not more training. The error anatomy above is counted after measurement. It is a diagnosis, not a re-scored result. No sensitivity number is reported, because a length-based filter removed 719 cards, mostly ordinary paragraphs, and would misstate the effect.
-- **The Stage 2 gate is not met** on this population: accuracy lower bound 0.969 (needs 0.99), FN 0.379, and abstention 11.3 % (needs ≤ 10 %). The FP upper bound, 0.0036, meets the ≤ 0.01 bar.
+- **The accuracy side does not transfer on the raw labels.** At 0.9933 the accuracy lower bound is 0.969, below the rule's 0.98 and the gate's 0.99. Every covered error is a **missed heading**: 22 of the 58 covered consensus H, in 4 of 10 documents (c3-0794 13, c3-0128 6, c3-0489 2, c3-0252 1).
+- **What the 22 covered misses are** (counted after measurement: a diagnosis, not a re-score):
+  - **9 are enumerator-only cards** ("I.", "A.", "C."). **This is a labelling-convention conflict, not a model miss.** The judge protocol said a section heading's numeral is H even when the box covers only the numeral. The training keys never label it that way: all 185 enumerator-only cards in `out/keys-all-4/labels.jsonl` are non-H (Lbl 166, P 11, TH 7, Other 1), because the stripped trees tag the numeral as Lbl inside the H. r10 follows its training and calls these Lbl at score ≈ 1.0. In the wild set the consensus calls 20 enumerator-only cards H and 95 Lbl. Those rows are **left as labelled**: the consensus stands and is not edited by hand.
+  - **8 are enumerated headings merged with their paragraph.** The untagged block builder emits "A. Plans All tanks shall be installed…" as one card. The model says P and the consensus says H, but neither label fits the block; the fix is splitting it. **This is a card-building defect** on untagged PDFs: the heading line is not split from the paragraph that follows it.
+  - **5 others:**
+    - 3 are genuine misses: c3-0252:53, a regular-weight place name, and c3-0794:134 and :138, bold catalogue lines;
+    - 2 are scanned-text noise in c3-0489 — a one-character "~" card decided by rule, and a garbled line. Both fall under the registered OCR-quality follow-up.
+- **Abstained misses (21)** are mostly short regular-weight lines.
+
+### Three views, all graded against Claude-consensus labels, at 0.9933
+| View | Rows | Covered | Abstention | Accuracy [exact 95 %] | FP (upper bound) | FN |
+|---|---|---|---|---|---|---|
+| **Raw — the headline** | 1,219 | 1,081 | 0.113 | **0.9796 [0.9693–0.9872]** | 0 (0.0036) | 22 |
+| Excluding the 20 enumerator-only H rows (convention conflict) | 1,199 | 1,067 | 0.110 | 0.9878 [0.9793–0.9935] | 0 (0.0036) | 13 |
+| Excluding every fragment-shaped card, chosen without looking at the label (227 cards) | 992 | 874 | 0.119 | 0.9931 [0.9851–0.9975] | 0 (0.0044) | 6 |
+
+- **How the views are chosen:**
+  - The second view's exclusion rests on a convention that was fixed before measurement (the training keys), so it is the fair reading of the model's judgement.
+  - The third view is a sensitivity bound. Its cards are chosen by shape alone: any enumerator-only card, plus any card that starts with an adjacent enumerator-only card's token.
+  - The reviewing session also computed a third view that drops only the *H-labelled* fragment cards (35): 0.9953 [0.989–0.998], FN 5. That selection conditions on the label and removes positives only, so it overstates; it is not adopted.
+- **About the bounds:** they here are the evaluator's exact Clopper-Pearson bounds. The reviewing session's independent scoring matches every count. Its bounds differ in the fourth decimal (for example, a raw upper bound of 0.9865), from a different interval method.
+- **The Stage 2 gate is not met on this population in any view.** Even the third view's accuracy lower bound, 0.985, is under 0.99, and abstention (0.106–0.119) is over 0.10. The FP upper bound meets the ≤ 0.01 bar in every view.
+- **The next lever is card building on untagged PDFs, not training:**
+  - split an enumerated heading line from its paragraph;
+  - decide one convention for the enumerator-only card — keep it Lbl, as the training does, and change the judge protocol, or merge the numeral into the heading card.
+- **Also found, not yet chased:**
+  - 11 sidecar cards share an identical locator box with another card. For example, c3-0794:149 "SUPPLY COMPANIES" has the same page-0 box as c3-0794:2 "I.". That points at a locator or page fault in the untagged block builder.
+  - 22 cards have a `prev` context equal to their own text, 17 of them in c3-0429. Most are genuinely repeated values (for example, a table of identical amounts). The peer's example, c3-0794:1, is a different case: its `prev` is an enclosing larger block that contains the card's own text. That is the same overlapping-block shape as the merged headings above.
+
+**One-line summary for the roadmap:** on the first wild population, graded against Claude-consensus labels, the 0.9933 operating point holds FP at 0 of 1,081 answered cards. Accuracy misses the gate (lower bound 0.969 raw, 0.979 net of the enumerator convention conflict) because of two card-level shapes, numeral-only cards and heading-plus-paragraph blocks — not because of the model's judgement on clean cards.
