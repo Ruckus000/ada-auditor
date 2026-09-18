@@ -48,3 +48,7 @@ Both ladder variants fail the ≥ 5 condition, so **Task 1 closes as "not traine
 - **The operating point is 0.9933 → 74.9 % coverage at 0.989 accuracy [0.981–0.994] and 0.4 % FP [0.08–1.1 %].**
 - **The Stage 2 gate is still not met.** It asks for accuracy ≥ 99 % with a lower bound ≥ 99 %, FP ≤ 1 % with an upper bound ≤ 1 %, and abstention ≤ 10 %. At this operating point the accuracy lower bound is 0.981 (needs 0.99), the FP upper bound is 0.0113 (needs 0.01) and abstention is 25.1 % (needs ≤ 10 %). The point estimates clear the accuracy and FP bars; the bounds and the abstention rate do not.
 - **Test was not evaluated**, and `test.spent` does not exist.
+
+---
+
+*Round 12 (a third epoch resumed from adapter-r10, aimed at the abstention rate) is registered in `docs/superpowers/plans/2026-09-18-stage1-round12.md` and recorded in `heading-stage1-r12-2026-09-18-results.md`.*
