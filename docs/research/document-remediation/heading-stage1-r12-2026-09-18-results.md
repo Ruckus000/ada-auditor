@@ -19,3 +19,8 @@ Abstention is Stage 2's largest miss: 25.1 % of rows are handed back at r10's op
 
 ## Training
 **Step 100:** loss 0.0388, 0.190 it/s, peak 10.72 GB. Projection 4,942 / 0.190 ≈ 26,010 s ≈ **7.2 h**, under the 15 h gate, so the run continues to 4,942.
+
+### Training — completed
+- All **4,942** iterations in a wall time of about **6.8 h** (24,608 s), final loss 0.0048, 0 errors.
+- `out/stage1/adapter-r12/adapters.safetensors` sha256 `cfb0a322…`.
+- **One operational note:** a resumed run writes no `adapter_config.json` of its own, because it reads r10's. Prediction failed on the missing file, so r10's config was copied into `adapter-r12/` unchanged (same rank, same target modules, same fine-tune type) and prediction was relaunched.
