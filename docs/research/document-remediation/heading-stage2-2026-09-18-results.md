@@ -194,3 +194,30 @@ That is itself a finding for the product: **more than half of the untagged marke
   - the known gaps listed under Task 2 stand;
   - **zero real human-answer labels exist yet.**
 - **Hydration flake fixed** in its own commit, 6fdf5ad, which changes the test file only. "a persisted document inspection survives a reload" now reads the row with two `expect.poll` checks making the same assertions. `test:hydration` passed twice, 53/53 both times. `test:db` at 550bc3e still covers this head: 6fdf5ad touches only the browser hydration suite, which `test:db` does not run. **Branch head is 6fdf5ad: unmerged and unpushed; the merge is the user's decision.**
+
+## Task 7 — attach the sidecar on the intake screen
+Commit **c9be7f8** on `claude/heading-suggestion-asks`, which closes the "API-only attachment" known gap.
+
+- **The control:** the intake screen has an optional "Heading suggestions (JSON, optional)" file control beside the PDF control. The chosen file's text is sent as the `headingSuggestions` part with the next PDF inspected, then cleared. When the control is empty, the part is omitted entirely.
+- **No new route and no new validation:** the route's cap and refine apply.
+- **Refusals:** `invalid_heading_suggestions` and `heading_suggestions_too_large` show the route's reason beside the control, with `aria-describedby` and `aria-invalid`.
+- **Tests:**
+  - unit tests on the form (part omitted when empty, present when chosen, and which part a refusal concerns);
+  - one case in `platform-hydration.test.ts`. It attaches a broken sidecar and sees the error beside the control, then attaches the synthetic fixture and sees the workbench coverage line. It lives in the hydration suite because only that suite has an app server to open the workbench.
+- **Gates:** lint 0, typecheck 0, `npm test` 2,535, `test:browser` 115, build 0, `test:hydration` 54.
+- **`test:db` is unaffected:** no store or persistence file changed. The `test:db` pass at 550bc3e (146 tests) still covers the store code at this head.
+- **Operator note:** choose the sidecar **before** the PDF, because the PDF uploads the moment it is chosen. The control's note says so.
+
+## Runbook — producing the first human labels
+1. **Suggest.** From `experiments/qwen-role-decisions`, run:
+   `python3 -B -m labels.suggest --pdf <untagged.pdf> --adapter out/stage1/adapter-r10 --threshold 0.9933 --python ~/.venvs/qwen-role-decisions/bin/python --all-blocks --out <sidecar.json>`
+   Documents over 600 blocks fall back to the likely-headings selector, and the sidecar says so. Image-only PDFs have no text layer and are not candidates.
+2. **Run the product branch** (`claude/heading-suggestion-asks`, once merged or locally) and open a client's documents.
+3. **Attach the sidecar on the intake screen** — choose "Heading suggestions (JSON, optional)" first, then the PDF.
+4. **Answer in the workbench.** Accept a proposed heading in one action, or choose the type and level. Every answer is stored as `decided` for that card, and nothing is applied to the document.
+5. **Export:** dump the document's `document_answers` rows as JSON with each document's url and content sha, then run:
+   `python3 -B -m labels.export_answers --dump <dump.json> --out out/labels/human-answers.jsonl`
+   Rows are grouped by host, and dependency-excluded rows are counted.
+6. **Fold and measure:** add the rows to the labels, run `eligibility_eval.py split --keep`, and re-measure the Stage 2 gate on the new held-out rows (plan Task 4).
+
+**Real human-answer labels produced so far: 0.**
