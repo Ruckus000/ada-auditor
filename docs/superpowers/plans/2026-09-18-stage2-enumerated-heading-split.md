@@ -52,7 +52,19 @@ def test_cards_dump_reports_first_line_and_line_count():
     assert by["c3-0794:9"]["first_line"] == "A. Plans"
     assert by["c3-0794:9"]["line_count"] >= 8
     assert by["c3-0794:10"]["first_line"] == "A." and by["c3-0794:10"]["line_count"] == 1
+
+
+def test_first_line_joins_an_enumerator_and_its_words_across_a_tab_gap():
+    # c3-0094 page 3: "VI." at x=90 and "Budget Process – Execution" at x=126 share one baseline.
+    tagged = Path("out/suggest/wild/c3-0094/odl-out/c3-0094.pdf")
+    if not tagged.is_file():
+        import pytest; pytest.skip("wild tagged copy not present on this machine")
+    by = {b["locator"]: b for b in dump_pdf(tagged, compile=False)["blocks"]}
+    assert by["c3-0094:54"]["first_line"] == "VI. Budget Process – Execution"
+    assert by["c3-0094:54"]["line_count"] >= 5
 ```
+
+Known limit, to be recorded, not fixed here: c3-0794:1 carries "I. OBJECTIVE: To insure that water tanks…" on one physical line, so its first line is long and the rule leaves it merged. Expect at most 14 of the 15 round-1 merged-heading blocks to split.
 
 - [ ] **Step 2: Run it to see it fail**
 
