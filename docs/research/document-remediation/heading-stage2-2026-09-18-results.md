@@ -440,3 +440,87 @@ Registered before any round 3 number exists, and before any wild figure uses it.
 **Disclosed limit:** validation contains none of the shape R5 exists for — a roman-numeral-only card that r10 answers H. The rule's benefit is therefore **untested on validation**. Its safety rests on two facts:
 - all 185 enumerator-only training-key rows are non-H;
 - all 16 validation rows are non-H.
+
+## Wild round 3: registered draw of 20 documents (partial judging)
+**Every number in this section is graded against Claude-consensus labels.** Plan: `2026-09-18-stage2-wild-population-growth.md`.
+
+**Draw and run.** The draw was registered before any run (`out/suggest/wild-r3/population.json`): `random.Random(20260919)` over the 91 unused census ids.
+- **Round 3 ids (20):** c3-0737, 0368, 0178, 0321, 0507, 0299, 0435, 0869, 0722, 0755, 0833, 0533, 0766, 0441, 0931, 0282, 0880, 0268, 0030, 0565.
+- **Extension ids (10):** c3-0317, 0867, 0217, 0259, 0925, 0872, 0735, 0944, 0309, 0774.
+- **Run:** every document tagged, so no replacements. That gives 1,720 cards: the census's 1,716 blocks plus 4 split heads. It took 3,758 s (2.2 s per card), across 17 hosts. Two of those documents are on buncombenc.gov, which was already in validation.
+
+**Judging is partial, and round 3 is a random card subsample.**
+- The session rate limit hit mid-judging, and the user then ruled out new agents. **13 of 28 chunks are unjudged.**
+- One killed judge admitted to writing placeholder guesses for cards it had not viewed. So every output from a failed or killed run was deleted before scoring, and only runs that completed count.
+- **Chunk coverage:**
+  - chunks 00–14 have all four judges;
+  - chunks 15 and 17 have three judges, with consensus at 3 of 3;
+  - chunks 16 and 18 have two judges and are excluded;
+  - chunks 19–27 have none.
+- **Chunks were shuffled across documents before judging**, so the 1,040 judged cards are a random subsample of the 1,720, not a subset of documents. Per-document rates below are on partial documents.
+- Every scored chunk used the thorough "high" judge.
+- **Judging statistics:**
+  - 848 unanimous 4/4, 37 at 3/4, 155 at 3/3;
+  - 7 with no consensus among judged cards, plus 673 unjudged or excluded — 680 unlabelled in total;
+  - pairwise agreement 0.969–0.993.
+- **Types:** P 353, Other 303, Lbl 166, H 93, Artifact 70, TH 37, Caption 18.
+- Protocol v2 applied. There was no calibration: no audit overlap exists.
+
+**Fold and split.** 1,040 labelled cards. `split --keep out/keys-all-4-wild-v2/split/split.json --assign-new validation` put all 1,040 in validation. 0 kept ids moved, and test was not evaluated.
+
+**Output files:**
+- `out/stage1/eval-wild-r3-r10.txt`
+- `out/stage1/eval-wild-v2r3-r10.txt`
+- `out/stage1/views-wild-r3.txt`
+
+### Views at 0.9933
+| View | Rows | Covered | Abstention | Accuracy [exact 95 %] | FP (upper bound) | FN | Clean documents* |
+|---|---|---|---|---|---|---|---|
+| Round 3 raw | 1,040 | 852 | 0.181 | 0.9941 [0.9864–0.9981] | 0 (0.0045) | 5 | 17/20 |
+| Round 3 shape-blind | 899 | 721 | 0.198 | 0.9931 [0.9839–0.9977] | 0 (0.0053) | 5 | 17/20 |
+| Round 3 with R5 | 1,040 | 853 | 0.180 | 0.9941 [0.9864–0.9981] | 0 (0.0045) | 5 | 17/20 |
+| **Rounds 2+3 raw — the headline** | 2,273 | 1,950 | 0.142 | **0.9903 [0.9848–0.9941]** | 0 (0.0020) | 19 | 23/30 |
+| Rounds 2+3, convention-net (−20 round-1 enumerator-only H) | 2,253 | 1,936 | 0.141 | 0.9938 [0.9892–0.9968] | 0 (0.0020) | 12 | 23/30 |
+| Rounds 2+3, shape-blind | 1,903 | 1,608 | 0.155 | 0.9938 [0.9886–0.9970] | 0 (0.0024) | 10 | 24/30 |
+| Rounds 2+3 with R5, convention-net | 2,253 | 1,939 | 0.139 | 0.9938 [0.9892–0.9968] | 0 (0.0020) | 12 | 23/30 |
+
+\* Round 3 documents are partially judged.
+
+**About the R5 rows:**
+- R5 is only meaningful against labels judged under protocol v2. On round 3 it touches 74 cards and changes one covered count; r10 had already answered none of them H at ≥ 0.9933.
+- On round 2, whose unchanged rows carry protocol-v1 labels, R5 overrides enumerator-only cards that round 1 labelled H. That makes "round 2 with R5" (0.9756, FN 27) and "rounds 2+3 with R5" (0.9837) artefacts of the label conflict.
+- The comparable R5 row is the convention-net one above, which is identical to convention-net without R5.
+- **R5 changes nothing measurable here.**
+
+**Coverage curve** (threshold: coverage, accuracy, lower bound, FP):
+
+| Threshold | Round 3 | Rounds 2+3 |
+|---|---|---|
+| 0.5 | 1.000, 0.9538, LB 0.9393, FP 20 | 1.000, 0.9635, LB 0.9549, FP 25 |
+| 0.9 | 0.936, 0.9805, LB 0.9697, FP 6 | 0.948, 0.9824, LB 0.9759, FP 7 |
+| 0.95 | 0.916, 0.9843, LB 0.9742, FP 6 | 0.932, 0.9854, LB 0.9793, FP 7 |
+| 0.99 | 0.845, 0.9909, LB 0.9821, FP 2 | 0.878, 0.9890, LB 0.9834, FP 2 |
+| 0.9933 | 0.819, 0.9941, LB 0.9864, FP 0 | 0.858, 0.9903, LB 0.9848, FP 0 |
+
+- **The rule re-derived on the wild set** gives 0.9742 on round 3 and 0.9566 on rounds 2+3. Neither is adopted; thresholds come only from validation.
+- **Recall, rounds 2+3:** bold 84 of 99, regular 68 of 111.
+
+**Round 3's 5 covered misses** (counted after measurement). All are r10 answering P or Other on a block the consensus calls H:
+- **4 are a heading run into its body text in one block,** with no enumerator: c3-0507:109 "Plant Selection …", c3-0507:110, c3-0507:499 "BULLETIN STAFF …", and c3-0722:147, a code-section number and title followed by its text.
+- **1 is a bold addendum line:** c3-0299:69.
+- **None is enumerator-only.** Round 3's labels follow the v2 convention, and r10 gave no confident H on a numeral card.
+
+### Gate verdict (the gate needs accuracy lower bound ≥ 0.99, FP upper bound ≤ 0.01, abstention ≤ 0.10)
+- **Rounds 2+3 raw:** not met.
+  - The accuracy lower bound is 0.9848, 0.0052 under the gate.
+  - FP passes: 0 of about 1,830 covered not-headings, upper bound 0.0020.
+  - Abstention, 0.142, fails.
+- **Convention-net and shape-blind:** not met. The lower bound is 0.989, 0.001 under, and abstention is 0.14–0.16.
+- **Extension rule** (plan: add ids 21–30 if the combined lower bound is within 0.005 of 0.99 with FP passing). The raw combined bound is 0.0052 away, so **not triggered on the headline**. It would be triggered on the convention-net view, 0.0008 away.
+  - Either way, judging is stopped by the user's no-new-agents ruling.
+  - The 680 unjudged round 3 cards are the cheaper way to more n, since they are already run.
+- **What moved:**
+  - FP is now well inside the bar, on the largest population yet.
+  - Accuracy is at the gate's edge.
+  - Abstention got worse (round 3 alone 0.181), and it is the bar furthest from passing at this threshold.
+  - The remaining misses are mostly run-in headings, a heading and its text in one block without an enumerator. That shape is not addressed by the split.
