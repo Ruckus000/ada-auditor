@@ -70,3 +70,7 @@ These are direct figures on audited labels. The un-audited-row estimate used in 
 - **Configuration:** round 9's command with `--dataset out/stage1/sft-r10`, `--iters 9884` (2 × 4,942), `--steps-per-save 9884`, output `out/stage1/adapter-r10`; 15 h gate judged at step 100.
 
 **Step 100:** loss 0.086, 0.197 it/s (window), peak 11.26 GB. Projection: 9,884 / 0.197 ≈ 50,170 s ≈ **13.9 h**, under the 15 h gate, so the run continues to 9,884.
+
+### Training — completed
+- All **9,884** iterations in a wall time of about **13.7 h** (49,449 s), final loss 0.0151, peak memory 14.16 GB, 0 errors.
+- `out/stage1/adapter-r10/adapters.safetensors` sha256 `f9279289…`.
