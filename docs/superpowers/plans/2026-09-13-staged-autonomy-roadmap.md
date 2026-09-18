@@ -203,6 +203,10 @@ are card-level shapes: 9 enumerator-only cards, a convention conflict with the
 training keys, and 8 headings merged with their paragraph. Net of the
 convention conflict, accuracy is 0.9878 [0.9793–0.9935]. The next lever is card
 building on untagged PDFs.
+**Wild round 2 (enumerated heading split, graded against Claude-consensus
+labels):** at 0.9933, accuracy 0.9872 [0.9787–0.9930], FP 0, abstention 11.0 %;
+net of the enumerator convention conflict, accuracy 0.9935 [0.9867–0.9974].
+The gate is still not met, and the lever is population size (round 3).
 The operating point was measured on 10 wild untagged documents (claude-audit):
 proposed precision 36/36, NHC hidden 0/37. 56 % of untagged candidates are
 image-only and need OCR first.
