@@ -32,7 +32,7 @@ def test_sidecar_has_the_exact_shape_and_key_set():
     assert s["document"] == "doc" and s["threshold"] == THRESHOLD
     assert [c["card_id"] for c in s["cards"]] == ["doc:1", "doc:2", "doc:3", "doc:4", "doc:5"]  # reading order
     for c in s["cards"]:
-        assert set(c) == set(CARD_KEYS) == {"card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on", "in_table_box"}
+        assert set(c) == set(CARD_KEYS) == {"card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on", "in_table_box", "asked"}
         assert set(c["locator"]) == set(LOCATOR_KEYS) == {"page", "x0", "y0", "x1", "y1"}
     one = _by_id(s)["doc:1"]
     assert one["locator"] == {"page": 0, "x0": 10.0, "y0": 10.0, "x1": 200.0, "y1": 22.0}
@@ -91,8 +91,10 @@ def test_depends_on_follows_the_stack_when_a_heading_closes_a_deeper_one():
 
 def test_coverage_counts():
     cov = _sidecar()["coverage"]
-    assert set(cov) == set(COVERAGE_KEYS) == {"blocks_total", "cards_considered", "selector", "not_heading_confident", "table_vetoed"}
-    assert cov == {"blocks_total": 9, "cards_considered": 5, "selector": "likely-headings+5%", "not_heading_confident": 1, "table_vetoed": 0}
+    assert set(cov) == set(COVERAGE_KEYS) == {"blocks_total", "cards_considered", "selector", "not_heading_confident",
+                                              "table_vetoed", "table_not_heading_confident"}
+    assert cov == {"blocks_total": 9, "cards_considered": 5, "selector": "likely-headings+5%", "not_heading_confident": 1,
+                   "table_vetoed": 0, "table_not_heading_confident": 0}
 
 
 def _block(i: int, tag: str, text: str, y0: float | None = None) -> dict:
@@ -184,13 +186,31 @@ def test_out_of_table_below_threshold_non_h_is_still_asked():
     assert not asked(s["doc:6"])  # confident non-heading, out of table: considered, not asked
 
 
-def test_coverage_counts_table_vetoed_inside_not_heading_confident():
+def test_coverage_splits_vetoed_asks_from_confident_table_cards():
     s = _table_sidecar()
-    assert s["coverage"]["table_vetoed"] == 2  # doc:1 and doc:2, whatever the score
-    assert s["coverage"]["not_heading_confident"] == 3  # doc:1, doc:2 (vetoed) and doc:6 (proposed P)
+    assert s["coverage"]["table_vetoed"] == 1  # doc:2: in table, non-H, below threshold -- an ask the veto removed
+    assert s["coverage"]["table_not_heading_confident"] == 1  # doc:1: in table, non-H, already proposed
+    assert s["coverage"]["not_heading_confident"] == 3  # doc:1 and doc:6 (proposed non-H) plus doc:2 (vetoed)
     assert sum(asked(c) for c in s["cards"]) == 3  # doc:3, doc:4, doc:5
     assert sum(asked(c) for c in s["cards"]) + s["coverage"]["not_heading_confident"] == s["coverage"]["cards_considered"]
 
 
 def test_a_card_without_the_table_fact_is_out_of_table():
     assert _by_id(_sidecar())["doc:1"]["in_table_box"] is False
+
+
+def test_asked_flag_on_every_branch():
+    cards = [{**_card(n, 0, n * 10.0), "in_table_box": t} for n, t in ((1, False), (2, True), (3, True), (4, False), (5, False), (6, True))]
+    cases = [('{"type":"H","level":1,"rule":1}', 0.6, True),   # H out of table, below threshold: asked
+             ('{"type":"H","level":2,"rule":1}', 0.999, True),  # H in table, proposed: the model's H overrides the veto
+             ('{"type":"P","rule":4}', 0.6, False),             # below-threshold non-H in table: vetoed
+             ('{"type":"P","rule":4}', 0.6, True),              # below-threshold non-H out of table: asked
+             ('{"type":"P","rule":4}', 0.999, False),           # proposed non-H out of table: confident, not asked
+             ('{"type":"TH","rule":3}', 0.999, False)]          # proposed non-H in table: confident, not asked
+    preds = [{"id": c["card_id"], "raw": r, "decided_by": "model", "score": sc} for c, (r, sc, _) in zip(cards, cases)]
+    s = assemble_sidecar("doc", THRESHOLD, cards, preds, 6, "all-blocks")
+    assert [c["asked"] for c in s["cards"]] == [want for _, _, want in cases]
+    assert all(c["asked"] == asked(c) for c in s["cards"])  # the flag is the Python rule
+    cov = s["coverage"]
+    assert (cov["table_vetoed"], cov["table_not_heading_confident"], cov["not_heading_confident"]) == (1, 1, 3)
+    assert sum(c["asked"] for c in s["cards"]) + cov["not_heading_confident"] == cov["cards_considered"]
