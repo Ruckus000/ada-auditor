@@ -418,3 +418,25 @@ Coverage curve, round 2 raw (threshold: coverage, accuracy [lower–upper], FP):
 - **11 overlapping locators.**
 - **OCR:** the 151 image-only candidates.
 - **The two residual merged shapes:** same-line, and a first line over six words.
+
+## Rule R5 (enumerator-only = Lbl), registered 2026-09-18 on validation
+Registered before any round 3 number exists, and before any wild figure uses it.
+
+**The rule:** a card whose whole text is a bare enumerator is decided `Lbl` before the model, with rule score 1.0. That is `split_heads`' enumerator with no words: `^(?:[IVX]+|[A-Z]|\d+)\.$`. It works the same way as the other rule-decided cards in `suggest.py`.
+- It is applied only as a recompute over existing predictions. No model run.
+- Training keys and the test split are untouched.
+
+**Measured on validation** (split-keys-all-4, `labels-audited-r10`, r10 at 0.993316; output in `out/stage1/rule-r5-validation.txt`):
+- The rule touches **16** of 1,525 validation rows. Their labels: Lbl 14, P 1, TOCI 1, **H 0**.
+- r10 already answers **all 16 as Lbl**, and covers all 16. So R5 changes **no answer**.
+
+| | Covered | Coverage | Accuracy [exact 95 %] | FP (upper bound) | FN | Clean documents | Fully covered, clean |
+|---|---|---|---|---|---|---|---|
+| r10 alone | 1,142 | 0.7489 | 0.98862 [0.9806–0.9939] | 3 (0.0113) | 10 | 60/67 | 8/67 |
+| r10 + R5 | 1,142 | 0.7489 | 0.98862 [0.9806–0.9939] | 3 (0.0113) | 10 | 60/67 | 8/67 |
+
+**Verdict: R5 is neutral on validation. It passes the "not unfavourable" condition, so it is adoptable as a labelled second view on the wild rounds.**
+
+**Disclosed limit:** validation contains none of the shape R5 exists for — a roman-numeral-only card that r10 answers H. The rule's benefit is therefore **untested on validation**. Its safety rests on two facts:
+- all 185 enumerator-only training-key rows are non-H;
+- all 16 validation rows are non-H.
