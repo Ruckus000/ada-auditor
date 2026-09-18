@@ -1,4 +1,4 @@
-from labels.suggest import ALL_BLOCKS_LIMIT, CARD_KEYS, COVERAGE_KEYS, LOCATOR_KEYS, SIDECAR_KEYS, assemble_sidecar, choose_cards
+from labels.suggest import ALL_BLOCKS_LIMIT, CARD_KEYS, COVERAGE_KEYS, LOCATOR_KEYS, SIDECAR_KEYS, assemble_sidecar, asked, choose_cards
 
 THRESHOLD = 0.9933
 
@@ -32,7 +32,7 @@ def test_sidecar_has_the_exact_shape_and_key_set():
     assert s["document"] == "doc" and s["threshold"] == THRESHOLD
     assert [c["card_id"] for c in s["cards"]] == ["doc:1", "doc:2", "doc:3", "doc:4", "doc:5"]  # reading order
     for c in s["cards"]:
-        assert set(c) == set(CARD_KEYS) == {"card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on"}
+        assert set(c) == set(CARD_KEYS) == {"card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on", "in_table_box"}
         assert set(c["locator"]) == set(LOCATOR_KEYS) == {"page", "x0", "y0", "x1", "y1"}
     one = _by_id(s)["doc:1"]
     assert one["locator"] == {"page": 0, "x0": 10.0, "y0": 10.0, "x1": 200.0, "y1": 22.0}
@@ -91,8 +91,8 @@ def test_depends_on_follows_the_stack_when_a_heading_closes_a_deeper_one():
 
 def test_coverage_counts():
     cov = _sidecar()["coverage"]
-    assert set(cov) == set(COVERAGE_KEYS) == {"blocks_total", "cards_considered", "selector", "not_heading_confident"}
-    assert cov == {"blocks_total": 9, "cards_considered": 5, "selector": "likely-headings+5%", "not_heading_confident": 1}
+    assert set(cov) == set(COVERAGE_KEYS) == {"blocks_total", "cards_considered", "selector", "not_heading_confident", "table_vetoed"}
+    assert cov == {"blocks_total": 9, "cards_considered": 5, "selector": "likely-headings+5%", "not_heading_confident": 1, "table_vetoed": 0}
 
 
 def _block(i: int, tag: str, text: str, y0: float | None = None) -> dict:
@@ -154,3 +154,43 @@ def test_all_blocks_above_the_limit_falls_back_to_the_selector_and_says_so():
     assert selector == "likely-headings+5% (all-blocks capped: 601 > 600)"
     default, _, _ = choose_cards(_body(ALL_BLOCKS_LIMIT + 1), "doc", all_blocks=False)
     assert [c["card_id"] for c in cards] == [c["card_id"] for c in default]
+
+
+def _table_sidecar() -> dict:
+    """Six cards: in-table P above and below threshold, in-table H above and below, out-of-table P below, out-of-table P above."""
+    cards = [{**_card(n, 0, n * 10.0), "in_table_box": n <= 4} for n in range(1, 7)]
+    raws = ['{"type":"TH","rule":3}', '{"type":"P","rule":4}', '{"type":"H","level":2,"rule":1}', '{"type":"H","level":2,"rule":1}',
+            '{"type":"P","rule":4}', '{"type":"P","rule":4}']
+    scores = [0.999, 0.6, 0.999, 0.6, 0.6, 0.999]
+    preds = [{"id": c["card_id"], "raw": r, "decided_by": "model", "score": sc} for c, r, sc in zip(cards, raws, scores)]
+    return assemble_sidecar("doc", THRESHOLD, cards, preds, 6, "all-blocks")
+
+
+def test_in_table_non_h_is_vetoed_above_and_below_threshold():
+    s = _by_id(_table_sidecar())
+    assert s["doc:1"]["in_table_box"] is True and s["doc:1"]["proposed"] is True and not asked(s["doc:1"])
+    assert s["doc:2"]["in_table_box"] is True and s["doc:2"]["proposed"] is False and not asked(s["doc:2"])
+
+
+def test_in_table_h_is_still_asked_at_any_score():
+    s = _by_id(_table_sidecar())
+    assert asked(s["doc:3"]) and s["doc:3"]["proposed"] is True
+    assert asked(s["doc:4"]) and s["doc:4"]["proposed"] is False
+
+
+def test_out_of_table_below_threshold_non_h_is_still_asked():
+    s = _by_id(_table_sidecar())
+    assert s["doc:5"]["in_table_box"] is False and asked(s["doc:5"])
+    assert not asked(s["doc:6"])  # confident non-heading, out of table: considered, not asked
+
+
+def test_coverage_counts_table_vetoed_inside_not_heading_confident():
+    s = _table_sidecar()
+    assert s["coverage"]["table_vetoed"] == 2  # doc:1 and doc:2, whatever the score
+    assert s["coverage"]["not_heading_confident"] == 3  # doc:1, doc:2 (vetoed) and doc:6 (proposed P)
+    assert sum(asked(c) for c in s["cards"]) == 3  # doc:3, doc:4, doc:5
+    assert sum(asked(c) for c in s["cards"]) + s["coverage"]["not_heading_confident"] == s["coverage"]["cards_considered"]
+
+
+def test_a_card_without_the_table_fact_is_out_of_table():
+    assert _by_id(_sidecar())["doc:1"]["in_table_box"] is False

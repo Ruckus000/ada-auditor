@@ -34,8 +34,8 @@ from labels.predict import OwnStack, parsed
 from labels.stage_pdfs import has_struct_tree
 
 SIDECAR_KEYS = ("document", "threshold", "page_base", "coverage", "cards")
-CARD_KEYS = ("card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on")
-COVERAGE_KEYS = ("blocks_total", "cards_considered", "selector", "not_heading_confident")
+CARD_KEYS = ("card_id", "locator", "text", "type", "level", "rule", "score", "decided_by", "proposed", "depends_on", "in_table_box")
+COVERAGE_KEYS = ("blocks_total", "cards_considered", "selector", "not_heading_confident", "table_vetoed")
 SELECTORS = {False: "likely-headings+5%", True: "all-blocks"}
 # A wall-time budget, not a quality bound: --all-blocks costs about 2.1 s per
 # model-decided card (c3-0128: 166 model cards in 397.7 s), so 600 blocks is
@@ -47,6 +47,22 @@ MODEL_SNAPSHOTS = Path.home() / ".cache/huggingface/hub/models--mlx-community--Q
 
 def reading_order(card: dict) -> tuple:
     return (card.get("page") if card.get("page") is not None else 10**9, card.get("y0") or 0.0)
+
+
+def table_vetoed(row: dict) -> bool:
+    """Inside a table box and not predicted H: not a document heading, whatever the score.
+    The model's H overrides the veto (that card is still asked)."""
+    return bool(row["in_table_box"]) and row["type"] != "H"
+
+
+def not_heading_confident(row: dict) -> bool:
+    """Considered, not a heading, and not asked: a proposed non-H, or a table-vetoed card."""
+    return row["type"] != "H" and (row["proposed"] or table_vetoed(row))
+
+
+def asked(row: dict) -> bool:
+    """The ask policy: every H at any score, and every other below-threshold card outside a table."""
+    return not not_heading_confident(row)
 
 
 def assemble_sidecar(document: str, threshold: float, cards: list[dict], predictions: list[dict],
@@ -80,12 +96,17 @@ def assemble_sidecar(document: str, threshold: float, cards: list[dict], predict
             "decided_by": p["decided_by"],
             "proposed": score is not None and score >= threshold,
             "depends_on": depends_on,
+            "in_table_box": bool(c.get("in_table_box")),
         })
-    # Proposed and not H: recorded as considered, not a heading; the product does not ask about them.
-    not_heading_confident = sum(1 for r in out if r["proposed"] and r["type"] != "H")
-    coverage = {"blocks_total": blocks_total, "cards_considered": len(out), "selector": selector,
-                "not_heading_confident": not_heading_confident}
-    return {"document": document, "threshold": threshold, "page_base": 0, "coverage": coverage, "cards": out}
+    return {"document": document, "threshold": threshold, "page_base": 0,
+            "coverage": coverage_of(out, blocks_total, selector), "cards": out}
+
+
+def coverage_of(rows: list[dict], blocks_total: int, selector: str) -> dict:
+    """``not_heading_confident`` cards are recorded as considered, not a heading; the product does
+    not ask about them. ``table_vetoed`` is the sub-count that is so because of the table veto."""
+    return {"blocks_total": blocks_total, "cards_considered": len(rows), "selector": selector,
+            "not_heading_confident": sum(map(not_heading_confident, rows)), "table_vetoed": sum(map(table_vetoed, rows))}
 
 
 def default_model_path() -> Path:
