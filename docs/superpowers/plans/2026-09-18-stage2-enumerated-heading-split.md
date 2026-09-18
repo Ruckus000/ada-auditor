@@ -112,7 +112,7 @@ git add experiments/qwen-role-decisions/Cards.java experiments/qwen-role-decisio
 git commit -m "Cards.java: report each block's first physical line and line count"
 ```
 
-### Task 2: `split_enumerated_heads` in `labels/pdf_cards.py`, wired into `labels/suggest.py`
+### Task 2: `split_enumerated_heads` in `labels/split_heads.py`, wired into `labels/suggest.py`
 
 **Files:**
 - Create: `experiments/qwen-role-decisions/labels/split_heads.py`
