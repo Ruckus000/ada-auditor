@@ -1,6 +1,9 @@
 """Run the typed prompt with an adapter over one split's rows; write predictions for the evaluator.
 
 Rules-in-front decide first; the model is called only for what they cannot say.
+Without ``--labels``/``--split`` every card in ``--cards`` is a row; with
+``--own-stack`` (a document with no key ladder) the approved-headings stack is
+the model's own prior H decisions on the document, in reading order.
 Each prediction row is ``{"id", "raw", "decided_by": "rule"|"model"}``; the
 ``raw`` is the exact model output (or the rule's JSON), which the evaluator
 parses. Never writes into a label file.
@@ -17,6 +20,7 @@ import os
 import re
 import subprocess
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 from labels.rules import decide, forbids_heading
@@ -50,6 +54,16 @@ def parsed(raw: str) -> dict | None:
 def is_h1(raw: str) -> bool:
     data = parsed(raw)
     return bool(data) and data.get("type") == "H" and data.get("level") == 1
+
+
+def heading_of_decision(raw: str, card: dict) -> dict | None:
+    """A decided H as a stack entry (the shape ``stack_before`` reads), or None."""
+    data = parsed(raw)
+    if not data or data.get("type") != "H" or not isinstance(data.get("level"), int):
+        return None
+    if card.get("page") is None or card.get("y0") is None:
+        return None
+    return {"page": card["page"], "y0": card["y0"], "level": data["level"], "text": card["text"], "locator": card["card_id"]}
 
 
 def after_h1_from_decisions(card: dict, cards_in_doc: list[dict], decided_h1: set[str]) -> bool:
@@ -185,10 +199,11 @@ def post_rules(raw: str, card: dict) -> str:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--labels", type=Path, required=True)
+    p.add_argument("--labels", type=Path, default=None, help="default: every card in --cards is a row")
     p.add_argument("--cards", type=Path, required=True, help="jsonl of candidate cards with prev/next/facts and image paths")
-    p.add_argument("--keys", type=Path, required=True, help="json: document_id -> ordered key headings [{page,y0,level,text}]")
-    p.add_argument("--split", type=Path, required=True)
+    p.add_argument("--keys", type=Path, default=None, help="json: document_id -> ordered key headings [{page,y0,level,text}]")
+    p.add_argument("--own-stack", action="store_true", help="no key ladder: the stack is the model's own prior H decisions, in reading order")
+    p.add_argument("--split", type=Path, default=None, help="default: every row is wanted")
     p.add_argument("--on", choices=("validation", "test"), default="validation")
     p.add_argument("--adapter", default=None)
     p.add_argument("--python", required=True, help="interpreter with mlx_vlm")
@@ -197,10 +212,13 @@ def main() -> None:
     p.add_argument("--limit-model", type=int, default=None, help="with --scores: stop after this many model-decided rows (parity check)")
     a = p.parse_args()
     scorer = ScoringGenerator() if a.scores else None
-    wanted = set(json.loads(a.split.read_text())["ids"][a.on])
+    if (a.keys is None) == (not a.own_stack):
+        p.error("pass exactly one of --keys and --own-stack")
     cards = {c["card_id"]: c for c in (json.loads(l) for l in a.cards.read_text().splitlines() if l.strip())}
-    keys = json.loads(a.keys.read_text())
-    rows = [json.loads(l) for l in a.labels.read_text().splitlines() if l.strip()]
+    keys = defaultdict(list) if a.own_stack else json.loads(a.keys.read_text())
+    rows = ([json.loads(l) for l in a.labels.read_text().splitlines() if l.strip()] if a.labels is not None
+            else [{"id": c["card_id"], "document_id": c["document_id"]} for c in cards.values()])
+    wanted = set(json.loads(a.split.read_text())["ids"][a.on]) if a.split is not None else {r["id"] for r in rows}
     # Reading order, so the fact below can only ever read a decision already made.
     doc_cards = cards_by_document(rows, cards)
     rows.sort(key=lambda r: (r["document_id"], cards.get(r["id"], {}).get("page", 10**9) or 0,
@@ -214,6 +232,8 @@ def main() -> None:
             done.add(prior["id"])
             if is_h1(prior["raw"]):
                 decided_h1.add(prior["id"])
+            if a.own_stack and (h := heading_of_decision(prior["raw"], cards[prior["id"]])) is not None:
+                keys[cards[prior["id"]]["document_id"]].append(h)
     n_rule = n_model = 0
     with a.out.open("a") as f:
         for r in rows:
@@ -239,6 +259,8 @@ def main() -> None:
                 by = "model"; n_model += 1
             if is_h1(raw):
                 decided_h1.add(r["id"])
+            if a.own_stack and (h := heading_of_decision(raw, card)) is not None:
+                keys[r["document_id"]].append(h)
             f.write(json.dumps({"id": r["id"], "raw": raw, "decided_by": by, **extra}) + "\n")
             f.flush()
     print(json.dumps({"rule": n_rule, "model": n_model, "out": str(a.out)}))

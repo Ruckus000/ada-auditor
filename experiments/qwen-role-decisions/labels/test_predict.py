@@ -92,3 +92,19 @@ def test_after_h1_at_inference_follows_the_models_own_prior_decision_not_the_lab
     assert after_h1_from_decisions(prev, doc, {"c1", "c2"}) is False
     # a decision on another page does not carry over
     assert after_h1_from_decisions({"card_id": "c3", "page": 1, "y0": 30.0}, doc + [{"card_id": "c3", "page": 1, "y0": 30.0}], {"c1"}) is False
+
+
+def test_own_stack_is_built_from_the_models_prior_heading_decisions():
+    from labels.predict import heading_of_decision
+
+    h1 = {"card_id": "d:1", "document_id": "d", "page": 0, "y0": 50.0, "text": "Alpha"}
+    body = {"card_id": "d:2", "document_id": "d", "page": 0, "y0": 90.0, "text": "Body"}
+    later = {"card_id": "d:3", "document_id": "d", "page": 1, "y0": 40.0, "text": "Beta"}
+    assert heading_of_decision('{"type":"P","rule":4}', body) is None
+    assert heading_of_decision('{"type":"H","rule":1}', body) is None  # no level, no stack entry
+    keys = {"d": [heading_of_decision('{"type":"H","level":1,"rule":1}', h1)]}
+    assert keys["d"][0] == {"page": 0, "y0": 50.0, "level": 1, "text": "Alpha", "locator": "d:1"}
+    prompt = prompt_for_row(later, {"id": "d:3", "document_id": "d"}, keys)
+    assert prompt.split("Approved headings so far:")[1].startswith(" H1 'Alpha'")
+    # the card's own decision is never in its own stack
+    assert "Alpha" not in prompt_for_row(h1, {"id": "d:1", "document_id": "d"}, keys).split("Approved headings so far:")[1]

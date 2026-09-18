@@ -84,6 +84,28 @@ def marked_image(card: dict, pdf: Path, pages: Path = OUT / "pages") -> Path | N
     return dest
 
 
+def context_cards(blocks: list[dict], doc_id: str, ids: set[str]) -> list[dict]:
+    """The cards of one tagged dump whose locator is in ``ids``, with the facts the prompt and rules read.
+
+    The facts are computed over every card of the document, not only the wanted
+    ones: the bullet that marks a list item is usually not itself a candidate.
+    """
+    cards, _ = blocks_to_cards(blocks)
+    reps = repeats_on_pages(cards)
+    extents = page_extents(blocks)
+    inline = after_inline_label(cards)
+    out = []
+    for c in cards:
+        if c["locator"] not in ids:
+            continue
+        c["card_id"] = c["locator"]; c["document_id"] = doc_id; c["kind"] = "pdf"
+        c["repeats_on_pages"] = reps.get(c["locator"], 1); c["norm"] = text_norm(c["text"])
+        c["in_margin_band"] = in_margin_band(c, extents)
+        c["after_inline_label"] = inline[c["locator"]]
+        out.append(c)
+    return out
+
+
 def ordered_headings(dump: dict) -> list[dict]:
     hs = [k for k in key_blocks(dump) if k["type"] == "H" and k.get("page") is not None and k.get("y0") is not None]
     hs.sort(key=lambda k: (k["page"], k["y0"]))
@@ -117,19 +139,7 @@ def main() -> None:
                 if not path.is_file():
                     raise FileNotFoundError(f"{doc_id}: {path}")
             blocks = dump_pdf(tagged, compile=False).get("blocks") or []
-            cards, _ = blocks_to_cards(blocks)
-            reps = repeats_on_pages(cards)
-            extents = page_extents(blocks)
-            # Over every card of the document, not only the labelled ones: the
-            # bullet that marks a list item is usually not itself labelled.
-            inline = after_inline_label(cards)
-            for c in cards:
-                if c["locator"] not in ids:
-                    continue
-                c["card_id"] = c["locator"]; c["document_id"] = doc_id; c["kind"] = "pdf"
-                c["repeats_on_pages"] = reps.get(c["locator"], 1); c["norm"] = text_norm(c["text"])
-                c["in_margin_band"] = in_margin_band(c, extents)
-                c["after_inline_label"] = inline[c["locator"]]
+            for c in context_cards(blocks, doc_id, ids):
                 img = marked_image(c, stripped, pages)
                 c["image"] = None if img is None else str(img.resolve())
                 n_img += img is not None; n_cards += 1
