@@ -67,8 +67,10 @@ the wild gate re-measured once afterwards.
 
 One new field, `first_line_x1`: the x-coordinate where the block's first
 physical line ends, from the same glyph walk that computes `first_line`
-(`firstLineOf`): the `x + w` of the last glyph before the first line change
-(`firstEnd`), null when the block has no glyphs. The walk, the line-change test
+(`firstLineOf`): the max `x + w` over the first line's glyphs (those before
+`firstEnd`), null when the block has no glyphs. (As implemented in `e5c3a5d`:
+the max over the line, not the last glyph — robust to kerning and trailing
+spaces; kept.) The walk, the line-change test
 (`dy > 0.5 em`), and every existing field are untouched; dumps without the
 field behave exactly as today.
 
