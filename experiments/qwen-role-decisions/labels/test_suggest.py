@@ -192,7 +192,7 @@ def test_coverage_splits_vetoed_asks_from_confident_table_cards():
     assert s["coverage"]["table_not_heading_confident"] == 1  # doc:1: in table, non-H, already proposed
     assert s["coverage"]["not_heading_confident"] == 3  # doc:1 and doc:6 (proposed non-H) plus doc:2 (vetoed)
     assert sum(asked(c) for c in s["cards"]) == 3  # doc:3, doc:4, doc:5
-    assert sum(c["asked"] for c in s["cards"]) + s["coverage"]["not_heading_confident"] == s["coverage"]["cards_considered"]
+    assert sum(asked(c) for c in s["cards"]) + s["coverage"]["not_heading_confident"] == s["coverage"]["cards_considered"]
 
 
 def test_a_card_without_the_table_fact_is_out_of_table():
