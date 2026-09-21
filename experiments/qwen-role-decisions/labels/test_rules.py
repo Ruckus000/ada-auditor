@@ -1,4 +1,4 @@
-from labels.rules import caption_by_prefix, decide, forbids_heading, list_item_body, toci_by_leaders
+from labels.rules import caption_by_prefix, decide, enumerator_only, forbids_heading, list_item_body, toci_by_leaders
 
 
 def test_toci_needs_three_dots_and_a_trailing_page_number():
@@ -82,3 +82,37 @@ def test_table_veto_is_by_ancestry_not_geometry():
     assert forbids_heading({"in_table_box": False, "ancestors": ["TD", "TR", "Table", "Document"]})
     assert not forbids_heading({"ancestors": ["TableOfFigures", "Tables"]})
     assert not forbids_heading({})
+
+
+def test_r5_enumerator_only_is_lbl():
+    # The registered R5 pattern: split_heads' enumerator with no words after the dot.
+    assert enumerator_only({"text": "A."}) == ("Lbl", 5)
+    assert enumerator_only({"text": "IV."}) == ("Lbl", 5)
+    assert enumerator_only({"text": "XIII."}) == ("Lbl", 5)
+    assert enumerator_only({"text": "3."}) == ("Lbl", 5)
+    assert enumerator_only({"text": "  VII.  "}) == ("Lbl", 5)  # surrounding whitespace is not text
+
+
+def test_r5_near_misses():
+    assert enumerator_only({"text": "A.5"}) is None        # not the enumerator alone
+    assert enumerator_only({"text": "IV"}) is None         # no closing dot
+    assert enumerator_only({"text": "A.B"}) is None        # wrong tail
+    assert enumerator_only({"text": "3.5"}) is None
+    assert enumerator_only({"text": "A. Plans"}) is None   # words after the enumerator
+    assert enumerator_only({"text": "AB."}) is None        # one letter only
+    assert enumerator_only({"text": "a."}) is None         # upper case only
+    assert enumerator_only({"text": "VII. Budget"}) is None
+    assert enumerator_only({"text": ""}) is None
+    assert enumerator_only({}) is None
+
+
+def test_r5_runs_after_the_earlier_rules():
+    # A digit enumerator has no letters: r2 already says Lbl (rule 3), unchanged.
+    assert decide({"text": "3.", "repeats_on_pages": 1}) == ("Lbl", 3)
+    # A margin-band repeat enumerator stays Artifact (rule 2), never Lbl.
+    assert decide({"text": "IV.", "repeats_on_pages": 4, "in_margin_band": True}) == ("Artifact", 2)
+    # A roman or letter enumerator with words is not R5's.
+    assert decide({"text": "IV. Budget", "repeats_on_pages": 1}) is None
+    # The new shape R5 exists for: a bare roman/letter enumerator reaches it.
+    assert decide({"text": "IV.", "repeats_on_pages": 1}) == ("Lbl", 5)
+    assert decide({"text": "B.", "repeats_on_pages": 1}) == ("Lbl", 5)
