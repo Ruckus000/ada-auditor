@@ -117,6 +117,10 @@ def test_cards_dump_reports_first_line_and_line_count_on_a_synthetic_pdf():
     assert (li["first_line"], li["line_count"]) == ("B. Scope", 3)
     assert (p["first_line"], p["line_count"]) == ("One line only", 1)
     assert (lst["first_line"], lst["line_count"]) == ("B. Scope", 3)  # a container reports its gathered glyphs
+    # first_line_x1: the right edge of the first line, from the same glyph walk
+    assert 72 < li["first_line_x1"] < li["x1"]  # "B. Scope" ends well inside the block
+    assert (li["first_line_x1"] - li["x0"]) < 0.6 * (li["x1"] - li["x0"])  # the run-in rule's width test fires
+    assert p["first_line_x1"] == p["x1"]  # one line: the first line is the whole block
 
 
 
@@ -126,6 +130,7 @@ def test_first_line_keeps_an_enumerator_and_its_words_across_a_tab_gap_on_one_ba
         _tagged_pdf(pdf, [[(72, "VI."), (108, "Budget Process")], "Every widget shall be", "counted twice."])
         li = next(b for b in dump_pdf(pdf, compile=True)["blocks"] if b["existing_tag"] == "LI")
     assert (li["first_line"], li["line_count"]) == ("VI. Budget Process", 3)
+    assert li["first_line_x1"] > 108  # x1 covers the second run past the tab gap, not just "VI."
 
 
 def test_cards_dump_reports_first_line_and_line_count():

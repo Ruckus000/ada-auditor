@@ -9,7 +9,9 @@ the facts and ``marked_image`` the marked page (rendered from the input PDF),
 decides — rules in front, then the model, whose approved-headings stack is its
 own prior H decisions on the document, in reading order.
 With ``--split-enumerated-heads``, an LI/H block whose first physical line is a short
-enumerated heading ("A. Plans") becomes a head card and a body card first
+enumerated heading ("A. Plans") becomes a head card and a body card first, and with
+``--split-run-in-heads WIDTH`` a P/LI/H* block whose first line is a short, unclosed
+run-in heading ending before WIDTH of the block width splits the same way
 (``labels.split_heads``); the training-key builder never does this.
 
 Advisory only: writes the sidecar and a per-run work directory
@@ -34,7 +36,7 @@ from labels.build_keys import candidate_pool, document_cards, odl
 from labels.key_context import context_cards, marked_image
 from labels.pdf_cards import SEED
 from labels.predict import OwnStack, parsed
-from labels.split_heads import split_enumerated_heads
+from labels.split_heads import split_enumerated_heads, split_run_in_heads
 from labels.stage_pdfs import has_struct_tree
 
 SIDECAR_KEYS = ("document", "threshold", "page_base", "coverage", "cards")
@@ -121,7 +123,8 @@ def coverage_of(rows: list[dict], blocks_total: int, selector: str, split_heads:
     ones. It is the complement of ``asked``. Two table sub-counts: ``table_vetoed``,
     the asks the veto removed (in table, non-H, below threshold); and
     ``table_not_heading_confident``, in-table non-H cards that were already proposed.
-    ``split_heads`` is how many blocks ``--split-enumerated-heads`` split (0 when off).
+    ``split_heads`` is how many blocks the heading-split flags split
+    (``--split-enumerated-heads`` and ``--split-run-in-heads``; 0 when both are off).
     """
     return {"blocks_total": blocks_total, "cards_considered": len(rows), "selector": selector,
             "not_heading_confident": sum(map(not_heading_confident, rows)), "table_vetoed": sum(map(table_vetoed, rows)),
@@ -148,13 +151,22 @@ def tag(pdf: Path, work: Path, stem: str) -> Path:
     return tagged
 
 
-def choose_cards(raw: dict, stem: str, all_blocks: bool, split_heads: bool = False) -> tuple[list[dict], int, str, int]:
+def choose_cards(raw: dict, stem: str, all_blocks: bool, split_heads: bool = False,
+                 run_in_width: float | None = None) -> tuple[list[dict], int, str, int]:
     """The cards to suggest for, with their facts, in reading order; the pool size
     (``blocks_total``); the selector actually used; and how many blocks were split.
     ``all_blocks`` over a pool larger than ``ALL_BLOCKS_LIMIT`` falls back to the
     default selector, and says so. ``split_heads`` splits enumerated heading lines out
-    of auto-tagged list items first (``labels.split_heads``), so the pool counts both halves."""
-    blocks, n_split = split_enumerated_heads(raw.get("blocks") or []) if split_heads else (raw.get("blocks") or [], 0)
+    of auto-tagged list items first, then ``run_in_width`` (a fraction, when not None)
+    splits run-in heading lines (``labels.split_heads``), so the pool counts both halves."""
+    blocks = raw.get("blocks") or []
+    n_split = 0
+    if split_heads:
+        blocks, n = split_enumerated_heads(blocks)
+        n_split += n
+    if run_in_width is not None:
+        blocks, n = split_run_in_heads(blocks, run_in_width)
+        n_split += n
     raw = {**raw, "blocks": blocks}
     blocks_total = len(candidate_pool(raw, stem))
     every = all_blocks and blocks_total <= ALL_BLOCKS_LIMIT
@@ -167,8 +179,8 @@ def choose_cards(raw: dict, stem: str, all_blocks: bool, split_heads: bool = Fal
 
 
 def build_cards(pdf: Path, tagged: Path, stem: str, work: Path, all_blocks: bool,
-                split_heads: bool = False) -> tuple[list[dict], int, str, int]:
-    cards, blocks_total, selector, n_split = choose_cards(dump_pdf(tagged, compile=False), stem, all_blocks, split_heads)
+                split_heads: bool = False, run_in_width: float | None = None) -> tuple[list[dict], int, str, int]:
+    cards, blocks_total, selector, n_split = choose_cards(dump_pdf(tagged, compile=False), stem, all_blocks, split_heads, run_in_width)
     for c in cards:
         img = marked_image(c, pdf, work / "pages")
         c["image"] = None if img is None else str(img.resolve())
@@ -187,6 +199,9 @@ def main() -> None:
                    help=f"every text block of the pool, no selection and no cap, up to {ALL_BLOCKS_LIMIT} blocks (a wall-time budget)")
     p.add_argument("--split-enumerated-heads", action="store_true",
                    help="split an LI/H block whose first physical line is a short enumerated heading into head + body cards")
+    p.add_argument("--split-run-in-heads", type=float, default=None, metavar="WIDTH",
+                   help="split a P/LI/H* block whose first physical line is a short run-in heading ending before "
+                        "WIDTH of the block width (e.g. 0.6); the fraction is frozen on validation, never on wild data")
     p.add_argument("--model-path", type=Path, default=None, help="local Qwen snapshot for the 408-token sizing; default the HF cache's")
     a = p.parse_args()
     started = time.monotonic()
@@ -202,7 +217,7 @@ def main() -> None:
         (work / f).unlink(missing_ok=True)
     work.mkdir(parents=True, exist_ok=True)
     tagged = tag(a.pdf, work, stem)
-    cards, blocks_total, selector, n_split = build_cards(a.pdf, tagged, stem, work, a.all_blocks, a.split_enumerated_heads)
+    cards, blocks_total, selector, n_split = build_cards(a.pdf, tagged, stem, work, a.all_blocks, a.split_enumerated_heads, a.split_run_in_heads)
     (work / "cards.jsonl").write_text("".join(json.dumps(c) + "\n" for c in cards))
     n_img = sum(1 for c in cards if c["image"])
     if n_img:

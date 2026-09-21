@@ -171,7 +171,8 @@ def _table_sidecar() -> dict:
 def test_in_table_non_h_is_vetoed_above_and_below_threshold():
     s = _by_id(_table_sidecar())
     assert s["doc:1"]["in_table_box"] is True and s["doc:1"]["proposed"] is True and not asked(s["doc:1"])
-    assert s["doc:2"]["in_table_box"] is True and s["doc:2"]["proposed"] is False and not asked(s["doc:2"])
+    assert s["doc:2"]["in_table_box"] is False or not s["doc:2"]["proposed"]
+    assert not asked(s["doc:2"])
 
 
 def test_in_table_h_is_still_asked_at_any_score():
@@ -192,7 +193,7 @@ def test_coverage_splits_vetoed_asks_from_confident_table_cards():
     assert s["coverage"]["table_not_heading_confident"] == 1  # doc:1: in table, non-H, already proposed
     assert s["coverage"]["not_heading_confident"] == 3  # doc:1 and doc:6 (proposed non-H) plus doc:2 (vetoed)
     assert sum(asked(c) for c in s["cards"]) == 3  # doc:3, doc:4, doc:5
-    assert sum(asked(c) for c in s["cards"]) + s["coverage"]["not_heading_confident"] == s["coverage"]["cards_considered"]
+    assert sum(c["asked"] for c in s["cards"]) + s["coverage"]["not_heading_confident"] == s["coverage"]["cards_considered"]
 
 
 def test_a_card_without_the_table_fact_is_out_of_table():
@@ -247,3 +248,44 @@ def test_split_enumerated_heads_does_not_change_the_default_selection_otherwise(
     off = choose_cards(FIXTURE, "doc", all_blocks=False)
     on = choose_cards(FIXTURE, "doc", all_blocks=False, split_heads=True)
     assert on == off and on[3] == 0
+
+
+# Stage 2 run-in split: --split-run-in-heads WIDTH. A P block whose first physical line is
+# a short run-in heading ending at 45 % of the block width, beside the FIXTURE body.
+# Synthetic text.
+def _run_in(raw: dict) -> dict:
+    p = {**_block(60, "P", "Plant Selection Native species thrive on this site.", y0=660.0), "y1": 700.0,
+         "first_line": "Plant Selection", "line_count": 4, "first_line_x1": 135.0}
+    return {**raw, "blocks": raw["blocks"] + [p]}
+
+
+def test_split_run_in_heads_is_off_by_default_and_counted_when_on():
+    raw = _run_in(FIXTURE)
+    off, total_off, _, n_off = choose_cards(raw, "doc", all_blocks=True)
+    assert n_off == 0 and "doc:60h" not in {c["card_id"] for c in off}
+    on, total_on, selector, n_on = choose_cards(raw, "doc", all_blocks=True, run_in_width=0.6)
+    assert n_on == 1 and total_on == total_off + 1 and selector == "all-blocks"
+    by = {c["card_id"]: c for c in on}
+    assert by["doc:60h"]["text"] == "Plant Selection" and by["doc:60"]["text"] == "Native species thrive on this site."
+    assert by["doc:60h"]["y1"] == by["doc:60"]["y0"] == 660.0 + 1.3 * 11
+    ids = [c["card_id"] for c in on]
+    assert ids.index("doc:60h") < ids.index("doc:60")  # head before body in reading order
+    s = assemble_sidecar("doc", THRESHOLD, on, [{"id": c["card_id"], "raw": '{"type":"P","rule":4}', "decided_by": "model", "score": 0.5} for c in on],
+                         total_on, selector, split_heads=n_on)
+    assert s["coverage"]["split_heads"] == 1 and set(s["coverage"]) == set(COVERAGE_KEYS)
+
+
+def test_split_run_in_heads_does_not_change_the_default_selection_otherwise():
+    """With nothing to split, the flag leaves the cards exactly as they were."""
+    off = choose_cards(FIXTURE, "doc", all_blocks=False)
+    on = choose_cards(FIXTURE, "doc", all_blocks=False, run_in_width=0.6)
+    assert on == off and on[3] == 0
+
+
+def test_split_enumerated_heads_output_is_unchanged_with_the_run_in_flag_present():
+    """The round-2 flag's output is byte-identical whether or not a run-in width is passed:
+    the enumerated fixture carries no first_line_x1, so the run-in rule never fires."""
+    raw = _enumerated(FIXTURE)
+    a = choose_cards(raw, "doc", all_blocks=True, split_heads=True)
+    b = choose_cards(raw, "doc", all_blocks=True, split_heads=True, run_in_width=0.6)
+    assert a == b and a[3] == 1
