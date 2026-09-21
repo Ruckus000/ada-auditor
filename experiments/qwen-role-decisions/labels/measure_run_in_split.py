@@ -33,6 +33,8 @@ overwrite an existing --out unless --overwrite is passed.
 
     python3 -B -m labels.measure_run_in_split \
         --keys-dir out/keys-all-4 \
+        --source out/keys:out/labels/manifest.json --source out/keys-c3:out/keys-c3/manifest.json \
+        --source out/keys-c4:out/keys-c4/manifest.json --source out/keys-c6:out/keys-c6/manifest.json \
         --split labels/split-keys-all-4-2026-09-14.json \
         --out out/labels/run-in-split-validation-2026-09-22.json
 """
@@ -46,6 +48,7 @@ from pathlib import Path
 
 from run import compile_cards, dump_pdf, text_norm
 from labels.build_keys import UNREADABLE, candidate_pool
+from labels.key_context import parse_source, resolve_sources
 from labels.split_heads import split_enumerated_heads, split_run_in_heads
 
 WIDTHS = (0.5, 0.6, 0.7)
@@ -116,7 +119,21 @@ def freeze(per_width: dict[float, dict]) -> dict:
     return {"width": chosen, "reason": f"highest recall {best} among capped widths; ties take the smaller"}
 
 
-def measure(keys_dir: Path, docs: list[str], headings: dict) -> tuple[dict, dict, str]:
+def tagged_copies(keys_dir: Path, sources: list[str], docs: list[str]) -> dict[str, Path]:
+    """Each document's tagged copy. ``keys-all-4`` is a merged corpus with no ``tagged/`` of
+    its own: its copies live in the per-cohort builds, so pass those as ``--source
+    <build_dir>:<manifest>`` (the ``key_context`` form that built it; a document in no
+    source or in two raises). With no source, ``<keys-dir>`` is the one build."""
+    if not sources:
+        if not (keys_dir / "tagged").is_dir():
+            raise SystemExit(f"{keys_dir / 'tagged'} does not exist: pass the builds that hold the "
+                             "tagged copies as --source <build_dir>:<manifest> (repeatable)")
+        return {d: keys_dir / "tagged" / f"{d}.pdf" for d in docs}
+    resolved = resolve_sources(set(docs), [parse_source(s) for s in sources])
+    return {d: build / "tagged" / f"{d}.pdf" for d, ((build, _, _), _) in resolved.items()}
+
+
+def measure(tagged_of: dict[str, Path], docs: list[str], headings: dict) -> tuple[dict, dict, str]:
     """The per-width table and per-document rows over ``docs``; the training-key fingerprint.
     A document without a tagged copy or one Cards cannot read is excluded and named."""
     compile_cards()
@@ -124,7 +141,7 @@ def measure(keys_dir: Path, docs: list[str], headings: dict) -> tuple[dict, dict
     per_doc, excluded = [], {}
     pool_fingerprint = {}
     for doc in docs:
-        tagged = keys_dir / "tagged" / f"{doc}.pdf"
+        tagged = tagged_of[doc]
         if not tagged.is_file():
             excluded[doc] = "no-tagged-copy"
             continue
@@ -157,6 +174,8 @@ def measure(keys_dir: Path, docs: list[str], headings: dict) -> tuple[dict, dict
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--keys-dir", type=Path, default=Path("out/keys-all-4"))
+    p.add_argument("--source", action="append", default=[], metavar="BUILD:MANIFEST",
+                   help="a build holding tagged copies, <build_dir>:<manifest> (repeatable); default <keys-dir> alone")
     p.add_argument("--split", type=Path, default=Path("labels/split-keys-all-4-2026-09-14.json"))
     p.add_argument("--wild-root", type=Path, default=Path("out/suggest"),
                    help="wild sidecars live at <wild-root>/<run>/<doc>/sidecar.json; those docs are excluded")
@@ -176,12 +195,12 @@ def main(argv: list[str] | None = None) -> None:
     missing_keys = [d for d in docs if d not in headings]
     if missing_keys:
         raise SystemExit(f"validation documents without key headings in {headings_path}: {missing_keys}")
-    result, detail, fp = measure(a.keys_dir, docs, headings)
+    result, detail, fp = measure(tagged_copies(a.keys_dir, a.source, docs), docs, headings)
     out = {"disclosure": DISCLOSURE, "freeze_rule": FREEZE_RULE, "widths": list(WIDTHS),
            "false_split_max": FALSE_SPLIT_MAX,
            "baseline": "both arms apply --split-enumerated-heads (the wild sidecar configuration); "
                        "the on arm adds --split-run-in-heads WIDTH",
-           "keys_dir": str(a.keys_dir), "split": str(a.split),
+           "keys_dir": str(a.keys_dir), "sources": a.source, "split": str(a.split),
            "documents": {"validation": len(docs) + len(excluded_wild), "excluded_wild": excluded_wild,
                          "excluded": detail["excluded"], "measured": len(detail["measured"])},
            "training_keys_sha256": fp, **result, "per_document": detail["measured"]}

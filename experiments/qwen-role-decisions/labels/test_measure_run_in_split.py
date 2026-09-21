@@ -3,7 +3,7 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 
-from labels.measure_run_in_split import FALSE_SPLIT_MAX, freeze, key_counter, main, measure_document, validation_docs, wild_docs
+from labels.measure_run_in_split import FALSE_SPLIT_MAX, freeze, key_counter, main, measure_document, tagged_copies, validation_docs, wild_docs
 from labels.split_heads import split_enumerated_heads, split_run_in_heads
 
 
@@ -146,3 +146,33 @@ def test_main_refuses_to_overwrite_and_refuses_wild_documents():
         except SystemExit:
             return
         raise AssertionError("an existing --out was overwritten without --overwrite")
+
+
+def test_tagged_copies_resolve_through_the_per_cohort_builds():
+    """keys-all-4 has no tagged/ of its own: each document's copy is in the build whose
+    manifest lists it; a document in no source raises rather than being skipped."""
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        for build, ids in (("keys-c3", ["c3-1"]), ("keys-c6", ["c6-1", "c6-2"])):
+            (root / build / "tagged").mkdir(parents=True)
+            (root / build / "manifest.json").write_text(json.dumps([{"id": i, "kind": "pdf"} for i in ids]))
+        sources = [f"{root / b}:{root / b / 'manifest.json'}" for b in ("keys-c3", "keys-c6")]
+        got = tagged_copies(root / "keys-all-4", sources, ["c3-1", "c6-2"])
+        assert got == {"c3-1": root / "keys-c3" / "tagged" / "c3-1.pdf",
+                       "c6-2": root / "keys-c6" / "tagged" / "c6-2.pdf"}
+        try:
+            tagged_copies(root / "keys-all-4", sources, ["c3-1", "nowhere"])
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("a document in no source was not refused")
+
+
+def test_no_source_and_no_tagged_dir_refuses_instead_of_excluding_everything():
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            tagged_copies(Path(d) / "keys-all-4", [], ["d1"])
+        except SystemExit as e:
+            assert "--source" in str(e)
+        else:
+            raise AssertionError("a keys dir without tagged/ was accepted")
