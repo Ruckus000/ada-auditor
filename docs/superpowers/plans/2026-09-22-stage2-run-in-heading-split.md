@@ -225,6 +225,53 @@ threshold):** c3-0178:37, c3-0299:28, c3-0299:69, c3-0755:26, c3-0755:27.
 
 **NOT MET.** Accuracy lower bound 0.9841 < 0.99 (FP upper bound 0.0059 ≤ 0.01
 passes). As registered in Step 0c, the raw gate could not pass on this split
-alone: 28 errors remain against the 15 allowed at this n. The split recovered
-real run-in headings (5 of the 12 shape-1 FN resolved, no FP added) but did
-not move the verdict.
+alone: 28 errors remain against the 15 allowed at this n (15 at both 2,516
+and 2,536, from `eval_wild.interval`).
+
+### What the five "gone" errors are (review, 2026-09-21)
+
+**No heading was recovered as a confident, correct answer.** In all five,
+the body card is now covered and correctly non-heading (P, scores
+0.9985–0.9999), and the heading moved to its head card, which scores below
+the threshold (0.65–0.94) and abstains. Those head cards are uncovered, so
+they were never judged and carry null labels. A confident miss became an
+ask; TP moved 77 → 78. That is the registered gate's intended direction
+(abstention is reported as ask-rate), but it is a conversion, not a
+recovery. The new error arises the other way round: `c3-0755:5` scored
+0.9924 (abstained) before the split and 0.9972 (covered, wrong) after it.
+
+### Precision and ask cost
+
+- Validation: 87 of 164 splits were false (0.53). The frozen cap measures
+  false splits per block (0.00451 of 19,277), not per split, so it admitted
+  this. A future split rule should also register false splits per split.
+- Wild: of the 19 covered head cards, **1** is a heading (`c3-0299:61h`);
+  14 P, 2 Other, 2 Artifact.
+- Asks on the 11 documents: 283 → 303. 20 of the 38 new heads are asked,
+  and at most the 5 abstaining heads above are known headings.
+
+### Known gaps (recorded, not fixed)
+
+- **Stacked-heading blocks.** The tagger merges a run of short headings (an
+  agenda) into one block. The rule reads only the first line, splits it
+  off, and treats the remaining headings as body: `c3-0755:5`. Any guard
+  must be registered on validation first; fitting one on the wild set is
+  tuning against the gate.
+- **Body cards inherit the head's font facts.** `Cards.java` takes
+  `font_pt`/`weight` from a block's first glyph, and both splits copy them to
+  the body, which the prompt shows (`Font:`, `Weight:`). 6 of the 38 wild
+  bodies read `bold` from their head. Measured impact is zero (all 38 bodies
+  predicted P); the enumerated split shares the defect. Not fixed: it needs
+  a new Cards field for no measured gain.
+
+### Decision
+
+The flag stays opt-in and off by default; the rule is not tuned further.
+The line-based split lever is spent. The remaining run-in misses are the 9
+same-line shape-2 FN and the 7 shape-1 FN this rule did not split. Next
+lever (intra-line geometry, wild population, or a validation-side threshold
+re-derivation) is the user's call.
+
+Reproduction tooling is in the code branch: `labels/judge/runin_diff.py`
+(the old-vs-new changed-card diff) and `labels/judge/refold.sh` (the fold
+and gate re-measurement); inputs are on the data branch named above.

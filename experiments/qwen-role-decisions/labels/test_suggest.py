@@ -1,4 +1,4 @@
-from labels.suggest import ALL_BLOCKS_LIMIT, CARD_KEYS, COVERAGE_KEYS, LOCATOR_KEYS, SIDECAR_KEYS, assemble_sidecar, asked, choose_cards
+from labels.suggest import ALL_BLOCKS_LIMIT, CARD_KEYS, COVERAGE_KEYS, LOCATOR_KEYS, SIDECAR_KEYS, assemble_sidecar, asked, choose_cards, width_frac
 
 THRESHOLD = 0.9933
 
@@ -288,3 +288,15 @@ def test_split_enumerated_heads_output_is_unchanged_with_the_run_in_flag_present
     a = choose_cards(raw, "doc", all_blocks=True, split_heads=True)
     b = choose_cards(raw, "doc", all_blocks=True, split_heads=True, run_in_width=0.6)
     assert a == b and a[3] == 1
+
+
+def test_split_run_in_width_is_checked_before_the_tagger_runs():
+    """A bad WIDTH fails at argument parsing, not after a full ODL run."""
+    import argparse
+    assert width_frac("0.5") == 0.5
+    for bad in ("0", "1", "5", "-0.2"):
+        try:
+            width_frac(bad)
+        except argparse.ArgumentTypeError:
+            continue
+        raise AssertionError(f"{bad} was accepted")

@@ -187,6 +187,15 @@ def build_cards(pdf: Path, tagged: Path, stem: str, work: Path, all_blocks: bool
     return cards, blocks_total, selector, n_split
 
 
+def width_frac(value: str) -> float:
+    """``--split-run-in-heads`` is a fraction of the block width, checked here: the tagger
+    runs before the split, so a bad value would otherwise fail only after a full ODL run."""
+    w = float(value)
+    if not 0.0 < w < 1.0:
+        raise argparse.ArgumentTypeError(f"must be in (0, 1), got {value}")
+    return w
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--pdf", type=Path, required=True)
@@ -199,7 +208,7 @@ def main() -> None:
                    help=f"every text block of the pool, no selection and no cap, up to {ALL_BLOCKS_LIMIT} blocks (a wall-time budget)")
     p.add_argument("--split-enumerated-heads", action="store_true",
                    help="split an LI/H block whose first physical line is a short enumerated heading into head + body cards")
-    p.add_argument("--split-run-in-heads", type=float, default=None, metavar="WIDTH",
+    p.add_argument("--split-run-in-heads", type=width_frac, default=None, metavar="WIDTH",
                    help="split a P/LI/H* block whose first physical line is a short run-in heading ending before "
                         "WIDTH of the block width (e.g. 0.6); the fraction is frozen on validation, never on wild data")
     p.add_argument("--model-path", type=Path, default=None, help="local Qwen snapshot for the 408-token sizing; default the HF cache's")
