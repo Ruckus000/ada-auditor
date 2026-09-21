@@ -24,6 +24,7 @@ import { dirname } from 'node:path';
 
 import { convertSourceToPdf } from '../../src/integrations/documents/convert';
 import { summarise, titleFromFilename } from '../../src/domain/document-remediation';
+import { javaEnv } from './java.mjs';
 
 // cwd-independent: the JVM stages resolve their classpath from `root`, and
 // the first full run refused all 30 documents because the runner's cwd was
@@ -74,8 +75,7 @@ function verapdfUa1(pdf: string): { pass: boolean; failedRules: string[] } {
   // The launcher shells out to `java` from its environment, and on this
   // machine that intermittently resolved to the macOS stub that only prints
   // an install prompt. Pinned to the same JDK the build scripts use.
-  const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
-  const env = { ...process.env, JAVA_HOME, PATH: `${JAVA_HOME}/bin:${process.env.PATH}` };
+  const env = javaEnv();
   // JSON, not text: the text format carries no per-clause detail, so the old
   // regex over it captured nothing — a grader that names no clause names no
   // work. The JSON report's ruleSummaries is where the clauses live

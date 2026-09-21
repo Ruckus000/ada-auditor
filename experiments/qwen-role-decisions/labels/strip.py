@@ -5,7 +5,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from run import CARDS_CLASSES, HERE, JAVA_HOME, PDFBOX, dump_pdf
+from run import CARDS_CLASSES, HERE, PDFBOX, dump_pdf, java_tool
 
 STRIP_JAVA = HERE / "Strip.java"
 _compiled = False
@@ -16,7 +16,7 @@ def compile_strip() -> None:
     if _compiled:
         return
     CARDS_CLASSES.mkdir(parents=True, exist_ok=True)
-    proc = subprocess.run([str(JAVA_HOME / "bin" / "javac"), "-cp", str(PDFBOX), "-d", str(CARDS_CLASSES), str(STRIP_JAVA)], capture_output=True, text=True)
+    proc = subprocess.run([str(java_tool("javac")), "-cp", str(PDFBOX), "-d", str(CARDS_CLASSES), str(STRIP_JAVA)], capture_output=True, text=True)
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr[-2000:])
     _compiled = True
@@ -25,7 +25,7 @@ def compile_strip() -> None:
 def strip_pdf(src: Path, dest: Path) -> dict:
     compile_strip()
     dest.parent.mkdir(parents=True, exist_ok=True)
-    proc = subprocess.run([str(JAVA_HOME / "bin" / "java"), "-Djava.awt.headless=true", "-cp", f"{PDFBOX}:{CARDS_CLASSES}", "Strip", str(src), str(dest)], capture_output=True, text=True)
+    proc = subprocess.run([str(java_tool("java")), "-Djava.awt.headless=true", "-cp", f"{PDFBOX}:{CARDS_CLASSES}", "Strip", str(src), str(dest)], capture_output=True, text=True)
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:])
     info = json.loads(proc.stdout.strip().splitlines()[-1])

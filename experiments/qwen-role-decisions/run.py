@@ -20,6 +20,7 @@ import json
 import math
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -556,13 +557,27 @@ STRUCT_TEXT = REPO / "src" / "integrations" / "documents" / "java" / "StructText
 CARDS_JAVA = HERE / "Cards.java"
 MARK_JAVA = HERE / "Mark.java"
 CARDS_CLASSES = HERE / "out" / "classes"
-JAVA_HOME = Path(os.environ.get("JAVA_HOME", "/opt/homebrew/opt/openjdk@17"))
+
+
+def java_tool(tool: str) -> Path:
+    """`JAVA_HOME/bin/<tool>` if it exists, else the first on PATH — the order
+    `src/integrations/documents/java-runtime.ts` uses. A set-but-wrong
+    JAVA_HOME falls through; it is nearly always a stale shell export."""
+    home = os.environ.get("JAVA_HOME", "").strip()
+    if home and (Path(home) / "bin" / tool).exists():
+        return Path(home) / "bin" / tool
+    found = shutil.which(tool)
+    if not found:
+        raise RuntimeError(f"no `{tool}` found: JAVA_HOME is unset or wrong, and none is on PATH. Install a JDK 17+.")
+    return Path(found)
+
+
 MODEL = "mlx-community/Qwen3.5-4B-MLX-4bit"
 
 
 def compile_cards() -> None:
     CARDS_CLASSES.mkdir(parents=True, exist_ok=True)
-    javac = JAVA_HOME / "bin" / "javac"
+    javac = java_tool("javac")
     cmd = [
         str(javac),
         "-cp",
@@ -580,7 +595,7 @@ def compile_cards() -> None:
 def dump_pdf(pdf: Path, compile: bool = True) -> dict:
     if compile:
         compile_cards()
-    java = JAVA_HOME / "bin" / "java"
+    java = java_tool("java")
     cmd = [
         str(java),
         "-Djava.awt.headless=true",
@@ -836,7 +851,7 @@ def parse_heading_flag(text: str) -> bool | None:
 
 def compile_preview() -> None:
     CARDS_CLASSES.mkdir(parents=True, exist_ok=True)
-    javac = JAVA_HOME / "bin" / "javac"
+    javac = java_tool("javac")
     cmd = [
         str(javac),
         "-cp",
@@ -854,7 +869,7 @@ def compile_preview() -> None:
 def render_page_png(pdf: Path, page_1based: int, dest: Path) -> Path:
     compile_preview()
     dest.parent.mkdir(parents=True, exist_ok=True)
-    java = JAVA_HOME / "bin" / "java"
+    java = java_tool("java")
     cmd = [
         str(java),
         "-Djava.awt.headless=true",
@@ -874,7 +889,7 @@ def render_page_png(pdf: Path, page_1based: int, dest: Path) -> Path:
 
 def compile_mark() -> None:
     CARDS_CLASSES.mkdir(parents=True, exist_ok=True)
-    javac = JAVA_HOME / "bin" / "javac"
+    javac = java_tool("javac")
     cmd = [
         str(javac),
         "-cp",
@@ -898,7 +913,7 @@ def mark_page_png(
 ) -> dict:
     compile_mark()
     dest.parent.mkdir(parents=True, exist_ok=True)
-    java = JAVA_HOME / "bin" / "java"
+    java = java_tool("java")
     cmd = [
         str(java),
         "-Djava.awt.headless=true",

@@ -25,8 +25,8 @@ from __future__ import annotations
 import argparse
 import concurrent.futures as futures
 import json
-import os
 import subprocess
+import sys
 import tempfile
 from collections import defaultdict
 from pathlib import Path
@@ -34,7 +34,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parents[2]  # experiments/qwen-role-decisions
 PDFBOX = HERE.parent / "document-remediation" / "vendor" / "pdfbox-app-3.0.8.jar"
 CLASSES = HERE / "out" / "classes"
-JAVA = Path(os.environ.get("JAVA_HOME", "/opt/homebrew/opt/openjdk@17")) / "bin" / "java"
+
+sys.path.insert(0, str(HERE))  # run as a script, not only via `-m` from HERE
+from run import java_tool  # noqa: E402
+
 SHEET_WIDTH = 1200
 JPEG_QUALITY = 80
 MAGENTA = (255, 0, 255)
@@ -42,7 +45,7 @@ MAGENTA = (255, 0, 255)
 
 def java_json(cls: str, args: list[str]) -> dict:
     proc = subprocess.run(
-        [str(JAVA), "-Djava.awt.headless=true", "-cp", f"{PDFBOX}:{CLASSES}", cls, *args],
+        [str(java_tool("java")), "-Djava.awt.headless=true", "-cp", f"{PDFBOX}:{CLASSES}", cls, *args],
         capture_output=True, text=True)
     if cls == "Mark":
         # --check exits 1 when the box lands outside the image; the JSON is still the answer

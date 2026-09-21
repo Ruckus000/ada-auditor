@@ -14,6 +14,7 @@ import { basename, join } from 'node:path';
 import { inspectDocument } from '../../src/integrations/documents/inspect';
 import { isTagged } from '../../src/domain/document-structure';
 import { summarise, titleFromFilename } from '../../src/domain/document-remediation';
+import { javaEnv } from './java.mjs';
 
 const [pdfDir, harvestMap, outJson] = process.argv.slice(2);
 if (!pdfDir || !harvestMap) {
@@ -27,7 +28,6 @@ if (!pdfDir || !harvestMap) {
 // always the instrument rather than the population.
 const ROOT = join(import.meta.dirname, '..', '..');
 const VERAPDF = join(import.meta.dirname, 'vendor', 'verapdf', 'verapdf');
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 
 /** The client-facing name for each local file — what a filename-derived title would read. */
 const nameOf = new Map<string, string>();
@@ -41,7 +41,7 @@ for (const line of readFileSync(harvestMap, 'utf8').split('\n')) {
 /** veraPDF UA-1 failed clauses, via the JSON report — the text format names none. */
 function ua1Clauses(pdf: string): string[] | null {
   if (!existsSync(VERAPDF)) return null;
-  const env = { ...process.env, JAVA_HOME, PATH: `${JAVA_HOME}/bin:${process.env.PATH}` };
+  const env = javaEnv();
   let raw = '';
   try {
     raw = execFileSync(VERAPDF, ['-f', 'ua1', '--format', 'json', pdf], {

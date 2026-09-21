@@ -40,14 +40,17 @@ path into this directory.
 ```bash
 ./fetch-tools.sh        # veraPDF 1.30.2 + PDFBox 3.0.8 into vendor/
 npm ci                  # from the repo root; brings @opendataloader/pdf 2.5.0
-export JAVA_HOME=/opt/homebrew/opt/openjdk@17
 ```
+
+Any JDK 17+ works. The runners take `java` from `JAVA_HOME` when it is set and
+valid, else from `PATH` (`java.mjs`, the same order as
+`src/integrations/documents/java-runtime.ts`).
 
 Compile every stage — the ones still here, plus the graduated sources they
 depend on:
 
 ```bash
-"$JAVA_HOME/bin/javac" -cp vendor/pdfbox-app-3.0.8.jar -d out/classes \
+javac -cp vendor/pdfbox-app-3.0.8.jar -d out/classes \
   *.java ../../src/integrations/documents/java/*.java
 ```
 

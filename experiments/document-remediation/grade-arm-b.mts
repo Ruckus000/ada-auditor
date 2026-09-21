@@ -18,11 +18,11 @@ import { fileURLToPath } from 'node:url';
 
 import { inspectDocument } from '../../src/integrations/documents/inspect';
 import { summarise } from '../../src/domain/document-remediation';
+import { javaEnv } from './java.mjs';
 
 const SPIKE_ROOT = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SPIKE_ROOT, '..', '..');
 const VERAPDF = join(SPIKE_ROOT, 'vendor/verapdf/verapdf');
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 
 const [pdfDir, outDir] = process.argv.slice(2);
 if (!pdfDir || !outDir || !existsSync(VERAPDF)) {
@@ -36,7 +36,7 @@ function verapdfUa1(pdf: string): { pass: boolean; failedRules: string[] } {
   // The launcher shells out to `java` from its environment, and on this
   // machine that intermittently resolved to the macOS stub that only prints
   // an install prompt. Pinned to the same JDK the build scripts use.
-  const env = { ...process.env, JAVA_HOME, PATH: `${JAVA_HOME}/bin:${process.env.PATH}` };
+  const env = javaEnv();
   // JSON, not text: the text format carries no per-clause detail, so the old
   // regex over it captured nothing — a grader that names no clause names no
   // work. The JSON report's ruleSummaries is where the clauses live

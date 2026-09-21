@@ -8,8 +8,8 @@ import { readdirSync, mkdirSync, writeFileSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
 import { describeExecFailure, summariseExecFailure } from './exec-failure.mjs';
+import { JAVA } from './java.mjs';
 
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const [IN = 'out/phase3-tagged', OUT = 'out/phase4-finished', LANG = 'en'] = process.argv.slice(2);
 
 mkdirSync(OUT, { recursive: true });
@@ -22,7 +22,7 @@ for (const f of files) {
   const started = Date.now();
   let error = null, errorLine = null;
   try {
-    execFileSync(`${JAVA_HOME}/bin/java`,
+    execFileSync(JAVA,
       ['-Djava.awt.headless=true', '-cp', `vendor/pdfbox-app-3.0.8.jar:out/classes`, 'Finish', join(IN, f), outPath, LANG],
       { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 });
   } catch (e) {

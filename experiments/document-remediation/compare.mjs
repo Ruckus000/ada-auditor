@@ -13,8 +13,8 @@ import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { JAVA } from './java.mjs';
 
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const CP = `vendor/pdfbox-app-3.0.8.jar:out/classes`;
 
 const GROUND_TRUTH_DIRS = ['corpus', 'holdout', 'holdout2'];
@@ -54,7 +54,7 @@ const significant = (s) =>
   new Set((s ?? '').toLowerCase().match(/[a-z]{3,}/g)?.filter((w) => !STOP.has(w)) ?? []);
 
 function inspect(file) {
-  return JSON.parse(execFileSync(`${JAVA_HOME}/bin/java`, ['-Djava.awt.headless=true', '-cp', CP, 'Inspect', file], {
+  return JSON.parse(execFileSync(JAVA, ['-Djava.awt.headless=true', '-cp', CP, 'Inspect', file], {
     maxBuffer: 32 * 1024 * 1024,
   }).toString());
 }

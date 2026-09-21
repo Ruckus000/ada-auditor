@@ -7,7 +7,7 @@
 // the written language where it is usable. Prints tags and counts and never
 // a word of any document: these are municipal records naming real people.
 //
-// Usage: JAVA_HOME=/opt/homebrew/opt/openjdk@17 npx tsx measure-language-hint.mts <pdfDir> [outJson]
+// Usage: npx tsx measure-language-hint.mts <pdfDir> [outJson]
 
 import { readdirSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';

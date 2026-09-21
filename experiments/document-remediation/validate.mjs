@@ -12,8 +12,8 @@
 import { readdirSync, mkdirSync, writeFileSync, readFileSync, statSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
+import { JAVA, javaEnv } from './java.mjs';
 
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const VERAPDF = 'vendor/verapdf/verapdf';
 const PDFBOX = 'vendor/pdfbox-app-3.0.8.jar';
 const FLAVOURS = ['ua1', 'wt1a'];
@@ -36,7 +36,7 @@ mkdirSync(outDir, { recursive: true });
 function pageCount(file) {
   const decoded = `${file}.decoded`;
   try {
-    execFileSync(`${JAVA_HOME}/bin/java`, ['-Djava.awt.headless=true', '-jar', PDFBOX, 'decode', '-skipImages', file, decoded], {
+    execFileSync(JAVA, ['-Djava.awt.headless=true', '-jar', PDFBOX, 'decode', '-skipImages', file, decoded], {
       stdio: 'ignore',
     });
     const text = readFileSync(decoded).toString('latin1');
@@ -56,7 +56,7 @@ function validate(file, flavour) {
   let raw;
   try {
     raw = execFileSync(VERAPDF, ['-f', flavour, '--format', 'json', file], {
-      env: { ...process.env, JAVA_HOME },
+      env: javaEnv(),
       maxBuffer: 64 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'ignore'],
     }).toString();

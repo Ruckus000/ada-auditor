@@ -10,8 +10,8 @@ import { chromium } from 'playwright';
 import { readdirSync, mkdirSync, writeFileSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { resolve, basename } from 'node:path';
+import { JAVA } from './java.mjs';
 
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const PDFBOX = 'vendor/pdfbox-app-3.0.8.jar';
 const OUT = 'out/corpus';
 
@@ -49,7 +49,7 @@ for (const file of docs) {
   if (name === SCANNED) {
     const pngPath = `${OUT}/${name}.png`;
     await page.screenshot({ path: pngPath, fullPage: true });
-    execFileSync(`${JAVA_HOME}/bin/java`, ['-Djava.awt.headless=true',
+    execFileSync(JAVA, ['-Djava.awt.headless=true',
       '-jar', PDFBOX, 'fromimage',
       '-i', pngPath, '-o', pdfPath, '-pageSize', 'A4', '-resize',
     ]);

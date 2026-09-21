@@ -32,7 +32,6 @@ if (!existsSync(pdfDir)) {
 // The repo root, not the cwd — `resolveJavaRuntime` anchors the compiled
 // classes on it (see `measure-pdf-population.mts`).
 const ROOT = join(import.meta.dirname, '..', '..');
-process.env.JAVA_HOME ??= '/opt/homebrew/opt/openjdk@17';
 
 type Row = {
   id: string;

@@ -14,8 +14,8 @@ import { readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, join } from 'node:path';
 import { describeExecFailure, summariseExecFailure } from './exec-failure.mjs';
+import { JAVA } from './java.mjs';
 
-const JAVA_HOME = process.env.JAVA_HOME ?? '/opt/homebrew/opt/openjdk@17';
 const [IN, OUT] = process.argv.slice(2);
 if (!IN || !OUT) {
   console.error('usage: node run-contrast.mjs <pdfDir> <outDir>');
@@ -29,7 +29,7 @@ for (const f of readdirSync(IN).filter((x) => x.endsWith('.pdf')).sort()) {
   let report = null, error = null, errorLine = null;
   const started = Date.now();
   try {
-    const out = execFileSync(`${JAVA_HOME}/bin/java`,
+    const out = execFileSync(JAVA,
       ['-Djava.awt.headless=true', '-cp', 'vendor/pdfbox-app-3.0.8.jar:out/classes', 'Contrast', join(IN, f)],
       { stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 32 * 1024 * 1024 }).toString().trim();
     report = JSON.parse(out.split('\n').at(-1));
