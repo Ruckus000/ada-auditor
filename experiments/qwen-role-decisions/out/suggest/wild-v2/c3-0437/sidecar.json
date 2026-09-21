@@ -1,0 +1,520 @@
+{
+  "document": "c3-0437",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 23,
+    "cards_considered": 23,
+    "selector": "all-blocks",
+    "not_heading_confident": 16,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0437:0",
+      "locator": {
+        "page": 0,
+        "x0": 355.7,
+        "y0": 43.35,
+        "x1": 652.8538,
+        "y1": 50.5
+      },
+      "text": "BUNCOMBE COUNTY STATISTICS REPORT",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9317296264754734,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0437:1",
+      "locator": {
+        "page": 0,
+        "x0": 378.15,
+        "y0": 58.45,
+        "x1": 632.5858,
+        "y1": 62.35
+      },
+      "text": "Bert Database Current As Of 12/15/2021 10:07:55 PM [SUCCESSFUL]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9859782578334313,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0437:2",
+      "locator": {
+        "page": 0,
+        "x0": 376.9,
+        "y0": 76.475,
+        "x1": 634.0336,
+        "y1": 80.95
+      },
+      "text": "JURISDICTION: MUNICIPALITY = 11_WFIN and STATUS = A, I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9842009567833273,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0437:3",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 113.4,
+        "x1": 140.827,
+        "y1": 118.7
+      },
+      "text": "Total Voters = 5,333",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9865452006417987,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0437:4",
+      "locator": {
+        "page": 0,
+        "x0": 587.05,
+        "y0": 127.125,
+        "x1": 635.7625,
+        "y1": 138.4
+      },
+      "text": "Multi- Asian Race",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994621222771551,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:7",
+      "locator": {
+        "page": 0,
+        "x0": 687.85,
+        "y0": 127.175,
+        "x1": 971.9085,
+        "y1": 138.7
+      },
+      "text": "Not Other Undesig Female Male Undesig Hispanic Hispanic Undesig",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993839310489051,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:5",
+      "locator": {
+        "page": 0,
+        "x0": 542.5,
+        "y0": 127.875,
+        "x1": 570.6312,
+        "y1": 131.0
+      },
+      "text": "American.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9978640979655475,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:6",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 130.875,
+        "x1": 672.0723,
+        "y1": 139.15
+      },
+      "text": "Grouping Total Voters Dem Rep Una Lib Black White Indian Hawaiian",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996709445621378,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:8",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 155.325,
+        "x1": 971.9631,
+        "y1": 160.05
+      },
+      "text": "PRECINCT:05.13003003000000210021",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9720626224196367,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0437:10",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 173.325,
+        "x1": 971.9631,
+        "y1": 178.05
+      },
+      "text": "PRECINCT : 41.1 23 8 8 7 0 0 21 0 0 0 0 0 2 13 9 1 3 17 3",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998319130755107,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:11",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 174.075,
+        "x1": 279.1131,
+        "y1": 178.05
+      },
+      "text": "PRECINCT : 41.1 2",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9973233962352626,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:12",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 191.325,
+        "x1": 971.9631,
+        "y1": 214.05
+      },
+      "text": "PRECINCT : 42.1 266 107 59 98 2 5 222 0 3 1 0 4 31 119 120 27 3 152 111 PRECINCT : 59.1 2 2 0 0 0 0 2 0 0 0 0 0 0 1 1 0 0 1 1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996475868786941,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:13",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 192.075,
+        "x1": 275.1131,
+        "y1": 196.05
+      },
+      "text": "PRECINCT : 42.1 2",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9813959742058298,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0437:15",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 227.325,
+        "x1": 971.9385,
+        "y1": 232.05
+      },
+      "text": "PRECINCT : 68.1 158 48 41 67 2 1 142 0 0 1 0 0 14 80 67 11 2 101 55",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996224743648716,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:16",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 228.15,
+        "x1": 100.9788,
+        "y1": 232.05
+      },
+      "text": "PRECINCT : 68.1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964465152905225,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:17",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 245.325,
+        "x1": 971.9139,
+        "y1": 250.05
+      },
+      "text": "PRECINCT : 69.1 505 182 126 196 1 18 431 0 2 1 1 12 40 246 227 32 12 335 158",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998097070362639,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:18",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 246.15,
+        "x1": 100.9788,
+        "y1": 250.05
+      },
+      "text": "PRECINCT : 69.1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9981273898602571,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:19",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 263.325,
+        "x1": 971.877,
+        "y1": 268.05
+      },
+      "text": "PRECINCT : 70.1 3,275 1,320 540 1,389 26 103 2,683 6 43 24 0 94 322 1,596 1,413 266 101 1,977 1,197",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996452755441244,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:20",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 264.15,
+        "x1": 100.9788,
+        "y1": 268.05
+      },
+      "text": "PRECINCT : 70.1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9792576065972596,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0437:21",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 281.325,
+        "x1": 971.9139,
+        "y1": 286.05
+      },
+      "text": "PRECINCT : 71.1 1,101 404 227 455 15 16 953 2 6 5 0 19 100 536 471 94 22 632 447",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997241562289507,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:22",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 282.15,
+        "x1": 100.9788,
+        "y1": 286.05
+      },
+      "text": "PRECINCT : 71.1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964063492485646,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:23",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 304.325,
+        "x1": 971.827,
+        "y1": 310.6
+      },
+      "text": "Total 5,333 2,071 1,001 2,215 46 143 4,457 8 54 32 1 129 509 2,593 2,309 431 143 3,217 1,973",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995719682117378,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0437:24",
+      "locator": {
+        "page": 0,
+        "x0": 39.0,
+        "y0": 531.625,
+        "x1": 971.996,
+        "y1": 535.4
+      },
+      "text": "Dec 16, 2021 11:15:38AM BertStat.rpt Page 1 of 1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992011890551805,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0437:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

@@ -1,0 +1,1017 @@
+{
+  "document": "c3-0737",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 44,
+    "cards_considered": 44,
+    "selector": "all-blocks",
+    "not_heading_confident": 37,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0737:1",
+      "locator": {
+        "page": 0,
+        "x0": 216.6,
+        "y0": 108.078,
+        "x1": 408.6079,
+        "y1": 142.2
+      },
+      "text": "CITY OF FIFE COVID-19 UTILITY ASSISTANCE PROGRAM APPLICATION",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.6781593712055812,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0737:2",
+      "locator": {
+        "page": 0,
+        "x0": 145.92,
+        "y0": 164.658,
+        "x1": 478.9272,
+        "y1": 202.4999
+      },
+      "text": "Application for utility assistance as funded by and allowed under the Coronavirus Aid, Relief, and Economic Security Act (CARES Act). The program is for residential customers only.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999757005401821,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:3",
+      "locator": {
+        "page": 0,
+        "x0": 132.9,
+        "y0": 211.3979,
+        "x1": 516.0626,
+        "y1": 218.0399
+      },
+      "text": "You must live at the address of the utility account you are requesting funds for.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991961882455878,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:4",
+      "locator": {
+        "page": 0,
+        "x0": 84.9599,
+        "y0": 243.2077,
+        "x1": 529.3582,
+        "y1": 250.68
+      },
+      "text": "APPLICATION DEADLINE IS 5:00 P.M. FRIDAY, SEPTEMBER 18, 2020",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8810286538576706,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0737:5",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 271.818,
+        "x1": 540.9099,
+        "y1": 294.0
+      },
+      "text": "PLEASE PROVIDE ANY SUPPORTING DOCUMENTS WITH THIS APPLICATION. Complete front and back of the application.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388385657148,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:6",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 333.138,
+        "x1": 349.5971,
+        "y1": 339.78
+      },
+      "text": "Applicant name Date",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988345520980497,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:7",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 378.558,
+        "x1": 398.9256,
+        "y1": 385.2
+      },
+      "text": "Physical Address Phone Number",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995700522745834,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:8",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 424.218,
+        "x1": 410.6473,
+        "y1": 430.86
+      },
+      "text": "Email Address Utility Account #",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9978215801997435,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:11",
+      "locator": {
+        "page": 0,
+        "x0": 35.76,
+        "y0": 455.778,
+        "x1": 104.6461,
+        "y1": 462.42
+      },
+      "text": "SECTION A:",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9034067305689427,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0737:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0737:13",
+      "locator": {
+        "page": 0,
+        "x0": 53.76,
+        "y0": 486.858,
+        "x1": 543.96,
+        "y1": 538.44
+      },
+      "text": "1. Income/Benefits received from the following sources: Wages/Earned Income Unemployment Compensation Social Security Income Retirement Pension Veteran\u2019s Assistance Other Income Source: __________________________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999822262328004,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:14",
+      "locator": {
+        "page": 0,
+        "x0": 53.76,
+        "y0": 486.858,
+        "x1": 62.6564,
+        "y1": 493.5
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:15",
+      "locator": {
+        "page": 0,
+        "x0": 53.732,
+        "y0": 546.036,
+        "x1": 188.982,
+        "y1": 553.98
+      },
+      "text": "2. Total Monthly Income $",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986822155735607,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:16",
+      "locator": {
+        "page": 0,
+        "x0": 53.732,
+        "y0": 546.036,
+        "x1": 62.6276,
+        "y1": 553.98
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:17",
+      "locator": {
+        "page": 0,
+        "x0": 35.76,
+        "y0": 561.576,
+        "x1": 350.5018,
+        "y1": 597.12
+      },
+      "text": "3. Number of people who live in your household _________ SECTION B: CIRCUMSTANCES",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9711577889813473,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:11"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0737:18",
+      "locator": {
+        "page": 0,
+        "x0": 53.732,
+        "y0": 561.576,
+        "x1": 62.6276,
+        "y1": 569.52
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:19",
+      "locator": {
+        "page": 0,
+        "x0": 35.76,
+        "y0": 590.478,
+        "x1": 212.8358,
+        "y1": 597.12
+      },
+      "text": "SECTION B: CIRCUMSTANCES",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9945150686858226,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:11"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0737:20",
+      "locator": {
+        "page": 0,
+        "x0": 54.0,
+        "y0": 605.8979,
+        "x1": 356.2946,
+        "y1": 612.54
+      },
+      "text": "4. Death of immediate family member due to COVID-19",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990905759320963,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:21",
+      "locator": {
+        "page": 0,
+        "x0": 54.0,
+        "y0": 605.8979,
+        "x1": 62.8964,
+        "y1": 612.54
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:22",
+      "locator": {
+        "page": 0,
+        "x0": 95.7602,
+        "y0": 621.438,
+        "x1": 289.7834,
+        "y1": 628.08
+      },
+      "text": "Loss of job or income due to COVID-19",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999769685921758,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:23",
+      "locator": {
+        "page": 0,
+        "x0": 95.7602,
+        "y0": 637.038,
+        "x1": 267.1335,
+        "y1": 643.68
+      },
+      "text": "Loss of childcare due to COVID-19",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997389098109368,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:24",
+      "locator": {
+        "page": 0,
+        "x0": 95.7599,
+        "y0": 652.5779,
+        "x1": 298.9392,
+        "y1": 659.22
+      },
+      "text": "Sudden illness or injury due to COVID-19",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039398606729,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:25",
+      "locator": {
+        "page": 0,
+        "x0": 95.76,
+        "y0": 668.118,
+        "x1": 249.96,
+        "y1": 674.76
+      },
+      "text": "Loss of funds due to COVID-19",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996202936361334,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:26",
+      "locator": {
+        "page": 0,
+        "x0": 95.7599,
+        "y0": 683.658,
+        "x1": 347.5379,
+        "y1": 690.3
+      },
+      "text": "Disabled or ill household member due to COVID-19",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998602325682423,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:27",
+      "locator": {
+        "page": 0,
+        "x0": 95.7602,
+        "y0": 699.1979,
+        "x1": 328.8097,
+        "y1": 705.84
+      },
+      "text": "Other (Please describe in detail on back of form)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990899247992153,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:28",
+      "locator": {
+        "page": 0,
+        "x0": 35.76,
+        "y0": 726.798,
+        "x1": 579.2676,
+        "y1": 747.24
+      },
+      "text": "EXTENUATING CIRCUMSTANCES: Please use the back of this application to provide an explanation for any checked items. Attach additional pages if needed.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995695447812858,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:0",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 70.6979,
+        "x1": 557.3374,
+        "y1": 77.3399
+      },
+      "text": "Please give a complete account of the circumstances and provide supporting documentation (pay stub, letter",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980740179873328,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:29",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 70.6979,
+        "x1": 557.3374,
+        "y1": 91.4399
+      },
+      "text": "Please give a complete account of the circumstances and provide supporting documentation (pay stub, letter from employer, unemployment, etc.)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911070536237,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:30",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 260.418,
+        "x1": 510.2137,
+        "y1": 267.06
+      },
+      "text": "_____ I am requesting assistance for the utility account associated with the residence where I live.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417145107724,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:31",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 272.9385,
+        "x1": 69.1974,
+        "y1": 277.92
+      },
+      "text": "(Initials)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989690795465974,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:32",
+      "locator": {
+        "page": 1,
+        "x0": 35.76,
+        "y0": 298.338,
+        "x1": 579.8008,
+        "y1": 373.9799
+      },
+      "text": "I certify and declare under penalty of perjury that the information I have provided with this application is accurate to the best of my knowledge. I also give my permission for the City of Fife\u2019s COVID-19 Utility Assistance Program Representative to request/release necessary information that may result in my receiving benefits. I hereby authorize the City of Fife to release billing information to the city\u2019s COVID-19 Utility Assistance Program Representative in order to process my application. I understand this application and any information submitted to the city is a public record and may be subject to disclosure under RCW 42.56.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999934596222539,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:33",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 394.9979,
+        "x1": 578.1888,
+        "y1": 415.4399
+      },
+      "text": "I understand that I may or may not receive assistance under this program and, if assistance is provided, it will be a grant in the form of a credit on my utility account.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852612250165,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:34",
+      "locator": {
+        "page": 1,
+        "x0": 35.76,
+        "y0": 441.0779,
+        "x1": 570.744,
+        "y1": 447.7199
+      },
+      "text": "Applicant Signature: Date:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766347283635,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:35",
+      "locator": {
+        "page": 1,
+        "x0": 34.5,
+        "y0": 482.898,
+        "x1": 354.5099,
+        "y1": 489.54
+      },
+      "text": "SUBMIT COMPLETED FORM AND DOCUMENTATION TO:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6523769672520952,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0737:37",
+      "locator": {
+        "page": 1,
+        "x0": 48.0,
+        "y0": 499.3431,
+        "x1": 483.6096,
+        "y1": 508.26
+      },
+      "text": "\uf0b7 BY MAIL - City of Fife, Utility Assistance Program, 5411 23 rd St E., Fife, WA 98424",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999452456750176,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:38",
+      "locator": {
+        "page": 1,
+        "x0": 48.0,
+        "y0": 500.91,
+        "x1": 82.6656,
+        "y1": 508.26
+      },
+      "text": "\uf0b7 BY",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999710533871989,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:39",
+      "locator": {
+        "page": 1,
+        "x0": 48.0,
+        "y0": 519.5701,
+        "x1": 282.672,
+        "y1": 526.92
+      },
+      "text": "\uf0b7 BY EMAIL - fifeutilityassist@cityoffife.org",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998205190241723,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:40",
+      "locator": {
+        "page": 1,
+        "x0": 48.0,
+        "y0": 519.5701,
+        "x1": 82.6764,
+        "y1": 526.92
+      },
+      "text": "\uf0b7 BY",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999930627709782,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:41",
+      "locator": {
+        "page": 1,
+        "x0": 48.0,
+        "y0": 536.6631,
+        "x1": 484.6035,
+        "y1": 545.58
+      },
+      "text": "\uf0b7 BY DROP BOX - Utility Drop Box at Fife City Hall, 5411 23 rd St E., Fife, WA 98424",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999379623494722,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:42",
+      "locator": {
+        "page": 1,
+        "x0": 48.0,
+        "y0": 538.23,
+        "x1": 82.6692,
+        "y1": 545.58
+      },
+      "text": "\uf0b7 BY",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999975862696483,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:43",
+      "locator": {
+        "page": 1,
+        "x0": 35.76,
+        "y0": 557.178,
+        "x1": 579.0,
+        "y1": 591.42
+      },
+      "text": "__________________________________________________________________________________________ SECTION D: CITY UTILITY ASSISTANCE REVIEWER (FOR CITY USE ONLY)",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9699179557168541,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:19"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0737:44",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 616.818,
+        "x1": 152.4673,
+        "y1": 623.46
+      },
+      "text": "Approved $250.00",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983031865557672,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:43"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:45",
+      "locator": {
+        "page": 1,
+        "x0": 38.7,
+        "y0": 634.5779,
+        "x1": 97.4496,
+        "y1": 641.22
+      },
+      "text": "Denied",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9985026020437205,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:43"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:46",
+      "locator": {
+        "page": 1,
+        "x0": 35.76,
+        "y0": 668.178,
+        "x1": 316.824,
+        "y1": 674.82
+      },
+      "text": "Reviewed by: Date:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998416412866494,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:43"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0737:47",
+      "locator": {
+        "page": 1,
+        "x0": 35.76,
+        "y0": 701.778,
+        "x1": 316.8239,
+        "y1": 708.42
+      },
+      "text": "Authorized by: Date:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996649811168987,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0737:1",
+        "c3-0737:43"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

@@ -1,0 +1,2340 @@
+{
+  "document": "c3-0030",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 106,
+    "cards_considered": 106,
+    "selector": "all-blocks",
+    "not_heading_confident": 98,
+    "table_vetoed": 3,
+    "table_not_heading_confident": 23,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0030:2",
+      "locator": {
+        "page": 0,
+        "x0": 14.64,
+        "y0": 11.736,
+        "x1": 183.856,
+        "y1": 20.52
+      },
+      "text": "So . . . now you own a",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.8910558244628363,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:83",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 19.35,
+        "x1": 968.3203,
+        "y1": 122.04
+      },
+      "text": "Wastewater contains nutrients, such as nitrates and phosphates, that in excessive amounts may pollute nearby waterways and groundwater supplies. Excessive nutrients in drinking water supplies can be harmful to human health and can degrade lakes and streams by enhancing weed growth and algal blooms. However, the soil can retain many of these nutrients, which are eventu- ally taken up by nearby vegetation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646445563499,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:46",
+      "locator": {
+        "page": 0,
+        "x0": 617.64,
+        "y0": 21.311,
+        "x1": 639.074,
+        "y1": 26.4
+      },
+      "text": "access",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9903178284159148,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:41",
+      "locator": {
+        "page": 0,
+        "x0": 268.8,
+        "y0": 21.852,
+        "x1": 357.804,
+        "y1": 28.44
+      },
+      "text": "HOW IT WORKS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9951168028393648,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:53",
+      "locator": {
+        "page": 0,
+        "x0": 622.442,
+        "y0": 28.99,
+        "x1": 634.293,
+        "y1": 34.079
+      },
+      "text": "port",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988325910920829,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:127",
+      "locator": {
+        "page": 0,
+        "x0": 632.347,
+        "y0": 28.99,
+        "x1": 634.293,
+        "y1": 34.079
+      },
+      "text": "t",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9859988315257903,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:51",
+      "locator": {
+        "page": 0,
+        "x0": 560.7599,
+        "y0": 30.9075,
+        "x1": 696.7949,
+        "y1": 36.36
+      },
+      "text": "inspection port inspection port",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995167229610522,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:5",
+      "locator": {
+        "page": 0,
+        "x0": 14.64,
+        "y0": 30.936,
+        "x1": 121.184,
+        "y1": 39.72
+      },
+      "text": "septic system",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.5834980355624584,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:42",
+      "locator": {
+        "page": 0,
+        "x0": 268.8,
+        "y0": 40.47,
+        "x1": 484.14,
+        "y1": 191.16
+      },
+      "text": "A typical septic system contains two major compo- nents: a septic tank and the absorption field (see Figure 1). Often, a distribution box is included as part of the system to separate the septic tank effluent evenly into a network of distribution lines that make up the absorption field. The septic tank is usually made of concrete, fiberglass, or plastic, is typically buried and should be watertight. All septic tanks have baffles (or tees) at the inlet and outlet to insure proper flow patterns (see Figure 2). Most septic tanks are single compartment; however, a number of states require two-compartment tanks or two single com- partment tanks in series.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204774520552,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:47",
+      "locator": {
+        "page": 0,
+        "x0": 593.4,
+        "y0": 46.0275,
+        "x1": 611.2949,
+        "y1": 51.48
+      },
+      "text": "scum",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991983290789275,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:54",
+      "locator": {
+        "page": 0,
+        "x0": 540.48,
+        "y0": 46.0275,
+        "x1": 554.2349,
+        "y1": 51.48
+      },
+      "text": "inlet",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990903785393317,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:55",
+      "locator": {
+        "page": 0,
+        "x0": 703.68,
+        "y0": 55.0275,
+        "x1": 722.025,
+        "y1": 60.48
+      },
+      "text": "outlet",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986769437146318,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:52",
+      "locator": {
+        "page": 0,
+        "x0": 656.16,
+        "y0": 69.3075,
+        "x1": 674.4075,
+        "y1": 74.76
+      },
+      "text": "baffle",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995124956074982,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:48",
+      "locator": {
+        "page": 0,
+        "x0": 580.2,
+        "y0": 69.3076,
+        "x1": 598.4475,
+        "y1": 74.7601
+      },
+      "text": "baffle",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997967379505603,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:8",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 77.29,
+        "x1": 225.14,
+        "y1": 591.12
+      },
+      "text": "More than 25 million homes, encompassing almost 25 percent of the U.S. population, of domestic wastewater through onsite systems. According to the American Housing Survey for the United States, in 1993 1.5 (million) out of every 4 (million) new owner- occupied home starts relied upon a form of onsite sewage disposal. One of the major differences between owning unsewered versus a sewered home is that unsewered wastewater treatment and disposal systems must be maintained by the homeowner Treatment and disposal of wastewater should one of the primary concerns of any homeowner in an unsewered area. The most common way to treat and dispose wastewater in rural homes is through the use of an onsite disposal system. The majority of onsite disposal systems in the United States septic systems. 1 2 3 4 Typical Septic System 1 2 3 4 5 6 septic tank 4\u201d perforated pipe absorption field crushed rock or gravel lined trench inspection ports distribution box 6",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993741646661359,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:9",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 77.29,
+        "x1": 215.31,
+        "y1": 167.88
+      },
+      "text": "More than 25 million homes, encompassing almost 25 percent of the U.S. population, of domestic wastewater through onsite systems. According to the American Housing Survey for the United States, in 1993 1.5 (million) out of every 4 (million) new owner- occupied home starts relied upon a form of onsite sewage disposal.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998314127626129,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:49",
+      "locator": {
+        "page": 0,
+        "x0": 671.8799,
+        "y0": 86.1076,
+        "x1": 696.3448,
+        "y1": 99.6
+      },
+      "text": "effluent filter",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996204185878771,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:33",
+      "locator": {
+        "page": 0,
+        "x0": 184.9601,
+        "y0": 89.29,
+        "x1": 232.82,
+        "y1": 107.88
+      },
+      "text": "dispose (unsewered)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993743681825434,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:50",
+      "locator": {
+        "page": 0,
+        "x0": 599.6399,
+        "y0": 106.1475,
+        "x1": 621.7348,
+        "y1": 111.6
+      },
+      "text": "sludge",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996202584895071,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:84",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 140.55,
+        "x1": 932.6602,
+        "y1": 146.04
+      },
+      "text": "What to Put In, What to Keep Out",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9882095483622498,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:41"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:56",
+      "locator": {
+        "page": 0,
+        "x0": 522.6,
+        "y0": 147.219,
+        "x1": 733.9651,
+        "y1": 152.16
+      },
+      "text": "Cross-section of a two-compartment septic tank",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 0.9024076634785972,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:86",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 151.35,
+        "x1": 968.6603,
+        "y1": 218.04
+      },
+      "text": "\u2022 Direct all wastewater from your home into the septic tank. This includes all sink, bath, shower, toilet, washing machine and dish- washer wastewaters. Any of these waters can contain disease-causing microorganisms or environmental pollutants.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999822222034372,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:87",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 151.35,
+        "x1": 776.3,
+        "y1": 158.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:57",
+      "locator": {
+        "page": 0,
+        "x0": 710.4031,
+        "y0": 158.982,
+        "x1": 733.6411,
+        "y1": 163.923
+      },
+      "text": "Fig. 2",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990655341239184,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:58",
+      "locator": {
+        "page": 0,
+        "x0": 522.0,
+        "y0": 172.11,
+        "x1": 725.6705,
+        "y1": 202.8
+      },
+      "text": "sometimes connected in a closed loop system, as illustrated on the front cover, or some other propri- etary distribution system",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485590806004,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:10",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 185.29,
+        "x1": 225.14,
+        "y1": 263.88
+      },
+      "text": "One of the major differences between owning unsewered versus a sewered home is that unsewered wastewater treatment and disposal systems must be maintained by the homeowner Treatment and disposal of wastewater should one of the primary concerns of any homeowner in an unsewered area.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417145129209,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:34",
+      "locator": {
+        "page": 0,
+        "x0": 219.74,
+        "y0": 185.29,
+        "x1": 229.74,
+        "y1": 191.88
+      },
+      "text": "an",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986775286457702,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:43",
+      "locator": {
+        "page": 0,
+        "x0": 268.8,
+        "y0": 208.47,
+        "x1": 483.48,
+        "y1": 347.04
+      },
+      "text": "While typically designed to hold a minimum of 750\u2013 1000 gallons of sewage, the size of the tank may vary depending upon the number of bedrooms in the home and state and local regulatory requirements. The primary purpose of the septic tank is to separate the solids from the liquids and to promote partial break- down of contaminants by microorganisms naturally present in the wastewater. The solids, known as sludge, collect on the bottom of the tank, while the scum floats on the top of the liquid. The sludge and scum remain in the tank and should be pumped out periodically (see Figure 2).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151915382234,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:59",
+      "locator": {
+        "page": 0,
+        "x0": 522.0,
+        "y0": 219.15,
+        "x1": 733.9005,
+        "y1": 345.84
+      },
+      "text": "The effluent is distributed through the perforated pipes, exits through the holes in the pipes, and trickles through the rock or gravel where it is stored until absorbed by the soil. The absorption field, which is located in the unsaturated zone of the soil, treats the wastewater through physical, chemical, and biologi- cal processes. The soil also acts as a natural buffer to filter out many of the harmful bacteria, viruses, and excessive nutrients, effectively treating the wastewa- ter as it passes through the unsaturated zone before it reaches the groundwater (see Figure 3).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999910603567744,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:35",
+      "locator": {
+        "page": 0,
+        "x0": 222.12,
+        "y0": 221.29,
+        "x1": 224.62,
+        "y1": 227.88
+      },
+      "text": "contractor. .",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988326237667197,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:88",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 235.35,
+        "x1": 964.9003,
+        "y1": 326.04
+      },
+      "text": "\u2022 Keep roof drains, basement sump pump drains, and other rainwater or surface water drainage systems away from the absorption field. Flooding of the absorption field with excessive water will keep the soil from naturally cleansing the wastewater, which can lead to groundwater and/or nearby surface water pollution.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999892168562329,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:89",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 235.35,
+        "x1": 776.3,
+        "y1": 242.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:11",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 281.29,
+        "x1": 216.41,
+        "y1": 335.88
+      },
+      "text": "The most common way to treat and dispose wastewater in rural homes is through the use of an onsite disposal system. The majority of onsite disposal systems in the United States septic systems.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998205177047029,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:37",
+      "locator": {
+        "page": 0,
+        "x0": 211.13,
+        "y0": 281.29,
+        "x1": 218.91,
+        "y1": 287.88
+      },
+      "text": "of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980769632669131,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:38",
+      "locator": {
+        "page": 0,
+        "x0": 212.39,
+        "y0": 317.29,
+        "x1": 225.36,
+        "y1": 323.88
+      },
+      "text": "are",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996205245491825,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:90",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 343.35,
+        "x1": 956.8803,
+        "y1": 374.04
+      },
+      "text": "\u2022 Conserve water to avoid overloading the septic system. Be sure to repair any leaky faucets or toilets. Use low-flow fixtures.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546041677669,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:91",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 343.35,
+        "x1": 776.3,
+        "y1": 350.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:44",
+      "locator": {
+        "page": 0,
+        "x0": 268.8,
+        "y0": 364.35,
+        "x1": 477.07,
+        "y1": 467.04
+      },
+      "text": "Solids that are allowed to pass from the septic tank may clog the absorption field. Keeping solids out of the absorption field not only prevents clogging, but also reduces potentially expensive repair or replace- ment costs and helps ensure the ability of the soil to effectively treat the septic tank effluent. Therefore, an additional safeguard in keeping solids out of the absorption field is the use of effluent filters on the outlet of the septic tank (see Figure 2).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417096204388,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:23",
+      "locator": {
+        "page": 0,
+        "x0": 50.04,
+        "y0": 379.832,
+        "x1": 54.488,
+        "y1": 385.68
+      },
+      "text": "2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:92",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 391.35,
+        "x1": 971.0403,
+        "y1": 422.04
+      },
+      "text": "\u2022 Do not use caustic drain openers for a clogged drain. Instead, use boiling water or a drain snake to open clogs.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785553940049,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:93",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 391.35,
+        "x1": 776.3,
+        "y1": 398.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:60",
+      "locator": {
+        "page": 0,
+        "x0": 535.8,
+        "y0": 415.112,
+        "x1": 540.248,
+        "y1": 420.96
+      },
+      "text": "1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:62",
+      "locator": {
+        "page": 0,
+        "x0": 657.24,
+        "y0": 425.192,
+        "x1": 661.688,
+        "y1": 431.04
+      },
+      "text": "2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:22",
+      "locator": {
+        "page": 0,
+        "x0": 139.44,
+        "y0": 431.552,
+        "x1": 143.888,
+        "y1": 437.4
+      },
+      "text": "1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:63",
+      "locator": {
+        "page": 0,
+        "x0": 684.12,
+        "y0": 432.152,
+        "x1": 688.568,
+        "y1": 438.0
+      },
+      "text": "3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:39",
+      "locator": {
+        "page": 0,
+        "x0": 211.44,
+        "y0": 436.112,
+        "x1": 215.888,
+        "y1": 441.96
+      },
+      "text": "5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:94",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 439.35,
+        "x1": 970.5004,
+        "y1": 482.04
+      },
+      "text": "\u2022 Do not use septic tank additives, commercial septic tank cleansers, yeast, sugar, etc. These products are not necessary and some may be harmful to your system.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417131253764,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:95",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 439.35,
+        "x1": 776.3,
+        "y1": 446.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:65",
+      "locator": {
+        "page": 0,
+        "x0": 725.04,
+        "y0": 443.192,
+        "x1": 729.488,
+        "y1": 449.04
+      },
+      "text": "4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:32",
+      "locator": {
+        "page": 0,
+        "x0": 129.36,
+        "y0": 466.472,
+        "x1": 133.808,
+        "y1": 472.32
+      },
+      "text": "6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:61",
+      "locator": {
+        "page": 0,
+        "x0": 594.24,
+        "y0": 467.912,
+        "x1": 598.688,
+        "y1": 473.76
+      },
+      "text": "5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:64",
+      "locator": {
+        "page": 0,
+        "x0": 683.4,
+        "y0": 481.712,
+        "x1": 687.848,
+        "y1": 487.56
+      },
+      "text": "6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:45",
+      "locator": {
+        "page": 0,
+        "x0": 268.8,
+        "y0": 484.35,
+        "x1": 485.7199,
+        "y1": 587.04
+      },
+      "text": "The wastewater (effluent) coming out of the septic tank may contain many potentially disease-causing microorganisms and pollutants (i.e., nitrates, phos- phates, chlorides). The effluent is passed on to the absorption field through a connecting pipe or distribu- tion box. The absorption field is also known as the soil drainfield, the disposal field, or the leachfield. The absorption field contains a series of underground perforated pipes, as indicated in Figure 1, that are",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724647862971,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:25",
+      "locator": {
+        "page": 0,
+        "x0": 156.36,
+        "y0": 487.832,
+        "x1": 160.808,
+        "y1": 493.68
+      },
+      "text": "4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:24",
+      "locator": {
+        "page": 0,
+        "x0": 89.64,
+        "y0": 496.352,
+        "x1": 94.088,
+        "y1": 502.2
+      },
+      "text": "3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:96",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 499.35,
+        "x1": 960.5703,
+        "y1": 554.04
+      },
+      "text": "\u2022 Use commercial bathroom cleaners and laundry detergents in moderation. Many people prefer to clean their toilets, sinks, showers, and tubs with a mild detergent or baking soda.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251575530175,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:97",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 499.35,
+        "x1": 776.3,
+        "y1": 506.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:66",
+      "locator": {
+        "page": 0,
+        "x0": 534.36,
+        "y0": 514.504,
+        "x1": 655.304,
+        "y1": 574.8
+      },
+      "text": "drinking water well septic tank distribution box absorption field soil absorption (unsaturated zone) groundwater (saturated zone)",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:68",
+      "locator": {
+        "page": 0,
+        "x0": 524.88,
+        "y0": 514.952,
+        "x1": 529.328,
+        "y1": 520.8
+      },
+      "text": "1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:31",
+      "locator": {
+        "page": 0,
+        "x0": 47.76,
+        "y0": 518.824,
+        "x1": 170.512,
+        "y1": 578.16
+      },
+      "text": "septic tank 4\u201d perforated pipe absorption field crushed rock or gravel lined trench inspection ports distribution box",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:13",
+      "locator": {
+        "page": 0,
+        "x0": 38.28,
+        "y0": 519.272,
+        "x1": 42.728,
+        "y1": 525.12
+      },
+      "text": "1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:70",
+      "locator": {
+        "page": 0,
+        "x0": 524.88,
+        "y0": 525.632,
+        "x1": 529.328,
+        "y1": 531.48
+      },
+      "text": "2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:15",
+      "locator": {
+        "page": 0,
+        "x0": 38.28,
+        "y0": 529.952,
+        "x1": 42.728,
+        "y1": 535.8
+      },
+      "text": "2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:72",
+      "locator": {
+        "page": 0,
+        "x0": 524.88,
+        "y0": 536.552,
+        "x1": 529.328,
+        "y1": 542.4
+      },
+      "text": "3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:17",
+      "locator": {
+        "page": 0,
+        "x0": 38.28,
+        "y0": 540.8719,
+        "x1": 42.728,
+        "y1": 546.72
+      },
+      "text": "3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:74",
+      "locator": {
+        "page": 0,
+        "x0": 524.88,
+        "y0": 547.232,
+        "x1": 529.328,
+        "y1": 553.08
+      },
+      "text": "4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:19",
+      "locator": {
+        "page": 0,
+        "x0": 38.28,
+        "y0": 551.552,
+        "x1": 42.728,
+        "y1": 557.4
+      },
+      "text": "4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:77",
+      "locator": {
+        "page": 0,
+        "x0": 524.88,
+        "y0": 557.912,
+        "x1": 529.328,
+        "y1": 563.76
+      },
+      "text": "5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:27",
+      "locator": {
+        "page": 0,
+        "x0": 38.28,
+        "y0": 562.112,
+        "x1": 42.728,
+        "y1": 567.96
+      },
+      "text": "5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:98",
+      "locator": {
+        "page": 0,
+        "x0": 772.8,
+        "y0": 567.85,
+        "x1": 827.2701,
+        "y1": 574.4401
+      },
+      "text": "continued . . .",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:79",
+      "locator": {
+        "page": 0,
+        "x0": 524.88,
+        "y0": 568.832,
+        "x1": 529.328,
+        "y1": 574.68
+      },
+      "text": "6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:29",
+      "locator": {
+        "page": 0,
+        "x0": 38.28,
+        "y0": 572.552,
+        "x1": 42.728,
+        "y1": 578.4
+      },
+      "text": "6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:21",
+      "locator": {
+        "page": 0,
+        "x0": 103.41,
+        "y0": 586.179,
+        "x1": 197.109,
+        "y1": 591.12
+      },
+      "text": "Typical Septic System",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9929376024627192,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:40",
+      "locator": {
+        "page": 0,
+        "x0": 204.993,
+        "y0": 586.179,
+        "x1": 228.222,
+        "y1": 591.12
+      },
+      "text": "Fig. 1",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 0.9996246894490733,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:81",
+      "locator": {
+        "page": 0,
+        "x0": 709.7971,
+        "y0": 586.179,
+        "x1": 732.5941,
+        "y1": 591.12
+      },
+      "text": "Fig. 3",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 0.9983128318709308,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:82",
+      "locator": {
+        "page": 0,
+        "x0": 520.797,
+        "y0": 586.179,
+        "x1": 702.2644,
+        "y1": 591.12
+      },
+      "text": "Wastewater treatment and disposal in soil",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.8132026528552846,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:84"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:123",
+      "locator": {
+        "page": 1,
+        "x0": 806.64,
+        "y0": 12.936,
+        "x1": 976.0319,
+        "y1": 40.92
+      },
+      "text": "So . . . now you own a septic system",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9623693488646898,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:82"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:100",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 19.35,
+        "x1": 226.19,
+        "y1": 62.04
+      },
+      "text": "\u2022 Check with your local regulatory agency if you have a garbage disposal unit to make sure that your septic system can accommo- date this additional waste.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785552549039,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:101",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 19.35,
+        "x1": 39.5,
+        "y1": 26.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:124",
+      "locator": {
+        "page": 1,
+        "x0": 768.0,
+        "y0": 58.899,
+        "x1": 995.4477,
+        "y1": 75.72
+      },
+      "text": "One in a series of three brochures designed to aid you in caring for your septic system.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997041398661971,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:102",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 79.35,
+        "x1": 228.67,
+        "y1": 110.04
+      },
+      "text": "\u2022 Check with your local regulatory agency before allowing water softener backwash to enter your septic tank.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999892168444,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:103",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 79.35,
+        "x1": 39.5,
+        "y1": 86.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:104",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 127.35,
+        "x1": 231.75,
+        "y1": 182.04
+      },
+      "text": "\u2022 Your septic system is not a trash can. Do not put grease, disposable diapers, sanitary napkins, tampons, condoms, paper towels, plastics, cat litter, latex paint, pesticides, or other hazardous chemicals into your system.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999921108081645,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:105",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 127.35,
+        "x1": 39.5,
+        "y1": 134.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:106",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 199.35,
+        "x1": 230.7199,
+        "y1": 230.04
+      },
+      "text": "\u2022 Keep records of repairs, pumpings, inspections, permits issued, and other system maintenance activities.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999757002067717,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:107",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 199.35,
+        "x1": 39.5,
+        "y1": 206.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:117",
+      "locator": {
+        "page": 1,
+        "x0": 528.48,
+        "y0": 200.259,
+        "x1": 733.6978,
+        "y1": 217.08
+      },
+      "text": "For more information regarding the care of your septic system, contact your local health department.",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:118",
+      "locator": {
+        "page": 1,
+        "x0": 532.917,
+        "y0": 232.659,
+        "x1": 729.414,
+        "y1": 260.28
+      },
+      "text": "More information about septic systems is available from the National Small Flows Clearinghouse (NSFC) through other brochures in this series:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251560707828,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:108",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 247.35,
+        "x1": 231.6301,
+        "y1": 278.04
+      },
+      "text": "\u2022 Learn the location of your septic system. Keep a sketch of it handy with your maintenance record for service visits.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898700585477,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:109",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 247.35,
+        "x1": 39.5,
+        "y1": 254.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:119",
+      "locator": {
+        "page": 1,
+        "x0": 544.437,
+        "y0": 269.109,
+        "x1": 717.8486,
+        "y1": 285.84
+      },
+      "text": "Groundwater protection and your septic system, Item #WWBRPE21",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999196391393151,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:120",
+      "locator": {
+        "page": 1,
+        "x0": 553.3109,
+        "y0": 294.669,
+        "x1": 708.9025,
+        "y1": 311.4
+      },
+      "text": "The care and feeding of your septic system, Item #WWBRPE18",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:110",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 295.35,
+        "x1": 229.75,
+        "y1": 338.04
+      },
+      "text": "\u2022 Have your septic system inspected every 1\u20132 years and pumped periodically (usually every 3\u20135 years) by a licensed inspector/ contractor.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999945778014169,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:111",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 295.35,
+        "x1": 39.5,
+        "y1": 302.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:121",
+      "locator": {
+        "page": 1,
+        "x0": 527.9939,
+        "y0": 326.979,
+        "x1": 734.238,
+        "y1": 419.4
+      },
+      "text": "For more information about this or other NSFC products, please contact us by writing to: National Small Flows Clearinghouse West Virginia University P.O. Box 6064 Morgantown, WV 26506-6064 or phone: (800) 624-8301, (304) 293-4191 or fax: (304) 293-3161",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869930080761,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:112",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 355.35,
+        "x1": 224.25,
+        "y1": 386.04
+      },
+      "text": "\u2022 Plant only grass over and near your septic system. Roots from nearby trees or shrubs may clog and damage the absorption field.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999938558528808,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:113",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 355.35,
+        "x1": 39.5,
+        "y1": 362.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:36",
+      "locator": {
+        "page": 1,
+        "x0": 54.0,
+        "y0": 367.35,
+        "x1": 222.59,
+        "y1": 374.04
+      },
+      "text": "be system. Roots from nearby trees or shrubs",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415787521238,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:114",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 403.35,
+        "x1": 222.57,
+        "y1": 434.04
+      },
+      "text": "\u2022 Do not drive or park over any part of your septic system. This can compact the soil and crush your system.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999938558685172,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:115",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 403.35,
+        "x1": 39.5,
+        "y1": 410.04
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:122",
+      "locator": {
+        "page": 1,
+        "x0": 596.5109,
+        "y0": 430.182,
+        "x1": 665.7117,
+        "y1": 436.203
+      },
+      "text": "www.nsfc.wvu.edu",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766082123074,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:116",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 451.35,
+        "x1": 231.25,
+        "y1": 506.04
+      },
+      "text": "In summary, understanding how your septic system works and adhering to these few simple rules will ensure that your septic system is a safe and economical method for treating and dispos- ing of your wastewater onsite.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999967112596859,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:132",
+      "locator": {
+        "page": 1,
+        "x0": 863.16,
+        "y0": 550.212,
+        "x1": 978.3,
+        "y1": 586.92
+      },
+      "text": "erica\u2019s small co ies m et their t ater n eds",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983004758362058,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:131",
+      "locator": {
+        "page": 1,
+        "x0": 861.679,
+        "y0": 551.2354,
+        "x1": 970.1315,
+        "y1": 586.4935
+      },
+      "text": "Helping America's small communites meet their wastewater needs",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972002515743491,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0030:125",
+      "locator": {
+        "page": 1,
+        "x0": 538.166,
+        "y0": 551.7284,
+        "x1": 646.6185,
+        "y1": 586.9865
+      },
+      "text": "Helping America's small communites meet their wastewater needs",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9841466612303258,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0030:126",
+      "locator": {
+        "page": 1,
+        "x0": 544.44,
+        "y0": 578.892,
+        "x1": 629.4481,
+        "y1": 586.8
+      },
+      "text": "Helping America\u2019s s l com unities meet p wastewater ne ds",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9933150904062684,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0030:123"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

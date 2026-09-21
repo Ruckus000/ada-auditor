@@ -1,0 +1,1217 @@
+{
+  "document": "c3-0825",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 53,
+    "cards_considered": 53,
+    "selector": "all-blocks",
+    "not_heading_confident": 38,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0825:1",
+      "locator": {
+        "page": 0,
+        "x0": 48.48,
+        "y0": 41.71,
+        "x1": 538.86,
+        "y1": 49.92
+      },
+      "text": "CITY OF NEW BERLIN FIRE DEPART\u2163 IENT\u25cf PERM:T APPLiCAT:ON FOR UST/AST",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.8504738449025203,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:3",
+      "locator": {
+        "page": 0,
+        "x0": 72.96,
+        "y0": 56.18,
+        "x1": 511.82,
+        "y1": 62.64
+      },
+      "text": "LOCAL PROGRAM OPERATOR DEPARTMENT OF AGRICULTURE\u2032 TRADE AND CONSUMER PROTECT:ON",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.893570306166437,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:4",
+      "locator": {
+        "page": 0,
+        "x0": 54.24,
+        "y0": 69.93,
+        "x1": 540.21,
+        "y1": 74.4
+      },
+      "text": "16300 Wo National Aveo New Beriin\u2032 Wi53151 0 Phone:262\u2010 785\u20106120 0 Fax:262\u2010 785\u20106130 0 un\u2033 u\u2234 newberiin.or8 0 SkOn(pnewberiin.org",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996202400157819,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:5",
+      "locator": {
+        "page": 0,
+        "x0": 27.84,
+        "y0": 90.28,
+        "x1": 408.6,
+        "y1": 110.16
+      },
+      "text": "Date: /_____\u2015 \u2015\u2015\u2015\u2015\u30ce Permit#T: Reviewed/Received By: Check#:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998688996646751,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:6",
+      "locator": {
+        "page": 0,
+        "x0": 27.36,
+        "y0": 119.5,
+        "x1": 475.932,
+        "y1": 172.32
+      },
+      "text": "Owner/or Occupancy: Job Site Address: Contractor: Contractor Address: Phone #: City: State: Zip Code:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999741483835798,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:7",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 187.856,
+        "x1": 515.89,
+        "y1": 192.96
+      },
+      "text": "UST/AST shall follow the requirements set by the Department of Agriculture, Trade and Consumer Protection (ATCP) code 93.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339976234182,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:8",
+      "locator": {
+        "page": 0,
+        "x0": 27.6,
+        "y0": 200.762,
+        "x1": 500.866,
+        "y1": 207.6
+      },
+      "text": "Type of Permit Fee Amount",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9923834734463982,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:9",
+      "locator": {
+        "page": 0,
+        "x0": 27.6,
+        "y0": 221.265,
+        "x1": 75.78,
+        "y1": 225.84
+      },
+      "text": "Plan Reviews:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6738272681855224,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:10",
+      "locator": {
+        "page": 0,
+        "x0": 48.72,
+        "y0": 228.597,
+        "x1": 466.722,
+        "y1": 237.84
+      },
+      "text": "Underground Storage Tank Installatlon S 150.00 / Tank # Tanks S",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991376739078495,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:11",
+      "locator": {
+        "page": 0,
+        "x0": 64.56,
+        "y0": 244.305,
+        "x1": 132.705,
+        "y1": 248.64
+      },
+      "text": "Under 5000 Gallons",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988491228665143,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:12",
+      "locator": {
+        "page": 0,
+        "x0": 48.24,
+        "y0": 252.117,
+        "x1": 466.612,
+        "y1": 261.6
+      },
+      "text": "Aboveground Storage Tank Installation S 150.00 / Tank S Tanks 5",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999741949614289,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:13",
+      "locator": {
+        "page": 0,
+        "x0": 48.24,
+        "y0": 268.065,
+        "x1": 201.0825,
+        "y1": 307.68
+      },
+      "text": "Under 5000 Gallons Portable Contractor Tanks New Construction (conversion to self-serve) Tank Updates",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99977078458439,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:14",
+      "locator": {
+        "page": 0,
+        "x0": 267.12,
+        "y0": 280.63,
+        "x1": 305.61,
+        "y1": 308.16
+      },
+      "text": "5 50.00 5 100.00 S 40.00",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997407026020845,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:15",
+      "locator": {
+        "page": 0,
+        "x0": 462.48,
+        "y0": 292.41,
+        "x1": 466.23,
+        "y1": 307.92
+      },
+      "text": "SS",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975741333906797,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:16",
+      "locator": {
+        "page": 0,
+        "x0": 27.36,
+        "y0": 321.46,
+        "x1": 69.36,
+        "y1": 324.96
+      },
+      "text": "inspections:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.605691709277356,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:17",
+      "locator": {
+        "page": 0,
+        "x0": 50.4,
+        "y0": 331.98,
+        "x1": 462.78,
+        "y1": 336.48
+      },
+      "text": "insta\u2016 ation of Tanks(UST`L AST) S80.00/Tank #Tanks S",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993040938342522,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:16"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:18",
+      "locator": {
+        "page": 0,
+        "x0": 50.16,
+        "y0": 343.616,
+        "x1": 124.1925,
+        "y1": 360.24
+      },
+      "text": "Addition of Upgrades Mandated Updates",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9960208408441499,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:16"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:19",
+      "locator": {
+        "page": 0,
+        "x0": 262.08,
+        "y0": 344.45,
+        "x1": 465.83,
+        "y1": 362.88
+      },
+      "text": "S45.00/Tank #Tanks______\u2015 \u2015\u2015\u2015 S S45.00/Tank #Tanks______\u2015 \u2015\u2026\u2026 S",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996660821508656,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:16"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:20",
+      "locator": {
+        "page": 0,
+        "x0": 26.88,
+        "y0": 373.425,
+        "x1": 82.4625,
+        "y1": 377.76
+      },
+      "text": "Tank Removals:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9530771510315782,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:16"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:21",
+      "locator": {
+        "page": 0,
+        "x0": 462.4,
+        "y0": 382.576,
+        "x1": 466.3531,
+        "y1": 384.576
+      },
+      "text": "\uff33",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9611453462938467,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:23",
+      "locator": {
+        "page": 0,
+        "x0": 52.08,
+        "y0": 384.176,
+        "x1": 118.065,
+        "y1": 388.8
+      },
+      "text": "A) 0 to 499 Gallons",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996239746243477,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:24",
+      "locator": {
+        "page": 0,
+        "x0": 52.08,
+        "y0": 384.465,
+        "x1": 61.665,
+        "y1": 388.8
+      },
+      "text": "A)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9936913857186757,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:33",
+      "locator": {
+        "page": 0,
+        "x0": 266.88,
+        "y0": 385.27,
+        "x1": 305.37,
+        "y1": 412.08
+      },
+      "text": "S 100.00 S 125.00 S 150.00",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996443103137277,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:34",
+      "locator": {
+        "page": 0,
+        "x0": 462.4,
+        "y0": 393.616,
+        "x1": 466.3531,
+        "y1": 395.616
+      },
+      "text": "\uff33",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968700300051747,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:25",
+      "locator": {
+        "page": 0,
+        "x0": 52.56,
+        "y0": 395.216,
+        "x1": 126.465,
+        "y1": 399.84
+      },
+      "text": "B) 500 to 999 Gallons",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994522750961337,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:26",
+      "locator": {
+        "page": 0,
+        "x0": 52.56,
+        "y0": 396.083,
+        "x1": 60.867,
+        "y1": 399.84
+      },
+      "text": "B)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9996333943614042,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:35",
+      "locator": {
+        "page": 0,
+        "x0": 462.16,
+        "y0": 405.616,
+        "x1": 466.1131,
+        "y1": 407.616
+      },
+      "text": "\uff33",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9925606451766202,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:27",
+      "locator": {
+        "page": 0,
+        "x0": 52.32,
+        "y0": 406.976,
+        "x1": 139.425,
+        "y1": 411.6
+      },
+      "text": "C) 1,000 to 2,999 Gallons",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992977211735685,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:28",
+      "locator": {
+        "page": 0,
+        "x0": 52.32,
+        "y0": 407.843,
+        "x1": 60.9845,
+        "y1": 411.6
+      },
+      "text": "C)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9957056332751918,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:29",
+      "locator": {
+        "page": 0,
+        "x0": 52.56,
+        "y0": 418.496,
+        "x1": 140.145,
+        "y1": 424.32
+      },
+      "text": "D) 3,000 to 4999 Gallons",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993809899729268,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:30",
+      "locator": {
+        "page": 0,
+        "x0": 52.56,
+        "y0": 419.074,
+        "x1": 61.891,
+        "y1": 423.12
+      },
+      "text": "D)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9952244718535191,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:36",
+      "locator": {
+        "page": 0,
+        "x0": 266.88,
+        "y0": 419.08,
+        "x1": 306.88,
+        "y1": 424.08
+      },
+      "text": "S 175.\u221e",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995704446404985,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:37",
+      "locator": {
+        "page": 0,
+        "x0": 462.24,
+        "y0": 420.33,
+        "x1": 465.99,
+        "y1": 424.08
+      },
+      "text": "S",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9893060768451463,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:31",
+      "locator": {
+        "page": 0,
+        "x0": 52.56,
+        "y0": 430.447,
+        "x1": 106.26,
+        "y1": 435.36
+      },
+      "text": "E) 5,fi)0 and up",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972390914087964,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:38",
+      "locator": {
+        "page": 0,
+        "x0": 266.88,
+        "y0": 431.59,
+        "x1": 305.13,
+        "y1": 435.84
+      },
+      "text": "S 200.00",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995140684488593,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:32",
+      "locator": {
+        "page": 0,
+        "x0": 52.56,
+        "y0": 431.892,
+        "x1": 60.228,
+        "y1": 435.36
+      },
+      "text": "E)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9975858830238473,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:39",
+      "locator": {
+        "page": 0,
+        "x0": 462.24,
+        "y0": 432.09,
+        "x1": 465.99,
+        "y1": 435.84
+      },
+      "text": "S",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9955235633822453,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:40",
+      "locator": {
+        "page": 0,
+        "x0": 27.36,
+        "y0": 444.597,
+        "x1": 309.081,
+        "y1": 467.76
+      },
+      "text": "Red Tag C.ompliance S 100.00 Relnspection Double Fees",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9987077643752242,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:41",
+      "locator": {
+        "page": 0,
+        "x0": 462.24,
+        "y0": 449.37,
+        "x1": 465.99,
+        "y1": 468.48
+      },
+      "text": "SS",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9954870661211133,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:42",
+      "locator": {
+        "page": 0,
+        "x0": 34.56,
+        "y0": 474.225,
+        "x1": 162.256,
+        "y1": 479.52
+      },
+      "text": "(Site not ready at appointment time)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997049409198187,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:43",
+      "locator": {
+        "page": 0,
+        "x0": 412.32,
+        "y0": 490.4,
+        "x1": 464.32,
+        "y1": 494.4
+      },
+      "text": "STATE FEES: S",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9637873409789127,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:44",
+      "locator": {
+        "page": 0,
+        "x0": 411.84,
+        "y0": 507.17,
+        "x1": 464.09,
+        "y1": 511.92
+      },
+      "text": "TOTALFEES S",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9845012829675668,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:45",
+      "locator": {
+        "page": 0,
+        "x0": 412.56,
+        "y0": 519.683,
+        "x1": 546.054,
+        "y1": 524.16
+      },
+      "text": "Make checks payable to: Clty of New Berlin",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994487878035001,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:46",
+      "locator": {
+        "page": 0,
+        "x0": 34.08,
+        "y0": 542.625,
+        "x1": 154.2975,
+        "y1": 547.2
+      },
+      "text": "ATTACHED PIANS/INFORMATION:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.7621808225834971,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:20"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:47",
+      "locator": {
+        "page": 0,
+        "x0": 44.4,
+        "y0": 550.437,
+        "x1": 113.847,
+        "y1": 582.24
+      },
+      "text": "tr 5 sets ofplans tr Specifications tr Site Safety Plan",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9823557074177675,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:48",
+      "locator": {
+        "page": 0,
+        "x0": 44.16,
+        "y0": 585.957,
+        "x1": 287.97,
+        "y1": 663.6
+      },
+      "text": "tr Plot plan drawn to a minimum scale of 1 inch = 20 feet tr Wisconsin Material Approval Numbers tr Location, size and capaclty ofeach tank tr Specifications describingthe spill and overspill protection devices D Typeofsecondarycontainment tr Type and operation ofcorrosion protection tr Location, offill, gauge and vent pipes",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997845379266262,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:49",
+      "locator": {
+        "page": 0,
+        "x0": 26.4,
+        "y0": 676.976,
+        "x1": 458.085,
+        "y1": 681.6
+      },
+      "text": "Agent Signature: Date:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968603709719094,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:50",
+      "locator": {
+        "page": 0,
+        "x0": 30.72,
+        "y0": 703.944,
+        "x1": 446.032,
+        "y1": 710.88
+      },
+      "text": "Date Received: Approved By:, Amount Approved:$",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994485537032295,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:51",
+      "locator": {
+        "page": 0,
+        "x0": 30.24,
+        "y0": 720.176,
+        "x1": 93.3375,
+        "y1": 724.8
+      },
+      "text": "Charge to Account",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9959559813111358,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:52",
+      "locator": {
+        "page": 0,
+        "x0": 106.8,
+        "y0": 733.94,
+        "x1": 494.7,
+        "y1": 739.68
+      },
+      "text": "WH:TE COPV\u2010 APPL:CAN\u4e01 \u25cfYELLOW COPY\u2010 F:RE DEPARTMENT\u25cf PiNK COPY\u2015 TREASURER",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9903127209488785,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:53",
+      "locator": {
+        "page": 0,
+        "x0": 161.28,
+        "y0": 746.72,
+        "x1": 292.4,
+        "y1": 753.12
+      },
+      "text": "\u2010 \u2033\u03b9\u529b\u61c3 Ch20 2\u03b8\u30ce\u30a4\u25cfZl\u2032\u305f\u03ba",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9947872124219256,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0825:54",
+      "locator": {
+        "page": 0,
+        "x0": 304.32,
+        "y0": 747.2,
+        "x1": 444.56,
+        "y1": 760.08
+      },
+      "text": "\u25a0\u2033P\u2033\u30c3\u03b9\u2033J\u308f\u2033\u03b1\u2033\u2033\u5a62 \u03b9\u2033b\u2033 B\u2033\u2033\u03b1 \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9797384540468537,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0825:55",
+      "locator": {
+        "page": 0,
+        "x0": 291.12,
+        "y0": 754.42,
+        "x1": 301.62,
+        "y1": 757.92
+      },
+      "text": "`\u25cf",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0825:1",
+        "c3-0825:46"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

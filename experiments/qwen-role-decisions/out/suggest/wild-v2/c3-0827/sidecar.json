@@ -1,0 +1,4876 @@
+{
+  "document": "c3-0827",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 243,
+    "cards_considered": 243,
+    "selector": "all-blocks",
+    "not_heading_confident": 241,
+    "table_vetoed": 8,
+    "table_not_heading_confident": 213,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0827:1",
+      "locator": {
+        "page": 0,
+        "x0": 33.61,
+        "y0": 98.72,
+        "x1": 408.4599,
+        "y1": 128.5
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Nonfamily households [7] DP-1 Profile of General Population and Housing Characteristics: 2010 2010 Demographic Profile Data",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.954046052869072,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0827:2",
+      "locator": {
+        "page": 0,
+        "x0": 33.61,
+        "y0": 98.72,
+        "x1": 408.4599,
+        "y1": 128.5
+      },
+      "text": "DP-1 Profile of General Population and Housing Characteristics: 2010 2010 Demographic Profile Data",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9455219329236072,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0827:3",
+      "locator": {
+        "page": 0,
+        "x0": 55.0,
+        "y0": 152.976,
+        "x1": 577.0079,
+        "y1": 157.6
+      },
+      "text": "NOTE: For more information on confidentiality protection, nonsampling error, and definitions, see http://www.census.gov/prod/cen2010/profiletd.pdf.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998205585326339,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:4",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 173.55,
+        "x1": 139.48,
+        "y1": 178.31
+      },
+      "text": "GEO: New Berlin city, Wisconsin",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7284461164202881,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:6",
+      "locator": {
+        "page": 0,
+        "x0": 102.55,
+        "y0": 198.21,
+        "x1": 131.446,
+        "y1": 202.97
+      },
+      "text": "Subject",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999261485801262,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:8",
+      "locator": {
+        "page": 0,
+        "x0": 233.89,
+        "y0": 198.21,
+        "x1": 264.114,
+        "y1": 202.97
+      },
+      "text": "Number",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997548269176676,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:10",
+      "locator": {
+        "page": 0,
+        "x0": 294.33,
+        "y0": 198.21,
+        "x1": 323.674,
+        "y1": 202.97
+      },
+      "text": "Percent",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999348312421145,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:12",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 208.976,
+        "x1": 92.808,
+        "y1": 741.6
+      },
+      "text": "SEX AND AGE \u00a0\u00a0Total population \u00a0\u00a0\u00a0\u00a0Under 5 years \u00a0\u00a0\u00a0\u00a05 to 9 years \u00a0\u00a0\u00a0\u00a010 to 14 years 15 to 19 years 20 to 24 years \u00a0\u00a0\u00a0\u00a025 to 29 years \u00a0\u00a0\u00a0\u00a030 to 34 years \u00a0\u00a0\u00a0\u00a035 to 39 years \u00a0\u00a0\u00a0\u00a040 to 44 years \u00a0\u00a0\u00a0\u00a045 to 49 years \u00a0\u00a0\u00a0\u00a050 to 54 years \u00a0\u00a0\u00a0\u00a055 to 59 years \u00a0\u00a0\u00a0\u00a060 to 64 years \u00a0\u00a0\u00a0\u00a065 to 69 years \u00a0\u00a0\u00a0\u00a070 to 74 years \u00a0\u00a0\u00a0\u00a075 to 79 years \u00a0\u00a0\u00a0\u00a080 to 84 years \u00a0\u00a0\u00a0\u00a085 years and over \u00a0\u00a0\u00a0\u00a0Median age (years) \u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over 21 years and over \u00a0\u00a0\u00a0\u00a062 years and over \u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0Male population \u00a0\u00a0\u00a0\u00a0Under 5 years \u00a0\u00a0\u00a0\u00a05 to 9 years \u00a0\u00a0\u00a0\u00a010 to 14 years \u00a0\u00a0\u00a0\u00a015 to 19 years \u00a0\u00a0\u00a0\u00a020 to 24 years \u00a0\u00a0\u00a0\u00a025 to 29 years \u00a0\u00a0\u00a0\u00a030 to 34 years \u00a0\u00a0\u00a0\u00a035 to 39 years \u00a0\u00a0\u00a0\u00a040 to 44 years \u00a0\u00a0\u00a0\u00a045 to 49 years \u00a0\u00a0\u00a0\u00a050 to 54 years \u00a0\u00a0\u00a0\u00a055 to 59 years \u00a0\u00a0\u00a0\u00a060 to 64 years \u00a0\u00a0\u00a0\u00a065 to 69 years \u00a0\u00a0\u00a0\u00a070 to 74 years \u00a0\u00a0\u00a0\u00a075 to 79 years \u00a0\u00a0\u00a0\u00a080 to 84 years \u00a0\u00a0\u00a0\u00a085 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991021075906008,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:13",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 208.976,
+        "x1": 69.24,
+        "y1": 213.6
+      },
+      "text": "SEX AND AGE",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9969783483708556,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:14",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 220.976,
+        "x1": 76.368,
+        "y1": 261.6
+      },
+      "text": "\u00a0\u00a0Total population \u00a0\u00a0\u00a0\u00a0Under 5 years \u00a0\u00a0\u00a0\u00a05 to 9 years \u00a0\u00a0\u00a0\u00a010 to 14 years",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992090682160286,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:25",
+      "locator": {
+        "page": 0,
+        "x0": 253.54,
+        "y0": 222.326,
+        "x1": 278.004,
+        "y1": 742.95
+      },
+      "text": "39,584 1,829 2,360 2,628 2,339 1,753 2,084 1,986 2,141 2,726 3,402 3,794 3,266 2,585 1,840 1,432 1,365 1,088 966 44.9 32,252 31,147 30,129 8,169 6,691 19,239 944 1,206 1,287 1,221 878 1,077 988 1,022 1,361 1,624 1,845 1,613 1,273 882 635 589 450 344",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:26",
+      "locator": {
+        "page": 0,
+        "x0": 253.54,
+        "y0": 222.326,
+        "x1": 278.004,
+        "y1": 226.95
+      },
+      "text": "39,584",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:59",
+      "locator": {
+        "page": 0,
+        "x0": 317.98,
+        "y0": 222.326,
+        "x1": 338.002,
+        "y1": 742.95
+      },
+      "text": "100.0 4.6 6.0 6.6 5.9 4.4 5.3 5.0 5.4 6.9 8.6 9.6 8.3 6.5 4.6 3.6 3.4 2.7 2.4 ( X ) 81.5 78.7 76.1 20.6 16.9 48.6 2.4 3.0 3.3 3.1 2.2 2.7 2.5 2.6 3.4 4.1 4.7 4.1 3.2 2.2 1.6 1.5 1.1 0.9",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:60",
+      "locator": {
+        "page": 0,
+        "x0": 317.98,
+        "y0": 222.326,
+        "x1": 338.0,
+        "y1": 442.95
+      },
+      "text": "100.0 4.6 6.0 6.6 5.9 4.4 5.3 5.0 5.4 6.9 8.6 9.6 8.3 6.5 4.6 3.6 3.4 2.7 2.4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:28",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 234.326,
+        "x1": 277.996,
+        "y1": 238.95
+      },
+      "text": "1,829",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:29",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 234.326,
+        "x1": 264.652,
+        "y1": 238.95
+      },
+      "text": "1,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:30",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 246.326,
+        "x1": 277.996,
+        "y1": 274.95
+      },
+      "text": "2,360 2,628 2,339",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:31",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 246.326,
+        "x1": 264.652,
+        "y1": 250.95
+      },
+      "text": "2,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:17",
+      "locator": {
+        "page": 0,
+        "x0": 23.896,
+        "y0": 268.976,
+        "x1": 32.792,
+        "y1": 273.6
+      },
+      "text": "15",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:19",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 280.976,
+        "x1": 92.808,
+        "y1": 477.6
+      },
+      "text": "20 to 24 years \u00a0\u00a0\u00a0\u00a025 to 29 years \u00a0\u00a0\u00a0\u00a030 to 34 years \u00a0\u00a0\u00a0\u00a035 to 39 years \u00a0\u00a0\u00a0\u00a040 to 44 years \u00a0\u00a0\u00a0\u00a045 to 49 years \u00a0\u00a0\u00a0\u00a050 to 54 years \u00a0\u00a0\u00a0\u00a055 to 59 years \u00a0\u00a0\u00a0\u00a060 to 64 years \u00a0\u00a0\u00a0\u00a065 to 69 years \u00a0\u00a0\u00a0\u00a070 to 74 years \u00a0\u00a0\u00a0\u00a075 to 79 years \u00a0\u00a0\u00a0\u00a080 to 84 years \u00a0\u00a0\u00a0\u00a085 years and over \u00a0\u00a0\u00a0\u00a0Median age (years) \u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998225478701349,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:20",
+      "locator": {
+        "page": 0,
+        "x0": 23.896,
+        "y0": 280.976,
+        "x1": 32.792,
+        "y1": 285.6
+      },
+      "text": "20",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:33",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 282.326,
+        "x1": 277.996,
+        "y1": 286.95
+      },
+      "text": "1,753",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:34",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 282.326,
+        "x1": 264.652,
+        "y1": 286.95
+      },
+      "text": "1,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:35",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 294.326,
+        "x1": 277.996,
+        "y1": 358.95
+      },
+      "text": "2,084 1,986 2,141 2,726 3,402 3,794",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:36",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 294.326,
+        "x1": 264.652,
+        "y1": 298.95
+      },
+      "text": "2,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:38",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 306.326,
+        "x1": 277.996,
+        "y1": 310.95
+      },
+      "text": "1,986",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:39",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 306.326,
+        "x1": 264.652,
+        "y1": 310.95
+      },
+      "text": "1,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:40",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 318.326,
+        "x1": 277.996,
+        "y1": 346.95
+      },
+      "text": "2,141 2,726 3,402",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:41",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 318.326,
+        "x1": 264.652,
+        "y1": 322.95
+      },
+      "text": "2,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:43",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 330.326,
+        "x1": 277.996,
+        "y1": 334.95
+      },
+      "text": "2,726",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:44",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 330.326,
+        "x1": 264.652,
+        "y1": 334.95
+      },
+      "text": "2,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:45",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 342.326,
+        "x1": 277.996,
+        "y1": 346.95
+      },
+      "text": "3,402",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:46",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 342.326,
+        "x1": 264.652,
+        "y1": 346.95
+      },
+      "text": "3,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:47",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 354.326,
+        "x1": 277.996,
+        "y1": 358.95
+      },
+      "text": "3,794",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:48",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 354.326,
+        "x1": 264.652,
+        "y1": 358.95
+      },
+      "text": "3,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:49",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 366.326,
+        "x1": 277.996,
+        "y1": 430.95
+      },
+      "text": "3,266 2,585 1,840 1,432 1,365 1,088",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:50",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 366.326,
+        "x1": 264.652,
+        "y1": 370.95
+      },
+      "text": "3,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:51",
+      "locator": {
+        "page": 0,
+        "x0": 264.66,
+        "y0": 438.326,
+        "x1": 278.004,
+        "y1": 442.95
+      },
+      "text": "966",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:52",
+      "locator": {
+        "page": 0,
+        "x0": 253.54,
+        "y0": 450.326,
+        "x1": 278.004,
+        "y1": 490.95
+      },
+      "text": "44.9 32,252 31,147 30,129",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:61",
+      "locator": {
+        "page": 0,
+        "x0": 322.43,
+        "y0": 450.326,
+        "x1": 338.002,
+        "y1": 526.95
+      },
+      "text": "( X ) 81.5 78.7 76.1 20.6 16.9 48.6",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:21",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 460.976,
+        "x1": 87.928,
+        "y1": 477.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998233369716235,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:22",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 484.976,
+        "x1": 87.928,
+        "y1": 513.6
+      },
+      "text": "21 years and over \u00a0\u00a0\u00a0\u00a062 years and over \u00a0\u00a0\u00a0\u00a065 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997723956178586,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:23",
+      "locator": {
+        "page": 0,
+        "x0": 23.896,
+        "y0": 484.976,
+        "x1": 32.792,
+        "y1": 489.6
+      },
+      "text": "21",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:53",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 498.326,
+        "x1": 277.996,
+        "y1": 514.95
+      },
+      "text": "8,169 6,691",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:24",
+      "locator": {
+        "page": 0,
+        "x0": 15.0,
+        "y0": 520.976,
+        "x1": 87.928,
+        "y1": 741.6
+      },
+      "text": "\u00a0\u00a0Male population \u00a0\u00a0\u00a0\u00a0Under 5 years \u00a0\u00a0\u00a0\u00a05 to 9 years \u00a0\u00a0\u00a0\u00a010 to 14 years \u00a0\u00a0\u00a0\u00a015 to 19 years \u00a0\u00a0\u00a0\u00a020 to 24 years \u00a0\u00a0\u00a0\u00a025 to 29 years \u00a0\u00a0\u00a0\u00a030 to 34 years \u00a0\u00a0\u00a0\u00a035 to 39 years \u00a0\u00a0\u00a0\u00a040 to 44 years \u00a0\u00a0\u00a0\u00a045 to 49 years \u00a0\u00a0\u00a0\u00a050 to 54 years \u00a0\u00a0\u00a0\u00a055 to 59 years \u00a0\u00a0\u00a0\u00a060 to 64 years \u00a0\u00a0\u00a0\u00a065 to 69 years \u00a0\u00a0\u00a0\u00a070 to 74 years \u00a0\u00a0\u00a0\u00a075 to 79 years \u00a0\u00a0\u00a0\u00a080 to 84 years \u00a0\u00a0\u00a0\u00a085 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999821210935276,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:54",
+      "locator": {
+        "page": 0,
+        "x0": 253.54,
+        "y0": 522.326,
+        "x1": 278.004,
+        "y1": 526.95
+      },
+      "text": "19,239",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:55",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 534.326,
+        "x1": 278.004,
+        "y1": 574.95
+      },
+      "text": "944 1,206 1,287 1,221",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:62",
+      "locator": {
+        "page": 0,
+        "x0": 326.88,
+        "y0": 534.326,
+        "x1": 338.0,
+        "y1": 742.95
+      },
+      "text": "2.4 3.0 3.3 3.1 2.2 2.7 2.5 2.6 3.4 4.1 4.7 4.1 3.2 2.2 1.6 1.5 1.1 0.9",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:56",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 582.326,
+        "x1": 278.004,
+        "y1": 598.95
+      },
+      "text": "878 1,077",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:57",
+      "locator": {
+        "page": 0,
+        "x0": 257.98,
+        "y0": 606.326,
+        "x1": 278.004,
+        "y1": 682.95
+      },
+      "text": "988 1,022 1,361 1,624 1,845 1,613 1,273",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:58",
+      "locator": {
+        "page": 0,
+        "x0": 264.66,
+        "y0": 690.326,
+        "x1": 278.004,
+        "y1": 742.95
+      },
+      "text": "882 635 589 450 344",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:0",
+      "locator": {
+        "page": 1,
+        "x0": 102.55,
+        "y0": 14.21,
+        "x1": 131.446,
+        "y1": 18.97
+      },
+      "text": "Subject",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9986111286051877,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:66",
+      "locator": {
+        "page": 1,
+        "x0": 233.89,
+        "y0": 14.21,
+        "x1": 264.114,
+        "y1": 18.97
+      },
+      "text": "Number",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:68",
+      "locator": {
+        "page": 1,
+        "x0": 294.33,
+        "y0": 14.21,
+        "x1": 323.674,
+        "y1": 18.97
+      },
+      "text": "Percent",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:70",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 24.976,
+        "x1": 205.304,
+        "y1": 743.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Median age (years) \u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over \u00a0\u00a0\u00a0\u00a021 years and over \u00a0\u00a0\u00a0\u00a062 years and over \u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0Female population \u00a0\u00a0\u00a0\u00a0Under 5 years \u00a0\u00a0\u00a0\u00a05 to 9 years \u00a0\u00a0\u00a0\u00a010 to 14 years 15 to 19 years 20 to 24 years \u00a0\u00a0\u00a0\u00a025 to 29 years \u00a0\u00a0\u00a0\u00a030 to 34 years \u00a0\u00a0\u00a0\u00a035 to 39 years \u00a0\u00a0\u00a0\u00a040 to 44 years \u00a0\u00a0\u00a0\u00a045 to 49 years \u00a0\u00a0\u00a0\u00a050 to 54 years \u00a0\u00a0\u00a0\u00a055 to 59 years \u00a0\u00a0\u00a0\u00a060 to 64 years \u00a0\u00a0\u00a0\u00a065 to 69 years \u00a0\u00a0\u00a0\u00a070 to 74 years \u00a0\u00a0\u00a0\u00a075 to 79 years \u00a0\u00a0\u00a0\u00a080 to 84 years \u00a0\u00a0\u00a0\u00a085 years and over \u00a0\u00a0\u00a0\u00a0Median age (years) \u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over 21 years and over \u00a0\u00a0\u00a0\u00a062 years and over \u00a0\u00a0\u00a0\u00a065 years and over RACE \u00a0\u00a0Total population \u00a0\u00a0\u00a0\u00a0One Race \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Black or African American \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian Indian \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Chinese \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Filipino \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Japanese \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Korean \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Vietnamese \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other Asian [1] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Guamanian or Chamorro \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Samoan \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other Pacific Islander [2] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Some Other Race \u00a0\u00a0\u00a0\u00a0Two or More Races \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; American Indian and Alaska Native [3] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; Asian [3] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; Black or African American [3] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; Some Other Race [3] \u00a0\u00a0Race alone or in combination with one or more other races: [4] \u00a0\u00a0\u00a0\u00a0White \u00a0\u00a0\u00a0\u00a0Black or African American \u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997425561018942,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:71",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 24.976,
+        "x1": 92.808,
+        "y1": 89.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Median age (years) \u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over \u00a0\u00a0\u00a0\u00a021 years and over \u00a0\u00a0\u00a0\u00a062 years and over \u00a0\u00a0\u00a0\u00a065 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993807425861313,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:90",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 26.326,
+        "x1": 278.004,
+        "y1": 744.95
+      },
+      "text": "43.8 15,542 14,954 14,429 3,630 2,900 20,345 885 1,154 1,341 1,118 875 1,007 998 1,119 1,365 1,778 1,949 1,653 1,312 958 797 776 638 622 45.9 16,710 16,193 15,700 4,539 3,791 39,584 39,129 36,987 290 118 1,492 576 380 103 40 109 81 203 10 3 1 0 6 232 455 86 141 93 62 37,412 413 238",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:91",
+      "locator": {
+        "page": 1,
+        "x0": 262.43,
+        "y0": 26.326,
+        "x1": 277.998,
+        "y1": 30.95
+      },
+      "text": "43.8",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:122",
+      "locator": {
+        "page": 1,
+        "x0": 317.98,
+        "y0": 26.326,
+        "x1": 338.002,
+        "y1": 744.95
+      },
+      "text": "( X ) 39.3 37.8 36.5 9.2 7.3 51.4 2.2 2.9 3.4 2.8 2.2 2.5 2.5 2.8 3.4 4.5 4.9 4.2 3.3 2.4 2.0 2.0 1.6 1.6 ( X ) 42.2 40.9 39.7 11.5 9.6 100.0 98.9 93.4 0.7 0.3 3.8 1.5 1.0 0.3 0.1 0.3 0.2 0.5 0.0 0.0 0.0 0.0 0.0 0.6 1.1 0.2 0.4 0.2 0.2 94.5 1.0 0.6",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:123",
+      "locator": {
+        "page": 1,
+        "x0": 322.43,
+        "y0": 26.326,
+        "x1": 338.002,
+        "y1": 66.95
+      },
+      "text": "( X ) 39.3 37.8 36.5",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:94",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 38.326,
+        "x1": 264.66,
+        "y1": 42.95
+      },
+      "text": "15,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:96",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 62.326,
+        "x1": 278.004,
+        "y1": 354.95
+      },
+      "text": "14,429 3,630 2,900 20,345 885 1,154 1,341 1,118 875 1,007 998 1,119 1,365 1,778 1,949 1,653 1,312 958 797 776 638 622 45.9 16,710 16,193",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:97",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 62.326,
+        "x1": 264.66,
+        "y1": 66.95
+      },
+      "text": "14,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:124",
+      "locator": {
+        "page": 1,
+        "x0": 326.88,
+        "y0": 74.326,
+        "x1": 338.0,
+        "y1": 90.95
+      },
+      "text": "9.2 7.3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:72",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 96.976,
+        "x1": 85.256,
+        "y1": 137.6
+      },
+      "text": "\u00a0\u00a0Female population \u00a0\u00a0\u00a0\u00a0Under 5 years \u00a0\u00a0\u00a0\u00a05 to 9 years \u00a0\u00a0\u00a0\u00a010 to 14 years",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995182719936474,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:98",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 98.326,
+        "x1": 278.004,
+        "y1": 102.95
+      },
+      "text": "20,345",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:125",
+      "locator": {
+        "page": 1,
+        "x0": 322.43,
+        "y0": 98.326,
+        "x1": 338.0,
+        "y1": 318.95
+      },
+      "text": "51.4 2.2 2.9 3.4 2.8 2.2 2.5 2.5 2.8 3.4 4.5 4.9 4.2 3.3 2.4 2.0 2.0 1.6 1.6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:99",
+      "locator": {
+        "page": 1,
+        "x0": 257.98,
+        "y0": 110.326,
+        "x1": 278.004,
+        "y1": 138.95
+      },
+      "text": "885 1,154 1,341",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:75",
+      "locator": {
+        "page": 1,
+        "x0": 23.896,
+        "y0": 144.976,
+        "x1": 32.792,
+        "y1": 149.6
+      },
+      "text": "15",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:101",
+      "locator": {
+        "page": 1,
+        "x0": 257.98,
+        "y0": 146.326,
+        "x1": 278.004,
+        "y1": 186.95
+      },
+      "text": "1,118 875 1,007 998",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:102",
+      "locator": {
+        "page": 1,
+        "x0": 257.98,
+        "y0": 146.326,
+        "x1": 277.996,
+        "y1": 150.95
+      },
+      "text": "1,118",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:77",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 156.976,
+        "x1": 92.808,
+        "y1": 353.6
+      },
+      "text": "20 to 24 years \u00a0\u00a0\u00a0\u00a025 to 29 years \u00a0\u00a0\u00a0\u00a030 to 34 years \u00a0\u00a0\u00a0\u00a035 to 39 years \u00a0\u00a0\u00a0\u00a040 to 44 years \u00a0\u00a0\u00a0\u00a045 to 49 years \u00a0\u00a0\u00a0\u00a050 to 54 years \u00a0\u00a0\u00a0\u00a055 to 59 years \u00a0\u00a0\u00a0\u00a060 to 64 years \u00a0\u00a0\u00a0\u00a065 to 69 years \u00a0\u00a0\u00a0\u00a070 to 74 years \u00a0\u00a0\u00a0\u00a075 to 79 years \u00a0\u00a0\u00a0\u00a080 to 84 years \u00a0\u00a0\u00a0\u00a085 years and over \u00a0\u00a0\u00a0\u00a0Median age (years) \u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994536256644686,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:78",
+      "locator": {
+        "page": 1,
+        "x0": 23.896,
+        "y0": 156.976,
+        "x1": 32.792,
+        "y1": 161.6
+      },
+      "text": "20",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:103",
+      "locator": {
+        "page": 1,
+        "x0": 257.98,
+        "y0": 170.326,
+        "x1": 278.004,
+        "y1": 186.95
+      },
+      "text": "1,007 998",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:104",
+      "locator": {
+        "page": 1,
+        "x0": 257.98,
+        "y0": 194.326,
+        "x1": 277.996,
+        "y1": 258.95
+      },
+      "text": "1,119 1,365 1,778 1,949 1,653 1,312",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:105",
+      "locator": {
+        "page": 1,
+        "x0": 257.98,
+        "y0": 194.326,
+        "x1": 277.996,
+        "y1": 198.95
+      },
+      "text": "1,119",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:106",
+      "locator": {
+        "page": 1,
+        "x0": 264.66,
+        "y0": 266.326,
+        "x1": 278.004,
+        "y1": 318.95
+      },
+      "text": "958 797 776 638 622",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:107",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 326.326,
+        "x1": 278.004,
+        "y1": 354.95
+      },
+      "text": "45.9 16,710 16,193",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:126",
+      "locator": {
+        "page": 1,
+        "x0": 322.43,
+        "y0": 326.326,
+        "x1": 338.002,
+        "y1": 378.95
+      },
+      "text": "( X ) 42.2 40.9 39.7 11.5",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:79",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 336.976,
+        "x1": 87.928,
+        "y1": 353.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a016 years and over \u00a0\u00a0\u00a0\u00a018 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999667540639611,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:80",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 360.976,
+        "x1": 87.928,
+        "y1": 389.6
+      },
+      "text": "21 years and over \u00a0\u00a0\u00a0\u00a062 years and over \u00a0\u00a0\u00a0\u00a065 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996675415915498,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:81",
+      "locator": {
+        "page": 1,
+        "x0": 23.896,
+        "y0": 360.976,
+        "x1": 32.792,
+        "y1": 365.6
+      },
+      "text": "21",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:108",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 362.326,
+        "x1": 278.004,
+        "y1": 390.95
+      },
+      "text": "15,700 4,539 3,791",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:109",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 362.326,
+        "x1": 264.66,
+        "y1": 366.95
+      },
+      "text": "15,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:127",
+      "locator": {
+        "page": 1,
+        "x0": 326.88,
+        "y0": 386.326,
+        "x1": 338.0,
+        "y1": 390.95
+      },
+      "text": "9.6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:82",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 396.976,
+        "x1": 76.368,
+        "y1": 413.6
+      },
+      "text": "RACE \u00a0\u00a0Total population",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9842291336374231,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:110",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 410.326,
+        "x1": 278.004,
+        "y1": 426.95
+      },
+      "text": "39,584 39,129",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:128",
+      "locator": {
+        "page": 1,
+        "x0": 317.98,
+        "y0": 410.326,
+        "x1": 337.998,
+        "y1": 438.95
+      },
+      "text": "100.0 98.9 93.4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:83",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 420.976,
+        "x1": 152.84,
+        "y1": 473.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0One Race \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Black or African American \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991076361675545,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:112",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 434.326,
+        "x1": 278.004,
+        "y1": 690.95
+      },
+      "text": "36,987 290 118 1,492 576 380 103 40 109 81 203 10 3 1 0 6 232 455 86 141 93 62",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:113",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 434.326,
+        "x1": 264.66,
+        "y1": 438.95
+      },
+      "text": "36,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:129",
+      "locator": {
+        "page": 1,
+        "x0": 326.88,
+        "y0": 446.326,
+        "x1": 338.0,
+        "y1": 690.95
+      },
+      "text": "0.7 0.3 3.8 1.5 1.0 0.3 0.1 0.3 0.2 0.5 0.0 0.0 0.0 0.0 0.0 0.6 1.1 0.2 0.4 0.2 0.2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:114",
+      "locator": {
+        "page": 1,
+        "x0": 257.98,
+        "y0": 470.326,
+        "x1": 278.004,
+        "y1": 510.95
+      },
+      "text": "1,492 576 380 103",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:84",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 480.976,
+        "x1": 86.152,
+        "y1": 557.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian Indian \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Chinese \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Filipino \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Japanese \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Korean \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Vietnamese \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other Asian [1]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998981749491798,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:115",
+      "locator": {
+        "page": 1,
+        "x0": 264.66,
+        "y0": 518.326,
+        "x1": 278.004,
+        "y1": 558.95
+      },
+      "text": "40 109 81 203",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:85",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 564.976,
+        "x1": 180.4,
+        "y1": 617.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Guamanian or Chamorro \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Samoan \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other Pacific Islander [2]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999042456493601,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:116",
+      "locator": {
+        "page": 1,
+        "x0": 269.1,
+        "y0": 566.326,
+        "x1": 277.998,
+        "y1": 618.95
+      },
+      "text": "103106",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:86",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 624.976,
+        "x1": 92.368,
+        "y1": 629.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Some Other Race",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997717365776327,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:117",
+      "locator": {
+        "page": 1,
+        "x0": 264.66,
+        "y0": 626.326,
+        "x1": 278.004,
+        "y1": 642.95
+      },
+      "text": "232 455",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:87",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 636.976,
+        "x1": 188.856,
+        "y1": 689.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Two or More Races \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; American Indian and Alaska Native [3] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; Asian [3] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; Black or African American [3] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White; Some Other Race [3]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995748456591301,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:118",
+      "locator": {
+        "page": 1,
+        "x0": 269.1,
+        "y0": 650.326,
+        "x1": 277.996,
+        "y1": 654.95
+      },
+      "text": "86",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:119",
+      "locator": {
+        "page": 1,
+        "x0": 264.66,
+        "y0": 662.326,
+        "x1": 278.004,
+        "y1": 690.95
+      },
+      "text": "141 93 62",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:88",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 696.976,
+        "x1": 205.304,
+        "y1": 701.6
+      },
+      "text": "\u00a0\u00a0Race alone or in combination with one or more other",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9818334720902938,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:89",
+      "locator": {
+        "page": 1,
+        "x0": 15.0,
+        "y0": 706.286,
+        "x1": 148.392,
+        "y1": 743.6
+      },
+      "text": "races: [4] \u00a0\u00a0\u00a0\u00a0White \u00a0\u00a0\u00a0\u00a0Black or African American \u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993069367967101,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:120",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 716.326,
+        "x1": 278.004,
+        "y1": 744.95
+      },
+      "text": "37,412 413 238",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:121",
+      "locator": {
+        "page": 1,
+        "x0": 253.54,
+        "y0": 716.326,
+        "x1": 264.66,
+        "y1": 720.95
+      },
+      "text": "37,",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:130",
+      "locator": {
+        "page": 1,
+        "x0": 322.43,
+        "y0": 716.326,
+        "x1": 338.0,
+        "y1": 744.95
+      },
+      "text": "94.5 1.0 0.6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:132",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 14.21,
+        "x1": 175.952,
+        "y1": 65.6
+      },
+      "text": "Subject \u00a0\u00a0\u00a0\u00a0Asian \u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander \u00a0\u00a0\u00a0\u00a0Some Other Race HISPANIC OR LATINO",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968089040752869,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:133",
+      "locator": {
+        "page": 2,
+        "x0": 102.55,
+        "y0": 14.21,
+        "x1": 131.446,
+        "y1": 18.97
+      },
+      "text": "Subject",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9988003896297346,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:135",
+      "locator": {
+        "page": 2,
+        "x0": 233.89,
+        "y0": 14.21,
+        "x1": 278.004,
+        "y1": 54.95
+      },
+      "text": "Number 1,668 23 324",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996664160277564,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:136",
+      "locator": {
+        "page": 2,
+        "x0": 233.89,
+        "y0": 14.21,
+        "x1": 264.114,
+        "y1": 18.97
+      },
+      "text": "Number",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:138",
+      "locator": {
+        "page": 2,
+        "x0": 294.33,
+        "y0": 14.21,
+        "x1": 338.0,
+        "y1": 54.95
+      },
+      "text": "Percent 4.2 0.1 0.8",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991019981612733,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:139",
+      "locator": {
+        "page": 2,
+        "x0": 294.33,
+        "y0": 14.21,
+        "x1": 323.674,
+        "y1": 18.97
+      },
+      "text": "Percent",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:134",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 24.976,
+        "x1": 175.952,
+        "y1": 65.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Asian \u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander \u00a0\u00a0\u00a0\u00a0Some Other Race HISPANIC OR LATINO",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988799262996166,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:137",
+      "locator": {
+        "page": 2,
+        "x0": 257.98,
+        "y0": 26.326,
+        "x1": 278.004,
+        "y1": 54.95
+      },
+      "text": "1,668 23 324",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:140",
+      "locator": {
+        "page": 2,
+        "x0": 326.88,
+        "y0": 26.326,
+        "x1": 338.0,
+        "y1": 54.95
+      },
+      "text": "4.2 0.1 0.8",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:141",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 72.976,
+        "x1": 141.688,
+        "y1": 161.6
+      },
+      "text": "\u00a0\u00a0Total population \u00a0\u00a0\u00a0\u00a0Hispanic or Latino (of any race) \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Mexican \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Puerto Rican \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Cuban \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other Hispanic or Latino [5] \u00a0\u00a0\u00a0\u00a0Not Hispanic or Latino HISPANIC OR LATINO AND RACE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9922673018906972,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:142",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 72.976,
+        "x1": 76.368,
+        "y1": 77.6
+      },
+      "text": "\u00a0\u00a0Total population",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996213974085033,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:145",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 74.326,
+        "x1": 278.004,
+        "y1": 150.95
+      },
+      "text": "39,584 1,036 635 181 24 196 38,548",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:146",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 74.326,
+        "x1": 278.004,
+        "y1": 78.95
+      },
+      "text": "39,584",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:149",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 74.326,
+        "x1": 338.0,
+        "y1": 150.95
+      },
+      "text": "100.0 2.6 1.6 0.5 0.1 0.5 97.4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:150",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 74.326,
+        "x1": 338.0,
+        "y1": 138.95
+      },
+      "text": "100.0 2.6 1.6 0.5 0.1 0.5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:143",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 84.976,
+        "x1": 135.048,
+        "y1": 137.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Hispanic or Latino (of any race) \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Mexican \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Puerto Rican \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Cuban \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other Hispanic or Latino [5]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997972249237138,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:147",
+      "locator": {
+        "page": 2,
+        "x0": 257.98,
+        "y0": 86.326,
+        "x1": 278.004,
+        "y1": 114.95
+      },
+      "text": "1,036 635 181",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:148",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 122.326,
+        "x1": 278.004,
+        "y1": 150.95
+      },
+      "text": "24 196 38,548",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:144",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 144.976,
+        "x1": 141.688,
+        "y1": 161.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Not Hispanic or Latino HISPANIC OR LATINO AND RACE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964694423231983,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:151",
+      "locator": {
+        "page": 2,
+        "x0": 322.43,
+        "y0": 146.326,
+        "x1": 337.998,
+        "y1": 150.95
+      },
+      "text": "97.4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:152",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 168.976,
+        "x1": 202.192,
+        "y1": 377.6
+      },
+      "text": "\u00a0\u00a0Total population \u00a0\u00a0\u00a0\u00a0Hispanic or Latino \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Black or African American alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Some Other Race alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Two or More Races \u00a0\u00a0\u00a0\u00a0Not Hispanic or Latino \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Black or African American alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Some Other Race alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Two or More Races RELATIONSHIP",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9955115308818403,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:153",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 168.976,
+        "x1": 76.368,
+        "y1": 173.6
+      },
+      "text": "\u00a0\u00a0Total population",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990912189755312,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:156",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 170.326,
+        "x1": 278.004,
+        "y1": 366.95
+      },
+      "text": "39,584 1,036 695 3 17 0 0 216 105 38,548 36,292 287 101 1,492 10 16 350",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:157",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 170.326,
+        "x1": 278.004,
+        "y1": 210.95
+      },
+      "text": "39,584 1,036 695 3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:164",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 170.326,
+        "x1": 338.0,
+        "y1": 366.95
+      },
+      "text": "100.0 2.6 1.8 0.0 0.0 0.0 0.0 0.5 0.3 97.4 91.7 0.7 0.3 3.8 0.0 0.0 0.9",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:165",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 170.326,
+        "x1": 338.0,
+        "y1": 270.95
+      },
+      "text": "100.0 2.6 1.8 0.0 0.0 0.0 0.0 0.5 0.3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:154",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 180.976,
+        "x1": 202.192,
+        "y1": 365.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Hispanic or Latino \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Black or African American alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Some Other Race alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Two or More Races \u00a0\u00a0\u00a0\u00a0Not Hispanic or Latino \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0White alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Black or African American alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0American Indian and Alaska Native alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Asian alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Native Hawaiian and Other Pacific Islander alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Some Other Race alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Two or More Races",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993769685182181,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:158",
+      "locator": {
+        "page": 2,
+        "x0": 269.1,
+        "y0": 218.326,
+        "x1": 277.998,
+        "y1": 246.95
+      },
+      "text": "17 0 0",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:159",
+      "locator": {
+        "page": 2,
+        "x0": 264.66,
+        "y0": 254.326,
+        "x1": 278.004,
+        "y1": 270.95
+      },
+      "text": "216 105",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:160",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 278.326,
+        "x1": 278.004,
+        "y1": 294.95
+      },
+      "text": "38,548 36,292",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:166",
+      "locator": {
+        "page": 2,
+        "x0": 322.43,
+        "y0": 278.326,
+        "x1": 337.998,
+        "y1": 294.95
+      },
+      "text": "97.4 91.7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:161",
+      "locator": {
+        "page": 2,
+        "x0": 264.66,
+        "y0": 302.326,
+        "x1": 278.004,
+        "y1": 318.95
+      },
+      "text": "287 101",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:167",
+      "locator": {
+        "page": 2,
+        "x0": 326.88,
+        "y0": 302.326,
+        "x1": 338.0,
+        "y1": 366.95
+      },
+      "text": "0.7 0.3 3.8 0.0 0.0 0.9",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:162",
+      "locator": {
+        "page": 2,
+        "x0": 257.98,
+        "y0": 326.326,
+        "x1": 277.996,
+        "y1": 354.95
+      },
+      "text": "1,492 10 16",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:163",
+      "locator": {
+        "page": 2,
+        "x0": 264.66,
+        "y0": 362.326,
+        "x1": 278.004,
+        "y1": 366.95
+      },
+      "text": "350",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:155",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 372.976,
+        "x1": 73.68,
+        "y1": 377.6
+      },
+      "text": "RELATIONSHIP",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.5313498004096622,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:168",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 384.976,
+        "x1": 136.84,
+        "y1": 629.6
+      },
+      "text": "\u00a0\u00a0Total population \u00a0\u00a0\u00a0\u00a0In households \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Householder \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Spouse [6] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Child \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Own child under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other relatives \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Nonrelatives \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Unmarried partner \u00a0\u00a0\u00a0\u00a0In group quarters \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Institutionalized population \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Noninstitutionalized population \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female HOUSEHOLDS BY TYPE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9978897618125648,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:169",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 384.976,
+        "x1": 76.368,
+        "y1": 437.6
+      },
+      "text": "\u00a0\u00a0Total population \u00a0\u00a0\u00a0\u00a0In households \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Householder \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Spouse [6] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Child",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998979957817067,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:177",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 386.326,
+        "x1": 278.004,
+        "y1": 618.95
+      },
+      "text": "39,584 39,423 16,292 9,891 10,868 8,030 1,023 324 254 1,349 83 116 764 161 125 34 91 36 12 24",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:178",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 386.326,
+        "x1": 278.004,
+        "y1": 414.95
+      },
+      "text": "39,584 39,423 16,292",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:188",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 386.326,
+        "x1": 338.0,
+        "y1": 618.95
+      },
+      "text": "100.0 99.6 41.2 25.0 27.5 20.3 2.6 0.8 0.6 3.4 0.2 0.3 1.9 0.4 0.3 0.1 0.2 0.1 0.0 0.1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:189",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 386.326,
+        "x1": 337.998,
+        "y1": 450.95
+      },
+      "text": "100.0 99.6 41.2 25.0 27.5 20.3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:180",
+      "locator": {
+        "page": 2,
+        "x0": 257.98,
+        "y0": 422.326,
+        "x1": 277.996,
+        "y1": 426.95
+      },
+      "text": "9,891",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:181",
+      "locator": {
+        "page": 2,
+        "x0": 257.98,
+        "y0": 422.326,
+        "x1": 269.1,
+        "y1": 426.95
+      },
+      "text": "9,8",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:182",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 434.326,
+        "x1": 278.004,
+        "y1": 462.95
+      },
+      "text": "10,868 8,030 1,023",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:183",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 434.326,
+        "x1": 269.108,
+        "y1": 438.95
+      },
+      "text": "10,8",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:170",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 444.976,
+        "x1": 123.496,
+        "y1": 449.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Own child under 18 years",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998693455535911,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:171",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 456.976,
+        "x1": 96.824,
+        "y1": 485.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Other relatives \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998604846238084,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:190",
+      "locator": {
+        "page": 2,
+        "x0": 326.88,
+        "y0": 458.326,
+        "x1": 338.0,
+        "y1": 618.95
+      },
+      "text": "2.6 0.8 0.6 3.4 0.2 0.3 1.9 0.4 0.3 0.1 0.2 0.1 0.0 0.1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:184",
+      "locator": {
+        "page": 2,
+        "x0": 264.66,
+        "y0": 470.326,
+        "x1": 278.004,
+        "y1": 486.95
+      },
+      "text": "324 254",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:172",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 492.976,
+        "x1": 97.696,
+        "y1": 533.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Nonrelatives \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Unmarried partner",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998913747590316,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:185",
+      "locator": {
+        "page": 2,
+        "x0": 257.98,
+        "y0": 494.326,
+        "x1": 277.996,
+        "y1": 498.95
+      },
+      "text": "1,349",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:186",
+      "locator": {
+        "page": 2,
+        "x0": 264.66,
+        "y0": 506.326,
+        "x1": 278.004,
+        "y1": 558.95
+      },
+      "text": "83 116 764 161 125",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:173",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 540.976,
+        "x1": 84.816,
+        "y1": 545.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0In group quarters",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998700991440828,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:174",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 552.976,
+        "x1": 122.616,
+        "y1": 581.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Institutionalized population \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998770023184225,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:187",
+      "locator": {
+        "page": 2,
+        "x0": 269.1,
+        "y0": 566.326,
+        "x1": 277.996,
+        "y1": 618.95
+      },
+      "text": "34 91 36 12 24",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:175",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 588.976,
+        "x1": 136.84,
+        "y1": 617.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Noninstitutionalized population \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997707164380566,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:176",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 624.976,
+        "x1": 107.024,
+        "y1": 629.6
+      },
+      "text": "HOUSEHOLDS BY TYPE",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.8477778387418713,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:191",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 636.976,
+        "x1": 176.424,
+        "y1": 737.6
+      },
+      "text": "\u00a0\u00a0Total households \u00a0\u00a0\u00a0\u00a0Family households (families) [7] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Husband-wife family \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male householder, no wife present \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female householder, no husband present \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992936390767893,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:192",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 636.976,
+        "x1": 80.368,
+        "y1": 641.6
+      },
+      "text": "\u00a0\u00a0Total households",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983218009599563,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:196",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 638.326,
+        "x1": 278.004,
+        "y1": 738.95
+      },
+      "text": "16,292 11,327 4,346 9,891 3,689 486 219 950 438",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:197",
+      "locator": {
+        "page": 2,
+        "x0": 253.54,
+        "y0": 638.326,
+        "x1": 278.004,
+        "y1": 654.95
+      },
+      "text": "16,292 11,327",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:200",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 638.326,
+        "x1": 338.0,
+        "y1": 738.95
+      },
+      "text": "100.0 69.5 26.7 60.7 22.6 3.0 1.3 5.8 2.7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:201",
+      "locator": {
+        "page": 2,
+        "x0": 317.98,
+        "y0": 638.326,
+        "x1": 337.998,
+        "y1": 690.95
+      },
+      "text": "100.0 69.5 26.7 60.7 22.6",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:193",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 648.976,
+        "x1": 147.056,
+        "y1": 677.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Family households (families) [7] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Husband-wife family",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998690682047281,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:198",
+      "locator": {
+        "page": 2,
+        "x0": 257.98,
+        "y0": 662.326,
+        "x1": 277.996,
+        "y1": 690.95
+      },
+      "text": "4,346 9,891 3,689",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:194",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 684.976,
+        "x1": 151.504,
+        "y1": 713.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male householder, no wife present \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997054197756008,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:199",
+      "locator": {
+        "page": 2,
+        "x0": 264.66,
+        "y0": 698.326,
+        "x1": 278.004,
+        "y1": 738.95
+      },
+      "text": "486 219 950 438",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:202",
+      "locator": {
+        "page": 2,
+        "x0": 326.88,
+        "y0": 698.326,
+        "x1": 338.0,
+        "y1": 738.95
+      },
+      "text": "3.0 1.3 5.8 2.7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:195",
+      "locator": {
+        "page": 2,
+        "x0": 15.0,
+        "y0": 720.976,
+        "x1": 176.424,
+        "y1": 737.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female householder, no husband present \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0With own children under 18 years",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997062920049158,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:204",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 14.21,
+        "x1": 188.408,
+        "y1": 149.6
+      },
+      "text": "Subject \u00a0\u00a0\u00a0\u00a0Nonfamily households [7] \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Householder living alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0\u00a0\u00a0Households with individuals under 18 years \u00a0\u00a0\u00a0\u00a0Households with individuals 65 years and over \u00a0\u00a0\u00a0\u00a0Average household size \u00a0\u00a0\u00a0\u00a0Average family size [7] HOUSING OCCUPANCY",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972571227947071,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:205",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 14.21,
+        "x1": 131.446,
+        "y1": 29.6
+      },
+      "text": "Subject \u00a0\u00a0\u00a0\u00a0Nonfamily households [7]",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9990557056341826,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:210",
+      "locator": {
+        "page": 3,
+        "x0": 233.89,
+        "y0": 14.21,
+        "x1": 278.004,
+        "y1": 138.95
+      },
+      "text": "Number 4,965 4,105 1,598 445 2,507 1,378 4,574 4,648 2.42 2.92",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995154875642484,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:211",
+      "locator": {
+        "page": 3,
+        "x0": 233.89,
+        "y0": 14.21,
+        "x1": 264.114,
+        "y1": 18.97
+      },
+      "text": "Number",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:219",
+      "locator": {
+        "page": 3,
+        "x0": 294.33,
+        "y0": 14.21,
+        "x1": 338.002,
+        "y1": 138.95
+      },
+      "text": "Percent 30.5 25.2 9.8 2.7 15.4 8.5 28.1 28.5 ( X ) ( X )",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992951378443755,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:220",
+      "locator": {
+        "page": 3,
+        "x0": 294.33,
+        "y0": 14.21,
+        "x1": 323.674,
+        "y1": 18.97
+      },
+      "text": "Percent",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:212",
+      "locator": {
+        "page": 3,
+        "x0": 257.98,
+        "y0": 26.326,
+        "x1": 277.996,
+        "y1": 42.95
+      },
+      "text": "4,965 4,105",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:221",
+      "locator": {
+        "page": 3,
+        "x0": 322.43,
+        "y0": 26.326,
+        "x1": 337.998,
+        "y1": 42.95
+      },
+      "text": "30.5 25.2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:206",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 36.976,
+        "x1": 115.936,
+        "y1": 53.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Householder living alone \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Male",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997441483932242,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:214",
+      "locator": {
+        "page": 3,
+        "x0": 257.98,
+        "y0": 50.326,
+        "x1": 278.004,
+        "y1": 66.95
+      },
+      "text": "1,598 445",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:215",
+      "locator": {
+        "page": 3,
+        "x0": 257.98,
+        "y0": 50.326,
+        "x1": 269.1,
+        "y1": 54.95
+      },
+      "text": "1,5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:222",
+      "locator": {
+        "page": 3,
+        "x0": 326.88,
+        "y0": 50.326,
+        "x1": 338.0,
+        "y1": 66.95
+      },
+      "text": "9.8 2.7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:207",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 60.976,
+        "x1": 101.272,
+        "y1": 77.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Female",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999847491172413,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:216",
+      "locator": {
+        "page": 3,
+        "x0": 257.98,
+        "y0": 74.326,
+        "x1": 277.996,
+        "y1": 114.95
+      },
+      "text": "2,507 1,378 4,574 4,648",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:217",
+      "locator": {
+        "page": 3,
+        "x0": 257.98,
+        "y0": 74.326,
+        "x1": 269.1,
+        "y1": 78.95
+      },
+      "text": "2,5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:223",
+      "locator": {
+        "page": 3,
+        "x0": 322.43,
+        "y0": 74.326,
+        "x1": 337.998,
+        "y1": 78.95
+      },
+      "text": "15.4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:208",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 84.976,
+        "x1": 188.408,
+        "y1": 137.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a065 years and over \u00a0\u00a0\u00a0\u00a0Households with individuals under 18 years \u00a0\u00a0\u00a0\u00a0Households with individuals 65 years and over \u00a0\u00a0\u00a0\u00a0Average household size \u00a0\u00a0\u00a0\u00a0Average family size [7]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997418439238723,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:224",
+      "locator": {
+        "page": 3,
+        "x0": 322.43,
+        "y0": 86.326,
+        "x1": 338.002,
+        "y1": 138.95
+      },
+      "text": "8.5 28.1 28.5 ( X ) ( X )",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998912498341365,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:218",
+      "locator": {
+        "page": 3,
+        "x0": 262.43,
+        "y0": 122.326,
+        "x1": 277.998,
+        "y1": 138.95
+      },
+      "text": "2.42 2.92",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:209",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 144.976,
+        "x1": 105.672,
+        "y1": 149.6
+      },
+      "text": "HOUSING OCCUPANCY",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.8336227422192238,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:225",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 156.976,
+        "x1": 187.52,
+        "y1": 293.6
+      },
+      "text": "\u00a0\u00a0Total housing units \u00a0\u00a0\u00a0\u00a0Occupied housing units \u00a0\u00a0\u00a0\u00a0Vacant housing units \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0For rent \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Rented, not occupied \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0For sale only \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Sold, not occupied \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0For seasonal, recreational, or occasional use \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0All other vacants \u00a0\u00a0\u00a0\u00a0Homeowner vacancy rate (percent) [8] \u00a0\u00a0\u00a0\u00a0Rental vacancy rate (percent) [9] HOUSING TENURE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.996887155941716,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:226",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 156.976,
+        "x1": 107.048,
+        "y1": 185.6
+      },
+      "text": "\u00a0\u00a0Total housing units \u00a0\u00a0\u00a0\u00a0Occupied housing units \u00a0\u00a0\u00a0\u00a0Vacant housing units",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988576531045918,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:230",
+      "locator": {
+        "page": 3,
+        "x0": 253.54,
+        "y0": 158.326,
+        "x1": 278.004,
+        "y1": 282.95
+      },
+      "text": "16,829 16,292 537 206 10 135 21 75 90 1.1 5.3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:231",
+      "locator": {
+        "page": 3,
+        "x0": 253.54,
+        "y0": 158.326,
+        "x1": 278.004,
+        "y1": 174.95
+      },
+      "text": "16,829 16,292",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:236",
+      "locator": {
+        "page": 3,
+        "x0": 317.98,
+        "y0": 158.326,
+        "x1": 338.002,
+        "y1": 282.95
+      },
+      "text": "100.0 96.8 3.2 1.2 0.1 0.8 0.1 0.4 0.5 ( X ) ( X )",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:237",
+      "locator": {
+        "page": 3,
+        "x0": 317.98,
+        "y0": 158.326,
+        "x1": 337.996,
+        "y1": 162.95
+      },
+      "text": "100.0",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:238",
+      "locator": {
+        "page": 3,
+        "x0": 322.43,
+        "y0": 170.326,
+        "x1": 338.0,
+        "y1": 258.95
+      },
+      "text": "96.8 3.2 1.2 0.1 0.8 0.1 0.4 0.5",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:232",
+      "locator": {
+        "page": 3,
+        "x0": 264.66,
+        "y0": 182.326,
+        "x1": 278.004,
+        "y1": 198.95
+      },
+      "text": "537 206",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:227",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 192.976,
+        "x1": 187.52,
+        "y1": 257.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0For rent \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Rented, not occupied \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0For sale only \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Sold, not occupied \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0For seasonal, recreational, or occasional use \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0All other vacants",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997975730515273,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:233",
+      "locator": {
+        "page": 3,
+        "x0": 269.1,
+        "y0": 206.326,
+        "x1": 277.996,
+        "y1": 210.95
+      },
+      "text": "10",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:234",
+      "locator": {
+        "page": 3,
+        "x0": 264.66,
+        "y0": 218.326,
+        "x1": 278.004,
+        "y1": 258.95
+      },
+      "text": "135 21 75 90",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:228",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 264.976,
+        "x1": 159.944,
+        "y1": 281.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Homeowner vacancy rate (percent) [8] \u00a0\u00a0\u00a0\u00a0Rental vacancy rate (percent) [9]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996248512868273,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:235",
+      "locator": {
+        "page": 3,
+        "x0": 266.88,
+        "y0": 266.326,
+        "x1": 278.0,
+        "y1": 282.95
+      },
+      "text": "1.1 5.3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:239",
+      "locator": {
+        "page": 3,
+        "x0": 322.89,
+        "y0": 266.326,
+        "x1": 338.002,
+        "y1": 282.95
+      },
+      "text": "(X)(X)",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:229",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 288.976,
+        "x1": 87.448,
+        "y1": 293.6
+      },
+      "text": "HOUSING TENURE",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.8861149457063324,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:240",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 300.976,
+        "x1": 200.424,
+        "y1": 341.6
+      },
+      "text": "\u00a0\u00a0Occupied housing units \u00a0\u00a0\u00a0\u00a0Owner-occupied housing units \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Population in owner-occupied housing units \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Average household size of owner-occupied units",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995714750759938,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:241",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 300.976,
+        "x1": 102.6,
+        "y1": 305.6
+      },
+      "text": "\u00a0\u00a0Occupied housing units",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995175220476421,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:243",
+      "locator": {
+        "page": 3,
+        "x0": 253.54,
+        "y0": 302.326,
+        "x1": 278.004,
+        "y1": 342.95
+      },
+      "text": "16,292 12,603 32,742 2.60",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:244",
+      "locator": {
+        "page": 3,
+        "x0": 253.54,
+        "y0": 302.326,
+        "x1": 278.004,
+        "y1": 330.95
+      },
+      "text": "16,292 12,603 32,742",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:246",
+      "locator": {
+        "page": 3,
+        "x0": 317.98,
+        "y0": 302.326,
+        "x1": 338.002,
+        "y1": 342.95
+      },
+      "text": "100.0 77.4 ( X ) ( X )",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:242",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 312.976,
+        "x1": 200.424,
+        "y1": 341.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Owner-occupied housing units \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Population in owner-occupied housing units \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Average household size of owner-occupied units",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997066508681605,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:245",
+      "locator": {
+        "page": 3,
+        "x0": 262.43,
+        "y0": 338.326,
+        "x1": 277.998,
+        "y1": 342.95
+      },
+      "text": "2.60",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:248",
+      "locator": {
+        "page": 3,
+        "x0": 15.0,
+        "y0": 354.976,
+        "x1": 199.5359,
+        "y1": 383.6
+      },
+      "text": "\u00a0\u00a0\u00a0\u00a0Renter-occupied housing units \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Population in renter-occupied housing units \u00a0\u00a0\u00a0\u00a0\u00a0\u00a0Average household size of renter-occupied units",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996261457243822,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:250",
+      "locator": {
+        "page": 3,
+        "x0": 257.98,
+        "y0": 356.326,
+        "x1": 277.998,
+        "y1": 384.95
+      },
+      "text": "3,689 6,681 1.81",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:251",
+      "locator": {
+        "page": 3,
+        "x0": 257.98,
+        "y0": 356.326,
+        "x1": 277.996,
+        "y1": 372.95
+      },
+      "text": "3,689 6,681",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:253",
+      "locator": {
+        "page": 3,
+        "x0": 322.43,
+        "y0": 356.326,
+        "x1": 338.002,
+        "y1": 384.95
+      },
+      "text": "22.6(X)(X)",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:252",
+      "locator": {
+        "page": 3,
+        "x0": 262.43,
+        "y0": 380.326,
+        "x1": 277.998,
+        "y1": 384.95
+      },
+      "text": "1.81",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:255",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 418.976,
+        "x1": 115.472,
+        "y1": 423.6
+      },
+      "text": "X Not applicable.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.993397084787125,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:257",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 430.976,
+        "x1": 249.752,
+        "y1": 435.6
+      },
+      "text": "[1] Other Asian alone, or two or more Asian categories.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996209901819705,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:258",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 430.976,
+        "x1": 63.896,
+        "y1": 435.6
+      },
+      "text": "[1]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:259",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 442.976,
+        "x1": 416.0319,
+        "y1": 447.6
+      },
+      "text": "[2] Other Pacific Islander alone, or two or more Native Hawaiian and Other Pacific Islander categories.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993755261137074,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:260",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 442.976,
+        "x1": 63.896,
+        "y1": 447.6
+      },
+      "text": "[2]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:261",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 454.976,
+        "x1": 407.5919,
+        "y1": 459.6
+      },
+      "text": "[3] One of the four most commonly reported multiple-race combinations nationwide in Census 2000.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993750036817822,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:262",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 454.976,
+        "x1": 63.896,
+        "y1": 459.6
+      },
+      "text": "[3]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:263",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 466.976,
+        "x1": 585.4799,
+        "y1": 480.91
+      },
+      "text": "[4] In combination with one or more of the other races listed. The six numbers may add to more than the total population, and the six percentages may add to more than 100 percent because individuals may report more than one race.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766811380697,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:264",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 466.976,
+        "x1": 63.896,
+        "y1": 471.6
+      },
+      "text": "[4]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:265",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 484.976,
+        "x1": 571.2159,
+        "y1": 498.91
+      },
+      "text": "[5] This category is composed of people whose origins are from the Dominican Republic, Spain, and Spanish-speaking Central or South American countries. It also includes general origin responses such as \"Latino\" or \"Hispanic.\"",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999739057787416,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:266",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 484.976,
+        "x1": 63.896,
+        "y1": 489.6
+      },
+      "text": "[5]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:267",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 502.976,
+        "x1": 565.2878,
+        "y1": 516.91
+      },
+      "text": "[6] \"Spouse\" represents spouse of the householder. It does not reflect all spouses in a household. Responses of \"same-sex spouse\" were edited during processing to \"unmarried partner.\"",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997966909621845,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:268",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 502.976,
+        "x1": 63.896,
+        "y1": 507.6
+      },
+      "text": "[6]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:269",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 520.976,
+        "x1": 585.8398,
+        "y1": 562.84
+      },
+      "text": "[7] \"Family households\" consist of a householder and one or more other people related to the householder by birth, marriage, or adoption. They do not include same-sex married couples even if the marriage was performed in a state issuing marriage certificates for same-sex couples. Same-sex couple households are included in the family households category if there is at least one additional person related to the householder by birth or adoption. Same-sex couple households with no relatives of the householder present are tabulated in nonfamily households. \"Nonfamily households\" consist of people living alone and households which do not have any members related to the householder.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998602467872856,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:270",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 520.976,
+        "x1": 63.896,
+        "y1": 525.6
+      },
+      "text": "[7]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:271",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 575.976,
+        "x1": 578.7039,
+        "y1": 599.22
+      },
+      "text": "[8] The homeowner vacancy rate is the proportion of the homeowner inventory that is vacant \"for sale.\" It is computed by dividing the total number of vacant units \"for sale only\" by the sum of owner-occupied units, vacant units that are \"for sale only,\" and vacant units that have been sold but not yet occupied; and then multiplying by 100.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999966792610876,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:272",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 575.976,
+        "x1": 63.896,
+        "y1": 580.6
+      },
+      "text": "[8]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:273",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 602.976,
+        "x1": 579.1599,
+        "y1": 634.6
+      },
+      "text": "[9] The rental vacancy rate is the proportion of the rental inventory that is vacant \"for rent.\" It is computed by dividing the total number of vacant units \"for rent\" by the sum of the renter-occupied units, vacant units that are \"for rent,\" and vacant units that have been rented but not yet occupied; and then multiplying by 100. Source: U.S. Census Bureau, 2010 Census.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999152287955331,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0827:274",
+      "locator": {
+        "page": 3,
+        "x0": 55.0,
+        "y0": 602.976,
+        "x1": 63.896,
+        "y1": 607.6
+      },
+      "text": "[9]",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

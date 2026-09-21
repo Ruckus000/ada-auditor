@@ -1,0 +1,234 @@
+{
+  "document": "c3-0880",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 10,
+    "cards_considered": 10,
+    "selector": "all-blocks",
+    "not_heading_confident": 9,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0880:0",
+      "locator": {
+        "page": 0,
+        "x0": 71.9995,
+        "y0": 80.3695,
+        "x1": 512.2994,
+        "y1": 109.6803
+      },
+      "text": "City of Banning Ranked as One of Nation\u2019s Top 10 Solar Utilities in 2010",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9042684137458737,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0880:1",
+      "locator": {
+        "page": 0,
+        "x0": 71.9995,
+        "y0": 132.1964,
+        "x1": 515.7,
+        "y1": 199.0802
+      },
+      "text": "June 9, 2011 \u2013 The City of Banning\u2019s Electric Utility has been honored as one of the nation\u2019s Top 10 utilities in the amount of solar power it added to its system per customer served in 2010. The designation came from the 2010 SEPA Utility Solar Rankings report published annually by the Solar Electric Power Association (SEPA). Of the 230 utilities that participated in the SEPA survey, Banning ranked 10th in the Annual Solar Megawatts-per-Customer category.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999876607693308,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:2",
+      "locator": {
+        "page": 0,
+        "x0": 71.9974,
+        "y0": 219.3163,
+        "x1": 532.7754,
+        "y1": 301.8001
+      },
+      "text": "\u201cBanning worked effectively with the solar contractors doing business in its territory and the Utility customers who installed solar PV panels at their homes and businesses, which resulted in increased installations in 2010\u201d said Fred Mason, Banning\u2019s Electric Utility Director. \u201cIn addition, as of December 2010, Banning became the first electric utility in California to meet the Senate Bill 1, also known as the California Solar Initiative, total rebate requirements. Per SB1, Banning was required to provide $2M in solar rebates, and as of today the Utility has awarded nearly $2.4M in rebates to its customers.\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251552129803,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:3",
+      "locator": {
+        "page": 0,
+        "x0": 71.9974,
+        "y0": 322.0362,
+        "x1": 521.2028,
+        "y1": 373.5601
+      },
+      "text": "\u201cWe congratulate Banning for proving itself one of the solar power leaders in the electric utility industry,\u201d said Julia Hamm, President and CEO of SEPA. \u201cBanning has developed creative business models and approaches that are appropriate for its environment and that bring the benefits of solar power to its operations, its customers and our society.\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832986444116,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:4",
+      "locator": {
+        "page": 0,
+        "x0": 71.9974,
+        "y0": 393.7962,
+        "x1": 544.8818,
+        "y1": 429.8401
+      },
+      "text": "Overall, the SEPA Utility Solar Rankings report found remarkable growth in the addition of new solar power by utilities in 2010, up 100 percent from the year before. It also found that utility solar power is rapidly expanding beyond the Southwest, into states as diverse as Idaho, New Jersey and North Carolina.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999989870019077,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:5",
+      "locator": {
+        "page": 0,
+        "x0": 71.9974,
+        "y0": 450.0762,
+        "x1": 535.0415,
+        "y1": 486.2401
+      },
+      "text": "\u201cThe trends are clear \u2013 utilities are offering their customers more solar power in almost every region of the country,\u201d says Ms. Hamm. \u201cWith the leadership of organizations like Banning, we expect those trends to continue.\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785552548562,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:6",
+      "locator": {
+        "page": 0,
+        "x0": 71.9984,
+        "y0": 506.4762,
+        "x1": 538.8602,
+        "y1": 573.36
+      },
+      "text": "For its annual report, SEPA surveyed 230 investor-owned, municipal and cooperative electric utilities and ranked them in two categories: total amount of solar power added to their systems in 2010, and the amount of solar power added on a per-customer-served basis. The top three utilities in total amount added are Pacific Gas and Electric Co. (CA), Florida Power & Light Co. and Public Service Electric & Gas Co. (NJ).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785551200028,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:7",
+      "locator": {
+        "page": 0,
+        "x0": 71.9984,
+        "y0": 593.5961,
+        "x1": 533.7139,
+        "y1": 614.28
+      },
+      "text": "The top three in the amount added per-customer category are Silicon Valley Power (CA), Public Service Electric & Gas Co. (NJ) and Hawaiian Electric Co.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388391549475,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:8",
+      "locator": {
+        "page": 0,
+        "x0": 71.9974,
+        "y0": 634.5161,
+        "x1": 540.8052,
+        "y1": 655.0801
+      },
+      "text": "The report contains additional details about the total solar capacity of U.S. utilities, rankings by regions, geographical diversity and other utility solar trends. The full report can be found at www.sepatop10.org.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687985608489,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0880:9",
+      "locator": {
+        "page": 0,
+        "x0": 71.9995,
+        "y0": 673.7273,
+        "x1": 506.5403,
+        "y1": 693.96
+      },
+      "text": "SEPA is an educational non-profit organization based in Washington dedicated to helping utilities integrate solar power into their energy portfolios.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151904618254,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0880:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

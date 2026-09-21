@@ -1,0 +1,3506 @@
+{
+  "document": "c3-0178",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 154,
+    "cards_considered": 154,
+    "selector": "all-blocks",
+    "not_heading_confident": 133,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0178:1",
+      "locator": {
+        "page": 0,
+        "x0": 180.0,
+        "y0": 77.7063,
+        "x1": 552.1937,
+        "y1": 96.36
+      },
+      "text": "City of RANCHO PALOS VERDES",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9416440757292474,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:2",
+      "locator": {
+        "page": 0,
+        "x0": 351.0,
+        "y0": 107.2687,
+        "x1": 535.8815,
+        "y1": 114.42
+      },
+      "text": "Community Development Department",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9773197237638386,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:3",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 131.9718,
+        "x1": 543.9312,
+        "y1": 141.66
+      },
+      "text": "GRADING PERMIT",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.998208323275371,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:4",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 160.1523,
+        "x1": 543.0256,
+        "y1": 230.4573
+      },
+      "text": "The purpose of a grading permit is to ensure that earth movement associated with the development of a property preserves the natural scenic character of the area and occurs in a manor harmonious with adjacent land so as to minimize adverse impacts and maintain the visual continuity of the area without unsightly continuous benching of building sites. According to Section 17.76.040 of the City's Development Code, there are three types of grading permits that may be issued with this application. These are described below.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339522727326,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:6",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 246.1327,
+        "x1": 543.011,
+        "y1": 352.0173
+      },
+      "text": "I. Minor Grading Permit: required for all earthwork projects which involve any of the following: 1. An excavation, fill, or combination thereof, in excess of twenty (20) cubic yards (exclusive of footing and foundation wall excavations) in any two (2) year period on a slope of less than 35%. 2. An excavation three (3) feet or more, but less than five (5) feet below natural grade, or a fill three (3) feet or more, but less than five (5) feet above natural grade on a slope less than 35%.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911452552609,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:7",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 246.1327,
+        "x1": 78.1126,
+        "y1": 253.4399
+      },
+      "text": "I.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999994909112047,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:9",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 269.1128,
+        "x1": 543.011,
+        "y1": 301.6191
+      },
+      "text": "1. An excavation, fill, or combination thereof, in excess of twenty (20) cubic yards (exclusive of footing and foundation wall excavations) in any two (2) year period on a slope of less than 35%.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999972466407478,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:10",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 269.1128,
+        "x1": 207.6973,
+        "y1": 276.42
+      },
+      "text": "1. An excavation",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983006374726819,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:11",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 319.511,
+        "x1": 543.0096,
+        "y1": 352.0173
+      },
+      "text": "2. An excavation three (3) feet or more, but less than five (5) feet below natural grade, or a fill three (3) feet or more, but less than five (5) feet above natural grade on a slope less than 35%.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999798562915654,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:12",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 319.511,
+        "x1": 205.0687,
+        "y1": 326.8182
+      },
+      "text": "2. An excavation",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996651087126741,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:13",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 367.6928,
+        "x1": 543.035,
+        "y1": 517.3195
+      },
+      "text": "II. Major Grading Permit: required for all earthwork projects which involve any of the following: 1. An excavation or fill, or combination thereof, in excess of fifty (50) cubic yards in any two (2) year period; 2. An excavation five (5) feet or more below natural grade or fill five (5) feet or more above natural grade; 3. Any excavation or fill which encroaches on or alters a natural drainage channel or water course; and, 4. Unless otherwise exempted, an excavation or fill on an extreme slope (i.e. 35% or great).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999097386112734,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:14",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 367.6928,
+        "x1": 81.1727,
+        "y1": 375.0
+      },
+      "text": "II.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999934025122264,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:16",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 390.6728,
+        "x1": 540.0033,
+        "y1": 410.5796
+      },
+      "text": "1. An excavation or fill, or combination thereof, in excess of fifty (50) cubic yards in any two (2) year period;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999986155733187,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:17",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 390.6728,
+        "x1": 117.1683,
+        "y1": 397.98
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:18",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 426.2528,
+        "x1": 540.0095,
+        "y1": 446.1595
+      },
+      "text": "2. An excavation five (5) feet or more below natural grade or fill five (5) feet or more above natural grade;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999798575466161,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:19",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 426.2528,
+        "x1": 117.1661,
+        "y1": 433.56
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:20",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 461.8328,
+        "x1": 539.921,
+        "y1": 481.7396
+      },
+      "text": "3. Any excavation or fill which encroaches on or alters a natural drainage channel or water course; and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999379736228032,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:21",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 461.8328,
+        "x1": 117.1694,
+        "y1": 469.14
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:22",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 497.4127,
+        "x1": 543.035,
+        "y1": 517.3195
+      },
+      "text": "4. Unless otherwise exempted, an excavation or fill on an extreme slope (i.e. 35% or great).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599446057782,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:23",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 497.4127,
+        "x1": 117.1672,
+        "y1": 504.7199
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:24",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 532.9927,
+        "x1": 543.0194,
+        "y1": 603.2981
+      },
+      "text": "III. Remedial Grading Permit: required for excavations, fill or any redistribution of earth materials for the purpose of enhancing soil stability and/or reducing geotechnical hazards due to natural land movement or the presence of natural hazards. Grading Applications for remedial grading shall be accompanied by geological and/or soils reports which justify the need for the remedial grading and indicate that the grading will not aggravate the existing soils and/or geologic conditions.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999379596973059,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:25",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 532.9927,
+        "x1": 84.2394,
+        "y1": 540.2999
+      },
+      "text": "III.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999599964629483,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:26",
+      "locator": {
+        "page": 0,
+        "x0": 62.9996,
+        "y0": 619.991,
+        "x1": 224.5417,
+        "y1": 627.2982
+      },
+      "text": "Required Application Filing Fees",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6977223001217049,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:27",
+      "locator": {
+        "page": 0,
+        "x0": 102.6002,
+        "y0": 643.8713,
+        "x1": 262.7324,
+        "y1": 651.4804
+      },
+      "text": "$190 for a Minor Grading Permit",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993093148005872,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:29",
+      "locator": {
+        "page": 0,
+        "x0": 102.6002,
+        "y0": 656.1108,
+        "x1": 388.6149,
+        "y1": 663.7199
+      },
+      "text": "$2,345 for a Major Grading Permit - Director Level Review",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999153597628664,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:30",
+      "locator": {
+        "page": 0,
+        "x0": 102.6002,
+        "y0": 656.1108,
+        "x1": 124.0068,
+        "y1": 663.7199
+      },
+      "text": "$2,3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:31",
+      "locator": {
+        "page": 0,
+        "x0": 102.6002,
+        "y0": 668.3509,
+        "x1": 458.932,
+        "y1": 675.96
+      },
+      "text": "$3,312 for a Major Grading Permit \u2013 Planning Commission Level Review",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996212082501647,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:32",
+      "locator": {
+        "page": 0,
+        "x0": 102.6002,
+        "y0": 668.3509,
+        "x1": 124.0068,
+        "y1": 675.96
+      },
+      "text": "$3,3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:33",
+      "locator": {
+        "page": 0,
+        "x0": 102.6002,
+        "y0": 680.5909,
+        "x1": 210.7575,
+        "y1": 688.2
+      },
+      "text": "$4 for Data Entry Fee",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990964203820228,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:34",
+      "locator": {
+        "page": 0,
+        "x0": 102.6002,
+        "y0": 692.8307,
+        "x1": 366.7417,
+        "y1": 700.4399
+      },
+      "text": "$18 for Historic Data Input (one time fee per property)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995136544446352,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:0",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 86.8326,
+        "x1": 333.5458,
+        "y1": 94.1398
+      },
+      "text": "public during the noticing period will be considered in the determination of a development",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9771103728234536,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:35",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 86.8326,
+        "x1": 333.5458,
+        "y1": 94.1398
+      },
+      "text": "Director Level or Planning Commission Level Review",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.5926602858567741,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:36",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 109.8128,
+        "x1": 543.0374,
+        "y1": 192.7173
+      },
+      "text": "When a Major Grading Application proposes earth movement involving 1,000CY or more or when a Remedial Grading Application proposes earth movement involving 5,000CY or more, the application shall be referred to the Planning Commission for a decision. Otherwise, all other Grading Applications shall be reviewed by the Community Development Director. The Director and/or the Planning Commission shall use the criteria contained in Section 17.76.040 of the City's Development Code in assessing an application for approval. If you have questions about these criteria, please contact the Planning staff.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869929020219,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:37",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 207.8528,
+        "x1": 542.9022,
+        "y1": 236.9399
+      },
+      "text": "Additional Fees In addition to the fees listed for the applications, the following fees may be assessed if applicable:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964070823323732,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:38",
+      "locator": {
+        "page": 1,
+        "x0": 89.7006,
+        "y0": 251.4109,
+        "x1": 543.0292,
+        "y1": 282.8993
+      },
+      "text": "A $1,727 filing fee for \u201cNeighborhood Compatibly\u201d will be required if the grading requested is in conjunction with a proposed addition or construction of a new single-family residence if such analysis is required (see Page 5).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151924752406,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:39",
+      "locator": {
+        "page": 1,
+        "x0": 89.7006,
+        "y0": 297.3709,
+        "x1": 543.0525,
+        "y1": 350.6393
+      },
+      "text": "A $198 filing fee will be assessed for applications requiring a foliage analysis (see Page 8). Projects that required review by a City Consultant will require the submittal of a Trust Deposit (the minimum amount to be determined by Staff) to recover costs associated with their review of this application. Contact the Planning Staff to discuss if this is needed for your project.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99996464442586,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:40",
+      "locator": {
+        "page": 1,
+        "x0": 274.8,
+        "y0": 379.164,
+        "x1": 349.4209,
+        "y1": 387.48
+      },
+      "text": "IMPORTANT",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9656157051579127,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:42",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 404.9116,
+        "x1": 540.9585,
+        "y1": 434.46
+      },
+      "text": "\u2022 When filing your application, make certain the entire uniform application is completed and that all the required submittal materials are included, OTHERWISE THE APPLICATION MAY NOT BE ACCEPTED FOR FILING.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999798558499655,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:43",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 405.4395,
+        "x1": 76.5816,
+        "y1": 411.54
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:44",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 451.5316,
+        "x1": 540.921,
+        "y1": 481.08
+      },
+      "text": "\u2022 Pursuant to Section 17.86.050 of the RPVMC, THE CITY WILL NOT ACCEPT ANY DEVELOPMENT APPLICATION(S) FOR A LOT OR PARCEL THAT IS IN VIOLATION OF THE CITY\u2019S MUNICIPAL CODE, UNLESS AN APPLICATION IS SUBMITTED TO CORRECT A VIOLATION.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852611894856,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:45",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 452.0595,
+        "x1": 76.5816,
+        "y1": 458.16
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:46",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 498.1515,
+        "x1": 540.9936,
+        "y1": 550.6199
+      },
+      "text": "\u2022 Projects involving new construction and additions or tear-down / rebuilds will require approvals from the Los Angeles County Fire Department. Prior to planning application submittal, it is highly recommended that you take your plans the Fire Department\u2019s Hawthorne Office to obtain their requirements, which may include costly upgrades. The LA County Fire Department Fire Prevention Division is located at 4475 W. El Segundo Blvd. Hawthorne, CA. 90250 (phone 310-263-2732).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999957771760151,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:47",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 498.6794,
+        "x1": 76.5816,
+        "y1": 504.7799
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:48",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 567.6915,
+        "x1": 540.9109,
+        "y1": 631.6199
+      },
+      "text": "\u2022 Projects such as new structures, foundation underpinning and basements require City approval of a soils/geology report. Other projects may require a $255 Category 1 site visit by the City Geologist to determine if a soils/geology report will be required. Prior to planning application submittal, it is highly recommended that you contact the Building & Safety Division to address the geological review of your project. Approval of any required soils/geology report may be pursued during the planning application review process.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999885213100659,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:49",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 568.2194,
+        "x1": 76.5816,
+        "y1": 574.3199
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:50",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 649.6147,
+        "x1": 540.9398,
+        "y1": 702.18
+      },
+      "text": "\u2022 The City is not responsible for a property owner\u2019s compliance with any CC&R\u2019s that may govern their property and the City does not enforce private CC&R\u2019s. The City recommends that property owners review their title report to see if any CC&R\u2019s govern their property, and if so, consult such CC&R\u2019s prior to submittal of their application. Additionally, property owners should review their title report for any other private property restrictions (Deed Restriction, Private Easement, etc.) that may govern their property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832986858394,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:51",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 649.6147,
+        "x1": 77.0508,
+        "y1": 656.34
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:52",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 87.4924,
+        "x1": 187.0023,
+        "y1": 94.7996
+      },
+      "text": "Cubic Yard Calculation",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.8354636863498619,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:40"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:53",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 112.6924,
+        "x1": 543.0745,
+        "y1": 145.1987
+      },
+      "text": "Grading shall be calculated in cubic yards and shall represent the total earth movement on a lot or parcel. The total earth movement shall be the total amount of excavation plus the total amount of fill, regardless of whether there is a net balance of cut and fill quantities on a site.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687981053517,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:52"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:54",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 163.0906,
+        "x1": 147.1724,
+        "y1": 170.3978
+      },
+      "text": "Average Slope",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9953805652606171,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:52"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:55",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 188.2924,
+        "x1": 543.0131,
+        "y1": 220.7986
+      },
+      "text": "Grading Applications involving vacant property shall indicate the average slope of each parcel and shall demonstrate the method used in calculating the average slope. The preferred formula for determining average slope is provided below:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485581003978,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:56",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 238.6906,
+        "x1": 399.0556,
+        "y1": 245.9977
+      },
+      "text": "Where: S = Average percent slope",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972015572066032,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:59",
+      "locator": {
+        "page": 2,
+        "x0": 108.0001,
+        "y0": 252.5506,
+        "x1": 501.6846,
+        "y1": 285.898
+      },
+      "text": "I = Contour interval in feet A = Area of the total site in square feet L = Summation of length of contours, in feet",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546055872938,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:57",
+      "locator": {
+        "page": 2,
+        "x0": 93.84,
+        "y0": 256.5038,
+        "x1": 156.6492,
+        "y1": 265.2
+      },
+      "text": "S=100IL",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992904125513338,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:58",
+      "locator": {
+        "page": 2,
+        "x0": 129.84,
+        "y0": 272.154,
+        "x1": 141.156,
+        "y1": 280.14
+      },
+      "text": "A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972007817193379,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:60",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 291.1904,
+        "x1": 466.4112,
+        "y1": 323.6967
+      },
+      "text": "(Per appropriate scale), for the total site Dumping Off-Site",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990893655357088,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:61",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 341.5923,
+        "x1": 543.0433,
+        "y1": 399.2977
+      },
+      "text": "Excavated material may be disposed of in a landfill/dump or on private property, provided written permission is received from the legal owner and a grading application is approved that allows the importation of fill onto said private property. Submission to the building official of dump receipts which substantiate the proper removal of all excavated material from the building site may be required.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869928983419,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:62",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 443.0486,
+        "x1": 109.2002,
+        "y1": 450.6577
+      },
+      "text": "NOTE:",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9700361293777761,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:54"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:63",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 455.8908,
+        "x1": 543.0674,
+        "y1": 551.3948
+      },
+      "text": "If grading is proposed in conjunction with a proposed addition or new residence, a grading application may substitute for the submittal of a Site Plan Review Application. The City's primary concern in processing a Grading Approval Application is to ensure that the proposed grading and/or construction is consistent with the City's Development Code. If you are unsure of any of the City's requirements in these areas, it is suggested that you contact one of our planners before you go to the expense of having plans drawn. Preliminary discussions with the Planning staff may reveal potential conflicts with the Development Code, or may indicate that different application forms are required.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999903898732783,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:62"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:64",
+      "locator": {
+        "page": 3,
+        "x0": 226.62,
+        "y0": 74.9509,
+        "x1": 388.4586,
+        "y1": 82.56
+      },
+      "text": "\u201cNeighborhood Compatibility\u201d",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.970157099415812,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:62"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:65",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 98.7729,
+        "x1": 543.0581,
+        "y1": 232.0756
+      },
+      "text": "The Development Code is a part of the City\u2019s Municipal Code that guides the growth and development of the City consistent with its land use policies. On November 7, 1989, the voters of the City of Rancho Palos Verdes approved, as a part of the Development Code, the \u201cCooperative View Preservation and Restoration Ordinance\u201d (Proposition M). The adopted Ordinance, among other things, \u201cinsures that the development of each parcel of land or additions to residences or structures occurs in a manner that is harmonious and maintains neighborhood compatibility and the character of contiguous sub-community development.\u201d In other words, the modernization of the City\u2019s existing housing stock must be done in a manner that recognizes and respects the unique features and characteristics of a neighborhood, and properly balances residential development with the preservation of the rural and semi-rural character of the City to ensure continued enjoyment of the City\u2019s quality of life. This is the concept of Neighborhood Compatibility.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869928912873,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:66",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 248.3491,
+        "x1": 543.0659,
+        "y1": 343.8531
+      },
+      "text": "In recent years, many of the City\u2019s residential housing stock have become the subject of significant modernization because of size, floor plan and aging conditions. In an attempt to preserve and improve the \u201ccharacter\u201d of established neighborhoods when new homes or additions to existing homes are proposed, the City Council recently amended the City\u2019s Development Code and residential development process for regulating the size and appearance of single-family residential development projects through the Neighborhood Compatibility requirement. The newly adopted Neighborhood Compatibility Ordinance and residential development process is briefly summarized as follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999959936679315,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:67",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 360.1848,
+        "x1": 325.9365,
+        "y1": 367.7939
+      },
+      "text": "When Does Neighborhood Compatibility Apply?",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9147158569944913,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:68",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 382.0328,
+        "x1": 543.0251,
+        "y1": 401.9395
+      },
+      "text": "Pursuant to Section 17.02.030(B) of the Rancho Palos Verdes Municipal Code, the Neighborhood Compatibility analysis is required for the following type of residential development projects:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695262360045,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:70",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 419.8315,
+        "x1": 429.7939,
+        "y1": 427.1386
+      },
+      "text": "1. A new residence that is proposed to be developed on a vacant lot;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999452531100952,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:71",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 419.8315,
+        "x1": 81.1694,
+        "y1": 427.1386
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:72",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 442.8128,
+        "x1": 431.6738,
+        "y1": 450.12
+      },
+      "text": "2. A new residence that is proposed to replace an existing residence;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999203396643513,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:73",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 442.8128,
+        "x1": 81.1705,
+        "y1": 450.12
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:74",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 465.7928,
+        "x1": 543.032,
+        "y1": 498.2991
+      },
+      "text": "3. An existing residence that is proposed to be remodeled or renovated such that fifty percent or greater of any existing interior and exterior walls or existing square footage is demolished;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999843107391901,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:75",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 465.7928,
+        "x1": 81.1705,
+        "y1": 473.1
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:76",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 513.9727,
+        "x1": 543.0131,
+        "y1": 571.6781
+      },
+      "text": "4. An addition to an existing single-family residence or the construction of any new detached structure that individually, or when combined with prior additions cumulatively, results in greater than: (i) 750 square feet of additional floor area, or (ii) a 25% expansion of the total square footage of all of the original structures constructed on the property, including the main residence, the garage, and all detached structures;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999877811611474,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:77",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 513.9727,
+        "x1": 81.1683,
+        "y1": 521.2799
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:78",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 587.3527,
+        "x1": 539.9344,
+        "y1": 607.2595
+      },
+      "text": "5. The construction of, or an addition to, a new second story or higher story; pursuant to Chapter 17.02 of the Development Code;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852615483314,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:79",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 587.3527,
+        "x1": 81.1694,
+        "y1": 594.6599
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:80",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 622.9327,
+        "x1": 539.9299,
+        "y1": 642.8395
+      },
+      "text": "6. Projects that result in lot coverage that exceeds the maximum allowed in Chapter 17.02 of the Development Code;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646461789637,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:81",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 622.9327,
+        "x1": 81.1672,
+        "y1": 630.2399
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:82",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 658.5127,
+        "x1": 542.9451,
+        "y1": 691.019
+      },
+      "text": "7. The construction of, or an addition of a deck, balcony or roof deck to a second story or higher story if the total area of the deck, balcony, or roof deck is eighty (80) square feet or larger or projects more than six (6) feet from the existing building; and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599436407218,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:83",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 658.5127,
+        "x1": 81.1705,
+        "y1": 665.8199
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:84",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 706.6927,
+        "x1": 539.9545,
+        "y1": 726.5994
+      },
+      "text": "8. An addition of a mezzanine to an existing structure that modifies the exterior of the structure other than the placement of flush mounted doors and windows.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599374655831,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:85",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 706.6927,
+        "x1": 81.1595,
+        "y1": 713.9999
+      },
+      "text": "8.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:86",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 74.9509,
+        "x1": 137.3969,
+        "y1": 82.56
+      },
+      "text": "Exemptions",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9978140215738914,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:64",
+        "c3-0178:67"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:87",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 99.7928,
+        "x1": 542.8079,
+        "y1": 144.8986
+      },
+      "text": "The projects listed in the following subparagraphs (a through d) shall be exempt from the Neighborhood Compatibility requirements of this Paragraph B. However, no property shall be issued a permit for a project that is subject to the same subparagraph more than once in a two-year period without complying with the Neighborhood Compatibility requirements:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251543411201,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:89",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 162.7905,
+        "x1": 503.9574,
+        "y1": 233.0955
+      },
+      "text": "a. An addition to an existing single-family residence that meets the following criteria: i. Is 16-feet or less in height, as measured according to the criteria stated in Section 17.02.040(B); and, ii. Is not being constructed along the facade facing any street, iii. Is 250 square feet or less in floor area; and, iv. Complies with all of the City\u2019s residential development standards.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99996678627446,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:90",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 162.7905,
+        "x1": 81.1694,
+        "y1": 170.0977
+      },
+      "text": "a.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999992662816386,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:92",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 175.3901,
+        "x1": 503.9574,
+        "y1": 195.2968
+      },
+      "text": "i. Is 16-feet or less in height, as measured according to the criteria stated in Section 17.02.040(B); and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999991060386095,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:93",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 175.3901,
+        "x1": 113.5044,
+        "y1": 182.6973
+      },
+      "text": "i.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999993108429904,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:94",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 200.5892,
+        "x1": 432.2733,
+        "y1": 207.8964
+      },
+      "text": "ii. Is not being constructed along the facade facing any street,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99995993727113,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:95",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 200.5892,
+        "x1": 115.9562,
+        "y1": 207.8964
+      },
+      "text": "ii.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999991689928053,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:96",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 213.1887,
+        "x1": 356.3687,
+        "y1": 220.4959
+      },
+      "text": "iii. Is 250 square feet or less in floor area; and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999798547043254,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:97",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 213.1887,
+        "x1": 118.4081,
+        "y1": 220.4959
+      },
+      "text": "iii.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999977417350345,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:98",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 225.7883,
+        "x1": 460.8322,
+        "y1": 233.0955
+      },
+      "text": "iv. Complies with all of the City\u2019s residential development standards.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646446401416,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:99",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 225.7883,
+        "x1": 119.0021,
+        "y1": 233.0955
+      },
+      "text": "iv.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999989328873493,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:100",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 250.9874,
+        "x1": 542.7748,
+        "y1": 283.4937
+      },
+      "text": "b. An addition or conversion of non-habitable floor area to habitable floor area that does not result in exterior modifications other than the placement of flush mounted doors and windows.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999822217398419,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:101",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 250.9874,
+        "x1": 81.1694,
+        "y1": 258.2946
+      },
+      "text": "b.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999994285901049,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:102",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 301.3856,
+        "x1": 542.8287,
+        "y1": 384.29
+      },
+      "text": "c. The construction of a minor non-habitable accessory structure, such as, but not limited to, a cabana, a pool changing room, a storage shed, or a playhouses, that meet the following criteria: i. Is 12-feet or less in height, as measured from lowest adjacent grade as stated in Section 17.48.050(D); and, ii. Is less than 250 square feet in floor area; and, iii. Complies with all of the City\u2019s residential development standards.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999822215935612,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:103",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 301.3856,
+        "x1": 80.5501,
+        "y1": 308.6927
+      },
+      "text": "c.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999987125366965,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:105",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 339.1842,
+        "x1": 509.7827,
+        "y1": 359.0909
+      },
+      "text": "i. Is 12-feet or less in height, as measured from lowest adjacent grade as stated in Section 17.48.050(D); and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999925887923848,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:106",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 339.1842,
+        "x1": 113.511,
+        "y1": 346.4914
+      },
+      "text": "i.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999994286488285,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:107",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 364.3833,
+        "x1": 368.0118,
+        "y1": 371.6905
+      },
+      "text": "ii. Is less than 250 square feet in floor area; and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99998615426851,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:108",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 364.3833,
+        "x1": 115.9562,
+        "y1": 371.6905
+      },
+      "text": "ii.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999999115397485,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:109",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 376.9828,
+        "x1": 460.8344,
+        "y1": 384.29
+      },
+      "text": "iii. Complies with all of the City\u2019s residential development standards.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724647752285,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:110",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 376.9828,
+        "x1": 118.4015,
+        "y1": 384.29
+      },
+      "text": "iii.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999999115756779,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:111",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 402.1819,
+        "x1": 503.9199,
+        "y1": 422.0887
+      },
+      "text": "d. The enclosure of a roofed breezeway between legally permitted structures or the enclosure of a 250 square foot or less patio cover, provided the enclosure:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999296918966194,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:112",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 402.1819,
+        "x1": 81.1683,
+        "y1": 409.4891
+      },
+      "text": "d.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999996941526937,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:114",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 427.381,
+        "x1": 507.0362,
+        "y1": 447.2878
+      },
+      "text": "i. Is 16-feet or less in height, as measured according to the criteria stated in Section 17.02.040(B); and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999925887592526,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:115",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 427.381,
+        "x1": 113.5055,
+        "y1": 434.6882
+      },
+      "text": "i.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999991151794276,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:116",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 452.5801,
+        "x1": 341.55,
+        "y1": 459.8873
+      },
+      "text": "ii. Is attached to the primary structure; and,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852614662881,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:117",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 452.5801,
+        "x1": 115.9496,
+        "y1": 459.8873
+      },
+      "text": "ii.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999991692295643,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:118",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 465.1797,
+        "x1": 460.7576,
+        "y1": 472.4869
+      },
+      "text": "iii. Complies with all of the City\u2019s residential development standards.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546030088295,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:119",
+      "locator": {
+        "page": 4,
+        "x0": 108.0001,
+        "y0": 465.1797,
+        "x1": 118.3982,
+        "y1": 472.4869
+      },
+      "text": "iii.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999991155548258,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:120",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 490.3788,
+        "x1": 543.1395,
+        "y1": 548.0842
+      },
+      "text": "If the Neighborhood Compatibility requirement is triggered, the analysis is based, at a minimum, on the review of the residences within the immediate neighborhood. For the purposes of Neighborhood Compatibility, the immediate neighborhood is normally considered to be at least the twenty (20) closest residences within the same zoning district. Pursuant to Section 17.02.030(B)(2) of the RPVMC, the analysis of Neighborhood Compatibility is based on the following criteria:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999994577791795,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:122",
+      "locator": {
+        "page": 4,
+        "x0": 125.9996,
+        "y0": 565.9761,
+        "x1": 301.2799,
+        "y1": 573.2833
+      },
+      "text": "A. Scale of surrounding residences",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646724514306,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:123",
+      "locator": {
+        "page": 4,
+        "x0": 125.9996,
+        "y0": 565.9761,
+        "x1": 136.39,
+        "y1": 573.2833
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9997704322504102,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:124",
+      "locator": {
+        "page": 4,
+        "x0": 125.9996,
+        "y0": 578.5756,
+        "x1": 346.5855,
+        "y1": 585.8828
+      },
+      "text": "B. Architectural styles and building materials",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964069396403755,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:125",
+      "locator": {
+        "page": 4,
+        "x0": 125.9996,
+        "y0": 578.5756,
+        "x1": 136.39,
+        "y1": 585.8828
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9994540901887858,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:126",
+      "locator": {
+        "page": 4,
+        "x0": 125.9996,
+        "y0": 591.1752,
+        "x1": 314.077,
+        "y1": 598.4824
+      },
+      "text": "C. Front, side, and rear yard setbacks",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9466223668682894,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:127",
+      "locator": {
+        "page": 4,
+        "x0": 125.9996,
+        "y0": 591.1752,
+        "x1": 136.9917,
+        "y1": 598.4824
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999910695347041,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:128",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 616.4325,
+        "x1": 309.683,
+        "y1": 624.0416
+      },
+      "text": "Neighborhood Compatibility Review Process",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9963953339172267,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:3",
+        "c3-0178:86"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:129",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 640.2546,
+        "x1": 543.0516,
+        "y1": 697.96
+      },
+      "text": "The Neighborhood Compatibility requirement is evaluated by the City in conjunction with the processing of a residential development application. The type of residential development application that needs to be submitted is determined by the nature of the proposed project. It is suggested that a property owner/applicant contact the Planning Division to determine the appropriate development application.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999910603091594,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:130",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 74.9509,
+        "x1": 387.6299,
+        "y1": 82.56
+      },
+      "text": "Neighborhood Compatibility Voluntary Pre-Application Step",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9840718098129415,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:128"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:131",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 99.7928,
+        "x1": 543.0406,
+        "y1": 157.4982
+      },
+      "text": "If a proposed project requires the Neighborhood Compatibility analysis, the City strongly encourages the property owner to complete a \u201cPre-Application Step.\u201d This is a voluntary step in the residential development process, but has been found to be helpful in addressing neighborhood issues early in the process that commonly cause delays in the formal process and added expense to the applicant. The Pre-Application Step involves three action items:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724643398207,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:133",
+      "locator": {
+        "page": 5,
+        "x0": 89.9995,
+        "y0": 175.3901,
+        "x1": 339.1378,
+        "y1": 182.6973
+      },
+      "text": "1. Notification to at least the 20 closest Neighbors",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998416178057269,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:134",
+      "locator": {
+        "page": 5,
+        "x0": 89.9995,
+        "y0": 175.3901,
+        "x1": 99.1711,
+        "y1": 182.6973
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:135",
+      "locator": {
+        "page": 5,
+        "x0": 89.9995,
+        "y0": 187.9896,
+        "x1": 420.2207,
+        "y1": 195.2968
+      },
+      "text": "2. Conducting a neighborhood meeting to review preliminary plans",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415662034665,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:136",
+      "locator": {
+        "page": 5,
+        "x0": 89.9995,
+        "y0": 187.9896,
+        "x1": 99.1667,
+        "y1": 195.2968
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:137",
+      "locator": {
+        "page": 5,
+        "x0": 89.9995,
+        "y0": 200.5892,
+        "x1": 295.5307,
+        "y1": 207.8964
+      },
+      "text": "3. Documentation of meeting attendance",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694983196886,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:138",
+      "locator": {
+        "page": 5,
+        "x0": 89.9995,
+        "y0": 200.5892,
+        "x1": 99.1678,
+        "y1": 207.8964
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:139",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 225.8465,
+        "x1": 199.7029,
+        "y1": 233.4556
+      },
+      "text": "Silhouette Construction",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9959209727336132,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:130"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:140",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 250.6928,
+        "x1": 543.0422,
+        "y1": 283.1991
+      },
+      "text": "If the Neighborhood Compatibility analysis is required, the property owner/applicant will be required to construct a silhouette, certified by a licensed engineer or architect, that depicts the proposed project.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999959936390376,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:141",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 301.1492,
+        "x1": 412.9443,
+        "y1": 308.7583
+      },
+      "text": "Who Reviews a Neighborhood Compatibility Project Application?",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9940797410936009,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:139"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:142",
+      "locator": {
+        "page": 5,
+        "x0": 71.9999,
+        "y0": 326.5925,
+        "x1": 543.0629,
+        "y1": 384.2979
+      },
+      "text": "The analysis of the Neighborhood Compatibility requirement shall be made by either the Community Development Director of or the Planning Commission, depending upon the review process of the requested development application. Notwithstanding, the Community Development Director shall refer a development application directly to the Planning Commission for consideration, as part of a public hearing, if any of the following are proposed (see next page):",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485579110369,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:144",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 402.4906,
+        "x1": 539.9089,
+        "y1": 422.3974
+      },
+      "text": "1. Any portion of a structure that exceeds sixteen (16) feet in height and extends closer than twenty-five (25) feet from the front or street-side property line; or,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039019178377,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:145",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 402.4906,
+        "x1": 99.1677,
+        "y1": 409.7978
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:146",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 440.2893,
+        "x1": 543.0663,
+        "y1": 472.7956
+      },
+      "text": "2. The area of the structure that exceeds sixteen (16) feet in height (the second story footprint) and exceeds seventy-five percent (75%) of the existing first story footprint area (residence and attached garage); or,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999978555203954,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:147",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 440.2893,
+        "x1": 99.1523,
+        "y1": 447.5965
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:148",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 490.6875,
+        "x1": 539.9685,
+        "y1": 510.5942
+      },
+      "text": "3. Sixty percent (60%) or more of an existing garage footprint that is covered by a structure that exceeds sixteen (16) feet in height (a second story); or,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999706892795159,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:149",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 490.6875,
+        "x1": 99.1666,
+        "y1": 497.9947
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:150",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 528.4861,
+        "x1": 542.9361,
+        "y1": 560.9924
+      },
+      "text": "4. Based on an initial site visit, the Director determines that any portion of a structure that is proposed to exceed sixteen (16) feet in height may significantly impair a view as defined in Section of the RPVMC 17.02.040; or,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810749650417,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:151",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 528.4861,
+        "x1": 99.1688,
+        "y1": 535.7933
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:152",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 578.8843,
+        "x1": 542.976,
+        "y1": 598.791
+      },
+      "text": "5. The portion of the structure which exceeds sixteen (16) feet in height is being developed as part of a new single-family residence; or,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339491222325,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:153",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 578.8843,
+        "x1": 99.1699,
+        "y1": 586.1915
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:154",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 616.6829,
+        "x1": 453.6281,
+        "y1": 623.9901
+      },
+      "text": "6. Grading involving more than 1,000 cubic yards of combined cut and fill.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388176768052,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:155",
+      "locator": {
+        "page": 5,
+        "x0": 89.9994,
+        "y0": 616.6829,
+        "x1": 99.1688,
+        "y1": 623.9901
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:156",
+      "locator": {
+        "page": 5,
+        "x0": 71.9999,
+        "y0": 642.2411,
+        "x1": 171.6137,
+        "y1": 649.8502
+      },
+      "text": "Public Notification",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.998967023852039,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:141"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:157",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 667.0928,
+        "x1": 543.0599,
+        "y1": 737.3978
+      },
+      "text": "Regardless of whether a development application requiring the Neighborhood Compatibility analysis is considered by the Community Development Director or by the Planning Commission, a public notice is required to be published in a newspaper and given to owners of property within a 500-foot radius of the proposed project. A public notice shall be given at least 15 days prior to a decision being rendered, unless a Height Variation application is requested, which requires a public noticing period of at least 30 days. It is important to note that comments and concerns raised by the",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810748652166,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:156"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:158",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 74.8928,
+        "x1": 543.0175,
+        "y1": 94.7996
+      },
+      "text": "public during the noticing period will be considered in the determination of a development application requiring Neighborhood Compatibility.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204741726103,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:156"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:159",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 111.1312,
+        "x1": 282.7039,
+        "y1": 118.7404
+      },
+      "text": "Neighborhood Compatibility Handbook",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9874350849571463,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:156"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:160",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 135.9728,
+        "x1": 543.0222,
+        "y1": 231.4769
+      },
+      "text": "In order to better inform the general public of the City\u2019s residential development process, specifically pertaining to the Neighborhood Compatibility requirements and procedures, the City Council adopted a Neighborhood Compatibility Handbook. The Handbook provides a detailed explanation of the City\u2019s Neighborhood Compatibility procedures and process, as well as includes suggested design tips and guidelines that may be used when preparing architectural plans for a new residence or an addition to an existing residence. The Handbook is intended to assist residents, architects, designers, and real estate professionals in understanding the City\u2019s procedure for processing residential development applications requiring the analysis of Neighborhood Compatibility.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832985957243,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:159"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:161",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 249.3688,
+        "x1": 542.9873,
+        "y1": 281.8751
+      },
+      "text": "For more information regarding the City\u2019s Neighborhood Compatibility requirements or to view the Neighborhood Compatibility Handbook contact the Planning Division at 310-544-5228 or visit the City\u2019s Website at www.palosverdes.com/rpv.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852611459595,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:159"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:162",
+      "locator": {
+        "page": 6,
+        "x0": 165.7209,
+        "y0": 298.2067,
+        "x1": 449.3539,
+        "y1": 305.8159
+      },
+      "text": "Removal of Foliage as a Condition of Permit Issuance",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.73018168552648,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0178:159"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0178:163",
+      "locator": {
+        "page": 6,
+        "x0": 71.9995,
+        "y0": 323.6523,
+        "x1": 546.0564,
+        "y1": 444.7156
+      },
+      "text": "As a result of a voter approved initiative in 1989, Section 17.02.040(B)(4) of the City's Municipal Code prohibits the issuance of a permit or other entitlement to construct, or to add livable area to a residential structure unless the owner removes foliage on the lot which exceeds sixteen (16) feet in height or the ridgeline of the primary structure, whichever is lower, that significantly impairs a view from the viewing area of another parcel. For the purpose of this requirement, \"livable area\" means an area of 120 square feet or more in size which 1) consists of habitable space (room expansions, additions); or 2) can be used as a gathering space and viewing area (decks, covered patios). Additions or structures which are less than 120 square feet in area and projects which do not involve habitable space (antennas, skylights, storage shed/garage, garden windows, etc.) are exempt from the requirements.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151895737897,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:159",
+        "c3-0178:162"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:164",
+      "locator": {
+        "page": 6,
+        "x0": 71.9995,
+        "y0": 460.9891,
+        "x1": 543.0686,
+        "y1": 544.6138
+      },
+      "text": "If it is determined that a proposed project is not exempt from the \"foliage removal\" requirements, a foliage analysis of the applicant's property must be conducted by Staff prior to approval of the Grading Permit Application. The purpose of the foliage analysis is to determine if any existing foliage on the applicant's property, which exceeds 16 feet or the ridgeline of the primary residence, whichever is lower, impairs a view from any surrounding properties. Project plans cannot not be approved until Staff completes the foliage analysis. In general, foliage analyses will be completed within 2 to 3 days from application submittal.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999885212594194,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:159",
+        "c3-0178:162"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:165",
+      "locator": {
+        "page": 6,
+        "x0": 71.9995,
+        "y0": 562.5057,
+        "x1": 543.0656,
+        "y1": 670.9695
+      },
+      "text": "If after conducting a foliage analysis, foliage on the applicant's property is found to exceed the prescribed height limits and to significantly impair a view, specific conditions of approval will be placed to trim, lace or remove such vegetation prior to issuance of a building permit. The property owner has the ability to appeal the conditions of approval or findings of the Community Development Director to the Planning Commission. Once the foliage is trimmed, laced or removed, the applicant must contact the City Staff to inform them that the work has been completed. City Staff will then verify that the work was performed in accordance with the specific conditions of approval. Once trimmed to a specific height, it will be the responsibility of the property owner to maintain the foliage at the prescribed height.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999934596006375,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:159",
+        "c3-0178:162"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0178:166",
+      "locator": {
+        "page": 6,
+        "x0": 72.0006,
+        "y0": 687.2429,
+        "x1": 543.0193,
+        "y1": 719.7492
+      },
+      "text": "If you have any questions regarding the City's requirements described above please contact the Planning Division by phone at (310) 544-5228, or in person, between the hours of 7:30 a.m. and 5:30 p.m. Monday through Thursday and 7:30 a.m. and 4:30 p.m. on Friday.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999921107556697,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0178:159",
+        "c3-0178:162"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

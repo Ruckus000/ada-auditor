@@ -1,0 +1,862 @@
+{
+  "document": "c3-0368",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 37,
+    "cards_considered": 37,
+    "selector": "all-blocks",
+    "not_heading_confident": 23,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0368:1",
+      "locator": {
+        "page": 0,
+        "x0": 156.0,
+        "y0": 86.7381,
+        "x1": 427.572,
+        "y1": 179.5452
+      },
+      "text": "Removing Pet Stains and Odors",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9990860053065367,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:0",
+      "locator": {
+        "page": 0,
+        "x0": 35.9945,
+        "y0": 170.0755,
+        "x1": 82.3295,
+        "y1": 197.3269
+      },
+      "text": "BEHAVIOR SERIES",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9156076937939311,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:2",
+      "locator": {
+        "page": 0,
+        "x0": 157.188,
+        "y0": 244.9107,
+        "x1": 182.0112,
+        "y1": 281.0229
+      },
+      "text": "Y",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.6156492273645979,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:3",
+      "locator": {
+        "page": 0,
+        "x0": 179.6406,
+        "y0": 251.2849,
+        "x1": 475.9417,
+        "y1": 269.4999
+      },
+      "text": "OU KNOW HOW IT GOES: The minute you turn your back, your pet decides that your new carpet is the perfect place to relieve himself. You",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9924294024107376,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:4",
+      "locator": {
+        "page": 0,
+        "x0": 176.7232,
+        "y0": 275.7399,
+        "x1": 461.7864,
+        "y1": 281.4999
+      },
+      "text": "clean and clean, but you can\u2019t get rid of that smell. What can you do?",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8520729566459627,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:5",
+      "locator": {
+        "page": 0,
+        "x0": 65.0,
+        "y0": 365.6474,
+        "x1": 305.8073,
+        "y1": 407.4074
+      },
+      "text": "Well, for starters, you need to find which areas are soiled and then retrain your pet to avoid eliminating in those areas. And to do that, you\u2019ll have to clean those areas, and clean them well. Here are the steps you\u2019ll need to take:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988305607935204,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:7",
+      "locator": {
+        "page": 0,
+        "x0": 335.0,
+        "y0": 365.6474,
+        "x1": 565.6497,
+        "y1": 468.8073
+      },
+      "text": "Teach your pet the appropriate place to eliminate by using positive reinforcement techniques. To be successful, you need to follow all these steps. If you fail to completely clean the area, your retraining efforts will be useless. As long as your pet can smell his personal scent, he\u2019ll continue to return to the \u201caccident zone.\u201d Even if you can\u2019t smell traces of urine, your pet can. Your most important chore is to remove (neutralize) that odor with the following steps.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646722456978,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:6",
+      "locator": {
+        "page": 0,
+        "x0": 74.0,
+        "y0": 416.4474,
+        "x1": 302.2418,
+        "y1": 720.4071
+      },
+      "text": "Find all soiled areas using your nose and eyes. A black- light bulb will usually show even old urine stains. Turn out all lights in the room, use the black light to identify soiled areas, and lightly outline the areas with chalk. Black lights can be purchased at home supply stores. Clean the soiled areas appropriately to remove the odors. Rule out medical causes for the behavior by visiting your veterinarian. Figure out why your pet is urinating or defecating in inappropriate areas. (For help, see our tips sheets \u201cSolving Litter Box Problems,\u201d \u201cHousetraining Your Puppy,\u201d and \u201cReducing Urine-Marking Behavior in Dogs and Cats.\u201d These tips sheets can be found at www.petsforlife.org.) Make the areas unattractive or unavailable. (For help, see our tip sheets on dog aversives and cat aversives. These tips sheets can be found at www.petsforlife.org.) Make the appropriate \u201cbathroom\u201d area attractive. (For help, see our tips sheets \u201cPositive Reinforcement: Training Your Dog (or Cat!) with Treats and Praise,\u201d \u201cHousetraining Your Puppy,\u201d and \u201cSolving Litter Box Problems.\u201d These tips sheets can be found at www.petsforlife.org.)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415692753103,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:8",
+      "locator": {
+        "page": 0,
+        "x0": 326.0,
+        "y0": 485.3913,
+        "x1": 437.3915,
+        "y1": 492.8073
+      },
+      "text": "To Clean Washable Items",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9957238596063628,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:9",
+      "locator": {
+        "page": 0,
+        "x0": 326.0,
+        "y0": 503.0473,
+        "x1": 568.8954,
+        "y1": 532.8073
+      },
+      "text": "Machine wash as usual, adding a one-pound box of baking soda to your regular detergent. It\u2019s best to air dry these items if possible.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999978555125984,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:10",
+      "locator": {
+        "page": 0,
+        "x0": 326.0,
+        "y0": 545.0473,
+        "x1": 555.0493,
+        "y1": 586.8073
+      },
+      "text": "If you can still see the stain or smell the urine, machine wash the item again and add an enzymatic cleaner (available at pet supply stores) that breaks down pet- waste odors. Be sure to follow the directions carefully.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485583313737,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:11",
+      "locator": {
+        "page": 0,
+        "x0": 326.0,
+        "y0": 599.0473,
+        "x1": 561.8355,
+        "y1": 652.8073
+      },
+      "text": "If your pet urinates or defecates on the sheets or blankets on a bed, cover the bed with a vinyl, flannel-backed tablecloth when you begin the retraining period. It\u2019s machine washable, inexpensive, and unattractive to your pet.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724645522452,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:12",
+      "locator": {
+        "page": 0,
+        "x0": 326.0,
+        "y0": 669.3913,
+        "x1": 501.4356,
+        "y1": 676.8073
+      },
+      "text": "To Clean Carpeted Areas and Upholstery",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9993673918029788,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:8"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:13",
+      "locator": {
+        "page": 0,
+        "x0": 326.0,
+        "y0": 686.5473,
+        "x1": 568.8071,
+        "y1": 726.8073
+      },
+      "text": "For new stains, those that are still wet, soak up as much of the urine as possible with a combination of newspaper and paper towels. The more fresh urine you can remove before it dries, especially from carpet, the easier it will be to",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646653997907,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:15",
+      "locator": {
+        "page": 0,
+        "x0": 472.71,
+        "y0": 738.8047,
+        "x1": 548.2495,
+        "y1": 741.9407
+      },
+      "text": "continued on reverse side",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9914501007447367,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:14",
+      "locator": {
+        "page": 0,
+        "x0": 65.0,
+        "y0": 751.028,
+        "x1": 426.112,
+        "y1": 756.0
+      },
+      "text": "For complete tips and advice on pet behavior and other pet care topics, visit www.petsforlife.org.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990894096417162,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:16",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 37.2981,
+        "x1": 287.7245,
+        "y1": 89.0581
+      },
+      "text": "remove the odor. Place a thick layer of paper towels on the wet spot and cover that with a thick layer of newspaper. If possible, put newspaper under the soiled area as well. Stand on this padding for about a minute. Remove the padding and repeat the process until the area is barely damp.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995121686678654,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:28",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 37.2981,
+        "x1": 560.33,
+        "y1": 54.5581
+      },
+      "text": "urine odor and may actually encourage your pet to reinforce the urine scent mark in that area.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965804365265,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:29",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 66.2981,
+        "x1": 552.4196,
+        "y1": 152.5581
+      },
+      "text": "If you\u2019ve previously used cleaners or chemicals of any kind on the area, then neutralizing cleaners won\u2019t be effective until you\u2019ve rinsed every trace of the old cleaner from the carpet. Even if you haven\u2019t used chemicals recently, any trace of a non-protein-based substance will weaken the effect of the enzymatic cleaner. The cleaner will use up its \u201cenergy\u201d on the old cleaners instead of on the protein stains you want removed.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999933949485132,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:17",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 100.7981,
+        "x1": 283.0694,
+        "y1": 152.5581
+      },
+      "text": "If possible, put the fresh, urine-soaked paper towel in the area where it belongs\u2014your cat\u2019s litter box or your dog\u2019s designated outdoor \u201cbathroom area.\u201d This will help remind your pet that eliminating isn\u2019t a \u201cbad\u201d behavior as long as it\u2019s done in the right place.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546024613687,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:18",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 164.2981,
+        "x1": 260.925,
+        "y1": 193.0581
+      },
+      "text": "Rinse the \u201caccident zone\u201d thoroughly with clean, cool water. After rinsing, remove as much of the water as possible by blotting or by using a \u201cwet vac.\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485583318392,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:30",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 164.2981,
+        "x1": 558.4598,
+        "y1": 204.5581
+      },
+      "text": "If urine has soaked down into the padding underneath your carpet, your job will be more difficult. In some cases, you may need to take the drastic step of removing and replacing that portion of the carpet and padding.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999925155877728,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:19",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 207.3431,
+        "x1": 190.7779,
+        "y1": 213.5581
+      },
+      "text": "For Stains That Have Already Set",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9902465946523781,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:12"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:31",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 220.6421,
+        "x1": 420.3261,
+        "y1": 228.0581
+      },
+      "text": "To Clean Floors and Walls",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9980485312715023,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:19"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:20",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 225.2981,
+        "x1": 288.817,
+        "y1": 323.0581
+      },
+      "text": "To remove all traces of heavy stains in carpeting, consider renting an extractor or wet vac from a local hardware store. This machine operates much like a vacuum cleaner and is efficient and economical. Extracting/wet vac machines do the best job of forcing clean water through your carpet and then forcing the dirty water back out again. When using these machines or cleaners, be sure to follow the instructions carefully. Don\u2019t use any chemicals with these machines; they work much more effectively with plain water.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999891107606802,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:31"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:32",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 243.7981,
+        "x1": 559.0427,
+        "y1": 364.5581
+      },
+      "text": "If the wood on your furniture, walls, baseboard, or floor is discolored, the varnish or paint has reacted to the acid in the urine. You may need to remove and replace the layer of varnish or paint. If you do so, make sure the new product is safe for pets. Employees at your local hardware or home improvement store can help you identify and match your needs with appropriate removers and replacements. Washable enamel paints and some washable wallpapers may respond favorably to enzymatic cleaners. Read the instructions carefully before using these products and test them in an invisible area.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810751031233,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:31"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:21",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 334.7981,
+        "x1": 285.2217,
+        "y1": 386.5581
+      },
+      "text": "Once the area is really clean, use a high-quality pet odor neutralizer available at pet supply stores. Be sure to read and follow the cleaner\u2019s directions for use, including testing the cleaner on a small, hidden portion of fabric first to be sure it doesn\u2019t stain.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251556588685,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:31"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:33",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 380.6421,
+        "x1": 381.0946,
+        "y1": 388.0581
+      },
+      "text": "Retrain Your Pet",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.998824582013595,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:31"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:34",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 397.7981,
+        "x1": 556.3383,
+        "y1": 495.5581
+      },
+      "text": "Finally, in conjunction with cleaning, be sure to teach your pet where you want him to eliminate. To do this, make the \u201caccident zone\u201d unattractive and the appropriate \u201cbathroom\u201d area attractive, and see our related tip sheets at www.petsforlife.org. The retraining period may take a week or more. Remember, it took time to build the bad habit, and it will take time to replace that habit with a new, more acceptable behavior. Treat your pet with patience and give him lots of encouragement!",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999975700083548,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:22",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 398.2981,
+        "x1": 288.0327,
+        "y1": 415.5581
+      },
+      "text": "If the area still looks stained after it\u2019s completely dry from extracting and neutralizing, try any good carpet stain remover.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646580901112,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:23",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 427.2981,
+        "x1": 284.8982,
+        "y1": 456.0581
+      },
+      "text": "Avoid using steam cleaners to clean urine odors from carpet or upholstery. The heat will permanently set the stain and the odor by bonding the protein into any man-made fibers.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785553772091,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:24",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 467.7981,
+        "x1": 277.9459,
+        "y1": 496.5581
+      },
+      "text": "Avoid using cleaning chemicals, especially those with strong odors such as ammonia or vinegar. From your pet\u2019s perspective, these don\u2019t effectively eliminate or cover the",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151903927251,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:25",
+      "locator": {
+        "page": 1,
+        "x0": 36.0,
+        "y0": 525.0593,
+        "x1": 225.3468,
+        "y1": 533.7113
+      },
+      "text": "Related topics at www.petsforlife.org",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9466399789593816,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:35",
+      "locator": {
+        "page": 1,
+        "x0": 309.0,
+        "y0": 535.6861,
+        "x1": 526.4202,
+        "y1": 567.5581
+      },
+      "text": "Adapted from material originally developed by applied animal behaviorists at the Dumb Friends League, Denver, Colorado. \u00a92000 Dumb Friends League and \u00a92003 The HSUS. All rights reserved.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151997302644,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:26",
+      "locator": {
+        "page": 1,
+        "x0": 45.125,
+        "y0": 543.5283,
+        "x1": 281.7102,
+        "y1": 641.9033
+      },
+      "text": "Housetraining Your Puppy Positive Reinforcement: Training Your Dog or Cat with Treats and Praise Reducing Urine-Marking Behavior in Dogs and Cats Solving Litter Box Problems Using Aversives to Modify Your Cat\u2019s Behavior Using Aversives to Modify Your Dog\u2019s Behavior",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964084073282916,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0368:27",
+      "locator": {
+        "page": 1,
+        "x0": 42.357,
+        "y0": 669.8753,
+        "x1": 185.9269,
+        "y1": 677.9093
+      },
+      "text": "This information provided for you by",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9058808095113439,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0368:36",
+      "locator": {
+        "page": 1,
+        "x0": 425.2184,
+        "y0": 699.4254,
+        "x1": 562.944,
+        "y1": 703.7689
+      },
+      "text": "Promoting the Protection of All Animals",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9527665198349037,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0368:1",
+        "c3-0368:33"
+      ],
+      "in_table_box": false,
+      "asked": true
+    }
+  ]
+}

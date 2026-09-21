@@ -1,0 +1,3098 @@
+{
+  "document": "c3-0794",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 135,
+    "cards_considered": 135,
+    "selector": "all-blocks",
+    "not_heading_confident": 120,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 4
+  },
+  "cards": [
+    {
+      "card_id": "c3-0794:1",
+      "locator": {
+        "page": 0,
+        "x0": 101.34,
+        "y0": 111.684,
+        "x1": 524.9335,
+        "y1": 311.5798
+      },
+      "text": "I. OBJECTIVE: To insure that water tanks for residential wildland fire protection are installed with uniformity and meet the requirements of Title 14 CCR and the California Fire Code Section 507, the various fire districts, and the Alpine County Community Development - Building Safety Division. This policy will apply to all private underground and above ground water tanks that supply fire sprinkler systems and on site fire hydrants or drafting hydrants. All individuals and companies who propose to engage in the installation or alteration of private water tanks for fire protection are subject to the requirements of this policy. This policy outlines the procedures to be followed for the installation of water tanks for fire sprinkler systems and private residential fire hydrants.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965946630548,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:2",
+      "locator": {
+        "page": 0,
+        "x0": 101.34,
+        "y0": 111.684,
+        "x1": 108.0132,
+        "y1": 118.38
+      },
+      "text": "I.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999517676612831,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:149",
+      "locator": {
+        "page": 0,
+        "x0": 101.34,
+        "y0": 111.684,
+        "x1": 108.0132,
+        "y1": 118.38
+      },
+      "text": "SUPPLY COMPANIES",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8531630656673058,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:150",
+      "locator": {
+        "page": 0,
+        "x0": 126.0168,
+        "y0": 111.684,
+        "x1": 294.9084,
+        "y1": 118.38
+      },
+      "text": "FITTINGS:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8191219481062109,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:152",
+      "locator": {
+        "page": 0,
+        "x0": 404.04,
+        "y0": 111.684,
+        "x1": 486.1021,
+        "y1": 118.38
+      },
+      "text": "L.N. Curtis & Sons",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986776365938617,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:153",
+      "locator": {
+        "page": 0,
+        "x0": 126.0,
+        "y0": 125.484,
+        "x1": 326.7575,
+        "y1": 132.18
+      },
+      "text": "1800 Peralta Street",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.992601700597131,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:136",
+      "locator": {
+        "page": 0,
+        "x0": 126.0,
+        "y0": 139.284,
+        "x1": 358.6428,
+        "y1": 145.98
+      },
+      "text": "Fax: 510-839-5325 (Sales)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968336780281069,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:3",
+      "locator": {
+        "page": 0,
+        "x0": 126.0,
+        "y0": 180.6839,
+        "x1": 524.1503,
+        "y1": 214.9799
+      },
+      "text": "This policy will apply to all private underground and above ground water tanks that supply fire sprinkler systems and on site fire hydrants or drafting hydrants.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898701207538,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:4",
+      "locator": {
+        "page": 0,
+        "x0": 126.0,
+        "y0": 235.8839,
+        "x1": 522.3567,
+        "y1": 270.1799
+      },
+      "text": "All individuals and companies who propose to engage in the installation or alteration of private water tanks for fire protection are subject to the requirements of this policy.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869929991922,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:5",
+      "locator": {
+        "page": 0,
+        "x0": 126.0,
+        "y0": 291.0838,
+        "x1": 517.4371,
+        "y1": 311.5798
+      },
+      "text": "This policy outlines the procedures to be followed for the installation of water tanks for fire sprinkler systems and private residential fire hydrants.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995696756444675,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:146",
+      "locator": {
+        "page": 0,
+        "x0": 324.12,
+        "y0": 291.0838,
+        "x1": 502.2332,
+        "y1": 297.7798
+      },
+      "text": "Sacramento, CA 95833",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995125600922785,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:147",
+      "locator": {
+        "page": 0,
+        "x0": 126.0,
+        "y0": 304.8838,
+        "x1": 324.1871,
+        "y1": 311.5798
+      },
+      "text": "Phone: 916-669-4399",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980901649748043,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:6",
+      "locator": {
+        "page": 0,
+        "x0": 97.98,
+        "y0": 332.4838,
+        "x1": 202.7112,
+        "y1": 339.1798
+      },
+      "text": "II. PROCEDURE",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.8434193834217921,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:7",
+      "locator": {
+        "page": 0,
+        "x0": 97.98,
+        "y0": 332.4838,
+        "x1": 107.9976,
+        "y1": 339.1798
+      },
+      "text": "II.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9985252473432833,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:9",
+      "locator": {
+        "page": 0,
+        "x0": 144.0,
+        "y0": 360.0838,
+        "x1": 520.0728,
+        "y1": 490.9799
+      },
+      "text": "A. Plans All tanks shall be installed in accordance with approved plans prepared by a person performing the tank installation. All proposed installations shall be approved and permitted by the County of Alpine prior to commencing work. If not provided on a site plan by the designer, the installation person shall submit for review and approval a schematic drawing showing part-for-part installation arrangement of the tank and appurtenances and a complete parts list with UL\u00ae listings where required for all parts prior to installation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415797255276,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:10",
+      "locator": {
+        "page": 0,
+        "x0": 144.0,
+        "y0": 360.0838,
+        "x1": 155.3268,
+        "y1": 366.7798
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999949082308563,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:11",
+      "locator": {
+        "page": 0,
+        "x0": 144.0,
+        "y0": 511.8839,
+        "x1": 194.6424,
+        "y1": 518.5799
+      },
+      "text": "B. Tanks",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.6219785715799114,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:12",
+      "locator": {
+        "page": 0,
+        "x0": 144.0,
+        "y0": 511.8839,
+        "x1": 155.334,
+        "y1": 518.5799
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9998704955001267,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:14",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 525.6839,
+        "x1": 499.516,
+        "y1": 546.1799
+      },
+      "text": "1. Due to the climate of Alpine County, it is recommended that tanks be installed underground.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599382435952,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:15",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 525.6839,
+        "x1": 172.0032,
+        "y1": 532.3799
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:16",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 553.2839,
+        "x1": 521.4995,
+        "y1": 587.5799
+      },
+      "text": "2. Tank size shall be a minimum of 2,500 gallons for single R-3 structures. Tanks of 5,000 gallons in capacity or height to width ratio greater than 2:1 may require engineering.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999930378981767,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:17",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 553.2839,
+        "x1": 172.0044,
+        "y1": 559.9799
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:18",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 594.6839,
+        "x1": 513.6055,
+        "y1": 656.5199
+      },
+      "text": "3. Tanks size for multiple family occupancy dwellings and commercial are not part of this guideline and shall be determined by application of NFPA 1142 based on the volume of the protected structure and designed, installed, and of materials in accordance with NFPA 22.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999910604416657,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:19",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 594.6839,
+        "x1": 172.0056,
+        "y1": 601.3799
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:20",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 663.624,
+        "x1": 518.1506,
+        "y1": 684.1199
+      },
+      "text": "4. Tanks for single dwellings may be constructed of any approved material. Example: polyethylene, metal, or concrete.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999942281424844,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:21",
+      "locator": {
+        "page": 0,
+        "x0": 162.0,
+        "y0": 663.624,
+        "x1": 172.0068,
+        "y1": 670.3199
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:23",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 111.684,
+        "x1": 522.2183,
+        "y1": 145.98
+      },
+      "text": "5. Tanks installed underground shall be listed for such service to support the load of the covering material and lateral pressures if empty.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999892167265733,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:24",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 111.684,
+        "x1": 172.0044,
+        "y1": 118.38
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:25",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 153.084,
+        "x1": 510.1994,
+        "y1": 173.58
+      },
+      "text": "6. Tanks installed aboveground shall be designed to resist snow load.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999916019868537,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:26",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 153.084,
+        "x1": 172.0056,
+        "y1": 159.78
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:27",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 180.6839,
+        "x1": 505.553,
+        "y1": 256.3799
+      },
+      "text": "7. Tanks installed aboveground or at ground level shall be protected from freezing. a. This is usually accomplished by mounding. b. Above ground tanks shall be on a base of pea gravel (not crushed rock) a minimum of 6\u201d deep or a concrete slab designed to support the imposed load.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852611327141,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:28",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 180.6839,
+        "x1": 172.0044,
+        "y1": 187.3799
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:30",
+      "locator": {
+        "page": 1,
+        "x0": 180.0,
+        "y0": 208.2839,
+        "x1": 425.4362,
+        "y1": 214.9799
+      },
+      "text": "a. This is usually accomplished by mounding.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646446706337,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:31",
+      "locator": {
+        "page": 1,
+        "x0": 180.0,
+        "y0": 208.2839,
+        "x1": 190.0032,
+        "y1": 214.9799
+      },
+      "text": "a.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999996744538362,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:32",
+      "locator": {
+        "page": 1,
+        "x0": 180.0,
+        "y0": 222.0839,
+        "x1": 505.553,
+        "y1": 256.3799
+      },
+      "text": "b. Above ground tanks shall be on a base of pea gravel (not crushed rock) a minimum of 6\u201d deep or a concrete slab designed to support the imposed load.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999975939024941,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:33",
+      "locator": {
+        "page": 1,
+        "x0": 180.0,
+        "y0": 222.0839,
+        "x1": 190.0008,
+        "y1": 228.7799
+      },
+      "text": "b.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999997127278194,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:34",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 263.4839,
+        "x1": 501.6507,
+        "y1": 283.9799
+      },
+      "text": "8. Tanks shall be provided with a vent of sufficient vent to draft ratio.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99998852137136,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:35",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 263.4839,
+        "x1": 172.0044,
+        "y1": 270.1799
+      },
+      "text": "8.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:36",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 291.0838,
+        "x1": 514.1699,
+        "y1": 297.7798
+      },
+      "text": "9. Tanks shall be provided with an approved water level indicator.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687986352969,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:37",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 291.0838,
+        "x1": 172.0044,
+        "y1": 297.7798
+      },
+      "text": "9.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:38",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 304.8838,
+        "x1": 520.1446,
+        "y1": 408.1799
+      },
+      "text": "10.Tanks not provided with an automatic refill shall not be used for any other purpose than Fire Protection and shall be refilled immediately after use. Tanks used for other than Fire Protection shall have the facility to limit other uses of the water to maintain the minimum calculated amount of water for Fire Protection at all times. That means that irrigation or domestic water use shall not be able to reduce the stored water to a level below the minimum required fire protection.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99999385584449,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:39",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 304.8838,
+        "x1": 178.6752,
+        "y1": 311.5798
+      },
+      "text": "10.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:42",
+      "locator": {
+        "page": 1,
+        "x0": 144.0,
+        "y0": 429.0839,
+        "x1": 156.0,
+        "y1": 435.7799
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999989976142446,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:44",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 442.8839,
+        "x1": 518.1771,
+        "y1": 477.18
+      },
+      "text": "1. All piping from the tank to the hydrant shall be a minimum size of 2.5\u201d for hydrants with 20PSI residual flowing pressure and 4\u201d for drafting hydrants.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999877809842158,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:45",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 442.8839,
+        "x1": 172.0044,
+        "y1": 449.5799
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:46",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 484.284,
+        "x1": 523.6851,
+        "y1": 546.1799
+      },
+      "text": "2. Approved piping is AWWA C900 class 150 or 200, DPI-50 ductile iron, and with previous approval, Schedule 40PVC. Galvanized pipe is not approved for underground supply piping. Ductile iron pipe or other listed assembly shall be used within five (5\u2019) feet of any foundation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999957771775969,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:47",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 484.284,
+        "x1": 172.0044,
+        "y1": 490.98
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:48",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 553.284,
+        "x1": 524.2046,
+        "y1": 615.1799
+      },
+      "text": "3. Depth of burial for piping shall be a minimum of 36 inches. Measurement is from the top of the pipe to grade. Piping shall be installed in accordance with NFPA 25 and Alpine County Fire Prevention Guideline \u201cFire Service Underground Piping Installation\u201d\u2019 (See drawing at end)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999930378028281,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:49",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 553.284,
+        "x1": 172.002,
+        "y1": 559.98
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:50",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 622.284,
+        "x1": 518.9496,
+        "y1": 670.3199
+      },
+      "text": "4. Any buried rods, nuts, bolts, washers, clamps, and other restraining devices shall be cleaned and coated with a bituminous corrosion retarding material after installation prior to burial.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999975939053136,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:51",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 622.284,
+        "x1": 172.0044,
+        "y1": 628.98
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:52",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 677.424,
+        "x1": 518.7095,
+        "y1": 711.72
+      },
+      "text": "5. Underground piping shall be set in a bed of imported sand (or natural gravel, not over 1 inch diameter) a minimum of 6 inches deep below the pipe and have a minimum of 12 inches of sand",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999930377694018,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:53",
+      "locator": {
+        "page": 1,
+        "x0": 162.0,
+        "y0": 677.424,
+        "x1": 171.9996,
+        "y1": 684.12
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:55",
+      "locator": {
+        "page": 2,
+        "x0": 180.0,
+        "y0": 111.684,
+        "x1": 516.2378,
+        "y1": 173.58
+      },
+      "text": "(or gravel) cover done in 4 inch layers. Native backfill or crushed rock is prohibited for bedding or the initial 12 inches of cover. Under pavement backfill from 12 inches above the pipe to grade shall be class 2 aggregate base compacted to 95% relative compaction in 8 inch layers.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999970976963718,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:56",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 180.6839,
+        "x1": 513.4952,
+        "y1": 214.9799
+      },
+      "text": "6. Any exposed piping or drafting hydrants shall be provided with insulation sleeves for frost protection. Exception: Dry drafting hydrants.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785554207774,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:57",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 180.6839,
+        "x1": 172.0044,
+        "y1": 187.3799
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:59",
+      "locator": {
+        "page": 2,
+        "x0": 144.0,
+        "y0": 235.8839,
+        "x1": 524.8117,
+        "y1": 435.7799
+      },
+      "text": "D. Hydrants with Pressure 1. Typical fire hydrants or hose connections and valves of 2.5 inch diameter and NHT male couplings may be used for pipe systems from tanks that have a flowing residual pressure in excess of 20psi. (Usually tanks more than 50 feet above the hydrant.) 2. Dry hydrants are hydrants and pipes permanently supplied from static water holding tank. 3. Dry hydrants or drafting hydrants shall be installed on all underground tanks and those tanks with less than 20psi residual flowing pressure. a. Hydrants below the water level surface or elevated tanks shall be provided with an approved full flow indicating control valve or post indicator valve, example: ball valve, butterfly valve.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646621617405,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:60",
+      "locator": {
+        "page": 2,
+        "x0": 144.0,
+        "y0": 235.8839,
+        "x1": 155.9964,
+        "y1": 242.5799
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999969109951533,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:62",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 249.6839,
+        "x1": 517.5443,
+        "y1": 311.58
+      },
+      "text": "1. Typical fire hydrants or hose connections and valves of 2.5 inch diameter and NHT male couplings may be used for pipe systems from tanks that have a flowing residual pressure in excess of 20psi. (Usually tanks more than 50 feet above the hydrant.)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999983463113408,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:63",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 249.6839,
+        "x1": 172.0044,
+        "y1": 256.3799
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:64",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 318.684,
+        "x1": 521.5077,
+        "y1": 339.18
+      },
+      "text": "2. Dry hydrants are hydrants and pipes permanently supplied from static water holding tank.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999904838467425,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:65",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 318.684,
+        "x1": 172.0032,
+        "y1": 325.38
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:66",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 346.2839,
+        "x1": 524.8117,
+        "y1": 380.5799
+      },
+      "text": "3. Dry hydrants or drafting hydrants shall be installed on all underground tanks and those tanks with less than 20psi residual flowing pressure.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999892168146596,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:67",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 346.2839,
+        "x1": 172.0044,
+        "y1": 352.9799
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:68",
+      "locator": {
+        "page": 2,
+        "x0": 198.0,
+        "y0": 387.6839,
+        "x1": 520.1251,
+        "y1": 435.7799
+      },
+      "text": "a. Hydrants below the water level surface or elevated tanks shall be provided with an approved full flow indicating control valve or post indicator valve, example: ball valve, butterfly valve.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999997593901249,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:69",
+      "locator": {
+        "page": 2,
+        "x0": 144.0,
+        "y0": 456.6838,
+        "x1": 360.8005,
+        "y1": 463.3799
+      },
+      "text": "E. Fire Pumper Connections for Drafting",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.932437990840327,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:70",
+      "locator": {
+        "page": 2,
+        "x0": 144.0,
+        "y0": 456.6838,
+        "x1": 155.3388,
+        "y1": 463.3799
+      },
+      "text": "E.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999975948120483,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:11"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:72",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 470.4838,
+        "x1": 520.9319,
+        "y1": 504.7798
+      },
+      "text": "1. The fire truck connection shall be no closer than 4 feet nor farther than 12 feet from a roadway, and in a location where fire apparatus using it will not block the roadway.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999960330177345,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:73",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 470.4838,
+        "x1": 172.0032,
+        "y1": 477.1798
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:74",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 511.8838,
+        "x1": 524.1647,
+        "y1": 684.1198
+      },
+      "text": "2. Dry or suction connections shall be a hydrant threaded adaptor made of bronze, brass, aluminum alloy or other durable, non- corrosive metal. The threaded adaptor must be permanently affixed to the supply pipe using epoxy adhesive or stainless steel bolts as applicable. The hydrant head shall be a 4.5 inch NHT (American National Fire Hose Thread) female swivel with a male plug connection to provide maximum supply. a. The cap may be of snap-on/snap-off design and removable without special tools. It shall be joined with a steel cable or chain and be permanently attached to the dry hydrant head. The cap shall be hard plastic or of same metal as NHT connection for maximum corrosion resistance.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999904838099354,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:75",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 511.8838,
+        "x1": 172.008,
+        "y1": 518.5798
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:76",
+      "locator": {
+        "page": 2,
+        "x0": 198.0,
+        "y0": 608.4838,
+        "x1": 514.962,
+        "y1": 684.1198
+      },
+      "text": "a. The cap may be of snap-on/snap-off design and removable without special tools. It shall be joined with a steel cable or chain and be permanently attached to the dry hydrant head. The cap shall be hard plastic or of same metal as NHT connection for maximum corrosion resistance.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999997273533758,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:77",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 691.2238,
+        "x1": 514.7927,
+        "y1": 711.7198
+      },
+      "text": "3. Guard Posts shall be provided to protect hydrants from vehicle impact.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999975700081775,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:78",
+      "locator": {
+        "page": 2,
+        "x0": 162.0,
+        "y0": 691.2238,
+        "x1": 172.0044,
+        "y1": 697.9198
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:80",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 111.684,
+        "x1": 508.1925,
+        "y1": 132.18
+      },
+      "text": "a. Constructed of steel not less than 4 inches in diameter and concrete filled.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599367782197,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:81",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 111.684,
+        "x1": 208.0056,
+        "y1": 118.38
+      },
+      "text": "a.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999997300651199,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:82",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 139.284,
+        "x1": 508.1843,
+        "y1": 145.98
+      },
+      "text": "b. Spaced not more than 4 feet between posts on center.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599370588512,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:83",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 139.284,
+        "x1": 208.002,
+        "y1": 145.98
+      },
+      "text": "b.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999999674427242,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:84",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 153.084,
+        "x1": 516.887,
+        "y1": 173.58
+      },
+      "text": "c. Set not less than 3 feet deep in a concrete footing of not less than a 15 inch diameter.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999892167666026,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:85",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 153.084,
+        "x1": 207.3324,
+        "y1": 159.78
+      },
+      "text": "c.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999993918210162,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:86",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 180.6839,
+        "x1": 508.1736,
+        "y1": 201.1799
+      },
+      "text": "d. Set with the top of the posts not less than 3 feet above the ground.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832987136433,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:87",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 180.6839,
+        "x1": 208.0044,
+        "y1": 187.3799
+      },
+      "text": "d.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999997898051226,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:88",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 208.2839,
+        "x1": 489.2794,
+        "y1": 214.9799
+      },
+      "text": "e. Located not less than 5 feet from the hydrant.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417120231974,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:89",
+      "locator": {
+        "page": 3,
+        "x0": 198.0,
+        "y0": 208.2839,
+        "x1": 208.0068,
+        "y1": 214.9799
+      },
+      "text": "e.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999997762247489,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:91",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 222.0839,
+        "x1": 477.6123,
+        "y1": 242.5799
+      },
+      "text": "4. Pumper connections on drafting or dry hydrants shall be approximately 24 inches above the ground surface.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999741328151619,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:92",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 222.0839,
+        "x1": 172.0068,
+        "y1": 228.7799
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:93",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 249.6839,
+        "x1": 522.3394,
+        "y1": 283.9799
+      },
+      "text": "5. The top of the fire truck pumping connection or centerline of fire engine pump on approved access (whichever is higher) shall be no more than 15 feet in elevation above the bottom of the tank.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852611302591,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:94",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 249.6839,
+        "x1": 172.0044,
+        "y1": 256.3799
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:97",
+      "locator": {
+        "page": 3,
+        "x0": 144.0,
+        "y0": 304.8838,
+        "x1": 154.6656,
+        "y1": 311.5798
+      },
+      "text": "F.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999970702763352,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:99",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 346.2838,
+        "x1": 516.9926,
+        "y1": 380.5798
+      },
+      "text": "1. If located along a driveway, a reflectorized blue marker, with a minimum dimension of 3 inches shall be located on the driveway address sign and mounted on a fire retardant post, or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810751111803,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:100",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 346.2838,
+        "x1": 172.0044,
+        "y1": 352.9798
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:101",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 387.6837,
+        "x1": 510.8059,
+        "y1": 463.3797
+      },
+      "text": "2. If located along a street or road; a reflectorized blue marker, with a minimum dimension of 3 inches, shall be mounted on a fire retardant post. The sign shall be within 3 feet of said hydrant/fire valve, with the sign no less than 3 feet or greater than 5 feet above ground, in a horizontal position and visible from the driveway.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999983299008813,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:102",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 387.6837,
+        "x1": 172.0068,
+        "y1": 394.3798
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:103",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 470.4837,
+        "x1": 507.5038,
+        "y1": 532.3796
+      },
+      "text": "3. A sign indicating the type of hydrant and its capacity, if not connected directly to an above ground tank of obvious size, shall be provided. The sign shall state if it is a wet or dry drafting hydrant and the water quantity available. It shall indicate \u201cFOR FIREFIGHTING USE ONLY\u201d - \u201cNO PARKING\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724652242246,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:104",
+      "locator": {
+        "page": 3,
+        "x0": 162.0,
+        "y0": 470.4837,
+        "x1": 172.0008,
+        "y1": 477.1797
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:105",
+      "locator": {
+        "page": 3,
+        "x0": 242.5804,
+        "y0": 583.6004,
+        "x1": 372.6516,
+        "y1": 703.9219
+      },
+      "text": "DRAFTING HYDRANT 8,000 GALLONS FIRE DEPARTMENT USE ONLY NO PARKING",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.989093309755194,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:106",
+      "locator": {
+        "page": 4,
+        "x0": 90.0,
+        "y0": 125.484,
+        "x1": 561.4105,
+        "y1": 145.98
+      },
+      "text": "Vehicle driving or parking Pavement 2\u201d over 5\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998207779582453,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:110",
+      "locator": {
+        "page": 4,
+        "x0": 323.4,
+        "y0": 166.884,
+        "x1": 380.0485,
+        "y1": 173.58
+      },
+      "text": "M",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.996852776863419,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:117",
+      "locator": {
+        "page": 4,
+        "x0": 426.72,
+        "y0": 166.884,
+        "x1": 544.0993,
+        "y1": 187.3799
+      },
+      "text": "Minimum of 24\u201d of #2 AB",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646514097174,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:118",
+      "locator": {
+        "page": 4,
+        "x0": 90.0,
+        "y0": 235.8839,
+        "x1": 160.6608,
+        "y1": 242.5799
+      },
+      "text": "Marker tape",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999948565759406,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:119",
+      "locator": {
+        "page": 4,
+        "x0": 90.0,
+        "y0": 249.6839,
+        "x1": 516.0926,
+        "y1": 270.1799
+      },
+      "text": "12\u201d of sand 10 Guage wire",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999098228202146,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:114",
+      "locator": {
+        "page": 4,
+        "x0": 244.68,
+        "y0": 277.2838,
+        "x1": 422.7745,
+        "y1": 283.9799
+      },
+      "text": "Sand",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999097871073475,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:120",
+      "locator": {
+        "page": 4,
+        "x0": 90.0,
+        "y0": 277.2838,
+        "x1": 597.3527,
+        "y1": 297.7798
+      },
+      "text": "Sand Pipe",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339713649309,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:121",
+      "locator": {
+        "page": 4,
+        "x0": 446.7,
+        "y0": 304.8838,
+        "x1": 597.4705,
+        "y1": 311.5798
+      },
+      "text": "6\u201d of Sand",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546133568348,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:129",
+      "locator": {
+        "page": 4,
+        "x0": 445.5,
+        "y0": 443.2688,
+        "x1": 494.3895,
+        "y1": 448.86
+      },
+      "text": "Native fill",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546104097516,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:130",
+      "locator": {
+        "page": 4,
+        "x0": 90.0,
+        "y0": 493.8488,
+        "x1": 503.3618,
+        "y1": 510.96
+      },
+      "text": "Marker tape 12\u201d of sand above pipe",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646583927085,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:131",
+      "locator": {
+        "page": 4,
+        "x0": 90.0,
+        "y0": 530.6288,
+        "x1": 473.3937,
+        "y1": 536.22
+      },
+      "text": "10 guage wire Sand",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998978134999289,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:132",
+      "locator": {
+        "page": 4,
+        "x0": 90.0,
+        "y0": 555.9488,
+        "x1": 596.764,
+        "y1": 573.06
+      },
+      "text": "Pipe 6 inches of sand under pipe",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999516959876963,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:133",
+      "locator": {
+        "page": 5,
+        "x0": 124.08,
+        "y0": 127.8488,
+        "x1": 198.2369,
+        "y1": 137.46
+      },
+      "text": "Style 130",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9922836848208061,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:134",
+      "locator": {
+        "page": 5,
+        "x0": 124.08,
+        "y0": 146.4712,
+        "x1": 255.1195,
+        "y1": 168.54
+      },
+      "text": "Dry Hydrant Plug Available sizes: 4\" thru 6\"",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968291706575739,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:135",
+      "locator": {
+        "page": 5,
+        "x0": 142.08,
+        "y0": 181.9165,
+        "x1": 473.5296,
+        "y1": 188.7
+      },
+      "text": "\uf0b7 Includes vinyl coated stainless steel wire rope to secure plug.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999667876217517,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:137",
+      "locator": {
+        "page": 5,
+        "x0": 124.08,
+        "y0": 309.3488,
+        "x1": 214.0665,
+        "y1": 318.96
+      },
+      "text": "Style 132-F",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9989618328603295,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:133"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:138",
+      "locator": {
+        "page": 5,
+        "x0": 124.08,
+        "y0": 327.9712,
+        "x1": 398.2383,
+        "y1": 362.2203
+      },
+      "text": "Long Handle Swivel Female Dry Hydrant Adapter Available sizes: 4\" thru 6\" 45 degree, 90 degree, or straight 180 degree",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695376271262,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:140",
+      "locator": {
+        "page": 5,
+        "x0": 142.08,
+        "y0": 375.5965,
+        "x1": 373.5309,
+        "y1": 382.38
+      },
+      "text": "\uf0b7 \"O\" ring seal assures vacuum tight joints.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999964644369698,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:141",
+      "locator": {
+        "page": 5,
+        "x0": 142.08,
+        "y0": 376.2428,
+        "x1": 146.6892,
+        "y1": 382.38
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:142",
+      "locator": {
+        "page": 5,
+        "x0": 142.08,
+        "y0": 397.7367,
+        "x1": 460.1438,
+        "y1": 404.5202
+      },
+      "text": "\uf0b7 Suction strainer w/ removable snap ring for easy cleanout.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911099334314,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:143",
+      "locator": {
+        "page": 5,
+        "x0": 142.08,
+        "y0": 398.383,
+        "x1": 146.6892,
+        "y1": 404.5202
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:144",
+      "locator": {
+        "page": 5,
+        "x0": 142.08,
+        "y0": 419.937,
+        "x1": 413.3834,
+        "y1": 426.7205
+      },
+      "text": "\uf0b7 Female thread shall be 4.5\u201d national hose thread.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204945402366,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:145",
+      "locator": {
+        "page": 5,
+        "x0": 142.08,
+        "y0": 420.5833,
+        "x1": 146.6892,
+        "y1": 426.7205
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:148",
+      "locator": {
+        "page": 5,
+        "x0": 148.38,
+        "y0": 642.5992,
+        "x1": 521.5311,
+        "y1": 666.4798
+      },
+      "text": "NO PARKING SIGN FEMALE DRY HYDRANT WITH ALUMINUM PLUG",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9332694114200795,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:151",
+      "locator": {
+        "page": 6,
+        "x0": 126.0,
+        "y0": 291.2392,
+        "x1": 263.6317,
+        "y1": 299.04
+      },
+      "text": "BUTTERFLY VALVE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8940325527039006,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:154",
+      "locator": {
+        "page": 6,
+        "x0": 214.98,
+        "y0": 487.1992,
+        "x1": 396.9926,
+        "y1": 495.0
+      },
+      "text": "INDICATING BALL VALVES",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9403415546104914,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:155",
+      "locator": {
+        "page": 7,
+        "x0": 223.32,
+        "y0": 113.2808,
+        "x1": 388.7634,
+        "y1": 122.22
+      },
+      "text": "SUPPLY COMPANIES",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9969037792790714,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:69",
+        "c3-0794:137"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:156",
+      "locator": {
+        "page": 7,
+        "x0": 90.0,
+        "y0": 143.964,
+        "x1": 152.0256,
+        "y1": 150.66
+      },
+      "text": "FITTINGS:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9931872918910388,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:157",
+      "locator": {
+        "page": 7,
+        "x0": 324.0,
+        "y0": 143.964,
+        "x1": 372.6313,
+        "y1": 150.66
+      },
+      "text": "TANKS:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9819520137419873,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0794:158",
+      "locator": {
+        "page": 7,
+        "x0": 90.0,
+        "y0": 171.504,
+        "x1": 246.1165,
+        "y1": 233.4
+      },
+      "text": "L.N. Curtis & Sons 1800 Peralta Street Oakland, CA 94607 Phone: 800-443-3556 Fax: 510-839-5325 (Sales)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646481468705,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:159",
+      "locator": {
+        "page": 7,
+        "x0": 324.0,
+        "y0": 171.504,
+        "x1": 446.7121,
+        "y1": 233.4
+      },
+      "text": "Water Tanks.com P. O. Box 340 Windsor, CA 95492 Phone: 877-655-1100 Fax: 707-535-1450",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999688011064802,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:160",
+      "locator": {
+        "page": 7,
+        "x0": 90.0,
+        "y0": 254.3039,
+        "x1": 209.4048,
+        "y1": 316.1999
+      },
+      "text": "Kochek Co. Inc. 4 Ridge Road Putnam, CT 06260 Phone 800-420-4673 Fax: 800-772-0255",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339597684909,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:163",
+      "locator": {
+        "page": 7,
+        "x0": 324.0,
+        "y0": 254.3039,
+        "x1": 446.8439,
+        "y1": 316.2
+      },
+      "text": "TRS TANKS 651 West 5 th Avenue Escondido, CA 92025 Phone: 877-741-6936 www.trstanks.com",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810769269477,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:161",
+      "locator": {
+        "page": 7,
+        "x0": 90.0,
+        "y0": 337.1039,
+        "x1": 281.4167,
+        "y1": 398.9998
+      },
+      "text": "Schlumberger Water Services 2520 Venture Oaks Way, Suite 430 Sacramento, CA 95833 Phone: 916-669-4399 Fax: 916-329-9191",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785563098796,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:164",
+      "locator": {
+        "page": 7,
+        "x0": 324.0,
+        "y0": 337.104,
+        "x1": 466.8549,
+        "y1": 412.7399
+      },
+      "text": "Loomis Tanks 12762 Kennedy Flat Road Jackson, CA 95642 Toll Free: 866-600-4307 Phone: 209-223-4307 Fax: 209-223-4357",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999688015029119,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:162",
+      "locator": {
+        "page": 7,
+        "x0": 90.0,
+        "y0": 419.8438,
+        "x1": 220.692,
+        "y1": 467.94
+      },
+      "text": "www.thefirestore.com/ www.firehosedirect.com/ Phone: 888-975-0858",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998416186838761,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:165",
+      "locator": {
+        "page": 7,
+        "x0": 324.0,
+        "y0": 433.6439,
+        "x1": 492.0146,
+        "y1": 509.3398
+      },
+      "text": "BH Tanks 601 Noble Street Madera, CA 93637 Toll Free: 800-464-2951 (USA) Phone: 559-662-0600 Fax: 559-662-0601",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999688011094396,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:166",
+      "locator": {
+        "page": 7,
+        "x0": 324.0,
+        "y0": 530.2438,
+        "x1": 458.1696,
+        "y1": 592.1398
+      },
+      "text": "M&M Water P.O. Box 1808 Cedar Ridge, CA 95924 Phone: 530-272-1040 Fax: 530-272-0539",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999152213611594,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0794:167",
+      "locator": {
+        "page": 7,
+        "x0": 324.0,
+        "y0": 613.0439,
+        "x1": 516.845,
+        "y1": 688.7399
+      },
+      "text": "Central Valley Tank of California 4752 E. Carmen Avenue Fresno, CA 93703 Phone: 888-374-8265 Fax: 559-456-3501 Email: centralvalleytank@gmail.com",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724673244391,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0794:6",
+        "c3-0794:155",
+        "c3-0794:157"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

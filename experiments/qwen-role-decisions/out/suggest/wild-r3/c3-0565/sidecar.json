@@ -1,0 +1,1728 @@
+{
+  "document": "c3-0565",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 76,
+    "cards_considered": 76,
+    "selector": "all-blocks",
+    "not_heading_confident": 58,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 1
+  },
+  "cards": [
+    {
+      "card_id": "c3-0565:1",
+      "locator": {
+        "page": 0,
+        "x0": 167.2797,
+        "y0": 89.2809,
+        "x1": 450.8363,
+        "y1": 139.92
+      },
+      "text": "BLUE HILLS REGIONAL DISTRICT SCHOOL COMMITTEE 800 Randolph Street Canton, MA 02021-9103 \u201cFifty-Third District Committee\u201d www.bluehills.org",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9841384810357989,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:2",
+      "locator": {
+        "page": 0,
+        "x0": 85.92,
+        "y0": 149.2812,
+        "x1": 528.5877,
+        "y1": 188.64
+      },
+      "text": "Membership: Francis J. Fistori, Avon; Eric C. Erskine, Braintree; Aidan G. Maguire, Jr., Canton; Thomas R. Polito, Jr., Dedham; Michael C. Franzosa, Holbrook; Fess Joyce, Milton; Kevin L. Connolly, Norwood; Marybeth Nearen, Randolph and Charles W. Flahive, Westwood.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998602154622734,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:3",
+      "locator": {
+        "page": 0,
+        "x0": 153.36,
+        "y0": 208.08,
+        "x1": 461.4193,
+        "y1": 216.0
+      },
+      "text": "Goals: \u201cTransparency, Accountability and Fiscal Discipline\u201d",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.6787730602398758,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:4",
+      "locator": {
+        "page": 0,
+        "x0": 286.0798,
+        "y0": 231.581,
+        "x1": 363.9479,
+        "y1": 237.6002
+      },
+      "text": "ORGANIZATION:",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9950311939100778,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:5",
+      "locator": {
+        "page": 0,
+        "x0": 180.0,
+        "y0": 241.6893,
+        "x1": 438.9805,
+        "y1": 283.9195
+      },
+      "text": "Chairman Marybeth Nearen Vice Chairman Thomas R. Polito, Jr. Secretary Eric C. Erskine District Treasurer Charles J. Gisondi Student Representative Andrew Bryant",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996202888805968,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:6",
+      "locator": {
+        "page": 0,
+        "x0": 187.6805,
+        "y0": 296.6921,
+        "x1": 434.8683,
+        "y1": 301.9193
+      },
+      "text": "SUBCOMMITTEES * Appointed by Chairman Nearen (7.11.17)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7459404988773181,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:7",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 315.1331,
+        "x1": 520.7749,
+        "y1": 404.16
+      },
+      "text": "ATHLETIC & EXTRACURRICULAR Members Flahive, Maguire, Erskine and Joyce BUILDINGS, FACILITIES, SAFETY AND SECURITY Members Connolly, Erskine, Franzosa, and Polito CURRICULUM & ADVISORY - Members Connolly, Franzosa, Joyce and Maguire, EVALUATION - Members Erskine, Fistori, Flahive, and Polito FINANCE & ADMINISTRATION - Members Franzosa, Maguire, Nearen and Polito PERSONNEL & NEGOTIATIONS - Members Erskine, Flahive, Maguire, and Polito POLICY - Members Fistori, Flahive, Franzosa and Nearen, SCHOOL BUILDING.MSBA - Members Connolly, Erskine, Franzosa, Polito WARRANT - Members Maguire Fistori, Flahive, Franzosa, WEBSITE & TECHNOLOGY Members Connolly, Fistori, Franzosa and Maguire",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997045712692619,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:8",
+      "locator": {
+        "page": 0,
+        "x0": 180.0006,
+        "y0": 449.9807,
+        "x1": 460.7743,
+        "y1": 476.6403
+      },
+      "text": "Superintendent / Director James P. Quaglia Principal Jill M. Rossetti Assistant Superintendent/Business & Personnel Steven M. Moore",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994478875988827,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:9",
+      "locator": {
+        "page": 0,
+        "x0": 102.72,
+        "y0": 481.0128,
+        "x1": 541.991,
+        "y1": 495.12
+      },
+      "text": "* Subcommittee Chairmen are first and bolded. Elected by subcommittee upon their first meeting after appointment. The Chairman of the District School Committee serves as Ex-officio member on all subcommittees.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998205270216299,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:10",
+      "locator": {
+        "page": 0,
+        "x0": 72.0004,
+        "y0": 508.6125,
+        "x1": 478.1262,
+        "y1": 513.8397
+      },
+      "text": "PLEASE NOTE SUBCOMMITTEE MEETINGS PRIOR TO REGULAR SCHEDULE MEETING",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8816392736414647,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:11",
+      "locator": {
+        "page": 0,
+        "x0": 187.44,
+        "y0": 534.4142,
+        "x1": 427.3611,
+        "y1": 553.2
+      },
+      "text": "*Subcommittee Meetings, prior to Regular Schedule Meeting: (in Board Room #402)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9741617791177403,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:12",
+      "locator": {
+        "page": 0,
+        "x0": 107.76,
+        "y0": 570.7635,
+        "x1": 506.8105,
+        "y1": 636.4799
+      },
+      "text": "Thursday, 11.30.17 at 3 p.m.: School Building MSBA, 27 th Meeting Thursday, 11.30.17 at 5 p.m.: Personnel & Negotiation Subcommittee: Negotiations/ Clerical #SEIU888 (Before Regular Meeting.12.5.17)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999769607656721,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:14",
+      "locator": {
+        "page": 0,
+        "x0": 105.84,
+        "y0": 640.9742,
+        "x1": 506.2329,
+        "y1": 648.0
+      },
+      "text": "5:30 p.m. Finance & Administration Subcommittee \u2013 Review of Financial Documents",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9985004017807657,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:15",
+      "locator": {
+        "page": 0,
+        "x0": 105.84,
+        "y0": 640.9742,
+        "x1": 149.5033,
+        "y1": 648.0
+      },
+      "text": "5:30 p.m.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9797624477924627,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:16",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 652.7343,
+        "x1": 525.4468,
+        "y1": 659.76
+      },
+      "text": "6:30 p.m.: Warrant Subcommittee - Review documents for Warrant Approval, Room 402",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9985006170326747,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:17",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 652.7343,
+        "x1": 151.5919,
+        "y1": 659.76
+      },
+      "text": "6:30 p.m.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8713859053856559,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:18",
+      "locator": {
+        "page": 0,
+        "x0": 296.8792,
+        "y0": 759.708,
+        "x1": 332.811,
+        "y1": 783.36
+      },
+      "text": "\u2192",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:0",
+      "locator": {
+        "page": 1,
+        "x0": 72.4801,
+        "y0": 31.7775,
+        "x1": 380.1325,
+        "y1": 38.4001
+      },
+      "text": "DSC Agenda, Regularly-Scheduled MEETING, Tuesday, December 5, 2017",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5634989449012258,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:20",
+      "locator": {
+        "page": 1,
+        "x0": 516.961,
+        "y0": 36.0975,
+        "x1": 562.3126,
+        "y1": 42.7201
+      },
+      "text": "Page 2 of 2",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9906639279655116,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:21",
+      "locator": {
+        "page": 1,
+        "x0": 196.3204,
+        "y0": 58.973,
+        "x1": 419.1377,
+        "y1": 84.2401
+      },
+      "text": "Regular Schedule Meeting-Agenda Tuesday, December 5, 2017 at 7 p.m.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.8353143601528565,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:22",
+      "locator": {
+        "page": 1,
+        "x0": 82.8002,
+        "y0": 90.4802,
+        "x1": 531.9453,
+        "y1": 98.4002
+      },
+      "text": "Conducted in the William T. Buckley District School Committee Meeting Room, #207A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9242367732931435,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:23",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 117.0544,
+        "x1": 533.7017,
+        "y1": 150.7206
+      },
+      "text": "NOTE: The listings of matters are those reasonably anticipated by the Chair which may be discussed at the meeting. Not all items listed may in fact be discussed and other items not listed may also be brought up for discussion to the extent permitted by law.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039035742805,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:25",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 167.9311,
+        "x1": 210.555,
+        "y1": 174.0004
+      },
+      "text": "1. Pledge of Allegiance, Roll Call",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9153104057000078,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:26",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 167.9311,
+        "x1": 79.5899,
+        "y1": 174.0004
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:27",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 183.5308,
+        "x1": 156.12,
+        "y1": 189.6002
+      },
+      "text": "2. Public Comment",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8420811063203628,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:28",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 183.5308,
+        "x1": 79.5899,
+        "y1": 189.6002
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:29",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 198.8907,
+        "x1": 300.5961,
+        "y1": 204.9601
+      },
+      "text": "3. Student Representative Mr. Andrew Bryant \u2013 Report.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992907183574119,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:30",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 198.8907,
+        "x1": 79.5918,
+        "y1": 204.9601
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:31h",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 214.4904,
+        "x1": 370.1828,
+        "y1": 226.19039999999998
+      },
+      "text": "4. CONSENT ITEMS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.7957221435738512,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:32",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 214.4904,
+        "x1": 79.5899,
+        "y1": 220.5598
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:31",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 226.19039999999998,
+        "x1": 370.1828,
+        "y1": 269.0408
+      },
+      "text": "\uf0b7 Approval of Previous Meeting Minutes (11.21.17) \uf0b7 Warrant Approval \u2013 Warrant Subcommittee recommendation. \uf0b7 Admissions Policy (Revised/Amended)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766261346596,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:34",
+      "locator": {
+        "page": 1,
+        "x0": 108.0004,
+        "y0": 230.8107,
+        "x1": 321.2958,
+        "y1": 236.8801
+      },
+      "text": "\uf0b7 Approval of Previous Meeting Minutes (11.21.17)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998831291360478,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:35",
+      "locator": {
+        "page": 1,
+        "x0": 108.0004,
+        "y0": 231.2941,
+        "x1": 112.1876,
+        "y1": 236.8801
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:36",
+      "locator": {
+        "page": 1,
+        "x0": 108.0004,
+        "y0": 246.8911,
+        "x1": 370.1828,
+        "y1": 252.9604
+      },
+      "text": "\uf0b7 Warrant Approval \u2013 Warrant Subcommittee recommendation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695744103645,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:37",
+      "locator": {
+        "page": 1,
+        "x0": 108.0004,
+        "y0": 247.3745,
+        "x1": 112.1876,
+        "y1": 252.9604
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:38",
+      "locator": {
+        "page": 1,
+        "x0": 108.0004,
+        "y0": 262.9715,
+        "x1": 280.7114,
+        "y1": 269.0408
+      },
+      "text": "\uf0b7 Admissions Policy (Revised/Amended)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964098771404594,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:39",
+      "locator": {
+        "page": 1,
+        "x0": 108.0004,
+        "y0": 263.4548,
+        "x1": 112.1876,
+        "y1": 269.0408
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:40",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 278.3314,
+        "x1": 223.0467,
+        "y1": 284.4007
+      },
+      "text": "5. Treasurer: Mr. Charles J. Gisondi",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990900391373502,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:41",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 278.3314,
+        "x1": 79.5908,
+        "y1": 284.4007
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:42",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 293.9311,
+        "x1": 293.1574,
+        "y1": 300.0005
+      },
+      "text": "6. Student Representative Report: Mr. Andrew Bryant",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983006033940555,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:43",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 293.9311,
+        "x1": 79.5917,
+        "y1": 300.0005
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:44",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 309.7708,
+        "x1": 278.6314,
+        "y1": 315.8401
+      },
+      "text": "7. DSC Chair Report: Chairman Marybeth Nearen",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991963156103695,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:45",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 309.7708,
+        "x1": 79.5899,
+        "y1": 315.8401
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:46",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 330.4111,
+        "x1": 306.2381,
+        "y1": 336.4805
+      },
+      "text": "8. Fall Athletic Report \u2013 Athletic Director Edward Catabia",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991962949578916,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:47",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 330.4111,
+        "x1": 79.5899,
+        "y1": 336.4805
+      },
+      "text": "8.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:48",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 351.0515,
+        "x1": 449.6249,
+        "y1": 390.0003
+      },
+      "text": "9. Subcommittee Reports (As needed.): \uf0b7 Finance and Administration Subcommittee Review of FY19 Budget Goals \uf0b7 Personnel & Negotiation Subcommittee \u2013 Chairman Eric C. Erskine (Update) \uf0b7 Warrant Subcommittee - Review documents relative to Warrant Approval.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992906104984814,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:49",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 351.0515,
+        "x1": 79.569,
+        "y1": 357.1209
+      },
+      "text": "9.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:51",
+      "locator": {
+        "page": 1,
+        "x0": 126.0,
+        "y0": 361.8514,
+        "x1": 438.6788,
+        "y1": 367.9208
+      },
+      "text": "\uf0b7 Finance and Administration Subcommittee Review of FY19 Budget Goals",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986756429200838,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:52",
+      "locator": {
+        "page": 1,
+        "x0": 126.0,
+        "y0": 362.3348,
+        "x1": 130.1873,
+        "y1": 367.9208
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:53",
+      "locator": {
+        "page": 1,
+        "x0": 126.0,
+        "y0": 372.8912,
+        "x1": 449.6249,
+        "y1": 378.9605
+      },
+      "text": "\uf0b7 Personnel & Negotiation Subcommittee \u2013 Chairman Eric C. Erskine (Update)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991963737203556,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:54",
+      "locator": {
+        "page": 1,
+        "x0": 126.0,
+        "y0": 373.3745,
+        "x1": 130.1873,
+        "y1": 378.9605
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:55",
+      "locator": {
+        "page": 1,
+        "x0": 126.0,
+        "y0": 383.9309,
+        "x1": 436.6627,
+        "y1": 390.0003
+      },
+      "text": "\uf0b7 Warrant Subcommittee - Review documents relative to Warrant Approval.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995696119452243,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:56",
+      "locator": {
+        "page": 1,
+        "x0": 126.0,
+        "y0": 384.4143,
+        "x1": 130.1873,
+        "y1": 390.0003
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:57",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 409.8509,
+        "x1": 477.7329,
+        "y1": 534.2404
+      },
+      "text": "10. Administrative Reports: 10.1 Treasurer: Mr. Charles J. Gisondi 10.2 Assistant Superintendent/Personnel and Business: Mr. Steven M. Moore \uf0b7 Review of Information provided at Finance & Administration Subcommittee Meeting. 10.3 Principal \u2013 Ms. Jill M. Rossetti 10.4 Superintendent/Director: Mr. James P. Quaglia",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990891665387338,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:58",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 409.8509,
+        "x1": 84.6073,
+        "y1": 415.9203
+      },
+      "text": "10.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:60",
+      "locator": {
+        "page": 1,
+        "x0": 109.7153,
+        "y0": 430.4913,
+        "x1": 267.7928,
+        "y1": 436.5606
+      },
+      "text": "10.1 Treasurer: Mr. Charles J. Gisondi",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993739728133856,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:61",
+      "locator": {
+        "page": 1,
+        "x0": 109.7153,
+        "y0": 430.4913,
+        "x1": 127.2571,
+        "y1": 436.5606
+      },
+      "text": "10.1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:62",
+      "locator": {
+        "page": 1,
+        "x0": 109.6798,
+        "y0": 454.7313,
+        "x1": 477.7329,
+        "y1": 485.7603
+      },
+      "text": "10.2 Assistant Superintendent/Personnel and Business: Mr. Steven M. Moore \uf0b7 Review of Information provided at Finance & Administration Subcommittee Meeting.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998602080322512,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:63",
+      "locator": {
+        "page": 1,
+        "x0": 109.6798,
+        "y0": 454.7313,
+        "x1": 127.2189,
+        "y1": 460.8007
+      },
+      "text": "10.2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:64",
+      "locator": {
+        "page": 1,
+        "x0": 126.0,
+        "y0": 479.6909,
+        "x1": 477.7329,
+        "y1": 485.7603
+      },
+      "text": "\uf0b7 Review of Information provided at Finance & Administration Subcommittee Meeting.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388531346671,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:65",
+      "locator": {
+        "page": 1,
+        "x0": 109.7016,
+        "y0": 504.1709,
+        "x1": 253.9885,
+        "y1": 510.2402
+      },
+      "text": "10.3 Principal \u2013 Ms. Jill M. Rossetti",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9959323674187887,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:66",
+      "locator": {
+        "page": 1,
+        "x0": 109.7016,
+        "y0": 504.1709,
+        "x1": 127.2489,
+        "y1": 510.2402
+      },
+      "text": "10.3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:67",
+      "locator": {
+        "page": 1,
+        "x0": 109.7016,
+        "y0": 528.1711,
+        "x1": 321.1501,
+        "y1": 534.2404
+      },
+      "text": "10.4 Superintendent/Director: Mr. James P. Quaglia",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990895145582869,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:68",
+      "locator": {
+        "page": 1,
+        "x0": 109.7016,
+        "y0": 528.1711,
+        "x1": 127.2407,
+        "y1": 534.2404
+      },
+      "text": "10.4",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:69",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 556.0108,
+        "x1": 255.3153,
+        "y1": 562.0811
+      },
+      "text": "11. Unfinished Business and New Business",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.5006522384502686,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:70",
+      "locator": {
+        "page": 1,
+        "x0": 72.0001,
+        "y0": 556.0108,
+        "x1": 84.6073,
+        "y1": 562.0801
+      },
+      "text": "11.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:31h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:71",
+      "locator": {
+        "page": 1,
+        "x0": 72.0006,
+        "y0": 579.5314,
+        "x1": 476.7494,
+        "y1": 585.6007
+      },
+      "text": "12. Discussion or Suggestions for the Good of the District, Including newsworthy educational items.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984991848042368,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:72",
+      "locator": {
+        "page": 1,
+        "x0": 72.0006,
+        "y0": 579.5314,
+        "x1": 84.6479,
+        "y1": 585.6007
+      },
+      "text": "12.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:73",
+      "locator": {
+        "page": 1,
+        "x0": 71.9997,
+        "y0": 595.1311,
+        "x1": 523.3009,
+        "y1": 647.9998
+      },
+      "text": "13. An executive session may occur to discuss collective bargaining, strategies and/or possible litigation under Open Meeting Law, Chapter 30A, Section 21 (a) (b), 2, 3 of the Commonwealth of Massachusetts General Laws. Open meeting discussion may have a detrimental effect on the bargaining or litigating position of the public body. And Open Meeting Law Regulations, 940 CMR 29.00-29.11.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599390181558,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:74",
+      "locator": {
+        "page": 1,
+        "x0": 72.0006,
+        "y0": 595.1311,
+        "x1": 84.6424,
+        "y1": 601.2004
+      },
+      "text": "13.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:75",
+      "locator": {
+        "page": 1,
+        "x0": 71.9997,
+        "y0": 665.6907,
+        "x1": 143.1628,
+        "y1": 671.7601
+      },
+      "text": "14. Adjournment",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9387004081489694,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:69"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:76",
+      "locator": {
+        "page": 1,
+        "x0": 71.9997,
+        "y0": 665.6907,
+        "x1": 84.6279,
+        "y1": 671.7601
+      },
+      "text": "14.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:78",
+      "locator": {
+        "page": 1,
+        "x0": 470.1669,
+        "y0": 681.545,
+        "x1": 566.1954,
+        "y1": 722.2204
+      },
+      "text": "Digitally signed by Susan M. Galvin DN: cn=Susan M. Galvin, o=Town of Milton, ou=Town Clerk, email=townclerk@townofmilton.org, c=US Date: 2017.11.30 10:46:27 -05'00'",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988334501714341,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:77",
+      "locator": {
+        "page": 1,
+        "x0": 71.9997,
+        "y0": 684.8632,
+        "x1": 436.0173,
+        "y1": 696.1494
+      },
+      "text": "Next meeting dates: 12.19.17, 1.2.18 and 1.16.18 Susan M.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964608424399579,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0565:79",
+      "locator": {
+        "page": 1,
+        "x0": 362.5557,
+        "y0": 707.398,
+        "x1": 412.0196,
+        "y1": 718.6842
+      },
+      "text": "Galvin",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9806850310225131,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:75"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0565:81",
+      "locator": {
+        "page": 1,
+        "x0": 107.0402,
+        "y0": 764.1087,
+        "x1": 115.0802,
+        "y1": 774.7215
+      },
+      "text": "2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0565:21",
+        "c3-0565:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

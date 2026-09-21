@@ -1,0 +1,257 @@
+{
+  "document": "c3-0282",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 11,
+    "cards_considered": 11,
+    "selector": "all-blocks",
+    "not_heading_confident": 7,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0282:1",
+      "locator": {
+        "page": 0,
+        "x0": 226.98,
+        "y0": 575.4959,
+        "x1": 389.9628,
+        "y1": 585.5399
+      },
+      "text": "Erlton North Trails",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9912497042520548,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0282:3",
+      "locator": {
+        "page": 0,
+        "x0": 70.2,
+        "y0": 610.079,
+        "x1": 194.629,
+        "y1": 617.8799
+      },
+      "text": "TRAIL FEATURES",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.8366567795798301,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0282:11",
+      "locator": {
+        "page": 0,
+        "x0": 269.7,
+        "y0": 610.079,
+        "x1": 526.0863,
+        "y1": 617.8799
+      },
+      "text": "TRAILS DISTANCE DIFFICULTY",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9998116564471656,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0282:12",
+      "locator": {
+        "page": 0,
+        "x0": 269.7,
+        "y0": 625.3439,
+        "x1": 543.0118,
+        "y1": 659.9399
+      },
+      "text": "Yellow .20 mi Easy, flat Orange .21 mi Easy, flat [ADA] Green .27 mi Easy",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0282:5",
+      "locator": {
+        "page": 0,
+        "x0": 53.7,
+        "y0": 625.5299,
+        "x1": 122.3364,
+        "y1": 632.8799
+      },
+      "text": "\uf0b7 Meadow",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998862032135754,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0282:6",
+      "locator": {
+        "page": 0,
+        "x0": 53.7,
+        "y0": 625.5299,
+        "x1": 59.22,
+        "y1": 632.8799
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0282:7",
+      "locator": {
+        "page": 0,
+        "x0": 53.7,
+        "y0": 640.1699,
+        "x1": 211.0248,
+        "y1": 661.5599
+      },
+      "text": "\uf0b7 ADA accessible-Orange trail, part of yellow",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998614640254624,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0282:8",
+      "locator": {
+        "page": 0,
+        "x0": 53.7,
+        "y0": 640.1699,
+        "x1": 59.22,
+        "y1": 647.5199
+      },
+      "text": "\uf0b7",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0282:18",
+      "locator": {
+        "page": 0,
+        "x0": 410.16,
+        "y0": 693.5059,
+        "x1": 502.3231,
+        "y1": 701.1599
+      },
+      "text": "TRAIL HEAD",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9745304023500173,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0282:15",
+      "locator": {
+        "page": 0,
+        "x0": 173.1,
+        "y0": 702.5059,
+        "x1": 253.3186,
+        "y1": 710.1599
+      },
+      "text": "LOCATION",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.6478405758432801,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0282:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0282:16",
+      "locator": {
+        "page": 0,
+        "x0": 100.8,
+        "y0": 717.456,
+        "x1": 325.1208,
+        "y1": 751.2
+      },
+      "text": "New Hampshire Ave, New York Ave and West Miami Ave Cherry Hill, NJ",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997974872894073,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0282:1",
+        "c3-0282:15"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

@@ -1,0 +1,6126 @@
+{
+  "document": "c3-0429",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 273,
+    "cards_considered": 273,
+    "selector": "all-blocks",
+    "not_heading_confident": 247,
+    "table_vetoed": 24,
+    "table_not_heading_confident": 138,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0429:0",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 78.403,
+        "x1": 234.18,
+        "y1": 91.043
+      },
+      "text": "Low-Barrier Shelter",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9875001966630729,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:1",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 111.8725,
+        "x1": 342.8439,
+        "y1": 138.334
+      },
+      "text": "RFP for Coronavirus State and Local Fiscal Recovery Funds",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8673899838793178,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:2",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 217.1568,
+        "x1": 188.388,
+        "y1": 229.206
+      },
+      "text": "City of Asheville",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.7026839005078417,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:3",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 238.938,
+        "x1": 174.744,
+        "y1": 275.0779
+      },
+      "text": "Debra Campbell PO Box 7148 Asheville, NC 28802",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766228626899,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:0",
+        "c3-0429:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:4",
+      "locator": {
+        "page": 0,
+        "x0": 329.4,
+        "y0": 253.006,
+        "x1": 417.468,
+        "y1": 261.0099
+      },
+      "text": "O: 828-271-6116",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990898213445428,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:0",
+        "c3-0429:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:5",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 381.6299,
+        "x1": 154.53,
+        "y1": 393.679
+      },
+      "text": "Emily Ball",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6239842746543275,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:0",
+        "c3-0429:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:6",
+      "locator": {
+        "page": 0,
+        "x0": 320.4,
+        "y0": 403.411,
+        "x1": 433.86,
+        "y1": 411.415
+      },
+      "text": "eball@ashevillenc.gov",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990893078372473,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:0",
+        "c3-0429:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:7",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 78.403,
+        "x1": 215.1,
+        "y1": 91.043
+      },
+      "text": "Application Form",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9977886883371636,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:0",
+        "c3-0429:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:8",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 131.0038,
+        "x1": 188.766,
+        "y1": 143.053
+      },
+      "text": "Question Group",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9990873648222934,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:9",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 152.588,
+        "x1": 533.78,
+        "y1": 171.1151
+      },
+      "text": "Buncombe County requests proposals for projects to help the community recover from and respond to COVID-19 and its negative economic impacts.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995121506876626,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:10",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 189.209,
+        "x1": 537.0902,
+        "y1": 219.943
+      },
+      "text": "Buncombe County has been awarded $50,733,290 in Coronavirus State and Local Fiscal Recovery Funds (Recovery Funding)i, as part of the American Rescue Plan Act. This infusion of federal resources is intended to help turn the tide on the pandemic, address its economic fallout, and lay the foundation for a strong and equitable recovery.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251546507535,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:11",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 238.037,
+        "x1": 370.64,
+        "y1": 244.3571
+      },
+      "text": "Buncombe County is committed to investing these funds in projects that:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968279566781768,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:13",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 254.777,
+        "x1": 333.7,
+        "y1": 261.097
+      },
+      "text": "\u2022 Align to county strategic plan and community priorities",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993737289196759,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:14",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 254.972,
+        "x1": 94.6,
+        "y1": 261.097
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:15",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 271.517,
+        "x1": 353.66,
+        "y1": 277.837
+      },
+      "text": "\u2022 Support equitable outcomes for most impacted populations",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988308061534202,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:16",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 271.712,
+        "x1": 94.6,
+        "y1": 277.837
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:17",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 288.257,
+        "x1": 356.72,
+        "y1": 294.577
+      },
+      "text": "\u2022 Leverage and align with other governmental funding sources",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986753846360189,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:18",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 288.452,
+        "x1": 94.6,
+        "y1": 294.577
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:19",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 304.997,
+        "x1": 325.82,
+        "y1": 311.317
+      },
+      "text": "\u2022 Make best use of this one-time infusion of resources",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9982998024852836,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:20",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 305.192,
+        "x1": 94.6,
+        "y1": 311.317
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:21",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 321.737,
+        "x1": 199.11,
+        "y1": 328.057
+      },
+      "text": "\u2022 Have a lasting impact",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9914284345162957,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:22",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 321.932,
+        "x1": 94.6,
+        "y1": 328.057
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:23",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 350.151,
+        "x1": 518.9102,
+        "y1": 368.678
+      },
+      "text": "Proposals shall be submitted in accordance with the terms and conditions of this RFP and any addenda issued hereto.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204803319135,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:24",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 386.772,
+        "x1": 288.777,
+        "y1": 393.092
+      },
+      "text": "Click here for the full terms and conditions of the RFP",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968280092213283,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:25",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 416.467,
+        "x1": 363.704,
+        "y1": 425.315
+      },
+      "text": "Coronavirus State and Local Fiscal Recovery Funds*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.8929213148362067,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:8"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:26",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 432.276,
+        "x1": 173.67,
+        "y1": 454.784
+      },
+      "text": "Name of Project. Low-Barrier Shelter",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999089169597038,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:27",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 497.626,
+        "x1": 240.896,
+        "y1": 506.474
+      },
+      "text": "Amount of Funds Requested*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9889371034047053,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:25"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:28",
+      "locator": {
+        "page": 1,
+        "x0": 88.2,
+        "y0": 513.066,
+        "x1": 149.25,
+        "y1": 519.736
+      },
+      "text": "$9,193,828.00",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:27"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:29",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 562.578,
+        "x1": 260.958,
+        "y1": 571.426
+      },
+      "text": "Recovery Fund Eligible Category*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9984970019300698,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:27"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:30",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 578.387,
+        "x1": 320.78,
+        "y1": 600.895
+      },
+      "text": "Please select one: Services for disproportionately impacted communities",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993737289449055,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:29"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:31",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 643.737,
+        "x1": 217.74,
+        "y1": 652.585
+      },
+      "text": "Brief Project Description*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9992896873587241,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:29"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:32",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 659.546,
+        "x1": 279.83,
+        "y1": 665.866
+      },
+      "text": "Provide a short summary of your proposed project.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9959306343624025,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:31"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:33",
+      "locator": {
+        "page": 1,
+        "x0": 72.0,
+        "y0": 675.384,
+        "x1": 528.86,
+        "y1": 717.226
+      },
+      "text": "The number of people experiencing unsheltered homelessness who have complex needs has increased and development of a new low-barrier, high-access emergency shelter is essential in filling this gap in our community's service system. The low-barrier shelter will be housing-focused, meeting immediate survival needs while actively working with participants on housing solutions that will help them exit homelessness.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911040786422,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:31"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:34",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 74.832,
+        "x1": 539.2502,
+        "y1": 140.122
+      },
+      "text": "The City seeks a collaborative partnership with the County and others to create a new 100-bed emergency shelter to leverage the strong array of services existing in our community. This proposal requests funding to match the anticipated City ARPA investment to acquire a shelter property and to provide 5 years of operating costs. This initiative will improve health by stabilizing and providing direct care for people experiencing homelessness, our most vulnerable community members, while also supporting the safety, well-being, and economic recovery of our community as a whole.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038977498006,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:31"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:35",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 182.964,
+        "x1": 147.068,
+        "y1": 191.812
+      },
+      "text": "Project Plan*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9984929587255282,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:31"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:36",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 198.773,
+        "x1": 405.39,
+        "y1": 205.093
+      },
+      "text": "Explain how the project will be structured and implemented, including timeframe.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997694960170413,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:37",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 214.611,
+        "x1": 539.8699,
+        "y1": 303.349
+      },
+      "text": "The proposed shelter will provide 24/7 access to 100 emergency shelter beds for adults of any household composition. Most beds will be non-congregate, meaning participants each have their own space, including a bathroom; the non-congregate component promotes individual health and safety and allows for maximum flexibility in serving people of all demographics. A portion of beds will operate in traditional congregate style, meaning multiple beds in a single location monitored by staff. These beds will be reserved for people in immediate crisis, often due to mental health or substance use, and will be filled by referral only from law enforcement, EMS, and the hospital. The shelter will also include office and clinic space for co-located partners to provide medical and behavioral healthcare.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898700122851,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:38",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 320.127,
+        "x1": 540.9301,
+        "y1": 420.589
+      },
+      "text": "The City is currently under contract to purchase an existing hotel with a projected closing date of Sept. 12, 2021, and plans to perform safety, accessibility, and security up fits for the intended use. For management and operations, the City will contract with a Shelter Operator, to be selected via competitive bid process. The Shelter Operator will deliver all basic shelter functions, including 24/7 staffing, security, food, laundry, connections to other community resources (such as Goodwill Industries for workforce training and job placement opportunities, Sunrise Community Recovery & Wellness for peer-supported recovery), and most importantly, housing planning for successful exits from the shelter into permanent housing through partnerships with agencies such as Homeward Bound and Thrive Asheville who specialize in housing placement for formerly homeless individuals.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610227915,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:39",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 437.367,
+        "x1": 527.97,
+        "y1": 467.485
+      },
+      "text": "The City will also partner with clinical service providers, such as Mission/HCA and Vaya Health, to incorporate onsite care in response to medical and behavioral health needs of shelter guests. Partnerships will be formalized late summer/early fall of 2021 with operations to begin in January 2022.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785550608427,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:40",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 484.263,
+        "x1": 538.4601,
+        "y1": 584.725
+      },
+      "text": "Services from all partners will be delivered using a client-centered, trauma-informed approach, with a focus on harm reduction. This includes security services, where de-escalation will be a primary strategy. All rules, policies, and practices will follow a low-barrier approach, intending to screen in rather than out and to support participants in staying in shelter, while also supporting the highest standards of safety for all parties. The shelter will serve as an essential bridge in our community's homeless service system, recognizing that many people who are unsheltered are not able or not willing to enter existing shelters because of rules and requirements, which can become barriers to accessing services for people who need them most. \u201cLow- barrier\u201d is an approach that identifies why people avoid shelter and addresses those specific issues through its policies and practices, while maintaining a particular focus on exits to permanent housing.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546021849737,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:41",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 639.291,
+        "x1": 186.954,
+        "y1": 648.139
+      },
+      "text": "Statement of Need*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9996644509122945,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:42",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 655.1,
+        "x1": 533.6702,
+        "y1": 673.627
+      },
+      "text": "Describe the need that this project will address. Include data to demonstrate the need, and cite the source of the data.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204750998126,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:43",
+      "locator": {
+        "page": 2,
+        "x0": 88.2,
+        "y0": 683.145,
+        "x1": 522.3701,
+        "y1": 689.815
+      },
+      "text": "People experiencing homelessness are some of our most vulnerable community members with highly",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986750464971863,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:44",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 694.869,
+        "x1": 535.0001,
+        "y1": 713.263
+      },
+      "text": "complex needs, including poor physical health and chronic medical conditions, severe and persistent mental illness, significant substance use, extensive criminal justice involvement, and severe histories of trauma. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965737899528,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:45",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 74.832,
+        "x1": 538.7101,
+        "y1": 198.742
+      },
+      "text": "2021 Point-in-Time count identified 527 people experiencing homelessness, most of whom were residing in emergency shelters or transitional housing programs, but 116 of whom were unsheltered (camping or on the street). People who are unsheltered are the most vulnerable subset of the homeless population, and in the 2021 count reported 3.6 times as many occurrences of mental health and substance use disorders and 3.3 times as many occurrences of domestic violence as people in emergency shelter or transitional housing. While our community has strong shelters and transitional housing programs that effectively end homelessness for the majority of people who experience it, this subset of the homeless population struggles to meet typical shelter requirements such as sobriety or having identification, and needs a more targeted intervention in order to stabilize. Low-barrier, high-access shelters are a demonstrably effective model recommended by national policy groups, and non-congregate shelter is emerging from the pandemic as a particularly promising practice.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995121570171992,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:46",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 215.52,
+        "x1": 535.3401,
+        "y1": 280.81
+      },
+      "text": "As a COVID response beginning in 2020, the City supported a low-barrier, non-congregate shelter at the Red Roof Inn for unsheltered people with underlying medical conditions. This shelter demonstrated strong housing outcomes for a population that has historically been underserved: 46 of the 158 people sheltered there were able to exit into permanent housing. A low-barrier, high-access shelter designed to connect with people with complex needs will improve safety, stability, and quality of life for shelter participants as well as all sectors of our community.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599365610957,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:41"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:47",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 358.824,
+        "x1": 175.488,
+        "y1": 367.672
+      },
+      "text": "Link to COVID-19*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9837176137412892,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:41"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:48",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 374.633,
+        "x1": 526.0902,
+        "y1": 393.16
+      },
+      "text": "Identify a health or economic harm resulting from or exacerbated by the public health emergency, describe the nature and extent of that harm, and explain how the use of this funding would address such harm.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993737271821727,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:47"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:49",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 402.678,
+        "x1": 534.28,
+        "y1": 491.416
+      },
+      "text": "COVID-19 highlighted the public health crisis of homelessness. According to the American Public Health Association, people experiencing homelessness were particularly vulnerable to COVID-19 morbidity and mortality because of the lack of connections to health care and systems of support and the likelihood of existing health issues. Many people were particularly vulnerable to complications from COVID-19 due to generally poor health and myriad underlying health conditions identified by the CDC as high risk. Additionally, congregant shelter services traditionally accessed by people who are homeless were either closed or had significantly reduced capacity during the pandemic, contributing to an increase in unsheltered homelessness.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785550833098,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:47"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:50",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 508.194,
+        "x1": 539.5101,
+        "y1": 561.76
+      },
+      "text": "One learning from the pandemic is that non-congregate shelter is highly effective at supporting the health needs of people who are homeless; it allows sick people to quarantine safely and to receive better care, and it reduces the spread of infectious disease by creating the ability for social distancing. It is also more successful at engaging people who have traditionally not engaged in services, improving their safety and service providers' ability to connect them with clinical care and permanent housing.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687981948383,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:47"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:51",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 578.538,
+        "x1": 530.3501,
+        "y1": 655.552
+      },
+      "text": "Economically, homelessness is experienced by people who are most often at the lowest incomes in our community, 0-15% Area Median Income (AMI). Without housing, many people are not able to stabilize and create pathways into the local workforce. Economic recovery efforts of local businesses are also reporting struggles due to unsheltered homelessness in our community. During the pandemic, the City conducted a survey related to Reimagining Public Safety and homelessness was one of the top concerns identified. In a recent listening session with downtown and W. Asheville businesses, City staff heard numerous complaints about unsheltered homelessness (ex. sanitation, litter) alongside advocacy for supportive services.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038984522033,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:47"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:52",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 88.689,
+        "x1": 182.95,
+        "y1": 97.537
+      },
+      "text": "Population Served*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.999083766304412,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:47"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:53",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 104.498,
+        "x1": 520.3801,
+        "y1": 123.025
+      },
+      "text": "Define the population to be served by this project, including volume and demographic characteristics of those served.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986750139119808,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:52"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:54",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 132.543,
+        "x1": 540.2202,
+        "y1": 233.005
+      },
+      "text": "This project will serve people experiencing unsheltered homelessness who typically have higher occurrences of mental health and substance use disorders, as well as other barriers to successfully exiting homelessness. The 2021 Point-in-Time count identified 527 people experiencing homelessness, 116 of whom were unsheltered (camping or on the street). While the Point-in-Time count is an accurate representation of the number of people who are in emergency shelters and transitional housing, it may not fully capture the scale of unsheltered homelessness, since many unsheltered people may not connect with service providers or volunteer to be counted. Homeward Bound's AHOPE Day Center which serves primarily unsheltered people has seen an average of 362 unduplicated people monthly over the past quarter. 71% of those people became homeless in Buncombe County, with another 12% last having had housing in a neighboring WNC community.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485578231911,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:52"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:55",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 249.783,
+        "x1": 537.8901,
+        "y1": 350.245
+      },
+      "text": "With the non-congregant setting and reduced barriers to entry as key components of the proposed low barrier shelter, we believe that individuals will be more inclined to access services at the low barrier shelter. In mid-April 2021, the City approached several individuals in established homeless encampments on City parks with the option to relocate to local hotels. All of the individuals -- 111 in total-- accepted the offer for a room. As of July 4, our data indicates that 3 individuals had been placed in housing, 29 individuals had applied for jobs, 11 people had secured employment, and 34 individuals had been connected to other community resources, including substance use treatment. This example provides evidence that the ideal homeless services system is built to adjust to the needs of the population it is intended to serve, with the low barrier model filling a gap in our current system of services.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546022388284,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:52"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:56",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 404.811,
+        "x1": 119.754,
+        "y1": 413.659
+      },
+      "text": "Results*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9997382989845587,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:52"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:57",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 420.62,
+        "x1": 506.8102,
+        "y1": 439.147
+      },
+      "text": "Describe the proposed impact of the project. List at least 3 performance measures that will be tracked and reported. If possible, include baselines and goals for each performance measure.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994472427838296,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:58",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 448.665,
+        "x1": 523.75,
+        "y1": 490.507
+      },
+      "text": "On an individual level, a new low-barrier, high-access emergency shelter should decrease unsheltered homelessness experienced by individuals; improve community health and connections to healthcare for people who need it most; and end more homelessness with permanent housing. Specific performance measures will include:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646608893677,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:60",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 495.561,
+        "x1": 539.36,
+        "y1": 513.955
+      },
+      "text": "1. Decreased unsheltered homelessness, as measured by the annual Point-in-Time Count (Baseline 2021 = 116 unsheltered individuals)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911089803372,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:61",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 495.561,
+        "x1": 95.79,
+        "y1": 502.231
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:62",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 507.285,
+        "x1": 197.83,
+        "y1": 513.955
+      },
+      "text": "116 unsheltered individuals)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993737360341072,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:63",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 519.009,
+        "x1": 388.36,
+        "y1": 525.679
+      },
+      "text": "2. Number of exits from the shelter to permanent housing destinations",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996200443107794,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:64",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 519.009,
+        "x1": 95.79,
+        "y1": 525.679
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:65",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 530.733,
+        "x1": 392.5501,
+        "y1": 537.403
+      },
+      "text": "3. Number of engagements in mental health or substance use treatment",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993737793236431,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:66",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 530.733,
+        "x1": 95.79,
+        "y1": 537.403
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:67",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 542.457,
+        "x1": 288.04,
+        "y1": 549.127
+      },
+      "text": "4. Number of job applications and employment",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968289039799441,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:68",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 542.457,
+        "x1": 95.79,
+        "y1": 549.127
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:69",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 565.905,
+        "x1": 540.05,
+        "y1": 596.023
+      },
+      "text": "Community level results should include decreased jail, hospital, EMS, and other crisis services utilization; decreased law enforcement interactions with this vulnerable population; and improved public safety. Specific performance measures will include:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694762587867,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:71",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 601.077,
+        "x1": 211.02,
+        "y1": 607.747
+      },
+      "text": "1. Decreased calls for service",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995425730350637,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:72",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 601.077,
+        "x1": 95.79,
+        "y1": 607.747
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:73",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 612.801,
+        "x1": 210.41,
+        "y1": 619.471
+      },
+      "text": "2. Community survey results",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9466720988681083,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:74",
+      "locator": {
+        "page": 4,
+        "x0": 88.2,
+        "y0": 612.801,
+        "x1": 95.79,
+        "y1": 619.471
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:75",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 674.037,
+        "x1": 138.752,
+        "y1": 682.885
+      },
+      "text": "Evaluation*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9992838314610034,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:56"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:76",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 689.846,
+        "x1": 523.2601,
+        "y1": 708.373
+      },
+      "text": "Describe the data collection, analysis, and quality assurance measures you will use to assure ongoing, effective tracking of contract requirements and outcomes.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415657680116,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:77",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 74.832,
+        "x1": 541.1099,
+        "y1": 151.846
+      },
+      "text": "As a key addition to the community's homeless service system, all shelter data will be entered into the Homeless Management Information System (HMIS). This database allows us to track outcomes at individual, program, agency, and community levels. Our community is required to submit annual reporting to the federal Department of Housing and Urban Development (HUD) using HMIS. Those reports inform the amount of HUD funding that becomes available to our community to prevent and end homelessness. HMIS data collected at this shelter will include demographics, homeless history, disabilities, healthcare, and income. It will also track length of stay in shelter, reasons for exiting shelter, and exit destinations.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756997726302,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:78",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 168.624,
+        "x1": 537.9701,
+        "y1": 198.742
+      },
+      "text": "The City of Asheville serves as the HMIS lead, managing the database and annual HUD reporting and providing technical assistance to service providers to ensure data quality. Additionally, City staff will support and train the Shelter Operator in using HMIS.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898700249764,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:79",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 215.52,
+        "x1": 536.9102,
+        "y1": 233.914
+      },
+      "text": "The City will also staff a project coordinator responsible for aggregate impact reporting as well as overall project oversight, ensuring fidelity to approach and supporting all partners in successful operations.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999938558278836,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:80",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 288.48,
+        "x1": 157.302,
+        "y1": 297.328
+      },
+      "text": "Equity Impact*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9975189295649463,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:75"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:81",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 304.289,
+        "x1": 517.78,
+        "y1": 322.816
+      },
+      "text": "How will this effort help build toward a just, equitable, and\u202fsustainable\u202fCOVID-19 recovery?\u202fHow are the root causes and/or disproportionate impacts of inequities addressed?",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388117718445,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:82",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 332.334,
+        "x1": 539.39,
+        "y1": 397.624
+      },
+      "text": "People who are homeless are highly vulnerable and disproportionately impacted by major community events, like the pandemic or economic downturns. Systemic racism also contributes to homelessness through legacies of redlining and disproportionality in incarceration and access to health care, all of which are correlated to rates of homelessness in any given community. In our community, racial inequity is particularly highlighted in homeless demographics: 24% of people experiencing homelessness are Black or African American compared to only 6% of the general population in Buncombe County.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038980387496,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:83",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 414.402,
+        "x1": 541.6,
+        "y1": 503.14
+      },
+      "text": "This proposal also offers services specifically targeted to people who are socio-economically disadvantaged and have the lowest incomes in our area, typically 0-15% Area Median Income. Low-barrier, high-access shelter is designed to fulfill equity in access to supportive services, including financial, housing, transportation, and health services. The proposed project will engage people who have traditionally been unable or unwilling to connect with services, providing an opportunity to address longstanding inequities in a highly vulnerable population. This new shelter intervention is designed to specifically engage people in the greatest need, providing a depth of resource that will bring them to a new baseline of stability from which they can successfully exit homelessness.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756998005526,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:84",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 592.878,
+        "x1": 170.742,
+        "y1": 601.726
+      },
+      "text": "Project Partners*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9997962881051508,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:80"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:85",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 608.687,
+        "x1": 514.8201,
+        "y1": 627.214
+      },
+      "text": "Identify any subcontractors you intend to use for the proposed scope of work. For each subcontractor listed, indicate:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965868820347,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:87",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 633.101,
+        "x1": 396.5099,
+        "y1": 639.421
+      },
+      "text": "1.) What products and/or services are to be supplied by that subcontractor and;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911061373015,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:88",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 633.101,
+        "x1": 114.69,
+        "y1": 639.421
+      },
+      "text": "1.) What p",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990891695561066,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:89",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 645.308,
+        "x1": 403.95,
+        "y1": 651.6281
+      },
+      "text": "2.) What percentage of the overall scope of work that subcontractor will perform.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999903900651412,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:90",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 645.308,
+        "x1": 114.69,
+        "y1": 651.6281
+      },
+      "text": "2.) What p",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980779081414237,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:91",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 669.722,
+        "x1": 282.95,
+        "y1": 676.042
+      },
+      "text": "Also, list non-funded key partners critical to project.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984990699363295,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:92",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 685.5601,
+        "x1": 539.86,
+        "y1": 715.678
+      },
+      "text": "In addition to funding partners and other community supports, the City's primary partner and subcontractor will be the Shelter Operator. The Shelter Operator will be selected in the coming months via a competitive Request for Proposals and will be contracted to provide for all basic shelter operations, including",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724643582518,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:93",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 74.832,
+        "x1": 533.8501,
+        "y1": 116.674
+      },
+      "text": "24/7 staffing, security, food, laundry, connections to other community resources, and most importantly, housing planning for successful exits from the shelter into permanent housing. The Shelter Operator will be expected to ensure that all shelter activities maintain a low-barrier, high-access approach. We anticipate the Shelter Operator will perform 80% of the overall scope of work for this project.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999983298649736,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:94",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 133.452,
+        "x1": 541.0801,
+        "y1": 175.294
+      },
+      "text": "Other key medical and behavioral healthcare providers will fulfill the remaining 20% of the scope of work and will be offered in-kind, on-site clinic and office space to deliver services within their professional scope to our shared target population. These partners will be identified in partnership with existing safety net providers in the coming months and supported and coordinated by City staff.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999921107471642,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:95",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 192.072,
+        "x1": 540.2201,
+        "y1": 245.638
+      },
+      "text": "This shelter is anticipated to be a critical component of our community\u2019s homeless service system and accordingly will collaborate with other homeless service providers such as Homeward Bound, ABCCM, Western Carolina Rescue Ministries, Salvation Army, Helpmate, Eliada, BeLoved, Goodwill Industries, Sunrise Community, and Haywood Street Congregation. Collaboration will ensure that all resources are best matched to individual client need to maximize the efficacy of community services.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898700161127,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:96",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 262.416,
+        "x1": 532.36,
+        "y1": 292.534
+      },
+      "text": "To develop sustainability of the shelter, long-term funding partners will be asked to participate to fund operations. Partners, such as the Dogwood Health Trust, Vaya Health, NC DHHS and others, will be asked to join in Year 2 and onward to sustain operations.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999967112529856,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:97",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 347.1,
+        "x1": 127.37,
+        "y1": 355.948
+      },
+      "text": "Capacity*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9912902879504105,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:84"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:98",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 362.909,
+        "x1": 535.0801,
+        "y1": 381.436
+      },
+      "text": "Describe the background, experience, and capabilities of your organization or department as it relates to capacity for delivering the proposed project and managing federal funds.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415677702784,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:97"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:99",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 390.954,
+        "x1": 537.4001,
+        "y1": 514.864
+      },
+      "text": "The City of Asheville has extensive experience managing federal funds and is also receiving American Rescue Plan Act funding so will be accountable to the same standards of compliance and reporting. Additionally, the City serves as the Continuum of Care (CoC) lead for Asheville/Buncombe County, which is a HUD framework for managing and improving homeless services at the community level. As the CoC lead, the City is responsible for understanding and implementing federal HUD regulations, managing federal and state funding processes for homeless services, and providing community leadership on the issue of homelessness. City staff have extensive experience with homeless programs and strategy as well as the needs of people experiencing homelessness in our community. As part of this proposal, the City intends to hire a new staff member to join the Community Development Division homeless services team. This Project Coordinator will be responsible for managing the shelter program, coordinating with funding and service partners, administering the contract with the Shelter Operator, and providing reporting on outcomes and deliverables.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610298221,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:97"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:100",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 531.642,
+        "x1": 522.7101,
+        "y1": 573.484
+      },
+      "text": "Through the selection process for the Shelter Operator and co-located service providers, the City will ensure that all partners have expertise with serving the target population using a client-centered, trauma- informed, harm-reduction approach so can deliver effective services in the manner intended, as well as familiarity with managing and reporting on public funds.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785551235394,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:97"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:101",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 590.262,
+        "x1": 528.77,
+        "y1": 620.38
+      },
+      "text": "The City also has a track record in developing financial partnerships with local institutional, non-profit, and private sector partners, including Dogwood Health Trust, Buncombe County Tourism Development Authority, and Buncombe County to provide shared community leadership that achieves community goals.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785551076189,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:97"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:102",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 663.222,
+        "x1": 119.544,
+        "y1": 672.07
+      },
+      "text": "Budget*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9988281030767384,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:97"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:103",
+      "locator": {
+        "page": 6,
+        "x0": 72.0,
+        "y0": 679.031,
+        "x1": 541.34,
+        "y1": 709.765
+      },
+      "text": "Provide a detailed project budget including all proposed project revenues and expenditures, including explanations and methodology. For all revenue sources, list the funder and denote whether funds are confirmed or pending. For project expenses, denote all capital vs. operating costs, and reflect which specific expenses are proposed to be",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151910741911,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:102"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:104",
+      "locator": {
+        "page": 7,
+        "x0": 72.0,
+        "y0": 75.201,
+        "x1": 484.9772,
+        "y1": 105.935
+      },
+      "text": "funded with one-time Buncombe County Recovery Funds. Download a copy of the budget form HERE. Complete the form, and upload it using the button below.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204744666831,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:102"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:105",
+      "locator": {
+        "page": 7,
+        "x0": 88.2,
+        "y0": 115.453,
+        "x1": 323.98,
+        "y1": 122.123
+      },
+      "text": "Recovery-Funds-budget-City of Asheville 7.15.2021.pdf",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9982995664874714,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:102"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:106",
+      "locator": {
+        "page": 7,
+        "x0": 72.0,
+        "y0": 164.965,
+        "x1": 206.862,
+        "y1": 173.813
+      },
+      "text": "Special Considerations*",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9992822901399577,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:102"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:107",
+      "locator": {
+        "page": 7,
+        "x0": 72.0,
+        "y0": 180.774,
+        "x1": 374.31,
+        "y1": 187.094
+      },
+      "text": "Provide any other information that might assist the County in its selection.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9978176521227509,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:106"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:108",
+      "locator": {
+        "page": 7,
+        "x0": 72.0,
+        "y0": 208.336,
+        "x1": 538.8,
+        "y1": 308.798
+      },
+      "text": "Homelessness is a community-wide issue that requires a community-wide solution, and while we are pleased to partner with the County to provide community leadership to successfully address homelessness, we recognize that moving the needle on this complex issue requires investment from many stakeholders. We do anticipate some level of ongoing funding requests for this project to both the City and County, but we also expect to diversify operational funding over time. This proposal also includes a full time staff member within the City of Asheville to function as the overseer of this program, apply for grants, and report out on deliverables. With the purchase of a capital asset, both Asheville City Council and Buncombe County Commission have the option to explore joint ownership of the real estate as a demonstration of both collateral and commitment to the investment in our community.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911041997375,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:106"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:109",
+      "locator": {
+        "page": 7,
+        "x0": 72.0,
+        "y0": 325.576,
+        "x1": 531.9401,
+        "y1": 379.142
+      },
+      "text": "Though this project serves a disproportionately impacted community, it meets many other objectives of this funding, including addressing disparities in public health outcomes, assistance to households, and improving the design and execution of health and public health programs. Our goals with this project and opportunity are to fill a gap in our community service system that is both longstanding and exacerbated by the pandemic.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417090564556,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:106"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:110",
+      "locator": {
+        "page": 7,
+        "x0": 72.0,
+        "y0": 395.92,
+        "x1": 537.86,
+        "y1": 437.762
+      },
+      "text": "This project supports Buncombe County\u2019s strategic plan in the focus areas of improving resident well- being and supporting a vibrant economy by creating a long-term solution to address unsheltered homelessness. This solution benefits not only people experiencing homelessness, but also Buncombe County residents, local businesses, and the community at large as we collectively recover from COVID-19.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417089858527,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:106"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:111",
+      "locator": {
+        "page": 8,
+        "x0": 72.0,
+        "y0": 78.403,
+        "x1": 288.78,
+        "y1": 91.043
+      },
+      "text": "File Attachment Summary",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9997370303183664,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:7",
+        "c3-0429:106"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:112",
+      "locator": {
+        "page": 8,
+        "x0": 72.0,
+        "y0": 111.8725,
+        "x1": 198.532,
+        "y1": 121.244
+      },
+      "text": "Applicant File Uploads",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9932107647833749,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:111"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:113",
+      "locator": {
+        "page": 8,
+        "x0": 72.0,
+        "y0": 128.402,
+        "x1": 368.184,
+        "y1": 136.406
+      },
+      "text": "\u2022 Recovery-Funds-budget-City of Asheville 7.15.2021.pdf",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984992836210325,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:111",
+        "c3-0429:112"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:114",
+      "locator": {
+        "page": 9,
+        "x0": 251.249,
+        "y0": 22.8697,
+        "x1": 521.7736,
+        "y1": 43.0863
+      },
+      "text": "Coronavirus State and Local Fiscal Recovery Funds Proposed Project Budget",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.989825233739877,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:111",
+        "c3-0429:112"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0429:116",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 59.6261,
+        "x1": 86.9564,
+        "y1": 64.8695
+      },
+      "text": "Organization Name:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9934396453447043,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:118",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 59.6261,
+        "x1": 254.2026,
+        "y1": 64.8695
+      },
+      "text": "City of Asheville",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9941315069492274,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:120",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 70.1551,
+        "x1": 64.4092,
+        "y1": 75.3986
+      },
+      "text": "Project Name:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9978375842412963,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:122",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 70.1551,
+        "x1": 265.7736,
+        "y1": 75.3986
+      },
+      "text": "Low-Barrier Shelter",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9581659311130664,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:124",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 80.6841,
+        "x1": 85.2851,
+        "y1": 85.9276
+      },
+      "text": "Amount Requested:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9861475547156904,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:126",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 80.6841,
+        "x1": 233.628,
+        "y1": 85.9276
+      },
+      "text": "$9,193,828",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:129",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 101.7422,
+        "x1": 137.1021,
+        "y1": 106.9856
+      },
+      "text": "Proposed Project Revenue Funder",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9609605241096558,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:131",
+      "locator": {
+        "page": 9,
+        "x0": 339.1664,
+        "y0": 101.7422,
+        "x1": 367.5781,
+        "y1": 106.9856
+      },
+      "text": "Amount",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9985622378498147,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:133",
+      "locator": {
+        "page": 9,
+        "x0": 388.1264,
+        "y0": 101.7422,
+        "x1": 471.6752,
+        "y1": 106.9856
+      },
+      "text": "Confirmed or Pending?",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972638199528483,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:135",
+      "locator": {
+        "page": 9,
+        "x0": 607.6567,
+        "y0": 101.7422,
+        "x1": 628.5627,
+        "y1": 106.9856
+      },
+      "text": "Notes",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9981775729425117,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:137",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 112.5121,
+        "x1": 166.8764,
+        "y1": 117.5146
+      },
+      "text": "Proposed Buncombe COVID Recovery Funds",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9886683514513716,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:139",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 112.5121,
+        "x1": 383.3889,
+        "y1": 117.5146
+      },
+      "text": "($ 9,193,828)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:141",
+      "locator": {
+        "page": 9,
+        "x0": 413.9225,
+        "y0": 112.5121,
+        "x1": 445.7069,
+        "y1": 117.5146
+      },
+      "text": "Pending",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:143",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 112.5121,
+        "x1": 736.2423,
+        "y1": 117.5146
+      },
+      "text": "Includes initial site acquisition / improvements, and operating costs for 5 years",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:145",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 123.0412,
+        "x1": 111.092,
+        "y1": 128.0437
+      },
+      "text": "City of Asheville ARPA Funds",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9673727525277074,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:147",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 123.0412,
+        "x1": 383.3889,
+        "y1": 128.0437
+      },
+      "text": "($ 9,193,828)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:149",
+      "locator": {
+        "page": 9,
+        "x0": 413.9225,
+        "y0": 123.0412,
+        "x1": 445.7069,
+        "y1": 128.0437
+      },
+      "text": "Pending",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:151",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 123.0412,
+        "x1": 736.2423,
+        "y1": 128.0437
+      },
+      "text": "Includes initial site acquisition / improvements, and operating costs for 5 years",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:153",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 133.5702,
+        "x1": 154.3193,
+        "y1": 138.5727
+      },
+      "text": "Dogwood Health Trust and Other Partners",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9577738181052096,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:155",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 133.5702,
+        "x1": 383.3889,
+        "y1": 138.5727
+      },
+      "text": "($ 5,000,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:157",
+      "locator": {
+        "page": 9,
+        "x0": 413.9225,
+        "y0": 133.5702,
+        "x1": 445.7069,
+        "y1": 138.5727
+      },
+      "text": "Pending",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:159",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 133.5702,
+        "x1": 643.4039,
+        "y1": 138.5727
+      },
+      "text": "Partner share of operating costs, starting in year 2",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:161",
+      "locator": {
+        "page": 9,
+        "x0": 302.2679,
+        "y0": 144.3848,
+        "x1": 319.6732,
+        "y1": 149.6282
+      },
+      "text": "Total",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.991747608672904,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:163",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 144.6257,
+        "x1": 383.3889,
+        "y1": 149.6282
+      },
+      "text": "($ 23,387,656)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:170",
+      "locator": {
+        "page": 9,
+        "x0": 196.4981,
+        "y0": 164.6847,
+        "x1": 255.0227,
+        "y1": 178.583
+      },
+      "text": "Proposed Recovery Funds",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9962317256714615,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:176",
+      "locator": {
+        "page": 9,
+        "x0": 392.338,
+        "y0": 164.6847,
+        "x1": 466.7098,
+        "y1": 178.583
+      },
+      "text": "Capital or Operating Expense?",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9910022686422678,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:168",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 173.3396,
+        "x1": 113.2978,
+        "y1": 178.583
+      },
+      "text": "Proposed Project Expenses",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.8789862109728266,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:172",
+      "locator": {
+        "page": 9,
+        "x0": 267.0426,
+        "y0": 173.3396,
+        "x1": 311.7454,
+        "y1": 178.583
+      },
+      "text": "Other Funds",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9987459162766132,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:174",
+      "locator": {
+        "page": 9,
+        "x0": 344.4309,
+        "y0": 173.3396,
+        "x1": 362.3934,
+        "y1": 178.583
+      },
+      "text": "Total",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9942641432722202,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:178",
+      "locator": {
+        "page": 9,
+        "x0": 607.6567,
+        "y0": 173.3396,
+        "x1": 628.5627,
+        "y1": 178.583
+      },
+      "text": "Notes",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9981471961268121,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:190",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 182.825,
+        "x1": 758.4206,
+        "y1": 196.4824
+      },
+      "text": "Based on fair market value and fully executed Purchase and Sales Contract; closing date 9/10/21.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999623827445576,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:180",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 191.4799,
+        "x1": 125.4408,
+        "y1": 196.4824
+      },
+      "text": "Purchase of Property for Shelter",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9102446352701522,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:182",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 191.4799,
+        "x1": 255.9876,
+        "y1": 196.4824
+      },
+      "text": "($ 4,875,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:184",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 191.4799,
+        "x1": 319.6882,
+        "y1": 196.4824
+      },
+      "text": "($ 4,875,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:186",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 191.4799,
+        "x1": 383.3889,
+        "y1": 196.4824
+      },
+      "text": "($ 9,750,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:188",
+      "locator": {
+        "page": 9,
+        "x0": 413.9225,
+        "y0": 191.4799,
+        "x1": 445.6844,
+        "y1": 196.4824
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:192",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 212.5379,
+        "x1": 148.8613,
+        "y1": 217.5405
+      },
+      "text": "Immediate property upfit for shelter use",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.993464003865644,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:201",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 223.5934,
+        "x1": 255.9876,
+        "y1": 228.5959
+      },
+      "text": "($ 7,500)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:203",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 223.5934,
+        "x1": 319.6882,
+        "y1": 228.5959
+      },
+      "text": "($ 7,500)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:205",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 223.5934,
+        "x1": 383.3889,
+        "y1": 228.5959
+      },
+      "text": "($ 15,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:207",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 223.5934,
+        "x1": 443.6195,
+        "y1": 228.5959
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:209",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 223.5934,
+        "x1": 550.5732,
+        "y1": 228.5959
+      },
+      "text": "CCTV Modernization",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:199",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 223.6235,
+        "x1": 134.6103,
+        "y1": 228.5959
+      },
+      "text": "Security System Improvements",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9955652065453248,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:213",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 234.6489,
+        "x1": 255.9876,
+        "y1": 239.6514
+      },
+      "text": "($ 75,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:215",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 234.6489,
+        "x1": 319.6882,
+        "y1": 239.6514
+      },
+      "text": "($ 75,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:217",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 234.6489,
+        "x1": 383.3889,
+        "y1": 239.6514
+      },
+      "text": "($ 150,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:219",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 234.6489,
+        "x1": 443.6195,
+        "y1": 239.6514
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:221",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 234.6489,
+        "x1": 633.4968,
+        "y1": 239.6514
+      },
+      "text": "8ft Tall Deterrent Fence (heavy duty, 1500 LF)",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:211",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 234.679,
+        "x1": 111.1898,
+        "y1": 239.6514
+      },
+      "text": "Fencing / Green Barrier",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9987095502759367,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:225",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 245.7044,
+        "x1": 255.9876,
+        "y1": 250.7069
+      },
+      "text": "($ 25,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:227",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 245.7044,
+        "x1": 319.6882,
+        "y1": 250.7069
+      },
+      "text": "($ 25,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:229",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 245.7044,
+        "x1": 383.3889,
+        "y1": 250.7069
+      },
+      "text": "($ 50,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:231",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 245.7044,
+        "x1": 443.6195,
+        "y1": 250.7069
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:233",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 245.7044,
+        "x1": 609.9559,
+        "y1": 250.7069
+      },
+      "text": "Install additional exterior lighting onsite",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:223",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 245.7345,
+        "x1": 56.8584,
+        "y1": 250.7069
+      },
+      "text": "Lighting",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.995740624202348,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:237",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 256.7599,
+        "x1": 255.9876,
+        "y1": 261.7624
+      },
+      "text": "($ 1,250)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:239",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 256.7599,
+        "x1": 319.6882,
+        "y1": 261.7624
+      },
+      "text": "($ 1,250)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:241",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 256.7599,
+        "x1": 383.3889,
+        "y1": 261.7624
+      },
+      "text": "($ 2,500)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:243",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 256.7599,
+        "x1": 443.6195,
+        "y1": 261.7624
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:245",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 256.7599,
+        "x1": 636.3198,
+        "y1": 261.7624
+      },
+      "text": "Manufacture and installation of shelter signage",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:235",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 256.79,
+        "x1": 58.1156,
+        "y1": 261.7624
+      },
+      "text": "Signage",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9970197217841227,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:249",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 267.8153,
+        "x1": 255.9876,
+        "y1": 272.8179
+      },
+      "text": "($ 7,500)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:251",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 267.8153,
+        "x1": 319.6882,
+        "y1": 272.8179
+      },
+      "text": "($ 7,500)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:253",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 267.8153,
+        "x1": 383.3889,
+        "y1": 272.8179
+      },
+      "text": "($ 15,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:255",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 267.8153,
+        "x1": 443.6195,
+        "y1": 272.8179
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:257",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 267.8153,
+        "x1": 574.001,
+        "y1": 272.8179
+      },
+      "text": "Remove and fill in pool area",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:247",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 267.8455,
+        "x1": 119.5688,
+        "y1": 272.8179
+      },
+      "text": "Remove Pool/Create Patio",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998691660267668,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:261",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 278.8708,
+        "x1": 255.9876,
+        "y1": 283.8734
+      },
+      "text": "($ 15,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:263",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 278.8708,
+        "x1": 319.6882,
+        "y1": 283.8734
+      },
+      "text": "($ 15,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:265",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 278.8708,
+        "x1": 383.3889,
+        "y1": 283.8734
+      },
+      "text": "($ 30,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:267",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 278.8708,
+        "x1": 443.6195,
+        "y1": 283.8734
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:269",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 278.8708,
+        "x1": 753.4142,
+        "y1": 283.8734
+      },
+      "text": "Based on findings of ECS property condition assessment (available upon request)",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:259",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 278.9009,
+        "x1": 120.6604,
+        "y1": 283.8734
+      },
+      "text": "ADA Facility Improvements",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.985053637422698,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:273",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 289.9263,
+        "x1": 255.9876,
+        "y1": 294.9288
+      },
+      "text": "($ 12,500)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:275",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 289.9263,
+        "x1": 319.6882,
+        "y1": 294.9288
+      },
+      "text": "($ 12,500)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:277",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 289.9263,
+        "x1": 383.3889,
+        "y1": 294.9288
+      },
+      "text": "($ 25,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:279",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 289.9263,
+        "x1": 443.6195,
+        "y1": 294.9288
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:281",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 289.9263,
+        "x1": 753.4142,
+        "y1": 294.9288
+      },
+      "text": "Based on findings of ECS property condition assessment (available upon request)",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:271",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 289.9564,
+        "x1": 84.4419,
+        "y1": 294.9288
+      },
+      "text": "Exterior Repairs",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9911190540978223,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:285",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 300.9818,
+        "x1": 255.9876,
+        "y1": 305.9843
+      },
+      "text": "($ 85,116)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:287",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 300.9818,
+        "x1": 319.6882,
+        "y1": 305.9843
+      },
+      "text": "($ 85,116)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:289",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 300.9818,
+        "x1": 383.3889,
+        "y1": 305.9843
+      },
+      "text": "($ 170,232)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:291",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 300.9818,
+        "x1": 443.6195,
+        "y1": 305.9843
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:293",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 300.9818,
+        "x1": 711.9562,
+        "y1": 305.9843
+      },
+      "text": "1100 LF at 6ft wide + professional services + Right of Way acquisition",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:283",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 301.0119,
+        "x1": 190.6431,
+        "y1": 305.9843
+      },
+      "text": "Sidewalk extension - Verde Vista Dr to Entrance",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972923211536772,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:297",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 312.0373,
+        "x1": 255.9876,
+        "y1": 317.0398
+      },
+      "text": "($ 11,444)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:299",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 312.0373,
+        "x1": 319.6882,
+        "y1": 317.0398
+      },
+      "text": "($ 11,444)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:301",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 312.0373,
+        "x1": 383.3889,
+        "y1": 317.0398
+      },
+      "text": "($ 22,887)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:303",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 312.0373,
+        "x1": 443.6195,
+        "y1": 317.0398
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:305",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 312.0373,
+        "x1": 572.3373,
+        "y1": 317.0398
+      },
+      "text": "Oversight and administration",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:295",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 312.0674,
+        "x1": 117.905,
+        "y1": 317.0398
+      },
+      "text": "Project Management (5%)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975922023034037,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:309",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 323.0928,
+        "x1": 255.9876,
+        "y1": 328.0953
+      },
+      "text": "($ 47,191)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:311",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 323.0928,
+        "x1": 319.6882,
+        "y1": 328.0953
+      },
+      "text": "($ 47,191)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:313",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 323.0928,
+        "x1": 383.3889,
+        "y1": 328.0953
+      },
+      "text": "($ 94,381)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:315",
+      "locator": {
+        "page": 9,
+        "x0": 416.0284,
+        "y0": 323.0928,
+        "x1": 443.6195,
+        "y1": 328.0953
+      },
+      "text": "Capital",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:317",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 323.0928,
+        "x1": 579.8731,
+        "y1": 328.0953
+      },
+      "text": "Standard contingency estimate",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:307",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 323.1229,
+        "x1": 94.4997,
+        "y1": 328.0953
+      },
+      "text": "Contingency (20%)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9987192567433705,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:319",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 345.7302,
+        "x1": 132.1711,
+        "y1": 350.7327
+      },
+      "text": "Transition operations and services",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.8607066184883124,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:336",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 354.9115,
+        "x1": 759.2635,
+        "y1": 377.2238
+      },
+      "text": "6 months of transitional care for people who have been in non-congregate shelter, prior to permanent shelter opening, based on existing City contracts for wrap-around services",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599597273946,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:328",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 372.0528,
+        "x1": 255.9876,
+        "y1": 377.0553
+      },
+      "text": "($ 210,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:330",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 372.0528,
+        "x1": 319.6882,
+        "y1": 377.0553
+      },
+      "text": "($ 210,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:332",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 372.0528,
+        "x1": 383.3889,
+        "y1": 377.0553
+      },
+      "text": "($ 420,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:334",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 372.0528,
+        "x1": 448.5025,
+        "y1": 377.0553
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:326",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 372.0829,
+        "x1": 131.2677,
+        "y1": 377.0553
+      },
+      "text": "Interim Wrap-Around Services",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9943420759022339,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:348",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 381.2972,
+        "x1": 752.1268,
+        "y1": 394.9547
+      },
+      "text": "6 months of facility operations (to include utilities, cleaning, property management, etc.)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999977177381864,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:340",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 389.9521,
+        "x1": 255.9876,
+        "y1": 394.9547
+      },
+      "text": "($ 40,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:342",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 389.9521,
+        "x1": 319.6882,
+        "y1": 394.9547
+      },
+      "text": "($ 40,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:344",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 389.9521,
+        "x1": 383.3889,
+        "y1": 394.9547
+      },
+      "text": "($ 80,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:346",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 389.9521,
+        "x1": 448.5025,
+        "y1": 394.9547
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:338",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 389.9822,
+        "x1": 85.27,
+        "y1": 394.9547
+      },
+      "text": "Interim Operator",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9701817237084307,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:362",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 430.2572,
+        "x1": 748.4756,
+        "y1": 443.9146
+      },
+      "text": "First year costs fully funded by City and County, includes all shelter staffing, wrap- around services, security and all facility operations costs.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646547697432,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:356",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 438.9121,
+        "x1": 188.1964,
+        "y1": 443.9146
+      },
+      "text": "Year One (Jan. 1, 2022 - Dec 31, 2022) Operations",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8340901847338579,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:374",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 448.1566,
+        "x1": 739.8708,
+        "y1": 461.814
+      },
+      "text": "Staff position to oversee shelter operations, reporting, grant administration and performance. Salary plus benefits.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999297340066086,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:366",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 456.8115,
+        "x1": 255.9876,
+        "y1": 461.814
+      },
+      "text": "($ 37,425)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:368",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 456.8115,
+        "x1": 319.6882,
+        "y1": 461.814
+      },
+      "text": "($ 37,425)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:370",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 456.8115,
+        "x1": 383.3889,
+        "y1": 461.814
+      },
+      "text": "($ 74,850)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:372",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 456.8115,
+        "x1": 448.5025,
+        "y1": 461.814
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:364",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 456.8416,
+        "x1": 160.515,
+        "y1": 461.814
+      },
+      "text": "Project Coordinator - City Staff position",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9727160735733522,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:386",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 466.0559,
+        "x1": 740.571,
+        "y1": 479.7133
+      },
+      "text": "Includes staff management, 24/7 security, guest services, service coordination, janitorial and maintenance personnel",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999877850995532,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:378",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 474.7108,
+        "x1": 255.9876,
+        "y1": 479.7133
+      },
+      "text": "($ 575,994)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:380",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 474.7108,
+        "x1": 319.6882,
+        "y1": 479.7133
+      },
+      "text": "($ 575,994)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:382",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 474.7108,
+        "x1": 383.3889,
+        "y1": 479.7133
+      },
+      "text": "($ 1,151,987)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:384",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 474.7108,
+        "x1": 448.5025,
+        "y1": 479.7133
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:376",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 474.7409,
+        "x1": 86.1132,
+        "y1": 479.7133
+      },
+      "text": "Shelter Operator",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9337539858205455,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:398",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 483.9553,
+        "x1": 750.8696,
+        "y1": 497.6127
+      },
+      "text": "Includes utilities, supplies, linens, food for guests, pest control, building & grounds maintenance, shuttle, FFE replacement, capital reserve.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999516990265327,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:390",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 492.6102,
+        "x1": 255.9876,
+        "y1": 497.6127
+      },
+      "text": "($ 434,486)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:392",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 492.6102,
+        "x1": 319.6882,
+        "y1": 497.6127
+      },
+      "text": "($ 434,486)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:394",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 492.6102,
+        "x1": 383.3889,
+        "y1": 497.6127
+      },
+      "text": "($ 868,971)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:396",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 492.6102,
+        "x1": 448.5025,
+        "y1": 497.6127
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:388",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 492.6403,
+        "x1": 90.7205,
+        "y1": 497.6127
+      },
+      "text": "Operational Costs",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.7990478295413802,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:410",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 501.8547,
+        "x1": 733.3437,
+        "y1": 515.5121
+      },
+      "text": "10% contingency and 10% overhead /administration, for Shelter Opertor and Operational costs only.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999452684585004,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:402",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 510.5096,
+        "x1": 255.9876,
+        "y1": 515.5121
+      },
+      "text": "($ 202,096)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:404",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 510.5096,
+        "x1": 319.6882,
+        "y1": 515.5121
+      },
+      "text": "($ 202,096)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:406",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 510.5096,
+        "x1": 383.3889,
+        "y1": 515.5121
+      },
+      "text": "($ 404,192)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:408",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 510.5096,
+        "x1": 448.5025,
+        "y1": 515.5121
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:400",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 510.5397,
+        "x1": 96.7055,
+        "y1": 515.5121
+      },
+      "text": "Administration Fees",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9916825999379194,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:422",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 519.754,
+        "x1": 750.1769,
+        "y1": 533.4114
+      },
+      "text": "Funded by City, County, and additional partners. Assumes 2.5% increase (cost of living / CPI adjustment)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999688137366649,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:412",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 528.4089,
+        "x1": 148.7484,
+        "y1": 533.4114
+      },
+      "text": "Year Two (Jan. 1, 2022 - Dec. 31 2023)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7080110026839257,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:414",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 528.4089,
+        "x1": 255.9876,
+        "y1": 533.4114
+      },
+      "text": "($ 1,000,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:416",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 528.4089,
+        "x1": 319.6882,
+        "y1": 533.4114
+      },
+      "text": "($ 1,500,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:418",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 528.4089,
+        "x1": 383.3889,
+        "y1": 533.4114
+      },
+      "text": "($ 2,506,250)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:420",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 528.4089,
+        "x1": 448.5025,
+        "y1": 533.4114
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:434",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 537.6534,
+        "x1": 750.1769,
+        "y1": 551.3108
+      },
+      "text": "Funded by City, County, and additional partners. Assumes 2.5% increase (cost of living / CPI adjustment).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999379855165291,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:424",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 546.3083,
+        "x1": 150.4347,
+        "y1": 551.3108
+      },
+      "text": "Year Three (Jan. 1 2023- Dec. 31 2024)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6483812014173406,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:426",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 546.3083,
+        "x1": 255.9876,
+        "y1": 551.3108
+      },
+      "text": "($ 500,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:428",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 546.3083,
+        "x1": 319.6882,
+        "y1": 551.3108
+      },
+      "text": "($ 2,000,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:430",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 546.3083,
+        "x1": 383.3889,
+        "y1": 551.3108
+      },
+      "text": "($ 2,512,516)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:432",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 546.3083,
+        "x1": 448.5025,
+        "y1": 551.3108
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:446",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 555.5527,
+        "x1": 750.1769,
+        "y1": 569.2101
+      },
+      "text": "Funded by City, County, and additional partners. Assumes 2.5% increase (cost of living / CPI adjustment).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485875981445,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:436",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 564.2076,
+        "x1": 152.6405,
+        "y1": 569.2101
+      },
+      "text": "Year Four (Jan. 1, 2024 - Dec. 31, 2025)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9041978037832774,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:438",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 564.2076,
+        "x1": 255.9876,
+        "y1": 569.2101
+      },
+      "text": "($ 500,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:440",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 564.2076,
+        "x1": 319.6882,
+        "y1": 569.2101
+      },
+      "text": "($ 2,000,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:442",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 564.2076,
+        "x1": 383.3889,
+        "y1": 569.2101
+      },
+      "text": "($ 2,518,797)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:444",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 564.2076,
+        "x1": 448.5025,
+        "y1": 569.2101
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:458",
+      "locator": {
+        "page": 9,
+        "x0": 476.5703,
+        "y0": 573.4521,
+        "x1": 748.0916,
+        "y1": 587.1095
+      },
+      "text": "Funded by City, County, and additional partners. Assumes 2.5% increase (cost of living / CPI adjustment).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417420130485,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:448",
+      "locator": {
+        "page": 9,
+        "x0": 13.8194,
+        "y0": 582.107,
+        "x1": 151.3832,
+        "y1": 587.1095
+      },
+      "text": "Year Five (Jan. 1, 2025 - Dec. 31, 2026)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9879946724445944,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:450",
+      "locator": {
+        "page": 9,
+        "x0": 195.9716,
+        "y0": 582.107,
+        "x1": 255.9876,
+        "y1": 587.1095
+      },
+      "text": "($ 500,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:452",
+      "locator": {
+        "page": 9,
+        "x0": 259.6722,
+        "y0": 582.107,
+        "x1": 319.6882,
+        "y1": 587.1095
+      },
+      "text": "($ 2,000,000)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:454",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 582.107,
+        "x1": 383.3889,
+        "y1": 587.1095
+      },
+      "text": "($ 2,525,094)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:456",
+      "locator": {
+        "page": 9,
+        "x0": 411.2903,
+        "y0": 582.107,
+        "x1": 448.5025,
+        "y1": 587.1095
+      },
+      "text": "Operating",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:460",
+      "locator": {
+        "page": 9,
+        "x0": 298.0856,
+        "y0": 592.9216,
+        "x1": 319.6616,
+        "y1": 598.165
+      },
+      "text": "Total",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9918905672917104,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0429:462",
+      "locator": {
+        "page": 9,
+        "x0": 323.3729,
+        "y0": 593.1625,
+        "x1": 383.3889,
+        "y1": 598.165
+      },
+      "text": "($ 23,387,656)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0429:114"
+      ],
+      "in_table_box": true,
+      "asked": false
+    }
+  ]
+}

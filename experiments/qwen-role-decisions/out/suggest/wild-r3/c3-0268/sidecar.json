@@ -1,0 +1,2050 @@
+{
+  "document": "c3-0268",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 91,
+    "cards_considered": 91,
+    "selector": "all-blocks",
+    "not_heading_confident": 79,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 1
+  },
+  "cards": [
+    {
+      "card_id": "c3-0268:0",
+      "locator": {
+        "page": 0,
+        "x0": 233.7602,
+        "y0": 77.6875,
+        "x1": 384.2307,
+        "y1": 96.8395
+      },
+      "text": "Board of Trustee Workshop June 15, 2010",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.6499468896728483,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:1",
+      "locator": {
+        "page": 0,
+        "x0": 90.0004,
+        "y0": 118.6075,
+        "x1": 505.6866,
+        "y1": 165.5995
+      },
+      "text": "The Board of Trustees for the Village of Cold Spring held a workshop meeting on Tuesday, June 15, 2010 at Village Hall, 85 Main Street, Cold Spring, NY at 7:30 pm. Attending: Mayor Seth Gallagher and Trustees Campbell, Hustis and Serradas Absent: Trustee Falloon (work-related absence)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485590890816,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:3",
+      "locator": {
+        "page": 0,
+        "x0": 90.0004,
+        "y0": 187.6075,
+        "x1": 521.7734,
+        "y1": 206.9995
+      },
+      "text": "1. Bart Clark, P.E. of Oakwood Environmental provided a presentation on the findings of a recent video inspection of the sewer system.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039014930019,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:4",
+      "locator": {
+        "page": 0,
+        "x0": 90.0004,
+        "y0": 187.6075,
+        "x1": 98.9946,
+        "y1": 193.1995
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:5",
+      "locator": {
+        "page": 0,
+        "x0": 90.3604,
+        "y0": 229.0074,
+        "x1": 524.5032,
+        "y1": 248.3995
+      },
+      "text": "2. RESOLUTION 2010-32 VILLAGE SUPPORT FOR SCHOOL DISTRICT AND TOWN EFFORTS TO ADDRESS IMPLICATIONS OF HIGHLAND VALLEY",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9947946034754271,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:6",
+      "locator": {
+        "page": 0,
+        "x0": 90.3604,
+        "y0": 229.0074,
+        "x1": 99.3546,
+        "y1": 234.5994
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:7",
+      "locator": {
+        "page": 0,
+        "x0": 234.84,
+        "y0": 256.6075,
+        "x1": 383.1506,
+        "y1": 262.1995
+      },
+      "text": "DEVELOPMENT PROJECT",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9841054186219178,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:8",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 284.2074,
+        "x1": 523.086,
+        "y1": 358.7994
+      },
+      "text": "WHEREAS, Walloon Trust has submitted a Draft Environmental Impact Statement (DEIS) for the Highland Valley development project to the Town of Fishkill Town Board and that this DEIS is for the purpose of \u201cconsideration of rezoning the project parcels from their current zoning designation of GB and R-4 zone to a RMF-5 zone and the development impacts associated with the development of the site to allow for the use of the Mobile Home Park regulations\u201d;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999921108086545,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:9",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 380.8074,
+        "x1": 479.7659,
+        "y1": 400.1994
+      },
+      "text": "AND WHEREAS, the proposed Highland Valley project calls for a high-density development of 210 homes on a 76.6 acre parcel;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999992110805208,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:10",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 422.2074,
+        "x1": 508.3316,
+        "y1": 441.5994
+      },
+      "text": "AND WHEREAS, this parcel is located in the Haldane School District and adjoins the Town of Philipstown;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999955048504827,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:11",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 463.6074,
+        "x1": 494.1737,
+        "y1": 496.7994
+      },
+      "text": "AND WHEREAS, the proposed enrollment impact on the Haldane School is much greater than the DEIS estimate of only 24 students, and would likely be closer to an estimate of 140 students;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999945778299404,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:12",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 518.8074,
+        "x1": 514.6942,
+        "y1": 551.9995
+      },
+      "text": "AND WHEREAS, greatly increasing the number of students at the Haldane School will require the construction of an addition to the existing school building(s) and such construction will create a severe tax impact on the Cold Spring taxpayers;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999969105224724,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:13",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 574.0075,
+        "x1": 519.9666,
+        "y1": 593.3995
+      },
+      "text": "AND WHEREAS, the Clove Creek Aquifer runs through Fishkill and Philipstown and is the area\u2019s only \u201cPrimary Aquifer\u201d;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999957771869575,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:14",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 615.4075,
+        "x1": 500.1678,
+        "y1": 648.5995
+      },
+      "text": "AND WHEREAS, the Clove Creek Aquifer provides pure water to seven (7) communities across two (2) counties including the Town of Philipstown, where the Village of Cold Spring is located and where the Village draws its water supply from;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999960330358075,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:15",
+      "locator": {
+        "page": 0,
+        "x0": 90.0003,
+        "y0": 670.6075,
+        "x1": 524.0583,
+        "y1": 689.9996
+      },
+      "text": "AND WHEREAS, over 200 acres of additional developable property is located in the immediate vicinity of the Hudson Valley project; is within the Haldane School District; is",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546042122529,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:16",
+      "locator": {
+        "page": 1,
+        "x0": 90.0001,
+        "y0": 77.2075,
+        "x1": 481.4548,
+        "y1": 96.5995
+      },
+      "text": "located over the Clove Creek aquifer; and is eligible for the same rezoning as the Highland Valley project;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832987284853,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:17",
+      "locator": {
+        "page": 1,
+        "x0": 89.9941,
+        "y0": 118.6075,
+        "x1": 512.162,
+        "y1": 151.7994
+      },
+      "text": "BE IT RESOLVED, that the Village of Cold Spring will support efforts of the Town of Philipstown and the Haldane School District to address this important issue for the benefit of the Village, Town, and School District residents.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898701270077,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:18",
+      "locator": {
+        "page": 1,
+        "x0": 90.0001,
+        "y0": 173.8075,
+        "x1": 289.2075,
+        "y1": 248.3995
+      },
+      "text": "On roll call vote: Trustee Bruce Campbell voting yes Trustee Airinhos Serradas voting yes Trustee Charles E. Hustis, III voting yes Trustee J. Ralph Falloon voting absent Mayor Seth Gallagher voting yes",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999688004621768,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:19",
+      "locator": {
+        "page": 1,
+        "x0": 90.0001,
+        "y0": 270.4074,
+        "x1": 306.0175,
+        "y1": 275.9995
+      },
+      "text": "Resolution officially adopted June 15, 2010",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996201612608397,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:21",
+      "locator": {
+        "page": 1,
+        "x0": 90.0001,
+        "y0": 298.0074,
+        "x1": 497.6545,
+        "y1": 317.3994
+      },
+      "text": "3. Request from the Haldane School to participate in legal effort regarding Highland Valley Development",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995697396075133,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:22",
+      "locator": {
+        "page": 1,
+        "x0": 90.0001,
+        "y0": 298.0074,
+        "x1": 98.9944,
+        "y1": 303.5995
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:23",
+      "locator": {
+        "page": 1,
+        "x0": 90.0001,
+        "y0": 339.4074,
+        "x1": 489.2592,
+        "y1": 358.7994
+      },
+      "text": "4. The following ideas were put out for discussion on the village component of the Butterfield Hospital proposal:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999664698605713,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:24",
+      "locator": {
+        "page": 1,
+        "x0": 90.0001,
+        "y0": 339.4074,
+        "x1": 98.9944,
+        "y1": 344.9995
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:26",
+      "locator": {
+        "page": 1,
+        "x0": 126.0001,
+        "y0": 367.0074,
+        "x1": 518.6552,
+        "y1": 427.7994
+      },
+      "text": "1. Post Office- make this location formally part of the proposed project so that when the Post Office puts out requests for lease offers this location can compete with any others. This would allow all options to move forward. This location could very likely compete price wise with any other location, which is one important factor the Post Office will consider in making their decision",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999771732065573,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:27",
+      "locator": {
+        "page": 1,
+        "x0": 126.0001,
+        "y0": 367.0074,
+        "x1": 134.9944,
+        "y1": 372.5994
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:28",
+      "locator": {
+        "page": 1,
+        "x0": 125.9996,
+        "y0": 436.0074,
+        "x1": 509.2932,
+        "y1": 469.1994
+      },
+      "text": "2. Cold Spring Police Station- moving the police station to Butterfield would solve the non-ADA access problem of the current location and allow police vehicles to be stored at the station location.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852617880117,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:29",
+      "locator": {
+        "page": 1,
+        "x0": 125.9996,
+        "y0": 436.0074,
+        "x1": 134.9938,
+        "y1": 441.5994
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:30",
+      "locator": {
+        "page": 1,
+        "x0": 125.9996,
+        "y0": 477.4074,
+        "x1": 510.9704,
+        "y1": 524.3994
+      },
+      "text": "3. Shared courtroom and Justice Court Office- This would be shared with Philipstown, if not Nelsonville. This would provide state of the art court facilities. This option would have costs for the village but would free up the current courtroom for other village meetings.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724653115818,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:31",
+      "locator": {
+        "page": 1,
+        "x0": 125.9996,
+        "y0": 477.4074,
+        "x1": 134.9939,
+        "y1": 482.9994
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:32",
+      "locator": {
+        "page": 1,
+        "x0": 125.9996,
+        "y0": 532.6074,
+        "x1": 251.5238,
+        "y1": 538.1994
+      },
+      "text": "4. County Senior Center",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9669620273563554,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:33",
+      "locator": {
+        "page": 1,
+        "x0": 125.9996,
+        "y0": 532.6074,
+        "x1": 134.9939,
+        "y1": 538.1994
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:34",
+      "locator": {
+        "page": 1,
+        "x0": 125.9997,
+        "y0": 546.4075,
+        "x1": 290.0514,
+        "y1": 551.9995
+      },
+      "text": "5. Firehouse located on this site",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996648408261081,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:35",
+      "locator": {
+        "page": 1,
+        "x0": 125.9997,
+        "y0": 546.4075,
+        "x1": 134.994,
+        "y1": 551.9995
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:36",
+      "locator": {
+        "page": 1,
+        "x0": 125.9997,
+        "y0": 560.2075,
+        "x1": 517.6849,
+        "y1": 579.5995
+      },
+      "text": "6. Locate trolleys at this site in secure garage space and save gas money driving to Carmel.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339543521681,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:37",
+      "locator": {
+        "page": 1,
+        "x0": 125.9997,
+        "y0": 560.2075,
+        "x1": 134.994,
+        "y1": 565.7994
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:38",
+      "locator": {
+        "page": 1,
+        "x0": 125.9998,
+        "y0": 587.8075,
+        "x1": 455.0476,
+        "y1": 593.3995
+      },
+      "text": "7. Contribute the Grove to this property with use to be determined",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994475899186213,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:39",
+      "locator": {
+        "page": 1,
+        "x0": 125.9998,
+        "y0": 587.8075,
+        "x1": 134.9941,
+        "y1": 593.3995
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:40",
+      "locator": {
+        "page": 1,
+        "x0": 89.9941,
+        "y0": 615.4075,
+        "x1": 524.1789,
+        "y1": 703.7996
+      },
+      "text": "After discussion, Trustee Hustis moved to include seven items (as described above) in the plan for the Butterfield site and seconded by Trustee Campbell and seconded by Trustee Campbell. On roll call vote: Trustee Hustis voting yes Trustee Bruce Campbell voting yes Trustee Serradas voting yes",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999993855869336,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:41",
+      "locator": {
+        "page": 2,
+        "x0": 89.9941,
+        "y0": 77.2075,
+        "x1": 507.8554,
+        "y1": 206.9995
+      },
+      "text": "Mayor Gallagher voting yes Trustee Serradas stated that he was in favor of consolidation of all services as much as possible. Trustee Serradas moved to include Village Hall to the Butterfield site and seconded by Trustee Hustis. On roll call vote: Trustee Hustis voting yes Trustee Campbell voting no Trustee Serradas voting yes Mayor Gallagher voting no",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999981075218098,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:43",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 229.0074,
+        "x1": 509.2865,
+        "y1": 248.3995
+      },
+      "text": "5. Trustee Hustis moved to release Cold Spring Landing from the $500 (site) bond and seconded by Trustee Serradas and unanimously approved.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646448722552,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:44",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 229.0074,
+        "x1": 98.9933,
+        "y1": 234.5994
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:45",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 270.4074,
+        "x1": 505.5697,
+        "y1": 289.7994
+      },
+      "text": "6. Trustee Hustis moved to approve payment of audited bills and seconded by Trustee Serradas and unanimously approved.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599389939929,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:46",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 270.4074,
+        "x1": 98.9933,
+        "y1": 275.9995
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:47",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 311.8074,
+        "x1": 517.455,
+        "y1": 344.9995
+      },
+      "text": "7. Trustee Hustis moved to authorize sending shut off letters to Nelsonville/ Philipstown residents who haven\u2019t paid water/sewer bills. Motion seconded by Mayor Gallagher and unanimously approved.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999771727392144,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:48",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 311.8074,
+        "x1": 98.9933,
+        "y1": 317.3994
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:49h",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 367.0074,
+        "x1": 522.4842,
+        "y1": 381.30740000000003
+      },
+      "text": "8. Correspondence",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.5872903347750642,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:50",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 367.0074,
+        "x1": 98.9933,
+        "y1": 372.5994
+      },
+      "text": "8.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:52",
+      "locator": {
+        "page": 2,
+        "x0": 107.999,
+        "y0": 380.8074,
+        "x1": 350.0569,
+        "y1": 386.3994
+      },
+      "text": "a. Planning Board opinion on composting toilets",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995697096929003,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:53",
+      "locator": {
+        "page": 2,
+        "x0": 107.999,
+        "y0": 380.8074,
+        "x1": 116.2751,
+        "y1": 386.3994
+      },
+      "text": "a.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999989971659942,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:49",
+      "locator": {
+        "page": 2,
+        "x0": 89.999,
+        "y0": 381.30740000000003,
+        "x1": 522.4842,
+        "y1": 510.5997
+      },
+      "text": "a. Planning Board opinion on composting toilets b. Letter of thanks from Butterfield Library for contribution to the Big Truck Day event c. Letter of thanks from David Cooke of the CSADA for support of the June 13 th Antique Show d. Stephen Gaba regarding enacting a local law providing Village Police shall impound or boot the vehicle of a party that has multiple parking violations e. NYCOM Planning and Zoning Summer School agenda will be forwarded to other boards for consideration f. Grant Action News",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997966271838391,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:54",
+      "locator": {
+        "page": 2,
+        "x0": 107.9932,
+        "y0": 394.6074,
+        "x1": 508.9308,
+        "y1": 413.9994
+      },
+      "text": "b. Letter of thanks from Butterfield Library for contribution to the Big Truck Day event",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695544399094,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:55",
+      "locator": {
+        "page": 2,
+        "x0": 107.9932,
+        "y0": 394.6074,
+        "x1": 116.9933,
+        "y1": 400.1994
+      },
+      "text": "b.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999987908031177,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:56",
+      "locator": {
+        "page": 2,
+        "x0": 107.9991,
+        "y0": 418.5331,
+        "x1": 502.2539,
+        "y1": 441.5997
+      },
+      "text": "c. Letter of thanks from David Cooke of the CSADA for support of the June 13 th Antique Show",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911237086375,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:57",
+      "locator": {
+        "page": 2,
+        "x0": 107.9991,
+        "y0": 422.2074,
+        "x1": 116.2752,
+        "y1": 427.7994
+      },
+      "text": "c.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999986295637477,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:58",
+      "locator": {
+        "page": 2,
+        "x0": 108.0002,
+        "y0": 449.8077,
+        "x1": 490.2122,
+        "y1": 469.1997
+      },
+      "text": "d. Stephen Gaba regarding enacting a local law providing Village Police shall impound or boot the vehicle of a party that has multiple parking violations",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339571891284,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:59",
+      "locator": {
+        "page": 2,
+        "x0": 108.0002,
+        "y0": 449.8077,
+        "x1": 116.9945,
+        "y1": 455.3997
+      },
+      "text": "d.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999992191485005,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:60",
+      "locator": {
+        "page": 2,
+        "x0": 108.0007,
+        "y0": 477.4077,
+        "x1": 522.4842,
+        "y1": 496.7997
+      },
+      "text": "e. NYCOM Planning and Zoning Summer School agenda will be forwarded to other boards for consideration",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99994856277964,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:61",
+      "locator": {
+        "page": 2,
+        "x0": 108.0007,
+        "y0": 477.4077,
+        "x1": 116.2768,
+        "y1": 482.9997
+      },
+      "text": "e.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999988638681914,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:62",
+      "locator": {
+        "page": 2,
+        "x0": 108.0007,
+        "y0": 505.0077,
+        "x1": 225.2365,
+        "y1": 510.5997
+      },
+      "text": "f. Grant Action News",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988327476574025,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:63",
+      "locator": {
+        "page": 2,
+        "x0": 108.0007,
+        "y0": 505.0077,
+        "x1": 114.9549,
+        "y1": 510.5997
+      },
+      "text": "f.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999955115666015,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:64",
+      "locator": {
+        "page": 2,
+        "x0": 90.0007,
+        "y0": 532.6077,
+        "x1": 460.3229,
+        "y1": 538.1997
+      },
+      "text": "9. Board members approved of the application for Community Day vendors.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122598407257,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:65",
+      "locator": {
+        "page": 2,
+        "x0": 90.0007,
+        "y0": 532.6077,
+        "x1": 98.995,
+        "y1": 538.1997
+      },
+      "text": "9.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:66",
+      "locator": {
+        "page": 2,
+        "x0": 90.0007,
+        "y0": 560.2078,
+        "x1": 484.0937,
+        "y1": 593.3998
+      },
+      "text": "10. Lynn Miller distributed raffle tickets on behalf of the Chamber of Commerce. Meeting adjourned at 9:53 pm",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766193036973,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:67",
+      "locator": {
+        "page": 2,
+        "x0": 90.0007,
+        "y0": 560.2078,
+        "x1": 104.995,
+        "y1": 565.7997
+      },
+      "text": "10.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:68",
+      "locator": {
+        "page": 2,
+        "x0": 89.9949,
+        "y0": 615.4078,
+        "x1": 475.5553,
+        "y1": 635.0398
+      },
+      "text": "Notes taken by Mayor Seth Gallagher Addendum added by vote of the Board of Trustees on 09-14-2010",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9953952507816335,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:69",
+      "locator": {
+        "page": 2,
+        "x0": 138.8321,
+        "y0": 645.0746,
+        "x1": 477.4827,
+        "y1": 652.5599
+      },
+      "text": "AGENDA BOARD OF TRUSTEE WORKSHOP",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9520899266304903,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:0",
+        "c3-0268:49h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:70",
+      "locator": {
+        "page": 2,
+        "x0": 213.7202,
+        "y0": 662.5352,
+        "x1": 402.1638,
+        "y1": 701.2799
+      },
+      "text": "JUNE 15, 2010 at 7:30 PM Village Hall \u2013 85 Main Street Transcript of Meeting Minutes",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.7049717657198709,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:69"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:72",
+      "locator": {
+        "page": 3,
+        "x0": 90.0001,
+        "y0": 94.6795,
+        "x1": 525.3288,
+        "y1": 126.7195
+      },
+      "text": "BEGINNING AUDIO RECORDING \u2013 38m:13s Presentation by Bart Clark of Oakwood Environmental to discuss results of recent video inspection of the sewer system and inflow and infiltration",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980735914485166,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:73",
+      "locator": {
+        "page": 3,
+        "x0": 90.0001,
+        "y0": 94.6795,
+        "x1": 344.8413,
+        "y1": 99.1195
+      },
+      "text": "BEGINNING AUDIO RECORDING \u2013 38m:13s",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5623951459522724,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:74",
+      "locator": {
+        "page": 3,
+        "x0": 90.0001,
+        "y0": 152.1595,
+        "x1": 502.3908,
+        "y1": 184.1995
+      },
+      "text": "BEGINNING AUDIO RECORDING \u2013 38m:14s Request from Haldane School to participate in legal effort regarding Highland Valley Development :",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9902967956732849,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:75",
+      "locator": {
+        "page": 3,
+        "x0": 90.0001,
+        "y0": 152.1595,
+        "x1": 344.7213,
+        "y1": 156.5995
+      },
+      "text": "BEGINNING AUDIO RECORDING \u2013 38m:14s",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5927666805021152,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:76",
+      "locator": {
+        "page": 3,
+        "x0": 129.6001,
+        "y0": 192.3716,
+        "x1": 527.853,
+        "y1": 694.7999
+      },
+      "text": "Gallagher: Let\u2019s move on to item two, resolution 3220-10; resolution supporting efforts of town and school pertaining to Highland Valley Development. This sort of goes along with the third item; Request from Haldane School to participate in legal effort regarding Highland Valley Development. They did meet with the school superintendent and the town supervisor and a number of other people sort have been involved in this issue and they\u2019re going to be putting up money and there is a request in something that I think is probably worth us getting involved in a small way, a limited way and in the neighborhood of two thousand dollars something like that; to put that in the economic consequences for village residents, if the development were to go in there of that size there\u2019s again the potential for even larger number of units in the Haldane School District up there, because of additional acreage that could be developed in the same way. The economic impact on the village could be substantial and we\u2019re talking for a new facility or even an addition of millions of dollars. And I\u2019m not sure what portion of the haldane school district cold spring is, but I would think probably would be 25 percent. CAMPBELL question: they talked about the boundaries trying to redistrict. GALLAGHER: you have to have the approval; the agreement of both school districts in order to do it; both Fishkill would have to say and Haldane. Of course \u201cillegible\u201d it is not in there interest. CAMPBELL: \u201cillegible\u201d Fishkill Wappingers area GALLAGHER: I would think so HUSTIS: Did Philipstown come out and say what they\u2019re contributing? GALLAGHER: They didn\u2019t say expressly so and I kind of want to avoid that because; it\u2019s much more than that. I don\u2019t want to give a fixed number on it and what the school contributing either right now because that\u2019s something that can be taken in account when you\u2019re trying to figure out what kind of opposition. But it\u2019s. It\u2019s certainly, I would say that more than, at least 5 times that or so. But that\u2019s something, I just sorta wanna get a, there\u2019s a, Steve is putting together a resolution on that, on the money. But that\u2019s something that we can take up next week. Just so we wanna get an idea, do people think that\u2019s a good way to contribute to this. SERRADAS: So Steve\u2019 already started the resolution? GALLAGHER: Yeah. We actually have, he sent it to me today. But it\u2019s not really, we should first work it out with Haldane, there\u2019s a few things, we need to, I\u2019ll send it, we\u2019ll send it out today. We just wanna get a few other",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999569456039419,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:77",
+      "locator": {
+        "page": 4,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.3338,
+        "y1": 704.0399
+      },
+      "text": "things in line with the school or the town first before we commit to that. But, does that seem like\u2026 HUSTIS: I have an issue with the amount of money. I don\u2019t know if its naivety or... in regards to it, because I don\u2019t know\u2026I don\u2019t understand how or what the direct impact it has on us. GALLAGHER: You\u2019re a Haldane taxpayer and you\u2019re forced, they\u2019re forced to build, let\u2019s say spend four million dollars on the addition. Two thousand people are gonna pay, have to pay for a million dollars, so basically its going to be a million dollars additional that have to be paid for by the residents of cold spring. So this is an effort to try and get and really get people to think about those kinda consequences; to figure the impacts it will have on our community. HUSTIS: Now the impact it has is if the development goes through\u2026the taxes\u2026school taxes will go up as well. Is that more trickle down\u2026. GALLAGHER: That\u2019s not what I\u2019m talking about. No, I\u2019m talking about school taxes. So everybody here is a school taxpayer, so their taxes are gonna go up, you know as if when we build the other school, so whether or not it would be a.., I don\u2019t know how much that cost. GALLAGHER: Do you know how much it is roughly? SERRADAS: I don\u2019t know. Gallagher: Quite a bit. We\u2019re talking millions of dollars. CAMPBELL: But they also said that they need the so many more classrooms, so they can readjust the current high school, put the\u2026 find other spaces for elementary or kindergarten. I think they talked about that\u2026 maybe they will rent the loretto school or other buildings that might be available to offset the expense of another school or building another addition. SERRADAS: I just don\u2019t see how building a school is going to be only Cold Spring\u2026 The village\u2019 only responsibility. GALLAGHER: Oh, it\u2019s not. No, I\u2019m just saying. SERRADAS: You made it sounds that way. Gallagher: No, I\u2019m just saying it would be a percentage. So lets just we\u2019re a quarter of the taxpayers of the Haldane district\u2026 or\u2026 you know\u2026 we\u2019re probably a quarter of the taxpayer of that district, so\u2026. a quarter of the burden financially would fall on us. A four million dollar school. You\u2019re talking a million dollars that would fall on the taxpayer. So the idea is to say contribute two thousand dollars\u2026.which is certainly much\u2026 a very small amount compared to\u2026 the potential there is for us in the long run and in the not so long run. SERRADAS: So who would be contributing? Philipstown. GALLAGHER: Philipstown, Cold Spring would sorta be the smallest one, but it would be Philipstown, the school district and the Hudson Highland Land Trust. SERRADAS: What about Nelsonville and Garrison? GALLAGHER: Garrison is\u2026they don\u2019t have a government, so they would be through Philipstown.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997546492569787,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:78",
+      "locator": {
+        "page": 5,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.3354,
+        "y1": 690.2399
+      },
+      "text": "SERRADAS: And Nelsonville? GALLAGHER: I don\u2019t know bout Nelsonville. SERRADAS: I\u2019 actually spoke to Chairman Tamagna earlier. He said he\u2019d spoke\u2026 has a very good relationship, if you will\u2026 with Supervisor Pagones. One of the things they\u2019ve been working on is having a good relationship\u2026 having a good face to face meeting. One of things they talked about to alleviate the possibility of doing this is reducing it from a regular community where we have children to a 55 plus community. If it is a 55 plus, it\u2019s less likely a chance we would be directly impacted. The thought is we should be conservative in approaching it from a legal perspective. At least in my mind. Let\u2019s see that plan out. Let\u2019s see that work itself through. Last resort being on the legal. I think it is important to start that and I think Haldane has already started that when I spoke to Dr. Valenti. I just think we need to be prudent in what we do. Mind you I do a lot of work with the Haldane school district, so I am pretty aware of what it costs to put a kid through school. GALLAGHER: They\u2019re also\u2026 and they\u2019re looking for a show of support also. So\u2026 and anything that does get it changed up there\u2026 you know\u2026is probably due\u2026is probably going to be due to the activities\u2026you know\u2026 the village\u2026 just to tell people generally\u2026to tell people up at Fishkill\u2026the school district itself. So we can talk about further\u2026I\u2019m going to meet with them on Friday too. We can talk about the actual commitment of money next week. GALLAGHER READS RESOLUTION. Gallagher changing estimate in resolution: \u201cup to 140 students.\u201d GALLAGHER: Questions? Comments? SERRADAS: At some time we\u2019ll discuss the specific dollar amount, at the bottom it says, \u201cWill support efforts\u201d I just\u2026Not to be rude; I\u2019m just trying to understand why we need a resolution. Why can\u2019t we just send them a letter of explaining our support? We\u2019re spending village money to create a resolution. GALLAGHER: We\u2019re not. How are we spending any money? SERRADAS: You said you asked Gaba to write up a resolution. GALLAGHER: No, I wrote this. SERRADAS: Ok. GALLAGHER: The one on\u2026He\u2019s writing\u2026.he wrote the one on the two thousand dollars. SERRADAS: Ok. I think we should table it. Whatever. Discuss the dollar amount at another point. GALLAGHER: This is just on supporting\u2026just saying that we support the effort. There\u2019s no dollar amount attached to it. It doesn\u2019t say we\u2019re committed to any money or anything. This is really just to say we\u2019re behind the effort. CAMPBELL: Also along with everyone else\u2026they\u2019re doing something similar\u2026something similar to this. They\u2019ve asked everyone to join in this. GALLAGHER: Yes. Yes.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694863543186,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:79",
+      "locator": {
+        "page": 6,
+        "x0": 129.5941,
+        "y0": 77.4115,
+        "x1": 525.3252,
+        "y1": 345.2397
+      },
+      "text": "CAMPBELL: They asked for at that meeting. That asked for everyone to join in the effort? GALLAGHER: Yes. We\u2019re sorta coming together on this. AUDIENCE: Since you\u2019re speaking of having everyone come together, why not have all the residents come together as well, by having them sign a petition and circulate it in the community? GALLAGHER: Residents are getting involved. CAMPBELL: There is a petition I believe electronically and... GALLAGHER: Anything else on the resolution. Then I would move that we that we adopt this resolution of support. Is there a second. CAMPBELL: I\u2019ll second. GALLAGHER: Bruce Campbell voting? CAMPBELL: Yes GALLAGHER: Trustee Serradas voting? SERRADAS: Yes GALLAGHER: Trustee Hustis? HUSTIS: Yes GALLAGHER: Trustee Falloon is absent. GALLAGHER: Mayor Seth Gallagher is yes. So we\u2019ll talk about the other one next week. We\u2019ll have an update on what\u2019s going on also.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999664664148839,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:80",
+      "locator": {
+        "page": 6,
+        "x0": 89.9998,
+        "y0": 367.2117,
+        "x1": 449.6144,
+        "y1": 386.6396
+      },
+      "text": "BEGINNING \u2013 51m:45s AUDIO RECORDING \u2013 DISCUSSION OF BUTTERFIELD SITE",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.5000881336087515,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:70"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:81",
+      "locator": {
+        "page": 6,
+        "x0": 129.5941,
+        "y0": 394.8117,
+        "x1": 525.1927,
+        "y1": 704.0399
+      },
+      "text": "GALLAGHER: Next item is the update on Butterfield property proposal for shared services and discussion of village component at the site. I had set up a meeting last week with the county executive, legislator Tamanga and the town supervisor, Richard Shea to sorta\u2026to figure out how we\u2026where we were on the project\u2026sorta\u2026you know\u2026see what we could do to help out. And it was a very productive meeting and everyone came out of that with some\u2026some homework. And my job was to come to the Board and\u2026to try to get an idea of what kind of services we could commit to up there. What would the village would wanna see up there. And a few of the ideas that had\u2026some of them had been around already. And the idea is sorta get\u2026for both the town and village to say what do you actually want. What do you have to contribute? And so\u2026 these are some of the ideas that came up. One of course is the post office\u2026three thousand square foot to make this alternative location formally part of proposed project so when the post office puts out requests for lease offers this location can compete with any others. We would move forward on all options to have the best chance of having a best chance of having a location in cold spring for the post office. This location could very likely compete, price wise with any other location, which is one important factor that the post office will consider in making their decision. So\u2026the best thing for us would be to have as many possibilities as possible. Hopefully one of those\u2026 because of that we will be able to keep the post office in cold spring. In thinking of uses for the village specifically, one thing that",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988305502143229,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:82",
+      "locator": {
+        "page": 7,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.3311,
+        "y1": 524.6398
+      },
+      "text": "had been mentioned before and would probably makes sense is Cold Spring police station, it would be nice to keep here on Main Street but there is a problem, both due to space and due to the location of the post office upstairs. So in estimation is maybe fifteen hundred to two thousand square feet for that. There would be a cost to the village but it would make the police station compliant with the ADA\u2026 it would also free up space at village hall, which would either be used by the village or leased out. 3. Shared courtroom and justice court office\u2026we\u2019re thinking roughly two hundred and fifty square feet for the office. This would be shared with Philipstown. If the Philipstown project includes moving their court there then we could work with them on that. I did speak with Judge Costello\u2026he\u2019s not against the move\u2026he does see the benefits for having a modern courtroom\u2026but of course he\u2019s also happy just where he is. This would have a cost to the village but would free up the current room for other village meetings and free up the judge\u2019 office for village use, such as the building department office. 4. Is the Senior Center. That\u2019s one that we\u2019ve talked about for awhile now. And would certainly be the key\u2026the most important part of this proposal. And 5. Is the firehouse that we\u2019ve talked about for awhile\u2026 locating that on the site...What I wanted to do is get the board support for these options and see if there are any other ones for a discussion on these and see if there\u2019s other ideas for the use of that. HUSTIS: There is one thing I was thinking actually as I was looking at the email\u2026.. Interrupted by Gallagher. GALLAGHER: Oh, I\u2019m sorry I missed one\u2026and that is sorta locating the trolley at the site in a secured garage space\u2026so that would be one thing to add to that\u2026 so they don\u2019t have to drive over from Carmel each time. HUSTIS: After reading this\u2026I was thinking that\u2026I was trying to make it out actually\u2026.If we come to an agreement that the firehouse go up on that section of the property and they leave the building where they are now on Main Street\u2026Is that the one kind of idea for the police to be\u2026 and would that make it easier for the police to be there? GALLAGHER: Yeah.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485597628442,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:83",
+      "locator": {
+        "page": 7,
+        "x0": 129.6001,
+        "y0": 532.8118,
+        "x1": 525.3317,
+        "y1": 704.0399
+      },
+      "text": "HUSTIS: And would that make it easier for them to be ADA complaint? GALLAGHER: Well certainly for one floor. HUSTIS: Ok. GALLAGHER: I guess this\u2026the one thing here is also\u2026I guess they\u2019re talking about is having the possibility of a sheriff\u2019s office there to. To share a lock up with them. Maybe things like. We would also have the court over there. It would have\u2026would be able to store their vehicles there too. So, that\u2019s\u2026one advantage to having it over there. CAMPBELL: It\u2019s obvious some of these could happen quicker than others. The post office\u2026would that meet their timeline for their lease next July? GALLAGHER: Post Office\u2026.It\u2019s really hard to say\u2026because there\u2019s so many\u2026there\u2019s ifs about it. You\u2019ve gotta get the county legislator to agree.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485621432159,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:84",
+      "locator": {
+        "page": 8,
+        "x0": 129.5941,
+        "y0": 77.4115,
+        "x1": 525.3345,
+        "y1": 704.04
+      },
+      "text": "To spend a certain amount and that amount has to be equal to what the owner of the property wants. So you gotta get those two together. So that\u2019s on Both their support for it and an amount that satisfy the owner of the property and then it would really take some work on figuring out how would you fund the building of it. Things like that, but at least you would be a step closer to that. CAMPBELL: Would it delay the shared courtroom that has to go there and would it delay the construction of the work on the court to be done here? GALLAGHER: No, this would probably have to be done in any case. So we would have do that...Some of this stuff would not necessarily be happening very quickly. Once you got an ok from the county that you can start to realistically look and I think the town is talking about contributing\u2026being a large part of this project also. CAMPBELL: So we can\u2019t hold off spending that ten thousand dollars? GALLAGHER: No. Yeah that\u2019s to be completed as soon as possible. That would take awhile. Then there\u2019s the question of how you fund these things. Anyone else. SERRADAS: Yeah\u2026Aside from consolidation of the town hall village locations. Courthouses are not one hundred percent ADA compliant. You have three that are not ADA compliant right now\u2026Police department, I think is crucial. When Bondi was here, we took some of the risk management people upstairs. They were shocked that anybody would walk up there\u2026.it\u2019s extremely dangerous. You know\u2026.everybody here knows. I\u2019m sure everybody in the audience knows as well. Potentially as was stated. I\u2019m glad you had a change of heart and things have changed. GALLAGHER: I didn\u2019t had a change of heart. No\u2026I\u2019m just saying I didn\u2019t have a change of heart. SERRADAS: Can I finish. Ok. Do I have the floor? GALLAGHER: Yeah. Don\u2019t go putting words into my mouth. SERRADAS: Ok. Having the trolley is I think crucial. It\u2019ll save us a ton of money. That\u2019s a great idea. Entertaining and speaking to Philipstown. If you can visualize\u2026having the trolley, having the fire company. Here we have the issue where you\u2019ve got fire fighters out there stopping traffic. Let\u2019s try to think of a way to reduce the footprint that they need. So in other words having a set up for\u2026if it were to happen\u2026they\u2019d pull in\u2026the garage door closes and they pull right out of the front. That minimizes that footprint. Senior citizens complex I think is phenomenal. They need it. They\u2019re right across the street from the oldest senior citizens complex in Putnam County. I think its ideal having that right next to each other. If the Ambulance Corp wanted to move there I think its\u2026it would be a great hub. Police, Fire, everything\u2019s right there. Considering the post office. I think that\u2019s a boom. Absolute boom for us. The other issues\u2026not issues\u2026How you say\u2026how we would fund this\u2026if we end up moving everything up there. The beauty of it is\u2026yes we own this property. The property that\u2019s up there\u2026aside from Lahey pavilion which stays by itself.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151937892095,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:85",
+      "locator": {
+        "page": 9,
+        "x0": 129.5941,
+        "y0": 77.4115,
+        "x1": 525.3314,
+        "y1": 386.6395
+      },
+      "text": "You have 44,000 square feet. It\u2019s easily convertible, converted, whatever\u2026retrofitted. So I can see of lot of this\u2026if not most of it being up there. The village could benefit by considering leasing this out to someone\u2026the business\u2026I\u2019m just throwing out\u2026. GALLAGHER: I\u2019m just saying\u2026right now no. The village office is not part of this. SERRADAS: I thought it was GALLAGHER: No. I\u2019m just saying right now no. It\u2019s the\u2026shared courtroom and the police. It\u2019s the\u2026not village hall. SERRADAS: Ok. We\u2019re throwing ideas out\u2026I\u2019m just saying\u2026Let\u2019s just hypothetically say that if we went up there\u2026everybody has their own offices\u2026you walk in\u2026. here\u2019s Philipstown\u2026if Nelsonville participates, it\u2019s here\u2026 here\u2019s Cold Spring. Everybody\u2019s still independent. Ideally we have the opportunity at that point\u2026to say\u2026you know what\u2026lets lease this property out. You have the fire company\u2026you can lease that out. You can bring in an old style theater\u2026bowling alley\u2026.I don\u2019t really know\u2026.I\u2019m just throwing ideas out to everyone. Those are good ways to generate money for the village at a very minimal cost. With respect to the police department\u2026I spoke to a good friend of mine. He\u2019s a former chief of police. And he sent me this afternoon so bear with me\u2026I\u2019ll read it\u2026I can email it\u2026I\u2019ll can clean it up and I\u2019ll send it to everyone. As far as minimum size\u2026a thousand, fifteen hundred\u2026. I don\u2019t know. Potentially it could be more. I\u2019ll just read what he has to say. SERRADAS reads letter.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040754693466,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:86",
+      "locator": {
+        "page": 9,
+        "x0": 129.6001,
+        "y0": 394.8117,
+        "x1": 525.3315,
+        "y1": 704.04
+      },
+      "text": "GALLAGHER after letter is read: Right now they have about a thousand square feet\u2026so this would certainly give them a bit more. SERRADAS: Does that include Bill Bujarski\u2019 area. GALLAGHER: Yeah, that\u2019s like the whole upstairs, basically. HUSTIS: If the offices were to move and in essence we do the courts going up to Butterfield and the police and everything and those offices going down. Do you have any idea of what you want up there? GALLAGHER: No\u2026I mean that\u2019s the idea\u2026we should put ideas out for that\u2026I mean\u2026probably don\u2019t want an office that the public has to go up to. So, it could be storage but then again it could be leased out. HUSTIS: You know one thing I thought it might be is a records section or something like that. To make it easier. With the post office as the number one on here\u2026I think it is a good idea to have it as an option. Because we don\u2019t want be in a position where the post office\u2026because the postal service is in consolidation right now\u2026so it\u2019s a good possibility that they may turn around and deem it by finances to shut the cold spring one down. It\u2019s always that possibility. Working at Foodtown\u2026I\u2019ll can honest \u2026 I can tell you that the store desperately needs the expansion. They need\u2026and if the post office goes up there to the Butterfield property. It makes it easier for them to\u2026for the property owner to address the sidewalk situations\u2026the drainage issues in the parking lot, because sometimes when it down pours rain its not proper drainage the water in essence goes underneath the sliding doors and it\u2019s a nightmare to try and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999903901564946,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:87",
+      "locator": {
+        "page": 10,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.3388,
+        "y1": 690.2399
+      },
+      "text": "mop up. Other than that\u2026I\u2019ll be honest with you\u2026I like the ideas that are presented here and\u2026Can you explain to me number seven with the Grove property\u2026how that would be incorporated for the possibility for the new firehouse? GALLAGHER: Well\u2026that\u2019s something I\u2026After talking bout stuff. I said what about the Grove property. That is something that we have\u2026cause they\u2019re looking for ways to actually make this happen. Financially, what kind assets, what kind of contributions. That type of things. And\u2026certainly with any development of that property. And with the firehouse\u2026you\u2019re gonna have to\u2026there\u2019s\u2026you\u2019re gonna have to move things around as much as possible, especially the parking in that area\u2026and how\u2019re you gonna use that building. That\u2019s one that thing we really never addressed. What\u2019s gonna be the use of that building? So that\u2019s something that\u2026it\u2019s really to put that out there as part of this project as a \u2026for sort of brainstorming as how to use that property. Having it being open to a nonprofit or something like that. And to at least think about it in developing a concept on how to use that site, which is just what we\u2019re doing and I would say\u2026you know\u2026as opposed to a change of heart. What happened last week was really the way the process is supposed to be. There\u2019s an idea for how to use this property the county is thinking of buying it. And they go to the municipalities and say how do you want to participate? Which is exactly what he did. That then puts the burden on us then to come back and say hey we gotta come up with some ideas if we wanna make this thing happen. And everybody left that meeting feeling like we\u2019re moving forward and there was sort of a positive energy to to make something happen\u2026and another idea that\u2026was proposed\u2026you know\u2026was or at least thought about was\u2026you know\u2026or if there are ways of combining other services\u2026you know\u2026the highway department of something like that or at least co-locating. I know that the county is certainly looking into probably working more with towns on maintenance of county roads. That type of thing. So, that\u2019s another thing I think that they\u2026to think about. Other ways to\u2026that services or locations could be shared ultimately to save money. Cause this is sorta of like one big giant puzzle. Moving pieces around...of freeing up space here but\u2026you know\u2026moving space there sharing it then you have\u2026you know\u2026a shared courtroom that a little bit higher quality\u2026or shared sheriff\u2026and police department\u2026type of thing. HUSTIS: I also like the possibility with the Grove of reaching out for a nonprofit taking over because you maybe can preserve the historical part of it. Bring some king of historical awareness to the community. I mean\u2026anything good for that building instead of looking at an eyesore right now would be a blessing. GALLAGHER: I hear ya. So on these items\u2026and the seven. We can go\u2026I can go back to County Executive Bondi and Legislator Tamagna and say the village boardss generally in support of these uses.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040849621538,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:88",
+      "locator": {
+        "page": 11,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.3369,
+        "y1": 704.0399
+      },
+      "text": "SERRADAS: I mean\u2026you had asked about financing. Before that\u2026I just wanna understand something. You said as far as the village is concerned, you\u2019re not in favor of moving up there or you are? GALLAGHER: Not in favor of moving the village hall. SERRADAS: Ok. Is there a reason? GALLAGHER: Yeah. I would like to keep it on Main Street. I think there is a\u2026there\u2019s an importance to having a village presence on Main Street especially during the week. It draws people down to Main Street. I think it\u2019s kind of\u2026I think it\u2019s kind of\u2026you know\u2026it\u2019s an important part of having a presence in the village and having a presence in the sorta of historic business district. There\u2019s where the municipal offices have been\u2026and I think it\u2026it serves a good just being here\u2026you know\u2026and certainly the board could always consider moving village hall. But I think that a\u2026to me\u2026that\u2019s a\u2026it\u2019s a discussion I couldn\u2019t\u2026I would find it difficult to say to the county, yes we want to do that without looking into it very\u2026you know\u2026very deeply and looking at the consequences of it. MAN IN AUDIENCE: Keeps that small village atmosphere. GALLAGHER: Yes. \u201cillegible\u201d You wonder into village hall ask some questions. Sometimes you have trouble parking but\u2026you know. SERRADAS: You got me\u2026I\u2019m definitely in favor\u2026personally I\u2019m in favor of the consolidation. I would love to see\u2026as you pull into cold spring you see the village green. That\u2019s the first thing you hit. You have all the municipal buildings right there. Everything is in one location; something that we\u2019ll gain by this is... assuming that this all comes to fruition. You\u2019ll gain a lot of parking that you don\u2019t have now. Let\u2019s just say that...completely municipal building with hypothetically the post office\u2026well the post office shuts down at noon; now you have all that extra parking spots that\u2019s available. If the trolley is there\u2026people can park\u2026the trolley takes them around\u2026it\u2019s a beautiful thing, and it just promotes that avenue. I\u2019ve done\u2026I mean\u2026you guys know I\u2019m a numbers guy. It\u2019s kind of boring. How to fund it\u2026it\u2019s from what numbers I\u2019ve done\u2026Lahey pavilion stays the way it is. It\u2019s a fifty year lease with Hudson valley. They\u2019re currently bringing in ninety thousand a year in rent. This AT&T antenna that brings in ten thousand. That\u2019s a hundred thousand dollars that comes in off of that. If you were to reach out to possibly Verizon. I don\u2019t know how it would work. Say another ten thousand. Now you\u2019re at a hundred and ten thousand. I don\u2019t know what the post office charges. I heard rumors it\u2019s around thirty dollars a square foot\u2026at three thousand\u2026another ninety thousand, so potentially its two hundred thousand dollars that helps pay for this project. It\u2019s not completely, but it helps reduce the debt service. So it would be a win win for everyone concerned. GALLAGHER: Well that would be for the county. My thinking on funding...by funding I meant who\u2019s gonna build the post office, if you have a post office; who gonna build whatever you\u2019re gonna\u2026its one thing to sort of buy the property and pay off the bond on it. But the\u2026We don\u2019t",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9982995055018518,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:89",
+      "locator": {
+        "page": 12,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.3359,
+        "y1": 704.0399
+      },
+      "text": "know what the post office pays for space. I think what they pay now is probably closer to ten thousand a square foot\u2026so SERRADAS: Ten thousand a square foot? GALLAGHER: Ten dollars\u2026ten thousand. Ten dollars\u2026so\u2026but\u2026ok\u2026so I\u2019m gonna say that the board members that are here are in favor of bringing these six items back to Mr. Bondi and Mr. Tamagna. SERRADAS: Six and more, plus the other things we had talked about. GALLAGHER: We can\u2019t give them more. We have to give them\u2026this is stuff so they can take something and say this is realistic. I\u2019m saying these things are\u2026we agree on\u2026correct? SERRADAS: But you\u2026I\u2019m not trying to start trouble but you\u2019re not addressing the fact that I personally would love to see our village facilities\u2026 GALLAGHER: Why don\u2019t you make a Motion to add that to this? SERRADAS: I make a Motion to add that. GALLAGHER: Is there a second for that? HUSTIS: I second that. GALLAGHER: Ok. Then any discussion on that. CAMPBELL: I don\u2019t have any discussion\u2026I just think\u2026it\u2019s just gonna be\u2026again taking a close look at a dependent situation, and then knowing that you can\u2019t fit everything up there eventually. Everything that we\u2019re talking about is not going to fit. So I mean logically somebody is gonna have to come up with a plan that makes sense of the economics of it and the\u2026whether or not you want to try and fit everything in. In a short range plan is to put certain things like the firehouse and things with a little bit longer route. Some of these can happen fairly soon within reason I think but at the same time if you add too many things up there\u2026cause everyone\u2026we\u2019ve been discussing these things for years as far as possibilities for that place. It makes sense. A lot of these things make sense except for when you start trying to add too many things to it\u2026it takes away from the whole concept of\u2026sense of it sometime. SERRADAS: Right, but you have folks across that part of the county that have no idea its here. It\u2019s almost if they feel they need a permit or visa to come across the county line. I\u2019m not saying throw everything at \u2018hem, but give them all the considerations; all the different options that are available. They say wow! I didn\u2019t realize that was available. We never knew that was a possibility. GALLAGHER: I just saying in this separate thing\u2026we\u2019re giving them more than options. We wanna give things that are actually\u2026we\u2019re fairly committing to a use of space and saying to the county legislator, please purchase this building because these entities are looking to use it for these purposes. So I just\u2026Why don\u2019t we just\u2026why don\u2019t we take a vote on that\u2026 SERRADAS: I just\u2026go ahead. GALLAGHER: Trustee Hustis HUSTIS: Yes",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965820421697,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:90",
+      "locator": {
+        "page": 13,
+        "x0": 129.5951,
+        "y0": 77.4115,
+        "x1": 525.3301,
+        "y1": 704.0399
+      },
+      "text": "GALLAGHER: Trustee Campbell CAMPBELL: Yes GALLAGHER: Yes! CAMPBELL: Yes GALLAGHER: Trustee Serradas SERRADAS: Yes GALLAGHER: Mayor Gallagher GALLAGHER: No SERRADAS: I would also like to make one more Motion, if I may. GALLAGHER: Wait one second. I just wanna explain what you\u2026 basically what you\u2026what you said to me is to go and tell the county that we\u2019re gonna move our village offices. CAMPBELL: No, not the village offices. I saying\u2026I was saying other possibilities\u2026 GALLAGHER: Oh\u2026oh\u2026can I\u2026 can I\u2026 CAMPBELL: I wasn\u2019t saying what you\u2019re talking about Airinhos. GALLAGHER: Can I\u2026can I\u2026Let me just clarify. The Motion was to include village hall moving to Butterfield in the project. CAMPBELL: Illegible\u2026sorry\u2026 GALLAGHER: Ok. Let me\u2026Let me take the vote again. Trustee Hustis HUSTIS: Yes GALLAGHER: Trustee Campbell CAMPBELL: No GALLAGHER: Trustee Serradas SERRADAS: Would you read the Motion again please. GALLAGHER: Trustee Serradas moves to include moving village hall to Butterfield. SERRADAS: I moved to consider it. GALLAGHER: No! No! This is stuff that I\u2026. SERRADAS: Ok\u2026ok fine; fine GALLAGHER: Ok, very good. Trustee Serradas, yes. Mayor Gallagher, No. The Motion does not pass. SERRADAS: I disagree. You\u2019re supposed to vote on the tie. There\u2019s no tie. GALLAGHER: No I can vote anytime I want. CAMPBELL: My discussion\u2026what I discussed was to the possibility of other things\u2026 GALLAGHER: It doesn\u2019t matter. You need three votes to pass and I can vote anytime I want. I vote on every single Motion we take where there is not a tie. SERRADAS: I understand that but if there\u2019s a tie\u2026that\u2019s\u2026prove me otherwise\u2026when there\u2019s a tie\u2026 GALLAGHER: I\u2019m proving you otherwise. Its law. Its state law. I have a vote anytime this board votes. Doesn\u2019t matter whether there\u2019s a tie or not. And anyway you need three votes to pass. No Motion can pass unless it has three votes.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999516757552142,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:91",
+      "locator": {
+        "page": 14,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.337,
+        "y1": 566.0398
+      },
+      "text": "SERRADAS: I\u2019d like to... HUSTIS: Could you please explain to me why you called for a second vote? GALLAGHER: Because I explained what the vote was for and Bruce said he was not voting on that. CAMPBELL: I thought we\u2019re\u2026I thought the Motion was to consider other possibilities to add to this whole thing here. And we discussed it and I discussed it. I misunderstood that we\u2019re focusing strictly on moving village hall. And that\u2019s what I misunderstood the Motion to be. GALLAGHER: Right; it\u2019s my fault for not reading the Motion right when we voted. SERRADAS: The Motion I made was to consider it. Not to do it. To consider. GALLAGHER: Right. I wrote it down. I read it to you. I told you this thing is not about considering. This is about what I can take to them and say we can bring this to the legislature and it is more than\u2026it is not just considering\u2026its sorta of we\u2019re making some sort of commitment; that if it were purchased that we would really work to do those things. Not just to consider them. Its not really\u2026brainstorming is sorta of what we discussed, but we don\u2019t bring them the whole brainstorming. So\u2026the next thing then would be to take a Motion of the six items mentioned. To approve taking them to the county executive Bondi and legislator Tamagna for inclusion in a plan for use for the site. So the Motion is to include the six items in a plan for the Butterfield site. Is there a Motion to include the six items mentioned in a plan for Butterfield site? SERRADAS: What happened to the seventh one? GALLAGHER: I don\u2019t know. You had seven\u2026 HUSTIS: The seventh was the Grove. GALLAGHER: Ok seven. I\u2019m sorry. So we\u2019ll put the seven items. SERRADAS: Someone had suggested an eighth one or is it somewhere in there? GALLAGHER: Which one? SERRADAS: Never mind GALLAGHER: So it\u2019s the seven items. Is there a Motion? CAMPBELL: So moved. GALLAGHER: Ok. Thank you. Second? Otherwise I\u2026I\u2019ll have\u2026",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999296920468231,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:92",
+      "locator": {
+        "page": 14,
+        "x0": 129.6001,
+        "y0": 588.0119,
+        "x1": 525.3314,
+        "y1": 704.0399
+      },
+      "text": "MALE AUDIENCE MEMBER: Excuse me. Could you clarify what you\u2019re voting on in relation to the Grove? GALLAGHER: Basically just to\u2026to sort of put it in the mix in developing the property there. Looking for\u2026 MALE AUDIENCE MEMBER: Illegible. The Grove is something GALLAGHER: It\u2019s something different, but its adjacent to the property. We don\u2019t have a whole lot of resources to put into some sort of investment, but if we can find a nonprofit to use the building and to think of fit with the property. Right now if we were to try and use the Grove",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251552824867,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:93",
+      "locator": {
+        "page": 15,
+        "x0": 129.6001,
+        "y0": 77.4115,
+        "x1": 525.3307,
+        "y1": 635.0399
+      },
+      "text": "property we would have to get some sort of easement through the hospital. So this\u2026so that\u2019s sort of a natural linkage to the hospital property. So we\u2019re giving up anything up on the property. We still own it. We still have all the rights to it, but that it be included in the planning for the property. SERRADAS: As I understand what you\u2019re saying is that we also make sure the Grove remains the Grove and doesn\u2019t get changed and doesn\u2019t get torn down, because I believe that it is a historic\u2026 GALLAGHER: It\u2019s not like that property is to be made blank and put something on it. MALE AUDIENCE MEMBER: You not creating an amalgamation of the Butterfield hospital plus the Grove. GALLAGHER: We\u2019re not doing anything. We\u2019re saying that the parties\u2026that we should look at that within the context of developing the hospital. Yes. Can we have a second? ILLEGIBLE (Second not heard on tape). Trustee Serradas? SERRADAS: Yes GALLAGHER: Trustee Campbell? CAMPBELL: Yes GALLAGHER: Ok we\u2019re voting on that. Trustee Hustis? HUSTIS: Yes GALLAGHER: Mayor Gallagher. Yes. So we don\u2019t lose any control over the building. We still do with it what we want. We still have to approve any use of it. SERRADAS: So at some point we would I assume some village input in what they would like to see there as well. GALLAGHER: This thing is to sort of to get some initial possible uses to\u2026. SERRADAS: Any indication of interest? GALLAGHER: Indication of interest is to try and get a\u2026it\u2019s for sale right now\u2026there\u2019s a desire to I think by the seller to have something decided by August. Early August and for the county to\u2026something that would allow the county to make a decision on that. Which is\u2026I mean we haven\u2019t really had\u2026this is be one of the biggest investments by the county on this side in a very long time. SERRADAS: I wanna address Bruce\u2019s comment earlier. Yeah their lease\u2026the post office lease is coming up. It\u2019s not unforeseeable that if they choose to, and they choose to opt for Butterfield. They can do what they did years ago when they had the fire. You just create\u2026put some trailers out there. They can still function until this whole thing comes to fruition if it moves in that direction.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485582889568,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0268:94",
+      "locator": {
+        "page": 15,
+        "x0": 104.4001,
+        "y0": 657.0119,
+        "x1": 525.3344,
+        "y1": 676.4399
+      },
+      "text": "END AUDIO RECORDING \u2013 1hr:25m:20s \u2013 DISCUSSION OF BUTTERFIELD SITE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7319642070405546,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0268:95",
+      "locator": {
+        "page": 16,
+        "x0": 104.4001,
+        "y0": 77.4115,
+        "x1": 525.3311,
+        "y1": 96.8395
+      },
+      "text": "BEGINNING AUDIO RECORDING \u2013 1hr:25m:21s \u2013 RELEASE OF COLD SPRING LANDING FROM FIVE THOUSAND DOLLAR BOND.",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.5614991732403771,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0268:70",
+        "c3-0268:80"
+      ],
+      "in_table_box": false,
+      "asked": true
+    }
+  ]
+}

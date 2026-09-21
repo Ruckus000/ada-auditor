@@ -1,0 +1,300 @@
+{
+  "document": "c3-0435",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 13,
+    "cards_considered": 13,
+    "selector": "all-blocks",
+    "not_heading_confident": 9,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0435:0",
+      "locator": {
+        "page": 0,
+        "x0": 348.0,
+        "y0": 43.35,
+        "x1": 642.5798,
+        "y1": 50.5
+      },
+      "text": "BUNCOMBE COUNTY STATISTICS REPORT",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9796035230910195,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0435:1",
+      "locator": {
+        "page": 0,
+        "x0": 369.3,
+        "y0": 58.45,
+        "x1": 623.4861,
+        "y1": 62.35
+      },
+      "text": "Bert Database Current As Of 12/17/2023 10:07:33 PM [SUCCESSFUL]",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9914595841048853,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0435:2",
+      "locator": {
+        "page": 0,
+        "x0": 467.7,
+        "y0": 76.475,
+        "x1": 525.338,
+        "y1": 80.95
+      },
+      "text": "STATUS = A, I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9841811090963953,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0435:3",
+      "locator": {
+        "page": 0,
+        "x0": 32.4186,
+        "y0": 113.875,
+        "x1": 142.5578,
+        "y1": 118.7
+      },
+      "text": "Total Voters = 206,801",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9906529424563381,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0435:6",
+      "locator": {
+        "page": 0,
+        "x0": 610.45,
+        "y0": 127.075,
+        "x1": 657.5125,
+        "y1": 139.2
+      },
+      "text": "Multi- Asian Race",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999301149103158,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:7",
+      "locator": {
+        "page": 0,
+        "x0": 668.2,
+        "y0": 127.725,
+        "x1": 692.9382,
+        "y1": 140.7
+      },
+      "text": "Pacific Islander",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999842800552241,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:8",
+      "locator": {
+        "page": 0,
+        "x0": 907.55,
+        "y0": 128.175,
+        "x1": 935.9724,
+        "y1": 141.15
+      },
+      "text": "Not Hispanic",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998638443545819,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:4",
+      "locator": {
+        "page": 0,
+        "x0": 30.0,
+        "y0": 128.275,
+        "x1": 596.1998,
+        "y1": 140.4
+      },
+      "text": "American.Grouping Total Voters Dem Rep Una Lib Black White Indian",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992092091259566,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:9",
+      "locator": {
+        "page": 0,
+        "x0": 699.15,
+        "y0": 131.925,
+        "x1": 965.7404,
+        "y1": 137.4
+      },
+      "text": "Other Undes Female Male Undes Hispanic Undes",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983272310903565,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:5",
+      "locator": {
+        "page": 0,
+        "x0": 429.65,
+        "y0": 134.175,
+        "x1": 463.625,
+        "y1": 137.4
+      },
+      "text": "Gre Nlb",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995201009593628,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:10",
+      "locator": {
+        "page": 0,
+        "x0": 30.0,
+        "y0": 155.325,
+        "x1": 965.7139,
+        "y1": 196.05
+      },
+      "text": "NC SENATE DISTRICT : n/a 386 95 123 166 2 0 0 14 309 2 3 5 0 13 40 176 179 31 9 217 160 NC SENATE DISTRICT : 46 48,665 13,015 15,073 20,186 355 13 23 865 42,784 84 193 174 8 971 3,586 24,083 21,278 3,304 987 31,221 16,457 NC SENATE DISTRICT : 49 157,750 59,732 29,368 67,198 1,296 81 75 9,222 128,977 255 1,337 813 37 4,300 12,809 79,238 66,668 11,843 4,243 97,096 56,411",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996235000178284,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:11",
+      "locator": {
+        "page": 0,
+        "x0": 32.3214,
+        "y0": 215.575,
+        "x1": 965.6524,
+        "y1": 221.45
+      },
+      "text": "Total 206,801 72,842 44,564 87,550 1,653 94 98 10,101 172,070 341 1,533 992 45 5,284 16,435 103,497 88,125 15,178 5,239 128,534 73,028",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997702256113004,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0435:12",
+      "locator": {
+        "page": 0,
+        "x0": 30.0,
+        "y0": 531.925,
+        "x1": 988.3461,
+        "y1": 536.25
+      },
+      "text": "Dec 18, 2023 1:38:32PM BertStat.rpt Page 1 of 1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988400922698721,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0435:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

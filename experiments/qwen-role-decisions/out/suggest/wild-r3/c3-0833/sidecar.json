@@ -1,0 +1,320 @@
+{
+  "document": "c3-0833",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 14,
+    "cards_considered": 14,
+    "selector": "all-blocks",
+    "not_heading_confident": 9,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0833:2",
+      "locator": {
+        "page": 0,
+        "x0": 170.1,
+        "y0": 133.26,
+        "x1": 440.7289,
+        "y1": 139.26
+      },
+      "text": "ARIZONABLUESTAKEISNOWARIZONA811",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9841152106083276,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0833:3",
+      "locator": {
+        "page": 0,
+        "x0": 44.58,
+        "y0": 173.126,
+        "x1": 573.4564,
+        "y1": 186.36
+      },
+      "text": "ImportantInformationAboutCampaignSigns",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.8661416101297946,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0833:4",
+      "locator": {
+        "page": 0,
+        "x0": 58.5679,
+        "y0": 220.9787,
+        "x1": 558.9709,
+        "y1": 255.0546
+      },
+      "text": "STATE LAW REQUIRES YOU TO HAVE UNDERGROUND UTILITIES MARKED BEFORE INSTALLING SIGNS",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7063866954192046,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0833:5",
+      "locator": {
+        "page": 0,
+        "x0": 41.447,
+        "y0": 278.4424,
+        "x1": 567.7283,
+        "y1": 308.1019
+      },
+      "text": "Running for office, supporting a candidate or working for or against a ballot measure? You must \u201cknow what\u2019s below\u201d before campaign signs go up.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766083757662,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:6",
+      "locator": {
+        "page": 0,
+        "x0": 41.46,
+        "y0": 331.1824,
+        "x1": 569.671,
+        "y1": 405.0578
+      },
+      "text": "Arizona law requires all underground utilities to be located and marked before any type of \u201cexcavation\u201d \u2013 this includes the installation of campaign signs on public or private property. Con- tact Arizona 811 (formerly Arizona Blue Stake) at least two working days before installing signs in the ground:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724644223503,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:8",
+      "locator": {
+        "page": 0,
+        "x0": 41.46,
+        "y0": 426.4024,
+        "x1": 568.3328,
+        "y1": 448.7447
+      },
+      "text": "- Call 811 from anywhere in Arizona between 6 a.m. and 5 p.m. Monday-Friday (excluding state holidays)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724644845513,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:9",
+      "locator": {
+        "page": 0,
+        "x0": 77.4577,
+        "y0": 426.4024,
+        "x1": 80.7127,
+        "y1": 433.98
+      },
+      "text": "-",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:10",
+      "locator": {
+        "page": 0,
+        "x0": 77.4603,
+        "y0": 461.5624,
+        "x1": 531.542,
+        "y1": 469.14
+      },
+      "text": "- Click Arizona811.com to create a ticket anytime with the Arizona 811 E-Stake tool",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9982995323863995,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:11",
+      "locator": {
+        "page": 0,
+        "x0": 77.4603,
+        "y0": 461.5624,
+        "x1": 80.7153,
+        "y1": 469.14
+      },
+      "text": "-",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:12",
+      "locator": {
+        "page": 0,
+        "x0": 77.4577,
+        "y0": 482.8024,
+        "x1": 569.5578,
+        "y1": 505.1447
+      },
+      "text": "- For installations at a single address (such as a home or business on a single lot) use the Single Address Ticket option on the Arizona 811 web site.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646442003519,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:13",
+      "locator": {
+        "page": 0,
+        "x0": 77.459,
+        "y0": 482.8024,
+        "x1": 80.714,
+        "y1": 490.38
+      },
+      "text": "-",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:14",
+      "locator": {
+        "page": 0,
+        "x0": 41.46,
+        "y0": 522.4623,
+        "x1": 562.9319,
+        "y1": 618.4717
+      },
+      "text": "Installing any type of sign without having utilities marked in advance is a violation of A.R.S. 40- 360.21-32, punishable by fines of up to $5,000 per violation. It\u2019s also dangerous. Knowing the location of buried lines, pipes and cables \u2013 and then carefully working around them \u2013 prevents serious injuries and protects the critical utilities we all rely on every day from damage. Learn more at www.Arizona811.com.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810749061779,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0833:15",
+      "locator": {
+        "page": 0,
+        "x0": 96.1714,
+        "y0": 658.466,
+        "x1": 521.4672,
+        "y1": 698.1599
+      },
+      "text": "Know what\u2019s below. Call 811 or click Arizona811.com before you dig.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9875734426021385,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0833:16",
+      "locator": {
+        "page": 0,
+        "x0": 195.0,
+        "y0": 721.224,
+        "x1": 422.0178,
+        "y1": 731.7
+      },
+      "text": "It\u2019s free. It\u2019s easy. It\u2019s the law.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9579473573606958,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0833:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    }
+  ]
+}

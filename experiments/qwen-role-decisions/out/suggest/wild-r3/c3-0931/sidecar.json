@@ -1,0 +1,496 @@
+{
+  "document": "c3-0931",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 24,
+    "cards_considered": 24,
+    "selector": "all-blocks",
+    "not_heading_confident": 17,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0931:0",
+      "locator": {
+        "page": 0,
+        "x0": 18.2353,
+        "y0": 82.5542,
+        "x1": 687.1201,
+        "y1": 572.7579
+      },
+      "text": "Accountant Freimanis, Larisa 85,097 - 6,510 9,539 - - 14,940 1,658 117,744 10.0 Accountant Wayland, Troy 85,097 - 6,510 9,539 - - 9,216 1,658 112,020 10.0 Accts Rec Clerk Budd, Susan 74,866 - 5,727 8,392 - - 21,732 3,403 114,120 23.0 Accts Rec Clerk Janowiak, Emily 54,861 - 4,197 6,150 - - 18,684 1,346 85,238 10.0 Accts Rec Clerk Joyce, Kathleen 50,171 - 3,838 5,624 - - 14,940 1,293 75,866 10.0 Accts Rec Clerk Miller, Joan 74,866 - 5,727 8,392 - - 9,216 3,403 101,604 25.0 Accts Rec Clerk O'Malley, Daniel 56,375 - 4,313 6,320 - - 8,868 1,363 77,239 10.0 Admin Services Director Skiles, Peter 162,869 - 10,890 18,258 - - 25,152 4,158 221,327 23.0 Administrative Manager Perley, Emma 94,856 - 7,256 10,633 - - 25,152 1,742 139,640 10.0 Administrative Systems Analyst Walker, Sam 87,689 - 6,708 9,830 - - 21,732 1,680 127,639 10.0 AP/AR Clerk Pristovnik, Lucy 50,171 - 3,838 5,624 - - 18,684 1,293 79,610 10.0 Assistant Director of Community Development Roberts, Lisa 132,891 - 10,166 14,897 - - 9,216 3,901 171,071 23.0 Assistant Finance Director Risko, John 108,904 - 8,331 12,208 - - 9,216 1,863 140,522 18.0 Assistant to the Public Works Director Amoruso, Kate 86,260 - 6,599 9,670 - - 9,216 3,500 115,245 15.0 Assistant Village Manager Braiman, Michael 189,660 - 11,278 21,261 - - 14,940 4,388 241,527 21.0 Assistant Water Plant Superintendent Jordan, Nate 107,295 - 8,208 12,028 - - 25,152 3,681 156,364 15.0 Assistant Director of Administrative Services Prejzner, John 126,389 - 9,669 14,168 - - 14,940 3,845 169,011 18.0 Assistant Director of Engineering Cruz, Jorge 130,156 - 9,957 14,590 - - 18,684 3,877 177,265 21.0 Building Inspector Norman, John 94,608 - 7,238 10,606 - - 9,216 3,572 125,239 18.0 Building Maintainer I Corcoran, Kevin 53,184 - 4,069 5,962 - - 19,380 1,327 83,922 10.0 Building Maintainer I Hartigan, Michael 53,184 - 4,069 5,962 - - 19,380 1,327 83,922 10.0 Business Development Coordinator Sivertsen, Lucas 103,447 - 7,914 11,596 - - 25,152 3,648 151,757 21.0 Cable TV Coordinator Meersman, Karen 92,027 - 7,040 10,316 - - 18,684 3,550 131,617 25.0 Code Enforcement Officer Blumenthal, Ted 84,313 - 6,450 9,451 - - 14,940 3,484 118,638 19.0 Community Development Director Adler, John 170,799 - 11,005 19,147 - - 18,684 4,226 223,861 25.0 Community Service Officer Eder, Steven 63,505 - 4,858 7,119 - - 21,732 3,277 100,491 19.0 Corporation Counsel Stein, Jeff 188,879 - 11,267 21,173 - - - 2,549 223,869 18.0 Crew Leader Conrad, Joseph 92,027 - 7,040 10,316 - - 16,800 3,550 129,733 25.0 Crew Leader DeBoer, Nicholas 92,027 - 7,040 10,316 - - 21,732 3,550 134,665 21.0 Crew Leader Falcone, Philip 75,737 - 5,794 8,490 - - 14,940 3,410 108,371 13.0 Crew Leader Rindfleisch, Steven 92,027 - 7,040 10,316 - - 18,684 3,550 131,617 21.0 Customer Service Specialist Issac, Jissenia 61,036 - 6,027 8,832 - - - 1,604 77,499 15.0 Customer Service Supervisor Padron, Andrea 67,142 - 5,136 7,527 - - 25,152 1,486 106,443 10.0 Deputy Director of Public Works Lam, Guy 147,450 - 10,666 16,529 - - 9,216 4,026 187,887 21.0 Deputy Fire Chief Brill, Robert 151,725 - 2,200 - - 96,158 21,732 4,063 275,878 10.5 Deputy Police Chief Collins, Patrick 152,736 - 2,215 - 75,671 - 25,152 4,071 259,845 25.0 Director of Public Works Berger-Raish, Brigitte 194,588 - 11,350 21,813 - - 18,684 4,431 250,866 25.0 Director of Water Management Quafisheh, Nabil 162,869 - 10,890 18,258 - - 25,152 4,158 221,327 19.0 Engineering Assistant I Kordek, Kristopher 72,331 - 5,533 8,108 - - 8,868 826 95,666 6.0 Engineering Assistant I Smith, Dan 78,787 - 6,027 8,832 - - 9,216 1,604 104,466 10.0 Equipment Coordinator Abplanalp, Eric 99,979 - 7,648 11,208 - - 18,684 3,618 141,137 15.0 Exec Sec/Vil Deputy Clerk Norwood, Karen 74,616 - 5,708 8,364 - - 18,684 1,568 108,941 15.0 Facilities Manager Ramaker, John 104,546 - 7,998 11,720 - - 21,732 3,657 149,653 25.0 Finance Director Molloy, Melinda 185,323 - 11,215 20,775 - - 14,940 4,351 236,604 21.0 Fire Battalion Chief Bentz, James 140,886 - 2,043 - - 89,289 14,940 2,137 249,295 12.5 Fire Battalion Chief Bucci, Anthony 140,886 - 2,043 - - 89,289 14,436 2,137 248,791 12.5 Fire Battalion Chief Menzies, Ryan 140,886 - 2,043 - - 89,289 21,732 3,969 257,919 10.5 Fire Chief Wozney, Benjamin 166,511 - 2,414 - - 105,529 25,152 4,190 303,796 25.0 Fire Department Secretary Anderson, Diane 80,530 - 6,161 9,027 - - 9,216 3,451 108,385 18.0 Fire Lieutenant Hughes, Robert 129,913 - 1,884 - - 82,334 16,056 3,875 234,062 12.5 Fire Lieutenant Isaacson, Michael 129,913 - 1,884 - - 82,334 25,152 3,875 243,158 10.5 Fire Lieutenant Wilk, Jason 129,913 - 1,884 - - 82,334 25,152 3,875 243,158 12.5 Fire Lieutenant Minogue, Michael 127,237 - 1,845 - - 80,638 21,732 3,852 235,305 10.5 Fire Lieutenant Rodgers, Jennifer 127,237 - 1,845 - - 80,638 9,216 3,852 222,789 10.5 Fire Lieutenant Scheetz, Michael 124,625 - 1,807 - - 78,983 18,684 3,830 227,929 8.0 Firefighter/Paramedic Blomquist, John 107,437 1,935 1,586 - - 68,090 25,152 1,867 206,067 12.5 Firefighter/Paramedic Halterman, Michael 107,437 1,935 1,586 - - 68,090 25,152 3,699 207,899 11.5 Firefighter/Paramedic Mager, Frank 107,437 1,935 1,586 - - 68,090 21,732 1,867 202,647 12.5",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988768783013727,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:1",
+      "locator": {
+        "page": 1,
+        "x0": 18.2371,
+        "y0": 82.5544,
+        "x1": 687.1187,
+        "y1": 351.2385
+      },
+      "text": "Firefighter/Paramedic Simon, Thomas 107,437 1,935 1,586 - - 68,090 21,732 3,699 204,479 12.5 Firefighter/Paramedic Wokurka, Gary 107,437 1,935 1,586 - - 68,090 14,940 3,699 197,687 11.5 Firefighter/Paramedic Grajewski, David 105,226 1,935 1,554 - - 66,689 16,056 3,680 195,140 10.5 Firefighter/Paramedic Harrington, Patrick 105,226 1,935 1,554 - - 66,689 19,380 3,680 198,464 10.5 Firefighter/Paramedic Barton, Kenneth 103,062 1,935 1,522 - - 65,317 21,732 3,661 197,230 10.0 Firefighter/Paramedic Eastman, Blake 103,062 1,935 1,522 - - 65,317 25,152 3,661 200,650 10.0 Firefighter/Paramedic Jost, Robert 103,062 1,935 1,522 - - 65,317 19,380 3,661 194,878 8.5 Firefighter/Paramedic Kofoed, Edward 103,062 1,935 1,522 - - 65,317 9,216 3,661 184,714 8.0 Firefighter/Paramedic Schmidt, Ryan 103,062 1,935 1,522 - - 65,317 25,152 3,661 200,650 10.0 Firefighter/Paramedic Walters, Daniel 103,062 1,935 1,522 - - 65,317 21,732 3,661 197,230 8.0 Firefighter/Paramedic Weglarz, Jason 103,062 1,935 1,522 - - 65,317 25,152 3,661 200,650 8.5 Firefighter/Paramedic Bonilla, Guillermo 100,943 1,935 1,492 - - 63,974 25,152 3,643 197,139 6.0 Firefighter/Paramedic Cirone, Thomas 100,943 1,935 1,492 - - 63,974 8,868 3,643 180,855 6.0 Firefighter/Paramedic Kopczyk, Thomas 100,943 1,935 1,492 - - 63,974 21,732 3,643 193,719 7.0 Firefighter/Paramedic Neurauter, Timothy 100,943 1,935 1,492 - - 63,974 19,380 3,643 191,367 7.0 Firefighter/Paramedic Paczosa, Scott 100,943 1,935 1,492 - - 63,974 16,056 3,643 188,043 8.0 Firefighter/Paramedic Riggan II, Richard 100,943 1,935 1,492 - - 63,974 25,152 3,645 197,141 7.5 Firefighter/Paramedic Schuman, Kevin 100,943 1,935 1,492 - - 63,974 25,152 3,643 197,139 7.5 Firefighter/Paramedic Wessel, Michael 100,943 1,935 1,492 - - 63,974 25,152 3,643 197,139 8.0 Firefighter/Paramedic Durband, William 97,530 1,935 1,442 - - 61,811 21,732 3,614 188,064 5.5 Firefighter/Paramedic Guth, Matthew 97,530 1,935 1,442 - - 61,811 9,216 3,614 175,548 5.5 Firefighter/Paramedic Kolze, Ryan 97,530 1,935 1,442 - - 61,811 9,216 3,614 175,548 5.5 Firefighter/Paramedic Lettieri, Michael 97,530 1,935 1,442 - - 61,811 21,732 3,614 188,064 5.5 Firefighter/Paramedic Murray, Colin 97,530 1,935 1,442 - - 61,811 19,380 3,614 185,712 5.5 Firefighter/Paramedic Fisher, Benjamin 93,153 1,935 1,379 - - 59,037 19,380 3,576 178,460 5.0 Firefighter/Paramedic Markovich, Bradley 93,153 - 1,351 - - 59,037 19,380 3,560 176,480 5.0 Firefighter/Paramedic Aguirre-Garcia, Jose 88,970 - 1,290 - - 56,386 7,980 3,523 158,148 5.0 Firefighter/Paramedic Richards, Robert 88,970 - 1,290 - - 56,386 - 3,525 150,170 5.0 Firefighter/Paramedic Caffie, Jeremy 81,161 - 1,177 - - 51,437 8,868 3,457 146,099 5.0 Firefighter/Paramedic Garard, Ted 75,740 1,935 1,126 - - 48,001 18,684 3,427 148,913 5.0 Human Resources Manager Cease, Alejandra 98,805 - 7,559 11,076 - - 25,152 3,608 146,200 18.0 Maintenance Supervisor Kumiega, Peter 103,447 - 7,914 11,596 - - 14,940 3,648 141,545 21.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983273745592091,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:3",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 355.1924,
+        "x1": 687.1187,
+        "y1": 410.8787
+      },
+      "text": "Maintenance Worker I Gomez, Steven 56,375 - 4,313 6,320 - - 7,980 1,363 76,351 10.0 Maintenance Worker I O'Malley, Christine 51,687 - 3,954 5,794 - - - 366 61,801 10.0 Maintenance Worker I Perri, Joe 57,220 - 4,377 6,414 - - 8,868 1,373 78,253 10.0 Maintenance Worker I Toppel, Chad 57,220 - 4,377 6,414 - - 25,152 1,373 94,537 10.0 Maintenance Worker II Archibald, Chad 69,264 - 5,299 7,764 - - 9,216 3,343 94,886 12.0 Maintenance Worker II Fioretto, Paul 66,238 - 5,067 7,425 - - 8,868 1,476 89,075 10.0 Maintenance Worker II Garcia, Luis 85,928 - 6,573 9,633 - - 16,800 3,498 122,432 21.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992948085386335,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:4",
+      "locator": {
+        "page": 1,
+        "x0": 18.2386,
+        "y0": 355.1924,
+        "x1": 81.0157,
+        "y1": 359.7582
+      },
+      "text": "Maintenance Worker I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9952425995594903,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:6",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 363.7122,
+        "x1": 687.1175,
+        "y1": 402.359
+      },
+      "text": "Maintenance Worker I O'Malley, Christine 51,687 - 3,954 5,794 - - - 366 61,801 10.0 Maintenance Worker I Perri, Joe 57,220 - 4,377 6,414 - - 8,868 1,373 78,253 10.0 Maintenance Worker I Toppel, Chad 57,220 - 4,377 6,414 - - 25,152 1,373 94,537 10.0 Maintenance Worker II Archibald, Chad 69,264 - 5,299 7,764 - - 9,216 3,343 94,886 12.0 Maintenance Worker II Fioretto, Paul 66,238 - 5,067 7,425 - - 8,868 1,476 89,075 10.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999449882335305,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:7",
+      "locator": {
+        "page": 1,
+        "x0": 18.2386,
+        "y0": 363.7122,
+        "x1": 81.0317,
+        "y1": 368.278
+      },
+      "text": "Maintenance Worker I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9906851018157993,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0931:9",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 372.234,
+        "x1": 687.1175,
+        "y1": 393.8392
+      },
+      "text": "Maintenance Worker I Perri, Joe 57,220 - 4,377 6,414 - - 8,868 1,373 78,253 10.0 Maintenance Worker I Toppel, Chad 57,220 - 4,377 6,414 - - 25,152 1,373 94,537 10.0 Maintenance Worker II Archibald, Chad 69,264 - 5,299 7,764 - - 9,216 3,343 94,886 12.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994520409363936,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:10",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 372.234,
+        "x1": 81.0243,
+        "y1": 376.7997
+      },
+      "text": "Maintenance Worker I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.994820940624931,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:12",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 380.7537,
+        "x1": 687.1175,
+        "y1": 385.3195
+      },
+      "text": "Maintenance Worker I Toppel, Chad 57,220 - 4,377 6,414 - - 25,152 1,373 94,537 10.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995723540492706,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:13",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 380.7537,
+        "x1": 80.9965,
+        "y1": 385.3195
+      },
+      "text": "Maintenance Worker I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9908446402530126,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0931:14",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 389.2735,
+        "x1": 687.1175,
+        "y1": 393.8392
+      },
+      "text": "Maintenance Worker II Archibald, Chad 69,264 - 5,299 7,764 - - 9,216 3,343 94,886 12.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995723654659278,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:15",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 389.2735,
+        "x1": 83.3089,
+        "y1": 393.8392
+      },
+      "text": "Maintenance Worker II",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9914665588952832,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0931:16",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 397.7932,
+        "x1": 687.1175,
+        "y1": 402.359
+      },
+      "text": "Maintenance Worker II Fioretto, Paul 66,238 - 5,067 7,425 - - 8,868 1,476 89,075 10.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995720187211998,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:17",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 397.7932,
+        "x1": 83.2421,
+        "y1": 402.359
+      },
+      "text": "Maintenance Worker II",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9906575833160337,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0931:18",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 406.313,
+        "x1": 687.1175,
+        "y1": 410.8787
+      },
+      "text": "Maintenance Worker II Garcia, Luis 85,928 - 6,573 9,633 - - 16,800 3,498 122,432 21.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992957798947024,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:19",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 406.313,
+        "x1": 83.3131,
+        "y1": 410.8787
+      },
+      "text": "Maintenance Worker II",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9922687689858005,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0931:20",
+      "locator": {
+        "page": 1,
+        "x0": 18.2363,
+        "y0": 414.8327,
+        "x1": 687.1179,
+        "y1": 572.7579
+      },
+      "text": "Maintenance Worker II Hoffman, David 84,162 - 6,438 9,435 - - 9,216 3,482 112,733 21.0 Maintenance Worker II Krahn, Brett 66,238 - 5,067 7,425 - - 9,216 1,477 89,424 10.0 Maintenance Worker II Morrissey, Quentin 70,303 - 5,378 7,881 - - 7,980 3,355 94,897 12.0 Maintenance Worker II Nonnemacher, Daniel 84,162 - 6,438 9,435 - - 8,868 3,482 112,385 21.0 Maintenance Worker II Novy, Dan 84,162 - 6,438 9,435 - - 21,732 3,482 125,249 21.0 Maintenance Worker II Peterson, Adam 66,238 - 5,067 7,425 - - 25,152 1,479 105,362 10.0 Maintenance Worker II Renteria, Fidel 85,928 - 6,573 9,633 - - 16,800 3,498 122,432 21.0 Maintenance Worker II Ricci, Anthony 69,264 - 5,299 7,764 - - 25,152 3,343 110,822 11.0 Maintenance Worker II Santini, Fred 84,162 - 6,438 9,435 - - 14,940 3,482 118,457 21.0 Maintenance Worker II Travis, Tyler 66,238 - 5,067 7,425 - - 14,940 1,478 95,149 10.0 Management Analyst Arteaga, Alex 58,872 - 4,504 6,600 - - 9,216 1,392 80,583 10.0 Mechanic II Pater, Brian 91,554 - 7,004 10,263 - - 9,216 3,546 121,583 14.0 Mechanic II Rodriguez, Michael 91,554 - 7,004 10,263 - - 21,732 3,546 134,099 14.0 Mechanic II Stockinger, Andrew 91,554 - 7,004 10,263 - - 9,216 3,546 121,583 13.0 Mechanic II Eq Coordinator Sparks, Keith 103,257 - 7,899 11,575 - - 18,684 1,814 143,229 25.0 Meter Repair Technician Hammersmith, Jeffrey 64,458 - 4,931 7,226 - - 9,216 3,288 89,119 11.0 Meter Shop Supervisor Lazar, Andrew 92,027 - 7,040 10,316 - - 9,216 3,550 122,149 25.0 Museum Director Hussey-Arntson, Kathy 92,027 - 7,040 10,316 - - - 1,718 111,101 25.0 Permit Clerk Lara, Leonardo 57,366 - 4,388 6,431 - - 19,380 3,207 90,772 11.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992038608437422,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:21",
+      "locator": {
+        "page": 1,
+        "x0": 18.2374,
+        "y0": 414.8327,
+        "x1": 83.304,
+        "y1": 419.3985
+      },
+      "text": "Maintenance Worker II",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9950689244244901,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:22",
+      "locator": {
+        "page": 2,
+        "x0": 18.2382,
+        "y0": 82.5544,
+        "x1": 687.1182,
+        "y1": 95.6398
+      },
+      "text": "Permit Clerk Schultheis, Mary Ann 58,949 - 4,510 6,608 - - 25,152 3,225 98,444 11.0 Plan Reviewer Berg, Scott 98,502 - 7,535 11,042 - - 18,684 3,605 139,369 11.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980933509335085,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:24",
+      "locator": {
+        "page": 2,
+        "x0": 18.2382,
+        "y0": 99.5938,
+        "x1": 687.1182,
+        "y1": 104.1596
+      },
+      "text": "Planner II McManus, Kate 83,514 - 6,389 9,362 - - 9,216 1,644 110,125 10.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999513233682956,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:25",
+      "locator": {
+        "page": 2,
+        "x0": 18.2382,
+        "y0": 99.5938,
+        "x1": 45.5229,
+        "y1": 104.1596
+      },
+      "text": "Planner II",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9695813213394747,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0931:26",
+      "locator": {
+        "page": 2,
+        "x0": 18.2369,
+        "y0": 108.1136,
+        "x1": 687.1201,
+        "y1": 572.7579
+      },
+      "text": "Planner III Randolph, Rachael 74,104 - 5,669 8,307 - - 21,732 3,396 113,208 13.5 Plumbing Inspector Booker, Chris 88,752 - 6,790 9,949 - - 21,732 1,690 128,913 15.0 Police Chief Murphy, Kyle 171,882 - 2,492 - 85,157 - 25,152 4,236 288,919 25.0 Police Commander McGarry, Michael 145,157 - 2,105 - 71,916 - 25,152 4,009 248,339 25.0 Police Commander Robinson, Michael 145,157 - 2,105 - 71,916 - 25,152 4,006 248,336 21.0 Police Communications Supervisor Peterson, Eric 110,586 - 8,460 12,397 - - 25,152 3,709 160,304 25.0 Police Officer Kiddle, Kevin 110,644 2,045 1,634 - 54,817 - 25,152 3,727 198,020 25.0 Police Officer Leigh, Stephen 110,644 2,045 1,634 - 54,817 - 21,732 3,727 194,600 21.0 Police Officer Parisi, Julie 110,644 2,045 1,634 - 54,817 - 14,940 3,727 187,808 25.0 Police Officer Rizzo, Nicholas 110,644 2,045 1,634 - 54,817 - 25,152 3,727 198,020 25.0 Police Officer Bullock, Sally 108,365 2,045 1,601 - 53,688 - 14,940 3,708 184,347 21.0 Police Officer Davis, Valerie 108,365 2,045 1,601 - 53,688 - 9,216 3,708 178,623 21.0 Police Officer Falk, John 108,365 2,045 1,601 - 53,688 - 18,684 3,708 188,091 21.0 Police Officer Gamba, Mark 108,365 2,045 1,601 - 53,688 - 21,732 3,708 191,139 21.0 Police Officer Pavely, Raimond 108,365 2,045 1,601 - 53,688 - 21,732 3,708 191,139 21.0 Police Officer Perez, Jose 108,365 2,045 1,601 - 53,688 - 25,152 3,708 194,559 21.0 Police Officer Santana, Ray 108,365 2,045 1,601 - 53,688 - 14,940 3,708 184,347 21.0 Police Officer Jurmu, Andrew 106,138 2,045 1,569 - 52,585 - 9,216 3,689 175,241 20.0 Police Officer Neubauer, Christopher 106,138 2,045 1,569 - 52,585 - 25,152 3,689 191,177 19.0 Police Officer Olivo, Maria 106,138 2,045 1,569 - 52,585 - 18,684 3,689 184,709 20.0 Police Officer Przekota, Christopher 106,138 2,045 1,569 - 52,585 - 8,868 3,689 174,893 17.0 Police Officer Cavanagh, Connor 103,955 2,045 1,537 - 51,503 - 7,980 3,670 170,690 15.0 Police Officer Handrick, Luke 103,955 2,045 1,537 - 51,503 - 25,152 3,670 187,862 15.0 Police Officer Hornbacher, Joshua 103,955 2,045 1,537 - 51,503 - 9,216 3,670 171,926 16.0 Police Officer Pasquesi, James 103,955 2,045 1,537 - 51,503 - 9,216 3,670 171,926 15.0 Police Officer Stenger, Brandon 103,955 2,045 1,537 - 51,503 - 9,216 3,670 171,926 14.0 Police Officer Sokolnik, Jonathan 98,545 2,045 1,459 - 48,823 - 9,216 3,623 163,711 12.0 Police Officer Folkerts, Robert 95,676 2,045 1,417 - 47,402 - 9,216 3,599 159,354 11.0 Police Officer Kutschke, Jeffrey 95,676 2,045 1,417 - 47,402 - 9,216 3,599 159,354 12.0 Police Officer McGuire, Elizabeth 95,676 2,045 1,417 - 47,402 - 9,216 3,599 159,354 12.0 Police Officer Monk, Russell 95,676 2,045 1,417 - 47,402 - 25,152 3,599 175,290 12.0 Police Officer Barry, Matthew 85,008 2,045 1,262 - 42,116 - - 1,676 132,107 10.0 Police Officer Bell, Jeffrey 85,008 2,045 1,262 - 42,116 - 9,216 1,677 141,324 10.0 Police Officer Botterman, Tim 85,008 2,045 1,262 - 42,116 - 9,216 1,675 141,322 10.0 Police Officer Demos, Michael 85,008 2,045 1,262 - 42,116 - - 1,675 132,106 10.0 Police Officer Golden, Brian 85,008 2,045 1,262 - 42,116 - 8,868 1,675 140,974 10.0 Police Officer Slywka, Travis 79,357 2,045 1,262 - 39,317 - - 1,675 123,656 10.0 Police Officer Weinman, Carly 85,008 2,045 1,262 - 42,116 - - 1,675 132,106 10.0 Police Officer Beck, Vincent 79,357 2,045 1,180 - 39,317 - 18,684 1,626 142,209 10.0 Police Sergeant Clark, Michael 132,891 3,000 1,970 - 65,839 - 21,732 3,927 229,359 17.0 Police Sergeant Girard, Landon 132,891 3,000 1,970 - 65,839 - 21,732 3,927 229,359 21.0 Police Sergeant Jurmu, Solveig 132,891 3,000 1,970 - 65,839 - 14,940 3,927 222,567 22.0 Police Sergeant Ockrim, Roger 132,891 3,000 1,970 - 65,839 - 18,684 3,927 226,311 22.0 Police Sergeant Trage, Edmund 132,891 3,000 1,970 - 65,839 - 25,152 3,927 232,779 25.0 Police Sergeant Sweet, James 130,156 3,000 1,931 - 64,484 - 25,152 3,903 228,626 21.0 Police Sergeant Mercado, Alejandro 127,476 3,000 1,892 - 63,157 - 8,868 3,880 208,272 21.0 Procurement Specialist Ruemmler, Cliff 87,441 - 6,689 9,802 - - 14,940 1,678 120,551 10.0 Project Manager Horn, Danielle 105,976 - 8,107 11,880 - - 18,684 3,670 148,317 18.0 Project Manager Kearney, Ryan 84,766 - 6,485 9,502 - - 9,216 935 110,904 10.0 Social Worker Aron, Mary 80,071 - 6,125 8,976 - - 16,800 1,615 113,587 10.0 Street Superintendent Muzik, Anthony 118,733 - 9,083 13,310 - - 14,940 3,779 159,845 21.0 Systems Administrator Nguyen, Phuong 127,476 - 9,752 14,290 - - 21,732 3,854 177,104 20.0 Telecommunicator King, Freddie 86,085 - 6,586 9,650 - - 25,152 3,499 130,971 21.0 Telecommunicator McGarry, Lynda 87,894 - 6,724 9,853 - - - 1,682 106,153 23.0 Telecommunicator McPhail, Jesse 65,260 - 4,992 7,316 - - 9,216 1,465 88,249 13.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9954936494286301,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0931:27",
+      "locator": {
+        "page": 2,
+        "x0": 18.2382,
+        "y0": 108.1136,
+        "x1": 47.8104,
+        "y1": 112.6793
+      },
+      "text": "Planner III",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9892593908064372,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0931:28",
+      "locator": {
+        "page": 3,
+        "x0": 18.2367,
+        "y0": 82.5544,
+        "x1": 687.1187,
+        "y1": 274.5592
+      },
+      "text": "Telecommunicator Miagusko, George 84,313 - 6,450 9,451 - - 21,732 3,484 125,430 19.0 Telecommunicator Rigas, Basil 81,588 - 6,241 9,146 - - 9,216 3,460 109,652 15.0 Telecommunicator Weiner, Barry 87,894 - 6,724 9,853 - - 25,152 1,682 131,305 25.0 Utility Technician Bagel, William 92,027 - 7,040 10,316 - - 16,800 1,718 127,901 25.0 Vehicle Maint Superintendent Smith, Kurt 122,175 - 9,346 13,696 - - 16,800 1,976 163,994 25.0 Village Engineer Manis, Dan 148,319 - 10,679 16,627 - - 25,152 2,201 202,977 17.0 Village Forester Sorby, Kevin 103,447 - 7,914 11,596 - - 8,868 3,648 135,473 21.0 Village Forester Wasley, Robert 77,722 - 5,946 8,713 - - 25,152 1,595 119,127 17.0 Village Manager Frenzer, Tim 243,997 - 12,066 27,352 - - 16,800 4,855 305,070 25.0 Water Plant Chemist Ladao, Stefanie 83,729 - 6,405 9,386 - - 9,216 1,646 110,383 10.0 Water Plant Electrician Christiansen, Joel 98,623 - 7,545 11,056 - - 25,152 1,774 144,150 25.0 Water Plant Maint Worker II Dutkiewicz, Wlodzimierz 70,303 - 5,378 7,881 - - 19,380 3,355 106,297 11.0 Water Plant Maint Worker I McGrath, Shawn 70,303 - 5,378 7,881 - - 25,152 1,522 110,237 10.0 Water Plant Mechanic McMillon, Jerritt 87,894 - 6,724 9,853 - - 21,732 3,514 129,717 21.0 Water Treatment Operator Agrawal, Arvind 98,623 - 7,545 11,056 - - - 3,607 120,830 20.0 Water Treatment Operator Amorella, Tim 86,260 - 6,599 9,670 - - 25,152 3,500 131,181 12.0 Water Treatment Operator Goldin, Michael 98,623 - 7,545 11,056 - - 9,216 3,607 130,046 25.0 Water Treatment Operator Lynch, Nicholas 86,260 - 6,599 9,670 - - 9,216 3,500 115,245 11.0 Water Treatment Operator Lyons, Austin 82,492 - 6,311 9,247 - - 25,152 3,468 126,670 12.0 Water Treatment Operator Matich, Louis 97,171 - 7,434 10,893 - - 25,152 3,594 144,244 15.0 Water Treatment Operator Wente, Derrick 78,888 - 6,035 8,843 - - 18,684 1,605 114,055 10.0 Water Treatment Operator Thvedt, Joshua 91,554 - 7,004 10,263 - - 25,152 3,546 137,519 13.0 Water/Sewer Superintendent Overeem, Matt 122,175 - 9,346 13,696 - - 18,684 1,976 165,878 18.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9985059524638955,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

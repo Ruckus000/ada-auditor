@@ -1,0 +1,562 @@
+{
+  "document": "c3-0766",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 25,
+    "cards_considered": 25,
+    "selector": "all-blocks",
+    "not_heading_confident": 18,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0766:1",
+      "locator": {
+        "page": 0,
+        "x0": 171.7199,
+        "y0": 67.2024,
+        "x1": 436.2803,
+        "y1": 99.8403
+      },
+      "text": "Avoid the 6 El Dorado County DUI Campaign",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9739828390774804,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0766:27",
+      "locator": {
+        "page": 0,
+        "x0": 171.7199,
+        "y0": 67.2024,
+        "x1": 436.2803,
+        "y1": 76.2003
+      },
+      "text": "Avoid the 6 El Dorado County",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9794390644307304,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0766:2",
+      "locator": {
+        "page": 0,
+        "x0": 205.6799,
+        "y0": 127.2342,
+        "x1": 378.065,
+        "y1": 134.4003
+      },
+      "text": "PRESSRELEASE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6236300910730423,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0766:27"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0766:4",
+      "locator": {
+        "page": 0,
+        "x0": 35.9995,
+        "y0": 161.7242,
+        "x1": 566.8734,
+        "y1": 167.1602
+      },
+      "text": "For Immediate Release: May 21, 2012",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8937629302911712,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0766:27"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0766:5",
+      "locator": {
+        "page": 0,
+        "x0": 35.9995,
+        "y0": 189.3242,
+        "x1": 423.9534,
+        "y1": 208.5602
+      },
+      "text": "Sgt Shannon Laney South Lake Tahoe PD, (530) 542-6100 slaney@cityofslt.us For additional information in the region, visit: www.californiaavoid.org",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251561271953,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:27"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:6",
+      "locator": {
+        "page": 0,
+        "x0": 134.6399,
+        "y0": 228.5142,
+        "x1": 481.2218,
+        "y1": 235.6802
+      },
+      "text": "Memorial Day Weekend Holiday DUI Crackdown",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9577340113734177,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0766:27"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0766:7",
+      "locator": {
+        "page": 0,
+        "x0": 155.2799,
+        "y0": 253.8603,
+        "x1": 459.5941,
+        "y1": 259.2003
+      },
+      "text": "High Visibility Avoid DUI Campaign Set for Holiday Weekend",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9241717327856621,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0766:8",
+      "locator": {
+        "page": 0,
+        "x0": 35.9985,
+        "y0": 276.6842,
+        "x1": 563.9926,
+        "y1": 309.7202
+      },
+      "text": "South Lake Tahoe, CA \u2013 The Avoid the 6 DUI Campaign will be deploying officers this holiday weekend at DUI/Drivers License Checkpoints and DUI Saturation Patrols countywide to arrest impaired drivers who still don\u2019t get the message.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898700534273,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:9",
+      "locator": {
+        "page": 0,
+        "x0": 35.9985,
+        "y0": 331.8841,
+        "x1": 576.2324,
+        "y1": 378.7201
+      },
+      "text": "The Memorial Day weekend is the first holiday travel period of the summer season and this, coupled with many college and high school graduations, will see friends and families gathering to celebrate, often with alcohol. Law enforcement is reminding everyone to make plans now for those weekend trips and celebrations to use a \u2018Designated Driver\u2019 to avert arrest or worse, a deadly drunk driving tragedy.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832986201114,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:10",
+      "locator": {
+        "page": 0,
+        "x0": 35.9992,
+        "y0": 400.884,
+        "x1": 576.4733,
+        "y1": 461.52
+      },
+      "text": "The enforcement blitz begins Friday night with DUI Saturation Patrols in South Lake Tahoe and Placerville. Saturday night officers from the AVOID Coalition will be conducting a DUI/Driver\u2019s License checkpoint in the city of South Lake Tahoe. More local DUI Saturation Patrols will be out on Sunday nights in the city of South Lake Tahoe. The California Highway Patrol is deploying all available officers Memorial Day weekend onto freeways and county roads in their jurisdiction.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810749021668,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:11",
+      "locator": {
+        "page": 0,
+        "x0": 35.9982,
+        "y0": 483.6839,
+        "x1": 563.7524,
+        "y1": 544.3199
+      },
+      "text": "\u201cThe summer months traditionally see a rise in DUI deaths and injuries,\u201d said Chris Murphy, Director of the California Office of Traffic Safety. \u201cLet\u2019s turn this trend around in 2012. Take measures to use a designated sober driver and call 9-1-1 to report a suspected drunk driver should you witness the tale-tale signs of impairment; such as weaving, crossing the center line, or a driver slow to start when the signal light turns green.\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339488769546,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:12",
+      "locator": {
+        "page": 0,
+        "x0": 35.9982,
+        "y0": 566.4839,
+        "x1": 533.0321,
+        "y1": 571.9199
+      },
+      "text": "Law enforcement region-wide are asking for everyone\u2019s support this holiday weekend and all summer:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9820152921208608,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0766:14",
+      "locator": {
+        "page": 0,
+        "x0": 53.9987,
+        "y0": 581.2439,
+        "x1": 537.9523,
+        "y1": 586.6799
+      },
+      "text": "\u2022 Arrange rides home for your friends, family, co-workers and yourself before the drinking begins",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039002425378,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:15",
+      "locator": {
+        "page": 0,
+        "x0": 53.9987,
+        "y0": 583.5719,
+        "x1": 59.5081,
+        "y1": 586.6799
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:16",
+      "locator": {
+        "page": 0,
+        "x0": 53.9981,
+        "y0": 595.8839,
+        "x1": 560.5122,
+        "y1": 614.9999
+      },
+      "text": "\u2022 Those hosting celebrations and servers must limit drinks to your guests or patrons. Don\u2019t serve more than one or two over several hours.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599371891822,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:17",
+      "locator": {
+        "page": 0,
+        "x0": 53.9981,
+        "y0": 598.2119,
+        "x1": 59.5076,
+        "y1": 601.3198
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:18",
+      "locator": {
+        "page": 0,
+        "x0": 53.9982,
+        "y0": 624.3239,
+        "x1": 417.8326,
+        "y1": 629.7598
+      },
+      "text": "\u2022 Identify and provide free non-alcoholic drinks to the Designated Driver",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039035950061,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:19",
+      "locator": {
+        "page": 0,
+        "x0": 53.9982,
+        "y0": 626.6519,
+        "x1": 59.5077,
+        "y1": 629.7598
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:20",
+      "locator": {
+        "page": 0,
+        "x0": 53.9987,
+        "y0": 639.0839,
+        "x1": 521.5125,
+        "y1": 644.5198
+      },
+      "text": "\u2022 Cut back on the amount of drinks you plan to bring to the party \u2013 and provide plenty of food.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251550484496,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:21",
+      "locator": {
+        "page": 0,
+        "x0": 53.9987,
+        "y0": 641.4119,
+        "x1": 59.5081,
+        "y1": 644.5198
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:22",
+      "locator": {
+        "page": 0,
+        "x0": 53.9991,
+        "y0": 653.7239,
+        "x1": 388.6737,
+        "y1": 659.1599
+      },
+      "text": "\u2022 If you see dangerous driving, Report Drunk Drivers \u2013 Call 9-1-1!",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975284658283778,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:23",
+      "locator": {
+        "page": 0,
+        "x0": 53.9991,
+        "y0": 656.0519,
+        "x1": 59.5086,
+        "y1": 659.1599
+      },
+      "text": "\u2022",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:24",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 681.2039,
+        "x1": 571.6749,
+        "y1": 714.2398
+      },
+      "text": "Funding for the Avoid DUI Campaign is through a grant from the California Office of Traffic Safety, through the National Highway Traffic Safety Administration. The Avoid Campaign will deploy checkpoints and DUI patrols again during the Independence Day Holiday and for the summer August/Labor Day DUI Mobilization.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417098629186,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:25",
+      "locator": {
+        "page": 0,
+        "x0": 36.001,
+        "y0": 736.4038,
+        "x1": 520.7952,
+        "y1": 741.8398
+      },
+      "text": "Note: See Attached Enforcement Schedule of operations for dates/locations/times within the county.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968291444393335,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0766:0",
+      "locator": {
+        "page": 1,
+        "x0": 293.9998,
+        "y0": 55.1643,
+        "x1": 320.994,
+        "y1": 60.6003
+      },
+      "text": "###",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0766:6"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

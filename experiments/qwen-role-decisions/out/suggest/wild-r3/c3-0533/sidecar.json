@@ -1,0 +1,915 @@
+{
+  "document": "c3-0533",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 42,
+    "cards_considered": 42,
+    "selector": "all-blocks",
+    "not_heading_confident": 35,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0533:0",
+      "locator": {
+        "page": 0,
+        "x0": 18.0,
+        "y0": 109.3134,
+        "x1": 578.1227,
+        "y1": 139.9199
+      },
+      "text": "Application ID # ____________ Application Date ____________ Permit # ___________________ Property Address:___________________________________________ Sect: 21 Block_______ Lot_________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975310899376332,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:1",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 161.1736,
+        "x1": 599.2303,
+        "y1": 198.48
+      },
+      "text": "Owner: Address: City: State: Zip: Phone: Cell: Email:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999380322876887,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:2",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 224.4138,
+        "x1": 229.9141,
+        "y1": 231.72
+      },
+      "text": "Applicant: (If applicant is different from owner state relationship to owner)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989698911179873,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:3",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 238.9758,
+        "x1": 501.793,
+        "y1": 260.04
+      },
+      "text": "Address: City: State: Zip: Phone: Cell: Email:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646572485139,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:4",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 296.4137,
+        "x1": 73.1785,
+        "y1": 303.72
+      },
+      "text": "Architect:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8541081771831176,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0533:5",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 310.9759,
+        "x1": 610.6367,
+        "y1": 333.36
+      },
+      "text": "Address: City: State: Zip: Phone: Cell: Email:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998767502348174,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:6",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 356.5338,
+        "x1": 81.443,
+        "y1": 363.84
+      },
+      "text": "Contractor:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9860446619383886,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0533:7",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 371.0959,
+        "x1": 606.0562,
+        "y1": 392.28
+      },
+      "text": "Address: City: State: Zip: Phone: Cell: Email:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999573762553335,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:8",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 414.1337,
+        "x1": 70.0644,
+        "y1": 421.44
+      },
+      "text": "Plumber:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9671233933028667,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0533:9",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 428.8159,
+        "x1": 606.0562,
+        "y1": 450.12
+      },
+      "text": "Address: City: State: Zip: Phone: Cell: Email:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999573794252095,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:10",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 472.2137,
+        "x1": 79.287,
+        "y1": 479.52
+      },
+      "text": "Electrician:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9941148811143545,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:11",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 486.7758,
+        "x1": 612.9091,
+        "y1": 507.96
+      },
+      "text": "Address: City: State: Zip: Phone: Cell: Email:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417340102674,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:12",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 529.8137,
+        "x1": 117.136,
+        "y1": 537.12
+      },
+      "text": "Other/Mechanical:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9842213367660192,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0533:13",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 544.8558,
+        "x1": 524.3597,
+        "y1": 566.64
+      },
+      "text": "Address: City: State: Zip: Phone: Cell: Email:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546273684601,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:14",
+      "locator": {
+        "page": 0,
+        "x0": 23.4,
+        "y0": 576.3584,
+        "x1": 128.4992,
+        "y1": 600.24
+      },
+      "text": "A/C, Boiler, etc Model# A/C, Boiler, etc Model#",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983021887478059,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:15",
+      "locator": {
+        "page": 0,
+        "x0": 18.0,
+        "y0": 623.6334,
+        "x1": 585.3701,
+        "y1": 666.48
+      },
+      "text": "Proposed Work: Be as detailed as possible describing anything that is not going to be specifically provided for in plans or other supporting documents such as number of plumbing fixtures, new services, i.e. gas, water, electric, number of new branch circuits or anything else billable by permit. Billable permit items are listed in Village Code Chapter 142-A as a pdf. Link. The building dept. is responsible for assessing permit fees.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998205011403833,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:16",
+      "locator": {
+        "page": 1,
+        "x0": 18.0,
+        "y0": 108.6137,
+        "x1": 595.2588,
+        "y1": 167.88
+      },
+      "text": "Cost of Improvement: Owner: Deposes and says that they are the owner(s) in fee of the Premises, that the work proposed to be done upon the said Premises shall be completed in accordance with the approved application and accompanying plans, and that all the statements herein are true to the deponents own knowledge.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039178713518,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:17",
+      "locator": {
+        "page": 1,
+        "x0": 153.9621,
+        "y0": 111.3459,
+        "x1": 159.5497,
+        "y1": 118.082
+      },
+      "text": "$",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:18",
+      "locator": {
+        "page": 1,
+        "x0": 18.0,
+        "y0": 211.2137,
+        "x1": 344.4828,
+        "y1": 247.8
+      },
+      "text": "Owner Signature: ________________________________________ Owner Signature: ________________________________________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417650831977,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:19",
+      "locator": {
+        "page": 1,
+        "x0": 24.9587,
+        "y0": 318.5836,
+        "x1": 448.3804,
+        "y1": 325.3197
+      },
+      "text": "Date: Notary:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986852644992953,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:20",
+      "locator": {
+        "page": 1,
+        "x0": 18.0,
+        "y0": 343.6784,
+        "x1": 592.4849,
+        "y1": 379.44
+      },
+      "text": "Contractors must submit proof of current insurance (C-105.2 or U-26.3 for compensation and DB-120.1 for disability or DB-155 for disability) as required by NY State. Form CE-200 may be submitted if exempted. Nassau County requires licensing and liability insurance for residential work. Proof of these are also required of contractors prior to the issuance of the permit",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999892174183449,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:21",
+      "locator": {
+        "page": 1,
+        "x0": 38.28,
+        "y0": 401.3874,
+        "x1": 124.3958,
+        "y1": 410.52
+      },
+      "text": "OFFICIAL USE",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9571157080165,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0533:25",
+      "locator": {
+        "page": 1,
+        "x0": 347.3989,
+        "y0": 417.8457,
+        "x1": 482.8179,
+        "y1": 425.7611
+      },
+      "text": "REQUIRED CERTIFICATES",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9232557792764103,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0533:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0533:22",
+      "locator": {
+        "page": 1,
+        "x0": 146.52,
+        "y0": 420.8695,
+        "x1": 174.108,
+        "y1": 428.76
+      },
+      "text": "FEES",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7275319774868794,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0533:23",
+      "locator": {
+        "page": 1,
+        "x0": 60.84,
+        "y0": 442.5584,
+        "x1": 163.4751,
+        "y1": 588.12
+      },
+      "text": "Application Fee $ Permit Fees Building Plumbing Electrical Mechanical Certificate Other Total Permit Fees",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996670784608318,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:27",
+      "locator": {
+        "page": 1,
+        "x0": 365.3978,
+        "y0": 453.5875,
+        "x1": 467.7222,
+        "y1": 460.3236
+      },
+      "text": "\u25a1 Cert of Occupancy",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998769803716528,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:28",
+      "locator": {
+        "page": 1,
+        "x0": 365.3978,
+        "y0": 454.0734,
+        "x1": 372.0235,
+        "y1": 460.3236
+      },
+      "text": "\u25a1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:29",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 468.9441,
+        "x1": 459.2192,
+        "y1": 475.6841
+      },
+      "text": "\u25a1 Cert of Approval",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998609500695574,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:30",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 469.4338,
+        "x1": 372.019,
+        "y1": 475.6841
+      },
+      "text": "\u25a1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:31",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 484.4253,
+        "x1": 470.9246,
+        "y1": 491.1653
+      },
+      "text": "\u25a1 Cert of Completion",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998917194989579,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:32",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 484.9151,
+        "x1": 372.019,
+        "y1": 491.1653
+      },
+      "text": "\u25a1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:33",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 499.9032,
+        "x1": 471.3663,
+        "y1": 506.6432
+      },
+      "text": "\u25a1 Cert of Compliance",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998914667073334,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:34",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 500.3929,
+        "x1": 372.019,
+        "y1": 506.6432
+      },
+      "text": "\u25a1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:35",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 515.2664,
+        "x1": 456.2376,
+        "y1": 522.0065
+      },
+      "text": "\u25a1 Cert of Tenancy",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998913866438848,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:36",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 515.7562,
+        "x1": 372.019,
+        "y1": 522.0065
+      },
+      "text": "\u25a1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:37",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 530.7443,
+        "x1": 444.3114,
+        "y1": 537.4844
+      },
+      "text": "\u25a1 Letter in Lieu",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998427022447123,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:38",
+      "locator": {
+        "page": 1,
+        "x0": 365.3933,
+        "y0": 531.2341,
+        "x1": 372.019,
+        "y1": 537.4844
+      },
+      "text": "\u25a1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:24",
+      "locator": {
+        "page": 1,
+        "x0": 155.4,
+        "y0": 581.3984,
+        "x1": 160.9756,
+        "y1": 588.12
+      },
+      "text": "$",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:39",
+      "locator": {
+        "page": 1,
+        "x0": 36.84,
+        "y0": 618.9584,
+        "x1": 548.3784,
+        "y1": 625.68
+      },
+      "text": "Approved by _____________________________________ Examined for approval on ________________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997392681398772,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:40",
+      "locator": {
+        "page": 1,
+        "x0": 18.0,
+        "y0": 645.5984,
+        "x1": 595.4096,
+        "y1": 666.84
+      },
+      "text": "New State Law Requires: Site visits by the Building Department prior to the issuance of any permit. Changes in project elements or design shall not be made until such changes are approved and documented with the Building Department.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999904843376413,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:41",
+      "locator": {
+        "page": 1,
+        "x0": 18.0,
+        "y0": 682.5584,
+        "x1": 566.0688,
+        "y1": 729.6
+      },
+      "text": "Village Code Requires: Zoning variances become invalid if authorized work has not begun within six (6) months of Building Department Approval. Extensions may be applied for to the Zoning Board. (138-1304). Building Permits expire twelve (12) months after the approval. Two (2) subsequent six (6) month extensions may be applied with approval of the Building Department and payment of fees. Additional approvals require application (48-15)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999843118414112,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0533:42",
+      "locator": {
+        "page": 1,
+        "x0": 528.12,
+        "y0": 735.2648,
+        "x1": 595.7244,
+        "y1": 740.16
+      },
+      "text": "Form IVOSC BP 6/18",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972151249453648,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0533:21",
+        "c3-0533:25"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

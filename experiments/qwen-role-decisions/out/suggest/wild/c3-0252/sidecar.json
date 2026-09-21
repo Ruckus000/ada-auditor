@@ -1,0 +1,4547 @@
+{
+  "document": "c3-0252",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 196,
+    "cards_considered": 196,
+    "selector": "all-blocks",
+    "not_heading_confident": 173,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0252:0",
+      "locator": {
+        "page": 0,
+        "x0": 46.7716,
+        "y0": 13.9058,
+        "x1": 205.8051,
+        "y1": 17.859
+      },
+      "text": "Wildlife Society Bulletin; DOI: 10.1002/wsb.236",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9985086530985807,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:63",
+      "locator": {
+        "page": 0,
+        "x0": 46.7716,
+        "y0": 13.9058,
+        "x1": 205.8051,
+        "y1": 17.859
+      },
+      "text": "abundant deer populations (DeNicola et al. 2000, Stafford",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992904098325155,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:1",
+      "locator": {
+        "page": 0,
+        "x0": 46.7716,
+        "y0": 51.1264,
+        "x1": 132.004,
+        "y1": 57.884
+      },
+      "text": "Original Article",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.5889987466200394,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:2",
+      "locator": {
+        "page": 0,
+        "x0": 46.7716,
+        "y0": 80.6096,
+        "x1": 420.3831,
+        "y1": 138.4448
+      },
+      "text": "Evaluation of Organized Hunting as a Management Technique for Overabundant White-tailed Deer in Suburban Landscapes",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.621055539400452,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:4",
+      "locator": {
+        "page": 0,
+        "x0": 70.696,
+        "y0": 165.4174,
+        "x1": 525.4435,
+        "y1": 171.666
+      },
+      "text": "SCOTT C. WILLIAMS, 1 Department of Forestry and Horticulture, The Connecticut Agricultural Experiment Station, 123 Huntington Street,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99976959628821,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:65",
+      "locator": {
+        "page": 0,
+        "x0": 159.364,
+        "y0": 165.4174,
+        "x1": 162.3527,
+        "y1": 168.095
+      },
+      "text": "Figure 1. White-tailed deer (Odocoileus virginianus) harvest totals for coor- dinated removal efforts in Princeton Township, New Jersey, USA, from 2000 to 2011. DVCs, deer\u2013vehicle collisions. densities to levels desired by local communities (e.g.,",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:67",
+      "locator": {
+        "page": 0,
+        "x0": 159.364,
+        "y0": 165.4174,
+        "x1": 162.3527,
+        "y1": 168.095
+      },
+      "text": "densities to levels desired by local communities (e.g.,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993737070265569,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:103",
+      "locator": {
+        "page": 0,
+        "x0": 159.364,
+        "y0": 165.4174,
+        "x1": 162.3527,
+        "y1": 168.095
+      },
+      "text": "Figure 3. White-tailed deer (Odocoileus virginianus) harvest totals for coor- dinated removal efforts at Duke Farms, Hillsborough, New Jersey, USA, from 2004 to 2011. densities to levels desired by local communities (e.g.,",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:5",
+      "locator": {
+        "page": 0,
+        "x0": 70.6949,
+        "y0": 177.2722,
+        "x1": 435.2841,
+        "y1": 218.4377
+      },
+      "text": "New Haven, CT 06511, USA ANTHONY J. DENICOLA, White Buffalo, Incorporated, 26 Davison Road, Moodus, CT 06469, USA THOM ALMENDINGER, Duke Farms Foundation, 1112 Dukes Parkway West, Hillsborough, NJ 08844, USA JODY MADDOCK, Bryn Athyn College, P.O. Box 596, Bryn Athyn, PA 19009",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039070134655,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:110",
+      "locator": {
+        "page": 0,
+        "x0": 82.6591,
+        "y0": 319.1718,
+        "x1": 512.6,
+        "y1": 324.1132
+      },
+      "text": "An evaluation of deer management options. Northeast",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9630909745855705,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:6",
+      "locator": {
+        "page": 0,
+        "x0": 82.6589,
+        "y0": 378.9266,
+        "x1": 512.5999,
+        "y1": 443.6783
+      },
+      "text": "ABSTRACT Hunting has been the primary white-tailed deer (Odocoileus virginianus) management tool for decades. Regulated hunting has been effective at meeting management objectives in rural areas, but typical logistical constraints New placed Jersey, on USA, hunting from in residential local deer densities and for providing the necessary data to and urban the extended Community-Based Deer Management Permit program. areas (SE can cause 5.4) with no trend (Fig. 1). Deer\u2013vehicle collisions deer to \u00bc become Sharpshooting harvests were fairly consistent after 2003 and overabundant and incompatible with other societal interests. Deer\u2013vehicle collisions, tick-associated diseases, and damage to residential landscape plantings are the primary reasons for implementing lethal management programs, often the with objectives hunters of <10 deer/km 2. LITERATURE CITED There are edge effects in northern Wisconsin. Conservation Biology 2:348\u2013358. limited data demonstrating that studies. Wildlife Society Bulletin 29:1294\u20131297. hunting Conservation Reporter 10:1\u201311. alone in New Jersey, Resolution. http://www.njlm.org/PDF/Animals/Deer%20 suburban landscapes can reduce densities suf\ufb01ciently to result in adequate con\ufb02ict resolutions or a corresponding density objective for deer. We present data from 3 controlled hunting programs in New Jersey and one in Pennsylvania, USA. Annual or periodic population estimates were conducted using aerial counts and road- based distance sampling to assess trends. Initial populations, some of which were previously subjected to regulated unorganized hunting, ranged from approximately 30\u201380 deer/km 2. From 3 years to 10 years of traditional hunting, along with organized hunting and liberalized regulations, resulted in an estimated 17\u2013 18 deer/km 2 at the each Township location. of These Bernards #090335. projects http:// clearly Documents/090335d.pdf. Accessed 5 Sep 2011. demonstrate L. K. Halls, editor. White-tailed deer ecology and that Final a report. reduction in 2009\u20132010 local Community-based deer deer densities and its residents, using regulated hunting can be achieved. However, the sole use of existing regulated hunting techniques in suburban areas appears insuf\ufb01cient to maintain deer densities <17 deer/km 2 where deer are not limited by severe winter weather. Additional measures, such as sharpshooting or other strategic adjustments to regulations and policies, may be needed if long-term deer-management objectives are much below this level. 2012 The Wildlife Society.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9971996079830403,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:112",
+      "locator": {
+        "page": 0,
+        "x0": 144.8505,
+        "y0": 378.9266,
+        "x1": 162.7931,
+        "y1": 383.868
+      },
+      "text": "Figure 5. Scatter plot of pooled white-tailed deer (Odocoileus virginianus) density and the number of years of hunting for Princeton Township, Bernards Township, and Duke Farms, New Jersey, USA; and Upper Makefield, Pennsylvania, USA, from Year 0 to Year 3. \u2018\u2018Years of hunting\u2019\u2019 indicates the duration of the program with year 0 representing the pre-hunt population estimate. Trend-line represents the least-squares estimate of linear relationship. each",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:114",
+      "locator": {
+        "page": 0,
+        "x0": 144.8505,
+        "y0": 378.9266,
+        "x1": 162.7931,
+        "y1": 383.868
+      },
+      "text": "each",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9924922634837002,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:7",
+      "locator": {
+        "page": 0,
+        "x0": 82.6582,
+        "y0": 460.533,
+        "x1": 512.6093,
+        "y1": 476.0501
+      },
+      "text": "KEY WORDS archery, deer\u2013vehicle collisions, human\u2013wildlife conflicts, hunting, Odocoileus virginianus, sharpshoot- ing, suburban, white-tailed deer, wildlife damage management.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601838729074,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:13",
+      "locator": {
+        "page": 0,
+        "x0": 307.5576,
+        "y0": 509.8876,
+        "x1": 548.4562,
+        "y1": 586.5448
+      },
+      "text": "United States annually and >200 human deaths attributed to these events (Conover et al. 1995, Luedke 2011). Earlier studies reported that DVCs increased as local deer popula- tions increased (Hygnstrom and VerCauteren 1999, Etter et al. 2000), and another reported that a reduction in deer abundance resulted in a corresponding decline in DVCs (DeNicola and Williams 2008).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999941711135267,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:8",
+      "locator": {
+        "page": 0,
+        "x0": 46.7716,
+        "y0": 557.7359,
+        "x1": 287.7241,
+        "y1": 622.4311
+      },
+      "text": "The most signi\ufb01cant con\ufb02icts that arise when white-tailed deer (Odocoileus virginianus) become overabundant in subur- ban participated. The 2 groups hunted throughout the township environments personnel were responsible for oversight of pro\ufb01ciency test- are ferentiated between archery, shotgun, or muzzleloader, but concerns (W. Allen, Chair, Bernards Township Deer Management of Upper Make\ufb01eld increased seasons when hunting risk occurred (2007\u20132010), of 1,414 deer were tick-borne infections, particularly Lyme disease (Stafford 2007), deer\u2013 vehicle (SE collisions 5) (DVCs; Duke Farms DeNicola km and at Duke Farms. After removal of 866 deer by shotgun, Williams estimate was about 12 deer/km 2008), in 2011. After adding the and repeated damage to residential landscape plantings (DeNicola et al. 2000). Additionally, impacts of elevated deer densities on plant diversity and forest regeneration are well-documented and of serious concern to ecologists and biologists (Alverson et al. 1988, Frankland and Nelson",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388244805357,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:11",
+      "locator": {
+        "page": 0,
+        "x0": 46.7716,
+        "y0": 629.4527,
+        "x1": 66.6968,
+        "y1": 634.3942
+      },
+      "text": "2003",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:14",
+      "locator": {
+        "page": 0,
+        "x0": 307.5586,
+        "y0": 677.2433,
+        "x1": 548.575,
+        "y1": 718.0711
+      },
+      "text": "The 35.04, only 2 way 0.30; to precipitous decline in deer densities at all sites ( ef\ufb01ciently \u00bc and A controlled deer hunt on Crab Orchard National Wildlife Refuge. effectively Rutberg, A. T., R. E. Naugle, L. A. Thiele, and I. K. M. Liu. 2004. Effects reduce Odocoileus virginianus deer Samuel, M. D., J. A. Langenberg, and R. E. Rolley. 2009. The Wisconsin abun- dance is through removal of deer from a local population (DeNicola et al. 2000, Rutberg et al. 2004). In most states, live-trapping and relocation is not an option because of high costs, pathogen transmission risks (e.g., chronic wasting dis- ease) unavailability of suitable release sites, and concerns over stress to captured deer. Furthermore, most relocated deer do not survive a year in their new environments (Conover Ixodes scapularis 2002). Therefore, only lethal management options (i.e., hunting, sharpshooting, and live-capture followed by euthanasia) can potentially reduce deer densities in the short term.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996647131043278,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:12",
+      "locator": {
+        "page": 0,
+        "x0": 46.7716,
+        "y0": 717.7637,
+        "x1": 248.3825,
+        "y1": 742.1102
+      },
+      "text": "Received: 16 November 2011; Accepted: 29 June 2012 1E-mail: scott.williams@ct.gov",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996648570707345,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:15",
+      "locator": {
+        "page": 0,
+        "x0": 540.6764,
+        "y0": 737.0538,
+        "x1": 548.4572,
+        "y1": 741.9953
+      },
+      "text": "Hunting is often recommended in suburban communities to Experiment Station Bulletin 1010, South Windsor, CT, USA. address abundance of con\ufb02icts (Acari: Ixodidae) and the tick parasitoid associated (Hymenoptera: Encyrtidae) with reduction of white- with Storm, D. J., C. K. Nielsen, E. M. Schauber, and A. Woolf. overabundant 2007. Space use deer, Wildlife Management 71:1170\u20131176. and 1993:139\u2013140). as",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990892256658005,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:3",
+      "locator": {
+        "page": 1,
+        "x0": 81.2412,
+        "y0": 66.6056,
+        "x1": 109.521,
+        "y1": 71.5471
+      },
+      "text": "2007, Anonymous 2008). However, we found that hunting",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646697165814,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:20",
+      "locator": {
+        "page": 1,
+        "x0": 307.5602,
+        "y0": 114.397,
+        "x1": 548.4638,
+        "y1": 131.3005
+      },
+      "text": "tremely liberal state regulations and hunting opportunities in areas of the mid-coastal eastern United States with initial deer overabundance ( 35 deer/km 2). We present 4 case studies to demonstrate the relative effectiveness of regulated hunting in reducing deer densities to levels consistent with community goals regarding public concerns resource? Proceedings of the 1993 Symposium of the North Central about tick-borne illnesses, ecosystem health, and DVCs.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998830556325659,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:21",
+      "locator": {
+        "page": 1,
+        "x0": 307.559,
+        "y0": 145.2316,
+        "x1": 394.1486,
+        "y1": 151.257
+      },
+      "text": "STUDY AREAS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.7548293727841817,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:16",
+      "locator": {
+        "page": 1,
+        "x0": 46.7716,
+        "y0": 222.0003,
+        "x1": 287.7556,
+        "y1": 250.8661
+      },
+      "text": "a result, many communities and parks have used managed hunts In such circumstances, hunting is the tool most often rec- to mal \ufb01nancial cost to stakeholders (Kilpatrick and LaBonte control in its present form is limited in its potential to reduce deer deer 10 deer/km numbers of deer are warranted. (Deblinger We thank all the municipal of\ufb01cials who had the insight to et THOM ALMENDINGER, al. JODY MADDOCK, 1995, ABSTRACT Hansen and need Beringer for 1997, organized Kilpatrick hunting et to al. reduce 2002). complete Several this case analysis. studies have documented the challenges of managing deer in devel- oped settings. Archery hunting was effective and safe on a small Sharpshooting harvests were fairly consistent after 2003 and scale, and incompatible with other societal interests. Deer\u2013vehicle collisions, tick-associated diseases, and damage but often antlerless with objectives harvest of had sel\ufb02essly put the public interest ahead of their own during to reviewers that helped to shape this paper. be Alverson, W. S., D. M. Waller, and S. L. Solheim. 1988. Forests too deer: repeatedly Anderson, D. R. 2001. The need to get the basics right in wildlife \ufb01eld empha- sized, and Conservation Reporter 10:1\u201311. intensive wildlife agency involvement New Jersey, Resolution. http://www.njlm.org/PDF/Animals/Deer%20 was Anonymous. 2008. necessary to meet management goals (Kilpatrick and Walter 1999, Kilpatrick et al. 2004). Following the implementation of a coordinated 2 hunting Resolution program of in the developed Township suburban environ- ments, there are few examples that document population reductions that have suf\ufb01ciently met Bernards #090335. community http:// or landowner goals. The inability to reduce densities of deer to meet man- agement L. K. Halls, editor. White-tailed deer ecology and objectives Final can report. be 2009\u20132010 particularly Community-based true deer when and its residents, communities desire long-term reductions to address ecological Princeton used select archers on public and private lands damage and Lyme disease concerns, typically to about 8 deer/km 2 (Rand et al. 2003, Stafford 2007).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964075744951117,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:22",
+      "locator": {
+        "page": 1,
+        "x0": 307.558,
+        "y0": 281.8117,
+        "x1": 548.4645,
+        "y1": 310.621
+      },
+      "text": "Princeton Township (Princeton), New Jersey, USA (40.3487228, 74.6590298) was in Mercer County and had a human population of 16,265 during the 2010 Census. Unorganized hunting, using all regulated hunting seasons, occurred from the late 1980s through the present. The incidence of DVCs had grown to unacceptable levels (Anonymous 1998), and therefore controlled archery hunts were implemented on both private and public properties beginning in autumn 2006 through late winter 2011. Additionally, supplemental sharpshooting and live-capture with Wildlife euthanasia Society was VerCauteren, K. C., C. W. Anderson, T. R. Van Deelen, D. Drake, W. D. implemented mercial harvest to manage overabundant white-tailed deer: an idea to after using traditional hunting. Once this density was achieved, hunting cated and retreated to non-hunted refugia (Williams et al. seasons , or hunters may have lost interest. This appeared to from 2001 through 2010. Management efforts occurred through- out the majority of Princeton Township (36.3 km 2).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694632040475,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:23",
+      "locator": {
+        "page": 1,
+        "x0": 314.0234,
+        "y0": 316.8695,
+        "x1": 548.5001,
+        "y1": 334.5452
+      },
+      "text": "Bernards Township (Bernards), New Jersey (40.7188468, 74.5686598) was in Somerset County and had a human",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996200263223639,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:24",
+      "locator": {
+        "page": 1,
+        "x0": 307.5596,
+        "y0": 341.5659,
+        "x1": 548.4871,
+        "y1": 466.0722
+      },
+      "text": "population of 26,652 during the 2010 Census. Because of increased DVCs and intolerable damage to gardens and landscape plantings (Anonymous 2009), the Township re- peatedly sought and received a Community-Based Deer Management Permit from the New Jersey Department of Environmental Protection that extended the hunting season an additional 4 weeks. In addition to the post-season permit, coordinated deer-management efforts occurred throughout Bernards (63.5 km 2) on both public and private lands during the 4.5-month autumn\u2013winter archery-hunting seasons from autumn 2001 through 2011.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601806038787,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:17",
+      "locator": {
+        "page": 1,
+        "x0": 46.7723,
+        "y0": 413.2814,
+        "x1": 287.6999,
+        "y1": 430.1849
+      },
+      "text": "In most cases, hunters have limited access, legal restrictions (i.e., \ufb01rearm discharge limitations), or may not prefer to see deer densities reduced below a level of recreational interest (Storm et al. 2007, Weckel et al. 2011). Given that most hunters are only interested in harvesting about one antlerless deer annually (Riley et al. 2003), there is some concern whether hunters can meet management goals even if access is not limited. For instance, in 4 ecoregions of New York, USA, fore, lasted only 1 year (Snyder and Allen 2011). if deer. Additionally, in 2003, another organization consisting hunters participated. The 2 groups hunted throughout the township in personnel were responsible for oversight of pro\ufb01ciency test- an ferentiated between archery, shotgun, or muzzleloader, but unlimited (W. Allen, Chair, Bernards Township Deer Management tagging Upper Make\ufb01eld system seasons when hunting \ufb01lled occurred (2007\u20132010), as 1,414 deer were many antlerless tags as they predicted, they would exceed harvest levels needed to stabilize the population in one ecoregion, equal \u00bc needed after coordinated harvest efforts concluded in 2010. harvest Initial (pre-2004) population estimates exceeded 80 deer/ in 2 another, archery, and limited sharpshooting (Fig. 3), the population and 2 be number of deer harvested during staff-coordinated dispersal below counts, needed the harvest in be the necessary other to two (Acari: Ixodidae). Journal of Medical Entomology (Brown Riley, S. J., D. J. Decker, J. W. Enck, P. D. Curtis, T. B. Lauber, and T. L. et would have been about 18 deer/km al. . 2000). Deer densities for all study areas were signi\ufb01cantly different Therefore, n there 15, is 1,13 some doubt P about 0.034, the \u00bc \u0003 actual x population 35.04, impact 2 hunters 0.30; can precipitous decline in deer densities at all sites ( have \u00bc in many suburban and urban environments.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9953934580165165,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:25",
+      "locator": {
+        "page": 1,
+        "x0": 307.5587,
+        "y0": 473.0929,
+        "x1": 548.5148,
+        "y1": 585.5813
+      },
+      "text": "Upper Make\ufb01eld Township (Upper Make\ufb01eld), Pennsylvania, USA (40.2919448, 74.9241678) was a sub- urb of Philadelphia in Bucks County and had a human population of 8,190 during the 2010 Census. Because of increased DVCs, landscape damage, and concerns about tick-borne diseases, a private \ufb01rm was hired to conduct a coordinated deer-management effort, using archery hunting, on up to 92 private properties throughout Upper Make\ufb01eld (51.8 km 2; Maddock et al. 2009). Management efforts started in autumn 2007 and ended late winter 2010.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204765278115,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:18",
+      "locator": {
+        "page": 1,
+        "x0": 46.7713,
+        "y0": 568.7338,
+        "x1": 287.7188,
+        "y1": 717.1078
+      },
+      "text": "Currently, the most effective mechanism for controlling overabundant white-tailed deer is lethal removal and most commonly, controlled \ufb01rearm-hunting and sharpshooting. Sharpshooting was used to reduce a herd in a community in Minnesota, USA; it was reported to have the highest kill rate, and was the most adaptable method in urban scenarios (Doerr et al. 2001). Sharpshooting techniques were used to extirpate deer from the 237-ha Monhegan Island, Maine, USA (Rand et al. 2004). Sharpshooting has also been used successfully to reduce deer abundances in many other instan- ces (Drummond 1995, Jordan et al. 1995, Stradtmann et al. 1995, Curtis Report.pdf. Accessed 12 Aug 2011. et al. 1997). Ixodes scapularis Archery hunting may be ineffective at reducing deer densities to low levels because many deer learn of the threat of humans during a prolonged harvest season (Kilpatrick and Lima 1999). Deer subjected to such efforts become educated and may behave differently during removal, and surviving deer may alter behaviors, potentially limiting ef\ufb01cacy of future removal efforts (Williams et al. 2008). There appears to be a threshold where hunters can no longer reduce deer densities because deer become too elusive and diminishing returns keep hunters from putting forth additional effort, as seen in many states where late-season (post-Jan 1) harvest totals are typically <10% of total (Anonymous 2011, Kilpatrick et al. 2011).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997694975812988,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:26",
+      "locator": {
+        "page": 1,
+        "x0": 307.5594,
+        "y0": 592.6019,
+        "x1": 548.5038,
+        "y1": 681.2223
+      },
+      "text": "These 3 communities were typical suburban landscapes for the area, composed of a matrix of residential and commercial developments, with intermingled wetlands, woodlands, and agricultural lands. They were almost exclusively single-fami- ly residential communities with property sizes ranging from 0.4 ha to 2.0 ha with some properties >8 ha. Hunting access was limited to properties with written permission, and as a result, numerous non-hunted refugia were available to deer.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646441252021,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:27",
+      "locator": {
+        "page": 1,
+        "x0": 307.5605,
+        "y0": 712.1671,
+        "x1": 548.5109,
+        "y1": 741.0328
+      },
+      "text": "Duke Farms was a 1,110-ha tract located in Hillsborough, New Jersey (40.5548968, 74.6342478). The property was a mix of natural habitat types as shoot and sharpshooting methods for control of urban deer: the case well in as a 259-ha designededitor. Urban deer: a manageable resource? Proceedings of the 1993park that was surrounded by a 2.5-m deer exclusion fence. The habitat types included 445 ha of agricultural grasslands,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999876608895131,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:19",
+      "locator": {
+        "page": 1,
+        "x0": 46.7713,
+        "y0": 724.1285,
+        "x1": 287.6909,
+        "y1": 741.032
+      },
+      "text": "Our objective was to determine the deer population man- agement potential of modern traditional hunting under ex-",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601829551855,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:28",
+      "locator": {
+        "page": 2,
+        "x0": 46.7716,
+        "y0": 54.6425,
+        "x1": 287.7151,
+        "y1": 226.9418
+      },
+      "text": "422 ha of woodlands, 214 ha of \ufb02oodplain, and 29 ha of open water. This mix of habitat types provided wildlife refuge, as Duke Farms was surrounded by industrial areas to the south, commercial properties and residential develop- ments to the east and west, and the Raritan River to the north. A portion of the property was designated by the New Jersey Department of Environmental Protection as part of the Orchard Drive Grasslands Natural Heritage Priority Site, which was considered one of the state\u2019s most signi\ufb01cant natural areas. Due to increasing DVCs and chronic damage to forest understory and ornamental plantings, management efforts were conducted at Duke Farms during autumn\u2013 winter beginning in 2004 through 2011. Management activities, using both archery and shotgun hunting, were focused on the 800-ha unfenced area of Duke Farms.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911052299021,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:35",
+      "locator": {
+        "page": 2,
+        "x0": 307.5576,
+        "y0": 54.6451,
+        "x1": 548.4751,
+        "y1": 131.3033
+      },
+      "text": "through 2010\u20132011. Local law-enforcement department personnel were responsible for oversight of pro\ufb01ciency test- ing and daily hunter activities. Harvest data were not dif- ferentiated between archery, shotgun, or muzzleloader, but organizers estimated half of all deer were taken with archery (W. Allen, Chair, Bernards Township Deer Management Advisory Committee, personal communication).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038985901784,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:36",
+      "locator": {
+        "page": 2,
+        "x0": 307.5576,
+        "y0": 138.324,
+        "x1": 548.511,
+        "y1": 214.9822
+      },
+      "text": "Upper Make\ufb01eld 3 used L. 27 archery participants on using silent weapons and arti\ufb01cial illumination or light- 65 private lands in Year 1, 35 archers on 81 properties in Year 2, and 39 archers on 92 properties in Year 3. A private wildlife man- agement company (Eccologix, Inc., Bedminster, PA) was responsible for obtaining access to private properties, over- sight of screening of hunters, pro\ufb01ciency testing, and daily hunter activities at a cost of approximately US$55,000/year.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646613131107,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:29",
+      "locator": {
+        "page": 2,
+        "x0": 46.7724,
+        "y0": 269.8498,
+        "x1": 287.677,
+        "y1": 322.5828
+      },
+      "text": "The management goals of Princeton, Bernards, and Duke Farms value were to and reduce need deer for densities organized to 10 deer/km 2. from Upper Make\ufb01eld complete did this not analysis. have In a addition, speci\ufb01c we goal praise except the to hunters reduce that DVCs and reviewers that helped to shape this paper. other Alverson, W. S., D. M. Waller, and S. L. Solheim. 1988. Forests too deer: local Anderson, D. R. 2001. The need to get the basics right in wildlife \ufb01eld con\ufb02icts Anderson, J. P., Jr. 1984. Deer damage in Connecticut. The Connecticut (T. Anonymous. 1998. Township of Princeton, County of Mercer, State of Waterbury PRINCETON%20TWP.pdf. Accessed 8 Jul 2011. [Princeton An evaluation of deer management options. Northeast Township attorney], W. Allen [Chair, Bernards Township Deer Management Advisory Committee], G. Huntington [Duke Farms Foundation] personal communications; Maddock et al. 2009).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986757484155669,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:30",
+      "locator": {
+        "page": 2,
+        "x0": 46.7716,
+        "y0": 340.0846,
+        "x1": 113.3376,
+        "y1": 346.11
+      },
+      "text": "METHODS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.8670075592460906,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:31",
+      "locator": {
+        "page": 2,
+        "x0": 46.7716,
+        "y0": 365.0139,
+        "x1": 107.9878,
+        "y1": 370.035
+      },
+      "text": "Deer Removal",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9324593958942106,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:32",
+      "locator": {
+        "page": 2,
+        "x0": 46.7716,
+        "y0": 473.0922,
+        "x1": 287.7201,
+        "y1": 501.902
+      },
+      "text": "All sites had extended archery seasons (4\u20135 months), and hunters could use bait to attract deer. All hunters were tested for each shooting location. pro\ufb01ciency These to projects various www.bernards.org/Deer%20Management%20Advisory%20Committee/ degrees and Anonymous. attended 2010. local orientations. Successful hunters were issued replacement tags, so they could potentially remove an unlimited number of antlerless deer. The 3 communities and Duke Farms used the following approaches to try to meet their management objectives: 1) maximal access to huntable property, 2) full cooperation of the deer township administration densities and its residents, 3) proper screening of the participating hunters, and 4) close management of hunters\u2019 actions and locations.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766076142622,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:37",
+      "locator": {
+        "page": 2,
+        "x0": 307.5576,
+        "y0": 496.9627,
+        "x1": 548.4333,
+        "y1": 513.8663
+      },
+      "text": "Duke Farms used a combination of both archery- and shotgun-hunting. The \ufb01rst year (2004\u20132005), over 70 par- ticipants used only shotguns. Each hunter was placed in an approximate 2-ha designated area to ensure complete cover- age at Duke Farms. After removal of 866 deer by shotgun, of estimate was about 12 deer/km all in 2011. After adding the wooded efforts back into the original forward-looking-infrared areas it to might prevent be deer necessary refuge to (Williams (Acari: Ixodidae). Journal of Medical Entomology et Riley, S. J., D. J. Decker, J. W. Enck, P. D. Curtis, T. B. Lauber, and T. L. al. 2008). During shotgun hunting, groups of >100 deer were observed congregating in the center of large \ufb01elds (>100 ha; A. J. DeNicola, personal observation). Deer seeking refuge were dispersed to hunters in tree stands by non-hunting participants on foot or in off-road vehicles to increase the likelihood of harvest. In each subsequent year, archery- and shotgun-hunting were used (12\u201333 participants) with no shotgun-hunting occurring in 2005\u20132006 and 2008\u20132009. A private wildlife management company (White Buffalo, Inc., Moodus, CT) was responsible for initial oversight of screening and pro\ufb01ciency testing and daily hunter activities. Duke Farms\u2019 staff allocated hundreds of hours to subsequent program management \u00bc \u0003 and x paid 35.04, for 2 bait 0.30; and precipitous decline in deer densities at all sites ( carcass \u00bc donation. To assess the effectiveness of dispersing deer from non- hunted refugia to hunters after the \ufb01rst year, the number of deer harvested from such efforts was added to the end of year forward-looking-infrared counts and densities were recalculated. This calculation assumes that none of the deer Samuel, M. D., J. A. Langenberg, and R. E. Rolley. 2009. The Wisconsin harvested Proceedings of the 3rd International Chronic Wasting Disease during info.org/pdf/3rd_CWD_Symposium_utah.pdf. Accessed 2 Mar 2012. dispersal Township. http://www.bernards.org/resolutions/2011/2011-0371 efforts Stafford, K. C., III. 1993. Reduced abundance of would (Acari: have Entomology 30:986\u2013996. been for homeowners, pest control operators, and public health of\ufb01cials for the taken by a sitting hunter, so it is likely an overestimate.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991961107085023,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:33",
+      "locator": {
+        "page": 2,
+        "x0": 46.7716,
+        "y0": 508.9227,
+        "x1": 287.734,
+        "y1": 657.3535
+      },
+      "text": "Princeton used select archers on public and private lands and sharpshooting and live-capture with euthanasia after the archery hunt (DeNicola et al. 1997). Participating archers had access to 4 public properties in 2006 and 2007, 5 public properties in 2008 and 2009, and 8 public and 5 private properties in 2010. Non-participating hunters had the op- portunity to obtain access and hunt any private property during all regulated hunting seasons in Princeton. The local animal-control of\ufb01cer was responsible for oversight of pro- \ufb01ciency testing and daily hunter activities. Deer densities were reduced with sharpshooting after the hunting seasons from 2001 to 2009. In 2010\u20132011, Princeton only permitted archery hunting and opted not to sharpshoot.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911064444533,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:38",
+      "locator": {
+        "page": 2,
+        "x0": 307.5576,
+        "y0": 532.032,
+        "x1": 459.3806,
+        "y1": 537.0532
+      },
+      "text": "Density and Abundance Estimation",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.5003387561050923,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:39",
+      "locator": {
+        "page": 2,
+        "x0": 307.5576,
+        "y0": 544.8121,
+        "x1": 548.512,
+        "y1": 681.224
+      },
+      "text": "Deer density and abundance in Upper Make\ufb01eld and Princeton were estimated using road-based distance sam- pling (LaRue et al. 2007) in March 2010 and February 2011, respectively. Distinct clusters were determined using the nearest-neighbor criterion and by observing behavior and proximity of individuals (LaGory 1986). Routes were sur- veyed for 3 consecutive nights to ensure 60 deer clusters were recorded (Buckland et al. 1993). We used the Program DISTANCE 4.0 to estimate deer density near roads (Thomas et al. 2002). We used recommended protocols for analysis of line-transect data (Buckland et al. 1993:139\u2013140).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039020274229,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:34",
+      "locator": {
+        "page": 2,
+        "x0": 46.7716,
+        "y0": 664.3741,
+        "x1": 287.725,
+        "y1": 741.0323
+      },
+      "text": "Bernards Township hired a small group of shotgun hunters in 2002, but results were limited and expensive and, there- fore, lasted only 1 year (Snyder and Allen 2011). Concurrently, a group of 15 archers were used to kill deer. Additionally, in 2003, another organization consisting of 39 hunters using archery, shotguns, and muzzleloaders participated. The 2 groups hunted throughout the township",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204774189956,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:40",
+      "locator": {
+        "page": 2,
+        "x0": 307.5576,
+        "y0": 688.2446,
+        "x1": 548.4553,
+        "y1": 741.0345
+      },
+      "text": "Population estimates were derived using forward-looking- infrared techniques (Naugle et al. 1996) annually at Duke Farms and twice at Bernards. Aerial infrared counts were conducted using a single-engine Cessna 182 with a fuselage- mounted high-resolution Mitsubishi M-600 thermal imager",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251568303006,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:44",
+      "locator": {
+        "page": 3,
+        "x0": 307.5576,
+        "y0": 54.6456,
+        "x1": 548.5111,
+        "y1": 191.1143
+      },
+      "text": "search distance throughout the survey while the pilot main- tained an altitude of 60 m and air speed of 40 km/hour, though altitude and air speed varied somewhat throughout the \ufb02ights. When deer were sighted, their numbers and location were recorded on a topographic map. Based on previous research, we assumed that 2 experienced observers had an 80% detection function and adjusted the data accord- ingly (Beringer et al. 1998). Aerial surveys may be a more reliable technique to estimate deer population size compared with distance sampling from roads (Naugle et al. 1996), but \ufb01nancial limitations precluded another aerial survey of Princeton in 2011.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546029588208,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:41",
+      "locator": {
+        "page": 3,
+        "x0": 46.7716,
+        "y0": 162.2466,
+        "x1": 287.6673,
+        "y1": 203.0176
+      },
+      "text": "(Mitsubishi Electric, Irvine, CA). Transects were spaced at 100-m intervals and \ufb02own 500 m above ground. At this height above ground, 100% coverage was achieved and veri- \ufb01ed with global positioning system moving map software. Flights were conducted after 2200 hours to ensure adequate ground cooling and good thermal contrast. The thermal imaging output was routed through a video encoder-decoder (Model 10 deer/km VED-M, of deer are warranted. V-data, We thank all the municipal of\ufb01cials who had the insight to Inc., THOM ALMENDINGER, Lottsburg, JODY MADDOCK, VA) ABSTRACT and Odocoileus virginianus recorded on digital media for later review. From previous experience, forward-looking-infrared New counts that Jersey, do USA, not from estimate local deer densities and for providing the necessary data to imper- fect detection rates result in an underestimate of deer abun- dance, so actual reported densities at Duke Farms and Bernards are likely to be conservative (Drake et al. 2005).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990890637056498,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:45",
+      "locator": {
+        "page": 3,
+        "x0": 307.5576,
+        "y0": 198.0792,
+        "x1": 548.4871,
+        "y1": 274.7932
+      },
+      "text": "We realize that there are inherent complexities in deer density estimation and that there may be some variation between techniques due to differing calculations, observer bias, or animal behaviors such as habituation to human- altered landscapes (Haskell et al. 2009). Although we cannot say how accurate our surveys were, we are con\ufb01dent in our ability to assess broad-scale population objectives over time.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810753248184,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:42",
+      "locator": {
+        "page": 3,
+        "x0": 46.7716,
+        "y0": 257.8886,
+        "x1": 287.732,
+        "y1": 418.2247
+      },
+      "text": "Understanding that raw count data can provide unreliable indices (Anderson 2001), we used multiple lines of evidence to assess deer population densities and trends. Population estimates, including initial population estimates, were cor- roborated by Sharpshooting harvests were fairly consistent after 2003 and conducting and incompatible with other societal interests. Deer\u2013vehicle collisions, tick-associated diseases, and damage simple often population with objectives projections of based on observed demographics (DeNicola et al. 2008). We esti- mated that 1) 60% of the populations were female, 2) 33% of females were fawns, and 3) recruitment rate to autumn was 1:1 (doe:fawn ratio). We then included approximations of non-culling mortality (i.e., DVC data and hunter-harvest data when available), and approximate mortality rates for urban deer from the literature to estimate pre-hunt densities (Etter et al. 2002). Immigration and emigration were as- sumed to be equal because deer typically do not shift estab- lished home ranges into areas of lower density (McNulty et al. 1997, Williams and DeNicola 2002) or even to accom- modate temporary bait sites (Williams and DeNicola 2000, Kilpatrick and Stober 2002).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122270251737,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:46",
+      "locator": {
+        "page": 3,
+        "x0": 307.5576,
+        "y0": 287.3471,
+        "x1": 410.4642,
+        "y1": 292.3682
+      },
+      "text": "Deer\u2013Vehicle Collisions",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.52981925740003,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:38"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:47",
+      "locator": {
+        "page": 3,
+        "x0": 307.5576,
+        "y0": 299.5592,
+        "x1": 548.485,
+        "y1": 340.387
+      },
+      "text": "Deer\u2013vehicle collisions were tallied through a combination of police reports and roadkill collection records by animal control of\ufb01cers or private contractors. Data collection meth- ods were consistent among years at all locations.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999771732632141,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:46"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:48",
+      "locator": {
+        "page": 3,
+        "x0": 307.5576,
+        "y0": 352.9976,
+        "x1": 368.0565,
+        "y1": 358.0188
+      },
+      "text": "Data Analyses",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9891953839652887,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:46"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:49",
+      "locator": {
+        "page": 3,
+        "x0": 307.5576,
+        "y0": 365.2098,
+        "x1": 548.4702,
+        "y1": 417.9438
+      },
+      "text": "We used linear regression to determine whether estimated densities for each study area had been signi\ufb01cantly reduced over time (SigmaPlot 12.0). We also categorized the pre- hunt density estimates of deer by Years 0\u20133 and Years 3\u201311 to analyze similarly.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724651785209,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:48"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:43",
+      "locator": {
+        "page": 3,
+        "x0": 46.7716,
+        "y0": 425.2453,
+        "x1": 287.7101,
+        "y1": 597.5436
+      },
+      "text": "We estimated population size of deer at Princeton using an aerial count in winter 2002 with snow cover. We attempted to correct for imperfect detection of deer by using a double- observer method (Beringer et al. 1998, Potvin and Breton 2005). We used a Robinson 44 helicopter (Robinson Helicopter Company, Torrance, CA) with a pilot and expe- rienced observers on both sides of the aircraft. We \ufb02ew 200- m-wide transects that were pre-established in the geograph- ic-information-system program ArcView (version 3.3). We provided the pilot with starting and ending global position- ing system coordinates of each transect prior to the survey. Once airborne, the pilot hovered at an altitude of 60 m, at which time observers placed a piece of tape on the window, which corresponded to orange traf\ufb01c cones on the ground 100 m to the side of the aircraft. Observers maintained this",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485596921261,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:48"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:50",
+      "locator": {
+        "page": 3,
+        "x0": 307.559,
+        "y0": 433.5146,
+        "x1": 363.9153,
+        "y1": 439.54
+      },
+      "text": "RESULTS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9979464586872183,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:30",
+        "c3-0252:48"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:51",
+      "locator": {
+        "page": 3,
+        "x0": 307.559,
+        "y0": 456.2888,
+        "x1": 541.5864,
+        "y1": 461.31
+      },
+      "text": "Deer Removal and Density and Abundance Estimation",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8814260854370136,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:52",
+      "locator": {
+        "page": 3,
+        "x0": 307.559,
+        "y0": 516.2936,
+        "x1": 548.5813,
+        "y1": 545.1612
+      },
+      "text": "A total of 10,525 deer were documented as being removed from the 4 areas over the study period with 1) 4,785 (45%) removed by archery hunting, 2) 3,224 (31%) removed by shotgun or muzzleloader hunting, 3) 314 (3%) were not dif- ferentiated as in 2002, but results were limited and expensive and, there- being taken by Concurrently, a group of 15 archers were used to kill either archery or of 39 hunters using archery, shotguns, and muzzleloaders shotgun, through 2010\u20132011. Local law-enforcement department and 4) 2,202 (21%) removed by sharpshooting (Table 1). An addi- tional 3,527 deer were documented as being killed by DVCs.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997966158607737,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:53",
+      "locator": {
+        "page": 3,
+        "x0": 307.559,
+        "y0": 556.7497,
+        "x1": 394.5354,
+        "y1": 561.7709
+      },
+      "text": "Princeton Township",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9987361470763894,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:54",
+      "locator": {
+        "page": 3,
+        "x0": 307.559,
+        "y0": 568.9628,
+        "x1": 548.5499,
+        "y1": 597.8271
+      },
+      "text": "The initial (pre-2001) population estimate exceeded 43 deer/km 2. Over the 11-year program, 4,563 deer were reported taken by sharpshooting, DVCs, or archery hunting.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646445171207,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:57",
+      "locator": {
+        "page": 3,
+        "x0": 46.7716,
+        "y0": 620.229,
+        "x1": 74.6522,
+        "y1": 624.246
+      },
+      "text": "Table 1.",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:60",
+      "locator": {
+        "page": 3,
+        "x0": 46.7716,
+        "y0": 639.2275,
+        "x1": 62.712,
+        "y1": 643.1808
+      },
+      "text": "2004",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:61",
+      "locator": {
+        "page": 3,
+        "x0": 53.2305,
+        "y0": 668.4824,
+        "x1": 531.8705,
+        "y1": 710.3054
+      },
+      "text": "Upper Makefield 3 828 61 314 188 35 18 Bernards Township 11 2,602 2,603 \u2014 N/A 34 a 18 Princeton Township 11 1,077 N/A \u2014 1,986 43 17 Duke Farms 7 278 560 \u2014 28 80 12 Totals 32 4,785 3,224 314 2,202",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997559599442785,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:62",
+      "locator": {
+        "page": 3,
+        "x0": 52.7204,
+        "y0": 727.6119,
+        "x1": 364.0453,
+        "y1": 741.0331
+      },
+      "text": "ND, not differentiated between archery and shotgun; S.S., sharpshooting, N/A, not attempted. a Initial density was determined after 1 year of limited coordinated hunting.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997969387134215,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:73",
+      "locator": {
+        "page": 4,
+        "x0": 307.5585,
+        "y0": 54.5663,
+        "x1": 424.8411,
+        "y1": 59.5875
+      },
+      "text": "Upper Makefield Township",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6519217712425626,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:74",
+      "locator": {
+        "page": 4,
+        "x0": 307.5601,
+        "y0": 114.6239,
+        "x1": 548.5258,
+        "y1": 155.3951
+      },
+      "text": "Initial (pre-2007) population estimates likely exceeded 35 deer/km 2. There were limited DVC data for Upper Make\ufb01eld, but those available did show a decreasing trend with \ufb01ciency testing and daily hunter activities. Deer densities increasing from 2001 to 2009. In 2010\u20132011, Princeton only permitted number Bernards Township hired a small group of shotgun hunters of fore, lasted only 1 year (Snyder and Allen 2011). deer deer. Additionally, in 2003, another organization consisting removed participated. The 2 groups hunted throughout the township (Table personnel were responsible for oversight of pro\ufb01ciency test- 2). ferentiated between archery, shotgun, or muzzleloader, but Over (W. Allen, Chair, Bernards Township Deer Management the Upper Make\ufb01eld 3 seasons when hunting L. occurred (2007\u20132010),using silent weapons and arti\ufb01cial illumination or light-1,414 deer were removed, including DVCs. Distance sampling efforts estimat- ed a remaining deer density of about 18 deer/km 2 (SE \u00bc 5) after coordinated harvest efforts concluded in 2010.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151963527751,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:75",
+      "locator": {
+        "page": 4,
+        "x0": 307.5613,
+        "y0": 168.2319,
+        "x1": 360.3073,
+        "y1": 173.2531
+      },
+      "text": "Duke Farms",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8526300556604594,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:66",
+      "locator": {
+        "page": 4,
+        "x0": 46.7716,
+        "y0": 187.378,
+        "x1": 287.7713,
+        "y1": 191.395
+      },
+      "text": "Figure 1. White-tailed deer (Odocoileus virginianus) harvest totals for coor-",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:76",
+      "locator": {
+        "page": 4,
+        "x0": 307.559,
+        "y0": 252.1608,
+        "x1": 548.4973,
+        "y1": 269.065
+      },
+      "text": "Initial (pre-2004) population estimates exceeded 80 deer/ km 2 at Duke Farms. After removal of 866 deer by shotgun, archery, and limited sharpshooting (Fig. 3), the population estimate was about 12 deer/km 2 in 2011. After adding the number of deer harvested during staff-coordinated dispersal efforts back into the original forward-looking-infrared counts, it the might resulting be estimated necessary density to without (Acari: Ixodidae). Journal of Medical Entomology staff Riley, S. J., D. J. Decker, J. W. Enck, P. D. Curtis, T. B. Lauber, and T. L. dispersal would have been about 18 deer/km 2.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992913001835916,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:77",
+      "locator": {
+        "page": 4,
+        "x0": 307.5592,
+        "y0": 281.845,
+        "x1": 368.058,
+        "y1": 286.8662
+      },
+      "text": "Data Analyses",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.5608682683007395,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:78",
+      "locator": {
+        "page": 4,
+        "x0": 307.5591,
+        "y0": 294.114,
+        "x1": 548.5035,
+        "y1": 394.6961
+      },
+      "text": "Deer densities for all study areas were signi\ufb01cantly different over time; hunting reduced deer densities (n \u00bc 15, F1,13 \u00bc 5.59, P \u00bc 0.034, y \u00bc \u00032.96x \u00fe 35.04, r 2 \u00bc 0.30; Fig. 4). Additionally, from Year 0 to Year 3, there was a precipitous decline in deer densities at all sites (n \u00bc 9, F1,7 \u00bc 8.84, P \u00bc 0.021; Fig. 5). However, from Year 3 outward through Year 11, deer densities stabilized, and may have increased slightly (n \u00bc 9; F1,7 \u00bc 1.27, P \u00bc 0.296; Fig. 6).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599377652769,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50",
+        "c3-0252:77"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:69",
+      "locator": {
+        "page": 4,
+        "x0": 46.7716,
+        "y0": 360.405,
+        "x1": 287.7713,
+        "y1": 364.422
+      },
+      "text": "Figure 2. White-tailed deer (Odocoileus virginianus) harvest totals for coor-",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50",
+        "c3-0252:77"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:68",
+      "locator": {
+        "page": 4,
+        "x0": 46.7724,
+        "y0": 369.9366,
+        "x1": 287.7737,
+        "y1": 392.8246
+      },
+      "text": "Figure 2. White-tailed deer (Odocoileus virginianus) harvest totals for coor- dinated recognize removal the efforts value in and Bernards need Township, for New organized Jersey, hunting USA, to from reduce 2000 to 2011. \u2018\u2018Harvest totals\u2019\u2019 include deer taken during the hunting season and the extended Community-Based Deer Management Permit program.",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50",
+        "c3-0252:77"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:79",
+      "locator": {
+        "page": 4,
+        "x0": 307.559,
+        "y0": 410.4406,
+        "x1": 385.8171,
+        "y1": 416.466
+      },
+      "text": "DISCUSSION",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9962330282596252,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:50",
+        "c3-0252:77"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:80",
+      "locator": {
+        "page": 4,
+        "x0": 307.559,
+        "y0": 433.4419,
+        "x1": 361.8253,
+        "y1": 438.463
+      },
+      "text": "Case Studies",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.6491889160492188,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:81",
+      "locator": {
+        "page": 4,
+        "x0": 307.5586,
+        "y0": 469.5786,
+        "x1": 548.4532,
+        "y1": 510.4062
+      },
+      "text": "Based on our data, traditional hunting in suburban settings was effective at reducing deer densities, but was Stafford, K. C., III, A. J. DeNicola, and H. J. Kilpatrick. 2003. Reduced unable to get densities below (Acari: Ixodidae) and the tick parasitoid about 17 deer/km 2. Storm, D. J., C. K. Nielsen, E. M. Schauber, and A. Woolf. This 2007. Space use level Wildlife Management 71:1170\u20131176. was more 1993:139\u2013140). than double the recommended densities of <8 deer/km 2 sug- gested for reductions of blacklegged ticks and associated incidents of Lyme disease (Rand et al. 2003, Stafford",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204984238215,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:84",
+      "locator": {
+        "page": 4,
+        "x0": 307.5586,
+        "y0": 517.371,
+        "x1": 330.8013,
+        "y1": 522.3125
+      },
+      "text": "2007)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:70",
+      "locator": {
+        "page": 4,
+        "x0": 187.9373,
+        "y0": 529.1813,
+        "x1": 287.7118,
+        "y1": 537.7891
+      },
+      "text": "From 2003 through 2010, hunters averaged 86.0 deer/year (SE \u00bc 5.4) with no trend (Fig. 1). Deer\u2013vehicle collisions decreased annually, but averaged 96.0/year (SE \u00bc 9.4). Sharpshooting harvests were fairly consistent after 2003 and averaged 154.0 deer/year (SE \u00bc 21.4). In 2011, sharpshoot- ing the did hunters not that occur these programs. Thank you to the numerous anonymous because LITERATURE CITED hunters said that they would edge effects in northern Wisconsin. Conservation Biology 2:348\u2013358. increase effort in an attempt to reduce the herd. Two-hundred forty deer were reported removed, 171 via archery and 69 via DVC in 2011. In winter 2002, the aerial survey revealed that there were an estimated 16 deer/km 2, and the distance sampling estimate An evaluation of deer management options. Northeast in pdf_\ufb01les/game/deeroptions.pdf. Accessed 29 Feb 2012. 2011 2 was approximately Resolution 17 deer/km 2 (SE \u00bc 3.0).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151974829579,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:71",
+      "locator": {
+        "page": 4,
+        "x0": 46.7723,
+        "y0": 552.7807,
+        "x1": 130.235,
+        "y1": 557.8019
+      },
+      "text": "Bernards Township",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7068978498536029,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:72",
+      "locator": {
+        "page": 4,
+        "x0": 46.7713,
+        "y0": 565.2191,
+        "x1": 287.698,
+        "y1": 629.9154
+      },
+      "text": "The of deer Bernards #090335. population http:// estimate Documents/090335d.pdf. Accessed 5 Sep 2011. at L. K. Halls, editor. White-tailed deer ecology and Bernards Final was report. about 2009\u20132010 34 deer/ km 2 after 1 year of limited coordinated hunting in 2002. The removal of a reported 7,166 deer, including DVCs, reduced estimated density to about 18 deer/km 2 in 2011. Over the course of the program, annual DVCs were reduced by about 50%, from 275 in 2008 to 128 in 2010 (Fig. 2).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999447698546871,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:83",
+      "locator": {
+        "page": 4,
+        "x0": 307.5604,
+        "y0": 577.1816,
+        "x1": 548.5974,
+        "y1": 617.9526
+      },
+      "text": "2007) and maintenance of forest regeneration and biodiver- sity (Anderson 1984, Tilghmann 1989, deCalesta 1994, deCalesta and Stout 1997). Despite extended hunting sea- sons (up to 5 months), permitted use of bait, and no harvest limits, it appears that 17\u201318 deer/km 2 is within the range of diminishing deer management returns by for state wildlife-conservation deer agencies. reduction Wildlife in Society some VerCauteren, K. C., C. W. Anderson, T. R. Van Deelen, D. Drake, W. D. suburban mercial harvest to manage overabundant white-tailed deer: an idea to areas using traditional hunting. Once this density was achieved, there were fewer shot opportunities, deer likely became edu- cated and retreated to non-hunted refugia (Williams et al.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251645839835,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:85",
+      "locator": {
+        "page": 4,
+        "x0": 307.5604,
+        "y0": 624.9732,
+        "x1": 548.5287,
+        "y1": 629.9147
+      },
+      "text": "2008), or hunters may have lost interest. This appeared to",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911124562422,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:86",
+      "locator": {
+        "page": 4,
+        "x0": 307.5604,
+        "y0": 624.9732,
+        "x1": 330.6556,
+        "y1": 629.9147
+      },
+      "text": "2008)",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:89",
+      "locator": {
+        "page": 4,
+        "x0": 46.7716,
+        "y0": 647.328,
+        "x1": 74.4824,
+        "y1": 651.345
+      },
+      "text": "Table 2.",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:90",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 672.2732,
+        "x1": 542.0526,
+        "y1": 676.2902
+      },
+      "text": "Year Archery Shotgun ND Sharpshoot DVCs",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999504429430085,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:92",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 686.1126,
+        "x1": 535.4389,
+        "y1": 690.0659
+      },
+      "text": "2006\u20132007 N/A N/A N/A N/A 43",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997046208325198,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:93",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 686.1126,
+        "x1": 81.1304,
+        "y1": 690.0659
+      },
+      "text": "2006\u201320",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:94",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 695.5812,
+        "x1": 535.439,
+        "y1": 699.5344
+      },
+      "text": "2007\u20132008 510 37 21 38 15",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:95",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 695.5812,
+        "x1": 81.1304,
+        "y1": 699.5344
+      },
+      "text": "2007\u201320",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:96",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 705.0498,
+        "x1": 533.4958,
+        "y1": 709.0031
+      },
+      "text": "2008\u20132009 318 24 \u2014 55 8",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:97",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 705.0498,
+        "x1": 81.1304,
+        "y1": 709.0031
+      },
+      "text": "2008\u201320",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:98",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 714.5184,
+        "x1": 538.9714,
+        "y1": 718.4716
+      },
+      "text": "2009\u20132010 \u2014 \u2014 293 95 N/A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998836693499518,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:99",
+      "locator": {
+        "page": 4,
+        "x0": 53.2347,
+        "y0": 714.5184,
+        "x1": 81.1304,
+        "y1": 718.4716
+      },
+      "text": "2009\u201320",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:100",
+      "locator": {
+        "page": 4,
+        "x0": 52.7246,
+        "y0": 735.7781,
+        "x1": 296.8144,
+        "y1": 739.7313
+      },
+      "text": "ND, not differentiated between archery and shotgun; N/A, not attempted.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995701110006434,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:104",
+      "locator": {
+        "page": 5,
+        "x0": 46.7716,
+        "y0": 189.816,
+        "x1": 76.9763,
+        "y1": 193.833
+      },
+      "text": "Figure 3.",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:113",
+      "locator": {
+        "page": 5,
+        "x0": 307.559,
+        "y0": 199.284,
+        "x1": 548.4957,
+        "y1": 203.301
+      },
+      "text": "Figure 5. Scatter plot of pooled white-tailed deer (Odocoileus virginianus)",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:108",
+      "locator": {
+        "page": 5,
+        "x0": 46.7716,
+        "y0": 233.9625,
+        "x1": 287.8098,
+        "y1": 298.6587
+      },
+      "text": "occur around value Year 3 and of deer management efforts. After Year 3, hours/harvest increased to a point at which hunters main- tained enough interest to keep the population stable, but further reduction was not achieved. This was likely the result of a majority of hunters dropping out of the program, while the more dedicated and ef\ufb01cient participants remained.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999991060369792,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:117",
+      "locator": {
+        "page": 5,
+        "x0": 307.5576,
+        "y0": 293.7173,
+        "x1": 548.503,
+        "y1": 478.0343
+      },
+      "text": "Recently, some managing agencies have witnessed the limitations in the ability of traditional hunting to signi\ufb01- cantly reduce deer densities. Agency sharpshooters in Wisconsin, USA, were 9\u201317 times more effective at remov- ing deer infected with chronic wasting disease than were hunters, despite \ufb01nancial incentives for hunter-harvested deer that tested positive and a state-funded food pantry program for donating harvested deer that tested negative (Langenberg et al. 2009). Six years of extended hunting seasons (Sep\u2013Mar) with no bag limits resulted in little cumulative change in deer density in chronic wasting dis- ease\u2013affected areas in Wisconsin (Samuel et al. 2009). Additionally, resistance by deer hunters themselves eroded this chronic wasting disease management strategy, and sur- veillance data suggested increased prevalence of chronic wasting disease during this time (Samuel et al. 2009).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999885213400374,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:109",
+      "locator": {
+        "page": 5,
+        "x0": 46.7716,
+        "y0": 449.1677,
+        "x1": 287.8087,
+        "y1": 537.788
+      },
+      "text": "Historically, controlled hunting with \ufb01rearms was effective at signi\ufb01cantly reducing deer populations (Deblinger et al. 1995). Controlled hunting was highly effective to and ef\ufb01cient reduce at reducing deer populations on large open spaces in Massachusetts, USA (McDonald et al. 2007). This is likely the case for populations of white-tailed deer that are affected by severe winter weather, where deer managers at state wildlife agencies attempt to regulate deer abundance by carefully allotting permits for antlerless deer to hunters (Diefenbach and Shea 2011). In Connecticut, USA, local densities in a private community were reduced by 92% in 6 days using a shotgun\u2013archery deer hunt, but that population initially con- sisted we of <30 the animals hunters (Kilpatrick that et these programs. Thank you to the numerous anonymous al. LITERATURE CITED 2002). edge effects in northern Wisconsin. Conservation Biology 2:348\u2013358. Firearms-hunt- ing was successful in reducing the deer herd at the George Reserve in Michigan, USA (McCullough 1984) and on a National Wildlife Refuge in Illinois, USA (Roseberry et al. 1969). Such controlled hunts can be successful with diligent oversight by managing agencies, near complete access by hunters, and primary use of \ufb01rearms; conditions that rarely exist in most suburban environments.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999741330305191,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:118",
+      "locator": {
+        "page": 5,
+        "x0": 307.5576,
+        "y0": 495.7468,
+        "x1": 499.3594,
+        "y1": 500.768
+      },
+      "text": "Limitations in the Organized Use of Hunters",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.6210964050148887,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:80"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:119",
+      "locator": {
+        "page": 5,
+        "x0": 307.5576,
+        "y0": 520.4301,
+        "x1": 548.4681,
+        "y1": 537.2779
+      },
+      "text": "Homeowner communities and municipalities often use pub- lic archery hunt (DeNicola et al. 1997). Participating archers health threats (e.g., properties in 2008 and 2009, and 8 public and 5 private DVCs portunity to obtain access and hunt any private property and animal-control of\ufb01cer was responsible for oversight of pro- tick-associated diseases) were reduced with sharpshooting after the hunting seasons to justify lethal deer-management programs to reduce over-",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122449694063,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:106",
+      "locator": {
+        "page": 5,
+        "x0": 46.7716,
+        "y0": 699.1453,
+        "x1": 287.7802,
+        "y1": 741.0335
+      },
+      "text": "Figure 4. Scatter plot of white-tailed deer (Odocoileus virginianus) density and the number of years of hunting for Princeton Township, Bernards Township, and Duke Farms, New Jersey, USA; and Upper Makefield, Pennsylvania, USA. \u2018\u2018Years of hunting\u2019\u2019 indicates duration of the program with year 0 representing the pre-hunt population estimate.",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:107",
+      "locator": {
+        "page": 5,
+        "x0": 46.7716,
+        "y0": 699.1453,
+        "x1": 77.6003,
+        "y1": 703.1623
+      },
+      "text": "Figure 4.",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:115",
+      "locator": {
+        "page": 5,
+        "x0": 307.559,
+        "y0": 699.1453,
+        "x1": 548.57,
+        "y1": 741.0335
+      },
+      "text": "Figure 6. Scatter plot of pooled white-tailed deer (Odocoileus virginianus) density and the number of years of hunting for Princeton Township, Bernards Township, and Duke Farms, New Jersey, USA; and Upper Makefield, Pennsylvania, USA, from 3 to 11 \u2018\u2018Years of hunting.\u2019\u2019 Trend-line represents the least-squares estimate of linear relationship.",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:116",
+      "locator": {
+        "page": 5,
+        "x0": 307.559,
+        "y0": 699.1453,
+        "x1": 548.4957,
+        "y1": 703.1623
+      },
+      "text": "Figure 6. Scatter plot of pooled white-tailed deer (Odocoileus virginianus)",
+      "type": "Caption",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:125",
+      "locator": {
+        "page": 6,
+        "x0": 307.5577,
+        "y0": 102.4373,
+        "x1": 548.5112,
+        "y1": 179.1514
+      },
+      "text": "avoid negatively conditioning deer should increase harvest, but management of hunters\u2019 actions and locations. unconventional and sharpshooting and live-capture with euthanasia after the incentives had access to 4 public properties in 2006 and 2007, 5 public may properties in 2010. Non-participating hunters had the op- also during all regulated hunting seasons in Princeton. The local need \ufb01ciency testing and daily hunter activities. Deer densities to from 2001 to 2009. In 2010\u20132011, Princeton only permitted be Bernards Township hired a small group of shotgun hunters considered to retrain dedicated hunters. These incentives might include 1) making legal exceptions to typical hunting regulations to allow of 39 hunters using archery, shotguns, and muzzleloaders practices through 2010\u20132011. Local law-enforcement department such ing and daily hunter activities. Harvest data were not dif- asorganizers estimated half of all deer were taken with archerynight-hunting Advisory Committee, personal communication). from 3elevated L. positions using silent weapons and arti\ufb01cial illumination or light- gathering sights, 2) community assistance with carcass re- trieval and delivery to the processor, 3) the community or landowner paying for carcass processing, or 4) partial reim- bursement for hunter expenses (e.g., US$50/deer for fuel, hunting equipment, etc.).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9959302715283691,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:120",
+      "locator": {
+        "page": 6,
+        "x0": 46.7714,
+        "y0": 174.2077,
+        "x1": 287.7159,
+        "y1": 334.5429
+      },
+      "text": "abundant deer populations (DeNicola et al. 2000, Stafford 2007, DeNicola and Williams 2008, Magnarelli et al. 2010). In such circumstances, hunting is the tool most often rec- ommended by state wildlife agencies due largely to its mini- mal \ufb01nancial cost to stakeholders (Kilpatrick and LaBonte 2007, Anonymous 2008). However, we found that hunting in its present form is limited in its potential to reduce deer densities to levels desired by local communities (e.g., 10 deer/km 2 in the case of Bernards and Princeton) for the following reasons: 1) there were community members that recognize would not allow hunting the on value their and properties, resulting in only a portion of the local community accessible for hunting; 2) some hunters may desire greater densities for recreational interests and willing participation compared with objective levels set by community landowners (Anonymous 2010); 3) even with pre-hunt estimates of deer densities derived using sound methodology, landowners and hunters alike may not comprehend the number of deer that need to be harvested to achieve and sustain signi\ufb01cant population reductions; and 4) hunters did not always take suitable precautions to prevent educating other deer to their presence, which is imperative for deer population-reduction efforts, particularly at high initial densities (Kilpatrick and Lima 1999, Williams et al. 2008).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964066960863405,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:126",
+      "locator": {
+        "page": 6,
+        "x0": 307.5577,
+        "y0": 305.6814,
+        "x1": 548.4792,
+        "y1": 346.5091
+      },
+      "text": "One untraditional potential incentive, in modern North America at least, would be permitting the sale of deer killed beyond the needs of the hunters and other willing recipients. In Initial (pre-2004) population estimates exceeded 80 deer/ the 2 instance archery, and limited sharpshooting (Fig. 3), the population of 2 overabundant number of deer harvested during staff-coordinated dispersal deer, counts, it the might resulting be estimated necessary density to provide this incentive to (Acari: Ixodidae). Journal of Medical Entomology achieve Riley, S. J., D. J. Decker, J. W. Enck, P. D. Curtis, T. B. Lauber, and T. L. densities in balance with the general public and natural ecosystems (VerCauteren et al. 2011). This goal-driven, carefully monitored harvest should bear little resemblance to the poorly regulated market-hunt- ing of the late nineteenth century. Also, the traditional model of providing hunter education, which primarily fo- cuses on nsafety, 15,does not seem adequate to teach hunters how to more effectively harvest deer in overabundant suburban environments to meet density goals often set by local com- munities and landowners.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99919592331807,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:121",
+      "locator": {
+        "page": 6,
+        "x0": 46.7714,
+        "y0": 341.5635,
+        "x1": 287.7259,
+        "y1": 501.903
+      },
+      "text": "The 3 suburban case studies (Bernards, Princeton, Upper Make\ufb01eld) are good examples of concerted attempts to reduce deer densities. Though concerted, these efforts were limited in that 1) hunter density was only 1/1.2 km 2 in Bernards; 2) only 92 properties ( 10%) of the 51.8-km 2 Upper Make\ufb01eld were available to hunters; and 3) approxi- mately 20% of Princeton was actively hunted. Though such hunter density might seem low for traditional hunting, it is appropriate when baiting to avoid effects of bait-site overlap (i.e., allowing deer access to multiple bait sites, thus reducing effectiveness of baiting). Unmanaged hunter activity oc- curred in all 3 locations, because there were no local restric- tions on hunting. The scope of hunter access outside the structured programs was unknown.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984988802140414,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:127",
+      "locator": {
+        "page": 6,
+        "x0": 307.5577,
+        "y0": 353.5298,
+        "x1": 548.4873,
+        "y1": 525.8266
+      },
+      "text": "Many states have adopted harvest policies that are incon- sistent; that is, they continue to acknowledge that urban and suburban deer populations are increasing, but nevertheless believe that their management efforts are working (Urbanek et al. 2011). Our experience is that suburban deer-manage- ment programs need to be administered and monitored rigorously, beyond simple harvest statistics, to determine whether goals are being met. We suggest that alternative, non-traditional methods, in addition to advanced hunter training, be considered if population densities <17 deer/ km 2 within suburban settings are desired. Other tools, such as professional sharpshooting and reproductive control, may possibly have an additive or complimentary effect to hunter harvest through increased mortality and a reduction in recruitment.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993736929220214,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:128",
+      "locator": {
+        "page": 6,
+        "x0": 307.559,
+        "y0": 539.7006,
+        "x1": 502.6878,
+        "y1": 545.726
+      },
+      "text": "MANAGEMENT IMPLICATIONS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.946470774245731,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:79",
+        "c3-0252:118"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:129",
+      "locator": {
+        "page": 6,
+        "x0": 307.559,
+        "y0": 556.7715,
+        "x1": 548.5154,
+        "y1": 741.0328
+      },
+      "text": "Managing of immunocontraception on a suburban population of white-tailed deer, state . Biological Conservation 116:243\u2013250. agencies experience with chronic wasting disease management: lessons learned. should play Symposium, 22\u201324 July 2009, Park City, Utah, USA. http://www.cwd- an Snyder, D., and B. Allen. 2011. Deer management program in Bernards active Report.pdf. Accessed 12 Aug 2011. role Ixodes scapularis in Ixodidae) with exclusion of deer by electric fencing. Journal of Medical guiding members of the public and municipalities toward speci\ufb01c techniques, as described above, that will achieve deer density objectives rather than simply advocating for hunting in the name of deer management. State agencies should provide outreach information regarding what is required to manage hunters in a way that will result in meaningful population reductions. This effort could be facilitated by professional organizations, such as The Wildlife Society, by establishing an overabundant deer position statement, which would ad- vise best management practices for state agencies and mu- nicipalities alike to achieve the dif\ufb01cult long-term goal of maintaining suburban deer densities at <10 deer/km 2. As management objectives for deer become more impact-ori- ented, state agencies will need greater resources to track public opinions about deer and their impacts on humans",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9959305581806113,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:122",
+      "locator": {
+        "page": 6,
+        "x0": 46.7716,
+        "y0": 604.5646,
+        "x1": 287.6812,
+        "y1": 645.3923
+      },
+      "text": "Hunting was more successful in reducing densities at Duke Farms apparently because it was a smaller, non-residential area where hunters had full access, and refugia were actively eliminated by actions of non-hunting coordinators. Alternatively, when deer are hunted within only a portion of a residential community or municipality, there can be too many non-hunted refugia available, thus making reductions to studies. Wildlife Society Bulletin 29:1294\u20131297. objective Conservation Reporter 10:1\u201311. levels, New Jersey, Resolution. http://www.njlm.org/PDF/Animals/Deer%20 with Anonymous. 2008. traditional Deer Technical Committee. http://www.ct.gov/dep/lib/dep/wildlife/ hunting Anonymous. only, 2009. dif\ufb01cult 18 deer/km and unlikely. the Even when Township hunters of had complete access Bernards #090335. to http:// the Documents/090335d.pdf. Accessed 5 Sep 2011. 800- ha Duke Farms and used intensive effort, deer retreated to neighboring suburbia, resulting in population reduction to about 12 deer/km 2.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993736992201054,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:123",
+      "locator": {
+        "page": 6,
+        "x0": 46.7717,
+        "y0": 663.5578,
+        "x1": 273.7178,
+        "y1": 680.541
+      },
+      "text": "An Enhanced Approach to Using Hunters to Manage Suburban Deer",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5926910685453681,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:124",
+      "locator": {
+        "page": 6,
+        "x0": 46.7717,
+        "y0": 688.2421,
+        "x1": 287.6853,
+        "y1": 741.032
+      },
+      "text": "We believe that regulated hunting, with some modi\ufb01cations, can be used to successfully further reduce deer densities. Often, a few skilled hunters with the interests of landowners in mind, can be more effective than many untrained hunters focused on recreation. Educating hunters regarding how to",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994472501118198,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:153",
+      "locator": {
+        "page": 7,
+        "x0": 314.0228,
+        "y0": 53.134,
+        "x1": 548.5604,
+        "y1": 76.022
+      },
+      "text": "247\u2013255 in T. J. Kreeger, editor. Contraception in wildlife management. U.S. Department of Agriculture, Animal Damage and Health Inspection Service, Technical Bulletin 1853, Washington, DC, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122212534223,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:130",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 54.6425,
+        "x1": 287.7261,
+        "y1": 179.1501
+      },
+      "text": "and to manage both public perception and long-term densi- ties of deer. If suggested actions are heeded, we believe that hunters can help depress deer densities closer to community- desired densities, while also maintaining hunting as the preferred and primary deer-management technique. If hunt- ers cannot, or will not, meet the density objectives of the general public, then hunting alone is not a solution to the management of overabundant deer. Ultimately, we suggest alternative methods for lethal removal of deer be considered to augment legal hunting programs where further reductions of deer are warranted.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546029688671,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:154",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 82.0467,
+        "x1": 548.5491,
+        "y1": 133.2814
+      },
+      "text": "Deblinger, R. D., D. W. Rimmer, J. J. Vaske, and G. Vecellio. 1995. Ef\ufb01ciency of controlled, limited hunting at the Crane Reservation, Ipswich, Massachusetts. Pages 82\u201386 in J. B. McAninch, editor. Urban deer: a manageable resource? Proceedings of the Symposium of the 55th Midwest Fish and Wildlife Conference. North Central Section of The Wildlife Society, 12\u201314 December 1993, St. Louis, Missouri, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388321270033,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:155",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 139.3061,
+        "x1": 548.5246,
+        "y1": 162.1948
+      },
+      "text": "deCalesta, D. S. 1994. Effect of white-tailed deer on songbirds within managed forests in Pennsylvania. Journal of Wildlife Management 58:711\u2013718.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415893627448,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:156",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 168.2195,
+        "x1": 548.5652,
+        "y1": 191.1075
+      },
+      "text": "deCalesta, D. S., and S. L. Stout. 1997. Relative deer density and sustain- ability: a conceptual framework for integrating deer management with ecosystem management. Wildlife Society Bulletin 25:252\u2013258.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485608123941,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:131",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 196.5956,
+        "x1": 188.0343,
+        "y1": 202.621
+      },
+      "text": "ACKNOWLEDGMENTS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9523200800693392,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:157",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 197.0764,
+        "x1": 548.5818,
+        "y1": 219.9644
+      },
+      "text": "DeNicola, A. J., D. R. Etter, and T. Almendinger. 2008. Demographics of non-hunted white-tailed deer populations in suburban areas. Human\u2013 Wildlife Con\ufb02icts 2:102\u2013109.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039048695018,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:128"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:158",
+      "locator": {
+        "page": 7,
+        "x0": 314.0227,
+        "y0": 235.4568,
+        "x1": 548.5372,
+        "y1": 267.8126
+      },
+      "text": "DeNicola, A. J., K. C. VerCauteren, P. D. Curtis, and S. E. Hygnstrom. 2000. Managing white-tailed n deer in suburban 1969. environments\u2014a technical guide. Cornell Cooperative Extension, the Wildlife Society-Wildlife Damage Management Working Group, and the Northeast Wildlife Damage Research and Outreach Cooperative. Ithaca, New York, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996647106116135,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:131"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:132",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 249.8368,
+        "x1": 287.6972,
+        "y1": 290.6078
+      },
+      "text": "We thank all the municipal of\ufb01cials who had the insight to recognize THOM ALMENDINGER, the JODY MADDOCK, value ABSTRACT and Odocoileus virginianus need decades. Regulated hunting has been effective at meeting management objectives in rural areas, but typical for New organized Jersey, hunting USA, to from reduce local deer densities and for providing the necessary data to complete the extended Community-Based Deer Management Permit program. this (SE analysis. 5.4) with no trend (Fig. 1). Deer\u2013vehicle collisions In \u00bc addition, Sharpshooting harvests were fairly consistent after 2003 and we and incompatible with other societal interests. Deer\u2013vehicle collisions, tick-associated diseases, and damage praise often the with objectives hunters of that sel\ufb02essly put the public interest ahead of their own during these programs. Thank you to the numerous anonymous reviewers that helped to shape this paper.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990891238374948,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:131"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:159",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 273.7815,
+        "x1": 548.5221,
+        "y1": 296.6695
+      },
+      "text": "DeNicola, A. J., S. J. Weber, C. A. Bridges, and J. L. Stokes. 1997. Nontraditional techniques for management of overabundant deer popu- lations. Wildlife Society Bulletin 25:496\u2013499.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766174075479,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:131"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:160",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 302.6942,
+        "x1": 548.5523,
+        "y1": 325.583
+      },
+      "text": "DeNicola, A. J., and S. C. Williams. 2008. Sharpshooting suburban white- tailed deer reduces deer\u2013vehicle collisions. Human\u2013Wildlife Con\ufb02icts 2:28\u201333.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251601940066,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:131"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:133",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 304.4816,
+        "x1": 173.6774,
+        "y1": 310.507
+      },
+      "text": "LITERATURE CITED",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.962601245779458,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:131"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0252:134",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 320.6138,
+        "x1": 287.7388,
+        "y1": 344.0127
+      },
+      "text": "Alverson, W. S., D. M. Waller, and S. L. Solheim. 1988. Forests too deer: edge effects in northern Wisconsin. Conservation Biology 2:348\u2013358. Anderson, D. R. 2001. The need to get the basics right in wildlife \ufb01eld",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995121975497915,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:161",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 331.6077,
+        "x1": 548.5357,
+        "y1": 363.907
+      },
+      "text": "Diefenbach, D. R., and S. M. Shea. 2011. Managing white-tailed deer: eastern North America. Pages 481\u2013500 in D. G. Hewitt, editor. Biology and management of white-tailed deer. CRC Press, Boca Raton, Florida, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766147866793,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:135",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 349.5273,
+        "x1": 287.7889,
+        "y1": 372.9254
+      },
+      "text": "studies. Wildlife Society Bulletin 29:1294\u20131297. Anderson, J. P., Jr. 1984. Deer damage in Connecticut. The Connecticut Conservation Reporter 10:1\u201311.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415759419961,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:162",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 369.9316,
+        "x1": 548.514,
+        "y1": 392.8205
+      },
+      "text": "Doerr, M. L., J. B. McAninch, and E. P. Wiggers. 2001. Comparison of 4 methods to reduce white-tailed deer abundance in an urban community. Wildlife Society Bulletin 29:1105\u20131113.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695186152133,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:136",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 378.8943,
+        "x1": 287.7658,
+        "y1": 401.7823
+      },
+      "text": "Anonymous. 1998. Township of Princeton, County of Mercer, State of New Jersey, Resolution. http://www.njlm.org/PDF/Animals/Deer%20 PRINCETON%20TWP.pdf. Accessed 8 Jul 2011.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646757669295,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:138",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 407.807,
+        "x1": 287.773,
+        "y1": 430.6958
+      },
+      "text": "Anonymous. 2008. An evaluation of deer management options. Northeast Deer Technical Committee. http://www.ct.gov/dep/lib/dep/wildlife/ pdf_\ufb01les/game/deeroptions.pdf. Accessed 29 Feb 2012.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766111855094,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:139",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 407.807,
+        "x1": 108.186,
+        "y1": 411.7602
+      },
+      "text": "Anonymous. 2008.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9982997310723976,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:163",
+      "locator": {
+        "page": 7,
+        "x0": 314.0227,
+        "y0": 408.313,
+        "x1": 548.518,
+        "y1": 421.7332
+      },
+      "text": "Drake, D., C. Aquila, and G. Huntington. 2005. Counting a suburban deer population prevention of tick-associated diseases. The Connecticut Agricultural using Stafford, K. C., III, A. J. DeNicola, and H. J. Kilpatrick. 2003. Reduced forward-looking Ixodes scapularis infrared Ixodiphagus hookeri radar tailed deer. Journal of Medical Entomology 40:642\u2013652. and 60 deer clusters road and survival of white-tailed deer in an exurban landscape. Journal of counts. Stradtmann, M. L., J. B. McAninch, E. P. Wiggers, Wildlife Society Bulletin 33:656\u2013661.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992905718105047,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:164",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 427.7021,
+        "x1": 548.5771,
+        "y1": 469.5257
+      },
+      "text": "Drummond, F. 1995. Lethal and non-lethal deer management at Ryerson Conservation Area, northeastern Illinois. Pages 105\u2013109 in J. B. McAninch, editor. Urban deer: a manageable resource? Proceedings of the 1993 Symposium of the North Central Section, The Wildlife Society, 12\u201314 December 1993, St. Louis, Missouri, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415757703647,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:140",
+      "locator": {
+        "page": 7,
+        "x0": 53.2346,
+        "y0": 436.7205,
+        "x1": 287.6981,
+        "y1": 459.5527
+      },
+      "text": "Anonymous. 2 2009. Resolution 18 deer/km of at the each Township location. of These Bernards #090335. projects http:// www.bernards.org/Deer%20Management%20Advisory%20Committee/ Documents/090335d.pdf. Accessed 5 Sep 2011.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999738832576938,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:141",
+      "locator": {
+        "page": 7,
+        "x0": 88.8933,
+        "y0": 436.7205,
+        "x1": 106.533,
+        "y1": 440.6737
+      },
+      "text": "Anonymous. 2 2009.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990890987547081,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:143",
+      "locator": {
+        "page": 7,
+        "x0": 88.6104,
+        "y0": 465.5774,
+        "x1": 106.2102,
+        "y1": 469.5306
+      },
+      "text": "Anonymous. L. K. Halls, editor. White-tailed deer ecology and 2010.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991961879756379,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:165",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 475.5504,
+        "x1": 548.5382,
+        "y1": 498.4384
+      },
+      "text": "Etter, D. E., T. R. Van Deelen, D. R. Ludwig, S. N. Kobal, and R. E. Warner. 2000. Management of white-tailed deer in Chicago, Illinois, forest preserves. Vertebrate Pest Conference 19:190\u2013196.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039014827453,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:142",
+      "locator": {
+        "page": 7,
+        "x0": 53.2346,
+        "y0": 484.5122,
+        "x1": 287.7308,
+        "y1": 497.9333
+      },
+      "text": "Anonymous. L. K. Halls, editor. White-tailed deer ecology and 2010. Final a report. reduction in 2009\u20132010 local Community-based deer deer densities manage- ment plan. http://www.bernards.org/Deer%20Management%20Advisory% 20Committee/Documents/Final%20Report%202009-2010.pdf. Princeton used select archers on public and private lands Accessed archery hunt (DeNicola et al. 1997). Participating archers 1 Nov 2011.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995123319111265,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:144",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 503.9579,
+        "x1": 287.7761,
+        "y1": 526.8459
+      },
+      "text": "Anonymous. 2011. New Jersey \ufb01sh and wildlife digest. New Jersey Division of Fish and Wildlife. www.state.nj.us/dep/fgw/njregs.htm. Accessed 1 Mar 2012.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388386068254,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:145",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 503.9579,
+        "x1": 107.6193,
+        "y1": 507.9112
+      },
+      "text": "Anonymous. 2011.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998968080690628,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:166",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 504.4631,
+        "x1": 548.5915,
+        "y1": 527.2953
+      },
+      "text": "Etter, D. R., T. R. Van Deelen, D. R. Ludwig, S. N. Kobal, and R. E. Warner. 2002. Survival and movements of white-tailed deer in suburban Chicago, Illinois. Journal of Wildlife Management 66:500\u2013510.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251572193854,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:146",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 532.8148,
+        "x1": 287.7642,
+        "y1": 555.7029
+      },
+      "text": "Beringer, J., L. P. Hansen, and O. Sexton. 1998. Detection rates of white- tailed deer with a helicopter over snow. Wildlife Society Bulletin 26: 24\u201328.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695109233977,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:167",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 533.32,
+        "x1": 548.558,
+        "y1": 546.741
+      },
+      "text": "Frankland, F., and T. Nelson. 2003. Impacts of white-tailed deer on spring wild\ufb02owers in Illinois, USA. Natural Areas Journal 23:341\u2013348.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965866584817,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:168",
+      "locator": {
+        "page": 7,
+        "x0": 314.0228,
+        "y0": 552.7657,
+        "x1": 548.5485,
+        "y1": 575.6537
+      },
+      "text": "Hansen, deer management L. by P., state wildlife-conservation and agencies. J. Wildlife Beringer. Society 1997. VerCauteren, K. C., C. W. Anderson, T. R. Van Deelen, D. Drake, W. D. Managed mercial harvest to manage overabundant white-tailed deer: an idea to hunts using traditional hunting. Once this density was achieved, to cated and retreated to non-hunted refugia (Williams et al. control , or hunters may have lost interest. This appeared to white-tailed deer populations on urban public areas in Missouri. Wildlife Society Bulletin 25:484\u2013487.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984993356465056,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:147",
+      "locator": {
+        "page": 7,
+        "x0": 53.2346,
+        "y0": 571.1953,
+        "x1": 287.7507,
+        "y1": 594.0834
+      },
+      "text": "Brown, T. L., D. J. Decker, S. J. Riley, J. W. Enck, T. B. Lauber, P. D. Curtis, in 2002, but results were limited and expensive and, there- and Concurrently, a group of 15 archers were used to kill G. of 39 hunters using archery, shotguns, and muzzleloaders F. through 2010\u20132011. Local law-enforcement department Mattfeld. ing and daily hunter activities. Harvest data were not dif- 2000. organizers estimated half of all deer were taken with archery The Advisory Committee, personal communication). future 3 of L. hunting using silent weapons and arti\ufb01cial illumination or light- as removed, including DVCs. Distance sampling efforts estimat- a 2 mechanism \u00bc to control white-tailed deer populations. Wildlife Society Bulletin 28: 797\u2013807.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992904585972027,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:169",
+      "locator": {
+        "page": 7,
+        "x0": 314.0228,
+        "y0": 581.6226,
+        "x1": 548.5549,
+        "y1": 623.4463
+      },
+      "text": "Haskell, sharpshooting, and deer\u2013vehicle collision (DVCs) totals for 2006\u20132010. S. 2006\u201320 P., 2007\u201320 D. 2008\u201320 A. 2009\u201320 Butler, peatedly sought and received a Community-Based Deer W. Environmental Protection that extended the hunting season B. coordinated deer-management efforts occurred throughout Ballard, 2 M. the 4.5-month autumn\u2013winter archery-hunting seasons J. Upper Make\ufb01eld Township (Upper Make\ufb01eld), Butler, 8 M. 74.924167 C. ) was a sub- Wallace, population of 8,190 during the 2010 Census. Because of and M. H. Humphrey. 2009. Deer density estimation in west-central Texas: old versus new ground techniques with mark\u2013resight as a comparative baseline. Western States and Provinces Deer and Elk Workshop Proceedings 7:30\u201347.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975294094442019,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:148",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 600.108,
+        "x1": 287.7834,
+        "y1": 622.9403
+      },
+      "text": "Buckland, S. T., D. R. Anderson, K. P. Burnham, and J. L. Laake. 1993. Distance sampling: estimating abundance of biological populations. Chapman and Hall, New York, New York, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965930332086,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:149",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 628.965,
+        "x1": 287.7722,
+        "y1": 661.3216
+      },
+      "text": "Carson, W. P., J. A. Banta, A. A. Royo, and C. Kirschbaum. 2005. Plant communities growing on boulders in the Allegheny National Forest: evidence for boulders as refugia from deer and as a bioassay of over- browsing. Natural Areas Journal 25:10\u201318.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417117830073,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:170",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 629.4709,
+        "x1": 548.5365,
+        "y1": 652.359
+      },
+      "text": "Horsley, S. B., S. L. Stout, and D. S. deCalesta. 2003. White-tailed deer impact on the vegetation dynamics of a northern hardwood forest. Ecological Applications 13:98\u2013118.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999620104010892,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:171",
+      "locator": {
+        "page": 7,
+        "x0": 307.5597,
+        "y0": 658.3836,
+        "x1": 548.5508,
+        "y1": 681.2725
+      },
+      "text": "Hygnstrom, S. E., and K. C. VerCauteren. 1999. Ecology of white-tailed deer in the Gifford Point\u2013Fontenelle Forest area, Nebraska. Final report. University of Nebraska, Lincoln, Nebraska, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694905417171,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:150",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 667.3463,
+        "x1": 287.7164,
+        "y1": 680.7665
+      },
+      "text": "Conover, M. R. 2002. Resolving human\u2013wildlife con\ufb02icts: the science of wildlife damage management. Lewis, Boca Raton, Florida, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601915462983,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:151",
+      "locator": {
+        "page": 7,
+        "x0": 46.7716,
+        "y0": 686.7354,
+        "x1": 287.7745,
+        "y1": 719.092
+      },
+      "text": "Conover, M. R., W. C. Pitt, K. K. Kessler, T. J. DuBow, and W. A. Sanborn. 1995. Review of human injuries, illnesses, and economic losses caused by wildlife in the United States. Wildlife Society Bulletin 23: 407\u2013414.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766127452174,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:172",
+      "locator": {
+        "page": 7,
+        "x0": 314.0227,
+        "y0": 687.2405,
+        "x1": 548.5803,
+        "y1": 738.5328
+      },
+      "text": "Jordan, ly residential communities with property sizes ranging from P. A., R. A. Moen, E. > J. DeGayner, and was limited to properties with written permission, and as a W.Duke Farms was a 1,110-ha tract located in Hillsborough,C. 8 Pitt. 74.634247 1995. ). The property was a Trap-and- shoot and sharpshooting methods for control of urban deer: the case history of North Oaks, Minnesota. Pages 97\u2013104 in J. B. McAninch, editor. Urban deer: a manageable resource? Proceedings of the 1993 Symposium of the North Central Section, The Wildlife Society, 12\u201314 December 1993, St. Louis, Missouri, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984991340429262,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:152",
+      "locator": {
+        "page": 7,
+        "x0": 224.4983,
+        "y0": 734.5845,
+        "x1": 287.7371,
+        "y1": 738.5377
+      },
+      "text": "Curtis, P. D., D. J. Decker, R. J. Stout, M. E. Richmond, and C. A. Loker. 1997. be Human necessary dimensions to of (Acari: Ixodidae). Journal of Medical Entomology contraception Riley, S. J., D. J. Decker, J. W. Enck, P. D. Curtis, T. B. Lauber, and T. L. in would have been about 18 deer/km wildlife . management. Pages",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996200763867118,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:194",
+      "locator": {
+        "page": 8,
+        "x0": 314.0212,
+        "y0": 53.131,
+        "x1": 548.5714,
+        "y1": 66.552
+      },
+      "text": "of interdependence of deer and hunter populations dynamics on manage- ment. Ecoscience 10:455\u2013461.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995696130032663,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:173",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 53.1368,
+        "x1": 287.773,
+        "y1": 76.0256
+      },
+      "text": "Kilpatrick, H. J., and A. M. LaBonte. 2007. Managing urban deer in Connecticut. Connecticut Department of Environmental Protection. www.ct.gov/dph/lib/dph/urbandeer07.pdf. Accessed 29 Feb 2012.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999623655827203,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:195",
+      "locator": {
+        "page": 8,
+        "x0": 314.0212,
+        "y0": 72.5767,
+        "x1": 548.57,
+        "y1": 95.4647
+      },
+      "text": "Roseberry, Data Analyses T. over time; hunting reduced deer densities ( L., \u00bc D. F C. \u00bc Autry, P W. 0.034, D. \u00bc \u0003 Klimstra, x and 35.04, J. 2 L. 0.30; A. precipitous decline in deer densities at all sites ( Mehrhoff. \u00bc 1969. A controlled deer hunt on Crab Orchard National Wildlife Refuge. Journal of Wildlife Management 33:791\u2013795.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999769531113057,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:174",
+      "locator": {
+        "page": 8,
+        "x0": 53.2346,
+        "y0": 91.5172,
+        "x1": 287.7052,
+        "y1": 104.8817
+      },
+      "text": "Kilpatrick, H. J., A. M. LaBonte, J. S. Barclay, and G. Warner. 2004. Assessing 2007, Anonymous 2008). However, we found that hunting strategies to densities to levels desired by local communities (e.g., improve bowhunting as 2 an urban ACKNOWLEDGMENTS deer management tool. Wildlife Society Bulletin 32:1177\u20131184.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9978183950251458,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:196",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 101.4336,
+        "x1": 548.526,
+        "y1": 124.3215
+      },
+      "text": "Rutberg, A. T., R. E. Naugle, L. A. Thiele, and I. K. M. Liu. 2004. Effects of immunocontraception on a suburban population of white-tailed deer, Odocoileus virginianus. Biological Conservation 116:243\u2013250.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766194385996,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:175",
+      "locator": {
+        "page": 8,
+        "x0": 53.2346,
+        "y0": 120.3741,
+        "x1": 287.8136,
+        "y1": 143.2629
+      },
+      "text": "Kilpatrick, H. the J., A. value M. and LaBonte, need and W. for Reid. 2011. 2010 organized Connecticut hunting deer program summary. from Connecticut local deer densities and for providing the necessary data to Department the extended Community-Based Deer Management Permit program. of Environmental (SE Protection. www.ct.gov/dep/lib/dep/wildlife/pdf_\ufb01les/game/deersum10.pdf. Accessed 1 Mar 2012.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996201106659255,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:197",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 130.3462,
+        "x1": 548.579,
+        "y1": 201.0266
+      },
+      "text": "Samuel, M. D., J. A. Langenberg, and R. E. Rolley. 2009. The Wisconsin experience with chronic wasting disease management: lessons learned. Proceedings of the 3rd International Chronic Wasting Disease Symposium, 22\u201324 July 2009, Park City, Utah, USA. http://www.cwd- info.org/pdf/3rd_CWD_Symposium_utah.pdf. Accessed 2 Mar 2012. Snyder, D., and B. Allen. 2011. Deer management program in Bernards Township. http://www.bernards.org/resolutions/2011/2011-0371 Report.pdf. Accessed 12 Aug 2011.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415930841587,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:176",
+      "locator": {
+        "page": 8,
+        "x0": 53.2346,
+        "y0": 158.7545,
+        "x1": 287.7714,
+        "y1": 172.1755
+      },
+      "text": "Kilpatrick, H. J., A. M. LaBonte, and J. T. Seymour. 2002. A shotgun\u2013 archery deer hunt in Sharpshooting harvests were fairly consistent after 2003 and a residential and incompatible with other societal interests. Deer\u2013vehicle collisions, tick-associated diseases, and damage community: often evaluation with objectives of hunt strategies and effectiveness. Wildlife Society Bulletin 30:478\u2013486.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999841590525789,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:177",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 178.1444,
+        "x1": 287.7729,
+        "y1": 201.0324
+      },
+      "text": "Kilpatrick, H. J., and K. K. Lima. 1999. Effects of archery hunting on movement and activity of female white-tailed deer in an urban landscape. Wildlife Society Bulletin 27:433\u2013440.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999379547199085,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:198",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 207.0513,
+        "x1": 548.5674,
+        "y1": 229.9401
+      },
+      "text": "Stafford, K. C., III. 1993. Reduced abundance of Ixodes scapularis (Acari: Ixodidae) with exclusion of deer by electric fencing. Journal of Medical Entomology 30:986\u2013996.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999516772486186,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:178",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 207.0571,
+        "x1": 287.7617,
+        "y1": 229.9459
+      },
+      "text": "Kilpatrick, H. J., and W. A. Stober. 2002. Effects of temporary bait sites on movements of suburban white-tailed deer. Wildlife Society Bulletin 30:760\u2013766.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999688005250668,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:199",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 235.9648,
+        "x1": 548.527,
+        "y1": 268.2639
+      },
+      "text": "Stafford, K. C., III. 2007. Tick management handbook: an integrated guide for homeowners, pest control operators, and public health of\ufb01cials for the prevention of tick-associated diseases. The Connecticut Agricultural Experiment Station Bulletin 1010, South Windsor, CT, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599390786356,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:179",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 235.9706,
+        "x1": 287.7467,
+        "y1": 258.8585
+      },
+      "text": "Kilpatrick, H. J., and W. D. Walter. 1999. A controlled archery hunt in a residential community: cost, effectiveness, and deer recovery rates. Wildlife Society Bulletin 27:115\u2013123.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999623706103494,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:180",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 264.8266,
+        "x1": 287.761,
+        "y1": 278.2476
+      },
+      "text": "LaGory, K. E. 1986. Habitat, group size, and the behavior of white-tailed deer. Behaviour 98:168\u2013179.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724657689198,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:200",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 274.2886,
+        "x1": 548.5748,
+        "y1": 306.6452
+      },
+      "text": "Stafford, K. C., III, A. J. DeNicola, and H. J. Kilpatrick. 2003. Reduced abundance of Ixodes scapularis (Acari: Ixodidae) and the tick parasitoid Ixodiphagus hookeri (Hymenoptera: Encyrtidae) with reduction of white- tailed deer. Journal of Medical Entomology 40:642\u2013652.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999573558878843,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:181",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 284.2723,
+        "x1": 287.7858,
+        "y1": 326.0959
+      },
+      "text": "Langenberg, J., D. Lopez, and A. Crossley. 2009. Status of chronic wasting disease management in Wisconsin. Proceedings of the 3rd International Chronic Wasting Disease Symposium, 22\u201324 July 2009, Park City, Utah, USA. http://www.cwd-info.org/pdf/3rd_CWD_Symposium_utah.pdf. Accessed 2 Mar 2012.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999962366500804,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:201",
+      "locator": {
+        "page": 8,
+        "x0": 314.0212,
+        "y0": 312.6699,
+        "x1": 548.5222,
+        "y1": 335.558
+      },
+      "text": "Storm, D. J., C. K. Nielsen, E. M. Schauber, and A. Woolf. 60 deer clusters 2007. Space use and survival of white-tailed deer in an exurban landscape. Journal of Wildlife Management 71:1170\u20131176.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911120958247,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:182",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 332.064,
+        "x1": 287.761,
+        "y1": 354.9529
+      },
+      "text": "LaRue, M. A., C. K. Nielsen, and M. D. Grund. 2007. Using distance sampling to estimate densities of white-tailed deer in south-central Minnesota. The Prairie Naturalist 39:57\u201368.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999977173571755,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:202",
+      "locator": {
+        "page": 8,
+        "x0": 314.0212,
+        "y0": 341.526,
+        "x1": 548.5715,
+        "y1": 392.8175
+      },
+      "text": "Stradtmann, M. L., J. B. McAninch, E. P. Wiggers, 1993:139\u2013140). and J. M. Parker. 1995. Police sharpshooting as a method to reduce urban deer populations. Pages 117\u2013122 in J. B. McAninch, editor. Urban deer: a manageable resource? Proceedings of the 1993 Symposium of the North Central Section, The Wildlife Society, 12\u201314 December 1993, St. Louis, Missouri, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911233039902,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:183",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 360.9775,
+        "x1": 287.7619,
+        "y1": 383.8664
+      },
+      "text": "Luedke, D. 2011. U.S. deer\u2013vehicle collisions fall 7 percent. State Farm Insurance Newsroom. http://www.statefarm.com/aboutus/_pressreleases/ 2011/october/3/us-deer-collisions-fall.pdf. Accessed 29 Feb 2012.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999933956391126,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:184",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 389.8902,
+        "x1": 287.7841,
+        "y1": 422.1903
+      },
+      "text": "Maddock, J. D., P. W. Feerrar, S. C. Kremp, and C. J. Winand. 2009. Upper Make\ufb01eld Township 2009 Deer Management Plan Annual Report. Eccologix Biodiversity Consulting Group, LLC., Bedminster, Pennsylvania, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485618205325,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:203",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 398.8422,
+        "x1": 548.5955,
+        "y1": 440.6658
+      },
+      "text": "Thomas, L., J. L. Laake, S. Strindberg, F. F. C. Marques, S. T. Buckland, D. L. Borchers, D. R. Anderson, K. P. Burnham, S. L. Hedley, and J. H. Pollard. 2002. Distance 4.0 Release 2. Research Unit for Wildlife Populations Assessment. University of St. Andrews, St. Andrews, Scotland, United Kingdom.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999203416056306,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:185",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 428.215,
+        "x1": 287.7514,
+        "y1": 460.5716
+      },
+      "text": "Magnarelli, L. A., S. C. Williams, and E. Fikrig. 2010. Seasonal prevalence of serum antibodies to whole cell and recombinant antigens of Borrelia burgdorferi and Anaplasma phagocytophilum in white-tailed deer in Connecticut. Journal of Wildlife Diseases 46:781\u2013790.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339529445652,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:204",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 446.6347,
+        "x1": 548.6116,
+        "y1": 469.5227
+      },
+      "text": "Tilghmann, N. G. 1989. Impacts of white-tailed deer on forest regeneration in northwestern Pennsylvania. Journal of Wildlife Management 53:524\u2013 532.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251660015835,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:186",
+      "locator": {
+        "page": 8,
+        "x0": 46.7716,
+        "y0": 466.5955,
+        "x1": 287.7826,
+        "y1": 489.4843
+      },
+      "text": "McCullough, D. R. 1984. Lessons from the George Reserve, Michigan. Pages 211\u2013242 in L. K. Halls, editor. White-tailed deer ecology and management. Stackpole, Harrisburg, Pennsylvania, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999152010869579,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:205",
+      "locator": {
+        "page": 8,
+        "x0": 314.0212,
+        "y0": 485.0152,
+        "x1": 548.5326,
+        "y1": 498.4362
+      },
+      "text": "Urbanek, R. E., K. R. Allen, and C. K. Nielsen. 2011. Urban and suburban deer management returns by for state wildlife-conservation deer agencies. reduction Wildlife in Society Bulletin 35:310\u2013315.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415907513769,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:187",
+      "locator": {
+        "page": 8,
+        "x0": 46.77,
+        "y0": 495.4524,
+        "x1": 287.7531,
+        "y1": 518.3412
+      },
+      "text": "McDonald, J. E., Jr., D. E. Clark, and W. A. Woytek. 2007. Reduction and maintenance of a white-tail deer herd in central Massachusetts. Journal of Wildlife Management 71:1585\u20131593.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999573545374172,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:206",
+      "locator": {
+        "page": 8,
+        "x0": 307.5582,
+        "y0": 504.4609,
+        "x1": 548.5636,
+        "y1": 536.7601
+      },
+      "text": "VerCauteren, K. C., C. W. Anderson, T. R. Van Deelen, D. Drake, W. D. Walter, S. M. Vantassel, and S. E. Hygnstrom. 2011. Regulated com- mercial harvest to manage overabundant white-tailed deer: an idea to consider? Wildlife Society Bulletin 35:185\u2013194.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417152443806,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:188",
+      "locator": {
+        "page": 8,
+        "x0": 46.77,
+        "y0": 524.3658,
+        "x1": 287.7834,
+        "y1": 547.2539
+      },
+      "text": "McNulty, S. A., W. F. Porter, N. E. Matthews, and J. A. Hill. 1997. Localized management for reducing white-tailed deer populations. Wildlife Society Bulletin 25:265\u2013271.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965957176871,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:207",
+      "locator": {
+        "page": 8,
+        "x0": 307.5574,
+        "y0": 542.7816,
+        "x1": 548.5892,
+        "y1": 565.6697
+      },
+      "text": "Weckel, M., R. F. Rockwell, and A. Wincorn. 2011. The sustainability of controlled archery programs: the motivation and satisfaction of suburban hunters. Wildlife Society Bulletin 35:330\u2013337.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999891112819739,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:189",
+      "locator": {
+        "page": 8,
+        "x0": 53.2331,
+        "y0": 553.2786,
+        "x1": 287.7667,
+        "y1": 576.1674
+      },
+      "text": "Naugle, deer D. densities E., 3) proper screening of the participating hunters, and 4) close J. Princeton used select archers on public and private lands A. archery hunt (DeNicola et al. 1997). Participating archers Jenks,properties in 2008 and 2009, and 8 public and 5 private and portunity to obtain access and hunt any private property B. animal-control of\ufb01cer was responsible for oversight of pro- J. were reduced with sharpshooting after the hunting seasons Kernohan. archery hunting and opted not to sharpshoot. 1996. in 2002, but results were limited and expensive and, there- Use Concurrently, a group of 15 archers were used to kill of of 39 hunters using archery, shotguns, and muzzleloaders thermal through 2010\u20132011. Local law-enforcement department infrared sensing to estimate density of white-tailed deer. Wildlife Society Bulletin 24:37\u201343.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996200639606075,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:190",
+      "locator": {
+        "page": 8,
+        "x0": 53.2331,
+        "y0": 582.1355,
+        "x1": 287.7482,
+        "y1": 605.0243
+      },
+      "text": "Potvin, (W. Allen, Chair, Bernards Township Deer Management F., Upper Make\ufb01eld and seasons when hunting L. occurred (2007\u20132010), Breton. 1,414 deer were 2005. ed a remaining deer density of about 18 deer/km Testing (SE 2 5) aerial Duke Farms survey km techniques at Duke Farms. After removal of 866 deer by shotgun, on estimate was about 12 deer/km deer in 2011. After adding the in fenced enclosures\u2014visual double-counts and thermal infrared sensing. Wildlife Society Bulletin 33:317\u2013325.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122841761742,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:208",
+      "locator": {
+        "page": 8,
+        "x0": 314.0205,
+        "y0": 600.0969,
+        "x1": 548.5639,
+        "y1": 613.518
+      },
+      "text": "Williams, S. C., and A. J. DeNicola. 2000. Spatial movements in response to baiting female white-tailed deer. Pages 206\u2013224 in M. C. Brittingham, J. Kays, and R. McPeake, editors. Proceedings of the 9th Wildlife Damage Management sharpshooting, and deer\u2013vehicle collision (DVCs) totals for 2006\u20132010. Conference, 2006\u201320 5\u20138 2007\u201320 October, 2008\u201320 2000, 2009\u201320 State peatedly sought and received a Community-Based Deer College, Environmental Protection that extended the hunting season Pennsylvania, USA.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972014221863363,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:191",
+      "locator": {
+        "page": 8,
+        "x0": 46.77,
+        "y0": 611.049,
+        "x1": 287.7323,
+        "y1": 643.4048
+      },
+      "text": "Rand, P. W., C. Lubelczyk, M. S. Holman, E. H. Lacombe, and R. P. Smith, Jr., 2004. Abundance of Ixodes scapularis (Acari: Ixodidae) after the complete removal of deer from an isolated offshore island, endemic for Lyme disease. Journal of Medical Entomology 41:779\u2013784.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339509405318,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:209",
+      "locator": {
+        "page": 8,
+        "x0": 314.0205,
+        "y0": 619.4861,
+        "x1": 548.5285,
+        "y1": 642.3749
+      },
+      "text": "Williams, S. C., 2 and A. J. DeNicola. 2002. Home range the 4.5-month autumn\u2013winter archery-hunting seasons increase of lactating female white-tailed deer following herd reduction. Northeast Wildlife 57:29\u201338.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601876581125,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:210",
+      "locator": {
+        "page": 8,
+        "x0": 307.5574,
+        "y0": 648.3995,
+        "x1": 548.5438,
+        "y1": 671.2876
+      },
+      "text": "Williams, S. C., A. J. DeNicola, and I. M. Ortega. 2008. Behavioral responses of white-tailed deer subjected to lethal management. Canadian Journal of Zoology 86:1358\u20131366.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339552021674,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:192",
+      "locator": {
+        "page": 8,
+        "x0": 46.7692,
+        "y0": 649.3729,
+        "x1": 287.7961,
+        "y1": 681.7296
+      },
+      "text": "Rand, P. W., C. Lubelczyk, G. R. Lavagne, S. Elias, M. S. Holman, E. H. Lacombe, and R. P. Smith, Jr., 2003. Deer density and the abundance of Ixodes scapularis (Acari: Ixodidae). Journal of Medical Entomology 40:179\u2013184.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999688008067122,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:193",
+      "locator": {
+        "page": 8,
+        "x0": 46.77,
+        "y0": 687.7542,
+        "x1": 287.7754,
+        "y1": 701.1744
+      },
+      "text": "Riley, S. J., D. J. Decker, J. W. Enck, P. D. Curtis, T. B. Lauber, and T. L. Brown. 2003. Deer population up, hunter populations down: implication",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695270759439,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0252:211",
+      "locator": {
+        "page": 8,
+        "x0": 307.5574,
+        "y0": 696.6233,
+        "x1": 385.4367,
+        "y1": 700.4849
+      },
+      "text": "Associate Editor: Haskell.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972018773772492,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0252:2",
+        "c3-0252:133"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

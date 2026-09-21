@@ -1,0 +1,1107 @@
+{
+  "document": "c3-0869",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 48,
+    "cards_considered": 48,
+    "selector": "all-blocks",
+    "not_heading_confident": 15,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0869:0",
+      "locator": {
+        "page": 0,
+        "x0": 32.543,
+        "y0": 24.0349,
+        "x1": 496.8787,
+        "y1": 75.8844
+      },
+      "text": "OTHER WAYS TO GETHOW TO CERTIFY YOUR MUNICIPALITY INVOLVED",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9608401942671358,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:2",
+      "locator": {
+        "page": 0,
+        "x0": 369.75,
+        "y0": 87.1779,
+        "x1": 513.9597,
+        "y1": 127.4188
+      },
+      "text": "Volunteer to help your town implement Sustainable CT actions and achieve certification.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388302820923,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:58",
+      "locator": {
+        "page": 0,
+        "x0": 395.2383,
+        "y0": 87.1779,
+        "x1": 402.2311,
+        "y1": 93.6688
+      },
+      "text": "n",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.990597934757936,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:1",
+      "locator": {
+        "page": 0,
+        "x0": 276.0,
+        "y0": 87.5319,
+        "x1": 345.5739,
+        "y1": 94.616
+      },
+      "text": "Individuals:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.8795216199820427,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:61",
+      "locator": {
+        "page": 0,
+        "x0": 394.7227,
+        "y0": 120.9279,
+        "x1": 401.7839,
+        "y1": 127.4188
+      },
+      "text": "a",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9565764641155058,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:58",
+        "c3-0869:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:63",
+      "locator": {
+        "page": 0,
+        "x0": 442.3828,
+        "y0": 120.9279,
+        "x1": 448.8965,
+        "y1": 127.4188
+      },
+      "text": "Successfully complete actions totaling 200 points c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9740711952079014,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:58",
+        "c3-0869:1"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:3",
+      "locator": {
+        "page": 0,
+        "x0": 22.5,
+        "y0": 148.916,
+        "x1": 231.7785,
+        "y1": 190.5
+      },
+      "text": "Pass a resolution that indicates your intent to participate in Sustainable CT and establishes a Sustainability Team.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415733046254,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:61"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:65",
+      "locator": {
+        "page": 0,
+        "x0": 214.8281,
+        "y0": 148.916,
+        "x1": 220.2937,
+        "y1": 156.0
+      },
+      "text": "r",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7554458711047971,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:10",
+      "locator": {
+        "page": 0,
+        "x0": 276.75,
+        "y0": 152.032,
+        "x1": 345.4802,
+        "y1": 159.116
+      },
+      "text": "Businesses:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.5301976626166646,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:11",
+      "locator": {
+        "page": 0,
+        "x0": 369.75,
+        "y0": 155.4279,
+        "x1": 478.8134,
+        "y1": 173.1688
+      },
+      "text": "Become a program sponsor.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968279795911225,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:66",
+      "locator": {
+        "page": 0,
+        "x0": 22.5,
+        "y0": 166.166,
+        "x1": 25.9984,
+        "y1": 173.25
+      },
+      "text": "i",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5952970252213403,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:67",
+      "locator": {
+        "page": 0,
+        "x0": 25.2422,
+        "y0": 166.166,
+        "x1": 32.874,
+        "y1": 173.25
+      },
+      "text": "n",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7776751522805172,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:68",
+      "locator": {
+        "page": 0,
+        "x0": 32.1211,
+        "y0": 166.166,
+        "x1": 37.1011,
+        "y1": 173.25
+      },
+      "text": "t",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7782770581595155,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:69",
+      "locator": {
+        "page": 0,
+        "x0": 36.3516,
+        "y0": 166.166,
+        "x1": 43.9336,
+        "y1": 173.25
+      },
+      "text": "e",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.7286217169139566,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:70",
+      "locator": {
+        "page": 0,
+        "x0": 43.1719,
+        "y0": 166.166,
+        "x1": 50.8037,
+        "y1": 173.25
+      },
+      "text": "n",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.7966907091188571,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:71",
+      "locator": {
+        "page": 0,
+        "x0": 50.0508,
+        "y0": 166.166,
+        "x1": 55.0308,
+        "y1": 173.25
+      },
+      "text": "t",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.5040433433388735,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:72",
+      "locator": {
+        "page": 0,
+        "x0": 57.2578,
+        "y0": 166.166,
+        "x1": 62.2378,
+        "y1": 173.25
+      },
+      "text": "t",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.532916412634333,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:73",
+      "locator": {
+        "page": 0,
+        "x0": 61.4883,
+        "y0": 166.166,
+        "x1": 69.2695,
+        "y1": 173.25
+      },
+      "text": "o",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.8317084990409771,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:74",
+      "locator": {
+        "page": 0,
+        "x0": 71.4844,
+        "y0": 166.166,
+        "x1": 79.7014,
+        "y1": 173.25
+      },
+      "text": "p",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.6495300232072042,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:75",
+      "locator": {
+        "page": 0,
+        "x0": 78.9492,
+        "y0": 166.166,
+        "x1": 86.6558,
+        "y1": 173.25
+      },
+      "text": "a",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.7956349782115744,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:76",
+      "locator": {
+        "page": 0,
+        "x0": 85.8984,
+        "y0": 166.166,
+        "x1": 91.364,
+        "y1": 173.25
+      },
+      "text": "r",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6241589310295182,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:77",
+      "locator": {
+        "page": 0,
+        "x0": 90.6094,
+        "y0": 166.166,
+        "x1": 95.5894,
+        "y1": 173.25
+      },
+      "text": "t",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5953263919690548,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:61",
+        "c3-0869:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:15",
+      "locator": {
+        "page": 0,
+        "x0": 369.0,
+        "y0": 199.6779,
+        "x1": 511.692,
+        "y1": 251.1688
+      },
+      "text": "Support your community through internship, research, and collaboration opportunities.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996200418205095,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:75"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:12",
+      "locator": {
+        "page": 0,
+        "x0": 273.75,
+        "y0": 200.032,
+        "x1": 350.0154,
+        "y1": 219.116
+      },
+      "text": "Colleges & Universities:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.8994015529942231,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:75"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:4",
+      "locator": {
+        "page": 0,
+        "x0": 22.5,
+        "y0": 235.166,
+        "x1": 222.8249,
+        "y1": 259.5
+      },
+      "text": "Designate an elected official or municipal employee to register your",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988308957801013,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:13",
+      "locator": {
+        "page": 0,
+        "x0": 275.25,
+        "y0": 262.2819,
+        "x1": 348.8083,
+        "y1": 269.366
+      },
+      "text": "Non-profits:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9921921557632273,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:12"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:16",
+      "locator": {
+        "page": 0,
+        "x0": 370.5,
+        "y0": 264.1779,
+        "x1": 512.1772,
+        "y1": 293.1688
+      },
+      "text": "Partner with towns to carry out Sustainable CT actions.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122143307849,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:12"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:5",
+      "locator": {
+        "page": 0,
+        "x0": 25.4766,
+        "y0": 269.666,
+        "x1": 234.1799,
+        "y1": 276.75
+      },
+      "text": "community at www.sustainablect.org.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984993536374052,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:13"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:14",
+      "locator": {
+        "page": 0,
+        "x0": 271.6641,
+        "y0": 309.5319,
+        "x1": 343.3708,
+        "y1": 316.616
+      },
+      "text": "Sponsor us:",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.9871052062878944,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:13"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:17",
+      "locator": {
+        "page": 0,
+        "x0": 371.25,
+        "y0": 310.6779,
+        "x1": 465.0641,
+        "y1": 328.4188
+      },
+      "text": "Support thriving communities.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9526340306415257,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:13"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:6",
+      "locator": {
+        "page": 0,
+        "x0": 22.5,
+        "y0": 321.416,
+        "x1": 224.9678,
+        "y1": 345.75
+      },
+      "text": "Complete actions and track them on your Municipal Dashboard.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122398523452,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:14"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:51",
+      "locator": {
+        "page": 0,
+        "x0": 553.043,
+        "y0": 362.4111,
+        "x1": 784.1589,
+        "y1": 500.152
+      },
+      "text": "A flexible, voluntary menu of actions, designed for towns by towns. Register your community for access to resources, including funding, to carry out well-defined sustainability best practices. Together we can create a healthier, more resilient and efficient,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415740836464,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:14"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:18",
+      "locator": {
+        "page": 0,
+        "x0": 325.8867,
+        "y0": 373.5349,
+        "x1": 465.5799,
+        "y1": 384.3679
+      },
+      "text": "OUR FUNDERS",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.997167698642476,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:74",
+        "c3-0869:14"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:7",
+      "locator": {
+        "page": 0,
+        "x0": 22.5,
+        "y0": 390.416,
+        "x1": 236.3718,
+        "y1": 432.0
+      },
+      "text": "Meet requirements for Bronze or Silver certification, and submit your progress through your Municipality Dashboard.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040721785185,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:18"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:8",
+      "locator": {
+        "page": 0,
+        "x0": 22.5,
+        "y0": 493.916,
+        "x1": 165.5412,
+        "y1": 518.25
+      },
+      "text": "Need help? Contact us at info@sustainainablect.org",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972002885277218,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:18"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:52",
+      "locator": {
+        "page": 0,
+        "x0": 575.2148,
+        "y0": 512.4111,
+        "x1": 757.78,
+        "y1": 518.902
+      },
+      "text": "thriving and Sustainable CT.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9467454844063545,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:18"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:21",
+      "locator": {
+        "page": 0,
+        "x0": 341.8125,
+        "y0": 512.7441,
+        "x1": 448.0843,
+        "y1": 521.0103
+      },
+      "text": "Learn more at:",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.561741267169563,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:18"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:23",
+      "locator": {
+        "page": 0,
+        "x0": 314.332,
+        "y0": 532.9941,
+        "x1": 480.2014,
+        "y1": 569.7603
+      },
+      "text": "sustainablect.org info@sustainablect.org 860.465.0258",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986752598376203,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:18",
+        "c3-0869:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:53",
+      "locator": {
+        "page": 0,
+        "x0": 711.0,
+        "y0": 576.6057,
+        "x1": 780.7656,
+        "y1": 580.5472
+      },
+      "text": "Get certified.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6803328555292181,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:18",
+        "c3-0869:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:54",
+      "locator": {
+        "page": 0,
+        "x0": 661.3125,
+        "y0": 587.9838,
+        "x1": 785.6624,
+        "y1": 596.25
+      },
+      "text": "sustainablect.org",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9971997649240724,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:18",
+        "c3-0869:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:26",
+      "locator": {
+        "page": 0,
+        "x0": 386.2969,
+        "y0": 592.2819,
+        "x1": 509.9292,
+        "y1": 599.366
+      },
+      "text": "@sustainablect",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9629413894623973,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:18",
+        "c3-0869:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:55",
+      "locator": {
+        "page": 1,
+        "x0": 155.6953,
+        "y0": 20.9913,
+        "x1": 243.3054,
+        "y1": 66.632
+      },
+      "text": "TAKE ACTION",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9962688987044314,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:18",
+        "c3-0869:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:56",
+      "locator": {
+        "page": 1,
+        "x0": 75.9844,
+        "y0": 89.2339,
+        "x1": 203.9171,
+        "y1": 97.5
+      },
+      "text": "2018 Certification",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9851503007661846,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:55"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:57",
+      "locator": {
+        "page": 1,
+        "x0": 26.25,
+        "y0": 112.916,
+        "x1": 251.2569,
+        "y1": 137.25
+      },
+      "text": "Complete at least 1 action in each of the 9 categories.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9708568719034526,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:55",
+        "c3-0869:56"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:59",
+      "locator": {
+        "page": 1,
+        "x0": 41.8477,
+        "y0": 150.7339,
+        "x1": 82.8776,
+        "y1": 159.0
+      },
+      "text": "Silver",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8680908706595589,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:55",
+        "c3-0869:56"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:60",
+      "locator": {
+        "page": 1,
+        "x0": 38.8008,
+        "y0": 169.916,
+        "x1": 224.7035,
+        "y1": 194.25
+      },
+      "text": "Successfully complete actions totaling 400 points",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9941040329912673,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:55",
+        "c3-0869:56"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0869:62",
+      "locator": {
+        "page": 1,
+        "x0": 42.0,
+        "y0": 209.9839,
+        "x1": 91.8277,
+        "y1": 218.25
+      },
+      "text": "Bronze",
+      "type": "H",
+      "level": 3,
+      "rule": 1,
+      "score": 0.7718957024734736,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0869:55",
+        "c3-0869:56"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0869:64",
+      "locator": {
+        "page": 1,
+        "x0": 39.5508,
+        "y0": 229.166,
+        "x1": 225.4535,
+        "y1": 253.5
+      },
+      "text": "Successfully complete actions totaling 200 points",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9933298495838276,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0869:55",
+        "c3-0869:56",
+        "c3-0869:62"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

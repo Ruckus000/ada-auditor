@@ -1,0 +1,483 @@
+{
+  "document": "c3-0321",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 21,
+    "cards_considered": 21,
+    "selector": "all-blocks",
+    "not_heading_confident": 11,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 1
+  },
+  "cards": [
+    {
+      "card_id": "c3-0321:0",
+      "locator": {
+        "page": 0,
+        "x0": 196.0422,
+        "y0": 50.3301,
+        "x1": 406.8462,
+        "y1": 94.5101
+      },
+      "text": "PearleL.CrawfordMemorialLibraryBoardofTrusteesMeetingTuesday,December9,2025",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5321607998941655,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:1",
+      "locator": {
+        "page": 0,
+        "x0": 176.7035,
+        "y0": 106.8958,
+        "x1": 423.2965,
+        "y1": 112.8958
+      },
+      "text": "6:15 pm \u2013 Dudley Municipal Complex \u2013 Room 321",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9770793947873823,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:3",
+      "locator": {
+        "page": 0,
+        "x0": 257.0126,
+        "y0": 185.1,
+        "x1": 351.8372,
+        "y1": 192.1
+      },
+      "text": "MeetingAgenda",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9815024918134936,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:4",
+      "locator": {
+        "page": 0,
+        "x0": 236.2209,
+        "y0": 207.2335,
+        "x1": 372.8279,
+        "y1": 212.7335
+      },
+      "text": "This meeting will be recorded.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9890395778308414,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0321:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:6",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 246.1157,
+        "x1": 275.4339,
+        "y1": 252.1157
+      },
+      "text": "1. Call to Order, Pledge of Allegiance",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9243774276866138,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0321:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:7",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 246.1157,
+        "x1": 98.2371,
+        "y1": 252.1157
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:8",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 268.0857,
+        "x1": 421.9846,
+        "y1": 274.0857
+      },
+      "text": "2. Review/Approval of Meeting minutes from November 12, 2025",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9903150523931435,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0321:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:9",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 268.0857,
+        "x1": 98.2371,
+        "y1": 274.0857
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:10h",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 290.0557,
+        "x1": 294.284,
+        "y1": 305.6557
+      },
+      "text": "3. Director\u2019s Report",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9193952298937575,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0321:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:11",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 290.0557,
+        "x1": 98.2371,
+        "y1": 296.0557
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:10",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 305.6557,
+        "x1": 294.284,
+        "y1": 394.0257
+      },
+      "text": "Staffing Update Programs, Events and Services \uf0a7\uf020\uf020Current and Upcoming Equipment/Facility Update Financial Update",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975281440722841,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:10h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:12",
+      "locator": {
+        "page": 0,
+        "x0": 119.0,
+        "y0": 349.3717,
+        "x1": 294.284,
+        "y1": 394.0257
+      },
+      "text": "\uf0a7\uf020\uf020Current and Upcoming Equipment/Facility Update Financial Update",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972009659674278,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:10h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:13",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 404.8757,
+        "x1": 195.696,
+        "y1": 410.8757
+      },
+      "text": "4. Teen Room Policy",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9781657325123927,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:10h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:14",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 404.8757,
+        "x1": 98.2371,
+        "y1": 410.8757
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:10h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:15",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 426.8457,
+        "x1": 241.3112,
+        "y1": 432.8457
+      },
+      "text": "5. Library Parking/No Parking",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9768578060627947,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:13"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:16",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 426.8457,
+        "x1": 98.2371,
+        "y1": 432.8457
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:13"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:17",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 448.8157,
+        "x1": 344.4151,
+        "y1": 454.8157
+      },
+      "text": "6. Board Member Comments and/or Obser vations",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9738537153695979,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:15"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0321:18",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 448.8157,
+        "x1": 98.2371,
+        "y1": 454.8157
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:15"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:19",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 470.7857,
+        "x1": 551.5038,
+        "y1": 498.7557
+      },
+      "text": "7. The next Library Trustee Meeting will be held at 6:15 p.m. on Tuesday, January 13 in Room 321",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992903876683147,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:20",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 470.7857,
+        "x1": 98.2371,
+        "y1": 476.7857
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0321:21",
+      "locator": {
+        "page": 0,
+        "x0": 88.95,
+        "y0": 544.4835,
+        "x1": 492.8768,
+        "y1": 563.4135
+      },
+      "text": "Any items discussed but not listed on the agenda are items not reasonably anticipated as a topic by the chair 48 hours in advance of the meeting.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415814826397,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0321:3",
+        "c3-0321:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

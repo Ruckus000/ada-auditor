@@ -1,0 +1,1392 @@
+{
+  "document": "c3-0094",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 63,
+    "cards_considered": 63,
+    "selector": "all-blocks",
+    "not_heading_confident": 47,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 3
+  },
+  "cards": [
+    {
+      "card_id": "c3-0094:1",
+      "locator": {
+        "page": 0,
+        "x0": 208.02,
+        "y0": 149.2979,
+        "x1": 407.0065,
+        "y1": 169.7999
+      },
+      "text": "TOWN & COUNTY OF NANTUCKET BOARD OF SELECTMEN",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.882521561283351,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:2",
+      "locator": {
+        "page": 0,
+        "x0": 224.82,
+        "y0": 190.6979,
+        "x1": 390.1198,
+        "y1": 197.3399
+      },
+      "text": "BUDGET POLICY & PROCESS",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.5753274397051424,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:3",
+      "locator": {
+        "page": 0,
+        "x0": 251.64,
+        "y0": 203.734,
+        "x1": 362.8029,
+        "y1": 220.8
+      },
+      "text": "Effective date: 09/15/2011 Adopted: 09/14/2011",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983013961142403,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:4",
+      "locator": {
+        "page": 0,
+        "x0": 90.0,
+        "y0": 241.338,
+        "x1": 373.0558,
+        "y1": 247.98
+      },
+      "text": "Applicability: Town, School, and Enterprise Departments",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7552738756983686,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:5",
+      "locator": {
+        "page": 0,
+        "x0": 90.0,
+        "y0": 268.6132,
+        "x1": 173.0494,
+        "y1": 274.74
+      },
+      "text": "I. Purpose",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9994356516675369,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:6",
+      "locator": {
+        "page": 0,
+        "x0": 90.0,
+        "y0": 293.4489,
+        "x1": 522.9891,
+        "y1": 322.0199
+      },
+      "text": "The overall goal implementing financial policies is to improve fiscal planning and maintain effective management of the Town\u2019s financial resources. One of the key deliverables in obtaining the goal is to provide a balanced budget without the assistance of one time revenue streams.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999898700241703,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:7",
+      "locator": {
+        "page": 0,
+        "x0": 90.0,
+        "y0": 339.4687,
+        "x1": 495.597,
+        "y1": 345.0598
+      },
+      "text": "The purpose of this process is to:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968288102503438,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:9",
+      "locator": {
+        "page": 0,
+        "x0": 125.9999,
+        "y0": 362.4485,
+        "x1": 506.8673,
+        "y1": 379.5597
+      },
+      "text": "1. Ensure annual budgets for all Town, School, and Enterprise Funds are structurally balanced throughout the budget process;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039009968564,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:10",
+      "locator": {
+        "page": 0,
+        "x0": 125.9999,
+        "y0": 362.4485,
+        "x1": 175.7021,
+        "y1": 368.0397
+      },
+      "text": "1. Ensure",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999802813275222,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:11",
+      "locator": {
+        "page": 0,
+        "x0": 125.9999,
+        "y0": 385.4284,
+        "x1": 504.2575,
+        "y1": 402.5396
+      },
+      "text": "2. Ensure recurring revenues will equal or exceed recurring expenditures in both the projected and adopted budget;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646441299975,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:12",
+      "locator": {
+        "page": 0,
+        "x0": 125.9999,
+        "y0": 385.4284,
+        "x1": 175.7201,
+        "y1": 391.0196
+      },
+      "text": "2. Ensure",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998982763602631,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:13",
+      "locator": {
+        "page": 0,
+        "x0": 125.9999,
+        "y0": 408.4083,
+        "x1": 470.303,
+        "y1": 425.5194
+      },
+      "text": "3. Ensure that if a structural imbalance occurs, a plan will be developed and implemented to provide for a balanced budget.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646440382064,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:14",
+      "locator": {
+        "page": 0,
+        "x0": 125.9999,
+        "y0": 408.4083,
+        "x1": 175.7151,
+        "y1": 413.9994
+      },
+      "text": "3. Ensure",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968364656787913,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:15",
+      "locator": {
+        "page": 0,
+        "x0": 90.0,
+        "y0": 443.3932,
+        "x1": 324.0233,
+        "y1": 449.52
+      },
+      "text": "II. Budgetary Policy \u2013 Operating Budget",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9996634933103352,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:5"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:16",
+      "locator": {
+        "page": 0,
+        "x0": 89.999,
+        "y0": 468.2289,
+        "x1": 509.2167,
+        "y1": 519.8398
+      },
+      "text": "All funds are required to balance. As such, total projected revenues and other resources must equal of sum of budgetary expenditures for each fund. Revenues and other resources are derived from the following: current revenue charges; increases in existing revenue charges; new revenue sources; and unallocated reserves carried forward from prior years to the extent allowed by law.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869928952294,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:15"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:17",
+      "locator": {
+        "page": 0,
+        "x0": 89.999,
+        "y0": 537.2285,
+        "x1": 521.3463,
+        "y1": 588.8395
+      },
+      "text": "Beginning in FY2014, all requests for appropriations are considered only in conjunction with measurable performance criteria. Expenditures are approved or rejected on the basis of planned levels of performance. Therefore, it is necessary for each activity within a fund to prepare a performance plan consisting of workload measures, efficiency measures, and effectiveness measures.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999957771680446,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:15"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:18",
+      "locator": {
+        "page": 0,
+        "x0": 89.999,
+        "y0": 606.2282,
+        "x1": 516.8701,
+        "y1": 669.2991
+      },
+      "text": "Expenditure budgets for enterprise operations (i.e., Water, Sewer, Airport, Solid Waste, and Our Island Home) must be funded either exclusively or primarily by user fee revenues; unless the Town decides to use the general tax revenue when a greater public benefit is demonstrated (i.e. Solid Waste and Our Island Home). In addition, expenditure budgets for enterprise operations that require the use of general tax revenue as a funding source to balance the operating budget require Board of Selectmen approval prior to forwarding to the Finance Committee.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785552373449,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:15"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:19",
+      "locator": {
+        "page": 0,
+        "x0": 89.999,
+        "y0": 686.6878,
+        "x1": 509.6956,
+        "y1": 715.319
+      },
+      "text": "Allocations from the General Fund are based on a long-range financial plan which includes an unallocated fund reserve. This reserve protects the Town against catastrophic revenue losses and major emergency expenditures as well as contributes to the Town\u2019s favorable bond rating.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766084745864,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:15"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:0",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 48.6488,
+        "x1": 218.4162,
+        "y1": 54.24
+      },
+      "text": "IX. Timeline",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.8903608537682925,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0094:15"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:20",
+      "locator": {
+        "page": 1,
+        "x0": 89.9996,
+        "y0": 48.6488,
+        "x1": 520.215,
+        "y1": 65.76
+      },
+      "text": "Ongoing expenses are never funded by a non-recurring or one-time revenue source. Future and current funding sources are identified for all new programs and services.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99994170883497,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:15"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:21",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 84.7731,
+        "x1": 340.5888,
+        "y1": 90.8999
+      },
+      "text": "III. Budgetary Policy \u2013 Capital Expenditures",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9988288135804465,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:22",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 109.6088,
+        "x1": 495.2206,
+        "y1": 149.7
+      },
+      "text": "A five year program for infrastructure capital improvements is updated annually through the budget process. The plan identifies not only anticipated capital expenditures in excess of $50,000 but also related operating expenses and anticipated funding sources. Capital improvements less than $50,000 are funded within the operating budget.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832985803582,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:23",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 167.0887,
+        "x1": 519.0596,
+        "y1": 195.6598
+      },
+      "text": "Capital projects in excess of $50,000 financed through the issuance of bonds will be financed for a period not to exceed the useful \u201clife\u201d of the project as defined by Massachusetts General Law (M.G.L.)",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999921107415493,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:24",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 213.1087,
+        "x1": 510.6995,
+        "y1": 241.6797
+      },
+      "text": "The Town will coordinate the development of the capital budget with the development of the operating budget. Future operating costs associated with new capital projects will be identified and included in operating budget forecasts.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999957771670753,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:25",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 259.0685,
+        "x1": 522.4001,
+        "y1": 276.1797
+      },
+      "text": "In accordance with the Town By-law, the Town will contribute up to 1% of prior year local receipts towards capital improvements.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999921107415756,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:26",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 293.5684,
+        "x1": 490.7682,
+        "y1": 310.6795
+      },
+      "text": "The Town will preserve its assets at a level adequate to protect the capital investment and minimize future maintenance and replacement costs.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999910603071177,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:27",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 328.0682,
+        "x1": 497.466,
+        "y1": 345.1794
+      },
+      "text": "The Town will establish an appropriate distribution of bonded debt and cash financing in the funding of capital projects.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832985963042,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:21"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:28",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 364.1931,
+        "x1": 277.03,
+        "y1": 370.3199
+      },
+      "text": "IV. Budgetary Policy \u2013 Revenue",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9998765726402371,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:21"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:29",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 389.0288,
+        "x1": 514.4922,
+        "y1": 429.1198
+      },
+      "text": "The Town will establish and maintain a broad revenue base. This is achieved through establishing and maintaining diversified revenue sources in order to distribute the revenue responsibly and equitably and protect the Town from short-term fluctuations in any one revenue source.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339481146826,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:30",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 446.5085,
+        "x1": 524.1193,
+        "y1": 463.6197
+      },
+      "text": "In order to fulfill funding requirements without an over dependence upon property taxes, the Town will attempt to enlarge the revenue base by seeking new revenue sources.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610258523,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:31",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 481.0084,
+        "x1": 518.6046,
+        "y1": 521.0994
+      },
+      "text": "The Town will implement user fees in all areas where feasible and productive as well as set fees at levels related to the costs of providing the services, within the constraints of the General Laws of Massachusetts. User fees will be reviewed annually as part of the budget process and if applicable, be adjusted to maintain current levels of service.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99997569977577,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:32",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 538.488,
+        "x1": 524.1264,
+        "y1": 578.5791
+      },
+      "text": "In accordance with MGL Chapter 44 Section 53 F 1/2, the Town will establish self-supporting enterprise funds where the relationship between operating costs and revenues is clearly identified or for the purpose to clearly identify the total service costs which may include a subsidy from the General Fund or other funds.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610306499,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:33",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 596.0279,
+        "x1": 512.4485,
+        "y1": 613.079
+      },
+      "text": "The Town will limit the designation of General Fund revenues for specified purposes in order to maximize flexibility in budgeting and utilize revenues more efficiently.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610300181,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:34",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 631.6687,
+        "x1": 496.3182,
+        "y1": 648.7198
+      },
+      "text": "The Town will maintain effective collection systems and implement aggressive enforcement strategies in order to maximize revenues from available sources.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869928866948,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:35",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 666.1686,
+        "x1": 514.6639,
+        "y1": 694.7396
+      },
+      "text": "Revenues will be projected conservatively with the goal of avoiding revenue deficits that impact future budgets and of realizing actual revenues at the fund level that equal or exceed budgeted revenues.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546022741331,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:36",
+      "locator": {
+        "page": 1,
+        "x0": 90.0,
+        "y0": 713.7527,
+        "x1": 289.2309,
+        "y1": 719.8795
+      },
+      "text": "V. Budget Process \u2013 Preparation",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9997037091096352,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:28"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:37",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 45.6442,
+        "x1": 522.3661,
+        "y1": 65.76
+      },
+      "text": "The Town & County of Nantucket\u2019s fiscal year begins July 1st and concludes on June 30 th. Major steps in the budgeting process include but are not limited to the following:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694628874031,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:39",
+      "locator": {
+        "page": 2,
+        "x0": 125.9999,
+        "y0": 71.6287,
+        "x1": 517.4762,
+        "y1": 123.2399
+      },
+      "text": "a. The Finance Department prepares the five year forecast and assumptions which identify positive and negative financial trends impacting the Town and County. The information is presented to Town Administration as well as the Board of Selectmen. Once adopted by the Board of Selectmen, the forecast and assumptions are then used as the financial framework for budget preparation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599366314513,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:40",
+      "locator": {
+        "page": 2,
+        "x0": 125.9999,
+        "y0": 71.6287,
+        "x1": 134.3586,
+        "y1": 77.2199
+      },
+      "text": "a.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999987903515407,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:41",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 129.1687,
+        "x1": 520.7601,
+        "y1": 157.7398
+      },
+      "text": "b. A Five Year Capital Plan is prepared by the Chief Procurement Officer and presented to Town Administration and the Board of Selectmen. Any additional operating costs associated with the first year of the plan are incorporated into the budget forecast.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687983124329,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:42",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 129.1687,
+        "x1": 134.3546,
+        "y1": 134.7599
+      },
+      "text": "b.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999980057913067,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:43",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 163.6687,
+        "x1": 524.281,
+        "y1": 226.7397
+      },
+      "text": "c. The Ad Hoc Budget workgroup will begin meeting in the fall to facilitate communications among the Board of Selectmen, School Committee, and Finance Committee concerning budget issues. The workgroup is comprised of the Chairs and Vice-chairs of the Board of Selectmen, School Committee, and Finance Committee. The Town Manager, Superintendent of Schools, and Finance Director also serve as ex officio members of the workgroup.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869929646661,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:44",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 163.6687,
+        "x1": 133.7955,
+        "y1": 169.2598
+      },
+      "text": "c.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999962747768414,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:45",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 232.6084,
+        "x1": 518.0964,
+        "y1": 318.7194
+      },
+      "text": "d. The Finance Department and School Business Office, with directions and guidelines from Town Administration and the Superintendent develop base budget expenditure levels for all departments and town-wide revenue projections for the upcoming fiscal year. Departments prepare data on performance measures and service levels for inclusion in the budget document. Additionally, departments submit service change request to enhance a current activity, establish and activity and/or obtain equipment associated with an activity. These detailed requests are reviewed and changes made to present a balance budget to Town Administration and the Superintendent.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999757000161671,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:46",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 232.6084,
+        "x1": 134.3577,
+        "y1": 238.1996
+      },
+      "text": "d.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999995778984769,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:47",
+      "locator": {
+        "page": 2,
+        "x0": 125.9999,
+        "y0": 324.6482,
+        "x1": 512.4444,
+        "y1": 387.7191
+      },
+      "text": "e. Town Administration and the Superintendent conduct budget workshops with their respective Department Heads to review expenditures for the upcoming year and announce any significant changes which directly impact new / existing programs or service levels. The changes are then used to prepare the Town Manager\u2019s budget recommendations to the Board of Selectmen and Superintendent\u2019s budget recommendations to the School Committee.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687983282538,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:48",
+      "locator": {
+        "page": 2,
+        "x0": 125.9999,
+        "y0": 324.6482,
+        "x1": 134.3576,
+        "y1": 330.2393
+      },
+      "text": "e.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999967120090413,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:49",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 393.6479,
+        "x1": 506.364,
+        "y1": 445.1988
+      },
+      "text": "f. The Board of Selectmen, School Committee, and Finance Committee conduct a series of workshops and public hearings before making changes to the Town Manager\u2019s and Superintendents budget recommendations. After careful and thorough consideration, the Board of Selectmen; School Committee; and Finance Committee present the budget recommendations to Town Meeting.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038992144547,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:50",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 393.6479,
+        "x1": 131.5691,
+        "y1": 399.239
+      },
+      "text": "f.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999969116795392,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:51",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 451.1276,
+        "x1": 519.2405,
+        "y1": 468.18
+      },
+      "text": "g. When the budget is adopted at Town Meeting, the budget becomes effective on July 1 st.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151943779404,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:52",
+      "locator": {
+        "page": 2,
+        "x0": 126.0,
+        "y0": 451.1276,
+        "x1": 134.3577,
+        "y1": 456.7188
+      },
+      "text": "g.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999892219485709,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:54h",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 486.1131,
+        "x1": 517.8483,
+        "y1": 499.1131
+      },
+      "text": "VI. Budget Process \u2013 Execution",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9997965291540447,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:55",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 486.1131,
+        "x1": 103.4461,
+        "y1": 492.2399
+      },
+      "text": "VI.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9091940628157076,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0094:36"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:54",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 499.1131,
+        "x1": 517.8483,
+        "y1": 572.8196
+      },
+      "text": "On July 1 st of each year, the adopted budget is implemented. Concurrently, an analysis of the previous year\u2019s actual expenditures will begin. During this analysis, problem areas are identified and reconciled. Problem areas that have an impact on the current year are closely monitored. Moreover, throughout the year, expenditures, revenues, and performance data are monitored in order to ensure the successful implementation of the Town & County\u2019s service plan. Status reports are provided to Town Administration and the Board of Selectmen on a monthly basis.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687982367881,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:55"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:56",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 506.7441,
+        "x1": 517.8483,
+        "y1": 572.8196
+      },
+      "text": "On July 1 st of each year, the adopted budget is implemented. Concurrently, an analysis of the previous year\u2019s actual expenditures will begin. During this analysis, problem areas are identified and reconciled. Problem areas that have an impact on the current year are closely monitored. Moreover, throughout the year, expenditures, revenues, and performance data are monitored in order to ensure the successful implementation of the Town & County\u2019s service plan. Status reports are provided to Town Administration and the Board of Selectmen on a monthly basis.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610368667,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:55"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:57h",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 591.8931,
+        "x1": 517.4393,
+        "y1": 604.8931
+      },
+      "text": "VII. Budget Process \u2013 Amendments",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9980561373014705,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:55"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:58",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 591.8931,
+        "x1": 106.5073,
+        "y1": 598.02
+      },
+      "text": "VII.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9987312000053059,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:55"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:57",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 604.8931,
+        "x1": 517.4393,
+        "y1": 655.6196
+      },
+      "text": "As conditions change or circumstances are altered, Department Heads are required to notify the Finance Department of anticipated requests for budget amendments. Budget amendments are subject to positive approval at the Annual Town Meeting and/or if applicable, a Special Town Meeting. Once approved, the Finance Department will post the budget amendments within a timely manner.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038981796932,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:58"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:59h",
+      "locator": {
+        "page": 2,
+        "x0": 89.9997,
+        "y0": 674.693,
+        "x1": 514.0391,
+        "y1": 687.693
+      },
+      "text": "VIII. Budgetary Process \u2013 Year End Transfers",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9932701307711402,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0094:58"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:60",
+      "locator": {
+        "page": 2,
+        "x0": 90.0,
+        "y0": 674.693,
+        "x1": 109.5642,
+        "y1": 680.8198
+      },
+      "text": "VIII.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9966699517381691,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:58"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:59",
+      "locator": {
+        "page": 2,
+        "x0": 89.9997,
+        "y0": 687.693,
+        "x1": 514.0391,
+        "y1": 738.4198
+      },
+      "text": "In accordance with MGL Chapter 44 Section 33B, the Finance Department prepares and presents a request to the Board of Selectmen and Finance Committee for budgetary transfers during the time period or May 1 st to July 15 th. Transfer requests are limited to 3% of the original budget amount of $5,000 whichever is greater. Year end transfers are only used to offset projected deficits in departmental or enterprise fund budgets.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151894665772,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:60"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0094:61",
+      "locator": {
+        "page": 3,
+        "x0": 90.0,
+        "y0": 61.7931,
+        "x1": 173.7093,
+        "y1": 67.9199
+      },
+      "text": "IX. Timeline",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.998031591881452,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:60"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0094:62",
+      "locator": {
+        "page": 3,
+        "x0": 90.0,
+        "y0": 86.5688,
+        "x1": 504.6985,
+        "y1": 103.68
+      },
+      "text": "The effectiveness of the process will be reviewed at the end of each budget cycle and refined accordingly.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601795865614,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0094:61"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

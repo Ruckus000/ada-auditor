@@ -1,0 +1,4936 @@
+{
+  "document": "c3-0722",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 245,
+    "cards_considered": 245,
+    "selector": "all-blocks",
+    "not_heading_confident": 210,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0722:2",
+      "locator": {
+        "page": 0,
+        "x0": 145.0,
+        "y0": 177.183,
+        "x1": 467.26,
+        "y1": 211.4
+      },
+      "text": "REGARDING ABATEMENT OF CHRONIC NUISANCE PROPERTIES AND AMENDING SECTION 5.01.150 REGARDING BUSINESS LICENSES",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9770272892208853,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:3",
+      "locator": {
+        "page": 0,
+        "x0": 73.2,
+        "y0": 232.2156,
+        "x1": 539.054,
+        "y1": 252.7
+      },
+      "text": "WHEREAS, the City of fife has the statutory and police power authority to define and abate nuisances and punish practices dangerous to the public health and safety; and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151901015039,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:4",
+      "locator": {
+        "page": 0,
+        "x0": 73.0,
+        "y0": 273.683,
+        "x1": 539.097,
+        "y1": 307.9
+      },
+      "text": "WHEREAS, the Chronic Public Nuisance Transient Accommodation Properties Ordinance, codified as Chapter 8.06 of the fife Municipal Code (FMC\u201d), was established in 2014 with the intent to protect the health, safety, and welfare of the public, and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546025005046,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:5",
+      "locator": {
+        "page": 0,
+        "x0": 72.7,
+        "y0": 328.9156,
+        "x1": 538.856,
+        "y1": 377.0
+      },
+      "text": "WHEREAS, Chapter 8.06 was designed to address motels and other transient acconmiodation properties that consume a disproportionate amount of City resources due to criminal conduct and impact on neighboring properties; however, successful application of the Ordinance has proven to be cumbersome, lengthy, or ineffective and, as a result, has been used minimally over the years, and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999968798286007,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:6",
+      "locator": {
+        "page": 0,
+        "x0": 72.5,
+        "y0": 397.983,
+        "x1": 538.7732,
+        "y1": 432.0
+      },
+      "text": "WHEREAS, certain other commercial and residential properties also consume a disproportionate amount of City resources due to criminal conduct and impact on neighboring properties; and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599367266465,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:89",
+      "locator": {
+        "page": 0,
+        "x0": 534.2,
+        "y0": 398.183,
+        "x1": 538.7732,
+        "y1": 404.6
+      },
+      "text": "be",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964092442489482,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:287",
+      "locator": {
+        "page": 0,
+        "x0": 466.1,
+        "y0": 411.883,
+        "x1": 476.9,
+        "y1": 418.3
+      },
+      "text": "hereby",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9842272770133398,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:288",
+      "locator": {
+        "page": 0,
+        "x0": 482.6,
+        "y0": 411.883,
+        "x1": 538.6628,
+        "y1": 418.3
+      },
+      "text": "amended",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9533953671091261,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:7",
+      "locator": {
+        "page": 0,
+        "x0": 72.2,
+        "y0": 453.183,
+        "x1": 538.4768,
+        "y1": 487.2
+      },
+      "text": "WHEREAS, staff is recommending a revision of Chapter 8.06 to include other commercial and residential properties that have chronic nuisance activity and to establish a stronger enforcement process; and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485586742404,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:290",
+      "locator": {
+        "page": 0,
+        "x0": 195.6,
+        "y0": 453.183,
+        "x1": 202.6035,
+        "y1": 459.6
+      },
+      "text": "8.06.020",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:294",
+      "locator": {
+        "page": 0,
+        "x0": 483.8,
+        "y0": 453.383,
+        "x1": 538.0916,
+        "y1": 459.8
+      },
+      "text": "which",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:296",
+      "locator": {
+        "page": 0,
+        "x0": 92.4,
+        "y0": 466.883,
+        "x1": 139.8924,
+        "y1": 473.3
+      },
+      "text": "a",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9960296980496317,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:297",
+      "locator": {
+        "page": 0,
+        "x0": 143.0,
+        "y0": 466.883,
+        "x1": 188.9885,
+        "y1": 473.3
+      },
+      "text": "chronic",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.98411649657313,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:295",
+      "locator": {
+        "page": 0,
+        "x0": 72.7,
+        "y0": 467.083,
+        "x1": 89.0173,
+        "y1": 473.5
+      },
+      "text": "is",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.995707389001829,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:299",
+      "locator": {
+        "page": 0,
+        "x0": 356.9,
+        "y0": 467.083,
+        "x1": 372.784,
+        "y1": 473.5
+      },
+      "text": "of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8828089519483877,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:301",
+      "locator": {
+        "page": 0,
+        "x0": 440.2,
+        "y0": 467.083,
+        "x1": 477.23,
+        "y1": 473.5
+      },
+      "text": "subject",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9936773259600794,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:75",
+      "locator": {
+        "page": 0,
+        "x0": 72.2,
+        "y0": 480.783,
+        "x1": 109.5578,
+        "y1": 487.2
+      },
+      "text": "its",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980972567361662,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:8",
+      "locator": {
+        "page": 0,
+        "x0": 72.2,
+        "y0": 508.383,
+        "x1": 538.1752,
+        "y1": 556.3
+      },
+      "text": "WHEREAS, the City Council finds that chronic nuisance properties can greatly impact quality of life, that chronic nuisance activities can convey the message that an area may be vulnerable to crime and unsafe, and that controlling nuisance activities at properties enhances safety and quality of life in the community; and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546029062921,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:9",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 577.483,
+        "x1": 537.8864,
+        "y1": 597.8
+      },
+      "text": "WHEREAS, the City Council finds that provisions of this Ordinance are necessary for the public health, safety and welfare; now therefore",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695191312848,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:10",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 632.983,
+        "x1": 537.3344,
+        "y1": 653.3
+      },
+      "text": "THE CITY COUNCIL OF THE CITY OF FIFE, PIERCE COUNTY, WASHINGTON DO ORDAIN AS FOLLOWS:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9914304312525684,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:107",
+      "locator": {
+        "page": 0,
+        "x0": 244.1,
+        "y0": 633.183,
+        "x1": 266.456,
+        "y1": 639.6
+      },
+      "text": "or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968294388256262,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:12",
+      "locator": {
+        "page": 0,
+        "x0": 72.0,
+        "y0": 687.883,
+        "x1": 165.2,
+        "y1": 694.3
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:16",
+      "locator": {
+        "page": 0,
+        "x0": 71.5,
+        "y0": 701.783,
+        "x1": 117.3791,
+        "y1": 708.2
+      },
+      "text": "Page 1 of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992072429963323,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:19",
+      "locator": {
+        "page": 1,
+        "x0": 74.3,
+        "y0": 176.1156,
+        "x1": 111.6692,
+        "y1": 182.7
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989682755126243,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:20",
+      "locator": {
+        "page": 1,
+        "x0": 110.0,
+        "y0": 204.083,
+        "x1": 195.6971,
+        "y1": 210.6
+      },
+      "text": "8.06.005 Purpose",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8355008232269243,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:22",
+      "locator": {
+        "page": 1,
+        "x0": 109.3,
+        "y0": 217.5156,
+        "x1": 503.5296,
+        "y1": 335.1
+      },
+      "text": "A. Chronic nuisance properties present grave health, safety and welfare concerns, where the persons responsible for such properties have failed to take corrective action to abate the nuisance condition. Chronic nuisance properties have a tremendous negative impact upon the quality of life, safety and health of the neighborhoods where they are located. This chapter is enacted to remedy nuisance activities that are particularly disruptive to quality of life and repeatedly occur or exist at properties by providing a process for abatement. This remedy is not an exclusive remedy available under any state or local laws and may be used in conjunction with such other laws.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756998175013,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:23",
+      "locator": {
+        "page": 1,
+        "x0": 109.7,
+        "y0": 217.7156,
+        "x1": 120.0032,
+        "y1": 224.3
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999970984462079,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:24",
+      "locator": {
+        "page": 1,
+        "x0": 108.5,
+        "y0": 355.6156,
+        "x1": 502.8752,
+        "y1": 404.8
+      },
+      "text": "B. Also, chronic nuisance properties are a financial burden to the City by the repeated calls for service to the properties because of the nuisance activities that repeatedly occur or exist on such property. This chapter is a means to ameliorate those conditions and hold accountable those persons responsible for such property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485586769497,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:25",
+      "locator": {
+        "page": 1,
+        "x0": 108.8,
+        "y0": 355.7156,
+        "x1": 118.4285,
+        "y1": 362.3
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999921145868,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:26",
+      "locator": {
+        "page": 1,
+        "x0": 72.6,
+        "y0": 424.7156,
+        "x1": 516.3632,
+        "y1": 445.0
+      },
+      "text": "Section 3. Section 8.06.0 10 of the Fife Municipal Code is hereby amended to read as follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040719363068,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:27",
+      "locator": {
+        "page": 1,
+        "x0": 108.5,
+        "y0": 466.383,
+        "x1": 208.45,
+        "y1": 473.0
+      },
+      "text": "8.06.010 Definitions",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8175993824063329,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:28",
+      "locator": {
+        "page": 1,
+        "x0": 107.7,
+        "y0": 479.8156,
+        "x1": 502.2836,
+        "y1": 500.5
+      },
+      "text": "For purposes of this chapter, the following words or phrases shall have the meaning prescribed below:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994472692379575,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:30",
+      "locator": {
+        "page": 1,
+        "x0": 107.5,
+        "y0": 521.3156,
+        "x1": 501.4732,
+        "y1": 570.4
+      },
+      "text": "A. \u201cAbate\u201d means to repair, replace, remove, destroy, or otherwise remedy a condition which constitutes a violation of this chapter by such means and in such a manner and to such an extent as the chief of police determines is necessary in the interest of the general health, safety and welfare of the community.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785551465769,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:31",
+      "locator": {
+        "page": 1,
+        "x0": 107.6,
+        "y0": 521.3156,
+        "x1": 130.2504,
+        "y1": 528.0
+      },
+      "text": "A. \u201c",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9986420531497102,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:32",
+      "locator": {
+        "page": 1,
+        "x0": 107.4,
+        "y0": 590.5156,
+        "x1": 501.0409,
+        "y1": 611.2
+      },
+      "text": "B. \u201cChief of police\u201d means the chief of the Fife police department or his or her designees.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999841572108921,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:33",
+      "locator": {
+        "page": 1,
+        "x0": 107.4,
+        "y0": 590.5156,
+        "x1": 127.9168,
+        "y1": 597.3
+      },
+      "text": "B. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9953936641568445,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:34",
+      "locator": {
+        "page": 1,
+        "x0": 107.0,
+        "y0": 632.2156,
+        "x1": 500.084,
+        "y1": 653.0
+      },
+      "text": "C. \u201cControl\u201d means the power or ability to direct or determine conditions, conduct, or events occurring on a property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99982047864095,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:35",
+      "locator": {
+        "page": 1,
+        "x0": 107.3,
+        "y0": 632.2156,
+        "x1": 126.1948,
+        "y1": 638.8
+      },
+      "text": "C. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9940941942919163,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:11",
+      "locator": {
+        "page": 1,
+        "x0": 254.2,
+        "y0": 632.6156,
+        "x1": 263.5296,
+        "y1": 639.2
+      },
+      "text": "or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9927757016423665,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:13",
+      "locator": {
+        "page": 1,
+        "x0": 342.0,
+        "y0": 632.9156,
+        "x1": 351.3296,
+        "y1": 639.5
+      },
+      "text": "convicted",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9933112636171545,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:36",
+      "locator": {
+        "page": 1,
+        "x0": 70.9,
+        "y0": 686.8156,
+        "x1": 164.2,
+        "y1": 693.9
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:65",
+      "locator": {
+        "page": 1,
+        "x0": 142.2,
+        "y0": 687.3156,
+        "x1": 164.2,
+        "y1": 693.9
+      },
+      "text": "vocation,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9636428454597327,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:40",
+      "locator": {
+        "page": 1,
+        "x0": 70.4,
+        "y0": 700.7156,
+        "x1": 116.2791,
+        "y1": 707.4
+      },
+      "text": "Page 2 of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998462181711584,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:43",
+      "locator": {
+        "page": 2,
+        "x0": 109.9,
+        "y0": 177.8156,
+        "x1": 390.8795,
+        "y1": 184.9
+      },
+      "text": "month period, has seven (7) or more nuisance activities; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810749329427,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:45",
+      "locator": {
+        "page": 2,
+        "x0": 109.6,
+        "y0": 205.4156,
+        "x1": 504.4296,
+        "y1": 226.1
+      },
+      "text": "3. A transient accommodation property that, within any 60-day period was 0.15 or more nuisance activities per lodging unit; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646444936695,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:46",
+      "locator": {
+        "page": 2,
+        "x0": 110.1,
+        "y0": 205.6156,
+        "x1": 129.842,
+        "y1": 212.2
+      },
+      "text": "3. A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995421771261217,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:47",
+      "locator": {
+        "page": 2,
+        "x0": 109.8,
+        "y0": 246.9156,
+        "x1": 502.925,
+        "y1": 267.6
+      },
+      "text": "4. A transient accommodation property that, within any 12-month period has 0.45 or more nuisance activities per lodging unit, or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999822217782659,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:48",
+      "locator": {
+        "page": 2,
+        "x0": 112.7,
+        "y0": 246.9156,
+        "x1": 132.6586,
+        "y1": 253.5
+      },
+      "text": "4. A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996331818621786,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:49",
+      "locator": {
+        "page": 2,
+        "x0": 109.2,
+        "y0": 288.4156,
+        "x1": 503.6752,
+        "y1": 350.5
+      },
+      "text": "5. A property which, upon a request for execution of a search warrant, has been the subject of a determination by a court two or more times within a 12-month period that probable cause exists that illegal possession, manufacture or delivery of a controlled substance or related offenses as defined in Chapter 69.50 RCW has occurred on the property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999877810887398,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:50",
+      "locator": {
+        "page": 2,
+        "x0": 109.8,
+        "y0": 288.4156,
+        "x1": 129.2586,
+        "y1": 295.0
+      },
+      "text": "5. A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990907243795705,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:52",
+      "locator": {
+        "page": 2,
+        "x0": 109.5,
+        "y0": 371.2156,
+        "x1": 299.1432,
+        "y1": 378.0
+      },
+      "text": "E. \u201cfMC\u201d means Fife Municipal Code.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040748684648,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:53",
+      "locator": {
+        "page": 2,
+        "x0": 109.5,
+        "y0": 371.2156,
+        "x1": 131.35,
+        "y1": 377.8
+      },
+      "text": "E. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9890600166625358,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:54",
+      "locator": {
+        "page": 2,
+        "x0": 109.2,
+        "y0": 398.8156,
+        "x1": 503.249,
+        "y1": 419.4
+      },
+      "text": "F. \u201cLodging unit\u201d shall mean one self-contained unit designated by number, letter or some other method of identification.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785552836061,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:55",
+      "locator": {
+        "page": 2,
+        "x0": 109.2,
+        "y0": 398.8156,
+        "x1": 127.4392,
+        "y1": 405.4
+      },
+      "text": "F. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9826748653391808,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:56",
+      "locator": {
+        "page": 2,
+        "x0": 108.4,
+        "y0": 440.1156,
+        "x1": 504.129,
+        "y1": 530.2
+      },
+      "text": "G. \u201cNuisance activity\u201d means any nuisance described in this subsection that occurs or exists upon a property, or if specified in this section, occurs or exists within two hundred (200) feet of a property. To be considered a nuisance activity within two hundred (200) feet of the property, the nuisance activity must involve the person in control of the property and/or any person associated with the person in control of the property. A person is associated with the person in control of the property if he or she is a guest or invitee of the person in control of the property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999930377625287,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:57",
+      "locator": {
+        "page": 2,
+        "x0": 109.2,
+        "y0": 440.1156,
+        "x1": 128.3392,
+        "y1": 446.9
+      },
+      "text": "G. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.967130370980933,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:58",
+      "locator": {
+        "page": 2,
+        "x0": 108.1,
+        "y0": 550.7156,
+        "x1": 502.1296,
+        "y1": 571.4
+      },
+      "text": "\u201cNuisance Activity\u201d includes the following criminal conduct that occurs on or within two hundred (200) feet of a property:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911134079063,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:60",
+      "locator": {
+        "page": 2,
+        "x0": 109.0,
+        "y0": 592.3156,
+        "x1": 390.2,
+        "y1": 599.3
+      },
+      "text": "1. A \u201cmost serious offense\u201d as defined in RCW 9.94A.030;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999296962966859,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:61",
+      "locator": {
+        "page": 2,
+        "x0": 109.0,
+        "y0": 592.3156,
+        "x1": 127.742,
+        "y1": 598.9
+      },
+      "text": "1. A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995755749257741,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:62",
+      "locator": {
+        "page": 2,
+        "x0": 107.5,
+        "y0": 620.1156,
+        "x1": 501.15,
+        "y1": 640.8
+      },
+      "text": "2. Any activity which constitutes a violation of Chapter 69.41, 69.50, or 69.52 RCW, or Chapter 9.20 or 9.21 FMC;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999757007227471,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:63",
+      "locator": {
+        "page": 2,
+        "x0": 107.8,
+        "y0": 620.1156,
+        "x1": 129.7918,
+        "y1": 626.7
+      },
+      "text": "2. A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9978245280676001,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:64",
+      "locator": {
+        "page": 2,
+        "x0": 72.0,
+        "y0": 688.7156,
+        "x1": 165.0,
+        "y1": 695.4
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:37",
+      "locator": {
+        "page": 2,
+        "x0": 71.7,
+        "y0": 702.6156,
+        "x1": 94.056,
+        "y1": 709.2
+      },
+      "text": "or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415864292619,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:68",
+      "locator": {
+        "page": 2,
+        "x0": 71.7,
+        "y0": 702.6156,
+        "x1": 118.6119,
+        "y1": 709.2
+      },
+      "text": "Page 3 of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989988862667261,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:71",
+      "locator": {
+        "page": 3,
+        "x0": 108.7,
+        "y0": 177.183,
+        "x1": 503.1235,
+        "y1": 557.0
+      },
+      "text": "defined in Chapter 9A.88 RCW; Prostitution as defined in Chapter 9A.88 RCW; Obstructing pedestrian or vehicular traffic, as defined in FMC 9.37.020; Failure to disperse, as defined in RCW 9A.84.020; Weapons violations, as defined in Chapter 9.41 RCW; Drug loitering, as defined in Chapter 9.22 fMC; Prostitution loitering as defined in Chapter 9.23 fMC; Child molestation in the third degree as defined in RCW 9A.44.089; Sexual misconduct with a minor as defined in RCW 9A.44.093 or 9A.44.096; \u201cCriminal street gang-related offense\u201d as defined in RCW 9.94A.030; Thefi of a motor vehicle or mail, or possession of a stolen motor vehicle or stole mail, as defined in Chapter 9A.56 RCW; Any domestic violence crime as defined in RCW 10.99.020; Indecent exposure, as defined on Chapter 9.26 fMC; Any dangerous animal violation, as defined in FMC 6.03.030.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251584468927,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:72",
+      "locator": {
+        "page": 3,
+        "x0": 108.5,
+        "y0": 577.783,
+        "x1": 502.3294,
+        "y1": 612.0
+      },
+      "text": "4. for purposed of this chapter, \u201cnuisance activity\u201d shall not include conduct where the person in charge is the victim of a crime and had no control over the criminal act.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911060995069,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:73",
+      "locator": {
+        "page": 3,
+        "x0": 108.0,
+        "y0": 633.183,
+        "x1": 502.106,
+        "y1": 653.5
+      },
+      "text": "H. \u201cOwner\u201d means any person who, alone or with others, has title or interest in any property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415711620601,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:74",
+      "locator": {
+        "page": 3,
+        "x0": 72.2,
+        "y0": 688.183,
+        "x1": 165.5,
+        "y1": 694.6
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:78",
+      "locator": {
+        "page": 3,
+        "x0": 72.0,
+        "y0": 701.783,
+        "x1": 117.829,
+        "y1": 708.5
+      },
+      "text": "Page 4 of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990378173685848,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:81",
+      "locator": {
+        "page": 4,
+        "x0": 109.9,
+        "y0": 177.1156,
+        "x1": 503.5526,
+        "y1": 211.3
+      },
+      "text": "any other person in actual or constructive possession of a property, including but not limited to a lessee, tenant, occupant, agent, or manager of a property under his or her control.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417092761159,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:83",
+      "locator": {
+        "page": 4,
+        "x0": 109.5,
+        "y0": 246.2156,
+        "x1": 503.2357,
+        "y1": 308.0
+      },
+      "text": "K. \u201cProperty\u201d means any land and that which is affixed, incidental or appurtenant to land, including but not limited to any business or residence, grounds, vacant lots, facilities,parking area, recreation area, loading area, landscaping,building or structure or any separate part, unit or portion thereof, or any business equipment, whether or not permanent..",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546026867037,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:84",
+      "locator": {
+        "page": 4,
+        "x0": 109.8,
+        "y0": 246.2156,
+        "x1": 130.3948,
+        "y1": 252.8
+      },
+      "text": "K. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9985484342590443,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:85",
+      "locator": {
+        "page": 4,
+        "x0": 109.5,
+        "y0": 329.0156,
+        "x1": 356.3711,
+        "y1": 336.0
+      },
+      "text": "L. \u201cRCW\u201d means the Revised Code of Washington.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965796291631,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:86",
+      "locator": {
+        "page": 4,
+        "x0": 109.5,
+        "y0": 329.0156,
+        "x1": 127.8504,
+        "y1": 335.6
+      },
+      "text": "L. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996766917829982,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:87",
+      "locator": {
+        "page": 4,
+        "x0": 109.2,
+        "y0": 356.6156,
+        "x1": 502.5496,
+        "y1": 405.3
+      },
+      "text": "M. \u201cTransient accommodation\u201d means any facility such as a hotel, motel, condominium, resort, or any other facility or place offering six or more lodging units to guests for periods of less than 30 days, but shall not include jails, hospitals, asylums, sanitariums, orphanages, prisons, detention homes, and similar facilities.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810749378142,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:88",
+      "locator": {
+        "page": 4,
+        "x0": 109.2,
+        "y0": 356.6156,
+        "x1": 135.7948,
+        "y1": 363.2
+      },
+      "text": "M. \u201c",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9981038910826641,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:91",
+      "locator": {
+        "page": 4,
+        "x0": 73.2,
+        "y0": 425.7156,
+        "x1": 538.3131,
+        "y1": 598.6
+      },
+      "text": "Section 4. Section 8.06.020 of the fife Municipal Code is hereby amended to read as follows: 8.06.020 Violation. A. Any property within the city of fife which is a chronic nuisance property is in violation of this chapter and subject to its remedies; B. Owners and other persons in charge who permit property to be a chronic nuisance property shall be in violation of this chapter and subject to its remedies; and C. An owner who fails to comply with FMC 8.06.035 is in violation of this chapter and may be subject to penalties pursuant to FMC 8.06.050.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766099801203,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:92",
+      "locator": {
+        "page": 4,
+        "x0": 109.4,
+        "y0": 425.7156,
+        "x1": 236.55,
+        "y1": 432.4
+      },
+      "text": "Section 4. Section 8.06.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9890296484532396,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:93",
+      "locator": {
+        "page": 4,
+        "x0": 73.2,
+        "y0": 439.3156,
+        "x1": 110.8971,
+        "y1": 445.9
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999447574660341,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:94",
+      "locator": {
+        "page": 4,
+        "x0": 108.9,
+        "y0": 467.383,
+        "x1": 202.6416,
+        "y1": 473.9
+      },
+      "text": "8.06.020 Violation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9466010595771654,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:96",
+      "locator": {
+        "page": 4,
+        "x0": 108.6,
+        "y0": 480.9156,
+        "x1": 501.6035,
+        "y1": 501.6
+      },
+      "text": "A. Any property within the city of fife which is a chronic nuisance property is in violation of this chapter and subject to its remedies;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852611237612,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:97",
+      "locator": {
+        "page": 4,
+        "x0": 120.6,
+        "y0": 480.9156,
+        "x1": 130.9032,
+        "y1": 487.5
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999988642428844,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:98",
+      "locator": {
+        "page": 4,
+        "x0": 108.6,
+        "y0": 494.6156,
+        "x1": 366.3784,
+        "y1": 501.6
+      },
+      "text": "in violation of this chapter and subject to its remedies;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485582635282,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:99",
+      "locator": {
+        "page": 4,
+        "x0": 120.4,
+        "y0": 522.3156,
+        "x1": 501.3885,
+        "y1": 529.8
+      },
+      "text": "B. Owners and other persons in charge who permit property to be a chronic",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994473675701526,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:100",
+      "locator": {
+        "page": 4,
+        "x0": 120.4,
+        "y0": 522.4156,
+        "x1": 130.0285,
+        "y1": 529.0
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999989332698788,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:101",
+      "locator": {
+        "page": 4,
+        "x0": 108.1,
+        "y0": 536.1156,
+        "x1": 501.0008,
+        "y1": 556.6
+      },
+      "text": "nuisance property shall be in violation of this chapter and subject to its remedies; and",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869929293501,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:102",
+      "locator": {
+        "page": 4,
+        "x0": 108.0,
+        "y0": 577.6156,
+        "x1": 500.9285,
+        "y1": 598.6
+      },
+      "text": "C. An owner who fails to comply with FMC 8.06.035 is in violation of this chapter and may be subject to penalties pursuant to FMC 8.06.050.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687983158951,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:103",
+      "locator": {
+        "page": 4,
+        "x0": 108.3,
+        "y0": 619.4156,
+        "x1": 536.9632,
+        "y1": 626.6
+      },
+      "text": "Section 5. Section 8.06.030 of the fife Municipal Code is hereby amended to read as",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986752179462971,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:104",
+      "locator": {
+        "page": 4,
+        "x0": 108.3,
+        "y0": 619.4156,
+        "x1": 235.15,
+        "y1": 626.1
+      },
+      "text": "Section 5. Section 8.06.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.962769152919692,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:105",
+      "locator": {
+        "page": 4,
+        "x0": 72.0,
+        "y0": 633.0156,
+        "x1": 109.3692,
+        "y1": 639.6
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996647546382478,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:106",
+      "locator": {
+        "page": 4,
+        "x0": 71.7,
+        "y0": 688.0156,
+        "x1": 165.0,
+        "y1": 694.6
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:110",
+      "locator": {
+        "page": 5,
+        "x0": 110.4,
+        "y0": 176.8156,
+        "x1": 147.7751,
+        "y1": 183.4
+      },
+      "text": "contain:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975288290851018,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:112",
+      "locator": {
+        "page": 5,
+        "x0": 109.8,
+        "y0": 204.4156,
+        "x1": 503.7308,
+        "y1": 224.9
+      },
+      "text": "1. The street address or a legal description sufficient for identification of the property;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965917285764,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:113",
+      "locator": {
+        "page": 5,
+        "x0": 123.1,
+        "y0": 204.4156,
+        "x1": 129.85,
+        "y1": 211.0
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:114",
+      "locator": {
+        "page": 5,
+        "x0": 109.8,
+        "y0": 218.3156,
+        "x1": 152.6922,
+        "y1": 224.9
+      },
+      "text": "property;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995122790153157,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:115",
+      "locator": {
+        "page": 5,
+        "x0": 121.8,
+        "y0": 245.9156,
+        "x1": 503.2962,
+        "y1": 253.1
+      },
+      "text": "2. A declaration that the chief of police has determined that the property has",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388302931655,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:116",
+      "locator": {
+        "page": 5,
+        "x0": 121.8,
+        "y0": 245.9156,
+        "x1": 129.45,
+        "y1": 252.5
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:117",
+      "locator": {
+        "page": 5,
+        "x0": 109.6,
+        "y0": 259.6156,
+        "x1": 503.3882,
+        "y1": 280.3
+      },
+      "text": "become a chronic nuisance property with a concise description of the nuisance activities that exist or that have occurred;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339487912579,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:119",
+      "locator": {
+        "page": 5,
+        "x0": 109.5,
+        "y0": 301.1156,
+        "x1": 503.0628,
+        "y1": 321.8
+      },
+      "text": "3. A notice that the owner and other persons in charge of the property are subject to monetary penalties as set forth in FMC 8.06.050;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766089382488,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:120",
+      "locator": {
+        "page": 5,
+        "x0": 121.8,
+        "y0": 301.1156,
+        "x1": 141.1586,
+        "y1": 307.8
+      },
+      "text": "3. A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984034095703891,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:121",
+      "locator": {
+        "page": 5,
+        "x0": 109.5,
+        "y0": 314.9156,
+        "x1": 354.8693,
+        "y1": 321.8
+      },
+      "text": "to monetary penalties as set forth in FMC 8.06.050;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417103959201,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:122",
+      "locator": {
+        "page": 5,
+        "x0": 121.2,
+        "y0": 342.5156,
+        "x1": 504.2791,
+        "y1": 349.8
+      },
+      "text": "4. A demand that the owner and other persons in charge respond to the chief of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040574733698,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:123",
+      "locator": {
+        "page": 5,
+        "x0": 121.2,
+        "y0": 342.7156,
+        "x1": 141.642,
+        "y1": 349.3
+      },
+      "text": "4. A",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9982999169537201,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:124",
+      "locator": {
+        "page": 5,
+        "x0": 109.2,
+        "y0": 356.3156,
+        "x1": 502.8024,
+        "y1": 376.9
+      },
+      "text": "police within seven days of service of the notice to discuss a course of action to correct the nuisance;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417098681792,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:125",
+      "locator": {
+        "page": 5,
+        "x0": 108.9,
+        "y0": 397.7156,
+        "x1": 502.8308,
+        "y1": 459.8
+      },
+      "text": "5. A notice that, if the person in charge does not respond to the chief of police as required in this section, or if the matter is not voluntarily corrected to the satisfaction of the chief of police, the city may file an action to abate the property as a chronic nuisance property pursuant to FMC 8.06.060 and/or take other action against the property or person in charge.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999985261064175,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:127",
+      "locator": {
+        "page": 5,
+        "x0": 108.3,
+        "y0": 480.5156,
+        "x1": 502.4296,
+        "y1": 542.5
+      },
+      "text": "B. When a notice is issued pursuant to this section to a person in charge, other than an owner or an owner\u2019s agent, who has permitted a property to become a chronic nuisance property, a copy of such notice shall also be sent by first class mail or personally served on the owner of the property, and a copy shall be sent by certified mail.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485590998639,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:128",
+      "locator": {
+        "page": 5,
+        "x0": 108.9,
+        "y0": 480.7156,
+        "x1": 118.2534,
+        "y1": 487.3
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999975952278221,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:129",
+      "locator": {
+        "page": 5,
+        "x0": 107.8,
+        "y0": 563.5156,
+        "x1": 501.665,
+        "y1": 612.0
+      },
+      "text": "C. If the owner or person in charge responds as required by the notice issued pursuant to subsection (A) of this section and agrees to a course of action to abate the nuisance activities, a written correction agreement conforming to the requirements of FMC 8.06.040 shall be executed.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599366201234,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:130",
+      "locator": {
+        "page": 5,
+        "x0": 108.6,
+        "y0": 563.7156,
+        "x1": 117.9534,
+        "y1": 570.3
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999987125367058,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:131",
+      "locator": {
+        "page": 5,
+        "x0": 107.8,
+        "y0": 632.8156,
+        "x1": 501.4381,
+        "y1": 653.9
+      },
+      "text": "D. If (1) the agreed course of action does not result in the abatement of nuisance activities to the satisfaction of the chief of police within 30 days of issuance of the",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388200145941,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:132",
+      "locator": {
+        "page": 5,
+        "x0": 107.8,
+        "y0": 632.8156,
+        "x1": 117.9088,
+        "y1": 639.4
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999955115668535,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:276",
+      "locator": {
+        "page": 5,
+        "x0": 446.4,
+        "y0": 633.6156,
+        "x1": 457.229,
+        "y1": 640.2
+      },
+      "text": "of",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8372527959030258,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:257",
+      "locator": {
+        "page": 5,
+        "x0": 254.4,
+        "y0": 646.9156,
+        "x1": 268.3308,
+        "y1": 653.5
+      },
+      "text": "the",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.987572280306426,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:159",
+      "locator": {
+        "page": 5,
+        "x0": 393.1,
+        "y0": 647.2156,
+        "x1": 413.8129,
+        "y1": 653.8
+      },
+      "text": "days",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9959313294156859,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:133",
+      "locator": {
+        "page": 5,
+        "x0": 72.0,
+        "y0": 687.5156,
+        "x1": 165.6,
+        "y1": 694.4
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:137",
+      "locator": {
+        "page": 6,
+        "x0": 110.1,
+        "y0": 176.8156,
+        "x1": 503.7024,
+        "y1": 211.5
+      },
+      "text": "determine that the property had become chronic nuisance property, or could not in spite of the exercise of reasonable care and diligence control the conduct leading to the determination that the property is chronic nuisance property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251544524428,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:139",
+      "locator": {
+        "page": 6,
+        "x0": 74.3,
+        "y0": 232.1156,
+        "x1": 539.2632,
+        "y1": 390.6
+      },
+      "text": "Section 6. Section 8.06.035 of the fife Municipal Code is hereby amended to read as follows: 8.06.035 Owner cooperation. An owner who receives a copy of a notice pursuant to FMC 8.06.030(B) describing a chronic nuisance property permitted by a person in charge other than the owner or the owner\u2019s agent shall promptly take all reasonable steps requested in writing by the chief of police to assist in abatement of the nuisance property. Such reasonable steps may include the owner taking all actions and pursuing all remedies, including pursuing eviction of the person in charge, that are (A) available to the owner pursuant to any lease or other agreement, and (B) consistent with state and local laws.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992903594664527,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:140",
+      "locator": {
+        "page": 6,
+        "x0": 110.6,
+        "y0": 232.3156,
+        "x1": 157.825,
+        "y1": 238.9
+      },
+      "text": "Section 6.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7312412956674694,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:141",
+      "locator": {
+        "page": 6,
+        "x0": 74.3,
+        "y0": 245.9156,
+        "x1": 111.6692,
+        "y1": 252.5
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992906968062686,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:142",
+      "locator": {
+        "page": 6,
+        "x0": 110.0,
+        "y0": 273.983,
+        "x1": 255.2375,
+        "y1": 280.5
+      },
+      "text": "8.06.035 Owner cooperation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9579137652943355,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:143",
+      "locator": {
+        "page": 6,
+        "x0": 109.2,
+        "y0": 287.2156,
+        "x1": 503.5588,
+        "y1": 390.6
+      },
+      "text": "An owner who receives a copy of a notice pursuant to FMC 8.06.030(B) describing a chronic nuisance property permitted by a person in charge other than the owner or the owner\u2019s agent shall promptly take all reasonable steps requested in writing by the chief of police to assist in abatement of the nuisance property. Such reasonable steps may include the owner taking all actions and pursuing all remedies, including pursuing eviction of the person in charge, that are (A) available to the owner pursuant to any lease or other agreement, and (B) consistent with state and local laws.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546024190609,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:144",
+      "locator": {
+        "page": 6,
+        "x0": 73.6,
+        "y0": 411.5156,
+        "x1": 538.5632,
+        "y1": 432.0
+      },
+      "text": "Section 7. Section 8.06.040 of the fife Municipal Code is hereby amended to read as follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9947809520953693,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:145",
+      "locator": {
+        "page": 6,
+        "x0": 109.9,
+        "y0": 411.5156,
+        "x1": 157.125,
+        "y1": 418.4
+      },
+      "text": "Section 7.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9669475033633816,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:146",
+      "locator": {
+        "page": 6,
+        "x0": 73.6,
+        "y0": 425.4156,
+        "x1": 110.9692,
+        "y1": 432.0
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9983003610801344,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:147",
+      "locator": {
+        "page": 6,
+        "x0": 108.8,
+        "y0": 439.583,
+        "x1": 502.465,
+        "y1": 528.8
+      },
+      "text": "8.06.040 Correction agreement. A. A correction agreement is a contract between the city and the person in charge of the chronic nuisance property in which such person agrees to promptly take all lawful and reasonable actions, which shall be set forth in the agreement, to abate the nuisance activities within a specified time and according to specified conditions. The agreement shall be signed by the person in charge and, if different, the owner. The agreement shall include the following:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040472549219,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:148",
+      "locator": {
+        "page": 6,
+        "x0": 109.4,
+        "y0": 439.583,
+        "x1": 118.1,
+        "y1": 446.0
+      },
+      "text": "8.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:150",
+      "locator": {
+        "page": 6,
+        "x0": 145.5,
+        "y0": 536.0156,
+        "x1": 463.8256,
+        "y1": 543.0
+      },
+      "text": "1. The name and address of the person(s) in charge of the property;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997549595441213,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:151",
+      "locator": {
+        "page": 6,
+        "x0": 145.5,
+        "y0": 536.1156,
+        "x1": 151.95,
+        "y1": 542.7
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:152",
+      "locator": {
+        "page": 6,
+        "x0": 144.1,
+        "y0": 549.8156,
+        "x1": 501.9752,
+        "y1": 584.2
+      },
+      "text": "2. The street address or a description sufficient for identification of the property, building, structure, or land upon or within which the nuisance is occurring;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415698681733,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:153",
+      "locator": {
+        "page": 6,
+        "x0": 144.3,
+        "y0": 549.8156,
+        "x1": 151.95,
+        "y1": 556.4
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:154",
+      "locator": {
+        "page": 6,
+        "x0": 144.3,
+        "y0": 591.3156,
+        "x1": 344.6013,
+        "y1": 598.2
+      },
+      "text": "3. A description of the nuisance activities;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997580828050054,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:155",
+      "locator": {
+        "page": 6,
+        "x0": 144.3,
+        "y0": 591.6156,
+        "x1": 151.725,
+        "y1": 598.2
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:156",
+      "locator": {
+        "page": 6,
+        "x0": 144.0,
+        "y0": 605.1156,
+        "x1": 501.4504,
+        "y1": 625.8
+      },
+      "text": "4. The necessary corrective action to be taken, and a date or time by which correction must be completed;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388303199457,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:157",
+      "locator": {
+        "page": 6,
+        "x0": 144.0,
+        "y0": 605.2156,
+        "x1": 151.425,
+        "y1": 611.8
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:158",
+      "locator": {
+        "page": 6,
+        "x0": 72.2,
+        "y0": 687.7156,
+        "x1": 165.6,
+        "y1": 694.4
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:162",
+      "locator": {
+        "page": 7,
+        "x0": 146.6,
+        "y0": 176.783,
+        "x1": 504.6962,
+        "y1": 225.8
+      },
+      "text": "7. When a person in charge, other than an owner or an owner\u2019s agent, has permitted a property to be a chronic nuisance property, an agreement by the owner to promptly take all acts and pursue all remedies requested by the chief of police pursuant to FMC 8.06.035.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999861541360366,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:163",
+      "locator": {
+        "page": 7,
+        "x0": 110.7,
+        "y0": 231.883,
+        "x1": 504.6308,
+        "y1": 252.2
+      },
+      "text": "B. Corrective action may include, but is not limited to, one or more of the following:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984990186807475,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:165",
+      "locator": {
+        "page": 7,
+        "x0": 147.6,
+        "y0": 259.583,
+        "x1": 443.0538,
+        "y1": 267.1
+      },
+      "text": "1. Have a representative available on the premises at all times.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388425394007,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:166",
+      "locator": {
+        "page": 7,
+        "x0": 147.6,
+        "y0": 259.583,
+        "x1": 153.6,
+        "y1": 266.0
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:167",
+      "locator": {
+        "page": 7,
+        "x0": 146.1,
+        "y0": 273.483,
+        "x1": 504.1758,
+        "y1": 294.2
+      },
+      "text": "2. Install and operate a surveillance camera (with recorder) in the lobby for 24 hours per day, seven days per week.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999822216431645,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:168",
+      "locator": {
+        "page": 7,
+        "x0": 146.1,
+        "y0": 273.483,
+        "x1": 153.3,
+        "y1": 279.9
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:169",
+      "locator": {
+        "page": 7,
+        "x0": 146.2,
+        "y0": 301.083,
+        "x1": 505.529,
+        "y1": 322.6
+      },
+      "text": "3. Provide the fife police department with the names and dates of birth of all owners, managers, and employees to allow for background checks.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999916019786322,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:170",
+      "locator": {
+        "page": 7,
+        "x0": 146.3,
+        "y0": 301.083,
+        "x1": 153.5,
+        "y1": 307.5
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:171",
+      "locator": {
+        "page": 7,
+        "x0": 216.8,
+        "y0": 301.383,
+        "x1": 235.3991,
+        "y1": 307.8944
+      },
+      "text": "fife",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:172",
+      "locator": {
+        "page": 7,
+        "x0": 146.2,
+        "y0": 301.483,
+        "x1": 505.529,
+        "y1": 322.6
+      },
+      "text": "police department with the names and dates of birth of all owners, managers, and employees to allow for background checks.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852611518424,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:173",
+      "locator": {
+        "page": 7,
+        "x0": 145.7,
+        "y0": 328.683,
+        "x1": 503.506,
+        "y1": 348.8
+      },
+      "text": "4. Hold semi-annual employee training sessions, assisted by the Fife police department.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832987847095,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:174",
+      "locator": {
+        "page": 7,
+        "x0": 145.7,
+        "y0": 328.683,
+        "x1": 153.125,
+        "y1": 335.1
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:175",
+      "locator": {
+        "page": 7,
+        "x0": 146.0,
+        "y0": 356.283,
+        "x1": 337.8007,
+        "y1": 363.3
+      },
+      "text": "5. Provide 24-hour front desk personnel.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601896449043,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:176",
+      "locator": {
+        "page": 7,
+        "x0": 146.0,
+        "y0": 356.283,
+        "x1": 152.975,
+        "y1": 362.7
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:177",
+      "locator": {
+        "page": 7,
+        "x0": 145.8,
+        "y0": 369.983,
+        "x1": 503.0308,
+        "y1": 488.0
+      },
+      "text": "6. Enforce the following guest rules: a. Units cannot be rented for less than a six-hour period. b. No unit may be used for drunkenness, fighting, or breaches of the peace. No unit may be used if loud noises come from that unit. Loud noises are those noises that disturb the tranquility of the neighborhood or those noises that would be disturbing to a reasonable person. c. Alcohol may not be consumed in common areas except for designated banquet or reception rooms or areas.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965847857386,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:178",
+      "locator": {
+        "page": 7,
+        "x0": 145.8,
+        "y0": 369.983,
+        "x1": 153.0,
+        "y1": 376.4
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:180",
+      "locator": {
+        "page": 7,
+        "x0": 181.5,
+        "y0": 384.083,
+        "x1": 448.1575,
+        "y1": 391.4
+      },
+      "text": "a. Units cannot be rented for less than a six-hour period.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599366512464,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:181",
+      "locator": {
+        "page": 7,
+        "x0": 181.5,
+        "y0": 384.283,
+        "x1": 188.0236,
+        "y1": 390.7
+      },
+      "text": "a.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999998363328142,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:182",
+      "locator": {
+        "page": 7,
+        "x0": 180.5,
+        "y0": 397.883,
+        "x1": 503.0308,
+        "y1": 459.8
+      },
+      "text": "b. No unit may be used for drunkenness, fighting, or breaches of the peace. No unit may be used if loud noises come from that unit. Loud noises are those noises that disturb the tranquility of the neighborhood or those noises that would be disturbing to a reasonable person.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999623644395349,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:183",
+      "locator": {
+        "page": 7,
+        "x0": 180.9,
+        "y0": 397.983,
+        "x1": 188.55,
+        "y1": 404.4
+      },
+      "text": "b.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999998145514162,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:184",
+      "locator": {
+        "page": 7,
+        "x0": 180.6,
+        "y0": 466.883,
+        "x1": 502.9758,
+        "y1": 488.0
+      },
+      "text": "c. Alcohol may not be consumed in common areas except for designated banquet or reception rooms or areas.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999972464508757,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:185",
+      "locator": {
+        "page": 7,
+        "x0": 180.9,
+        "y0": 467.083,
+        "x1": 187.6318,
+        "y1": 473.5
+      },
+      "text": "c.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999997127903013,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:186",
+      "locator": {
+        "page": 7,
+        "x0": 144.5,
+        "y0": 494.383,
+        "x1": 502.7008,
+        "y1": 542.5
+      },
+      "text": "7. Maintain a daily key log. Each key that is found to be missing must have its corresponding lock re-keyed prior to the unit being rented. Each master key that is found to be missing will require the establishment to re-key all corresponding locks.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999877810321298,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:187",
+      "locator": {
+        "page": 7,
+        "x0": 145.0,
+        "y0": 494.583,
+        "x1": 151.975,
+        "y1": 501.0
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:188",
+      "locator": {
+        "page": 7,
+        "x0": 144.3,
+        "y0": 549.583,
+        "x1": 501.938,
+        "y1": 571.2
+      },
+      "text": "8. Issue parking passes to all vehicles to be allowed to park on the premises with each pass marked with the issue date and expiration date.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832987094055,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:189",
+      "locator": {
+        "page": 7,
+        "x0": 144.6,
+        "y0": 549.783,
+        "x1": 151.575,
+        "y1": 556.2
+      },
+      "text": "8.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:190",
+      "locator": {
+        "page": 7,
+        "x0": 143.9,
+        "y0": 577.383,
+        "x1": 501.5594,
+        "y1": 611.5
+      },
+      "text": "9. Participate in the Fife police department \u2018crirninaI trespass program.\u201d Participation shall mean the facility shall be registered in the \u201ccriminal trespass program.\u201d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999954603507977,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:191",
+      "locator": {
+        "page": 7,
+        "x0": 144.2,
+        "y0": 577.383,
+        "x1": 151.175,
+        "y1": 583.8
+      },
+      "text": "9.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:192",
+      "locator": {
+        "page": 7,
+        "x0": 143.5,
+        "y0": 618.883,
+        "x1": 502.8791,
+        "y1": 639.2
+      },
+      "text": "10. Remove all graffiti and repair all vandalism within seven days of occurrence.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810750413447,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:193",
+      "locator": {
+        "page": 7,
+        "x0": 144.8,
+        "y0": 618.883,
+        "x1": 157.05,
+        "y1": 625.3
+      },
+      "text": "10.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:134",
+      "locator": {
+        "page": 7,
+        "x0": 431.6,
+        "y0": 620.183,
+        "x1": 457.7855,
+        "y1": 626.6
+      },
+      "text": "seven",
+      "type": "Other",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:194",
+      "locator": {
+        "page": 7,
+        "x0": 71.6,
+        "y0": 687.483,
+        "x1": 164.7,
+        "y1": 694.2
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:198",
+      "locator": {
+        "page": 8,
+        "x0": 145.8,
+        "y0": 177.183,
+        "x1": 377.7116,
+        "y1": 183.8
+      },
+      "text": "of one and one-half foot-candles at ground level.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546026123386,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:200",
+      "locator": {
+        "page": 8,
+        "x0": 145.6,
+        "y0": 190.983,
+        "x1": 504.1409,
+        "y1": 225.3
+      },
+      "text": "14. Install and operate video monitoring equipment in all parking lots, monitored and recorded at the front desk 24 hours per day, seven days per week.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546028586714,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:201",
+      "locator": {
+        "page": 8,
+        "x0": 147.0,
+        "y0": 191.283,
+        "x1": 159.25,
+        "y1": 197.7
+      },
+      "text": "14.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:202",
+      "locator": {
+        "page": 8,
+        "x0": 145.7,
+        "y0": 232.383,
+        "x1": 503.749,
+        "y1": 252.9
+      },
+      "text": "15. Have a licensed, armed and uniformed security guard on the premises every day from 6:00 p.m. until 6:00 a.m.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687983238693,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:203",
+      "locator": {
+        "page": 8,
+        "x0": 146.7,
+        "y0": 232.783,
+        "x1": 159.2,
+        "y1": 239.2
+      },
+      "text": "15.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:204",
+      "locator": {
+        "page": 8,
+        "x0": 145.4,
+        "y0": 260.183,
+        "x1": 503.5948,
+        "y1": 280.8
+      },
+      "text": "16. Submit to scheduled semi-annual audits by the city of Fife police department to verify compliance with the above-referenced requirements.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485583404448,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:205",
+      "locator": {
+        "page": 8,
+        "x0": 146.6,
+        "y0": 260.383,
+        "x1": 159.1,
+        "y1": 266.8
+      },
+      "text": "16.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:206",
+      "locator": {
+        "page": 8,
+        "x0": 145.3,
+        "y0": 287.783,
+        "x1": 503.7294,
+        "y1": 335.5
+      },
+      "text": "17. Undergo a Fife police department crime prevention assessment of their property to be conducted by the Fife police crime prevention unit using standards from the crime prevention through environmental design (CPTED) program.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810749560284,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:207",
+      "locator": {
+        "page": 8,
+        "x0": 146.6,
+        "y0": 287.983,
+        "x1": 158.85,
+        "y1": 294.4
+      },
+      "text": "17.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:208",
+      "locator": {
+        "page": 8,
+        "x0": 73.5,
+        "y0": 356.683,
+        "x1": 539.4131,
+        "y1": 376.8
+      },
+      "text": "Section 8. Section 8.06.050 of the Fife Municipal Code is hereby amended to read as follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991959931373768,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:209",
+      "locator": {
+        "page": 8,
+        "x0": 108.3,
+        "y0": 398.383,
+        "x1": 502.7882,
+        "y1": 473.6
+      },
+      "text": "8.06.050 Penalties. A. Except as provided in this section, in addition to any other sanction or remedial procedure that may be available, the person in charge is subject to a penalty of up to $500.00 per day from the date of the notice issued pursuant to FMC 8.06.030(A) until the chief of police confirms that the property is no longer a chronic nuisance property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911038749014,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:211",
+      "locator": {
+        "page": 8,
+        "x0": 108.1,
+        "y0": 494.683,
+        "x1": 502.66,
+        "y1": 584.5
+      },
+      "text": "B. If the agreed course of action results in the abatement of nuisance activities to the satisfaction of the chief of police within 30 days of the notice issued pursuant to FMC 8.06.030(A) or such longer period allowed by the chief of police pursuant to FMC 8.06.030(D) and remains under the applicable chronic nuisance thresholds established in FMC 8.06.010(D) for 12 continuous months thereafter, the matter shall not be referred to the city attorney and the person in charge shall not be subject to any penalty pursuant to this chapter.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687983348892,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:212",
+      "locator": {
+        "page": 8,
+        "x0": 120.3,
+        "y0": 494.783,
+        "x1": 129.9285,
+        "y1": 501.2
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999972794809683,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:213",
+      "locator": {
+        "page": 8,
+        "x0": 108.1,
+        "y0": 508.483,
+        "x1": 502.66,
+        "y1": 584.5
+      },
+      "text": "the satisfaction of the chief of police within 30 days of the notice issued pursuant to FMC 8.06.030(A) or such longer period allowed by the chief of police pursuant to FMC 8.06.030(D) and remains under the applicable chronic nuisance thresholds established in FMC 8.06.010(D) for 12 continuous months thereafter, the matter shall not be referred to the city attorney and the person in charge shall not be subject to any penalty pursuant to this chapter.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785551471765,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:214",
+      "locator": {
+        "page": 8,
+        "x0": 108.1,
+        "y0": 591.683,
+        "x1": 502.4336,
+        "y1": 612.4
+      },
+      "text": "C. An owner who fails to comply with FMC 8.06.035 is subject to a civil penalty of up to $25,000.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756998267619,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:215",
+      "locator": {
+        "page": 8,
+        "x0": 108.3,
+        "y0": 591.783,
+        "x1": 117.6534,
+        "y1": 598.2
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999987127331069,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:216",
+      "locator": {
+        "page": 8,
+        "x0": 107.5,
+        "y0": 633.183,
+        "x1": 501.9,
+        "y1": 653.9
+      },
+      "text": "D. The person in charge is not relieved of the duty to abate the nuisance activity by paying the penalty associated with the violation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756999411714,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:217",
+      "locator": {
+        "page": 8,
+        "x0": 107.8,
+        "y0": 633.283,
+        "x1": 117.9088,
+        "y1": 639.7
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999991153974801,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:218",
+      "locator": {
+        "page": 8,
+        "x0": 72.1,
+        "y0": 688.183,
+        "x1": 165.2,
+        "y1": 694.7
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:222",
+      "locator": {
+        "page": 9,
+        "x0": 110.3,
+        "y0": 176.3156,
+        "x1": 504.3962,
+        "y1": 197.5
+      },
+      "text": "penalties pursuant to this chapter, to seek alternative remedies under city or state laws and seek any other relief authorized by law.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485582167335,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:224",
+      "locator": {
+        "page": 9,
+        "x0": 74.9,
+        "y0": 217.8156,
+        "x1": 540.7131,
+        "y1": 404.9
+      },
+      "text": "Section 10. Section 8.06.070 of the fife Municipal Code is hereby amended to read as follows: 8.06.070 Burden of proof. In an action against a person in charge to abate a chronic nuisance property or to recover penalties authorized by this chapter, the city shall have the burden of proof to show by a preponderance of the evidence that the property is a chronic nuisance property pursuant to this chapter. In an action against an owner to recover penalties authorized by FMC 8.06.050(C), the city shall have the additional burden to prove by a preponderance of the evidence that the owner failed to comply with FMC 8.06.03 5. Copies of police incident reports and reports of other city departments documenting nuisance activities shall be admissible in such actions. Additionally, evidence of a property\u2019s general reputation and the reputation of persons residing in or frequenting the property shall be admissible in such actions.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766099463353,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:225",
+      "locator": {
+        "page": 9,
+        "x0": 111.1,
+        "y0": 217.8156,
+        "x1": 242.65,
+        "y1": 224.6
+      },
+      "text": "Section 10. Section 8.06.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9859407420203431,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:226",
+      "locator": {
+        "page": 9,
+        "x0": 74.9,
+        "y0": 231.5156,
+        "x1": 112.2692,
+        "y1": 238.1
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996646878245908,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:227",
+      "locator": {
+        "page": 9,
+        "x0": 110.5,
+        "y0": 259.683,
+        "x1": 239.1752,
+        "y1": 266.6
+      },
+      "text": "8.06.070 Burden of proof.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8354856684882267,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:228",
+      "locator": {
+        "page": 9,
+        "x0": 109.3,
+        "y0": 273.0156,
+        "x1": 505.2584,
+        "y1": 404.9
+      },
+      "text": "In an action against a person in charge to abate a chronic nuisance property or to recover penalties authorized by this chapter, the city shall have the burden of proof to show by a preponderance of the evidence that the property is a chronic nuisance property pursuant to this chapter. In an action against an owner to recover penalties authorized by FMC 8.06.050(C), the city shall have the additional burden to prove by a preponderance of the evidence that the owner failed to comply with FMC 8.06.03 5. Copies of police incident reports and reports of other city departments documenting nuisance activities shall be admissible in such actions. Additionally, evidence of a property\u2019s general reputation and the reputation of persons residing in or frequenting the property shall be admissible in such actions.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832986462163,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:229",
+      "locator": {
+        "page": 9,
+        "x0": 109.6,
+        "y0": 424.8156,
+        "x1": 523.363,
+        "y1": 433.1
+      },
+      "text": "Section 11. Section 8.06.080 of the Fife Municipal Code is hereby amended to read as",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990890784942771,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:230",
+      "locator": {
+        "page": 9,
+        "x0": 109.6,
+        "y0": 424.8156,
+        "x1": 236.95,
+        "y1": 431.7
+      },
+      "text": "Section 11. Section 8.06.0",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9875820264576738,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:231",
+      "locator": {
+        "page": 9,
+        "x0": 73.5,
+        "y0": 438.4156,
+        "x1": 110.8692,
+        "y1": 445.0
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695247157057,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:232",
+      "locator": {
+        "page": 9,
+        "x0": 109.2,
+        "y0": 466.683,
+        "x1": 205.0668,
+        "y1": 473.2
+      },
+      "text": "8.06.080 Remedies.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7310738408879403,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:233",
+      "locator": {
+        "page": 9,
+        "x0": 107.5,
+        "y0": 480.0156,
+        "x1": 502.3285,
+        "y1": 654.3
+      },
+      "text": "A. If the court determines a property is a chronic nuisance property pursuant to this chapter, the court may order any of the following: (1) order the person in charge to immediately abate nuisance activity from occurring on the property; (2) order that the chief of police shall have the right to inspect the property to determine if the court\u2019s orders have been complied with; (3) impose a penalty of up to $500.00 per day against the person in charge for each day from the date the notice pursuant to FMC 8.06.030(A) was issued until the chief of police confirms that the property is no longer a chronic nuisance property; (4) order the property closed and secured against all unauthorized access, use and occupancy for a period up to one year; (5) make any other order that will reasonably abate nuisance activities from occurring on the property, including authorizing the city to take action to abate nuisance activities from occurring upon the property if other court orders are not complied with or do not abate nuisance activity on the property and providing that the costs",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417097559361,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:195",
+      "locator": {
+        "page": 9,
+        "x0": 213.0,
+        "y0": 605.1156,
+        "x1": 230.25,
+        "y1": 611.7
+      },
+      "text": "that",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984991129631576,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:234",
+      "locator": {
+        "page": 9,
+        "x0": 71.6,
+        "y0": 687.0156,
+        "x1": 164.7,
+        "y1": 694.0
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:238",
+      "locator": {
+        "page": 10,
+        "x0": 110.3,
+        "y0": 176.9156,
+        "x1": 150.55,
+        "y1": 183.5
+      },
+      "text": "$25,000.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:239",
+      "locator": {
+        "page": 10,
+        "x0": 109.8,
+        "y0": 204.1156,
+        "x1": 503.85,
+        "y1": 238.4
+      },
+      "text": "C. Any civil penalty and/or costs awarded to the city may be filed with the city treasurer who shall cause the same to be filed as a lien on the property with the county auditor.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601786671164,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:241",
+      "locator": {
+        "page": 10,
+        "x0": 73.7,
+        "y0": 259.3156,
+        "x1": 539.2632,
+        "y1": 418.0
+      },
+      "text": "Section 12. A new Section 8.06.085 is hereby added to the Fife Municipal Code to read as follows: 8.06.085 Additional remedies. In addition to the remedies authorized by FMC 8.06.080, if, as part of its order abating a chronic nuisance property, the court orders a person in charge to cease renting or leasing a property, the court may order the person in charge to pay relocation assistance not to exceed three thousand dollars ($3,000) to any tenant (1) who must relocate because of the order of abatement, and (2) the court finds the tenant did not cause or participate in nuisance activities at the property. For the purposes of this section, the term \u201ctenant\u201d shall have the same meaning as set forth in RCW 59.18.030.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995121543108624,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:242",
+      "locator": {
+        "page": 10,
+        "x0": 110.2,
+        "y0": 259.4156,
+        "x1": 162.0,
+        "y1": 266.1
+      },
+      "text": "Section 12.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8520026128324085,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:243",
+      "locator": {
+        "page": 10,
+        "x0": 73.7,
+        "y0": 273.0156,
+        "x1": 111.3971,
+        "y1": 279.6
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984990822840791,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:244",
+      "locator": {
+        "page": 10,
+        "x0": 109.6,
+        "y0": 301.183,
+        "x1": 259.278,
+        "y1": 307.8
+      },
+      "text": "8.06.085 Additional remedies.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6513578141306762,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:245",
+      "locator": {
+        "page": 10,
+        "x0": 108.7,
+        "y0": 314.5156,
+        "x1": 503.314,
+        "y1": 418.0
+      },
+      "text": "In addition to the remedies authorized by FMC 8.06.080, if, as part of its order abating a chronic nuisance property, the court orders a person in charge to cease renting or leasing a property, the court may order the person in charge to pay relocation assistance not to exceed three thousand dollars ($3,000) to any tenant (1) who must relocate because of the order of abatement, and (2) the court finds the tenant did not cause or participate in nuisance activities at the property. For the purposes of this section, the term \u201ctenant\u201d shall have the same meaning as set forth in RCW 59.18.030.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911038027571,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:246",
+      "locator": {
+        "page": 10,
+        "x0": 73.1,
+        "y0": 438.8156,
+        "x1": 538.4632,
+        "y1": 556.6
+      },
+      "text": "Section 13. Section 8.06.090 of the Fife Municipal Code is hereby amended to read as follows: 8.06.090 Suspension or revocation of business license. In addition to any other remedy that is authorized by this chapter or other laws, upon the finding by a court that a property is a chronic nuisance property pursuant to this chapter, the person in charge is subject to the suspension or revocation of a business license or other license issued by the city and required at such property, including but not limited to licenses issued pursuant to FMC Title 5.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964065515056206,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:247",
+      "locator": {
+        "page": 10,
+        "x0": 109.6,
+        "y0": 438.9156,
+        "x1": 162.6,
+        "y1": 445.6
+      },
+      "text": "Section 13.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8808196121395317,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:248",
+      "locator": {
+        "page": 10,
+        "x0": 73.1,
+        "y0": 452.6156,
+        "x1": 110.7971,
+        "y1": 459.2
+      },
+      "text": "follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9982996102940728,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:249",
+      "locator": {
+        "page": 10,
+        "x0": 109.0,
+        "y0": 480.683,
+        "x1": 379.0186,
+        "y1": 487.4
+      },
+      "text": "8.06.090 Suspension or revocation of business license.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.754917796667771,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:250",
+      "locator": {
+        "page": 10,
+        "x0": 108.0,
+        "y0": 494.0156,
+        "x1": 502.2836,
+        "y1": 556.6
+      },
+      "text": "In addition to any other remedy that is authorized by this chapter or other laws, upon the finding by a court that a property is a chronic nuisance property pursuant to this chapter, the person in charge is subject to the suspension or revocation of a business license or other license issued by the city and required at such property, including but not limited to licenses issued pursuant to FMC Title 5.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999964643827202,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:251",
+      "locator": {
+        "page": 10,
+        "x0": 108.8,
+        "y0": 577.1156,
+        "x1": 526.6357,
+        "y1": 584.5
+      },
+      "text": "Section 14. A new section 8.06.110 is hereby added to the Fife Municipal Code to read",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.994090380188492,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:252",
+      "locator": {
+        "page": 10,
+        "x0": 108.8,
+        "y0": 577.2156,
+        "x1": 160.7,
+        "y1": 583.9
+      },
+      "text": "Section 14.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7983434521481079,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:253",
+      "locator": {
+        "page": 10,
+        "x0": 72.6,
+        "y0": 590.8156,
+        "x1": 122.997,
+        "y1": 597.4
+      },
+      "text": "as follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986751882178734,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:254",
+      "locator": {
+        "page": 10,
+        "x0": 108.0,
+        "y0": 618.983,
+        "x1": 278.3584,
+        "y1": 625.8
+      },
+      "text": "8.06.110 Successive owners liable.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9149087915845568,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:255",
+      "locator": {
+        "page": 10,
+        "x0": 108.0,
+        "y0": 632.4156,
+        "x1": 501.4,
+        "y1": 653.6
+      },
+      "text": "Every successive owner of property, or other person in charge, who neglects to abate a continuing chronic nuisance upon, or in the use of, such property caused by",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999704062665325,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:256",
+      "locator": {
+        "page": 10,
+        "x0": 71.9,
+        "y0": 687.3156,
+        "x1": 165.2,
+        "y1": 694.0
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:260",
+      "locator": {
+        "page": 11,
+        "x0": 109.6,
+        "y0": 177.283,
+        "x1": 504.6791,
+        "y1": 253.2
+      },
+      "text": "Any owner or other person in charge of a chronic nuisance property shall be in violation of this chapter and subject to its remedies. The person in charge and the owner are jointly liable for any chronic nuisance. Both the owner and person in charge are subject to the provisions and remedies of this chapter. Application of this chapter against one party does not preclude application to another party who is an owner or person in control of a chronic nuisance property.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038987412339,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:261",
+      "locator": {
+        "page": 11,
+        "x0": 73.8,
+        "y0": 273.9156,
+        "x1": 538.9632,
+        "y1": 294.3
+      },
+      "text": "Section 16. Section 5.01.150 of the Fife Municipal Code is hereby amended to read as follows:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986751666760727,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:262",
+      "locator": {
+        "page": 11,
+        "x0": 109.5,
+        "y0": 315.683,
+        "x1": 323.7875,
+        "y1": 322.4
+      },
+      "text": "5.01.150 License suspension or revocation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8670438421883492,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:263",
+      "locator": {
+        "page": 11,
+        "x0": 109.0,
+        "y0": 329.1156,
+        "x1": 502.8409,
+        "y1": 363.5
+      },
+      "text": "In addition to the other penalties provided herein or by law, any license issued under the provisions of this title may be revoked or suspended, should any or all of the following apply:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251547927452,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:265",
+      "locator": {
+        "page": 11,
+        "x0": 109.2,
+        "y0": 384.3156,
+        "x1": 503.9791,
+        "y1": 405.0
+      },
+      "text": "A. The license was procured by fraud, false representation, or material omission of fact; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339496489643,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:266",
+      "locator": {
+        "page": 11,
+        "x0": 109.2,
+        "y0": 384.4156,
+        "x1": 141.527,
+        "y1": 391.0
+      },
+      "text": "A. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999569542659992,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:267",
+      "locator": {
+        "page": 11,
+        "x0": 108.7,
+        "y0": 425.7156,
+        "x1": 502.506,
+        "y1": 460.2
+      },
+      "text": "B. The licensee or any of its employees, officers, agents or servants, while acting within the scope of their employment, violates or fails to comply with any of the provisions of this title; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339490451934,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:268",
+      "locator": {
+        "page": 11,
+        "x0": 108.9,
+        "y0": 425.7156,
+        "x1": 141.327,
+        "y1": 432.3
+      },
+      "text": "B. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997040956901573,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:269",
+      "locator": {
+        "page": 11,
+        "x0": 108.4,
+        "y0": 481.0156,
+        "x1": 502.2752,
+        "y1": 515.9
+      },
+      "text": "C. The licensee\u2019s continued operation of the business for which the license was issued has or will result in a danger to the public health, safety or welfare, or the violation of any federal or state law or any ordinance or regulation of the city; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485589423303,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:270",
+      "locator": {
+        "page": 11,
+        "x0": 108.9,
+        "y0": 481.1156,
+        "x1": 141.727,
+        "y1": 487.7
+      },
+      "text": "C. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998977137864602,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:271",
+      "locator": {
+        "page": 11,
+        "x0": 108.3,
+        "y0": 536.2156,
+        "x1": 501.9024,
+        "y1": 570.8
+      },
+      "text": "D. The operation of the business for which the license was issued has resulted in the creation of a public nuisance as defined in the FMC, or state statute or common law; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687985648343,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:272",
+      "locator": {
+        "page": 11,
+        "x0": 108.3,
+        "y0": 536.3156,
+        "x1": 141.738,
+        "y1": 542.9
+      },
+      "text": "D. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998840945665118,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:273",
+      "locator": {
+        "page": 11,
+        "x0": 107.8,
+        "y0": 591.6156,
+        "x1": 501.5008,
+        "y1": 626.5
+      },
+      "text": "E. The licensee, or any of its employees, officers, agents or servants, has been convicted of a crime which relates directly to the specific occupation, trade, vocation, or business for which the license was issued; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151917603614,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:274",
+      "locator": {
+        "page": 11,
+        "x0": 108.3,
+        "y0": 591.8156,
+        "x1": 140.927,
+        "y1": 598.4
+      },
+      "text": "E. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993739684266196,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:275",
+      "locator": {
+        "page": 11,
+        "x0": 72.2,
+        "y0": 688.2156,
+        "x1": 165.2,
+        "y1": 694.9
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:279",
+      "locator": {
+        "page": 12,
+        "x0": 109.4,
+        "y0": 175.6156,
+        "x1": 503.2024,
+        "y1": 196.6
+      },
+      "text": "H. The property at which the business is located has been determined by a court to be a chronic nuisance property as provided in Chapter 8.06 FMC.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251562609452,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:281",
+      "locator": {
+        "page": 12,
+        "x0": 72.4,
+        "y0": 217.1156,
+        "x1": 539.1924,
+        "y1": 278.9
+      },
+      "text": "Section 17. Each and every provision of this Ordinance shall be deemed severable. In the event that any portion of this Ordinance is determined by final order of a court of competent jurisdiction to be void or unenforceable, such determination shall not affect the validity of the remaining provisions thereof provided the intent of this Ordinance can still be furthered without the invalid provision.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999925159512795,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:282",
+      "locator": {
+        "page": 12,
+        "x0": 110.1,
+        "y0": 217.1156,
+        "x1": 158.3,
+        "y1": 223.8
+      },
+      "text": "Section 17",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.6509620647823704,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:283",
+      "locator": {
+        "page": 12,
+        "x0": 72.8,
+        "y0": 299.9156,
+        "x1": 538.7512,
+        "y1": 334.5
+      },
+      "text": "Section 18. This Ordinance shall be in full force and effect five (5) days after publication as required by law. A summary of this Ordinance may be published in lieu of the entire Ordinance, as authorized by State law.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999741335052881,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:282"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:284",
+      "locator": {
+        "page": 12,
+        "x0": 109.5,
+        "y0": 299.9156,
+        "x1": 159.1,
+        "y1": 306.6
+      },
+      "text": "Section 18",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.970601761244362,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0722:282"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:285",
+      "locator": {
+        "page": 12,
+        "x0": 145.0,
+        "y0": 355.2156,
+        "x1": 437.025,
+        "y1": 390.1
+      },
+      "text": "Introduced the 13th day of October, 2020. Passed by the City Council on the 27th day of October, 2020.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785566918946,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:286",
+      "locator": {
+        "page": 12,
+        "x0": 72.4,
+        "y0": 438.3156,
+        "x1": 384.6132,
+        "y1": 472.1
+      },
+      "text": "I(i oscoe, ayor ATTEST:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986796079288778,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:289",
+      "locator": {
+        "page": 12,
+        "x0": 65.4,
+        "y0": 507.0156,
+        "x1": 185.9752,
+        "y1": 513.7
+      },
+      "text": "\u2014Br5e Rota, City Clerk",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989694472125245,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:291",
+      "locator": {
+        "page": 12,
+        "x0": 71.4,
+        "y0": 548.5156,
+        "x1": 251.4001,
+        "y1": 555.2278
+      },
+      "text": "OFO",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9776719257623809,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0722:292",
+      "locator": {
+        "page": 12,
+        "x0": 72.0,
+        "y0": 590.1156,
+        "x1": 233.749,
+        "y1": 597.0
+      },
+      "text": "Gregory F. Amann, City Attorney",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485790024517,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:293",
+      "locator": {
+        "page": 12,
+        "x0": 71.5,
+        "y0": 629.9532,
+        "x1": 258.3264,
+        "y1": 641.1
+      },
+      "text": "Published: 6?/hir\u2019 2a20",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986767391483597,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:298",
+      "locator": {
+        "page": 12,
+        "x0": 71.5,
+        "y0": 645.5156,
+        "x1": 260.4,
+        "y1": 654.6
+      },
+      "text": "Effective Date: 3 , 2020",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993762875699346,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0722:300",
+      "locator": {
+        "page": 12,
+        "x0": 71.5,
+        "y0": 686.5156,
+        "x1": 164.8,
+        "y1": 693.2
+      },
+      "text": "Ordinance No. 2035",
+      "type": "Artifact",
+      "level": null,
+      "rule": 2,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0722:284"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

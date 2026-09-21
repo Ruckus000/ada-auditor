@@ -1,0 +1,1045 @@
+{
+  "document": "c3-0489",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 47,
+    "cards_considered": 47,
+    "selector": "all-blocks",
+    "not_heading_confident": 26,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0
+  },
+  "cards": [
+    {
+      "card_id": "c3-0489:2",
+      "locator": {
+        "page": 0,
+        "x0": 56.5203,
+        "y0": 12.4977,
+        "x1": 579.6395,
+        "y1": 23.1605
+      },
+      "text": "Riing of Candidacy for Zlpcrcial D i s k k t Wminatlon SEL 190",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9145547832099667,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:34",
+      "locator": {
+        "page": 0,
+        "x0": 120.72,
+        "y0": 14.1611,
+        "x1": 203.5355,
+        "y1": 23.1605
+      },
+      "text": "~",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:1",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 17.1382,
+        "x1": 63.3568,
+        "y1": 37.4405
+      },
+      "text": "-1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:3",
+      "locator": {
+        "page": 0,
+        "x0": 515.5203,
+        "y0": 25.0798,
+        "x1": 557.1199,
+        "y1": 29.2799
+      },
+      "text": "mDwttUfS-",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7838710767411577,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:4",
+      "locator": {
+        "page": 0,
+        "x0": 66.3607,
+        "y0": 341.7304,
+        "x1": 320.4161,
+        "y1": 348.3602
+      },
+      "text": "1s '11 Filing of d d a c y by dedmtim, with the required $10.00 he.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9771601834058009,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:5",
+      "locator": {
+        "page": 0,
+        "x0": 46.8007,
+        "y0": 355.8971,
+        "x1": 610.8567,
+        "y1": 377.8804
+      },
+      "text": "I 0 of Filing the of dgtm candidacy residing by petition, in the electoral with thg distlicf reguird for signature the oRm sheets (whidmver beering is the less), signatures amT*d by of the at bast appropriate 25 electors county or at elections least 10% ofFtisls. ~",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9988320740371379,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:6",
+      "locator": {
+        "page": 0,
+        "x0": 46.5601,
+        "y0": 398.8094,
+        "x1": 611.83,
+        "y1": 409.0805
+      },
+      "text": "I O e c u warsent ~ employment - paid or unpaid I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99486401501364,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:7",
+      "locator": {
+        "page": 0,
+        "x0": -0.0,
+        "y0": 417.6185,
+        "x1": 137.1329,
+        "y1": 428.8801
+      },
+      "text": "1 I ' - 1, 1, ,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9862664920787589,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:8",
+      "locator": {
+        "page": 0,
+        "x0": 28.6798,
+        "y0": 426.9246,
+        "x1": 319.4075,
+        "y1": 437.5197
+      },
+      "text": ", 1 Oow-nal bbband previous emlwment - paid or unpaid",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989758330450451,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:9",
+      "locator": {
+        "page": 0,
+        "x0": 27.9602,
+        "y0": 533.5148,
+        "x1": 51.4005,
+        "y1": 548.7596
+      },
+      "text": "II",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9904435177405619,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:10",
+      "locator": {
+        "page": 0,
+        "x0": 52.9201,
+        "y0": 562.1466,
+        "x1": 569.277,
+        "y1": 580.3199
+      },
+      "text": "EducationaI hck@mmd &mots attended, use ale*ment if needed Complete Name af Suhpd no acronyms Last G d e Level D i p l o m d D o g p e f m t e Courseofstudy",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9941399321863139,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:11",
+      "locator": {
+        "page": 0,
+        "x0": 27.2406,
+        "y0": 573.1031,
+        "x1": 29.2811,
+        "y1": 582.2404
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9715821070355859,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:12",
+      "locator": {
+        "page": 0,
+        "x0": 236.2808,
+        "y0": 585.6884,
+        "x1": 530.8254,
+        "y1": 592.6797
+      },
+      "text": "Corn- MA, BA BS, NIA, PhD, ste) optional",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992007043362535,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:13",
+      "locator": {
+        "page": 0,
+        "x0": 27.0,
+        "y0": 590.7271,
+        "x1": 32.56,
+        "y1": 600.1196
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9900699741390311,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:14",
+      "locator": {
+        "page": 0,
+        "x0": 27.0,
+        "y0": 607.7432,
+        "x1": 33.95,
+        "y1": 617.2802
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9964407465397594,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:15",
+      "locator": {
+        "page": 0,
+        "x0": 249.4809,
+        "y0": 622.1223,
+        "x1": 319.7335,
+        "y1": 635.6395
+      },
+      "text": "1972",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:16",
+      "locator": {
+        "page": 0,
+        "x0": 26.7605,
+        "y0": 625.5176,
+        "x1": 29.3111,
+        "y1": 636.1196
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9941075072839942,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:17",
+      "locator": {
+        "page": 0,
+        "x0": 593.1607,
+        "y0": 635.2251,
+        "x1": 605.654,
+        "y1": 637.3204
+      },
+      "text": "\\*",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:18",
+      "locator": {
+        "page": 0,
+        "x0": 249.0007,
+        "y0": 637.3688,
+        "x1": 254.6302,
+        "y1": 639.6001
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8819621854991234,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:19",
+      "locator": {
+        "page": 0,
+        "x0": 26.7605,
+        "y0": 643.4019,
+        "x1": 32.3205,
+        "y1": 647.5201
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9845608105133011,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:20",
+      "locator": {
+        "page": 0,
+        "x0": 27.0,
+        "y0": 649.0174,
+        "x1": 31.17,
+        "y1": 653.2802
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9870571379040873,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:21",
+      "locator": {
+        "page": 0,
+        "x0": 26.2804,
+        "y0": 716.1693,
+        "x1": 227.3401,
+        "y1": 745.8005
+      },
+      "text": "' continued on ttie mwne *I* of this form",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994482295296925,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:22",
+      "locator": {
+        "page": 0,
+        "x0": 510.4808,
+        "y0": 740.8186,
+        "x1": 575.1477,
+        "y1": 749.5205
+      },
+      "text": "SEL 190",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9035014232394225,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:24",
+      "locator": {
+        "page": 1,
+        "x0": 13.0654,
+        "y0": 188.587,
+        "x1": 22.8649,
+        "y1": 204.1208
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9754069367696993,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:25",
+      "locator": {
+        "page": 1,
+        "x0": 18.9096,
+        "y0": 258.0673,
+        "x1": 484.251,
+        "y1": 288.8408
+      },
+      "text": "3 that I will qualify for said offjaef if elected that '11 information pmvided by me on this fonn, including my 4- sdusstbnal and OeCupatimal hb.dound, WMJ F h r E l W ~aperients, ~ ~ lis true to the best of my knrwklgs",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996647040886214,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:26",
+      "locator": {
+        "page": 1,
+        "x0": 17.937,
+        "y0": 299.0828,
+        "x1": 125.8345,
+        "y1": 305.5202
+      },
+      "text": "-the W M ~ ~trcur; I B",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9941006562901945,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:27",
+      "locator": {
+        "page": 1,
+        "x0": -0.0138,
+        "y0": 305.0735,
+        "x1": 4.559,
+        "y1": 309.4808
+      },
+      "text": "'",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:28",
+      "locator": {
+        "page": 1,
+        "x0": 30.6573,
+        "y0": 310.1724,
+        "x1": 511.6001,
+        "y1": 318.9609
+      },
+      "text": "BY marking this box, I m i y I do m have sr W n g andidate's cornrn*&tee md I & DO( ewect o spsnd nn, mn 5350",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695838837757,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:29",
+      "locator": {
+        "page": 1,
+        "x0": 15.6158,
+        "y0": 323.8503,
+        "x1": 681.1022,
+        "y1": 330.8404
+      },
+      "text": "R 0if total ~ ~G*OrI NmT~~or ~EmDl ~n ~mpmditues d ~ ~ ~mead % n $360 d a dving f f ~a ah& . I ~ *ywr, r ~I must ~ l follow m u the s trequiremm ~ ~ ~ o det iled f a I Iin ~the m p a E s n t m n & ~ ~ n d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991963793234815,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:30",
+      "locator": {
+        "page": 1,
+        "x0": 70.9878,
+        "y0": 345.8667,
+        "x1": 143.8883,
+        "y1": 352.0802
+      },
+      "text": "FiiraMbe mug/.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9048763382044257,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:31",
+      "locator": {
+        "page": 1,
+        "x0": 15.7783,
+        "y0": 352.9609,
+        "x1": 511.4298,
+        "y1": 363.9609
+      },
+      "text": "0 By mrkinp this box, l cmm h t Ihwe slready3.d or wiU won file 8 Statement qf Organization for Candidate Carnittee",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9980751982521492,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:32",
+      "locator": {
+        "page": 1,
+        "x0": 234.9153,
+        "y0": 368.0462,
+        "x1": 310.3944,
+        "y1": 374.8802
+      },
+      "text": "(SEL220).Fordetailedinstrudam,seertheCIrnusrfollowthearequimmem&tsilsdinthem~~~this~l~~hsti~~~orwillsowr~a~of~r~izationfor~&~m~~etQ220).nFInmManw)I.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993738827599431,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:33",
+      "locator": {
+        "page": 2,
+        "x0": 48.72,
+        "y0": 0.8745,
+        "x1": 617.0028,
+        "y1": 31.2005
+      },
+      "text": "I su 190 1",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8440227312371997,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:35",
+      "locator": {
+        "page": 2,
+        "x0": 36.2395,
+        "y0": 11.5363,
+        "x1": 443.7065,
+        "y1": 21.481
+      },
+      "text": "- I Filing of Candidffiy tor Speoial Diotflot Nomination",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.8149802717265947,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:0",
+      "locator": {
+        "page": 2,
+        "x0": 48.72,
+        "y0": 22.6213,
+        "x1": 50.7605,
+        "y1": 31.2005
+      },
+      "text": "I",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7416017730126402,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:36",
+      "locator": {
+        "page": 2,
+        "x0": 516.4794,
+        "y0": 23.8411,
+        "x1": 624.3571,
+        "y1": 28.0804
+      },
+      "text": "rnovle~-~.~",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6353396829042726,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:37",
+      "locator": {
+        "page": 2,
+        "x0": 26.0398,
+        "y0": 737.5414,
+        "x1": 577.2825,
+        "y1": 749.7614
+      },
+      "text": "icomi~onmnmrses~bmistbm,SEL190",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9534997499374163,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:40",
+      "locator": {
+        "page": 4,
+        "x0": 532.5601,
+        "y0": 352.3371,
+        "x1": 555.7781,
+        "y1": 353.9988
+      },
+      "text": "-",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:41",
+      "locator": {
+        "page": 4,
+        "x0": 143.5199,
+        "y0": 354.3734,
+        "x1": 172.4882,
+        "y1": 357.1189
+      },
+      "text": "T ' 7,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.7325654673562008,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:42",
+      "locator": {
+        "page": 4,
+        "x0": 63.7207,
+        "y0": 360.1816,
+        "x1": 725.0504,
+        "y1": 365.7597
+      },
+      "text": "Q~iwof~~~wlth~~~~~ringthe~aiatleam25e~rsoratleasx10%",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972080929398633,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:43",
+      "locator": {
+        "page": 4,
+        "x0": 134.5199,
+        "y0": 368.0908,
+        "x1": 599.2131,
+        "y1": 375.8396
+      },
+      "text": "r ~ i d i n g in tho fw t h g m hwWmm is kss), mrtified by the appfoprbte munty eiectitions ofkids.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9990895357178541,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:45",
+      "locator": {
+        "page": 5,
+        "x0": 34.3202,
+        "y0": 279.5583,
+        "x1": 129.5307,
+        "y1": 285.3595
+      },
+      "text": "Wleekhhsl&iddebWc",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9876153362141875,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:46",
+      "locator": {
+        "page": 5,
+        "x0": 33.1194,
+        "y0": 292.2716,
+        "x1": 585.7996,
+        "y1": 299.0397
+      },
+      "text": "QBy~thLboa.l~IdanotWm~~s~sndI&not~tospgndmorethan$350",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992909158139973,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:47",
+      "locator": {
+        "page": 5,
+        "x0": 580.5818,
+        "y0": 303.8192,
+        "x1": 586.3568,
+        "y1": 309.5997
+      },
+      "text": "~ Q r r ~ i d i n g ~ tho m mDwttUfS- w '11 g of ~ by ~ with a required k he. n 0 S Filing n of g candidacy s by e in c electoral h thg c reguird a signature k oRm n (whidmver d is s less), r amT*d y of l at a appropriate r electors ~ or I elections ~ 10% ~ ~ I O e c u r ~ n - u or s I t I s - t 1, i , l Oow-nal l previous ~ - w or w I r EducationaI d &mots s use d if a Complete B af c no a Last m Level p m t e a I i MA, g BS, n PhD, m optional n I s or a won e 8 t qf i for w Carnittee a 220). n detailed d",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989683761712216,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:48",
+      "locator": {
+        "page": 5,
+        "x0": 46.3195,
+        "y0": 314.3949,
+        "x1": 528.9971,
+        "y1": 331.4405
+      },
+      "text": "i~~~frotal~arW~m~S3Wlduh.lIrnusrfollowtheea~~,requimmem&tsilsdinthe",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993738358898501,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0489:49",
+      "locator": {
+        "page": 5,
+        "x0": 33.1194,
+        "y0": 336.4727,
+        "x1": 777.3439,
+        "y1": 342.7202
+      },
+      "text": "0~~~this~l~~hsti~~~orwillsowr~a~of~r~izationfor~&~m~~et",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.932652070361142,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0489:50",
+      "locator": {
+        "page": 5,
+        "x0": 46.3195,
+        "y0": 346.8651,
+        "x1": 287.3504,
+        "y1": 353.0397
+      },
+      "text": "(SU. 220). For detailed .mthe-FiimceMmd",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9986756905067928,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0489:35"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}
