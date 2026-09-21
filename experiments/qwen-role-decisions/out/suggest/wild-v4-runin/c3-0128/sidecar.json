@@ -1,0 +1,4294 @@
+{
+  "document": "c3-0128",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 193,
+    "cards_considered": 193,
+    "selector": "all-blocks",
+    "not_heading_confident": 163,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 8
+  },
+  "cards": [
+    {
+      "card_id": "c3-0128:0",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 111.4047,
+        "x1": 336.7734,
+        "y1": 120.3603
+      },
+      "text": "Risk Management: Policy and Procedure",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9913569414817672,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:1h",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 145.6669,
+        "x1": 369.7578,
+        "y1": 159.9669
+      },
+      "text": "Date: November 14, 2007",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9975296105061751,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:0"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:1",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 159.9669,
+        "x1": 369.7578,
+        "y1": 165.8403
+      },
+      "text": "Title: Lockout / Tagout - The Control of Hazardous Energy",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8810679480602492,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:3h",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 185.9869,
+        "x1": 517.5766,
+        "y1": 200.2869
+      },
+      "text": "I. Purpose",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9992865739044255,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:4",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 185.9869,
+        "x1": 77.5583,
+        "y1": 192.7203
+      },
+      "text": "I.",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.7512501587863124,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:0"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:3",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 200.2869,
+        "x1": 517.5766,
+        "y1": 241.6802
+      },
+      "text": "This policy is intended to protect employees from the hazards associated with the unexpected release of energy during the setup, maintenance or servicing of machines or equipment and to maintain compliance with 29 CFR 1910.147.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99992515405909,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:3h",
+        "c3-0128:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:5",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 208.2829,
+        "x1": 517.5766,
+        "y1": 241.6802
+      },
+      "text": "This policy is intended to protect employees from the hazards associated with the unexpected release of energy during the setup, maintenance or servicing of machines or equipment and to maintain compliance with 29 CFR 1910.147.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546022647384,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:3h",
+        "c3-0128:4"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:6h",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 257.6268,
+        "x1": 530.0645,
+        "y1": 271.9268
+      },
+      "text": "II. Scope",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9995066766339027,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:3h",
+        "c3-0128:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:7",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 257.6268,
+        "x1": 82.1182,
+        "y1": 264.3602
+      },
+      "text": "II.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9983377493496022,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:3h",
+        "c3-0128:4"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:6",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 271.9268,
+        "x1": 530.0645,
+        "y1": 371.5202
+      },
+      "text": "This policy applies to all City of Westminster (City) employees performing maintenance or servicing operations on any equipment or machine in which the unexpected startup or release of stored energy could cause injury to an employee. This procedure contains general fundamental requirements essential for compliance and nothing in this procedure shall be construed to prohibit individual departments from exceeding the requirements established in this policy/procedure. In such cases, Departmental Standard Operating Procedures should be coordinated with the Risk Coordinator, Office of Human Resources.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485582102281,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:7"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:8",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 284.4829,
+        "x1": 530.0645,
+        "y1": 371.5202
+      },
+      "text": "This policy applies to all City of Westminster (City) employees performing maintenance or servicing operations on any equipment or machine in which the unexpected startup or release of stored energy could cause injury to an employee. This procedure contains general fundamental requirements essential for compliance and nothing in this procedure shall be construed to prohibit individual departments from exceeding the requirements established in this policy/procedure. In such cases, Departmental Standard Operating Procedures should be coordinated with the Risk Coordinator, Office of Human Resources.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599364839159,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:7"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:9",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 387.3468,
+        "x1": 160.2763,
+        "y1": 394.0802
+      },
+      "text": "III. Responsibility",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9996370459921419,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:7"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:10",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 387.3468,
+        "x1": 86.6782,
+        "y1": 394.0802
+      },
+      "text": "III.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9995442808413298,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:7"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:12",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 409.7628,
+        "x1": 499.2168,
+        "y1": 479.0402
+      },
+      "text": "A. Directors (Department Heads) and Deputy Directors Directors (Department Heads) and Deputy Directors shall hold all subordinate supervisors accountable for all safety and health responsibilities, making sure that the provisions of this policy are complied with by the employees under their direction.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694647530512,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:13",
+      "locator": {
+        "page": 0,
+        "x0": 93.4799,
+        "y0": 409.7628,
+        "x1": 104.8002,
+        "y1": 416.2802
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9842279799122146,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:14",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 432.2029,
+        "x1": 499.2168,
+        "y1": 465.6002
+      },
+      "text": "Directors (Department Heads) and Deputy Directors shall hold all subordinate supervisors accountable for all safety and health responsibilities, making sure that the provisions of this policy are complied with by the employees under their",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417098760568,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:15",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 472.5228,
+        "x1": 155.3086,
+        "y1": 479.0402
+      },
+      "text": "direction.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995695345688416,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:16",
+      "locator": {
+        "page": 0,
+        "x0": 90.4799,
+        "y0": 494.8428,
+        "x1": 347.7426,
+        "y1": 501.3601
+      },
+      "text": "B. Department Superintendents, Managers/Supervisors",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6225028704216475,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:17",
+      "locator": {
+        "page": 0,
+        "x0": 90.4799,
+        "y0": 494.8428,
+        "x1": 101.318,
+        "y1": 501.3601
+      },
+      "text": "B.",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.5740325566902863,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:10"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:18",
+      "locator": {
+        "page": 0,
+        "x0": 70.08,
+        "y0": 517.2828,
+        "x1": 521.5415,
+        "y1": 577.4401
+      },
+      "text": "Department superintendents, managers/ supervisors are responsible for ensuring compliance with the requirements of this policy, in their respective areas, and they shall work directly with the Risk Coordinator, Office of Human Resources and the employees they supervise to ensure that proper lockout/tagout procedures are followed, which include:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999985261108916,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:20",
+      "locator": {
+        "page": 0,
+        "x0": 70.0803,
+        "y0": 593.3628,
+        "x1": 519.7346,
+        "y1": 626.7601
+      },
+      "text": "1. Instructing employees in applicable precautions to achieve zero-energy state (ZES) during the installation, repair, removal and maintenance of affected equipment and machinery.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999885212763958,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:21",
+      "locator": {
+        "page": 0,
+        "x0": 108.0,
+        "y0": 593.3628,
+        "x1": 116.7982,
+        "y1": 599.8801
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:22",
+      "locator": {
+        "page": 0,
+        "x0": 70.0806,
+        "y0": 633.6827,
+        "x1": 524.7768,
+        "y1": 653.6401
+      },
+      "text": "2. Ensuring that equipment and machine repair operations are performed in compliance with this standard.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687990793324,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:23",
+      "locator": {
+        "page": 0,
+        "x0": 108.0002,
+        "y0": 633.6827,
+        "x1": 116.7985,
+        "y1": 640.2001
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:24",
+      "locator": {
+        "page": 0,
+        "x0": 70.0806,
+        "y0": 660.5627,
+        "x1": 516.3611,
+        "y1": 680.5201
+      },
+      "text": "3. Providing and maintaining the equipment necessary to safely implement lockout/ tagout procedures.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417111282828,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:25",
+      "locator": {
+        "page": 0,
+        "x0": 108.0004,
+        "y0": 660.5627,
+        "x1": 116.7986,
+        "y1": 667.0801
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:26",
+      "locator": {
+        "page": 0,
+        "x0": 70.0809,
+        "y0": 687.4427,
+        "x1": 510.1484,
+        "y1": 707.4001
+      },
+      "text": "3. Supplying and properly maintaining the equipment necessary for confined space entry/rescue.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546035838731,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:28h",
+      "locator": {
+        "page": 1,
+        "x0": 70.08,
+        "y0": 150.083,
+        "x1": 527.0549,
+        "y1": 164.383
+      },
+      "text": "C. Employees",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9522240874418086,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:29",
+      "locator": {
+        "page": 1,
+        "x0": 87.5999,
+        "y0": 150.083,
+        "x1": 98.3181,
+        "y1": 156.6003
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.6166425161962752,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:17"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:28",
+      "locator": {
+        "page": 1,
+        "x0": 70.08,
+        "y0": 164.383,
+        "x1": 527.0549,
+        "y1": 264.1202
+      },
+      "text": "As with all activities, City employees have the most important role. The ultimate execution of much this policy rest with employees. Therefore, employees are responsible for: 1. Knowing and obeying the requirements of this policy. 2. Only attempting to repair equipment for which they are qualified to do so. 3. Attending lockout/tagout training sessions.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99998329863972,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:30",
+      "locator": {
+        "page": 1,
+        "x0": 70.08,
+        "y0": 176.963,
+        "x1": 527.0549,
+        "y1": 210.3602
+      },
+      "text": "As with all activities, City employees have the most important role. The ultimate execution of much this policy rest with employees. Therefore, employees are responsible for:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485586269526,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:32",
+      "locator": {
+        "page": 1,
+        "x0": 107.9989,
+        "y0": 230.7229,
+        "x1": 375.0314,
+        "y1": 237.2402
+      },
+      "text": "1. Knowing and obeying the requirements of this policy.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997965852540135,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:33",
+      "locator": {
+        "page": 1,
+        "x0": 107.9989,
+        "y0": 230.7229,
+        "x1": 116.7972,
+        "y1": 237.2402
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:34",
+      "locator": {
+        "page": 1,
+        "x0": 107.999,
+        "y0": 244.1629,
+        "x1": 468.7401,
+        "y1": 250.6802
+      },
+      "text": "2. Only attempting to repair equipment for which they are qualified to do so.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646444312071,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:35",
+      "locator": {
+        "page": 1,
+        "x0": 107.999,
+        "y0": 244.1629,
+        "x1": 116.7973,
+        "y1": 250.6802
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:36",
+      "locator": {
+        "page": 1,
+        "x0": 107.9989,
+        "y0": 257.6029,
+        "x1": 323.1996,
+        "y1": 264.1202
+      },
+      "text": "3. Attending lockout/tagout training sessions.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415733785784,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:37",
+      "locator": {
+        "page": 1,
+        "x0": 107.9989,
+        "y0": 257.6029,
+        "x1": 116.7972,
+        "y1": 264.1202
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:38",
+      "locator": {
+        "page": 1,
+        "x0": 90.479,
+        "y0": 284.4829,
+        "x1": 324.9386,
+        "y1": 291.0002
+      },
+      "text": "D. Risk Coordinator, Office of Human Resources",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6514536153474254,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:39",
+      "locator": {
+        "page": 1,
+        "x0": 90.479,
+        "y0": 284.4829,
+        "x1": 101.7993,
+        "y1": 291.0002
+      },
+      "text": "D.",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.5316914974128806,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:28h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:40",
+      "locator": {
+        "page": 1,
+        "x0": 70.0801,
+        "y0": 311.3629,
+        "x1": 489.3768,
+        "y1": 331.3202
+      },
+      "text": "The Risk Coordinator is responsible for providing consultation and guidance to supervisors and employees in regard to the requirements of this policy, including:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339499535327,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:42",
+      "locator": {
+        "page": 1,
+        "x0": 107.9998,
+        "y0": 351.5629,
+        "x1": 347.5596,
+        "y1": 358.0802
+      },
+      "text": "1. Assisting in performing workplace assessments.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695307250685,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:43",
+      "locator": {
+        "page": 1,
+        "x0": 107.9998,
+        "y0": 351.5629,
+        "x1": 116.7981,
+        "y1": 358.0802
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:44",
+      "locator": {
+        "page": 1,
+        "x0": 107.9998,
+        "y0": 365.0029,
+        "x1": 362.7927,
+        "y1": 371.5202
+      },
+      "text": "2. Developing suitable educational/training programs.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204813322468,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:45",
+      "locator": {
+        "page": 1,
+        "x0": 107.9998,
+        "y0": 365.0029,
+        "x1": 116.7981,
+        "y1": 371.5202
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:46",
+      "locator": {
+        "page": 1,
+        "x0": 107.9999,
+        "y0": 378.4429,
+        "x1": 503.5261,
+        "y1": 384.9602
+      },
+      "text": "3. Conducting periodic workplace inspections to ensure compliance with the policy.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039010301412,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:47",
+      "locator": {
+        "page": 1,
+        "x0": 107.9999,
+        "y0": 378.4429,
+        "x1": 116.7981,
+        "y1": 384.9602
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:48",
+      "locator": {
+        "page": 1,
+        "x0": 70.0801,
+        "y0": 391.8829,
+        "x1": 506.6634,
+        "y1": 411.8402
+      },
+      "text": "4. Providing department superintendents, managers/supervisors and employees with technical knowledge regarding lockout/tagout procedures and regulations.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756999799839,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:49",
+      "locator": {
+        "page": 1,
+        "x0": 107.9999,
+        "y0": 391.8829,
+        "x1": 116.7981,
+        "y1": 398.4002
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:50",
+      "locator": {
+        "page": 1,
+        "x0": 70.0801,
+        "y0": 432.2268,
+        "x1": 143.2607,
+        "y1": 438.9602
+      },
+      "text": "IV. Definitions",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9995646523747408,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:10",
+        "c3-0128:39"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:52",
+      "locator": {
+        "page": 1,
+        "x0": 70.0804,
+        "y0": 459.0828,
+        "x1": 526.7034,
+        "y1": 479.0402
+      },
+      "text": "A. Affected employee - an employee who works in an area where servicing or maintenance operations are performed under lockout/tagout.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039026014102,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:53",
+      "locator": {
+        "page": 1,
+        "x0": 93.4801,
+        "y0": 459.0829,
+        "x1": 104.8003,
+        "y1": 465.6002
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999965023351273,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:54",
+      "locator": {
+        "page": 1,
+        "x0": 93.4804,
+        "y0": 499.4028,
+        "x1": 535.7106,
+        "y1": 546.1201
+      },
+      "text": "B. Authorized employee - an employee who performs service or maintenance on machines and implements lockout/tagout procedures in order to guarantee his/her protection. An affected employee becomes an authorized employee when that employee\u2019s duties include performing servicing or maintenance operations.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599366977715,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:55",
+      "locator": {
+        "page": 1,
+        "x0": 93.4804,
+        "y0": 499.4028,
+        "x1": 104.1986,
+        "y1": 505.9202
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999418359632435,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:56",
+      "locator": {
+        "page": 1,
+        "x0": 70.0809,
+        "y0": 566.4828,
+        "x1": 478.1168,
+        "y1": 586.4401
+      },
+      "text": "C. Energy-isolating device - any mechanical device that physically prevents the transmission or release of energy.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339499659431,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:57",
+      "locator": {
+        "page": 1,
+        "x0": 93.48,
+        "y0": 566.4828,
+        "x1": 104.1982,
+        "y1": 573.0001
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999822853394359,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:58",
+      "locator": {
+        "page": 1,
+        "x0": 70.08,
+        "y0": 606.8027,
+        "x1": 522.8577,
+        "y1": 626.7601
+      },
+      "text": "D. Energy source - Any source of electrical, mechanical, pneumatic, hydraulic, chemical, thermal, or other energy.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911081315636,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:59",
+      "locator": {
+        "page": 1,
+        "x0": 93.4809,
+        "y0": 606.8027,
+        "x1": 104.8011,
+        "y1": 613.3201
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999844154581186,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:60",
+      "locator": {
+        "page": 1,
+        "x0": 70.08,
+        "y0": 647.1227,
+        "x1": 508.581,
+        "y1": 680.5201
+      },
+      "text": "E. Lockout - the placement of a lockout device(lock) used to secure an energy isolating device in a safe position that prevents the unexpected operation of equipment or machinery until its removal.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417103707577,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:61",
+      "locator": {
+        "page": 1,
+        "x0": 93.4799,
+        "y0": 647.1227,
+        "x1": 103.4763,
+        "y1": 653.6401
+      },
+      "text": "E.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9997055874353504,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:63",
+      "locator": {
+        "page": 2,
+        "x0": 70.0807,
+        "y0": 109.883,
+        "x1": 521.298,
+        "y1": 156.6003
+      },
+      "text": "F. Tagout - the placement of a warning device that can be securely fastened to the energy isolating device or controls of the affected equipment or machinery indicating that it may not be operated until the tag is removed by the authorized employee who implemented the tagout.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251547737328,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:64",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 109.883,
+        "x1": 102.64,
+        "y1": 116.4003
+      },
+      "text": "F.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.999998630015797,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:65",
+      "locator": {
+        "page": 2,
+        "x0": 70.0799,
+        "y0": 176.963,
+        "x1": 501.3792,
+        "y1": 196.9202
+      },
+      "text": "G. Stored Energy - energy not being immediately used for operation, but may activate when the primary energy source of energy is disabled.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546022779641,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:66",
+      "locator": {
+        "page": 2,
+        "x0": 93.4807,
+        "y0": 176.963,
+        "x1": 104.8009,
+        "y1": 183.4803
+      },
+      "text": "G.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999962805411103,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:67",
+      "locator": {
+        "page": 2,
+        "x0": 70.0798,
+        "y0": 217.2829,
+        "x1": 512.5503,
+        "y1": 237.2402
+      },
+      "text": "H. Zero Energy State (ZES) - state of affected equipment or machinery where all energy sources have been neutralized and all stored energy sources have been released.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724643532324,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:68",
+      "locator": {
+        "page": 2,
+        "x0": 93.4798,
+        "y0": 217.2829,
+        "x1": 104.8001,
+        "y1": 223.8002
+      },
+      "text": "H.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8011242488202522,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:69",
+      "locator": {
+        "page": 2,
+        "x0": 70.08,
+        "y0": 253.1868,
+        "x1": 279.8868,
+        "y1": 259.9202
+      },
+      "text": "V. Preparing for Zero Energy State (ZES)",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.997524264786121,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:50"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:71",
+      "locator": {
+        "page": 2,
+        "x0": 70.0801,
+        "y0": 275.4829,
+        "x1": 518.8844,
+        "y1": 308.8802
+      },
+      "text": "A. Any employee who is assigned a duty that involves the installation, repair, removal or maintenance of equipment shall determine if the uncontrolled release of energy could occur, and if so, that lockout/tagout procedures are followed.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724643527089,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:72",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 275.4829,
+        "x1": 104.8002,
+        "y1": 282.0002
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999942312706176,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:73",
+      "locator": {
+        "page": 2,
+        "x0": 70.08,
+        "y0": 324.8029,
+        "x1": 479.2958,
+        "y1": 344.6402
+      },
+      "text": "B. Employees to be affected shall be notified by the individual(s) performing the maintenance.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785551580824,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:74",
+      "locator": {
+        "page": 2,
+        "x0": 93.4798,
+        "y0": 324.8029,
+        "x1": 104.198,
+        "y1": 331.3202
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999975954047494,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:75",
+      "locator": {
+        "page": 2,
+        "x0": 70.08,
+        "y0": 360.4428,
+        "x1": 505.3245,
+        "y1": 380.4002
+      },
+      "text": "C. All sources capable of uncontrolled or stored energy release shall be identified and controlled.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999983298623902,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:76",
+      "locator": {
+        "page": 2,
+        "x0": 93.4798,
+        "y0": 360.4428,
+        "x1": 104.198,
+        "y1": 366.9602
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999978781284613,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:77",
+      "locator": {
+        "page": 2,
+        "x0": 70.08,
+        "y0": 396.3228,
+        "x1": 508.5664,
+        "y1": 416.2802
+      },
+      "text": "D. All personnel shall be cleared from any potential exposure to uncontrolled release of energy until ZES is achieved.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999885212476214,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:78",
+      "locator": {
+        "page": 2,
+        "x0": 93.4798,
+        "y0": 396.3228,
+        "x1": 104.8,
+        "y1": 402.8402
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999972776227292,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:79",
+      "locator": {
+        "page": 2,
+        "x0": 70.08,
+        "y0": 432.2268,
+        "x1": 183.9698,
+        "y1": 438.9602
+      },
+      "text": "VI. Implementing ZES",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9997692310179924,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:69"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:81",
+      "locator": {
+        "page": 2,
+        "x0": 70.08,
+        "y0": 454.5228,
+        "x1": 511.5868,
+        "y1": 474.4802
+      },
+      "text": "A. The affected equipment or machinery shall be turned off or shut down using normal operating procedure.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999706886489377,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:82",
+      "locator": {
+        "page": 2,
+        "x0": 93.4798,
+        "y0": 454.5228,
+        "x1": 104.8,
+        "y1": 461.0402
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999965027593095,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:83",
+      "locator": {
+        "page": 2,
+        "x0": 70.0801,
+        "y0": 490.4028,
+        "x1": 490.9392,
+        "y1": 510.3602
+      },
+      "text": "B. All energy isolating devices shall be locked out and tagged out by an authorized employee(s).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756999859284,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:84",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 490.4028,
+        "x1": 104.1981,
+        "y1": 496.9202
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999974403220298,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:85",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 530.7228,
+        "x1": 468.3662,
+        "y1": 537.2401
+      },
+      "text": "C. All other energy sources shall have a lockout device applied to achieve ZES.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999756999117838,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:86",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 530.7228,
+        "x1": 104.1981,
+        "y1": 537.2401
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999988641481732,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:87",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 557.4828,
+        "x1": 375.7489,
+        "y1": 564.0001
+      },
+      "text": "D. All stored energy sources shall be released or controlled.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485580757134,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:88",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 557.4828,
+        "x1": 104.8002,
+        "y1": 564.0001
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999965019606075,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:89",
+      "locator": {
+        "page": 2,
+        "x0": 70.0801,
+        "y0": 584.3628,
+        "x1": 500.7582,
+        "y1": 604.3201
+      },
+      "text": "E. Before beginning maintenance or servicing, attempt to activate the machinery using normal operating controls to assure ZES.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687982562716,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:90",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 584.3628,
+        "x1": 103.4764,
+        "y1": 590.8801
+      },
+      "text": "E.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999987132781463,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:91",
+      "locator": {
+        "page": 2,
+        "x0": 70.0801,
+        "y0": 624.6828,
+        "x1": 517.6835,
+        "y1": 644.6401
+      },
+      "text": "F. Energy sources having the potential for re-accumulation of energy to a hazardous level shall be checked during the maintenance operation to assure that ZES is maintained.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785550951883,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:92",
+      "locator": {
+        "page": 2,
+        "x0": 96.4799,
+        "y0": 624.6828,
+        "x1": 105.76,
+        "y1": 631.2001
+      },
+      "text": "F.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999955282838628,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:93",
+      "locator": {
+        "page": 2,
+        "x0": 70.0801,
+        "y0": 665.0028,
+        "x1": 521.521,
+        "y1": 698.4001
+      },
+      "text": "G. When more than one authorized employee is working on the same machine, each employee shall place his/her lockout device and tag on each energy isolating device for added security (crew lockout).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610715354,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:94",
+      "locator": {
+        "page": 2,
+        "x0": 93.48,
+        "y0": 665.0028,
+        "x1": 104.8002,
+        "y1": 671.5201
+      },
+      "text": "G.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999758117714397,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:96",
+      "locator": {
+        "page": 3,
+        "x0": 70.08,
+        "y0": 109.883,
+        "x1": 529.9368,
+        "y1": 237.1202
+      },
+      "text": "H. When activities extend into a subsequent shift: 1. The maintenance supervisor shall notify the relieving employee of his/her designation as the authorized employee. 2. The authorized employee relieved will remove his/her personal lock in the presence of the relieving employee. 3. The relieving employee will affix his/her lock to the energy isolating device. 4. The affected employees shall be notified. *IF A DEVICE CAN BE LOCKED OUT, IT MUST BE LOCKED WITH NO EXCEPTIONS *",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204738847947,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:97",
+      "locator": {
+        "page": 3,
+        "x0": 93.4798,
+        "y0": 109.883,
+        "x1": 104.8,
+        "y1": 116.4003
+      },
+      "text": "H.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999938578859245,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:99",
+      "locator": {
+        "page": 3,
+        "x0": 108.0,
+        "y0": 132.323,
+        "x1": 529.9368,
+        "y1": 152.1603
+      },
+      "text": "1. The maintenance supervisor shall notify the relieving employee of his/her designation as the authorized employee.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485580771857,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:100",
+      "locator": {
+        "page": 3,
+        "x0": 108.0,
+        "y0": 132.323,
+        "x1": 143.6591,
+        "y1": 138.8403
+      },
+      "text": "1. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999933971026373,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:101",
+      "locator": {
+        "page": 3,
+        "x0": 70.0803,
+        "y0": 159.083,
+        "x1": 519.98,
+        "y1": 179.0403
+      },
+      "text": "2. The authorized employee relieved will remove his/her personal lock in the presence of the relieving employee.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687982446225,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:102",
+      "locator": {
+        "page": 3,
+        "x0": 108.0,
+        "y0": 159.083,
+        "x1": 143.6591,
+        "y1": 165.6003
+      },
+      "text": "2. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724895673489,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:103",
+      "locator": {
+        "page": 3,
+        "x0": 108.0001,
+        "y0": 185.963,
+        "x1": 486.7262,
+        "y1": 192.4803
+      },
+      "text": "3. The relieving employee will affix his/her lock to the energy isolating device.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417090465255,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:104",
+      "locator": {
+        "page": 3,
+        "x0": 108.0001,
+        "y0": 185.963,
+        "x1": 143.6592,
+        "y1": 192.4803
+      },
+      "text": "3. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999038993563805,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:105",
+      "locator": {
+        "page": 3,
+        "x0": 108.0001,
+        "y0": 199.403,
+        "x1": 321.0306,
+        "y1": 205.9203
+      },
+      "text": "4. The affected employees shall be notified.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999623643225022,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:106",
+      "locator": {
+        "page": 3,
+        "x0": 108.0001,
+        "y0": 199.403,
+        "x1": 143.6591,
+        "y1": 205.9203
+      },
+      "text": "4. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998415867795923,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:107",
+      "locator": {
+        "page": 3,
+        "x0": 70.08,
+        "y0": 213.6421,
+        "x1": 529.0143,
+        "y1": 237.1202
+      },
+      "text": "*IF A DEVICE CAN BE LOCKED OUT, IT MUST BE LOCKED WITH NO EXCEPTIONS *",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9947828216813626,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:108",
+      "locator": {
+        "page": 3,
+        "x0": 93.4798,
+        "y0": 253.1629,
+        "x1": 528.8295,
+        "y1": 273.1202
+      },
+      "text": "I. Electrical test verification of de-energized circuits will be implemented when maintenance or servicing is performed on electrical parts of equipment or machinery.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485578422234,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:109",
+      "locator": {
+        "page": 3,
+        "x0": 93.4798,
+        "y0": 253.1629,
+        "x1": 100.1182,
+        "y1": 259.6802
+      },
+      "text": "I.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999974399673544,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:110",
+      "locator": {
+        "page": 3,
+        "x0": 93.4798,
+        "y0": 288.9229,
+        "x1": 337.7083,
+        "y1": 295.4402
+      },
+      "text": "J. Where ZES cannot be achieved or is not feasible:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968274995647297,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:111",
+      "locator": {
+        "page": 3,
+        "x0": 93.4798,
+        "y0": 288.9229,
+        "x1": 100.96,
+        "y1": 295.4402
+      },
+      "text": "J.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999962796987738,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:113",
+      "locator": {
+        "page": 3,
+        "x0": 70.0803,
+        "y0": 311.3868,
+        "x1": 528.1575,
+        "y1": 331.5602
+      },
+      "text": "1. The authorized employee shall notify his/her supervisor prior to performing any additional activities.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546023399504,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:114",
+      "locator": {
+        "page": 3,
+        "x0": 108.0,
+        "y0": 311.3868,
+        "x1": 144.9828,
+        "y1": 318.1202
+      },
+      "text": "1. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339629739038,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:115",
+      "locator": {
+        "page": 3,
+        "x0": 70.0802,
+        "y0": 338.1229,
+        "x1": 528.3703,
+        "y1": 358.0802
+      },
+      "text": "2. The notified supervisor shall assure that alternative safety measures are implemented and consult with the Safety Coordinator, as necessary.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832985988187,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:116",
+      "locator": {
+        "page": 3,
+        "x0": 107.9999,
+        "y0": 338.1229,
+        "x1": 143.659,
+        "y1": 344.6402
+      },
+      "text": "2. The",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998204786983532,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:119",
+      "locator": {
+        "page": 3,
+        "x0": 70.08,
+        "y0": 373.9068,
+        "x1": 90.5182,
+        "y1": 380.6402
+      },
+      "text": "VII.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.97002517620826,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:79"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:121",
+      "locator": {
+        "page": 3,
+        "x0": 70.0801,
+        "y0": 396.3228,
+        "x1": 491.6537,
+        "y1": 416.2802
+      },
+      "text": "A. All authorized and affected employees shall be notified of the intent to return the equipment or machine to operating condition.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724644081776,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:122",
+      "locator": {
+        "page": 3,
+        "x0": 93.48,
+        "y0": 396.3228,
+        "x1": 104.8002,
+        "y1": 402.8402
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999898771979984,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:123",
+      "locator": {
+        "page": 3,
+        "x0": 70.0801,
+        "y0": 432.2029,
+        "x1": 507.6233,
+        "y1": 452.1602
+      },
+      "text": "B. The authorized employee shall inspect the equipment or machine to assure tools and service equipment have been removed.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251550643017,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:124",
+      "locator": {
+        "page": 3,
+        "x0": 93.48,
+        "y0": 432.2029,
+        "x1": 104.1981,
+        "y1": 438.7202
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9997049815994926,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:125",
+      "locator": {
+        "page": 3,
+        "x0": 70.08,
+        "y0": 467.9628,
+        "x1": 523.5698,
+        "y1": 487.9202
+      },
+      "text": "C. The machine or equipment shall be inspected by the authorized employee to ensure that components are operationally intact.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417091390848,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:126",
+      "locator": {
+        "page": 3,
+        "x0": 93.48,
+        "y0": 467.9628,
+        "x1": 104.1981,
+        "y1": 474.4802
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999925923358807,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:127",
+      "locator": {
+        "page": 3,
+        "x0": 70.0792,
+        "y0": 508.2828,
+        "x1": 497.7793,
+        "y1": 528.2401
+      },
+      "text": "D. All guards or similar safety devices shall be replaced and inspected or adjusted as needed.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599365503611,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:128",
+      "locator": {
+        "page": 3,
+        "x0": 93.48,
+        "y0": 508.2828,
+        "x1": 104.8002,
+        "y1": 514.8002
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999957789847616,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:129",
+      "locator": {
+        "page": 3,
+        "x0": 70.0783,
+        "y0": 548.4828,
+        "x1": 494.6579,
+        "y1": 568.4402
+      },
+      "text": "E. All controls and operating devices shall be verified to be in the \u201coff\u201d position and the machinery rendered inoperable.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999646438791107,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:130",
+      "locator": {
+        "page": 3,
+        "x0": 93.4792,
+        "y0": 548.4828,
+        "x1": 103.4756,
+        "y1": 555.0001
+      },
+      "text": "E.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999952283082559,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:131",
+      "locator": {
+        "page": 3,
+        "x0": 93.5981,
+        "y0": 588.8028,
+        "x1": 424.3362,
+        "y1": 595.3201
+      },
+      "text": "F. All employees shall be removed from the machinery to a safe area.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485580341154,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:132",
+      "locator": {
+        "page": 3,
+        "x0": 93.5981,
+        "y0": 588.8028,
+        "x1": 102.7582,
+        "y1": 595.3201
+      },
+      "text": "F.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999925946795303,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:133",
+      "locator": {
+        "page": 3,
+        "x0": 70.0783,
+        "y0": 615.6828,
+        "x1": 526.0842,
+        "y1": 635.6401
+      },
+      "text": "G. All authorized employees shall remove their lock and/or tag from the energy isolating device(s).",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339483349919,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:134",
+      "locator": {
+        "page": 3,
+        "x0": 93.4781,
+        "y0": 615.6828,
+        "x1": 104.7984,
+        "y1": 622.2001
+      },
+      "text": "G.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9993773658967287,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:135",
+      "locator": {
+        "page": 3,
+        "x0": 70.0783,
+        "y0": 656.0028,
+        "x1": 509.2863,
+        "y1": 675.9601
+      },
+      "text": "H. A final visual check shall be performed by the authorized employee to assure that no individuals are exposed to any hazards of the equipment or machinery.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911044689557,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:136",
+      "locator": {
+        "page": 3,
+        "x0": 93.4782,
+        "y0": 656.0028,
+        "x1": 104.7984,
+        "y1": 662.5201
+      },
+      "text": "H.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999833090392662,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:137",
+      "locator": {
+        "page": 3,
+        "x0": 96.3581,
+        "y0": 696.3228,
+        "x1": 308.4345,
+        "y1": 702.8401
+      },
+      "text": "I. The machinery shall then be re-energized.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995694658624386,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:138",
+      "locator": {
+        "page": 3,
+        "x0": 96.3581,
+        "y0": 696.3228,
+        "x1": 102.9965,
+        "y1": 702.8401
+      },
+      "text": "I.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9996679046163779,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:139",
+      "locator": {
+        "page": 4,
+        "x0": 70.08,
+        "y0": 109.9069,
+        "x1": 218.8603,
+        "y1": 116.6403
+      },
+      "text": "VIII. Lockout/Tagout Devices",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9988203008343204,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:119"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:141",
+      "locator": {
+        "page": 4,
+        "x0": 93.4798,
+        "y0": 136.643,
+        "x1": 521.7617,
+        "y1": 143.1603
+      },
+      "text": "A. Lockout/Tagout devices shall be provided to authorized employees by their department.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417090554518,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:142",
+      "locator": {
+        "page": 4,
+        "x0": 93.4798,
+        "y0": 136.643,
+        "x1": 104.8,
+        "y1": 143.1603
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999952179026099,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:143",
+      "locator": {
+        "page": 4,
+        "x0": 70.08,
+        "y0": 163.523,
+        "x1": 497.643,
+        "y1": 183.4803
+      },
+      "text": "B. The authorized employee shall utilize a tag with every lockout device and indicate his/her identity on every tag used.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546025391869,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:144",
+      "locator": {
+        "page": 4,
+        "x0": 93.4798,
+        "y0": 163.523,
+        "x1": 104.198,
+        "y1": 170.0403
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999949139416081,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:145",
+      "locator": {
+        "page": 4,
+        "x0": 93.4798,
+        "y0": 203.843,
+        "x1": 514.3348,
+        "y1": 223.8003
+      },
+      "text": "C. Lockout devices shall be substantial enough to prevent removal without the use of substantial force, such as the use bolt cutters.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999810748882142,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:146",
+      "locator": {
+        "page": 4,
+        "x0": 93.4798,
+        "y0": 203.843,
+        "x1": 104.198,
+        "y1": 210.3603
+      },
+      "text": "C.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999952230437988,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:147",
+      "locator": {
+        "page": 4,
+        "x0": 70.0791,
+        "y0": 244.163,
+        "x1": 523.1963,
+        "y1": 264.1203
+      },
+      "text": "D. Tagout devices shall be substantial enough to prevent inadvertent or accidental removal. The tags shall have a minimum unlocking strength of 50 pounds.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999885212513234,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:148",
+      "locator": {
+        "page": 4,
+        "x0": 93.479,
+        "y0": 244.163,
+        "x1": 104.7992,
+        "y1": 250.6803
+      },
+      "text": "D.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999898872374174,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:149",
+      "locator": {
+        "page": 4,
+        "x0": 70.0792,
+        "y0": 297.923,
+        "x1": 505.8133,
+        "y1": 317.8803
+      },
+      "text": "E. Lockout/Tagout devices shall be utilized for the specific purpose of Lockout/Tagout. These devices may not be utilized for any other purpose.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610317759,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:150",
+      "locator": {
+        "page": 4,
+        "x0": 93.479,
+        "y0": 297.923,
+        "x1": 103.4754,
+        "y1": 304.4403
+      },
+      "text": "E.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999977412798363,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:151",
+      "locator": {
+        "page": 4,
+        "x0": 70.0793,
+        "y0": 338.1229,
+        "x1": 487.8208,
+        "y1": 358.0803
+      },
+      "text": "F. Lockout/tagout devices shall only be removed by the authorized employee who installed the device.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999832986133649,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:152",
+      "locator": {
+        "page": 4,
+        "x0": 93.4791,
+        "y0": 338.1229,
+        "x1": 102.6392,
+        "y1": 344.6403
+      },
+      "text": "F.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999892509004399,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:153h",
+      "locator": {
+        "page": 4,
+        "x0": 70.0793,
+        "y0": 378.4668,
+        "x1": 400.4641,
+        "y1": 392.7668
+      },
+      "text": "IX. Tagout",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9995117868733296,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:139"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:153",
+      "locator": {
+        "page": 4,
+        "x0": 70.0793,
+        "y0": 392.7668,
+        "x1": 400.4641,
+        "y1": 411.8402
+      },
+      "text": "A. Authorized employees must tag the energy isolating devices.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999251548015143,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:155",
+      "locator": {
+        "page": 4,
+        "x0": 70.0793,
+        "y0": 432.2029,
+        "x1": 526.6952,
+        "y1": 479.0402
+      },
+      "text": "1. Tagout devices must warn against hazardous conditions if the machine is energized, such as: a. DO NOT START b. DO NOT OPERATE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999983298689251,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:156",
+      "locator": {
+        "page": 4,
+        "x0": 110.9993,
+        "y0": 432.2029,
+        "x1": 116.8359,
+        "y1": 438.7202
+      },
+      "text": "1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:158",
+      "locator": {
+        "page": 4,
+        "x0": 131.399,
+        "y0": 459.0829,
+        "x1": 226.0151,
+        "y1": 465.6002
+      },
+      "text": "a. DO NOT START",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9989680774640173,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:159",
+      "locator": {
+        "page": 4,
+        "x0": 131.399,
+        "y0": 459.0829,
+        "x1": 186.0553,
+        "y1": 465.6002
+      },
+      "text": "a. DO NOT",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99908910014757,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:160",
+      "locator": {
+        "page": 4,
+        "x0": 134.279,
+        "y0": 472.5229,
+        "x1": 245.2169,
+        "y1": 479.0402
+      },
+      "text": "b. DO NOT OPERATE",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9991961518090119,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:161",
+      "locator": {
+        "page": 4,
+        "x0": 134.279,
+        "y0": 472.5229,
+        "x1": 189.7771,
+        "y1": 479.0402
+      },
+      "text": "b. DO NOT",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992905086402462,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:162",
+      "locator": {
+        "page": 4,
+        "x0": 110.9991,
+        "y0": 485.9629,
+        "x1": 523.9221,
+        "y1": 492.4802
+      },
+      "text": "2. Tagout devices must be able to withstand the environmental conditions encountered.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485588481559,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:163",
+      "locator": {
+        "page": 4,
+        "x0": 110.9991,
+        "y0": 485.9629,
+        "x1": 116.8357,
+        "y1": 492.4802
+      },
+      "text": "2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:164",
+      "locator": {
+        "page": 4,
+        "x0": 111.0002,
+        "y0": 499.4029,
+        "x1": 529.9343,
+        "y1": 519.3602
+      },
+      "text": "3 Tags may only be used alone if energy isolating devices cannot be locked out and the variance is approved by the department supervisor.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852610938469,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:165",
+      "locator": {
+        "page": 4,
+        "x0": 111.0002,
+        "y0": 499.4029,
+        "x1": 116.8368,
+        "y1": 505.9202
+      },
+      "text": "3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:166",
+      "locator": {
+        "page": 4,
+        "x0": 70.0802,
+        "y0": 539.6268,
+        "x1": 297.7001,
+        "y1": 546.3602
+      },
+      "text": "X. Unauthorized Removal of Lockout Devices",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9997694229234334,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:153h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:168",
+      "locator": {
+        "page": 4,
+        "x0": 70.0795,
+        "y0": 566.4829,
+        "x1": 498.6173,
+        "y1": 586.4402
+      },
+      "text": "A. Locks/Tags shall only be removed by the authorized employee who installed the device.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417093677834,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:169",
+      "locator": {
+        "page": 4,
+        "x0": 99.2402,
+        "y0": 566.4829,
+        "x1": 110.5604,
+        "y1": 573.0002
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999957792267293,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:170",
+      "locator": {
+        "page": 4,
+        "x0": 99.2394,
+        "y0": 606.5868,
+        "x1": 526.7035,
+        "y1": 613.3202
+      },
+      "text": "B. If a lockout device must be removed by someone other than the person who installed it:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993736956595952,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:171",
+      "locator": {
+        "page": 4,
+        "x0": 99.2394,
+        "y0": 606.8029,
+        "x1": 110.0775,
+        "y1": 613.3202
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999957853030073,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:173",
+      "locator": {
+        "page": 4,
+        "x0": 119.7589,
+        "y0": 633.6829,
+        "x1": 291.8602,
+        "y1": 640.2002
+      },
+      "text": "1. Notify the department supervisor.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911105597557,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:174",
+      "locator": {
+        "page": 4,
+        "x0": 119.7589,
+        "y0": 633.6829,
+        "x1": 125.5955,
+        "y1": 640.2002
+      },
+      "text": "1",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:175",
+      "locator": {
+        "page": 4,
+        "x0": 70.0791,
+        "y0": 647.1229,
+        "x1": 528.9967,
+        "y1": 667.0802
+      },
+      "text": "2 . The supervisor must make a reasonable effort to contact the authorized employee to inform him/her that their lockout device will be removed.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999869929917828,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:176",
+      "locator": {
+        "page": 4,
+        "x0": 119.7588,
+        "y0": 647.1229,
+        "x1": 125.5954,
+        "y1": 653.6402
+      },
+      "text": "2",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:177",
+      "locator": {
+        "page": 4,
+        "x0": 70.0792,
+        "y0": 674.0028,
+        "x1": 533.319,
+        "y1": 693.9602
+      },
+      "text": "3. The supervisor shall assure that the authorized employee, whose lockout device was removed, is informed prior to resuming work.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999852611252331,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:178",
+      "locator": {
+        "page": 4,
+        "x0": 119.7588,
+        "y0": 674.0028,
+        "x1": 125.5954,
+        "y1": 680.5201
+      },
+      "text": "3",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:180h",
+      "locator": {
+        "page": 5,
+        "x0": 70.0791,
+        "y0": 109.9069,
+        "x1": 526.0909,
+        "y1": 124.20689999999999
+      },
+      "text": "XI. Training",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9999151190171657,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:181",
+      "locator": {
+        "page": 5,
+        "x0": 70.08,
+        "y0": 109.9069,
+        "x1": 85.8382,
+        "y1": 116.6403
+      },
+      "text": "XI.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9987716761078226,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:166"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:180",
+      "locator": {
+        "page": 5,
+        "x0": 70.0791,
+        "y0": 124.20689999999999,
+        "x1": 526.0909,
+        "y1": 210.3603
+      },
+      "text": "A. Employees shall receive instruction on this procedure and its application consistent with their assigned duties. B. Retraining shall be provided for employees when their job duties change; a change in machines, equipment or processes that present a new hazard; a change in the energy control procedures; or whenever the employer believes that there are deviations from or inadequacies in the employee\u2019s knowledge or use of the energy control procedures.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998601792433853,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:181"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:183",
+      "locator": {
+        "page": 5,
+        "x0": 70.0791,
+        "y0": 136.643,
+        "x1": 526.0909,
+        "y1": 156.6003
+      },
+      "text": "A. Employees shall receive instruction on this procedure and its application consistent with their assigned duties.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151893141647,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:181"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:184",
+      "locator": {
+        "page": 5,
+        "x0": 93.4799,
+        "y0": 136.643,
+        "x1": 104.8002,
+        "y1": 143.1603
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999861651289018,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:181"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:185",
+      "locator": {
+        "page": 5,
+        "x0": 70.0791,
+        "y0": 163.523,
+        "x1": 523.6815,
+        "y1": 210.3603
+      },
+      "text": "B. Retraining shall be provided for employees when their job duties change; a change in machines, equipment or processes that present a new hazard; a change in the energy control procedures; or whenever the employer believes that there are deviations from or inadequacies in the employee\u2019s knowledge or use of the energy control procedures.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599364921352,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:181"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:186",
+      "locator": {
+        "page": 5,
+        "x0": 93.479,
+        "y0": 163.523,
+        "x1": 104.1971,
+        "y1": 170.0403
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999833181121253,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:181"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:187h",
+      "locator": {
+        "page": 5,
+        "x0": 70.0787,
+        "y0": 230.7469,
+        "x1": 529.923,
+        "y1": 245.04690000000002
+      },
+      "text": "XII. Program Evaluation",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.999768740722405,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:181"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:188",
+      "locator": {
+        "page": 5,
+        "x0": 70.0791,
+        "y0": 230.7469,
+        "x1": 90.3973,
+        "y1": 237.4803
+      },
+      "text": "XII.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9999596632297625,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:181"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:187",
+      "locator": {
+        "page": 5,
+        "x0": 70.0787,
+        "y0": 245.04690000000002,
+        "x1": 529.923,
+        "y1": 398.4003
+      },
+      "text": "A. Supervisors, employees, and the Risk Coordinator shall evaluate this program at least annually to ensure program effectiveness and identify any deviations or inadequacies within the program 1. The evaluation shall be performed by an authorized employee other than the ones(s) utilizing the energy control procedure being evaluated. B. Evaluations shall be documented through a certification. The certification shall identify the machine or equipment on which the energy control procedure was being utilized, the date of the evaluation, the employees included in the evaluation, and the person performing the evaluation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996200351104565,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:190",
+      "locator": {
+        "page": 5,
+        "x0": 70.0789,
+        "y0": 257.603,
+        "x1": 527.2985,
+        "y1": 331.3203
+      },
+      "text": "A. Supervisors, employees, and the Risk Coordinator shall evaluate this program at least annually to ensure program effectiveness and identify any deviations or inadequacies within the program 1. The evaluation shall be performed by an authorized employee other than the ones(s) utilizing the energy control procedure being evaluated.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999915189407145,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:191",
+      "locator": {
+        "page": 5,
+        "x0": 96.3591,
+        "y0": 257.603,
+        "x1": 107.6794,
+        "y1": 264.1203
+      },
+      "text": "A.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999646658939868,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:192",
+      "locator": {
+        "page": 5,
+        "x0": 70.0789,
+        "y0": 311.363,
+        "x1": 527.2985,
+        "y1": 331.3203
+      },
+      "text": "1. The evaluation shall be performed by an authorized employee other than the ones(s) utilizing the energy control procedure being evaluated.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998911043952761,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:193",
+      "locator": {
+        "page": 5,
+        "x0": 70.0787,
+        "y0": 351.563,
+        "x1": 529.923,
+        "y1": 398.4003
+      },
+      "text": "B. Evaluations shall be documented through a certification. The certification shall identify the machine or equipment on which the energy control procedure was being utilized, the date of the evaluation, the employees included in the evaluation, and the person performing the evaluation.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999724643626368,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:194",
+      "locator": {
+        "page": 5,
+        "x0": 96.359,
+        "y0": 351.563,
+        "x1": 107.0771,
+        "y1": 358.0803
+      },
+      "text": "B.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999771987018927,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:195h",
+      "locator": {
+        "page": 5,
+        "x0": 70.0787,
+        "y0": 418.7869,
+        "x1": 246.1393,
+        "y1": 433.0869
+      },
+      "text": "XIII. Exemptions",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9998149656759763,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:196",
+      "locator": {
+        "page": 5,
+        "x0": 72.9587,
+        "y0": 418.7869,
+        "x1": 97.8369,
+        "y1": 425.5203
+      },
+      "text": "XIII.",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9999130453072846,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:188"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:195",
+      "locator": {
+        "page": 5,
+        "x0": 70.0787,
+        "y0": 433.0869,
+        "x1": 246.1393,
+        "y1": 452.1602
+      },
+      "text": "A. This policy does not include:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.8178421572793912,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0128:198",
+      "locator": {
+        "page": 5,
+        "x0": 70.079,
+        "y0": 472.5229,
+        "x1": 531.9971,
+        "y1": 506.1602
+      },
+      "text": "1. Routine, minor adjustments and maintenance required during normal production operations, unless required to bypass a guard or place any body part into an area on the machine where work is actually performed;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599366970382,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:199",
+      "locator": {
+        "page": 5,
+        "x0": 107.9987,
+        "y0": 472.5229,
+        "x1": 116.797,
+        "y1": 479.0403
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:200",
+      "locator": {
+        "page": 5,
+        "x0": 70.0786,
+        "y0": 512.8429,
+        "x1": 557.065,
+        "y1": 559.5602
+      },
+      "text": "2. Work on cord and plug connected electrical equipment for which exposure to the hazards of unexpected energization or start up of the equipment is controlled by the unplugging of the equipment from the energy source. The individual working on the equipment has exclusive control of the plug and maintains visual sight of the plug.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999546024346997,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:201",
+      "locator": {
+        "page": 5,
+        "x0": 107.9993,
+        "y0": 512.8429,
+        "x1": 116.7975,
+        "y1": 519.3602
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:202",
+      "locator": {
+        "page": 5,
+        "x0": 107.9984,
+        "y0": 566.4829,
+        "x1": 508.3243,
+        "y1": 573.0002
+      },
+      "text": "3. Hot tap operations where the employer can prove prior to the start of the job that:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995121570011712,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:203",
+      "locator": {
+        "page": 5,
+        "x0": 107.9984,
+        "y0": 566.4829,
+        "x1": 116.7966,
+        "y1": 573.0002
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:205",
+      "locator": {
+        "page": 5,
+        "x0": 131.3982,
+        "y0": 579.9229,
+        "x1": 300.9874,
+        "y1": 586.4402
+      },
+      "text": "a. Continuity of service is essential;",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388238551449,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:206",
+      "locator": {
+        "page": 5,
+        "x0": 131.3982,
+        "y0": 579.9229,
+        "x1": 139.4747,
+        "y1": 586.4402
+      },
+      "text": "a.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999938596738669,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:207",
+      "locator": {
+        "page": 5,
+        "x0": 131.3982,
+        "y0": 593.3629,
+        "x1": 351.7386,
+        "y1": 599.8802
+      },
+      "text": "b. Shutdown of the system is impracticable; or",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9993737840487252,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:208",
+      "locator": {
+        "page": 5,
+        "x0": 131.3982,
+        "y0": 593.3629,
+        "x1": 140.1965,
+        "y1": 599.8802
+      },
+      "text": "b.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999910707590745,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:209",
+      "locator": {
+        "page": 5,
+        "x0": 70.0797,
+        "y0": 606.8029,
+        "x1": 516.2485,
+        "y1": 626.7603
+      },
+      "text": "c. Documented procedures are followed to provide equally effective protection for employees.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999925156177546,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0128:210",
+      "locator": {
+        "page": 5,
+        "x0": 131.3982,
+        "y0": 606.8029,
+        "x1": 139.4747,
+        "y1": 613.3202
+      },
+      "text": "c.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999852782559946,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0128:196"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

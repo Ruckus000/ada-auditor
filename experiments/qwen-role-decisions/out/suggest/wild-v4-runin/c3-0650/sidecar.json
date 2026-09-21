@@ -1,0 +1,408 @@
+{
+  "document": "c3-0650",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 18,
+    "cards_considered": 18,
+    "selector": "all-blocks",
+    "not_heading_confident": 15,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 6,
+    "split_heads": 1
+  },
+  "cards": [
+    {
+      "card_id": "c3-0650:2",
+      "locator": {
+        "page": 0,
+        "x0": 380.94,
+        "y0": 70.6801,
+        "x1": 562.4762,
+        "y1": 76.6801
+      },
+      "text": "Permit # _______________________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9924693587350634,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0650:3",
+      "locator": {
+        "page": 0,
+        "x0": 299.9431,
+        "y0": 118.29,
+        "x1": 540.1626,
+        "y1": 128.28
+      },
+      "text": "SEPTIC PERMIT APPLICATION",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.9984893471912549,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0650:1h",
+      "locator": {
+        "page": 0,
+        "x0": 39.0037,
+        "y0": 126.6901,
+        "x1": 204.8082,
+        "y1": 135.7901
+      },
+      "text": "13400 \u2013 90",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:1",
+      "locator": {
+        "page": 0,
+        "x0": 39.0037,
+        "y0": 135.7901,
+        "x1": 204.8082,
+        "y1": 141.8998
+      },
+      "text": "th Street NE \u2022 Otsego, MN 55330 (763) 441\u20102593 \u2022 E\u2010mail: building@ci.otsego.mn.us",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997966216106233,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:4",
+      "locator": {
+        "page": 0,
+        "x0": 284.7,
+        "y0": 149.46,
+        "x1": 362.46,
+        "y1": 170.1
+      },
+      "text": "Date Received: _____________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999039252164861,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:5",
+      "locator": {
+        "page": 0,
+        "x0": 383.88,
+        "y0": 149.46,
+        "x1": 461.64,
+        "y1": 170.1
+      },
+      "text": "Received By: _____________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485699137148,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:6",
+      "locator": {
+        "page": 0,
+        "x0": 478.6201,
+        "y0": 149.46,
+        "x1": 556.3764,
+        "y1": 170.1
+      },
+      "text": "Approved By: _____________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997695548667128,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:8",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 204.9,
+        "x1": 545.7468,
+        "y1": 328.0801
+      },
+      "text": "Project Address: _______________________________________________________________________ Septic Contractor: __________________________________________ License #: __________________ Address / City / Zip: ____________________________________________________________________ E\u2010Mail Address: ____________________________________________ Phone: _____________________ Property Owner: ___________________________________________ Phone: _____________________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999517496510146,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:9",
+      "locator": {
+        "page": 0,
+        "x0": 41.6401,
+        "y0": 351.9001,
+        "x1": 113.8093,
+        "y1": 357.9001
+      },
+      "text": "Property Type:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995605998736911,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:11",
+      "locator": {
+        "page": 0,
+        "x0": 166.92,
+        "y0": 351.9001,
+        "x1": 436.2265,
+        "y1": 374.7001
+      },
+      "text": "Single Dwelling Commercial / Industrial Multiple Dwelling",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.998982574611873,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:13",
+      "locator": {
+        "page": 0,
+        "x0": 41.64,
+        "y0": 388.74,
+        "x1": 106.3584,
+        "y1": 394.74
+      },
+      "text": "System Type:",
+      "type": "TH",
+      "level": null,
+      "rule": 3,
+      "score": 0.9999050512557962,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:15",
+      "locator": {
+        "page": 0,
+        "x0": 166.08,
+        "y0": 389.04,
+        "x1": 434.4648,
+        "y1": 430.56
+      },
+      "text": "Standard Alternative Other Trench At Grade Pressure Bed Mound Chamber",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9992951816720523,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:17",
+      "locator": {
+        "page": 0,
+        "x0": 41.64,
+        "y0": 442.8,
+        "x1": 126.582,
+        "y1": 448.8
+      },
+      "text": "Additional Notes:",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.99900810330263,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": true,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:20",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 493.38,
+        "x1": 248.5679,
+        "y1": 499.38
+      },
+      "text": "Valuation (job cost): $ _________________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9994477419915802,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:21",
+      "locator": {
+        "page": 0,
+        "x0": 36.0,
+        "y0": 520.11,
+        "x1": 544.2807,
+        "y1": 539.0396
+      },
+      "text": "This permit becomes null and void if work or construction authorized is not commenced within 180 days, or if construction or work is suspended or abandoned for a period of 180 days at any time after work has commenced.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999417194903961,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:22",
+      "locator": {
+        "page": 0,
+        "x0": 36.0062,
+        "y0": 560.3737,
+        "x1": 551.694,
+        "y1": 606.1795
+      },
+      "text": "I hereby certify that I have read and examined this application and know the same to be true and correct. All provisions of law and ordinances governing this type of work will be complied with whether specified herein or not. The granting of a permit does not presume to give authority to violate or cancel the provisions of any other state or local law regulating construction or the performance of construction.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999785560438448,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0650:23",
+      "locator": {
+        "page": 0,
+        "x0": 38.4595,
+        "y0": 638.43,
+        "x1": 141.0676,
+        "y1": 643.92
+      },
+      "text": "If different than above,",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9468041116107501,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0650:24",
+      "locator": {
+        "page": 0,
+        "x0": 35.9999,
+        "y0": 666.9,
+        "x1": 559.1519,
+        "y1": 731.52
+      },
+      "text": "Applicant Name (please print): __________________________________ Phone: _____________________ Address: _______________________________ City: __________________________ Zip: ______________ Signature: _________________________________________ Date: ________________________________",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999485685292409,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0650:3"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

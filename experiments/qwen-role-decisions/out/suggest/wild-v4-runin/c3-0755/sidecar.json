@@ -1,0 +1,694 @@
+{
+  "document": "c3-0755",
+  "threshold": 0.9933,
+  "page_base": 0,
+  "coverage": {
+    "blocks_total": 30,
+    "cards_considered": 30,
+    "selector": "all-blocks",
+    "not_heading_confident": 20,
+    "table_vetoed": 0,
+    "table_not_heading_confident": 0,
+    "split_heads": 4
+  },
+  "cards": [
+    {
+      "card_id": "c3-0755:0",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 42.1446,
+        "x1": 538.0831,
+        "y1": 75.3604
+      },
+      "text": "WEST VALLEY SOLID WASTE MANAGEMENT AUTHORITY Executive Director Member Agencies",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9631221167628546,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:1",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 82.2199,
+        "x1": 537.5765,
+        "y1": 153.0002
+      },
+      "text": "L. Scott Hobson City of Campbell Hilton Farnkopf & Hobson, LLC Town of Los Gatos 933 West 2200 North City of Monte Sereno Pleasant Grove, UT 84062 City of Saratoga Telephone \u2022 (801) 310-3608 Facsimile \u2022 (801) 785-6794 E-mail \u2022 lshobson@msn.com",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997390488979242,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:2",
+      "locator": {
+        "page": 0,
+        "x0": 229.4399,
+        "y0": 184.4759,
+        "x1": 390.7599,
+        "y1": 192.3602
+      },
+      "text": "MEETING AGENDA",
+      "type": "H",
+      "level": 1,
+      "rule": 1,
+      "score": 0.993218699211275,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:3",
+      "locator": {
+        "page": 0,
+        "x0": 224.64,
+        "y0": 216.7922,
+        "x1": 394.5658,
+        "y1": 266.7602
+      },
+      "text": "February 2, 2009 Monte Sereno City Hall 18041 Saratoga-Los Gatos Road Monte Sereno, CA 95030",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9995695308487411,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:4",
+      "locator": {
+        "page": 0,
+        "x0": 276.2399,
+        "y0": 277.2359,
+        "x1": 344.0699,
+        "y1": 285.1201
+      },
+      "text": "5:00 p.m.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6523044371054847,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:5h",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 324.3121,
+        "x1": 356.1855,
+        "y1": 339.9121
+      },
+      "text": "CALL TO ORDER",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9702781877660858,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:5",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 339.9121,
+        "x1": 356.1855,
+        "y1": 476.8801
+      },
+      "text": "ROLL CALL ORAL COMMUNICATIONS FROM THE PUBLIC WRITTEN COMMUNICATIONS None. NEW BUSINESS",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9972023603298686,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:7",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 500.1061,
+        "x1": 208.6856,
+        "y1": 506.1601
+      },
+      "text": "1. Elect new officers",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9984998888758546,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:8",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 500.1061,
+        "x1": 85.32,
+        "y1": 506.1601
+      },
+      "text": "1.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:9",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 529.6262,
+        "x1": 521.1651,
+        "y1": 550.4401
+      },
+      "text": "2. Provide a recommendation to the Member Agencies regarding the proposed Single-Use Carryout Bag ordinance",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999599372925339,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:10",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 529.6262,
+        "x1": 85.32,
+        "y1": 535.6802
+      },
+      "text": "2.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:11",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 573.9061,
+        "x1": 498.7177,
+        "y1": 594.7201
+      },
+      "text": "3. Receive and file a report on the proposed County AB 939 fee adjustment effective July 1, 2009",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999687987684,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:12",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 573.9061,
+        "x1": 85.32,
+        "y1": 579.9601
+      },
+      "text": "3.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:13",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 618.186,
+        "x1": 535.3222,
+        "y1": 639.0001
+      },
+      "text": "4. Discuss implementation alternatives for and the rate impact of a vehicle impact fee on West Valley Collection & Recycling effective July 1, 2009",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999339505472278,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:14",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 618.186,
+        "x1": 85.32,
+        "y1": 624.2401
+      },
+      "text": "4.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:15",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 662.466,
+        "x1": 438.3518,
+        "y1": 668.52
+      },
+      "text": "5. Approve Resolution 2009-01 adopting the FY 2009-10 budget",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9997388386797602,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:16",
+      "locator": {
+        "page": 0,
+        "x0": 76.32,
+        "y0": 662.466,
+        "x1": 85.32,
+        "y1": 668.52
+      },
+      "text": "5.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:17",
+      "locator": {
+        "page": 1,
+        "x0": 76.3195,
+        "y0": 41.1065,
+        "x1": 508.3625,
+        "y1": 46.5603
+      },
+      "text": "WEST VALLEY SOLID WASTE MANAGEMENT AUTHORITY AGENDA",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6841150063955017,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:18",
+      "locator": {
+        "page": 1,
+        "x0": 76.3195,
+        "y0": 53.5604,
+        "x1": 510.8041,
+        "y1": 58.5603
+      },
+      "text": "Page 2 February 5, 2009",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.986279929901216,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:19",
+      "locator": {
+        "page": 1,
+        "x0": 76.3195,
+        "y0": 90.5523,
+        "x1": 211.1113,
+        "y1": 155.2803
+      },
+      "text": "PUBLIC HEARINGS None. CONSENT CALENDAR",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.6794061492433113,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:21",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 178.5063,
+        "x1": 427.085,
+        "y1": 184.5603
+      },
+      "text": "6. Approve Minutes of the November 6, 2008 Board Meeting",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.999796599252998,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:22",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 178.5063,
+        "x1": 85.32,
+        "y1": 184.5603
+      },
+      "text": "6.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:23h",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 208.0263,
+        "x1": 266.6404,
+        "y1": 223.6263
+      },
+      "text": "7. Executive Director report",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9996648134314567,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:24",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 208.0263,
+        "x1": 85.32,
+        "y1": 214.0803
+      },
+      "text": "7.",
+      "type": "Lbl",
+      "level": null,
+      "rule": 3,
+      "score": 1.0,
+      "decided_by": "rule",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:23",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 223.6263,
+        "x1": 266.6404,
+        "y1": 228.8403
+      },
+      "text": "YTD Financial Report",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9968291638086111,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:25",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 252.4324,
+        "x1": 240.8535,
+        "y1": 258.3604
+      },
+      "text": "BOARD MEMBER REPORTS",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.9738711235197702,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:5h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:26h",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 296.2322,
+        "x1": 340.1932,
+        "y1": 311.8322
+      },
+      "text": "ADJOURNMENT",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.938986923690878,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:25"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:26",
+      "locator": {
+        "page": 1,
+        "x0": 76.32,
+        "y0": 311.8322,
+        "x1": 340.1932,
+        "y1": 331.4402
+      },
+      "text": "Next Regular Meeting: May 7, 2009, 5:00 p.m.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9998766159668964,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:26h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    },
+    {
+      "card_id": "c3-0755:27h",
+      "locator": {
+        "page": 1,
+        "x0": 76.3195,
+        "y0": 635.5352,
+        "x1": 542.4995,
+        "y1": 647.2352000000001
+      },
+      "text": "ADDRESSING THE BOARD",
+      "type": "H",
+      "level": 2,
+      "rule": 1,
+      "score": 0.7756000445026912,
+      "decided_by": "model",
+      "proposed": false,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:26h"
+      ],
+      "in_table_box": false,
+      "asked": true
+    },
+    {
+      "card_id": "c3-0755:27",
+      "locator": {
+        "page": 1,
+        "x0": 76.3195,
+        "y0": 647.2352000000001,
+        "x1": 542.4995,
+        "y1": 738.48
+      },
+      "text": "Any person shall have the right to address the Board during consideration of any item on the Board\u2019s agenda or during the time for oral communication if not on the agenda but pertaining to subject matter within the jurisdiction of the Board. Any person wishing to address the Board should stand or raise the hand and wait to be recognized by the Chairperson. Please stand at the podium, if able, state your name and address for the record, and proceed to address the Board. All remarks and questions should be addressed to the Board through the Chairperson and not to any member thereof or to the public. No question should be asked a Board member or a member of Authority staff without first obtaining permission of the Chairperson.",
+      "type": "P",
+      "level": null,
+      "rule": 4,
+      "score": 0.9999151920121337,
+      "decided_by": "model",
+      "proposed": true,
+      "depends_on": [
+        "c3-0755:2",
+        "c3-0755:27h"
+      ],
+      "in_table_box": false,
+      "asked": false
+    }
+  ]
+}

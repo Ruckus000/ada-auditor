@@ -1,0 +1,193 @@
+{"id": "c3-0128:0", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9913569414817672, "score": 0.9913569414817672, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:1h", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00247038949382494, "score": 0.9975296105061751, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:1", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.11893205193975076, "score": 0.8810679480602492, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:3h", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9992865739044255, "score": 0.9992865739044255, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:4", "raw": "{\"type\":\"H\",\"level\":2,\"rule\":1}\n", "decided_by": "model", "p_H": 0.7512501587863124, "score": 0.7512501587863124, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:3", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 7.484594091005672e-05, "score": 0.99992515405909, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:5", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.539773526157256e-05, "score": 0.9999546022647384, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:6h", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9995066766339027, "score": 0.9995066766339027, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:7", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9983377493496022, "score": 0.9983377493496022, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:6", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.1441789771897875e-05, "score": 0.9999485582102281, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:8", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.0063516084047655e-05, "score": 0.9999599364839159, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:9", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9996370459921419, "score": 0.9996370459921419, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:10", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9995442808413298, "score": 0.9995442808413298, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:12", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00043053524694883254, "score": 0.9995694647530512, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:13", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 0.015772020087785405, "score": 0.9842279799122146, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:14", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.829012394318136e-05, "score": 0.9999417098760568, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:15", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0004304654311584875, "score": 0.9995695345688416, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:16", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.3774971295783525, "score": 0.6225028704216475, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:17", "raw": "{\"type\":\"H\",\"level\":2,\"rule\":1}\n", "decided_by": "model", "p_H": 0.5740325566902863, "score": 0.5740325566902863, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:18", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.4738891084052424e-05, "score": 0.999985261108916, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:20", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.1478723604229268e-05, "score": 0.9999885212763958, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:21", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:22", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 3.120092066752661e-05, "score": 0.9999687990793324, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:23", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:24", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.828887171724215e-05, "score": 0.9999417111282828, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:25", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:26", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.5396416126851344e-05, "score": 0.9999546035838731, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:28h", "raw": "{\"type\":\"H\",\"level\":2,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9522240874418086, "score": 0.9522240874418086, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:29", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 0.38335748380372475, "score": 0.6166425161962752, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:28", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.6701360280035824e-05, "score": 0.99998329863972, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:30", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.144137304739944e-05, "score": 0.9999485586269526, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:32", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0002034147459865078, "score": 0.9997965852540135, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:33", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:34", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 3.535556879287663e-05, "score": 0.9999646444312071, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:35", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:36", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00015842662142164152, "score": 0.9998415733785784, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:37", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:38", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.3485463846525746, "score": 0.6514536153474254, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:39", "raw": "{\"type\":\"H\",\"level\":2,\"rule\":1}\n", "decided_by": "model", "p_H": 0.4683085025871195, "score": 0.5316914974128806, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:40", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 6.605004646736473e-05, "score": 0.9999339499535327, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:42", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00023046927493149344, "score": 0.9997695307250685, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:43", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:44", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00017951866775323152, "score": 0.9998204813322468, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:45", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:46", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 9.60989698588543e-05, "score": 0.9999039010301412, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:47", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:48", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.4300020016119077e-05, "score": 0.9999756999799839, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:49", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:50", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9995646523747408, "score": 0.9995646523747408, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:52", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 9.609739858986275e-05, "score": 0.9999039026014102, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:53", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 3.4976648727488267e-06, "score": 0.9999965023351273, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:54", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.006330222847393e-05, "score": 0.9999599366977715, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:55", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 5.816403675649599e-05, "score": 0.9999418359632435, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:56", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 6.605003405690933e-05, "score": 0.9999339499659431, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:57", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.77146605641608e-05, "score": 0.9999822853394359, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:58", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00010889186843646334, "score": 0.9998911081315636, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:59", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.5584541881402852e-05, "score": 0.9999844154581186, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:60", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.828962924222274e-05, "score": 0.9999417103707577, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:61", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 0.0002944125646496192, "score": 0.9997055874353504, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:63", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 7.484522626717494e-05, "score": 0.9999251547737328, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:64", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.3699842030240748e-06, "score": 0.999998630015797, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:65", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.539772203596703e-05, "score": 0.9999546022779641, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:66", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 3.7194588897146086e-06, "score": 0.9999962805411103, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:67", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.753564676758087e-05, "score": 0.9999724643532324, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:68", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.19887575117974773, "score": 0.8011242488202522, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:69", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.997524264786121, "score": 0.997524264786121, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:71", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.7535647291061676e-05, "score": 0.9999724643527089, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:72", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 5.768729382411542e-06, "score": 0.9999942312706176, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:73", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.14448419175224e-05, "score": 0.9999785551580824, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:74", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.4045952505473846e-06, "score": 0.9999975954047494, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:75", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.670137609797097e-05, "score": 0.999983298623902, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:76", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.1218715386993657e-06, "score": 0.9999978781284613, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:77", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.147875237864591e-05, "score": 0.9999885212476214, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:78", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.7223772707812946e-06, "score": 0.9999972776227292, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:79", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9997692310179924, "score": 0.9997692310179924, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:81", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.9311351062323893e-05, "score": 0.9999706886489377, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:82", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 3.497240690461033e-06, "score": 0.9999965027593095, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:83", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.4300014071565505e-05, "score": 0.9999756999859284, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:84", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.559677970300275e-06, "score": 0.9999974403220298, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:85", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.4300088216235933e-05, "score": 0.9999756999117838, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:86", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.1358518268513208e-06, "score": 0.9999988641481732, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:87", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.144192428657959e-05, "score": 0.9999485580757134, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:88", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 3.498039392424437e-06, "score": 0.9999965019606075, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:89", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 3.1201743728445374e-05, "score": 0.9999687982562716, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:90", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.2867218536847868e-06, "score": 0.9999987132781463, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:91", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.144490481170051e-05, "score": 0.9999785550951883, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:92", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 4.471716137160731e-06, "score": 0.9999955282838628, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:93", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.473892846463711e-05, "score": 0.9999852610715354, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:94", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.4188228560362256e-05, "score": 0.9999758117714397, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:96", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00017952611520533315, "score": 0.9998204738847947, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:97", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 6.142114075474106e-06, "score": 0.9999938578859245, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:99", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.144192281428006e-05, "score": 0.9999485580771857, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:100", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 6.602897362696873e-05, "score": 0.999933971026373, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:101", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 3.120175537751637e-05, "score": 0.9999687982446225, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:102", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.751043265118493e-05, "score": 0.9999724895673489, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:103", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.8290953474536974e-05, "score": 0.9999417090465255, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:104", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 9.61006436195134e-05, "score": 0.9999038993563805, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:105", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 3.7635677497772274e-05, "score": 0.9999623643225022, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:106", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00015841322040767718, "score": 0.9998415867795923, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:107", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.005217178318637494, "score": 0.9947828216813626, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:108", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.144215777666521e-05, "score": 0.9999485578422234, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:109", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.560032645634724e-06, "score": 0.9999974399673544, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:110", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.003172500435270279, "score": 0.9968274995647297, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:111", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 3.7203012262310924e-06, "score": 0.9999962796987738, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:113", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.539766004961074e-05, "score": 0.9999546023399504, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:114", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 6.603702609620273e-05, "score": 0.9999339629739038, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:115", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.6701401181259875e-05, "score": 0.9999832985988187, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:116", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00017952130164678473, "score": 0.9998204786983532, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:119", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.97002517620826, "score": 0.97002517620826, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:121", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.7535591822448924e-05, "score": 0.9999724644081776, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:122", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.0122802001592577e-05, "score": 0.9999898771979984, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:123", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 7.48449356983001e-05, "score": 0.9999251550643017, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:124", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 0.00029501840050737865, "score": 0.9997049815994926, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:125", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.8290860915259674e-05, "score": 0.9999417091390848, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:126", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 7.407664119374985e-06, "score": 0.9999925923358807, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:127", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.006344963886313e-05, "score": 0.9999599365503611, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:128", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 4.22101523843709e-06, "score": 0.9999957789847616, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:129", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 3.5356120889341504e-05, "score": 0.9999646438791107, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:130", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 4.771691744010451e-06, "score": 0.9999952283082559, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:131", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.14419658845534e-05, "score": 0.9999485580341154, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:132", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 7.40532046968964e-06, "score": 0.9999925946795303, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:133", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 6.605166500810446e-05, "score": 0.9999339483349919, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:134", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 0.0006226341032713971, "score": 0.9993773658967287, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:135", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00010889553104433087, "score": 0.9998911044689557, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:136", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.6690960733745716e-05, "score": 0.9999833090392662, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:137", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00043053413756148975, "score": 0.9995694658624386, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:138", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 0.00033209538362211413, "score": 0.9996679046163779, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:139", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9988203008343204, "score": 0.9988203008343204, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:141", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.829094454820854e-05, "score": 0.9999417090554518, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:142", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 4.7820973900521836e-06, "score": 0.9999952179026099, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:143", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.539746081310498e-05, "score": 0.9999546025391869, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:144", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 5.086058391898828e-06, "score": 0.9999949139416081, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:145", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.8925111785788924e-05, "score": 0.9999810748882142, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:146", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 4.7769562012130525e-06, "score": 0.9999952230437988, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:147", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.1478748676541722e-05, "score": 0.9999885212513234, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:148", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.0112762582507799e-05, "score": 0.9999898872374174, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:149", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.4738968224133437e-05, "score": 0.9999852610317759, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:150", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.2587201636583416e-06, "score": 0.9999977412798363, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:151", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.6701386635137516e-05, "score": 0.9999832986133649, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:152", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.074909956015522e-05, "score": 0.9999892509004399, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:153h", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9995117868733296, "score": 0.9995117868733296, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:153", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 7.484519848569478e-05, "score": 0.9999251548015143, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:155", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.6701310749015988e-05, "score": 0.999983298689251, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:156", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:158", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0010319225359826719, "score": 0.9989680774640173, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:159", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0009108998524299446, "score": 0.99908910014757, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:160", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0008038481909880895, "score": 0.9991961518090119, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:161", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0007094913597538682, "score": 0.9992905086402462, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:162", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.14411518440366e-05, "score": 0.9999485588481559, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:163", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:164", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.4738906153101687e-05, "score": 0.9999852610938469, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:165", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:166", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9997694229234334, "score": 0.9997694229234334, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:168", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 5.8290632216630047e-05, "score": 0.9999417093677834, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:169", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 4.220773270694846e-06, "score": 0.9999957792267293, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:170", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0006263043404047671, "score": 0.9993736956595952, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:171", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 4.214696992772744e-06, "score": 0.9999957853030073, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:173", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00010888944024429293, "score": 0.9998911105597557, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:174", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:175", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.3007008217196266e-05, "score": 0.9999869929917828, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:176", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:177", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 1.4738874766841242e-05, "score": 0.9999852611252331, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:178", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:180h", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9999151190171657, "score": 0.9999151190171657, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:181", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9987716761078226, "score": 0.9987716761078226, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:180", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00013982075661469852, "score": 0.9998601792433853, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:183", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 8.481068583529636e-05, "score": 0.9999151893141647, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:184", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.3834871098211925e-05, "score": 0.9999861651289018, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:185", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.006350786475044e-05, "score": 0.9999599364921352, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:186", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.668188787468598e-05, "score": 0.9999833181121253, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:187h", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.999768740722405, "score": 0.999768740722405, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:188", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9999596632297625, "score": 0.9999596632297625, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:187", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00037996488954354814, "score": 0.9996200351104565, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:190", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 8.481059285506217e-05, "score": 0.999915189407145, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:191", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 3.533410601318549e-05, "score": 0.9999646658939868, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:192", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00010889560472394214, "score": 0.9998911043952761, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:193", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 2.7535637363214757e-05, "score": 0.9999724643626368, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:194", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 2.2801298107294144e-05, "score": 0.9999771987018927, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:195h", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9998149656759763, "score": 0.9998149656759763, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:196", "raw": "{\"type\":\"H\",\"level\":1,\"rule\":1}\n", "decided_by": "model", "p_H": 0.9999130453072846, "score": 0.9999130453072846, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:195", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.1821578427206088, "score": 0.8178421572793912, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:198", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.006330296182789e-05, "score": 0.9999599366970382, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:199", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:200", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 4.539756530034048e-05, "score": 0.9999546024346997, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:201", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:202", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00048784299882877907, "score": 0.9995121570011712, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:203", "raw": "{\"type\":\"Lbl\",\"rule\":3}", "decided_by": "rule", "p_H": null, "score": 1.0, "score_method": "rule"}
+{"id": "c3-0128:205", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.00026117614485512785, "score": 0.9997388238551449, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:206", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 6.140326133102038e-06, "score": 0.9999938596738669, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:207", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 0.0006262159512748143, "score": 0.9993737840487252, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:208", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 8.929240925503433e-06, "score": 0.9999910707590745, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:209", "raw": "{\"type\":\"P\",\"rule\":4}\n", "decided_by": "model", "p_H": 7.484382245405317e-05, "score": 0.999925156177546, "score_method": "logprob", "vetoed": false}
+{"id": "c3-0128:210", "raw": "{\"type\":\"Lbl\",\"rule\":3}\n", "decided_by": "model", "p_H": 1.4721744005357624e-05, "score": 0.9999852782559946, "score_method": "logprob", "vetoed": false}

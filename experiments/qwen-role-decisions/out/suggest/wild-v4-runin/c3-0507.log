@@ -1,0 +1,6 @@
+c3-0507                          1365ms out=1459666
+
+1/1 produced output
+{"source_images": 473, "reduced_images": 473, "planned_tokens": {"416": 473}, "cards": 473, "cards_rewritten": 473, "max_pixels": 448000, "sample_default_check": [{"image": "c3-0507_61.png", "default_image_tokens": 416}, {"image": "c3-0507_285.png", "default_image_tokens": 416}, {"image": "c3-0507_471.png", "default_image_tokens": 416}, {"image": "c3-0507_82.png", "default_image_tokens": 416}, {"image": "c3-0507_300.png", "default_image_tokens": 416}]}
+{"rule": 66, "model": 407, "out": "out/suggest/wild-v4-runin/c3-0507/predictions.jsonl"}
+{"document": "c3-0507", "cards": 473, "proposed": 377, "rule": 66, "model": 407, "blocks_total": 473, "cards_considered": 473, "selector": "all-blocks", "not_heading_confident": 363, "table_vetoed": 0, "table_not_heading_confident": 0, "split_heads": 3, "seconds": 1014.6, "out": "out/suggest/wild-v4-runin/c3-0507/sidecar.json"}

@@ -1,0 +1,44 @@
+{
+ "note": "the 12 shape-1 (run-in) covered FN from fn-shapes.json vs the width-0.5 rerun; head = <id>h in the new sidecar; threshold 0.9933",
+ "split": [
+  {
+   "id": "c3-0178:37",
+   "head_type": "P",
+   "head_score": 0.6792001258043077,
+   "head_proposed": false
+  },
+  {
+   "id": "c3-0299:28",
+   "head_type": "P",
+   "head_score": 0.6525218260399972,
+   "head_proposed": false
+  },
+  {
+   "id": "c3-0299:69",
+   "head_type": "H",
+   "head_score": 0.8171495733247695,
+   "head_proposed": false
+  },
+  {
+   "id": "c3-0755:26",
+   "head_type": "H",
+   "head_score": 0.938986923690878,
+   "head_proposed": false
+  },
+  {
+   "id": "c3-0755:27",
+   "head_type": "H",
+   "head_score": 0.7756000445026912,
+   "head_proposed": false
+  }
+ ],
+ "not_split": [
+  "c3-0268:72",
+  "c3-0299:293",
+  "c3-0299:445",
+  "c3-0507:109",
+  "c3-0507:475",
+  "c3-0507:499",
+  "c3-0794:134"
+ ]
+}

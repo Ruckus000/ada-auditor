@@ -1,0 +1,128 @@
+{
+ "totals": {
+  "docs": 11,
+  "cards_old": 1648,
+  "cards_new": 1686,
+  "new_heads": 38,
+  "changed_bodies": 38,
+  "removed": 0,
+  "context_changed": 54,
+  "context_changed_decision_flip": 1,
+  "must_judge": 76,
+  "must_judge_covered": 53
+ },
+ "per_document": {
+  "c3-0094": {
+   "old_run": "wild-v2",
+   "new_heads": 1,
+   "changed_bodies": 1,
+   "removed": [],
+   "context_changed": 2,
+   "context_changed_decision_flip": [],
+   "must_judge": 2,
+   "must_judge_covered": 1
+  },
+  "c3-0128": {
+   "old_run": "wild-v2",
+   "new_heads": 1,
+   "changed_bodies": 1,
+   "removed": [],
+   "context_changed": 1,
+   "context_changed_decision_flip": [],
+   "must_judge": 2,
+   "must_judge_covered": 1
+  },
+  "c3-0178": {
+   "old_run": "wild-r3",
+   "new_heads": 1,
+   "changed_bodies": 1,
+   "removed": [],
+   "context_changed": 2,
+   "context_changed_decision_flip": [],
+   "must_judge": 2,
+   "must_judge_covered": 1
+  },
+  "c3-0252": {
+   "old_run": "wild-v2",
+   "new_heads": 14,
+   "changed_bodies": 14,
+   "removed": [],
+   "context_changed": 22,
+   "context_changed_decision_flip": [],
+   "must_judge": 28,
+   "must_judge_covered": 23
+  },
+  "c3-0268": {
+   "old_run": "wild-r3",
+   "new_heads": 4,
+   "changed_bodies": 4,
+   "removed": [],
+   "context_changed": 7,
+   "context_changed_decision_flip": [],
+   "must_judge": 8,
+   "must_judge_covered": 6
+  },
+  "c3-0299": {
+   "old_run": "wild-r3",
+   "new_heads": 3,
+   "changed_bodies": 3,
+   "removed": [],
+   "context_changed": 4,
+   "context_changed_decision_flip": [],
+   "must_judge": 6,
+   "must_judge_covered": 4
+  },
+  "c3-0489": {
+   "old_run": "wild-v2",
+   "new_heads": 5,
+   "changed_bodies": 5,
+   "removed": [],
+   "context_changed": 6,
+   "context_changed_decision_flip": [],
+   "must_judge": 10,
+   "must_judge_covered": 7
+  },
+  "c3-0507": {
+   "old_run": "wild-r3",
+   "new_heads": 3,
+   "changed_bodies": 3,
+   "removed": [],
+   "context_changed": 5,
+   "context_changed_decision_flip": [
+    "c3-0507:27"
+   ],
+   "must_judge": 6,
+   "must_judge_covered": 1
+  },
+  "c3-0650": {
+   "old_run": "wild-v2",
+   "new_heads": 1,
+   "changed_bodies": 1,
+   "removed": [],
+   "context_changed": 1,
+   "context_changed_decision_flip": [],
+   "must_judge": 2,
+   "must_judge_covered": 2
+  },
+  "c3-0755": {
+   "old_run": "wild-r3",
+   "new_heads": 3,
+   "changed_bodies": 3,
+   "removed": [],
+   "context_changed": 2,
+   "context_changed_decision_flip": [],
+   "must_judge": 6,
+   "must_judge_covered": 3
+  },
+  "c3-0794": {
+   "old_run": "wild-v2",
+   "new_heads": 2,
+   "changed_bodies": 2,
+   "removed": [],
+   "context_changed": 2,
+   "context_changed_decision_flip": [],
+   "must_judge": 4,
+   "must_judge_covered": 4
+  }
+ }
+}

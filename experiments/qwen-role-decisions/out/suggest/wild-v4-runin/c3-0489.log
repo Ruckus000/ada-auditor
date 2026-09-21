@@ -1,0 +1,6 @@
+c3-0489                           323ms out=390748
+
+1/1 produced output
+{"source_images": 52, "reduced_images": 52, "planned_tokens": {"414": 52}, "cards": 52, "cards_rewritten": 52, "max_pixels": 448000, "sample_default_check": [{"image": "c3-0489_30.png", "default_image_tokens": 414}, {"image": "c3-0489_6.png", "default_image_tokens": 414}, {"image": "c3-0489_32.png", "default_image_tokens": 414}, {"image": "c3-0489_10.png", "default_image_tokens": 414}, {"image": "c3-0489_22.png", "default_image_tokens": 414}]}
+{"rule": 8, "model": 44, "out": "out/suggest/wild-v4-runin/c3-0489/predictions.jsonl"}
+{"document": "c3-0489", "cards": 52, "proposed": 29, "rule": 8, "model": 44, "blocks_total": 52, "cards_considered": 52, "selector": "all-blocks", "not_heading_confident": 29, "table_vetoed": 0, "table_not_heading_confident": 0, "split_heads": 5, "seconds": 107.9, "out": "out/suggest/wild-v4-runin/c3-0489/sidecar.json"}
