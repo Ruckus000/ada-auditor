@@ -171,8 +171,7 @@ def _table_sidecar() -> dict:
 def test_in_table_non_h_is_vetoed_above_and_below_threshold():
     s = _by_id(_table_sidecar())
     assert s["doc:1"]["in_table_box"] is True and s["doc:1"]["proposed"] is True and not asked(s["doc:1"])
-    assert s["doc:2"]["in_table_box"] is False or not s["doc:2"]["proposed"]
-    assert not asked(s["doc:2"])
+    assert s["doc:2"]["in_table_box"] is True and s["doc:2"]["proposed"] is False and not asked(s["doc:2"])
 
 
 def test_in_table_h_is_still_asked_at_any_score():
