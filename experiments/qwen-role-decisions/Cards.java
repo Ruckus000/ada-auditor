@@ -120,6 +120,11 @@ public final class Cards {
                 FirstLine fl = firstLineOf(gs);
                 json.append(", \"first_line\": ").append(q(fl.text()));
                 json.append(", \"line_count\": ").append(fl.lines());
+                if (fl.x1() == null) {
+                    json.append(", \"first_line_x1\": null");
+                } else {
+                    json.append(String.format(Locale.ROOT, ", \"first_line_x1\":%.4f", fl.x1()));
+                }
                 if (face == null) {
                     json.append(", \"font_pt\": null, \"weight\": null");
                 } else {
@@ -239,16 +244,18 @@ public final class Cards {
         return sb.toString().replaceAll("\\s+", " ").trim();
     }
 
-    /** The glyphs up to the first line change, joined like wordsOf; and the line count. */
-    record FirstLine(String text, int lines) {}
+    /** The glyphs up to the first line change, joined like wordsOf; the line count;
+     *  and the right edge of the first line (max glyph x+w over it), null when the
+     *  block has no glyphs. */
+    record FirstLine(String text, int lines, Float x1) {}
 
     /**
      * A line change is the same test wordsOf uses (dy over half an em). Blocks with
-     * no glyphs report ("", 0). Stage 2 round 2: the split of an enumerated heading
-     * line out of an auto-tagged list item reads these.
+     * no glyphs report ("", 0, null). Stage 2 round 2: the split of an enumerated heading
+     * line out of an auto-tagged list item reads these; the run-in split reads x1.
      */
     static FirstLine firstLineOf(List<Glyph> glyphs) {
-        if (glyphs.isEmpty()) return new FirstLine("", 0);
+        if (glyphs.isEmpty()) return new FirstLine("", 0, null);
         int lines = 1;
         int firstEnd = glyphs.size();
         Glyph prev = null;
@@ -263,7 +270,12 @@ public final class Cards {
             }
             prev = g;
         }
-        return new FirstLine(wordsOf(glyphs.subList(0, firstEnd)), lines);
+        float x1 = Float.NEGATIVE_INFINITY;
+        for (int i = 0; i < firstEnd; i++) {
+            Glyph g = glyphs.get(i);
+            x1 = Math.max(x1, g.x() + g.w());
+        }
+        return new FirstLine(wordsOf(glyphs.subList(0, firstEnd)), lines, x1);
     }
 
     /**

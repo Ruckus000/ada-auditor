@@ -12,6 +12,7 @@ import re
 
 ENUM_HEAD = re.compile(r"^(?:[IVX]+|[A-Z]|\d+)\.\s+\S")
 SPLIT_TAGS = {"LI", "H", "H1", "H2", "H3", "H4", "H5", "H6"}
+RUN_IN_TAGS = SPLIT_TAGS | {"P"}
 MAX_HEAD_WORDS = 6
 LINE_EM = 1.3
 
