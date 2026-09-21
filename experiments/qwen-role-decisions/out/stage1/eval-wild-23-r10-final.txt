@@ -1,0 +1,245 @@
+graded against Claude-consensus labels; graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)
+{
+  "disclosure": "graded against Claude-consensus labels; graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+  "direct": {
+    "disclosure": "graded against Claude-consensus labels; graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+    "n": 2839,
+    "positives": 215,
+    "negatives": 2624,
+    "confusion": {
+      "tp": 153,
+      "fp": 36,
+      "tn": 2588,
+      "fn": 62,
+      "abstain": 0,
+      "parse-failure": 0
+    },
+    "missing_predictions": 0,
+    "accuracy": 0.965480803099683,
+    "accuracy_ci": [
+      0.9580918788002667,
+      0.9718886196878352
+    ],
+    "false_positive_rate": 0.013719512195121951,
+    "false_positive_rate_ci": [
+      0.009626982422593633,
+      0.018943424883906813
+    ],
+    "false_negative_rate": 0.28837209302325584,
+    "type_confusion": {
+      "H->P": 59,
+      "P->P": 879,
+      "H->H": 153,
+      "P->H": 14,
+      "Lbl->Lbl": 380,
+      "Lbl->H": 12,
+      "Lbl->P": 18,
+      "Artifact->P": 68,
+      "Caption->Caption": 17,
+      "P->Caption": 1,
+      "P->Lbl": 98,
+      "Caption->Lbl": 1,
+      "TH->P": 152,
+      "TH->Lbl": 26,
+      "TH->TH": 20,
+      "Caption->P": 32,
+      "H->Lbl": 1,
+      "Artifact->Lbl": 29,
+      "P->TH": 1,
+      "TH->H": 3,
+      "TH->Artifact": 6,
+      "Caption->H": 2,
+      "H->TH": 1,
+      "Artifact->H": 3,
+      "Artifact->Artifact": 13
+    },
+    "documents": 30,
+    "clients": 24
+  },
+  "threshold_rule": {
+    "disclosure": "graded against Claude-consensus labels; graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+    "rule": "lowest score threshold where covered accuracy exact 95 % lower bound >= 0.98 and FP exact 95 % upper bound <= 0.02",
+    "threshold": 0.974037406342972,
+    "covered": 2641,
+    "coverage": 0.9302571327932371,
+    "tp": 109,
+    "fp": 10,
+    "tn": 2494,
+    "fn": 28,
+    "accuracy": 0.9856115107913669,
+    "accuracy_ci": [
+      0.9803036985130864,
+      0.9897982632509128
+    ],
+    "fp_rate": 0.003993610223642172,
+    "fp_rate_ci": [
+      0.0019167017818668697,
+      0.0073320890910023055
+    ],
+    "fn_rate": 0.20437956204379562,
+    "documents": 30,
+    "documents_clean": 15,
+    "documents_clean_rate": 0.5,
+    "documents_clean_fully_covered": 3
+  },
+  "coverage_curve": {
+    "disclosure": "graded against Claude-consensus labels; graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+    "points": [
+      {
+        "t": 0.5,
+        "covered": 2839,
+        "coverage": 1.0,
+        "tp": 153,
+        "fp": 36,
+        "tn": 2588,
+        "fn": 62,
+        "accuracy": 0.965480803099683,
+        "accuracy_ci": [
+          0.9580918788002667,
+          0.9718886196878352
+        ],
+        "fp_rate": 0.013719512195121951,
+        "fp_rate_ci": [
+          0.009626982422593633,
+          0.018943424883906813
+        ],
+        "fn_rate": 0.28837209302325584,
+        "documents": 30,
+        "documents_clean": 8,
+        "documents_clean_rate": 0.26666666666666666,
+        "documents_clean_fully_covered": 8
+      },
+      {
+        "t": 0.9,
+        "covered": 2720,
+        "coverage": 0.9580838323353293,
+        "tp": 123,
+        "fp": 16,
+        "tn": 2545,
+        "fn": 36,
+        "accuracy": 0.9808823529411764,
+        "accuracy_ci": [
+          0.9750045620646002,
+          0.9856898935402462
+        ],
+        "fp_rate": 0.006247559547051933,
+        "fp_rate_ci": [
+          0.0035751116867216437,
+          0.010125867824404469
+        ],
+        "fn_rate": 0.22641509433962265,
+        "documents": 30,
+        "documents_clean": 12,
+        "documents_clean_rate": 0.4,
+        "documents_clean_fully_covered": 7
+      },
+      {
+        "t": 0.95,
+        "covered": 2684,
+        "coverage": 0.9454033110250089,
+        "tp": 117,
+        "fp": 15,
+        "tn": 2522,
+        "fn": 30,
+        "accuracy": 0.9832339791356185,
+        "accuracy_ci": [
+          0.9776294623488027,
+          0.9877451396655369
+        ],
+        "fp_rate": 0.005912495072920773,
+        "fp_rate_ci": [
+          0.003312842205941635,
+          0.009733039818282122
+        ],
+        "fn_rate": 0.20408163265306123,
+        "documents": 30,
+        "documents_clean": 13,
+        "documents_clean_rate": 0.43333333333333335,
+        "documents_clean_fully_covered": 4
+      },
+      {
+        "t": 0.99,
+        "covered": 2562,
+        "coverage": 0.9024304332511448,
+        "tp": 90,
+        "fp": 9,
+        "tn": 2437,
+        "fn": 26,
+        "accuracy": 0.9863387978142076,
+        "accuracy_ci": [
+          0.9810513615784702,
+          0.9904665186793093
+        ],
+        "fp_rate": 0.003679476696647588,
+        "fp_rate_ci": [
+          0.0016838290647468446,
+          0.006973252400192912
+        ],
+        "fn_rate": 0.22413793103448276,
+        "documents": 30,
+        "documents_clean": 17,
+        "documents_clean_rate": 0.5666666666666667,
+        "documents_clean_fully_covered": 2
+      },
+      {
+        "t": 0.9933,
+        "covered": 2516,
+        "coverage": 0.8862275449101796,
+        "tp": 77,
+        "fp": 7,
+        "tn": 2407,
+        "fn": 25,
+        "accuracy": 0.9872813990461049,
+        "accuracy_ci": [
+          0.9820921989840663,
+          0.9912846615846272
+        ],
+        "fp_rate": 0.002899751449875725,
+        "fp_rate_ci": [
+          0.0011666206525532408,
+          0.005965414127339653
+        ],
+        "fn_rate": 0.24509803921568626,
+        "documents": 30,
+        "documents_clean": 18,
+        "documents_clean_rate": 0.6,
+        "documents_clean_fully_covered": 1
+      }
+    ]
+  },
+  "recall_by_weight": {
+    "disclosure": "graded against Claude-consensus labels; graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+    "weights": {
+      "bold": {
+        "positives": 98,
+        "tp": 80,
+        "recall": 0.8163265306122449
+      },
+      "regular": {
+        "positives": 117,
+        "tp": 73,
+        "recall": 0.6239316239316239
+      }
+    }
+  },
+  "level_by_depth": {
+    "disclosure": "graded against Claude-consensus labels; graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+    "depths": {
+      "1": {
+        "positives": 88,
+        "tp": 73,
+        "exact": 51
+      },
+      "2": {
+        "positives": 101,
+        "tp": 62,
+        "exact": 29
+      },
+      "3": {
+        "positives": 26,
+        "tp": 18,
+        "exact": 3
+      }
+    }
+  }
+}
