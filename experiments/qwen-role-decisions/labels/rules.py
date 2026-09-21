@@ -23,6 +23,10 @@ TOCI_TAIL = re.compile(r"\.(?:[ \t]*\.){2,}\s*\d{1,4}$")
 # typographic form spaces the dash ("Figure 2 — Site plan"); nothing else in the
 # pattern is loosened.
 CAPTION_HEAD = re.compile(r"^(?:Table|Figure|Chart|Exhibit)\s+\d+[A-Za-z]?\s*[:.\-–—]")
+# Rule R5 (enumerator-only = Lbl), registered 2026-09-18 on validation
+# (heading-stage2-2026-09-18-results.md): a card whose whole text is a bare
+# enumerator -- split_heads' enumerator pattern with no words after the dot.
+ENUMERATOR_ONLY = re.compile(r"^(?:[IVX]+|[A-Z]|\d+)\.$")
 
 
 def r2_no_letters(card: dict) -> tuple[str, int] | None:
@@ -69,8 +73,13 @@ def list_item_body(card: dict) -> tuple[str, int] | None:
     return ("Other", 3) if card.get("after_inline_label") is True else None
 
 
+def enumerator_only(card: dict) -> tuple[str, int] | None:
+    # R5: "A.", "IV.", "3." alone on the card is a list marker, never a heading.
+    return ("Lbl", 5) if ENUMERATOR_ONLY.match((card.get("text") or "").strip()) else None
+
+
 def decide(card: dict) -> tuple[str, int] | None:
-    for rule in (r2_no_letters, artifact_by_repeat, toci_by_leaders, caption_by_prefix, list_item_body):
+    for rule in (r2_no_letters, artifact_by_repeat, toci_by_leaders, caption_by_prefix, list_item_body, enumerator_only):
         hit = rule(card)
         if hit:
             return hit
