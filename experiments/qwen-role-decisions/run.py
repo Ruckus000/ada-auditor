@@ -11,6 +11,10 @@ rows for the separate eligibility adapter; `--eval-verify-marked` runs it.
 `--eval-verify-text` scores the text-only adapter.
 `--verify-text-binary` applies that adapter to frozen rescore rows
 without images or role-model regeneration.
+
+Adapter modes take no default adapter: pass `--adapter-path` (and
+`--role-adapter` for the eval modes and `--smoke-adapter-image`) naming a
+directory under out/stage1/adapter-r*.
 """
 
 from __future__ import annotations
@@ -1023,9 +1027,6 @@ def apply_page_verify(
 MARKED_ROLE_LOCALIZER = (
     "The outlined rectangle in the image marks the Element described below."
 )
-ADAPTER_ROLE = HERE / "out" / "adapter-role"
-ADAPTER_VERIFY_MARKED = HERE / "out" / "adapter-verify-marked"
-ADAPTER_VERIFY_TEXT = HERE / "out" / "adapter-verify-text"
 
 
 def marked_role_prompt(case: dict) -> str:
@@ -1548,6 +1549,22 @@ def flag_value(flag: str) -> str | None:
     if i + 1 >= len(sys.argv):
         return None
     return sys.argv[i + 1]
+
+
+def require_adapter(flag: str, mode: str) -> Path:
+    """The adapter directory `flag` names, or exit saying so.
+
+    No default, as in labels/suggest.py: the old defaults (out/adapter-role,
+    out/adapter-verify-marked, out/adapter-verify-text) never existed, so a
+    run without the flag failed late inside mlx_vlm. Trained adapters are
+    under out/stage1/adapter-r*."""
+    value = flag_value(flag)
+    if not value:
+        raise SystemExit(f"{mode} requires {flag} <dir> (trained adapters: out/stage1/adapter-r*)")
+    path = Path(value)
+    if not path.is_dir():
+        raise SystemExit(f"{flag} {value}: no such adapter directory")
+    return path
 
 
 def run_cases(
@@ -2308,6 +2325,8 @@ def rescore_frozen(
 ) -> tuple[list[dict], int]:
     rows = []
     skipped = 0
+    if (verify_marked_role or verify_marked_binary or verify_text_binary) and not adapter_path:
+        raise ValueError("an adapter verify mode needs adapter_path; there is no default adapter")
     png_cache: dict[tuple[str, int], Path] = {}
     pages_dir = png_dir or (HERE / "out" / "pages")
     role_locs = verify_locators if verify_locators is not None else PART10_VERIFY_LOCATORS
@@ -2380,7 +2399,7 @@ def rescore_frozen(
                     text_eligibility_prompt(case),
                     image=None,
                     thinking_mode="disabled",
-                    adapter_path=adapter_path or str(ADAPTER_VERIFY_TEXT),
+                    adapter_path=adapter_path,
                 )
                 heading_flag = parse_heading_flag(raw_verify)
             elif pdf_dir is None or page is None or (needs_box and not box_ok):
@@ -2392,7 +2411,7 @@ def rescore_frozen(
                 adapter = None
                 if want_binary:
                     prompt = marked_eligibility_prompt(case)
-                    adapter = adapter_path or str(ADAPTER_VERIFY_MARKED)
+                    adapter = adapter_path
                     if not omit_image:
                         image = ensure_marked_png(case, pdf_dir, pages_dir, png_cache)
                 elif want_marked or want_role:
@@ -2408,7 +2427,7 @@ def rescore_frozen(
                     image = ensure_marked_png(case, pdf_dir, pages_dir, png_cache)
                     if want_role:
                         prompt = marked_role_prompt(case)
-                        adapter = adapter_path or str(ADAPTER_ROLE)
+                        adapter = adapter_path
                     else:
                         prompt = MARKED_VERIFY_STEM
                 else:
@@ -2513,8 +2532,8 @@ if __name__ == "__main__":
             match_path,
             out_dir,
             pages_dir,
-            Path(flag_value("--role-adapter") or ADAPTER_ROLE),
-            Path(flag_value("--adapter-path") or ADAPTER_VERIFY_MARKED),
+            require_adapter("--role-adapter", "--eval-verify-marked"),
+            require_adapter("--adapter-path", "--eval-verify-marked"),
             omit_image="--omit-image" in sys.argv,
         )
         raise SystemExit(0)
@@ -2531,14 +2550,15 @@ if __name__ == "__main__":
             match_path,
             out_dir,
             pages_dir,
-            Path(flag_value("--role-adapter") or ADAPTER_ROLE),
-            Path(flag_value("--adapter-path") or ADAPTER_VERIFY_TEXT),
+            require_adapter("--role-adapter", "--eval-verify-text"),
+            require_adapter("--adapter-path", "--eval-verify-text"),
             omit_image=True,
             text_prompt=True,
         )
         raise SystemExit(0)
 
     if "--smoke-adapter-image" in sys.argv:
+        role_adapter = require_adapter("--role-adapter", "--smoke-adapter-image")
         png = HERE / "out" / "box-map" / "01-simple-text-p1-marked.png"
         if not png.is_file():
             dump = dump_pdf(DEV_MAP_PDF)
@@ -2571,7 +2591,7 @@ if __name__ == "__main__":
             ),
             image=str(png),
             thinking_mode="disabled",
-            adapter_path=str(ADAPTER_ROLE),
+            adapter_path=str(role_adapter),
         )
         parsed = parse_json(raw)
         payload = {
@@ -2622,6 +2642,9 @@ if __name__ == "__main__":
                 verify_locs = tuple(str(x) for x in payload)
             else:
                 verify_locs = tuple(str(x) for x in payload.get("locators") or [])
+        adapter_modes = [m for m in ("--verify-marked-role", "--verify-marked-binary", "--verify-text-binary") if m in sys.argv]
+        if adapter_modes:
+            require_adapter("--adapter-path", adapter_modes[0])
         rows, skipped = rescore_frozen(
             preds,
             fields,
