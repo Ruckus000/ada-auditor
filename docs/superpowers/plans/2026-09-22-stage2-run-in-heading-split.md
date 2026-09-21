@@ -177,3 +177,54 @@ only.
 - Sheet-format bias toward H (coordinator caveat in the 2026-09-21 addendum)
   is unresolved and bounds shared seat error at ≈2%; it applies unchanged to
   the re-judged cards.
+
+## Addendum 2026-09-22: run-in split judged and folded, wild gate re-measured (NOT MET)
+
+Counts only; no document bytes in this record. Label and sidecar files named
+below live on the data-only branch `kimi-data-run-in-2026-09-21` (d13599b);
+the fold was rerun from that branch's `refold.sh` and reproduced every number
+below exactly.
+
+### Judging (the registered two-seat page-sheet method)
+
+Split frozen at width 0.5 on validation (67 documents; recall 0.2240,
+false-split rate 0.00451 of 19,277 blocks). On the wild set the split fired in
+**11 documents**, changing **76 cards** (53 covered by the gate + 23
+uncovered). The 53 covered cards were judged blind on 22 page sheets in 4
+chunks (12, 18, 14, 9 boxes):
+
+- Seat 1 = Claude Opus-medium on sheets; seat 2 = Kimi K3 on sheets (blind
+  pack branch `kimi-judge-pack-runin-2026-09-21`; seat 2 output at 9f24de8);
+  tie-break = Claude Opus-quick per card on heading-bit disagreements.
+- Seats agreed on **52 of 53** cards. One tie-break: **c3-0252:72h**,
+  resolved **P** (with seat 1).
+- Consensus: 53 rows, **2 H** (c3-0299:61h, c3-0755:5), 51 non-heading.
+  Label source `opus-kimi-consensus`.
+
+### Fold
+
+The 11 fired documents' sidecars swapped to `out/suggest/wild-v4-runin`; the
+53 judged rows plus null rows for the 23 uncovered changed cards patched by id
+into NEW `s2wild-consensus-v2-runin.jsonl` / `s2wild-r3-consensus-runin.jsonl`
+(published finals untouched; neighbours keep their labels). The baseline fold
+was first reproduced byte-identical to the published finals (2,516 / 7 FP /
+25 FN), then the run-in fold rebuilt by `refold.sh`.
+
+### Wild gate, before and after (t = 0.9933, rounds 2+3, adapter-r10)
+
+| | Covered | Coverage | Accuracy [95% exact] | FP (UB) | FN | Docs clean |
+|---|---|---|---|---|---|---|
+| Baseline (finals) | 2,516 | 0.886 | 0.9873 [0.9821–0.9913] | 7 (0.0060) | 25 | 18/30 |
+| Run-in split | 2,536 | 0.888 | 0.9890 [0.9841–0.9927] | 7 (0.0059) | 21 | 19/30 |
+
+Covered errors 32 → 28. **Gone (5, all FN — the split heads now abstain at
+threshold):** c3-0178:37, c3-0299:28, c3-0299:69, c3-0755:26, c3-0755:27.
+**New (1 FN):** c3-0755:5 — a shortened body that both seats call H.
+
+### Verdict
+
+**NOT MET.** Accuracy lower bound 0.9841 < 0.99 (FP upper bound 0.0059 ≤ 0.01
+passes). As registered in Step 0c, the raw gate could not pass on this split
+alone: 28 errors remain against the 15 allowed at this n. The split recovered
+real run-in headings (5 of the 12 shape-1 FN resolved, no FP added) but did
+not move the verdict.
