@@ -1,6 +1,6 @@
 """Cross-reference the blind judges: calibrate each against audit-s2wild, then build consensus labels.
 
-usage: python3 consensus.py [--judges a,b,c] [--min-agree 3] [--min-calib 0.90] [--no-calib] [--source rows.jsonl] [--outdir DIR] [--outfile FILE] [--write]
+usage: python3 consensus.py [--judges a,b,c] [--min-agree 3] [--min-calib 0.90] [--no-calib] [--actor A] [--label-source S] [--source rows.jsonl] [--outdir DIR] [--outfile FILE] [--write]
 Reads judge/out/<judge>/chunk-XX.jsonl for judges low, medium, high, fable.
 """
 import os, sys
@@ -13,6 +13,8 @@ import json, glob, os, sys, collections, uuid, datetime
 JUDGES = sys.argv[sys.argv.index("--judges") + 1].split(",") if "--judges" in sys.argv else ["low", "medium", "high", "fable"]
 MIN_AGREE = int(sys.argv[sys.argv.index("--min-agree") + 1]) if "--min-agree" in sys.argv else 3
 MIN_CALIB = float(sys.argv[sys.argv.index("--min-calib") + 1]) if "--min-calib" in sys.argv else 0.90
+ACTOR = sys.argv[sys.argv.index("--actor") + 1] if "--actor" in sys.argv else "consensus-4judge"
+LABEL_SOURCE = sys.argv[sys.argv.index("--label-source") + 1] if "--label-source" in sys.argv else "claude-consensus"
 WRITE = "--write" in sys.argv
 NO_CALIB = "--no-calib" in sys.argv  # when the audit rows refer to older card text
 SRC = sys.argv[sys.argv.index("--source") + 1] if "--source" in sys.argv else f"{R}/out/labels/s2wild-all-source.jsonl"
@@ -65,7 +67,7 @@ for i in src:
         lv = collections.Counter(v.get("level") for v in agreeing if v.get("level"))
         level = lv.most_common(1)[0][0] if lv else None
     stats["consensus"] += 1; stats[f"agree_{n_agree}_of_{len(vs)}"] += 1
-    rows.append({"id": i, "answer_id": str(uuid.uuid4()), "actor": "consensus-4judge", "label_source": "claude-consensus",
+    rows.append({"id": i, "answer_id": str(uuid.uuid4()), "actor": ACTOR, "label_source": LABEL_SOURCE,
                  "type": typ, "unsure": False, "label": {"heading": bool(hbit), "level": level},
                  "votes": {"judges": len(vs), "agree": n_agree, "by": {j: v["type"] for j, v in vs.items()}},
                  "note": "", "labelled_at": datetime.datetime.now(datetime.timezone.utc).isoformat()})

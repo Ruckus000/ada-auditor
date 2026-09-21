@@ -36,6 +36,14 @@ from eligibility_eval import CONFIDENCE, evaluate, load_jsonl, read_prediction, 
 
 DISCLOSURE = "graded against Claude-consensus labels"
 LABEL_SOURCE = "claude-consensus"
+# Registered 2026-09-21: opus-kimi-consensus rows (Claude Opus-medium seat 1
+# and Kimi K3 seat 2 on page sheets, Claude Opus-quick per-card tie-break).
+LABEL_SOURCES = ("claude-consensus", "opus-kimi-consensus")
+DISCLOSURES = {
+    "claude-consensus": "graded against Claude-consensus labels",
+    "opus-kimi-consensus": "graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), "
+                           "Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+}
 CURVE = (0.5, 0.9, 0.95, 0.99, 0.9933)
 RULE_ACCURACY_LOWER = 0.98
 RULE_FP_UPPER = 0.02
@@ -95,7 +103,7 @@ def threshold_rule(rows: list[dict], preds: dict[str, dict]) -> dict:
     return {"rule": RULE, "threshold": None, "note": "no score threshold meets the rule on these labels"}
 
 
-def report(labels: list[dict], predictions: list[dict], cards: list[dict]) -> dict:
+def report(labels: list[dict], predictions: list[dict], cards: list[dict], disclosure: str = DISCLOSURE) -> dict:
     preds = {p["id"]: p for p in predictions}
     direct = evaluate(labels, {i: p["raw"] for i, p in preds.items()},
                       decided_by={i: p["decided_by"] for i, p in preds.items() if "decided_by" in p})
@@ -121,9 +129,9 @@ def report(labels: list[dict], predictions: list[dict], cards: list[dict]) -> di
     for w in by_weight.values():
         w["recall"] = rate(w["tp"], w["positives"])
     return {
-        "disclosure": DISCLOSURE,
+        "disclosure": disclosure,
         "direct": {
-            "disclosure": DISCLOSURE, "n": direct["n"], "positives": direct["positives"], "negatives": direct["negatives"],
+            "disclosure": disclosure, "n": direct["n"], "positives": direct["positives"], "negatives": direct["negatives"],
             "confusion": c, "missing_predictions": len(direct["missing_predictions"]),
             "accuracy": direct["accuracy"], "accuracy_ci": list(interval(right, direct["n"])),
             "false_positive_rate": direct["false_positive_rate"],
@@ -132,10 +140,10 @@ def report(labels: list[dict], predictions: list[dict], cards: list[dict]) -> di
             "type_confusion": direct["type_confusion"],
             "documents": direct["diversity"]["documents"], "clients": direct["diversity"]["clients"],
         },
-        "threshold_rule": {"disclosure": DISCLOSURE, **threshold_rule(labels, preds)},
-        "coverage_curve": {"disclosure": DISCLOSURE, "points": [at_threshold(labels, preds, t) for t in CURVE]},
-        "recall_by_weight": {"disclosure": DISCLOSURE, "weights": dict(sorted(by_weight.items()))},
-        "level_by_depth": {"disclosure": DISCLOSURE, "depths": dict(sorted(by_depth.items()))},
+        "threshold_rule": {"disclosure": disclosure, **threshold_rule(labels, preds)},
+        "coverage_curve": {"disclosure": disclosure, "points": [at_threshold(labels, preds, t) for t in CURVE]},
+        "recall_by_weight": {"disclosure": disclosure, "weights": dict(sorted(by_weight.items()))},
+        "level_by_depth": {"disclosure": disclosure, "depths": dict(sorted(by_depth.items()))},
     }
 
 
@@ -146,14 +154,16 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--cards", type=Path, required=True)
     a = p.parse_args(argv)
     labels = load_jsonl(a.labels)
-    other = sorted({r.get("label_source") for r in labels} - {LABEL_SOURCE}, key=str)
+    present = sorted({r.get("label_source") for r in labels}, key=str)
+    other = [s for s in present if s not in LABEL_SOURCES]
     if other:
-        raise SystemExit(f"every row must be {LABEL_SOURCE} for the '{DISCLOSURE}' tag to be true; found {other}")
+        raise SystemExit(f"every row's label_source must be one of {LABEL_SOURCES}; found {other}")
+    disclosure = "; ".join(DISCLOSURES[s] for s in LABEL_SOURCES if s in present)
     bad = refusals(labels)
     if bad:
         raise SystemExit("labels refused:\n" + "\n".join(bad[:30]))
-    print(DISCLOSURE)
-    print(json.dumps(report(labels, load_jsonl(a.predictions), load_jsonl(a.cards)), indent=2))
+    print(disclosure)
+    print(json.dumps(report(labels, load_jsonl(a.predictions), load_jsonl(a.cards), disclosure), indent=2))
 
 
 if __name__ == "__main__":

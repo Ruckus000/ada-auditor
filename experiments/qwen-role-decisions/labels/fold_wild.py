@@ -58,6 +58,15 @@ LABEL_SOURCE = "claude-consensus"
 ACTOR = "consensus-4judge"
 CONSENSUS_MIN = 3
 MAX_JUDGES = 4
+# Registered 2026-09-21: the sheet-method consensus (Claude Opus-medium seat 1
+# and Kimi K3 seat 2 on page sheets, Claude Opus-quick per-card tie-break)
+# joins claude-consensus as an accepted label source. Two seats plus a
+# tie-break means a labelled row carries agree >= 2 of at most 3 judges; the
+# four-judge rules are unchanged for claude-consensus rows.
+SOURCES = {
+    "claude-consensus": {"actor": "consensus-4judge", "min_agree": 3, "max_judges": 4},
+    "opus-kimi-consensus": {"actor": "consensus-2seat-tiebreak", "min_agree": 2, "max_judges": 3},
+}
 LABEL_TYPES = tuple(t for t in PREDICTION_TYPES if t != "Unsure")
 
 
@@ -94,10 +103,13 @@ def prediction_row(card: dict) -> dict:
 def consensus_problems(row: dict) -> list[str]:
     where = f"consensus row {row.get('id')!r}"
     out = []
-    if row.get("actor", ACTOR) != ACTOR:
-        out.append(f"{where}: actor {row['actor']!r} is not {ACTOR!r}")
-    if row.get("label_source", LABEL_SOURCE) != LABEL_SOURCE:
-        out.append(f"{where}: label_source {row['label_source']!r} is not {LABEL_SOURCE!r}")
+    source = row.get("label_source", LABEL_SOURCE)
+    if source not in SOURCES:
+        out.append(f"{where}: label_source {source!r} is not one of {tuple(SOURCES)}")
+        source = LABEL_SOURCE  # validate the rest against the default rules
+    rule = SOURCES[source]
+    if row.get("actor", rule["actor"]) != rule["actor"]:
+        out.append(f"{where}: actor {row['actor']!r} is not {rule['actor']!r}")
     if row.get("unsure", False) is not False:
         out.append(f"{where}: unsure must be false on a consensus row")
     present = [k for k in MODEL_FIELDS if k in row]
@@ -106,12 +118,12 @@ def consensus_problems(row: dict) -> list[str]:
     votes = row.get("votes")
     if not isinstance(votes, dict) or not all(isinstance(votes.get(k), int) for k in ("judges", "agree")):
         return out + [f"{where}: votes must be {{judges, agree}} integers"]
-    if not 0 <= votes["agree"] <= votes["judges"] <= MAX_JUDGES:
-        out.append(f"{where}: agree exceeds judges, or judges exceeds {MAX_JUDGES}: {votes}")
+    if not 0 <= votes["agree"] <= votes["judges"] <= rule["max_judges"]:
+        out.append(f"{where}: agree exceeds judges, or judges exceeds {rule['max_judges']}: {votes}")
     if row.get("label") is None:
         return out
-    if votes["agree"] < CONSENSUS_MIN:
-        out.append(f"{where}: a labelled row needs agree >= {CONSENSUS_MIN}, got {votes}")
+    if votes["agree"] < rule["min_agree"]:
+        out.append(f"{where}: a labelled row needs agree >= {rule['min_agree']}, got {votes}")
     heading = row["label"].get("heading") if isinstance(row["label"], dict) else None
     if row.get("type") not in LABEL_TYPES or heading not in (True, False) or (row["type"] == "H") != heading:
         out.append(f"{where}: type {row.get('type')!r} must be one of {LABEL_TYPES} and H exactly when label.heading is true")
@@ -147,9 +159,11 @@ def fold(*, consensus: list[dict], sidecars: list[dict], urls: dict[str, str], p
         if row.get("label") is None:
             continue
         host = host_of(urls[doc])
+        source = row.get("label_source", LABEL_SOURCE)
+        actor = SOURCES[source]["actor"]
         labels.append({
-            "id": card["card_id"], "document_id": doc, "document_stem": doc, "label_source": LABEL_SOURCE,
-            "answer_id": row.get("answer_id") or f"{ACTOR}:{card['card_id']}", "actor": ACTOR,
+            "id": card["card_id"], "document_id": doc, "document_stem": doc, "label_source": source,
+            "answer_id": row.get("answer_id") or f"{actor}:{card['card_id']}", "actor": actor,
             "client_id": host, "template_id": host, "document_sha256": pdf_sha256[doc],
             "type": row["type"], "label": {"heading": row["label"]["heading"], "level": row["label"].get("level")},
             "votes": {"judges": row["votes"]["judges"], "agree": row["votes"]["agree"]},

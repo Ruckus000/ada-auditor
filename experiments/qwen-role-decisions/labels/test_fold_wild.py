@@ -159,3 +159,35 @@ def test_accepts_the_handover_shapes_with_their_extra_keys():
     unsure = copy.deepcopy(rows)
     next(r for r in unsure if r.get("label"))["unsure"] = True
     _refused("unsure", consensus=unsure)
+
+
+def test_opus_kimi_consensus_source_folds_with_two_seat_rules():
+    """Registered 2026-09-21: sheet-method consensus rows (actor
+    consensus-2seat-tiebreak, label_source opus-kimi-consensus, agree >= 2 of
+    <= 3 judges) fold; the four-judge rules still govern claude-consensus."""
+    inputs = _inputs()
+    rows = copy.deepcopy(inputs["consensus"])
+    for r in rows:
+        if r.get("label") is not None:
+            r["label_source"] = "opus-kimi-consensus"
+            r["actor"] = "consensus-2seat-tiebreak"
+            r["votes"] = {"judges": 2, "agree": 2}
+    labels, _, _, counts = _fold(consensus=rows)
+    assert counts["consensus_kept"] == 9
+    assert all(r["label_source"] == "opus-kimi-consensus" for r in labels)
+    assert all(r["actor"] == "consensus-2seat-tiebreak" for r in labels)
+    assert all(r["votes"] == {"judges": 2, "agree": 2} for r in labels)
+    assert refusals(labels) == []
+    # a one-vote agreement is not a consensus under this source either
+    bad = copy.deepcopy(rows)
+    for r in bad:
+        if r.get("label") is not None:
+            r["votes"] = {"judges": 2, "agree": 1}
+    _refused("agree >= 2", consensus=bad)
+    # and three agreeing judges of four is fine for the old source, but a
+    # 2-of-2 row under claude-consensus is still refused
+    bad2 = copy.deepcopy(inputs["consensus"])
+    for r in bad2:
+        if r.get("label") is not None:
+            r["votes"] = {"judges": 2, "agree": 2}
+    _refused("agree >= 3", consensus=bad2)
