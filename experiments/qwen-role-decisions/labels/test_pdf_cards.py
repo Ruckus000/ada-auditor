@@ -44,7 +44,7 @@ def test_cap_per_document_keeps_best_reasons_and_all_random_rows():
     rows = [{"document_id": "a", "why": ["short"], "n": i} for i in range(300)]
     rows += [{"document_id": "a", "why": ["source_h"], "n": 900 + i} for i in range(5)]
     rows += [{"document_id": "a", "why": ["random"], "n": 990 + i} for i in range(7)]
-    rows += [{"document_id": "b", "why": ["outlier"], "n": 2000}]
+    rows += [{"document_id": "b", "why": ["outlier"], "n": 2000} for i in range(1)]
     out = cap_per_document(rows, random.Random(0), cap=10)
     a = [r for r in out if r["document_id"] == "a"]
     assert len(a) == 10 + 7 and sum(r["why"] == ["source_h"] for r in a) == 5
@@ -131,6 +131,84 @@ def test_first_line_keeps_an_enumerator_and_its_words_across_a_tab_gap_on_one_ba
         li = next(b for b in dump_pdf(pdf, compile=True)["blocks"] if b["existing_tag"] == "LI")
     assert (li["first_line"], li["line_count"]) == ("VI. Budget Process", 3)
     assert li["first_line_x1"] > 108  # x1 covers the second run past the tab gap, not just "VI."
+
+
+# Task 3 (Stage 2 same-line probe): Cards.java reports the first line's style runs —
+# the smallest per-glyph style output that can show a bold (or larger) run at the start
+# of the first line followed by regular text. Every pre-existing field is untouched.
+
+def _styled_tagged_pdf(path: Path, lines: list) -> None:
+    """Like _tagged_pdf, but each line is a list of (x, text, font, size) runs on one
+    baseline; font is "F1" (Helvetica) or "F2" (Helvetica-Bold). Synthetic text only."""
+    shows = "".join(
+        f"BT /{f} {s} Tf 1 0 0 1 {x} {700 - 14 * i} Tm ({t}) Tj ET\n"
+        for i, line in enumerate(lines) for x, t, f, s in line)
+    content = f"/LI <</MCID 0>> BDC\n{shows}EMC\n"
+    objs = [
+        "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 12 0 R >> >> "
+        "/Contents 9 0 R /StructParents 0 >>",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+        "<< /Type /StructTreeRoot /K 6 0 R /ParentTree 10 0 R >>",
+        "<< /Type /StructElem /S /Document /P 5 0 R /K [7 0 R] >>",
+        "<< /Type /StructElem /S /L /P 6 0 R /K [8 0 R] >>",
+        "<< /Type /StructElem /S /LI /P 7 0 R /Pg 3 0 R /K [0] >>",
+        f"<< /Length {len(content.encode('latin-1'))} >>\nstream\n{content}endstream",
+        "<< /Nums [0 [8 0 R]] >>",
+        "<< /Type /StructElem /S /P /P 6 0 R /Pg 3 0 R /K [0] >>",  # unused sibling-free shape
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+    ]
+    out = bytearray(b"%PDF-1.7\n")
+    offsets = []
+    for n, body in enumerate(objs, start=1):
+        offsets.append(len(out))
+        out += f"{n} 0 obj\n{body}\nendobj\n".encode("latin-1")
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1 }\n0000000000 65535 f \n".encode()
+    out += "".join(f"{o:010d} 00000 n \n" for o in offsets).encode()
+    out += f"trailer\n<< /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    path.write_bytes(bytes(out))
+
+
+def _styled_li(lines: list) -> dict:
+    with tempfile.TemporaryDirectory() as d:
+        pdf = Path(d) / "syn.pdf"
+        _styled_tagged_pdf(pdf, lines)
+        return next(b for b in dump_pdf(pdf, compile=True)["blocks"] if b["existing_tag"] == "LI")
+
+
+def test_first_line_runs_show_a_bold_lead_in_then_regular_text():
+    li = _styled_li([[(72, "Summary", "F2", 12), (150, "the body follows here", "F1", 12)]])
+    assert li["first_line_runs"] == [
+        {"text": "Summary", "font_pt": 12, "bold": True},
+        {"text": "the body follows here", "font_pt": 12, "bold": False}]
+
+
+def test_first_line_runs_show_a_larger_lead_in_then_regular_text():
+    li = _styled_li([[(72, "Scope", "F1", 14), (150, "the body follows here", "F1", 12)]])
+    assert li["first_line_runs"] == [
+        {"text": "Scope", "font_pt": 14, "bold": False},
+        {"text": "the body follows here", "font_pt": 12, "bold": False}]
+
+
+def test_first_line_runs_cover_only_the_first_line():
+    li = _styled_li([[(72, "Summary", "F2", 12), (150, "the body follows", "F1", 12)],
+                     [(72, "next line is bold again", "F2", 12)]])
+    assert li["first_line_runs"] == [
+        {"text": "Summary", "font_pt": 12, "bold": True},
+        {"text": "the body follows", "font_pt": 12, "bold": False}]
+    assert li["line_count"] == 2
+
+
+def test_first_line_runs_collapse_one_style_into_one_run():
+    li = _styled_li([[(72, "all one style on this line", "F1", 12)]])
+    assert li["first_line_runs"] == [{"text": "all one style on this line", "font_pt": 12, "bold": False}]
+
+
+def test_first_line_runs_empty_for_a_glyphless_block():
+    li = _styled_li([[(72, "", "F1", 12)]])
+    assert li["first_line_runs"] == []
 
 
 def test_cards_dump_reports_first_line_and_line_count():
