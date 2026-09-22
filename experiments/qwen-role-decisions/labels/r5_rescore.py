@@ -1,4 +1,4 @@
-"""Rule R5 as a recompute over existing predictions: no model run.
+r"""Rule R5 as a recompute over existing predictions: no model run.
 
 The registered rule (heading-stage2-2026-09-18-results.md, "Rule R5
 (enumerator-only = Lbl)"): a card whose whole text matches

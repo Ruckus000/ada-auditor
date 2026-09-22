@@ -53,3 +53,39 @@ score 1.0 on cards that used to abstain) are all correct. FN unchanged at 21
 0.0015 ≤ 0.01 passes). 21 errors against the 15 allowed at n = 2,545. The
 registered R5 view behaves exactly as predicted in the 2026-09-22 plan's
 Step 0c: the FP are convention, and removing them does not pass the gate.
+
+## End-to-end check on the product path (2026-09-22)
+
+The offline re-score cannot see one effect. `predict.py --own-stack` feeds
+every H decision into the approved-headings stack that later cards' prompts
+read, and R5 removes the 7 roman-numeral H decisions from that stack. So
+c3-0094 and c3-0128, the two documents where R5 overrides a model H, were
+re-run end to end: `labels.suggest` with the product configuration
+(adapter-r10, 0.9933, `--all-blocks --split-enumerated-heads
+--split-run-in-heads 0.5`, R5 in `labels.rules.decide`), code at b750d58,
+output `out/suggest/wild-v5-r5/` (both exit 0; 137 s and 316 s).
+
+- Card sets and card facts are identical to the pre-R5 run (only image paths
+  differ), so every label carries over.
+- All 70 enumerator-only cards on the two documents are rule-decided `Lbl`.
+- The stack effect is real: 4 non-enumerator cards change decision or
+  coverage (c3-0094:56h, c3-0094:59h, c3-0094:61, c3-0128:28h), and scores
+  move on 59 others.
+- The gate, folded with those two sidecars swapped in (rounds 2+3, t = 0.9933,
+  same labels):
+
+| | Covered | Accuracy [95% exact] | FP | FN | Docs clean |
+|---|---|---|---|---|---|
+| Run-in + R5, offline re-score | 2,545 | 0.9917 [0.9874–0.9949] | 0 | 21 | 20/30 |
+| Run-in + R5, end to end | 2,543 | 0.9917 [0.9874–0.9949] | 0 | 21 | 20/30 |
+
+The covered errors are the same cards in both. The offline table is right
+on errors and 2 cards high on coverage. The verdict is unchanged: NOT MET.
+
+## Training-builder effect (recorded, not acted on)
+
+`labels/sft.py` holds out every card `rules.decide` catches (`rule_decided`),
+so any future SFT rebuild drops the enumerator-only rows: 59 of the 7,051
+train ids in `split-keys-all-4-2026-09-14.json`. All are non-heading, so this
+matches the training convention, but "training untouched" holds only until a
+rebuild. Any rebuild after be0c665 must disclose it.
