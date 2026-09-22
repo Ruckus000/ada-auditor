@@ -1,0 +1,50 @@
+{
+ "adapter": "r10",
+ "labels": "labels-audited-r10.jsonl",
+ "rule": "lowest score threshold where covered accuracy exact 95 % lower bound >= 0.98 and FP exact 95 % upper bound <= 0.02",
+ "threshold": 0.993316,
+ "covered": 1142,
+ "coverage": 0.7488524590163934,
+ "counts": {
+  "tn": 770,
+  "tp": 359,
+  "fn": 10,
+  "fp": 3
+ },
+ "accuracy": 0.98861646234676,
+ "accuracy_ci": [
+  0.9806124695309983,
+  0.9939252091783799
+ ],
+ "fp_rate": 0.0038809831824062097,
+ "fp_ci": [
+  0.0008010682511476182,
+  0.01129963830394981
+ ],
+ "fn_rate": 0.02710027100271003,
+ "documents": 59,
+ "documents_clean": 52,
+ "documents_clean_fully_covered": 0,
+ "abstained": {
+  "n": 383,
+  "types": {
+   "H": 219,
+   "Other": 28,
+   "P": 117,
+   "Caption": 8,
+   "TH": 4,
+   "Artifact": 2,
+   "TOCI": 5
+  },
+  "weight": {
+   "bold": 203,
+   "regular": 180
+  },
+  "h_levels": {
+   "1": 52,
+   "2": 86,
+   "3": 69,
+   "4": 12
+  }
+ }
+}
