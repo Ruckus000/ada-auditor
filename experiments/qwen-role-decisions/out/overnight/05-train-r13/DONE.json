@@ -1,0 +1,16 @@
+{
+ "id": "05-train-r13",
+ "exit_code": -9,
+ "seconds": 600,
+ "commit": "5e7c2a8d6c47a8405a26243657a5f1c0d542c81c",
+ "started": "2026-09-22T16:07:42.185464+00:00",
+ "finished": "2026-09-22T16:17:42.328647+00:00",
+ "stdout_tail": "#trainable params: 16.232448 M || all params: 4539.264 M || trainable%: 0.358%\n\u001b[95mStarting training..., iterations: 11144\u001b[0m\n\u001b[94mNo validation dataset provided \u2014 training will run without validation.\u001b[0m\nIter 50: Train loss \u001b[92m0.17603605\u001b[0m, Learning Rate 2.000e-05, It/sec 0.188, Tokens/sec 160.246, Trained Tokens 42659, Peak mem 12.093 GB\nIter 100: Train loss \u001b[92m0.10166712\u001b[0m, Learning Rate 2.000e-05, It/sec 0.182, Tokens/sec 154.807, Trained Tokens 85187, Peak mem 12.093 GB\n",
+ "stderr_tail": "INFO:__main__:\u001b[95mLoading model from mlx-community/Qwen3.5-4B-MLX-4bit\u001b[0m\nINFO:__main__:\u001b[95mLoading dataset from out/overnight/04-emit-sft-r13\u001b[0m\n\nGenerating train split: 0 examples [00:00, ? examples/s]\nGenerating train split: 5572 examples [00:00, 54303.27 examples/s]\nGenerating train split: 5572 examples [00:00, 53412.06 examples/s]\nINFO:__main__:\u001b[4mSetting up LoRA\u001b[0m\nINFO:__main__:\u001b[95mSetting up optimizer\u001b[0m\nINFO:__main__:\u001b[95mTraining model (sft)\u001b[0m\n/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown\n  warnings.warn('resource_tracker: There appear to be %d '\n",
+ "time_gate": {
+  "step": 100,
+  "it_per_sec": 0.182,
+  "projected_hours": 17.01,
+  "stopped": "projection over the 16 h gate"
+ }
+}

@@ -1,0 +1,5 @@
+#trainable params: 16.232448 M || all params: 4539.264 M || trainable%: 0.358%
+[95mStarting training..., iterations: 11144[0m
+[94mNo validation dataset provided — training will run without validation.[0m
+Iter 50: Train loss [92m0.17603605[0m, Learning Rate 2.000e-05, It/sec 0.188, Tokens/sec 160.246, Trained Tokens 42659, Peak mem 12.093 GB
+Iter 100: Train loss [92m0.10166712[0m, Learning Rate 2.000e-05, It/sec 0.182, Tokens/sec 154.807, Trained Tokens 85187, Peak mem 12.093 GB
