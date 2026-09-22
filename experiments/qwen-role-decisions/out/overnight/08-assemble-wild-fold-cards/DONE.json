@@ -1,0 +1,10 @@
+{
+ "id": "08-assemble-wild-fold-cards",
+ "exit_code": 0,
+ "seconds": 30,
+ "commit": "5e7c2a8d6c47a8405a26243657a5f1c0d542c81c",
+ "started": "2026-09-22T16:19:19.015624+00:00",
+ "finished": "2026-09-22T16:19:49.021053+00:00",
+ "stdout_tail": "{\n \"documents\": 30,\n \"rows\": 3004,\n \"chosen\": {\n  \"c3-0094\": \"wild-v5-r5\",\n  \"c3-0128\": \"wild-v5-r5\",\n  \"c3-0252\": \"wild-v4-runin\",\n  \"c3-0429\": \"wild-v2\",\n  \"c3-0437\": \"wild-v2\",\n  \"c3-0489\": \"wild-v4-runin\",\n  \"c3-0650\": \"wild-v4-runin\",\n  \"c3-0794\": \"wild-v4-runin\",\n  \"c3-0825\": \"wild-v2\",\n  \"c3-0827\": \"wild-v2\",\n  \"c3-0030\": \"wild-r3\",\n  \"c3-0178\": \"wild-v4-runin\",\n  \"c3-0268\": \"wild-v4-runin\",\n  \"c3-0282\": \"wild-r3\",\n  \"c3-0299\": \"wild-v4-runin\",\n  \"c3-0321\": \"wild-r3\",\n  \"c3-0368\": \"wild-r3\",\n  \"c3-0435\": \"wild-r3\",\n  \"c3-0441\": \"wild-r3\",\n  \"c3-0507\": \"wild-v4-runin\",\n  \"c3-0533\": \"wild-r3\",\n  \"c3-0565\": \"wild-r3\",\n  \"c3-0722\": \"wild-r3\",\n  \"c3-0737\": \"wild-r3\",\n  \"c3-0755\": \"wild-v4-runin\",\n  \"c3-0766\": \"wild-r3\",\n  \"c3-0833\": \"wild-r3\",\n  \"c3-0869\": \"wild-r3\",\n  \"c3-0880\": \"wild-r3\",\n  \"c3-0931\": \"wild-r3\"\n },\n \"sha256\": \"009572a664bcd1d2daf5843eaf9a440dba64e43dd9166a4795f999c6aa4799a9\",\n \"fold_cards\": \"out/labels/wild-23-cards-runin.jsonl\"\n}\n",
+ "stderr_tail": ""
+}
