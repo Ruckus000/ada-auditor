@@ -1,0 +1,188 @@
+{
+ "fold_cards": "out/labels/wild-23-cards-runin.jsonl",
+ "documents": 30,
+ "probe_cards": 1021,
+ "per_document": {
+  "c3-0030": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0030",
+   "fold_cards": 106,
+   "split_blocks": 0,
+   "probed": 37
+  },
+  "c3-0094": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0094",
+   "fold_cards": 64,
+   "split_blocks": 4,
+   "probed": 30
+  },
+  "c3-0128": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0128",
+   "fold_cards": 193,
+   "split_blocks": 8,
+   "probed": 50
+  },
+  "c3-0178": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0178",
+   "fold_cards": 155,
+   "split_blocks": 1,
+   "probed": 57
+  },
+  "c3-0252": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0252",
+   "fold_cards": 210,
+   "split_blocks": 14,
+   "probed": 127
+  },
+  "c3-0268": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0268",
+   "fold_cards": 95,
+   "split_blocks": 5,
+   "probed": 46
+  },
+  "c3-0282": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0282",
+   "fold_cards": 11,
+   "split_blocks": 0,
+   "probed": 3
+  },
+  "c3-0299": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0299",
+   "fold_cards": 255,
+   "split_blocks": 3,
+   "probed": 24
+  },
+  "c3-0321": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0321",
+   "fold_cards": 21,
+   "split_blocks": 1,
+   "probed": 3
+  },
+  "c3-0368": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0368",
+   "fold_cards": 37,
+   "split_blocks": 0,
+   "probed": 24
+  },
+  "c3-0429": {
+   "suggest_dir": "out/suggest/wild-v2/c3-0429",
+   "fold_cards": 273,
+   "split_blocks": 0,
+   "probed": 55
+  },
+  "c3-0435": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0435",
+   "fold_cards": 13,
+   "split_blocks": 0,
+   "probed": 1
+  },
+  "c3-0437": {
+   "suggest_dir": "out/suggest/wild-v2/c3-0437",
+   "fold_cards": 23,
+   "split_blocks": 0,
+   "probed": 2
+  },
+  "c3-0441": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0441",
+   "fold_cards": 10,
+   "split_blocks": 0,
+   "probed": 1
+  },
+  "c3-0489": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0489",
+   "fold_cards": 52,
+   "split_blocks": 5,
+   "probed": 3
+  },
+  "c3-0507": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0507",
+   "fold_cards": 473,
+   "split_blocks": 3,
+   "probed": 251
+  },
+  "c3-0533": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0533",
+   "fold_cards": 42,
+   "split_blocks": 0,
+   "probed": 16
+  },
+  "c3-0565": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0565",
+   "fold_cards": 76,
+   "split_blocks": 1,
+   "probed": 15
+  },
+  "c3-0650": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0650",
+   "fold_cards": 18,
+   "split_blocks": 1,
+   "probed": 5
+  },
+  "c3-0722": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0722",
+   "fold_cards": 245,
+   "split_blocks": 0,
+   "probed": 80
+  },
+  "c3-0737": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0737",
+   "fold_cards": 44,
+   "split_blocks": 0,
+   "probed": 12
+  },
+  "c3-0755": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0755",
+   "fold_cards": 30,
+   "split_blocks": 4,
+   "probed": 7
+  },
+  "c3-0766": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0766",
+   "fold_cards": 25,
+   "split_blocks": 0,
+   "probed": 7
+  },
+  "c3-0794": {
+   "suggest_dir": "out/suggest/wild-v4-runin/c3-0794",
+   "fold_cards": 141,
+   "split_blocks": 5,
+   "probed": 48
+  },
+  "c3-0825": {
+   "suggest_dir": "out/suggest/wild-v2/c3-0825",
+   "fold_cards": 53,
+   "split_blocks": 0,
+   "probed": 9
+  },
+  "c3-0827": {
+   "suggest_dir": "out/suggest/wild-v2/c3-0827",
+   "fold_cards": 243,
+   "split_blocks": 0,
+   "probed": 72
+  },
+  "c3-0833": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0833",
+   "fold_cards": 14,
+   "split_blocks": 0,
+   "probed": 6
+  },
+  "c3-0869": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0869",
+   "fold_cards": 48,
+   "split_blocks": 0,
+   "probed": 12
+  },
+  "c3-0880": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0880",
+   "fold_cards": 10,
+   "split_blocks": 0,
+   "probed": 9
+  },
+  "c3-0931": {
+   "suggest_dir": "out/suggest/wild-r3/c3-0931",
+   "fold_cards": 24,
+   "split_blocks": 0,
+   "probed": 9
+  }
+ },
+ "out": "out/overnight/09-merged-probe-wild"
+}
