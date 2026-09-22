@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/jphilistin/.codex/worktrees/12c6/ADA Auditor/experiments/qwen-role-decisions/labels/predict.py", line 291, in <module>
+    main()
+  File "/Users/jphilistin/.codex/worktrees/12c6/ADA Auditor/experiments/qwen-role-decisions/labels/predict.py", line 259, in main
+    with a.out.open("a") as f:
+         ^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'out/overnight/02-score-probe-dev/pred-merged-probe-dev.jsonl'
