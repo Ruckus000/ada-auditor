@@ -1,0 +1,10 @@
+{
+ "id": "04-emit-sft-r13",
+ "exit_code": 1,
+ "seconds": 30,
+ "commit": "e76ede31117a0bc195124ab7f0e40f0b50f4bfad",
+ "started": "2026-09-22T14:55:50.266607+00:00",
+ "finished": "2026-09-22T14:56:20.272465+00:00",
+ "stdout_tail": "",
+ "stderr_tail": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 203, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/Users/jphilistin/.codex/worktrees/12c6/ADA Auditor/experiments/qwen-role-decisions/labels/emit_sft.py\", line 77, in <module>\n    main()\n    ~~~~^^\n  File \"/Users/jphilistin/.codex/worktrees/12c6/ADA Auditor/experiments/qwen-role-decisions/labels/emit_sft.py\", line 48, in main\n    rows = [json.loads(l) for l in (a.keys_dir / \"labels.jsonl\").read_text().splitlines() if l.strip()]\n                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py\", line 787, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:\n         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py\", line 771, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'out/overnight/03-keys-r13/labels.jsonl'\n"
+}
