@@ -1,0 +1,20 @@
+dev truth is the keys struct tree (key-headings.json; label sources stripped-tree / word-outline / planted); no judged labels read; wild gate documents excluded; test split never read
+{
+ "documents": 223,
+ "blocks": 103047,
+ "positives_train": 1152,
+ "positives_validation": 147,
+ "negatives_pool": 2763,
+ "negatives_kept": 600,
+ "wild_docs_excluded": 0,
+ "containers": 5484,
+ "skipped_text_shape": 0,
+ "few_body_words": 3984,
+ "no_context_card": 0,
+ "negative_train_excluded": 17147,
+ "train_positives": 1152,
+ "block_cards": 1152,
+ "probe_cards": 1899,
+ "dev_set_sha256": "336caf8366d2d4213de5d42a527731d9f39bfa73967b175683a8104236d74c6c",
+ "out": "out/overnight/01-merged-probe-dev"
+}

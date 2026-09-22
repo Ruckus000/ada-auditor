@@ -1,0 +1,10 @@
+{
+ "id": "01-merged-probe-dev",
+ "exit_code": 0,
+ "seconds": 5868,
+ "commit": "e76ede31117a0bc195124ab7f0e40f0b50f4bfad",
+ "started": "2026-09-22T11:29:01.225458+00:00",
+ "finished": "2026-09-22T13:06:49.325783+00:00",
+ "stdout_tail": "dev truth is the keys struct tree (key-headings.json; label sources stripped-tree / word-outline / planted); no judged labels read; wild gate documents excluded; test split never read\n{\n \"documents\": 223,\n \"blocks\": 103047,\n \"positives_train\": 1152,\n \"positives_validation\": 147,\n \"negatives_pool\": 2763,\n \"negatives_kept\": 600,\n \"wild_docs_excluded\": 0,\n \"containers\": 5484,\n \"skipped_text_shape\": 0,\n \"few_body_words\": 3984,\n \"no_context_card\": 0,\n \"negative_train_excluded\": 17147,\n \"train_positives\": 1152,\n \"block_cards\": 1152,\n \"probe_cards\": 1899,\n \"dev_set_sha256\": \"336caf8366d2d4213de5d42a527731d9f39bfa73967b175683a8104236d74c6c\",\n \"out\": \"out/overnight/01-merged-probe-dev\"\n}\n",
+ "stderr_tail": ""
+}
