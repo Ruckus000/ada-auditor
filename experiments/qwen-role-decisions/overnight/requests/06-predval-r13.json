@@ -1,0 +1,8 @@
+{
+  "id": "06-predval-r13",
+  "purpose": "Strategy C validation prediction: r13 adapter scores the exact r10 validation population (keys-all-9 cards, split validation, key ladder), with --scores; expected 1,525 rows, 0 parse failures",
+  "commit": "5e7c2a8d6c47a8405a26243657a5f1c0d542c81c",
+  "cmd": ["~/.venvs/qwen-role-decisions/bin/python", "-B", "-m", "labels.predict", "--labels", "out/keys-all-9/labels.jsonl", "--cards", "out/keys-all-9/cards.jsonl", "--keys", "out/keys-all-9/key-headings.json", "--split", "out/keys-all-4/split/split.json", "--on", "validation", "--scores", "--adapter", "out/overnight/05-train-r13/adapter-r13", "--python", "~/.venvs/qwen-role-decisions/bin/python", "--out", "out/overnight/06-predval-r13/pred-validation-r13.jsonl"],
+  "outputs": ["out/overnight/06-predval-r13/pred-validation-r13.jsonl"],
+  "est_minutes": 60
+}

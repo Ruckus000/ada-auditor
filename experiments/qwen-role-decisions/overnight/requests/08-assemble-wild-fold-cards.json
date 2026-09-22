@@ -1,0 +1,8 @@
+{
+  "id": "08-assemble-wild-fold-cards",
+  "purpose": "Strategy C wild input: assemble the predict-ready fold-view cards file (full schema) from each wild document's best suggest round; refuses unless the assembled ids reproduce the fold's ordered ids exactly",
+  "commit": "5e7c2a8d6c47a8405a26243657a5f1c0d542c81c",
+  "cmd": ["python3", "-B", "-m", "labels.fold_view_cards", "--fold-cards", "out/labels/wild-23-cards-runin.jsonl", "--suggest-root", "out/suggest", "--out", "out/overnight/08-assemble-wild-fold-cards/cards.jsonl", "--report", "out/overnight/08-assemble-wild-fold-cards/report.json"],
+  "outputs": ["out/overnight/08-assemble-wild-fold-cards/cards.jsonl", "out/overnight/08-assemble-wild-fold-cards/report.json"],
+  "est_minutes": 5
+}
