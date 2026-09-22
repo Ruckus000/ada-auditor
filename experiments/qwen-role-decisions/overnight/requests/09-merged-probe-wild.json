@@ -1,0 +1,8 @@
+{
+  "id": "09-merged-probe-wild",
+  "purpose": "Strategy A wild probe build: re-tag each wild-gate document with the pipeline's own tagger, verify the fold's blocks reproduce (refuse on drift), and emit probe cards (first line as its own card, id <locator>mh) for every unsplit multi-line >= 3-body-word fold block, with marked images from the real PDFs. Dev recall 0.6097 >= 0.5 was confirmed on 02's scores (tau_A = 0.9838874545166708, false-trigger 12/600) before this request was pushed.",
+  "commit": "2103b74c8dbe24e9273cce004a3c69135618dd4d",
+  "cmd": ["python3", "-B", "-m", "labels.merged_probe", "wild", "--fold-cards", "out/labels/wild-23-cards-runin.jsonl", "--suggest-root", "out/suggest", "--real-root", "out/cohort3/real", "--out", "out/overnight/09-merged-probe-wild"],
+  "outputs": ["out/overnight/09-merged-probe-wild/probe-cards.jsonl", "out/overnight/09-merged-probe-wild/wild-report.json"],
+  "est_minutes": 150
+}
