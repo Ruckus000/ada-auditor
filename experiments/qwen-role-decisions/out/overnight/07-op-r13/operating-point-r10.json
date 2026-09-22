@@ -1,0 +1,26 @@
+{
+ "adapter": "r10",
+ "rule": "lowest score threshold where covered accuracy exact 95 % lower bound >= 0.98 and FP exact 95 % upper bound <= 0.02",
+ "threshold": 0.9933194276290794,
+ "covered": 1142,
+ "coverage": 0.1047610310980644,
+ "counts": {
+  "tn": 770,
+  "tp": 359,
+  "fn": 10,
+  "fp": 3
+ },
+ "accuracy": 0.98861646234676,
+ "accuracy_ci": [
+  0.9806124695310114,
+  0.99392520917838
+ ],
+ "fp_rate": 0.0038809831824062097,
+ "fp_ci": [
+  0.0008010682511427891,
+  0.011299638303949797
+ ],
+ "fn_rate": 0.02710027100271003,
+ "documents": 442,
+ "documents_clean": 435
+}

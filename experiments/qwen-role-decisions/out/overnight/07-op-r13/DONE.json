@@ -1,0 +1,10 @@
+{
+ "id": "07-op-r13",
+ "exit_code": 1,
+ "seconds": 90,
+ "commit": "5e7c2a8d6c47a8405a26243657a5f1c0d542c81c",
+ "started": "2026-09-22T16:17:46.766408+00:00",
+ "finished": "2026-09-22T16:19:16.786994+00:00",
+ "stdout_tail": "",
+ "stderr_tail": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 203, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/Users/jphilistin/.codex/worktrees/12c6/ADA Auditor/experiments/qwen-role-decisions/labels/operating_point.py\", line 103, in <module>\n    main()\n    ~~~~^^\n  File \"/Users/jphilistin/.codex/worktrees/12c6/ADA Auditor/experiments/qwen-role-decisions/labels/operating_point.py\", line 90, in main\n    got = operating_point(name, rows, [json.loads(l) for l in pred_path.read_text().splitlines() if l.strip()])\n                                                              ~~~~~~~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py\", line 787, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:\n         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py\", line 771, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'out/overnight/06-predval-r13/pred-validation-r13.jsonl'\n"
+}
