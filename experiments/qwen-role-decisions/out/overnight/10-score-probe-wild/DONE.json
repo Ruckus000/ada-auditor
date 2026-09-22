@@ -1,0 +1,10 @@
+{
+ "id": "10-score-probe-wild",
+ "exit_code": 0,
+ "seconds": 1590,
+ "commit": "2103b74c8dbe24e9273cce004a3c69135618dd4d",
+ "started": "2026-09-22T15:29:59.404506+00:00",
+ "finished": "2026-09-22T15:56:29.787861+00:00",
+ "stdout_tail": "{\"rule\": 70, \"model\": 951, \"out\": \"out/overnight/10-score-probe-wild/pred-merged-probe-wild.jsonl\"}\n",
+ "stderr_tail": ""
+}
