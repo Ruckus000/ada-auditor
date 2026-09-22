@@ -333,6 +333,133 @@ def build_dev(manifest_path: Path, tagged_root: Path, stripped_root: Path, key_h
     return summary
 
 
+SUGGEST_ROUND_PRIORITY = ("wild-v4-runin", "wild-v2", "wild-r3", "wild")
+
+
+def resolve_suggest_dir(suggest_root: Path, doc: str, fold_ids: set[str]) -> tuple[Path, dict] | tuple[None, None]:
+    """The suggest dir whose cards cover the doc's fold ids, in registered priority.
+
+    refold.sh swaps wild-v4-runin in for the fired documents, so that round is
+    tried first; a dir wins only when every fold id of the document is one of
+    its cards. Returns (dir, cards_by_id) or (None, None).
+    """
+    for round_ in SUGGEST_ROUND_PRIORITY:
+        cards_path = suggest_root / round_ / doc / "cards.jsonl"
+        if not cards_path.is_file():
+            continue
+        cards = {json.loads(l)["card_id"]: json.loads(l) for l in cards_path.read_text().splitlines() if l.strip()}
+        if fold_ids <= set(cards):
+            return suggest_root / round_ / doc, cards
+    return None, None
+
+
+def verify_fold_blocks(fold_ids: set[str], cards: dict, blocks: dict) -> tuple[list[str], set[str]]:
+    """(non-reproducing fold ids, split-block bases) for one document.
+
+    Every plain fold id must name a dump block with identical text. The two
+    shapes suggest's split_heads adds are accepted and marked as split: a
+    ``<locator>h`` head card (text == the base block's first line) and a split
+    body (locator kept, text == the block's body, its head also in the fold).
+    Anything else means the re-tag did not reproduce and the build refuses.
+    """
+    bad, split_bases = [], set()
+    for cid in sorted(fold_ids):
+        want = collapse_glyph_spaces(cards[cid].get("text") or "")
+        if cid.endswith("h") and cid[:-1] in blocks:
+            first = (blocks[cid[:-1]].get("first_line") or "").strip()
+            (split_bases.add(cid[:-1]) if want == collapse_glyph_spaces(first) else bad.append(cid))
+            continue
+        if cid not in blocks:
+            bad.append(cid)
+            continue
+        got = collapse_glyph_spaces(blocks[cid].get("text") or "")
+        if want == got:
+            continue
+        body = body_of(blocks[cid])
+        if body is not None and want == collapse_glyph_spaces(body) and f"{cid}h" in fold_ids:
+            split_bases.add(cid)
+            continue
+        bad.append(cid)
+    return bad, split_bases
+
+
+def build_wild(fold_cards_path: Path, suggest_root: Path, real_root: Path, out: Path,
+               images: bool, overwrite: bool) -> dict:
+    """Strategy A's wild probe cards: the first line of every multi-line fold block.
+
+    The fold cards (the pushed run-in fold) are the universe. Each document's
+    suggest dir is re-tagged with the pipeline's own tagger and re-dumped; the
+    build REFUSES unless every fold id reproduces exactly (same locator, same
+    text) — a tagger that does not reproduce stops the strategy, it does not
+    get guessed around. Probe population: unsplit fold cards (text identical
+    to the dump block's; split heads and split bodies are out — suggest
+    already split those) whose block is multi-line with at least 3 body words,
+    the dev population's gates. Images are marked from the real untagged PDF,
+    exactly as suggest rendered the wild cards.
+    """
+    from labels.suggest import tag  # lazy: dev builds never need the tagger
+
+    if out.exists() and not overwrite:
+        raise SystemExit(f"{out} exists; choose a new name (provenance) or pass --overwrite")
+    compile_cards()
+    fold: dict[str, list[str]] = {}
+    for line in fold_cards_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        cid = json.loads(line)["id"]
+        fold.setdefault(cid.split(":")[0], []).append(cid)
+    out.mkdir(parents=True, exist_ok=True)
+    pages = out / "pages"
+    probe_cards: list[dict] = []
+    report: dict[str, dict] = {}
+    problems = []
+    for doc in sorted(fold):
+        fold_ids = set(fold[doc])
+        sdir, cards = resolve_suggest_dir(suggest_root, doc, fold_ids)
+        if sdir is None:
+            problems.append(f"{doc}: no suggest dir covers {len(fold_ids)} fold ids")
+            continue
+        real = real_root / f"{doc}.pdf"
+        tagged = tag(real, out / "tagwork" / doc, doc)
+        blocks = {b["locator"]: b for b in (dump_pdf(tagged, compile=False).get("blocks") or [])}
+        bad, split_bases = verify_fold_blocks(fold_ids, cards, blocks)
+        if bad:
+            problems.append(f"{doc}: {len(bad)} fold ids did not reproduce, first {bad[:5]}")
+            continue
+        n_probe = 0
+        for cid in sorted(fold_ids):
+            if cid in split_bases or cid.endswith("h"):
+                continue  # suggest already split this block: out of the probe population
+            b = blocks[cid]
+            if not is_multiline_block(b):
+                continue
+            body = body_of(b)
+            if body is None or head_words(body) < MIN_BODY_WORDS:
+                continue
+            card = probe_card(b, cards[cid], doc)
+            if images:
+                img = marked_image(card, real, pages)
+                if img is not None:
+                    card["image_full"] = str(img.resolve())
+                    card["image"] = str((reduce_marked(img) or img).resolve())
+                else:
+                    card["image"] = card["image_full"] = None
+            else:
+                card["image"] = card["image_full"] = None
+            probe_cards.append(card)
+            n_probe += 1
+        report[doc] = {"suggest_dir": str(sdir), "fold_cards": len(fold_ids),
+                       "split_blocks": len(split_bases), "probed": n_probe}
+    if problems:
+        raise SystemExit("wild probe refused:\n" + "\n".join(problems[:30]))
+    probe_cards.sort(key=lambda c: (c["document_id"], c["page"] if c["page"] is not None else 10**9, c["y0"] or 0.0))
+    (out / "probe-cards.jsonl").write_text("".join(json.dumps(c) + "\n" for c in probe_cards))
+    summary = {"fold_cards": str(fold_cards_path), "documents": len(report), "probe_cards": len(probe_cards),
+               "per_document": report, "out": str(out)}
+    (out / "wild-report.json").write_text(json.dumps(summary, indent=1) + "\n")
+    return summary
+
+
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest="mode", required=True)
@@ -347,11 +474,21 @@ def main(argv: list[str] | None = None) -> None:
     d.add_argument("--out", type=Path, required=True)
     d.add_argument("--no-images", action="store_true", help="image: null (verification mode; never a scoring input)")
     d.add_argument("--overwrite", action="store_true")
+    w = sub.add_parser("wild", help="strategy A's wild probe cards from the run-in fold (re-tags and verifies)")
+    w.add_argument("--fold-cards", type=Path, required=True)
+    w.add_argument("--suggest-root", type=Path, default=Path("out/suggest"))
+    w.add_argument("--real-root", type=Path, default=Path("out/cohort3/real"))
+    w.add_argument("--out", type=Path, required=True)
+    w.add_argument("--no-images", action="store_true")
+    w.add_argument("--overwrite", action="store_true")
     a = p.parse_args(argv)
     if a.mode == "dev":
         print(DISCLOSURE)
         print(json.dumps(build_dev(a.manifest, a.tagged_root, a.stripped_root, a.key_headings,
                                    a.labels, a.split, a.wild_root, a.out, not a.no_images, a.overwrite), indent=1))
+    elif a.mode == "wild":
+        print(json.dumps(build_wild(a.fold_cards, a.suggest_root, a.real_root, a.out,
+                                    not a.no_images, a.overwrite), indent=1))
 
 
 if __name__ == "__main__":

@@ -120,3 +120,39 @@ def test_block_card_keeps_exactly_the_keys_card_fields():
     assert set(card) == set(KEYS_CARD_FIELDS), sorted(set(card) ^ set(KEYS_CARD_FIELDS))
     assert card["locator"] == "locator" and card["next"] == "next"
     assert "after_inline_label" not in card and "probe" not in card
+
+
+def test_resolve_suggest_dir_priority_and_coverage():
+    import tempfile
+    from pathlib import Path
+    from labels.merged_probe import resolve_suggest_dir
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        for round_, ids in (("wild-r3", ["d:1", "d:2"]), ("wild-v4-runin", ["d:1", "d:2", "d:3"])):
+            p = root / round_ / "d"
+            p.mkdir(parents=True)
+            (p / "cards.jsonl").write_text("".join(json.dumps({"card_id": i}) + "\n" for i in ids))
+        sdir, cards = resolve_suggest_dir(root, "d", {"d:1", "d:2"})
+        assert sdir == root / "wild-v4-runin" / "d" and len(cards) == 3
+        sdir2, _ = resolve_suggest_dir(root, "d", {"d:1", "d:9"})
+        assert sdir2 is None  # no dir covers every fold id
+
+
+def test_verify_fold_blocks_accepts_splits_and_refuses_drift():
+    from labels.merged_probe import verify_fold_blocks
+    blocks = {
+        "d:1": {"locator": "d:1", "text": "one line", "first_line": "one line", "line_count": 1},
+        "d:2": {"locator": "d:2", "text": "Summary the body text here", "first_line": "Summary", "line_count": 2},
+        "d:3": {"locator": "d:3", "text": "DRIFTED", "first_line": "DRIFTED", "line_count": 1},
+    }
+    cards = {
+        "d:1": {"text": "one line"},
+        "d:2": {"text": "the body text here"},        # the split body
+        "d:2h": {"text": "Summary"},                   # the split head
+        "d:3": {"text": "original text"},
+    }
+    bad, split_bases = verify_fold_blocks({"d:1", "d:2", "d:2h", "d:3"}, cards, blocks)
+    assert bad == ["d:3"] and split_bases == {"d:2"}
+    # without the head in the fold, the body mismatch is drift, not a split
+    bad2, split2 = verify_fold_blocks({"d:2"}, {"d:2": {"text": "the body text here"}}, blocks)
+    assert bad2 == ["d:2"] and split2 == set()
