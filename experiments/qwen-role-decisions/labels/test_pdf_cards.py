@@ -44,7 +44,7 @@ def test_cap_per_document_keeps_best_reasons_and_all_random_rows():
     rows = [{"document_id": "a", "why": ["short"], "n": i} for i in range(300)]
     rows += [{"document_id": "a", "why": ["source_h"], "n": 900 + i} for i in range(5)]
     rows += [{"document_id": "a", "why": ["random"], "n": 990 + i} for i in range(7)]
-    rows += [{"document_id": "b", "why": ["outlier"], "n": 2000} for i in range(1)]
+    rows += [{"document_id": "b", "why": ["outlier"], "n": 2000}]
     out = cap_per_document(rows, random.Random(0), cap=10)
     a = [r for r in out if r["document_id"] == "a"]
     assert len(a) == 10 + 7 and sum(r["why"] == ["source_h"] for r in a) == 5
