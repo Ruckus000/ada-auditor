@@ -1,8 +1,16 @@
 # Re-judge registration: page-sheet label bias (2026-09-22)
 
-Status: REGISTERED, not run. This file exists before any re-judging.
-The local session runs the judge only after the user approves this plan.
-No judging, training, or tuning against the wild set has happened for it.
+Status: REGISTERED and APPROVED with two amendments (user, 2026-09-22),
+committed before any re-judging. Amendments: (1) the verdict is model-blind:
+it reads only the judge-side flip asymmetry over all 565 cards; f9 is
+reported, never a condition. (2) The label source is registered in code in
+the same commit as this amendment, before the run.
+
+Why the stakes changed: at n = 2,545, up to 15 covered errors pass
+(12 errors -> lower bound 0.9918; 15 -> 0.9903; 16 -> 0.9898). The run-in +
+R5 view has 21, so replacing labels could by itself decide the gate. That is
+why the adoption decision must not depend on whether the new labels help the
+model.
 
 ## Question
 
@@ -44,7 +52,13 @@ Never only the model's errors, never only the 9 FN rows, never a sample.
   used for the original wild judging and for the sheet round's
   tie-breaks. NOT page sheets. The judge sees only the card, never
   the sheet label, never model output, never which rows are the 9 FN.
-- Presentation order: randomized, fixed seed recorded in the output.
+- Presentation order: randomized with seed 20260922, recorded in the
+  output; chunks of 62 cards, the per-card protocol `labels/judge/PROTOCOL.md`,
+  one fresh judge run per chunk, images are the marked-408 per-card images
+  from `out/suggest/wild-r3/<doc>/cards.jsonl` (the ones the original
+  four-judge and tie-break rounds used).
+- A run that does not end with its `done` line, or whose line count differs
+  from its chunk, is discarded in full and re-run.
 - Calibration: Opus-quick's measured per-card accuracy is 0.998, so
   over 565 cards the expected spurious-disagreement count is ~= 1.
   All decision thresholds below are set well above that noise floor.
@@ -56,9 +70,12 @@ Never only the model's errors, never only the 9 FN rows, never a sample.
 - New labels are written to a NEW data-branch file:
   `out/labels/s2wild-r3-cardrejudge-folds.jsonl`.
   The published consensus files are never edited.
-- Label source value for the new file: `opus-quick-card-rejudge`
-  (added to `LABEL_SOURCES` in `eval_wild.py` in the same code commit
-  that consumes the file — after the run, not now).
+- Label source value for the new file: `opus-quick-card-rejudge`, actor
+  `opus-quick-card`, one judge (agree 1 of 1). Registered now, before the
+  run, in `eligibility_eval.LABEL_SOURCES`, `labels/fold_wild.SOURCES` and
+  `labels/eval_wild.LABEL_SOURCES`/`DISCLOSURES`, with a fold test.
+- An `Unsure` re-judge answer keeps the sheet label for that row; the count
+  of Unsure rows is reported.
 - Flips are counted per row against the sheet label. Let:
   - f9 = of the 9 sheet-round FN rows, how many re-judge to non-H;
   - g = of all 565 rows, H under sheet -> non-H under re-judge;
@@ -66,18 +83,27 @@ Never only the model's errors, never only the 9 FN rows, never a sample.
 
 ## Verdict criteria (fixed)
 
-- Bias CONFIRMED: f9 >= 6 AND g - r >= 4.
-  Action: the re-judge labels replace the sheet labels for the 565 rows;
-  the run-in + R5 gate is recomputed and recorded with both label files
-  named; the replaced rows are disclosed by count (never by content).
-- Bias REFUTED: f9 <= 2 AND |g - r| <= 2.
+Model-blind: g and r are computed over all 565 rows from the two label
+sets alone; no model output is read to reach the verdict.
+
+- Bias CONFIRMED: g - r >= 4.
+  Action: the re-judge labels replace the sheet labels for all 565 rows
+  (never a subset); the run-in + R5 gate is recomputed on the end-to-end
+  predictions (wild-v5-r5 for c3-0094/c3-0128, wild-v4-runin for the other
+  fired documents) and recorded with both label files named; replaced rows
+  are disclosed by count (never by content).
+- Bias REFUTED: |g - r| <= 2.
   Action: sheet labels stand; the 9-FN excess is recorded as real
   misses, the sheet-bias question is closed, no gate change.
-- INCONCLUSIVE: anything between (3 <= f9 <= 5, or directional but
-  small asymmetry).
+- INCONCLUSIVE: g - r = 3, or r - g >= 3 (a bias toward non-H would be a
+  different question).
   Action: sheet labels stand; the re-judge file is kept as an appendix
   record; the excess stays an open question in the run-in record;
   no gate change.
+
+Reported with every verdict, never used to reach it: f9 (of the 9
+sheet-round FN rows, how many re-judge to non-H), and the gate numbers
+under the re-judge labels.
 
 ## Disclosure
 

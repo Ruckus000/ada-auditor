@@ -87,7 +87,8 @@ MIN_TEST_TEMPLATES = 10
 SPLIT = (("train", 0.6), ("validation", 0.2), ("test", 0.2))
 GROUP_KEYS = ("document_sha256", "template_id", "client_id")
 MODEL_FIELDS = ("prediction", "model", "model_role", "heading_flag", "raw", "confidence")
-LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted", "claude-audit", "claude-consensus", "opus-kimi-consensus")
+LABEL_SOURCES = ("human-answer", "stripped-tree", "word-outline", "planted", "claude-audit", "claude-consensus", "opus-kimi-consensus",
+                 "opus-quick-card-rejudge")
 # --assign-new targets. Never test: a held-out set is only ever grown into validation (or train).
 ASSIGNABLE = ("train", "validation")
 PREDICTION_TYPES = ("H", "P", "Artifact", "Caption", "TH", "TOCI", "Lbl", "BlockQuote", "Other", "Unsure")

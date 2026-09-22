@@ -191,3 +191,28 @@ def test_opus_kimi_consensus_source_folds_with_two_seat_rules():
         if r.get("label") is not None:
             r["votes"] = {"judges": 2, "agree": 2}
     _refused("agree >= 3", consensus=bad2)
+
+
+def test_opus_quick_card_rejudge_source_folds_as_one_judge():
+    """Registered 2026-09-22 before the run: the page-sheet bias re-judge's rows
+    (actor opus-quick-card, one judge card by card, agree 1 of 1) fold; a second
+    judge or a different actor under this source is refused."""
+    inputs = _inputs()
+    rows = copy.deepcopy(inputs["consensus"])
+    for r in rows:
+        if r.get("label") is not None:
+            r["label_source"] = "opus-quick-card-rejudge"
+            r["actor"] = "opus-quick-card"
+            r["votes"] = {"judges": 1, "agree": 1}
+    labels, _, _, counts = _fold(consensus=rows)
+    assert counts["consensus_kept"] == 9
+    assert all(r["label_source"] == "opus-quick-card-rejudge" for r in labels)
+    assert refusals(labels) == []
+    two = copy.deepcopy(rows)
+    for r in two:
+        if r.get("label") is not None:
+            r["votes"] = {"judges": 2, "agree": 2}
+    _refused("judges exceeds 1", consensus=two)
+    wrong_actor = copy.deepcopy(rows)
+    next(r for r in wrong_actor if r.get("label") is not None)["actor"] = "consensus-2seat-tiebreak"
+    _refused("is not 'opus-quick-card'", consensus=wrong_actor)

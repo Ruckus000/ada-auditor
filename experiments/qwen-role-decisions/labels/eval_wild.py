@@ -38,11 +38,15 @@ DISCLOSURE = "graded against Claude-consensus labels"
 LABEL_SOURCE = "claude-consensus"
 # Registered 2026-09-21: opus-kimi-consensus rows (Claude Opus-medium seat 1
 # and Kimi K3 seat 2 on page sheets, Claude Opus-quick per-card tie-break).
-LABEL_SOURCES = ("claude-consensus", "opus-kimi-consensus")
+# Registered 2026-09-22, before the run: opus-quick-card-rejudge rows (one Claude
+# Opus-quick judge, card by card), which replace the 565 sheet-round rows only if
+# the page-sheet bias re-judge's model-blind verdict is CONFIRMED.
+LABEL_SOURCES = ("claude-consensus", "opus-kimi-consensus", "opus-quick-card-rejudge")
 DISCLOSURES = {
     "claude-consensus": "graded against Claude-consensus labels",
     "opus-kimi-consensus": "graded against consensus labels, judges: Claude Opus-medium (seat 1, sheets), "
                            "Kimi K3 (seat 2, sheets), Claude Opus-quick (per-card tie-break)",
+    "opus-quick-card-rejudge": "graded against re-judged labels, judge: Claude Opus-quick (one judge, card by card)",
 }
 CURVE = (0.5, 0.9, 0.95, 0.99, 0.9933)
 RULE_ACCURACY_LOWER = 0.98

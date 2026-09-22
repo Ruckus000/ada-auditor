@@ -66,6 +66,9 @@ MAX_JUDGES = 4
 SOURCES = {
     "claude-consensus": {"actor": "consensus-4judge", "min_agree": 3, "max_judges": 4},
     "opus-kimi-consensus": {"actor": "consensus-2seat-tiebreak", "min_agree": 2, "max_judges": 3},
+    # Registered 2026-09-22 before the run (2026-09-22-wild-sheet-bias-rejudge-registration.md):
+    # one Claude Opus-quick judge, card by card, re-judging the 565 sheet-round rows.
+    "opus-quick-card-rejudge": {"actor": "opus-quick-card", "min_agree": 1, "max_judges": 1},
 }
 LABEL_TYPES = tuple(t for t in PREDICTION_TYPES if t != "Unsure")
 
