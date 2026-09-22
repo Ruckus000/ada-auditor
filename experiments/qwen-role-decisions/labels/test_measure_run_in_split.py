@@ -101,6 +101,20 @@ def test_freeze_with_nothing_lost_takes_the_smallest_capped_width():
     assert freeze(table)["width"] == 0.5
 
 
+def test_first_line_runs_field_does_not_change_the_training_keys_fingerprint():
+    """The same-line probe's new Cards field is probe-only: candidate_pool reads
+    locator and text, so a dump carrying first_line_runs fingerprints identically
+    (this is what keeps training_keys_sha256 unchanged on the real corpus)."""
+    from labels.build_keys import candidate_pool
+    from labels.measure_run_in_split import norm
+    b = blk("d:9", "Summary Body text follows here.", "Summary Body text follows here.", 1)
+    plain = [(c["locator"], norm(c["text"])) for c in candidate_pool({"blocks": [b]}, "d")]
+    b["first_line_runs"] = [{"text": "Summary", "font_pt": 12, "bold": True},
+                            {"text": "Body text follows here.", "font_pt": 11, "bold": False}]
+    styled = [(c["locator"], norm(c["text"])) for c in candidate_pool({"blocks": [b]}, "d")]
+    assert plain == styled
+
+
 def test_main_measures_a_synthetic_keys_build():
     """End-to-end over a tiny keys build: one tagged PDF with a merged run-in, plus
     key-headings.json and a split manifest. Compiles and runs Cards.java."""
