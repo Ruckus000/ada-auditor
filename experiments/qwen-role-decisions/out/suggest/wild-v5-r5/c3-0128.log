@@ -1,0 +1,6 @@
+c3-0128                           390ms out=72921
+
+1/1 produced output
+{"source_images": 193, "reduced_images": 193, "planned_tokens": {"408": 193}, "cards": 193, "cards_rewritten": 193, "max_pixels": 448000, "sample_default_check": [{"image": "c3-0128_196.png", "default_image_tokens": 408}, {"image": "c3-0128_205.png", "default_image_tokens": 408}, {"image": "c3-0128_107.png", "default_image_tokens": 408}, {"image": "c3-0128_164.png", "default_image_tokens": 408}, {"image": "c3-0128_38.png", "default_image_tokens": 408}]}
+{"rule": 73, "model": 120, "out": "out/suggest/wild-v5-r5/c3-0128/predictions.jsonl"}
+{"document": "c3-0128", "cards": 193, "proposed": 187, "rule": 73, "model": 120, "blocks_total": 193, "cards_considered": 193, "selector": "all-blocks", "not_heading_confident": 175, "table_vetoed": 0, "table_not_heading_confident": 0, "split_heads": 8, "seconds": 315.3, "out": "out/suggest/wild-v5-r5/c3-0128/sidecar.json"}

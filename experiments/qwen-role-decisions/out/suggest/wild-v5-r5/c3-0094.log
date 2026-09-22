@@ -1,0 +1,6 @@
+c3-0094                           362ms out=52217
+
+1/1 produced output
+{"source_images": 64, "reduced_images": 64, "planned_tokens": {"414": 64}, "cards": 64, "cards_rewritten": 64, "max_pixels": 448000, "sample_default_check": [{"image": "c3-0094_54h.png", "default_image_tokens": 414}, {"image": "c3-0094_57.png", "default_image_tokens": 414}, {"image": "c3-0094_13.png", "default_image_tokens": 414}, {"image": "c3-0094_4.png", "default_image_tokens": 414}, {"image": "c3-0094_7.png", "default_image_tokens": 414}]}
+{"rule": 3, "model": 61, "out": "out/suggest/wild-v5-r5/c3-0094/predictions.jsonl"}
+{"document": "c3-0094", "cards": 64, "proposed": 59, "rule": 3, "model": 61, "blocks_total": 64, "cards_considered": 64, "selector": "all-blocks", "not_heading_confident": 51, "table_vetoed": 0, "table_not_heading_confident": 0, "split_heads": 4, "seconds": 137.3, "out": "out/suggest/wild-v5-r5/c3-0094/sidecar.json"}
