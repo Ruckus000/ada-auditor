@@ -33,7 +33,8 @@ import org.apache.pdfbox.text.TextPosition;
  * a quarter em — PDFMarkedContentExtractor yields one MCID per letter, and
  * StructText.of joins those with spaces, which would feed the frozen
  * role-only prompt "QuarterlyOperationsSummary". Missing font is JSON null,
- * never a default.
+ * never a default. `first_line_runs` is a probe-only addition (same-line
+ * run-in Step 0, 2026-09-22): the first line's style runs, read by no rule.
  *
  * Usage: Cards &lt;file.pdf&gt;
  */
@@ -145,6 +146,17 @@ public final class Cards {
                         ", \"x0\":%.4f, \"y0\":%.4f, \"x1\":%.4f, \"y1\":%.4f",
                         box.x0(), box.y0(), box.x1(), box.y1()));
                 }
+                List<Run> runs = firstLineRuns(gs);
+                json.append(", \"first_line_runs\": [");
+                for (int r = 0; r < runs.size(); r++) {
+                    if (r > 0) json.append(", ");
+                    Run run = runs.get(r);
+                    json.append("{\"text\": ").append(q(run.text()))
+                        .append(", \"font_pt\": ").append(run.fontPt())
+                        .append(", \"bold\": ").append(run.bold())
+                        .append("}");
+                }
+                json.append("]");
                 json.append("}");
                 json.append(i < found.size() - 1 ? ",\n" : "\n");
             }
@@ -249,6 +261,27 @@ public final class Cards {
      *  block has no glyphs. */
     record FirstLine(String text, int lines, Float x1) {}
 
+    /** One style run of the first line: maximal span of same-(rounded-size, weight)
+     *  glyphs, text joined like wordsOf. Probe-only output (same-line run-in, plan
+     *  2026-09-22 Step 0): a bold or larger lead run followed by regular text marks
+     *  a heading sharing line 1 with its body. No rule reads this field. */
+    record Run(String text, int fontPt, boolean bold) {}
+
+    /** Index one past the last glyph of the first physical line — the same line-change
+     *  test wordsOf uses (dy over half an em). The whole list when there is one line. */
+    private static int firstLineEnd(List<Glyph> glyphs) {
+        Glyph prev = null;
+        for (int i = 0; i < glyphs.size(); i++) {
+            Glyph g = glyphs.get(i);
+            if (prev != null) {
+                float em = g.fontPt > 0 ? g.fontPt : prev.fontPt;
+                if (Math.abs(g.y - prev.y) > 0.5f * em) return i;
+            }
+            prev = g;
+        }
+        return glyphs.size();
+    }
+
     /**
      * A line change is the same test wordsOf uses (dy over half an em). Blocks with
      * no glyphs report ("", 0, null). Stage 2 round 2: the split of an enumerated heading
@@ -257,16 +290,13 @@ public final class Cards {
     static FirstLine firstLineOf(List<Glyph> glyphs) {
         if (glyphs.isEmpty()) return new FirstLine("", 0, null);
         int lines = 1;
-        int firstEnd = glyphs.size();
+        int firstEnd = firstLineEnd(glyphs);
         Glyph prev = null;
         for (int i = 0; i < glyphs.size(); i++) {
             Glyph g = glyphs.get(i);
             if (prev != null) {
                 float em = g.fontPt > 0 ? g.fontPt : prev.fontPt;
-                if (Math.abs(g.y - prev.y) > 0.5f * em) {
-                    if (lines == 1) firstEnd = i;
-                    lines++;
-                }
+                if (Math.abs(g.y - prev.y) > 0.5f * em) lines++;
             }
             prev = g;
         }
@@ -276,6 +306,25 @@ public final class Cards {
             x1 = Math.max(x1, g.x() + g.w());
         }
         return new FirstLine(wordsOf(glyphs.subList(0, firstEnd)), lines, x1);
+    }
+
+    /** The first line's style runs: maximal spans of equal (rounded font size, bold),
+     *  each span's text joined like wordsOf. Empty for a glyphless block. */
+    static List<Run> firstLineRuns(List<Glyph> glyphs) {
+        int end = firstLineEnd(glyphs);
+        List<Run> runs = new ArrayList<>();
+        int start = 0;
+        for (int i = 1; i <= end; i++) {
+            Glyph g = glyphs.get(i - 1);
+            boolean boundary = i == end
+                || Math.round(glyphs.get(i).fontPt()) != Math.round(g.fontPt())
+                || glyphs.get(i).bold() != g.bold();
+            if (boundary) {
+                runs.add(new Run(wordsOf(glyphs.subList(start, i)), Math.round(g.fontPt()), g.bold()));
+                start = i;
+            }
+        }
+        return runs;
     }
 
     /**
