@@ -1,0 +1,25 @@
+{
+  "id": "14-score-wild-r13",
+  "purpose": "Strategy C wild re-prediction (its one registered wild look): r13 adapter scores the fold-view wild cards own-stack, rules in front, scores only. No threshold is applied here; t_r13 (derived on validation by 07) is applied locally when the gate is recomputed [Resubmitted by the runner session from Kimi's staged spec: Kimi's GitHub connection was down. Only id, output paths and the adapter/predictions path differ from the original.]",
+  "commit": "c2e9ee682f5f2134d51e487ebcbf02b291dfd879",
+  "cmd": [
+    "~/.venvs/qwen-role-decisions/bin/python",
+    "-B",
+    "-m",
+    "labels.predict",
+    "--scores",
+    "--own-stack",
+    "--cards",
+    "out/overnight/08-assemble-wild-fold-cards/cards.jsonl",
+    "--adapter",
+    "out/overnight/12-train-r13/adapter-r13",
+    "--python",
+    "~/.venvs/qwen-role-decisions/bin/python",
+    "--out",
+    "out/overnight/14-score-wild-r13/pred-wild-r13.jsonl"
+  ],
+  "outputs": [
+    "out/overnight/14-score-wild-r13/pred-wild-r13.jsonl"
+  ],
+  "est_minutes": 130
+}

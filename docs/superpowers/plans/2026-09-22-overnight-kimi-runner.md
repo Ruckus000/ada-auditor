@@ -59,7 +59,13 @@ in `NN` order, one at a time (there is one MLX device). It runs from
   `emit_sft --keys-dir out/keys-all-9 --split out/keys-all-4/split/split.json --on train --exclude-doc-prefix c5 --oversample-regular-h 2`
   (4,942 rows, 9,884 iters, 13.7 h).
   - Time gate: at step 100 the runner projects wall time and stops the run
-    if it exceeds 16 h.
+    if it exceeds 18 h. It was 16 h until 2026-09-22: request 05 projected
+    17.0 h (0.182 it/s × 11,144 iters, 13% more iters than r10) and was
+    stopped. The user raised the budget to 18 h. It is a compute budget, not
+    a result threshold, and any record citing r13 must disclose the change.
+  - `labels.predict` scoring may put `--scores` anywhere in the argv. An
+    `--adapter` must be `out/stage1/adapter-r10` or an existing adapter under
+    `out/overnight/`; a missing one is refused before any model time is spent.
   - A resumed LoRA run writes no `adapter_config.json`, so train from the
     base model.
 - **Refused:** any argument naming the test split or `--on test`; any output

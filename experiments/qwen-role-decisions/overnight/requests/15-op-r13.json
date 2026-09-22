@@ -1,0 +1,25 @@
+{
+  "id": "15-op-r13",
+  "purpose": "Strategy C operating point: re-derive the threshold for r13 on validation by the registered r11 rule, beside r10, and print the registered guard (covered-accuracy LB and FP UB no worse than r10's reference) [Resubmitted by the runner session from Kimi's staged spec: Kimi's GitHub connection was down. Only id, output paths and the adapter/predictions path differ from the original.]",
+  "commit": "c2e9ee682f5f2134d51e487ebcbf02b291dfd879",
+  "cmd": [
+    "python3",
+    "-B",
+    "-m",
+    "labels.operating_point",
+    "--labels",
+    "out/keys-all-4/labels-audited-r10.jsonl",
+    "--predictions",
+    "out/stage1/pred-validation-r10.jsonl",
+    "--predictions",
+    "out/overnight/13-predval-r13/pred-validation-r13.jsonl",
+    "--reference",
+    "out/stage1/operating-point-r10.json",
+    "--out",
+    "out/overnight/15-op-r13"
+  ],
+  "outputs": [
+    "out/overnight/15-op-r13"
+  ],
+  "est_minutes": 5
+}

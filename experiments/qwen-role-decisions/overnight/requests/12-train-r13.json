@@ -1,0 +1,34 @@
+{
+  "id": "12-train-r13",
+  "purpose": "Strategy C training: adapter-r13 from the base model on sft-r13 (04's dataset), exact r10 recipe, iters = 2N = 11,144 (04's manifest n = 5,572 verified against the local run before this request was pushed) [Resubmitted by the runner session from Kimi's staged spec: Kimi's GitHub connection was down. Only id, output paths and the adapter/predictions path differ from the original.]",
+  "commit": "c2e9ee682f5f2134d51e487ebcbf02b291dfd879",
+  "cmd": [
+    "~/.venvs/qwen-role-decisions/bin/python",
+    "-m",
+    "mlx_vlm.lora",
+    "--model-path",
+    "mlx-community/Qwen3.5-4B-MLX-4bit",
+    "--dataset",
+    "out/overnight/04-emit-sft-r13",
+    "--split",
+    "train",
+    "--batch-size",
+    "1",
+    "--lora-rank",
+    "8",
+    "--iters",
+    "11144",
+    "--steps-per-report",
+    "50",
+    "--steps-per-save",
+    "11144",
+    "--train-on-completions",
+    "--grad-checkpoint",
+    "--output-path",
+    "out/overnight/12-train-r13/adapter-r13"
+  ],
+  "outputs": [
+    "out/overnight/12-train-r13/adapter-r13"
+  ],
+  "est_minutes": 960
+}
