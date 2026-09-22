@@ -6,17 +6,20 @@ No judging, training, or tuning against the wild set has happened for it.
 
 ## Question
 
-The page-sheet round (589 rows, 24 dropped, 565 labelled via
-`out/labels/s2wild-r3-folds.jsonl`, label source `opus-kimi-consensus`)
-may carry a bias toward H: a judge who sees the whole page sheet may
-call a card "heading" more readily than a judge who sees the card alone.
+The page-sheet round (label source `opus-kimi-consensus`, seats Claude
+Opus-medium + Kimi K3 on sheets, Claude Opus-quick per-card tie-break) may
+carry a bias toward H: a judge who sees the whole page sheet may call a card
+"heading" more readily than a judge who sees the card alone. In
+`out/labels/s2wild-r3-consensus-final.jsonl`, 566 rows carry that label
+source; 565 of them are covered at t = 0.9933 in the run-in + R5 fold (the
+one uncovered row is c3-0507:27).
 
 The numbers that keep the question open (run-in + R5, t = 0.9933,
 recorded in heading-stage2-2026-09-22-rule-r5-wild-gate.md):
 
-- 21 remaining misses (FN); 9 of them sit on the 565 sheet-judged rows.
-- FN rate on sheet-judged rows: 9 / 565 = 1.6%.
-- FN rate elsewhere: 12 / 1,971 = 0.6%.
+- 21 remaining misses (FN); 9 of them sit on the 565 covered sheet rows.
+- FN rate on covered sheet rows: 9 / 565 = 1.6%.
+- FN rate elsewhere: 12 / 1,980 = 0.6%.
 - If sheet rows behaved like the rest, expected FN on them ~= 3.4;
   the excess over expectation is ~= 5.6 of the 9.
 
@@ -26,10 +29,14 @@ labelling artifact, not model error.
 
 ## Population (fixed)
 
-All 565 covered rows of `out/labels/s2wild-r3-folds.jsonl`
-(equals `out/labels/s2wild-r3-remaining-ids.json` minus the 24 dropped).
-Every one of the 565 is re-judged. Never only the model's errors,
-never only the 9 FN rows, never a sample.
+The 565 covered rows with `label_source == "opus-kimi-consensus"` in
+`out/labels/s2wild-r3-consensus-final.jsonl` (the round-3 file, pre-run-in,
+so the 53 run-in-round judgements are never included).
+`out/labels/s2wild-r3-remaining-ids.json` does not exist on the data branch
+at 3184183, so before any judging a script materializes the id list to a NEW
+data-branch file `out/labels/s2wild-r3-sheet-round-ids.json`; the run stops
+unless the list holds exactly 565 ids. Every one of the 565 is re-judged.
+Never only the model's errors, never only the 9 FN rows, never a sample.
 
 ## Judge and method
 
@@ -48,7 +55,7 @@ never only the 9 FN rows, never a sample.
 
 - New labels are written to a NEW data-branch file:
   `out/labels/s2wild-r3-cardrejudge-folds.jsonl`.
-  `s2wild-r3-folds.jsonl` is never edited.
+  The published consensus files are never edited.
 - Label source value for the new file: `opus-quick-card-rejudge`
   (added to `LABEL_SOURCES` in `eval_wild.py` in the same code commit
   that consumes the file — after the run, not now).

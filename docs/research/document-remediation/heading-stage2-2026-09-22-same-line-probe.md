@@ -68,8 +68,13 @@ matching the registered count of 9. Blocks read from the tagged copies in
 - 2 have the lead run smaller than the body run (numbering small, title
   larger — the opposite of the pattern).
 
-For completeness: the only one of all 21 FN showing the pattern is the
-shape-4 card c3-0533:2, whose lead is a form-field label, not the heading.
+For completeness, all 21 FN were read: the pattern fires on 3 of them — the
+shape-4 card c3-0533:2 (a form-field label lead) and two shape-1 cards,
+c3-0507:109 and c3-0507:499, where a 1-point size flicker (11 pt → 10 pt,
+both regular) breaks the heading's own first line mid-heading. In none of the
+three does the lead run equal the heading; a boundary split there would emit a
+truncated head. Where the signal appears on wild misses at all, it never
+coincides with the heading boundary.
 
 ## Decision (registered in advance)
 
