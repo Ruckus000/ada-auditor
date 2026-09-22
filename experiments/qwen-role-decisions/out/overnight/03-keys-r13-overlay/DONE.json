@@ -1,1 +1,10 @@
-{"id": "03-keys-r13-overlay", "refused": "output outside out/overnight/03-keys-r13-overlay: out/overnight/03-keys-r13"}
+{
+ "id": "03-keys-r13-overlay",
+ "exit_code": 0,
+ "seconds": 30,
+ "commit": "2103b74c8dbe24e9273cce004a3c69135618dd4d",
+ "started": "2026-09-22T15:56:32.677239+00:00",
+ "finished": "2026-09-22T15:57:02.689499+00:00",
+ "stdout_tail": "{\n \"keys_dir\": \"out/keys-all-9\",\n \"positives\": 1152,\n \"added_to_split_train\": 1145,\n \"already_h\": 1,\n \"appended\": 1145,\n \"from_P\": 6,\n \"relabelled\": 6,\n \"source_planted\": 3,\n \"source_stripped-tree\": 2,\n \"source_word-outline\": 1\n}\n",
+ "stderr_tail": ""
+}

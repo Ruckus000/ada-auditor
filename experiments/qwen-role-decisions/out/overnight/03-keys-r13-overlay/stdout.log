@@ -1,0 +1,12 @@
+{
+ "keys_dir": "out/keys-all-9",
+ "positives": 1152,
+ "added_to_split_train": 1145,
+ "already_h": 1,
+ "appended": 1145,
+ "from_P": 6,
+ "relabelled": 6,
+ "source_planted": 3,
+ "source_stripped-tree": 2,
+ "source_word-outline": 1
+}
