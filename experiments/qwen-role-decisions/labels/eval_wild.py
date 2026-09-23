@@ -10,7 +10,10 @@ Given the folded files from ``labels/fold_wild.py`` it prints one JSON report:
 - ``threshold_rule``: the registered rule (r11, ``operating-point-r10.json``) re-run
   here -- the lowest score at which the covered subset's accuracy lower bound is
   >= 0.98 and its FP upper bound is <= 0.02 -- with coverage and the per-document
-  clean rate (documents with zero covered errors) at that threshold.
+  clean rate (documents with zero covered errors) at that threshold. Coverage is
+  covered rows over *scored* rows (a prediction with a non-null score), so a labels
+  file carrying rows no prediction covers -- train rows beside validation, say --
+  does not dilute it.
 - ``coverage_curve`` at 0.5 / 0.9 / 0.95 / 0.99 / 0.9933.
 - ``recall_by_weight`` (card weight from the cards file) and ``level_by_depth``
   (level exactness among true positives, by the label's level), both direct.
@@ -72,8 +75,13 @@ def at_threshold(rows: list[dict], preds: dict[str, dict], t: float) -> dict:
     errors_by_doc: Counter = Counter()
     uncovered_docs = set()
     documents = {r["document_id"] for r in rows}
+    scored = 0
     for r in rows:
         p = preds.get(r["id"])
+        # Coverage is over scored rows, not all rows: a labels file can hold rows
+        # no prediction scores (keys files carry train rows beside validation).
+        if p is not None and p.get("score") is not None:
+            scored += 1
         outcome = read_prediction(p["raw"])[0] if p else "parse-failure"
         if p is None or p.get("score") is None or p["score"] < t or outcome not in ("heading", "not-heading"):
             uncovered_docs.add(r["document_id"])
@@ -86,7 +94,7 @@ def at_threshold(rows: list[dict], preds: dict[str, dict], t: float) -> dict:
     right, negatives, positives = counts["tp"] + counts["tn"], counts["fp"] + counts["tn"], counts["tp"] + counts["fn"]
     clean = [d for d in documents if not errors_by_doc[d]]
     return {
-        "t": t, "covered": covered, "coverage": rate(covered, len(rows)),
+        "t": t, "covered": covered, "coverage": rate(covered, scored),
         **{k: counts[k] for k in ("tp", "fp", "tn", "fn")},
         "accuracy": rate(right, covered), "accuracy_ci": list(interval(right, covered)),
         "fp_rate": rate(counts["fp"], negatives), "fp_rate_ci": list(interval(counts["fp"], negatives)),

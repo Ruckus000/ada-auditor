@@ -64,10 +64,27 @@ def test_coverage_curve_at_the_registered_points():
     by_t = {p["t"]: p for p in curve}
     # >= 0.9933: w-0001:0 (H 0.999, tp), w-0001:1 (P 0.9995, tn), w-0001:3 (rule 1.0, tn), w-0002:0 (H 0.9999, fp)
     assert (by_t[0.9933]["covered"], by_t[0.9933]["tp"], by_t[0.9933]["tn"], by_t[0.9933]["fp"], by_t[0.9933]["fn"]) == (4, 1, 2, 1, 0)
-    assert by_t[0.9933]["coverage"] == 4 / 9
+    # coverage is over scored rows: the parse-failure card (score None) is not scored, so 4/8, not 4/9
+    assert by_t[0.9933]["coverage"] == 4 / 8
     # the parse-failure card (score None) is never covered; at 0.5 every scored card is
     assert by_t[0.5]["covered"] == 8
     assert by_t[0.9933]["documents"] == 2 and by_t[0.9933]["documents_clean"] == 1  # w-0002 has the covered FP
+
+
+def test_coverage_divides_by_scored_rows_not_all_label_rows():
+    # Request 15's bug: 10,901 label rows of which 1,525 scored made coverage 0.0996
+    # instead of 0.71. Unscored rows (no prediction, or a null score) leave the
+    # denominator; covered, the counts and the bounds do not move.
+    rows, preds = _synthetic(2, 2, 0, 0.5)
+    rows = rows + [{"id": f"u{i}", "document_id": "du", "label_source": "claude-consensus", "label": {"heading": False, "level": None}} for i in range(96)]
+    preds[1] = {**preds[1], "score": None}
+    by_id = {p["id"]: p for p in preds}
+    got = at_threshold(rows, by_id, 0.5)
+    assert got["covered"] == 3 and got["coverage"] == 1.0  # 3 scored, all covered; not 3/100
+    without_unscored = at_threshold(rows[:4], by_id, 0.5)
+    assert (got["covered"], got["tp"], got["tn"], got["fp"], got["fn"], got["accuracy_ci"], got["fp_rate_ci"]) == \
+        (without_unscored["covered"], without_unscored["tp"], without_unscored["tn"], without_unscored["fp"],
+         without_unscored["fn"], without_unscored["accuracy_ci"], without_unscored["fp_rate_ci"])
 
 
 def test_threshold_rule_picks_the_lowest_passing_score():
@@ -99,7 +116,7 @@ def test_recall_by_weight_and_level_by_depth_on_the_fixture():
     depth = got["level_by_depth"]["depths"]
     # TP levels: w-0001:0 label 1 pred 1 exact; w-0001:2 label 3 pred 2 not exact
     assert depth == {"1": {"positives": 2, "tp": 1, "exact": 1}, "2": {"positives": 1, "tp": 0, "exact": 0},
-                     "3": {"positives": 1, "tp": 1, "exact": 0}}
+                     "3": {"positives": 1, "tp": 0, "exact": 0}}
 
 
 def test_cli_prints_the_tagged_report_and_refuses_other_label_sources():
