@@ -1,0 +1,347 @@
+[
+ {
+  "sheet": "sheets/c3-0103_p0_s2.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0103:22",
+    "text": "IX. Newfield Update Report"
+   },
+   {
+    "k": 2,
+    "id": "c3-0103:23",
+    "text": "IX."
+   },
+   {
+    "k": 3,
+    "id": "c3-0103:24h",
+    "text": "X. Arcadis Update Report"
+   },
+   {
+    "k": 4,
+    "id": "c3-0103:25",
+    "text": "X."
+   },
+   {
+    "k": 5,
+    "id": "c3-0103:28",
+    "text": "A."
+   },
+   {
+    "k": 6,
+    "id": "c3-0103:30",
+    "text": "B."
+   },
+   {
+    "k": 7,
+    "id": "c3-0103:32",
+    "text": "C."
+   },
+   {
+    "k": 8,
+    "id": "c3-0103:34",
+    "text": "XI."
+   },
+   {
+    "k": 9,
+    "id": "c3-0103:35",
+    "text": "XII. Adjournment"
+   },
+   {
+    "k": 10,
+    "id": "c3-0103:36",
+    "text": "XII."
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0136_p0_s1.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0136:0",
+    "text": "Definitions"
+   },
+   {
+    "k": 2,
+    "id": "c3-0136:14",
+    "text": "Additional Resources"
+   },
+   {
+    "k": 3,
+    "id": "c3-0136:15",
+    "text": "SLO Green Build SLO Guide Low Impact Development"
+   },
+   {
+    "k": 4,
+    "id": "c3-0136:5",
+    "text": "Pre-project: The existing land use condition prior to a proposed development activity."
+   },
+   {
+    "k": 5,
+    "id": "c3-0136:16",
+    "text": "http://www.slogreenbuild.org/Library/documents/ general/20101117LIDguide.pdf"
+   },
+   {
+    "k": 6,
+    "id": "c3-0136:6",
+    "text": "Redevelopment: The creation, addition, and/or replacement of impervious surface on an already developed site. Examples include the expansion of a building footprint, road widening, the addition to or replacement of a structure, and creation or addition of impervious surfaces. Replacement of impervious surfaces includes any activity that is not part of a routine maintenance activity where impervious materials are removed, exposing underlying soil during construction. Redevelopment does not include trenching and resurfacing associated with utility work, resurfacing and reconfiguring surface parking lots and existing roadways, new sidewalk construction, pedestrian ramps, or bike lane on existing roads, and routine replacement of damaged pavement, such as pothole repair."
+   },
+   {
+    "k": 7,
+    "id": "c3-0136:17",
+    "text": "City Of Santa Barbara Post-Construction Best Management Practice Manual"
+   },
+   {
+    "k": 8,
+    "id": "c3-0136:91",
+    "text": "Management Practice Manual"
+   },
+   {
+    "k": 9,
+    "id": "c3-0136:2",
+    "text": "Hydromodification: The alteration of hydrologic characteristics and channel geometry within a watershed."
+   },
+   {
+    "k": 10,
+    "id": "c3-0136:18",
+    "text": "http://www.santabarbaraca.gov/Resident/Community/ Creeks/Storm_Water_Management_Program.htm"
+   },
+   {
+    "k": 11,
+    "id": "c3-0136:3",
+    "text": "Impervious Surface / Area: A hard surface area which either prevents or reduces the entry of water into the soil mantle. Common impervious surfaces include, but are not limited to, roof tops, walkways, patios, driveways, parking lots or storage areas, concrete or asphalt paving, gravel roads, packed earthen materials, and oiled, macadam or other surfaces which similarly impede the natural infiltration of storm water."
+   },
+   {
+    "k": 12,
+    "id": "c3-0136:19",
+    "text": "Southern California Storm Water Coalition Southern California LID Guidance Manual"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0136_p0_s2.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0136:20",
+    "text": "http://www.casqa.org/LID/SoCalLID/tabid/218/ Default.aspx"
+   },
+   {
+    "k": 2,
+    "id": "c3-0136:94",
+    "text": ".3."
+   },
+   {
+    "k": 3,
+    "id": "c3-0136:95",
+    "text": "Guidebook"
+   },
+   {
+    "k": 4,
+    "id": "c3-0136:66",
+    "text": "resurfacing and reconfiguring"
+   },
+   {
+    "k": 5,
+    "id": "c3-0136:67",
+    "text": "surface parking lots and existing"
+   },
+   {
+    "k": 6,
+    "id": "c3-0136:22",
+    "text": "http://www.cccleanwater.org/Publications/Guidebook/ Stormwater_C3_Guidebook_5th_Edition.pdf"
+   },
+   {
+    "k": 7,
+    "id": "c3-0136:96",
+    "text": "http://www.cccleanwater.org/Publications/Guidebook/"
+   },
+   {
+    "k": 8,
+    "id": "c3-0136:4",
+    "text": "Low Impact Development (LID): An integrated site design methodology that uses small-scale detention and retention (Integrated Management Practices, or IMPs) to mimic pre-project site hydrological conditions or improve pre-project conditions."
+   },
+   {
+    "k": 9,
+    "id": "c3-0136:69",
+    "text": "bike lane on existing roads, and"
+   },
+   {
+    "k": 10,
+    "id": "c3-0136:47",
+    "text": "An integrated site design"
+   },
+   {
+    "k": 11,
+    "id": "c3-0136:70",
+    "text": "routine replacement of damaged"
+   },
+   {
+    "k": 12,
+    "id": "c3-0136:49",
+    "text": "-"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0136_p0_s3.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0136:7",
+    "text": "Roadway: Any paved surface used to carry vehicular traffic (cars/ trucks, forklifts, farm machinery, or any other large machinery)."
+   },
+   {
+    "k": 2,
+    "id": "c3-0136:8",
+    "text": "New Development: Development activity that includes site alteration (e.g., paving, grading, excavating, filling, or clearing) or installation of structures and other impervious surfaces."
+   },
+   {
+    "k": 3,
+    "id": "c3-0136:10",
+    "text": "Runoff: Stormwater that does not infiltrate into the ground during and after a rainfall event."
+   },
+   {
+    "k": 4,
+    "id": "c3-0136:72",
+    "text": "(e.g., paving, grading, excavating,"
+   },
+   {
+    "k": 5,
+    "id": "c3-0136:73",
+    "text": "filling, or clearing) or installation of"
+   },
+   {
+    "k": 6,
+    "id": "c3-0136:74",
+    "text": "structures and other impervious"
+   },
+   {
+    "k": 7,
+    "id": "c3-0136:11",
+    "text": "Stormwater: runoff that originates as precipitation on a particular site, basin, or watershed."
+   },
+   {
+    "k": 8,
+    "id": "c3-0136:75",
+    "text": "surfaces."
+   },
+   {
+    "k": 9,
+    "id": "c3-0136:9",
+    "text": "Parking Lot: A land area or facility for the parking or storage of motor vehicles used personally, for business, or for commercial purposes."
+   },
+   {
+    "k": 10,
+    "id": "c3-0136:77",
+    "text": "A land area or"
+   },
+   {
+    "k": 11,
+    "id": "c3-0136:79",
+    "text": "Pavements for roadways, sidewalks,"
+   },
+   {
+    "k": 12,
+    "id": "c3-0136:80",
+    "text": "or plazas that are designed to"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0136_p0_s4.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0136:81",
+    "text": "infiltrate a portion of rainfall,"
+   },
+   {
+    "k": 2,
+    "id": "c3-0136:82",
+    "text": "including pervious concrete,"
+   },
+   {
+    "k": 3,
+    "id": "c3-0136:83",
+    "text": "pervious asphalt, unit"
+   },
+   {
+    "k": 4,
+    "id": "c3-0136:84",
+    "text": "-"
+   },
+   {
+    "k": 5,
+    "id": "c3-0136:85",
+    "text": "pavers"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0136_p1_s1.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0136:39",
+    "text": "Why The Need?"
+   },
+   {
+    "k": 2,
+    "id": "c3-0136:50",
+    "text": "Project Tiers"
+   },
+   {
+    "k": 3,
+    "id": "c3-0136:41",
+    "text": "he interim Low Impact Development (LID) guidelines are a pilot project sponsored by municipalities in San Luis Obispo County and the Central Coast Regional Water Quality"
+   },
+   {
+    "k": 4,
+    "id": "c3-0136:88",
+    "text": "he first step in reducing stormwater runoff may be as simple as revisiting a proposed site plan with a design professional and adjusting the location of a development to preserve natural areas, natural"
+   },
+   {
+    "k": 5,
+    "id": "c3-0136:52",
+    "text": "Any project that creates between 2,500 sf to 5,000 sf of"
+   },
+   {
+    "k": 6,
+    "id": "c3-0136:55",
+    "text": "increased impervious surface is considered a Tier 1"
+   },
+   {
+    "k": 7,
+    "id": "c3-0136:42",
+    "text": "Control Board. These guidelines and regulations act as a transition into new rules that will be developed as a part of a joint effort to develop new hydromodification control criteria. In addition to the environmental benefits, LID may provide aesthetic benefits, and in some cases, an economic benefit as well. These guidelines should be utilized to the extent feasible to reduce on-site stormwater runoff."
+   },
+   {
+    "k": 8,
+    "id": "c3-0136:57",
+    "text": "project. A Tier 1 project is required to utilize at least one (1) agency approved stormwater runoff reduction measure. Please contact this agency\u2019s project engineer or planner for additional guidance. Tier 2 Projects Any project that creates more than 5,000 sf of increased impervious surface is considered a Tier 2"
+   },
+   {
+    "k": 9,
+    "id": "c3-0136:58",
+    "text": "project. A Tier 1 project is required to utilize at least"
+   },
+   {
+    "k": 10,
+    "id": "c3-0136:90",
+    "text": "drainage, and limit the amount of grading. Ways to achieving this may include:"
+   },
+   {
+    "k": 11,
+    "id": "c3-0136:59",
+    "text": "Tier 2 Projects"
+   },
+   {
+    "k": 12,
+    "id": "c3-0136:43",
+    "text": "Our local agency is participating in this effort to meet goals developed by the Central Coast Regional Water Quality Control Board. If you have any questions regarding the information in this handout, please contact a planner or public works representative."
+   }
+  ]
+ }
+]

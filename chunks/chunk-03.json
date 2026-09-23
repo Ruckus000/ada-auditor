@@ -1,0 +1,352 @@
+[
+ {
+  "sheet": "sheets/c3-0088_p4_s2.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0088:137",
+    "text": "Mankato"
+   },
+   {
+    "k": 2,
+    "id": "c3-0088:138",
+    "text": "South Bend"
+   },
+   {
+    "k": 3,
+    "id": "c3-0088:147",
+    "text": "Rapidan"
+   },
+   {
+    "k": 4,
+    "id": "c3-0088:148",
+    "text": "Lincoln"
+   },
+   {
+    "k": 5,
+    "id": "c3-0088:149",
+    "text": "Garden City"
+   },
+   {
+    "k": 6,
+    "id": "c3-0088:151",
+    "text": "Decoria"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0088_p5_s1.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0088:152",
+    "text": "Blue Earth County Buffer Protection"
+   },
+   {
+    "k": 2,
+    "id": "c3-0088:155",
+    "text": "Other Watercourses"
+   },
+   {
+    "k": 3,
+    "id": "c3-0088:156",
+    "text": "16.5 Feet"
+   },
+   {
+    "k": 4,
+    "id": "c3-0088:157",
+    "text": "50 Feet Township"
+   },
+   {
+    "k": 5,
+    "id": "c3-0088:154",
+    "text": "1 in = 2 miles"
+   },
+   {
+    "k": 6,
+    "id": "c3-0088:165",
+    "text": "Lyra"
+   },
+   {
+    "k": 7,
+    "id": "c3-0088:166",
+    "text": "Beauford Medo"
+   },
+   {
+    "k": 8,
+    "id": "c3-0088:153",
+    "text": "Projection: 2015 UTM Aerial NAD83 Imagery Zone 15 \u00dc"
+   },
+   {
+    "k": 9,
+    "id": "c3-0088:177",
+    "text": "Danville"
+   },
+   {
+    "k": 10,
+    "id": "c3-0088:179",
+    "text": "Sterling Mapleton"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0088_p6_s1.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0088:183",
+    "text": "Blue Earth County Buffer Protection"
+   },
+   {
+    "k": 2,
+    "id": "c3-0088:186",
+    "text": "Other Watercourses"
+   },
+   {
+    "k": 3,
+    "id": "c3-0088:187",
+    "text": "16.5 Feet"
+   },
+   {
+    "k": 4,
+    "id": "c3-0088:188",
+    "text": "50 Feet Township"
+   },
+   {
+    "k": 5,
+    "id": "c3-0088:195",
+    "text": "Ceresco"
+   },
+   {
+    "k": 6,
+    "id": "c3-0088:196",
+    "text": "Vernon Center"
+   },
+   {
+    "k": 7,
+    "id": "c3-0088:182",
+    "text": "Lyra"
+   },
+   {
+    "k": 8,
+    "id": "c3-0088:185",
+    "text": "1 in = 1 miles"
+   },
+   {
+    "k": 9,
+    "id": "c3-0088:184",
+    "text": "Projection: 2015 UTM Aerial NAD83 Imagery Zone 15 \u00dc"
+   },
+   {
+    "k": 10,
+    "id": "c3-0088:210",
+    "text": "Pleasant Mound"
+   },
+   {
+    "k": 11,
+    "id": "c3-0088:211",
+    "text": "Shelby"
+   },
+   {
+    "k": 12,
+    "id": "c3-0088:213",
+    "text": "Sterling"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0097_p0_s1.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0097:9",
+    "text": "Wheatland"
+   },
+   {
+    "k": 2,
+    "id": "c3-0097:10",
+    "text": "Webster"
+   },
+   {
+    "k": 3,
+    "id": "c3-0097:3",
+    "text": "Lonsdale"
+   },
+   {
+    "k": 4,
+    "id": "c3-0097:5",
+    "text": "Northfield"
+   },
+   {
+    "k": 5,
+    "id": "c3-0097:13",
+    "text": "Northfield"
+   },
+   {
+    "k": 6,
+    "id": "c3-0097:4",
+    "text": "Dundas"
+   },
+   {
+    "k": 7,
+    "id": "c3-0097:11",
+    "text": "Erin Forest"
+   },
+   {
+    "k": 8,
+    "id": "c3-0097:14",
+    "text": "Dennison"
+   },
+   {
+    "k": 9,
+    "id": "c3-0097:12",
+    "text": "Bridgewater"
+   },
+   {
+    "k": 10,
+    "id": "c3-0097:6",
+    "text": "Nerstrand"
+   },
+   {
+    "k": 11,
+    "id": "c3-0097:15",
+    "text": "Wheeling"
+   },
+   {
+    "k": 12,
+    "id": "c3-0097:7",
+    "text": "Faribault"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0097_p0_s2.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0097:23",
+    "text": "II"
+   },
+   {
+    "k": 2,
+    "id": "c3-0097:17",
+    "text": "Morristown"
+   },
+   {
+    "k": 3,
+    "id": "c3-0097:8",
+    "text": "Morristown"
+   },
+   {
+    "k": 4,
+    "id": "c3-0097:29",
+    "text": "0 15,000 30,000 60,000 Feet"
+   },
+   {
+    "k": 5,
+    "id": "c3-0097:44",
+    "text": "Date Printed: May 12, 2022"
+   },
+   {
+    "k": 6,
+    "id": "c3-0097:32",
+    "text": "I"
+   },
+   {
+    "k": 7,
+    "id": "c3-0097:34",
+    "text": "II"
+   },
+   {
+    "k": 8,
+    "id": "c3-0097:43",
+    "text": "Map features are representations of original data sources and do not replace or modify land surveys, deeds, or other legal instruments defining land ownership or use."
+   },
+   {
+    "k": 9,
+    "id": "c3-0097:36",
+    "text": "III"
+   },
+   {
+    "k": 10,
+    "id": "c3-0097:38",
+    "text": "IV"
+   },
+   {
+    "k": 11,
+    "id": "c3-0097:30",
+    "text": "-"
+   },
+   {
+    "k": 12,
+    "id": "c3-0097:40",
+    "text": "V"
+   }
+  ]
+ },
+ {
+  "sheet": "sheets/c3-0103_p0_s1.jpg",
+  "cards": [
+   {
+    "k": 1,
+    "id": "c3-0103:7",
+    "text": "I."
+   },
+   {
+    "k": 2,
+    "id": "c3-0103:9",
+    "text": "II."
+   },
+   {
+    "k": 3,
+    "id": "c3-0103:11",
+    "text": "III."
+   },
+   {
+    "k": 4,
+    "id": "c3-0103:12",
+    "text": "IV. Public Comments"
+   },
+   {
+    "k": 5,
+    "id": "c3-0103:13",
+    "text": "IV."
+   },
+   {
+    "k": 6,
+    "id": "c3-0103:14",
+    "text": "V. Chairperson\u2019s Update"
+   },
+   {
+    "k": 7,
+    "id": "c3-0103:15",
+    "text": "V."
+   },
+   {
+    "k": 8,
+    "id": "c3-0103:16",
+    "text": "VI. Communications Sub-Committee Report"
+   },
+   {
+    "k": 9,
+    "id": "c3-0103:17",
+    "text": "VI."
+   },
+   {
+    "k": 10,
+    "id": "c3-0103:18",
+    "text": "VII. Design Sub-Committee Report"
+   },
+   {
+    "k": 11,
+    "id": "c3-0103:19",
+    "text": "VII."
+   },
+   {
+    "k": 12,
+    "id": "c3-0103:21",
+    "text": "VIII."
+   }
+  ]
+ }
+]
