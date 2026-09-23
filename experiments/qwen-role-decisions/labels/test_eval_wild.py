@@ -116,7 +116,7 @@ def test_recall_by_weight_and_level_by_depth_on_the_fixture():
     depth = got["level_by_depth"]["depths"]
     # TP levels: w-0001:0 label 1 pred 1 exact; w-0001:2 label 3 pred 2 not exact
     assert depth == {"1": {"positives": 2, "tp": 1, "exact": 1}, "2": {"positives": 1, "tp": 0, "exact": 0},
-                     "3": {"positives": 1, "tp": 0, "exact": 0}}
+                     "3": {"positives": 1, "tp": 1, "exact": 0}}
 
 
 def test_cli_prints_the_tagged_report_and_refuses_other_label_sources():
