@@ -54,6 +54,29 @@ head at run time, with R5 in `labels.rules.decide`. The run-in split stays off
   result is recorded. After that they may train a later adapter, and that
   retires them as a test.
 
+## Amendment before judging (2026-09-23, after the model pass, before any judge runs)
+
+**What the model pass produced:** 40 of 40 documents, 3,763 cards, 2,913 covered
+(the gate allows at most 18 errors), 924 asks. `out/suggest/confirm-r13/summary.json`
+has the details.
+
+**Judge seats, chosen by the user:** as in the run-in labels,
+- seat 1: Claude Opus-medium on page sheets
+- seat 2: Kimi K3 on page sheets, run from a blind pack branch that holds no
+  predictions
+- tie-break: Claude Opus-quick, card by card, on heading-bit disagreements
+
+The label source is `opus-kimi-consensus`, with its disclosure. Kimi is kept
+blind: it must not open `out/suggest/confirm-r13/` or any branch that holds
+predictions, and its code-task session is separate from its judging.
+
+**R5b key check:** 75 train and validation key cards match the pattern, and 0 of
+them are H, so R5b is kept as the secondary view.
+
+**Disclosure:** the scan read the *text*, not the labels, of every card in the
+local `out/keys-all-9/cards.jsonl`. That includes 45 matching test-split cards.
+No label of a test card was read, and nothing from them is used.
+
 ## Verdict
 
 - **Pass:** covered-accuracy exact 95 % LB ≥ 0.99 and FP exact 95 % UB ≤ 0.01.
