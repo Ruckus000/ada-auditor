@@ -1,0 +1,6 @@
+INFO:__main__:[95mLoading model from mlx-community/Qwen3.5-4B-MLX-4bit[0m
+INFO:__main__:[95mLoading dataset from out/overnight/04-emit-sft-r13[0m
+INFO:__main__:[4mSetting up LoRA[0m
+INFO:__main__:[95mSetting up optimizer[0m
+INFO:__main__:[95mTraining model (sft)[0m
+INFO:__main__:[95mTraining completed! Model saved to out/overnight/12-train-r13/adapter-r13/adapters.safetensors[0m
