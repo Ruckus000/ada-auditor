@@ -27,6 +27,12 @@ CAPTION_HEAD = re.compile(r"^(?:Table|Figure|Chart|Exhibit)\s+\d+[A-Za-z]?\s*[:.
 # (heading-stage2-2026-09-18-results.md): a card whose whole text is a bare
 # enumerator -- split_heads' enumerator pattern with no words after the dot.
 ENUMERATOR_ONLY = re.compile(r"^(?:[IVX]+|[A-Z]|\d+)\.$")
+# Rule R5b, registered 2026-09-23 as a secondary view only
+# (docs/superpowers/plans/2026-09-23-r13-confirmation-batch-registration.md):
+# R5's enumerator plus an optional opening quote mark ("F. “", "G. '"). It comes
+# from r13's wild errors c3-0722:55 and :57, so it is post-hoc and never joins
+# decide's default chain; labels.r5_rescore applies it as an opt-in second view.
+ENUMERATOR_QUOTE_ONLY = re.compile(r"^(?:[IVX]+|[A-Z]|\d+)\.\s*[“\"‘']?$")
 
 
 def r2_no_letters(card: dict) -> tuple[str, int] | None:
@@ -76,6 +82,12 @@ def list_item_body(card: dict) -> tuple[str, int] | None:
 def enumerator_only(card: dict) -> tuple[str, int] | None:
     # R5: "A.", "IV.", "3." alone on the card is a list marker, never a heading.
     return ("Lbl", 5) if ENUMERATOR_ONLY.match((card.get("text") or "").strip()) else None
+
+
+def enumerator_quote_only(card: dict) -> tuple[str, int] | None:
+    # R5b: an enumerator followed by at most an opening quote is still a list
+    # marker. Opt-in only -- decide does not call this.
+    return ("Lbl", 5) if ENUMERATOR_QUOTE_ONLY.match((card.get("text") or "").strip()) else None
 
 
 def decide(card: dict) -> tuple[str, int] | None:

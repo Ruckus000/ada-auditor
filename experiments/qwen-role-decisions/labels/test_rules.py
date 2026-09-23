@@ -1,4 +1,4 @@
-from labels.rules import caption_by_prefix, decide, enumerator_only, forbids_heading, list_item_body, toci_by_leaders
+from labels.rules import caption_by_prefix, decide, enumerator_only, enumerator_quote_only, forbids_heading, list_item_body, toci_by_leaders
 
 
 def test_toci_needs_three_dots_and_a_trailing_page_number():
@@ -116,3 +116,31 @@ def test_r5_runs_after_the_earlier_rules():
     # The new shape R5 exists for: a bare roman/letter enumerator reaches it.
     assert decide({"text": "IV.", "repeats_on_pages": 1}) == ("Lbl", 5)
     assert decide({"text": "B.", "repeats_on_pages": 1}) == ("Lbl", 5)
+
+
+def test_r5b_enumerator_with_opening_quote_is_lbl():
+    # The registered R5b pattern: R5's enumerator plus an optional opening quote.
+    assert enumerator_quote_only({"text": "F. “"}) == ("Lbl", 5)
+    assert enumerator_quote_only({"text": "G. '"}) == ("Lbl", 5)
+    assert enumerator_quote_only({"text": "IV. ‘"}) == ("Lbl", 5)
+    assert enumerator_quote_only({"text": '3. "'}) == ("Lbl", 5)
+    assert enumerator_quote_only({"text": "A."}) == ("Lbl", 5)  # R5's shape still matches
+
+
+def test_r5b_near_misses():
+    assert enumerator_quote_only({"text": "F. Fees"}) is None   # words after the enumerator
+    assert enumerator_quote_only({"text": "F. “Fees"}) is None  # a quote does not open a word run
+    assert enumerator_quote_only({"text": "F.5"}) is None
+    assert enumerator_quote_only({"text": "F. ”"}) is None      # a closing quote is not an opening one
+    assert enumerator_quote_only({"text": "AB. “"}) is None     # one letter only
+    assert enumerator_quote_only({"text": "a. “"}) is None      # upper case only
+    assert enumerator_quote_only({"text": "F. ' x"}) is None
+    assert enumerator_quote_only({"text": ""}) is None
+    assert enumerator_quote_only({}) is None
+
+
+def test_r5b_stays_out_of_the_default_chain():
+    # Opt-in only: decide's output is unchanged by R5b's existence.
+    assert decide({"text": "F. “", "repeats_on_pages": 1}) is None
+    assert decide({"text": "G. '", "repeats_on_pages": 1}) is None
+    assert decide({"text": "IV. ‘", "repeats_on_pages": 1}) is None
