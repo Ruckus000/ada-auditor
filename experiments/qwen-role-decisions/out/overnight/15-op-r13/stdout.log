@@ -1,0 +1,84 @@
+{
+ "r10": {
+  "point": {
+   "adapter": "r10",
+   "rule": "lowest score threshold where covered accuracy exact 95 % lower bound >= 0.98 and FP exact 95 % upper bound <= 0.02",
+   "threshold": 0.9933194276290794,
+   "covered": 1142,
+   "coverage": 0.1047610310980644,
+   "counts": {
+    "tn": 770,
+    "tp": 359,
+    "fn": 10,
+    "fp": 3
+   },
+   "accuracy": 0.98861646234676,
+   "accuracy_ci": [
+    0.9806124695310114,
+    0.99392520917838
+   ],
+   "fp_rate": 0.0038809831824062097,
+   "fp_ci": [
+    0.0008010682511427891,
+    0.011299638303949797
+   ],
+   "fn_rate": 0.02710027100271003,
+   "documents": 442,
+   "documents_clean": 435
+  },
+  "guard": {
+   "accuracy_lower": {
+    "new": 0.9806124695310114,
+    "reference": 0.9806124695309983,
+    "no_worse": true
+   },
+   "fp_upper": {
+    "new": 0.011299638303949797,
+    "reference": 0.01129963830394981,
+    "no_worse": true
+   },
+   "guard_passed": true
+  }
+ },
+ "r13": {
+  "point": {
+   "adapter": "r13",
+   "rule": "lowest score threshold where covered accuracy exact 95 % lower bound >= 0.98 and FP exact 95 % upper bound <= 0.02",
+   "threshold": 0.98081102556551,
+   "covered": 1086,
+   "coverage": 0.09962388771672323,
+   "counts": {
+    "tn": 751,
+    "tp": 323,
+    "fn": 9,
+    "fp": 3
+   },
+   "accuracy": 0.988950276243094,
+   "accuracy_ci": [
+    0.9807779791964385,
+    0.9942777749158891
+   ],
+   "fp_rate": 0.003978779840848806,
+   "fp_ci": [
+    0.0008212728533654179,
+    0.011583287757108313
+   ],
+   "fn_rate": 0.02710843373493976,
+   "documents": 442,
+   "documents_clean": 434
+  },
+  "guard": {
+   "accuracy_lower": {
+    "new": 0.9807779791964385,
+    "reference": 0.9806124695309983,
+    "no_worse": true
+   },
+   "fp_upper": {
+    "new": 0.011583287757108313,
+    "reference": 0.01129963830394981,
+    "no_worse": false
+   },
+   "guard_passed": false
+  }
+ }
+}
