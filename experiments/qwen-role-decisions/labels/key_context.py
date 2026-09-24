@@ -10,14 +10,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 from collections import defaultdict
 from pathlib import Path
 
 from run import blocks_to_cards, compile_cards, dump_pdf, mark_page_png, render_page_png, text_norm
 from labels.inline_label import after_inline_label
 from labels.keys import key_blocks
-from labels.margin_band import in_margin_band, page_extents
+from labels.margin_band import margin_side, page_extents
 from labels.pdf_cards import repeats_on_pages
+from labels.text_layer import ocr_word_conf
 
 OUT = Path("out/keys")
 DEFAULT_SOURCE = "out/keys:out/labels/manifest.json"
@@ -94,13 +96,15 @@ def context_cards(blocks: list[dict], doc_id: str, ids: set[str]) -> list[dict]:
     reps = repeats_on_pages(cards)
     extents = page_extents(blocks)
     inline = after_inline_label(cards)
+    body = statistics.median(c["font_pt"] for c in cards) if cards else None  # blocks_to_cards keeps only cards with a font
     out = []
     for c in cards:
         if c["locator"] not in ids:
             continue
         c["card_id"] = c["locator"]; c["document_id"] = doc_id; c["kind"] = "pdf"
         c["repeats_on_pages"] = reps.get(c["locator"], 1); c["norm"] = text_norm(c["text"])
-        c["in_margin_band"] = in_margin_band(c, extents)
+        c["margin_band"] = margin_side(c, extents); c["in_margin_band"] = c["margin_band"] is not None
+        c["body_font_pt"] = body
         c["after_inline_label"] = inline[c["locator"]]
         out.append(c)
     return out
@@ -142,6 +146,7 @@ def main() -> None:
             for c in context_cards(blocks, doc_id, ids):
                 img = marked_image(c, stripped, pages)
                 c["image"] = None if img is None else str(img.resolve())
+                c["ocr_word_conf"] = ocr_word_conf(c, img)
                 n_img += img is not None; n_cards += 1
                 f.write(json.dumps(c) + "\n")
             headings[doc_id] = ordered_headings(dump_pdf(original, compile=False))

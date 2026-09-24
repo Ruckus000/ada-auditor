@@ -144,3 +144,50 @@ def test_r5b_stays_out_of_the_default_chain():
     assert decide({"text": "F. “", "repeats_on_pages": 1}) is None
     assert decide({"text": "G. '", "repeats_on_pages": 1}) is None
     assert decide({"text": "IV. ‘", "repeats_on_pages": 1}) is None
+
+
+# Guard 1 (docs/superpowers/plans/2026-09-24-rule-fixes-registration.md): a repeat in
+# the top band at body size or larger is a per-page title, so rule 2 abstains.
+def _repeat(**facts):
+    return {"id": "d:1", "text": "Blue Earth County Buffer Protection", "repeats_on_pages": 5, "in_margin_band": True, **facts}
+
+
+def test_top_band_repeat_at_body_size_or_larger_abstains():
+    assert decide(_repeat(margin_band="top", font_pt=15, body_font_pt=9)) is None
+    assert decide(_repeat(margin_band="top", font_pt=12, body_font_pt=12)) is None   # equal to body counts
+
+
+def test_small_top_repeat_and_any_bottom_repeat_stay_artifact():
+    assert decide(_repeat(margin_band="top", font_pt=8, body_font_pt=11)) == ("Artifact", 2)
+    assert decide(_repeat(margin_band="bottom", font_pt=15, body_font_pt=9)) == ("Artifact", 2)
+
+
+def test_repeat_without_the_new_facts_behaves_as_before():
+    assert decide(_repeat()) == ("Artifact", 2)
+    assert decide(_repeat(margin_band="top", font_pt=15)) == ("Artifact", 2)          # no body size
+    assert decide(_repeat(margin_band="top", body_font_pt=9)) == ("Artifact", 2)      # no font size
+
+
+# Guard 2: a no-letters card whose own crop OCRs to a word (conf >= 80) has a text
+# layer that contradicts the page, so the no-letters rule abstains.
+def test_no_letters_card_contradicted_by_ocr_abstains():
+    assert decide({"text": "552,579", "repeats_on_pages": 1, "ocr_word_conf": 95.0}) is None
+    assert decide({"text": "552,579", "repeats_on_pages": 1, "ocr_word_conf": 80.0}) is None   # the bound is inclusive
+
+
+def test_no_letters_card_confirmed_or_unchecked_is_still_lbl():
+    assert decide({"text": "3", "repeats_on_pages": 1, "ocr_word_conf": 79.9}) == ("Lbl", 3)
+    assert decide({"text": "3", "repeats_on_pages": 1, "ocr_word_conf": 0.0}) == ("Lbl", 3)
+    assert decide({"text": "—", "repeats_on_pages": 1}) == ("Lbl", 3)                 # no fact: as before
+
+
+def test_rule_2_guard_leaves_the_later_rules_in_place():
+    # rule 2 abstains, so a later rule may still decide the card
+    assert decide(_repeat(text="Figure 2: Site plan", margin_band="top", font_pt=12, body_font_pt=12)) == ("Caption", 3)
+
+
+def test_a_contradicted_text_layer_stops_every_rule():
+    # after_inline_label is derived from the same lying text layer, so list_item_body must not decide
+    assert decide({"text": "..", "repeats_on_pages": 1, "after_inline_label": True, "ocr_word_conf": 93.0}) is None
+    assert decide({"text": "3.", "repeats_on_pages": 1, "ocr_word_conf": 88.0}) is None          # nor R5
+    assert decide({"text": "..", "repeats_on_pages": 1, "after_inline_label": True}) == ("Lbl", 3)  # unchecked: as before

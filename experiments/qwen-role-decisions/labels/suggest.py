@@ -34,6 +34,7 @@ from pathlib import Path
 from run import compile_cards, dump_pdf
 from labels.build_keys import candidate_pool, document_cards, odl
 from labels.key_context import context_cards, marked_image
+from labels.text_layer import ocr_word_conf
 from labels.pdf_cards import SEED
 from labels.predict import OwnStack, parsed
 from labels.split_heads import split_enumerated_heads, split_run_in_heads
@@ -184,6 +185,7 @@ def build_cards(pdf: Path, tagged: Path, stem: str, work: Path, all_blocks: bool
     for c in cards:
         img = marked_image(c, pdf, work / "pages")
         c["image"] = None if img is None else str(img.resolve())
+        c["ocr_word_conf"] = ocr_word_conf(c, img)
     return cards, blocks_total, selector, n_split
 
 

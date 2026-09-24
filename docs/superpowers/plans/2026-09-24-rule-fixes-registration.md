@@ -106,3 +106,27 @@ A guard that fails is recorded as dropped, and its code is reverted.
   wild card sets).
 - An SFT rebuild would change which rows are held back as rule-decided.
   Record the count; no retraining is part of this change.
+
+## Amendments during implementation (2026-09-24, before any model scoring)
+
+Both came from checking the implementation against the four target cards of
+the spent batch. They are post-hoc and disclosed.
+
+1. **The crop is taken from the clean page render, not the marked image.** As
+   first implemented, the crop was taken inside the marked image's magenta
+   outline. It read the four garbled titles at confidence 0–79, because the
+   mark is drawn tight over the glyphs. The box is now found from the mark,
+   padded by 4 px, cropped from the unmarked render that `marked_image` writes
+   beside it, and given a 10 px white border. It reads "PAHRUMP", "TOWN",
+   "BOARD" and "NORTH" at 92–97, and `2007-34` at 0.
+   - **The crop settings were tuned on those 4 cards.** The false-release rate
+     is measured on validation keys with the final method: 4 of 254 no-letter
+     cards (1.6 %) are released, and 0 of them are H.
+2. **Guard 2 applies to the whole rule chain.** When the text layer is
+   contradicted (`ocr_word_conf` ≥ 80), `decide` returns `None` before any
+   rule runs. Every rule reads that same text or its derived facts.
+   - With the guard inside `r2_no_letters` alone, 2 of the 4 released garbled
+     titles were decided `Other` by `list_item_body`. Its `after_inline_label`
+     fact is computed from the same wrong text layer.
+
+Release counts with both amendments are recorded in the results record.

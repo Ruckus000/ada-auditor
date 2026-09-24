@@ -8,6 +8,10 @@ from __future__ import annotations
 import re
 
 MIN_REPEATS = 3  # same text, same band, on three or more pages: pagination, not content
+# Guard 2 (docs/superpowers/plans/2026-09-24-rule-fixes-registration.md): a no-letters
+# card whose own crop OCRs to a word at this confidence has a text layer that
+# contradicts its page (a broken encoding, a typewritten scan).
+OCR_WORD_CONF = 80.0
 
 # §4 rule 3: a more specific ISO type wins over H. Three shapes, registered in
 # the round 8 record before implementation, each written to the letter of that
@@ -50,9 +54,16 @@ def artifact_by_repeat(card: dict) -> tuple[str, int] | None:
         return None
     if "in_margin_band" not in card:
         raise ValueError(f"{card.get('card_id') or card.get('id') or card.get('locator')}: repeats on {card['repeats_on_pages']} pages but has no in_margin_band fact")
-    if card["in_margin_band"]:
-        return "Artifact", 2
-    return None
+    if not card["in_margin_band"]:
+        return None
+    # The band is measured from the top of the page's content, so a page's own
+    # first-line title is always in it. A top-band repeat at body size or larger
+    # can be a per-page title (each map of a series, each form of a packet), so
+    # the rule abstains; without both size facts it decides as before.
+    font, body = card.get("font_pt"), card.get("body_font_pt")
+    if card.get("margin_band") == "top" and font is not None and body is not None and font >= body:
+        return None
+    return "Artifact", 2
 
 
 def in_table(card: dict) -> tuple[str, int] | None:
@@ -90,7 +101,16 @@ def enumerator_quote_only(card: dict) -> tuple[str, int] | None:
     return ("Lbl", 5) if ENUMERATOR_QUOTE_ONLY.match((card.get("text") or "").strip()) else None
 
 
+def text_layer_contradicted(card: dict) -> bool:
+    # The text layer can lie ("NORTH" extracts as "552,579"). When OCR of the card's
+    # own crop reads a word, no rule reading that text (or facts derived from it) is
+    # certain, so none decides and the model, which sees the image, does.
+    return (card.get("ocr_word_conf") or 0.0) >= OCR_WORD_CONF
+
+
 def decide(card: dict) -> tuple[str, int] | None:
+    if text_layer_contradicted(card):
+        return None
     for rule in (r2_no_letters, artifact_by_repeat, toci_by_leaders, caption_by_prefix, list_item_body, enumerator_only):
         hit = rule(card)
         if hit:

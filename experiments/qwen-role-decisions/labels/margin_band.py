@@ -24,12 +24,21 @@ def page_extents(blocks: list[dict]) -> dict[int, tuple[float, float]]:
     return ext
 
 
-def in_margin_band(card: dict, extents: dict[int, tuple[float, float]], share: float = SHARE) -> bool:
+def margin_side(card: dict, extents: dict[int, tuple[float, float]], share: float = SHARE) -> str | None:
+    """"top" or "bottom" band, or None mid-page; a card inside both bands is "top"."""
     if card.get("page") is None or card.get("y0") is None or card.get("y1") is None:
-        return False
+        return None
     span = extents.get(int(card["page"]))
     if span is None:
-        return False
+        return None
     lo, hi = span
     band = share * (hi - lo)
-    return float(card["y0"]) <= lo + band or float(card["y1"]) >= hi - band
+    if float(card["y0"]) <= lo + band:
+        return "top"
+    if float(card["y1"]) >= hi - band:
+        return "bottom"
+    return None
+
+
+def in_margin_band(card: dict, extents: dict[int, tuple[float, float]], share: float = SHARE) -> bool:
+    return margin_side(card, extents, share) is not None

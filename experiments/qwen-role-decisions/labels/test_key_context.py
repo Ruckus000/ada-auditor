@@ -89,3 +89,20 @@ def test_stripped_copy_is_found_flat_or_in_the_one_odl_batch_dir_it_was_moved_to
             pass
         else:
             raise AssertionError("expected ValueError for two copies")
+
+
+def _block(loc, text, page, y0, font=10.0):
+    return {"locator": loc, "text": text, "font_pt": font, "weight": "regular", "existing_tag": None,
+            "page": page, "x0": 50.0, "y0": y0, "x1": 300.0, "y1": y0 + font}
+
+
+def test_context_cards_carry_the_band_side_and_the_documents_body_size():
+    from labels.key_context import context_cards
+    blocks = [_block("d:0", "Title", 0, 50.0, font=18.0), _block("d:1", "Body one", 0, 400.0),
+              _block("d:2", "Body two", 0, 420.0), _block("d:3", "Page 1", 0, 740.0, font=8.0)]
+    cards = {c["locator"]: c for c in context_cards(blocks, "d", {"d:0", "d:1", "d:3"})}
+    assert cards["d:0"]["margin_band"] == "top" and cards["d:0"]["in_margin_band"] is True
+    assert cards["d:1"]["margin_band"] is None and cards["d:1"]["in_margin_band"] is False
+    assert cards["d:3"]["margin_band"] == "bottom"
+    # the median over every card of the document, not only the wanted ones
+    assert {c["body_font_pt"] for c in cards.values()} == {10.0}
