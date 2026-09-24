@@ -114,6 +114,11 @@ def draw_sheet(sheet: Path, boxes: list[tuple[int, int, int, int, int]]) -> None
     img.save(sheet, quality=JPEG_QUALITY)
 
 
+def source_pdf(stem: str) -> Path:
+    """The cohort's PDF for a stem: ``c8-0004`` lives in ``out/cohort8/real``."""
+    return HERE / "out" / f"cohort{stem.split('-')[0].removeprefix('c')}" / "real" / f"{stem}.pdf"
+
+
 def build_sheet(sheets_dir: Path, stem: str, page: int, group: list[dict], sheet_name: str) -> dict:
     """One sheet: Preview render -> greyscale -> JPEG q80, then Mark --check boxes
     against the final JPEG, drawn by PIL. Width: 1200 px minimum; the native
@@ -121,7 +126,7 @@ def build_sheet(sheets_dir: Path, stem: str, page: int, group: list[dict], sheet
     moved mapped boxes by >3 px (Mark rounds each edge independently at the
     target size) and broke the registered pixel check."""
     from PIL import Image
-    pdf = HERE / "out" / "cohort3" / "real" / f"{stem}.pdf"
+    pdf = source_pdf(stem)
     if not pdf.is_file():
         raise FileNotFoundError(f"{stem}: no pdf at {pdf}")
     sheets_dir.mkdir(parents=True, exist_ok=True)
@@ -171,16 +176,14 @@ def cmd_check(suggests: list[Path]) -> None:
         if stem not in seen and c.get("image_full") and all(c.get(k) is not None for k in ("page", "x0", "y0", "x1", "y1")):
             picked.append(c)
             seen.add(stem)
-        if len(picked) == 5:
+        if len(picked) == 15:
             break
-    if len(picked) < 5:
-        raise SystemExit("fewer than 5 documents with full images")
     tmpdir = HERE / "out" / "labels" / "s2wild-judges-r3" / "sheets-check"
     tmpdir.mkdir(parents=True, exist_ok=True)
     results = []
     for c in picked:
         stem, page = c["document_id"], int(c["page"])
-        pdf = HERE / "out" / "cohort3" / "real" / f"{stem}.pdf"
+        pdf = source_pdf(stem)
         cc = dict(c)
         cc["_k"] = 1
         entry = build_sheet(tmpdir, stem, page, [cc], f"check-{stem}_p{page}.jpg")
@@ -188,8 +191,9 @@ def cmd_check(suggests: list[Path]) -> None:
         base = tmpdir / f"check-base-{stem}_p{page}.png"
         render_page(pdf, page + 1, base)
         ref_bbox = ref_stroke_bbox(Path(c["image_full"]), base)
-        if ref_bbox is None:
-            raise SystemExit(f"{c['id']}: marked image identical to fresh render — no box found")
+        if ref_bbox is None:  # the mark vanished at render scale (a tiny box on a large page): nothing to compare
+            print(f"{c['id']}: marked image identical to fresh render — skipped", file=sys.stderr)
+            continue
         from PIL import Image
         s = Image.open(entry["sheet"]).width / Image.open(c["image_full"]).width
         ref = tuple(v * s for v in ref_bbox)
@@ -197,6 +201,10 @@ def cmd_check(suggests: list[Path]) -> None:
         # Java's stroke is centered on the same rect: outer edge up to 1.5 px out
         delta = max(abs(a - b) for a, b in zip(mine, ref))
         results.append({"id": c["id"], "delta_px": round(delta, 2), "ok": delta <= 3})
+        if len(results) == 5:
+            break
+    if len(results) < 5:
+        raise SystemExit("fewer than 5 documents with a comparable mark")
     print(json.dumps({"check": results, "pass": all(r["ok"] for r in results)}, indent=1))
     if not all(r["ok"] for r in results):
         raise SystemExit(1)
