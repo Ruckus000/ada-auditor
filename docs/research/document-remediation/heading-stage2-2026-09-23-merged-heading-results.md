@@ -110,3 +110,11 @@ https://arxiv.org/abs/2607.24562.
 - A batch-size benchmark on the training Mac (M4 Max, 36 GB) found batch 1
   fastest: 0.217 examples/s, against 0.176 at batch 2 and 0.094 at batch 4.
   Faster training on this Mac has to come from less work per run.
+
+## Confirmation (2026-09-24): NOT MET
+
+The fresh-batch confirmation this record called for came back NOT MET: 40
+host-disjoint documents, 2,913 covered cards, 35 errors against 18 allowed,
+with accuracy 0.9880 [0.9833–0.9916]. r13's wild pass did not generalise.
+16 of the 35 errors come from two deterministic rules, not the model. See
+`heading-stage2-2026-09-24-r13-confirmation-results.md`.
