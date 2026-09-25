@@ -60,6 +60,30 @@ The cohort-9 product path keeps it off.
 - r14 covers far fewer validation headings than r13 (242 against 332 covered
   positives, TP 230 against 323). It trades heading coverage for 0 FP.
 
-**Secondary check (reported, not gating):** r14 at t_r14 on the 24 cohort-8
-validation documents, through the product path, against r13's look on the same
-documents. Running.
+**Secondary check (reported, not gating).** r14 at t_r14 against r13's look at
+t_r13, on the 24 cohort-8 validation documents, through the product path and on
+the same card set.
+- The 168 cards r14 covers that r13 asked on were judged as in the look.
+- The seats disagreed on 1 of them, and the tie-break settled it 3/3 H.
+
+| | Covered | Errors | FP | FN | TP | Accuracy [LB] | Asks | Clean docs |
+|---|---|---|---|---|---|---|---|---|
+| r13 @ 0.98081 | 2,531 | 21 | 6 | 15 | 54 | 0.9917 [0.9873] | 352 | 13/24 |
+| r14 @ 0.97050 | 2,589 | 19 | 4 | 15 | 51 | 0.9927 [0.9886] | 294 | 13/24 |
+
+- **Cards both models cover** (2,421): r13 makes 14 errors, r14 makes 13.
+  - On the 110 cards only r13 covers, r13 makes 7 errors.
+  - On the 168 cards only r14 covers, r14 makes 6 errors.
+- **FN are unchanged at 15.** The run-in headings in c8-0018 ("Location
+  Accuracy: Horizontal…") are still missed, as are rule-decided map and agenda
+  titles. r14 answers 51 of the 83 labelled headings correctly; r13 answers 54.
+- **FP fall from 6 to 4.** Three of the remaining four are fund-name table
+  headers in c8-0265.
+- **Reading.** r14 is marginally better on fresh-host documents: 2 fewer errors
+  and 58 fewer asks. It does not fix the run-in class. The difference is within
+  noise at this size.
+- **This subset is easier than cohort 8 as a whole:** 0.83 % for r13 here
+  against 1.49 % on the whole look. The hardest documents (c8-0022, c8-0187,
+  c8-0114) fell in train.
+
+**Cohort 9:** held unspent by user decision (d9203f95).
