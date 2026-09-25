@@ -30,6 +30,10 @@ def _render_page_png_atomic(pdf: Path, page_1based: int, dest: Path) -> Path:
 def _mark_page_png_atomic(pdf: Path, page_1based: int, box, src: Path, dest: Path) -> dict:
     tmp = dest.with_suffix(".tmp.png")
     result = mark_page_png(pdf, page_1based, box, src, tmp)
+    # Mark writes nothing when the outline lands off the raster; main() counts
+    # that as a failed card, which is what it is — there is no image to hand on.
+    if not result.get("visible"):
+        raise RuntimeError(f"box maps off the page raster, no marked image: {result}")
     os.replace(tmp, dest)
     return result
 

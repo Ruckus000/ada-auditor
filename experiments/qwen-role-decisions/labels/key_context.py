@@ -82,7 +82,15 @@ def marked_image(card: dict, pdf: Path, pages: Path = OUT / "pages") -> Path | N
         render_page_png(pdf, page1, base)
     dest = pages / "marked" / (card["card_id"].replace(":", "_") + ".png")
     if not dest.is_file():
-        mark_page_png(pdf, page1, (float(card["x0"]), float(card["y0"]), float(card["x1"]), float(card["y1"])), base, dest)
+        mapped = mark_page_png(pdf, page1, (float(card["x0"]), float(card["y0"]), float(card["x1"]), float(card["y1"])), base, dest)
+        # A box that maps off the page raster — past the page box, or into the
+        # half a crop window cuts away — gets no outline drawn, and the card
+        # then reaches the model as a page with no magenta on it while the
+        # prompt talks about "the box drawn in magenta". No image is the honest
+        # input; 344 of cohort 8's 10,989 cards were the other shape
+        # (out/suggest/cohort8-r13, measured 2026-09-24).
+        if not mapped.get("visible"):
+            return None
     return dest
 
 

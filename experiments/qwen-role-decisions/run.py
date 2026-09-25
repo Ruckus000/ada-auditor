@@ -941,7 +941,11 @@ def mark_page_png(
     if not check_only:
         cmd.append(str(dest))
     proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
-    if proc.returncode not in (0, 1) or (not check_only and proc.returncode != 0):
+    # Exit 3 is Mark's "the outline falls off the raster, no image written": a
+    # reportable outcome, not a failure. The payload still carries the mapping,
+    # and `visible` is false — the caller decides what to do without an image.
+    ok = (0, 1) if check_only else (0, 3)
+    if proc.returncode not in ok:
         raise RuntimeError(proc.stderr[-2000:] or proc.stdout[-2000:] or f"exit {proc.returncode}")
     return json.loads(proc.stdout.strip().splitlines()[-1])
 
@@ -1080,7 +1084,7 @@ def ensure_marked_png(
         png_cache[cache_key] = png
     marked = pages_dir / "marked" / f"{loc.replace(':', '_')}.png"
     if not marked.is_file():
-        mark_page_png(
+        mapped = mark_page_png(
             pdf_dir / f"{stem}.pdf",
             page_1,
             (
@@ -1092,6 +1096,11 @@ def ensure_marked_png(
             png,
             marked,
         )
+        # This path promises a file. Mark writes none when the outline lands off
+        # the raster, so say which card and why rather than hand back a path to
+        # nothing for the caller to fail on later.
+        if not mapped.get("visible"):
+            raise RuntimeError(f"{loc}: box maps off the page raster, no marked image: {mapped}")
     return marked
 
 
