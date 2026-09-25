@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkedContentReference;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDMarkedContent;
@@ -65,7 +66,13 @@ public final class StructText {
             ex.processPage(page);
             Map<Integer, String> ids = new HashMap<>();
             Map<Integer, Box> boxes = new HashMap<>();
-            for (PDMarkedContent mc : ex.getMarkedContents()) harvest(mc, ids, boxes, i);
+            // The crop box, not the media box: PDFBox reports glyph positions
+            // relative to it, and `Preview` renders it, so this is the frame a
+            // box is already in for upright text.
+            PDRectangle crop = page.getCropBox();
+            for (PDMarkedContent mc : ex.getMarkedContents()) {
+                harvest(mc, ids, boxes, i, crop.getWidth(), crop.getHeight());
+            }
             byPage.put(i, ids);
             boxByPage.put(i, boxes);
         }
@@ -156,23 +163,55 @@ public final class StructText {
         }
     }
 
-    private void harvest(PDMarkedContent mc, Map<Integer, String> ids, Map<Integer, Box> boxes, int page) {
+    private void harvest(PDMarkedContent mc, Map<Integer, String> ids, Map<Integer, Box> boxes,
+                         int page, float pageW, float pageH) {
         StringBuilder sb = new StringBuilder();
         Box b = null;
         for (Object o : mc.getContents()) {
             if (o instanceof TextPosition tp) {
                 sb.append(tp.getUnicode());
-                Box g = new Box(page, tp.getXDirAdj(), tp.getYDirAdj() - tp.getHeightDir(),
-                                tp.getXDirAdj() + tp.getWidthDirAdj(), tp.getYDirAdj());
-                b = g.union(b);
+                b = glyphBox(tp, page, pageW, pageH).union(b);
             } else if (o instanceof PDMarkedContent child) {
-                harvest(child, ids, boxes, page);
+                harvest(child, ids, boxes, page, pageW, pageH);
             }
         }
         if (mc.getMCID() >= 0 && sb.length() > 0) {
             ids.merge(mc.getMCID(), sb.toString(), String::concat);
             if (b != null) boxes.merge(mc.getMCID(), b, Box::union);
         }
+    }
+
+    /**
+     * One glyph's extent, in page coordinates.
+     *
+     * `getXDirAdj()` and its siblings are the *direction-adjusted* accessors:
+     * PDFBox reports them in the frame the text **reads** in, rotated by
+     * `getDir()`. That is the right frame for grouping glyphs into lines, and
+     * the wrong one for saying where on the page they are — for a run drawn at
+     * 90 or 270 degrees the axes are swapped, so the box comes out transposed,
+     * usually off the page and sometimes on top of unrelated content.
+     *
+     * Upright text has `dir == 0`, where the two frames are the same and this
+     * returns exactly what it always did — which is why the defect survived
+     * until a cohort of survey plats and rotated-content landscape sheets
+     * ran through it (2,331 of 10,989 cards; see
+     * `docs/research/document-remediation/heading-stage2-2026-09-25-rotated-text-geometry.md`).
+     *
+     * Rotating back by `dir` is the whole correction: the page's own `/Rotate`
+     * is not involved, because marked-content extraction never applies it.
+     * A direction that is not a right angle is left alone — PDFBox quantises
+     * `getDir()` to one of four, and guessing at a fifth would be worse than
+     * the frame being honest about what it is.
+     */
+    private static Box glyphBox(TextPosition tp, int page, float pageW, float pageH) {
+        float rx0 = tp.getXDirAdj(), ry1 = tp.getYDirAdj();
+        float rx1 = rx0 + tp.getWidthDirAdj(), ry0 = ry1 - tp.getHeightDir();
+        return switch (Math.floorMod((int) tp.getDir(), 360)) {
+            case 90 -> new Box(page, ry0, pageH - rx1, ry1, pageH - rx0);
+            case 180 -> new Box(page, pageW - rx1, pageH - ry1, pageW - rx0, pageH - ry0);
+            case 270 -> new Box(page, pageW - ry1, rx0, pageW - ry0, rx1);
+            default -> new Box(page, rx0, ry0, rx1, ry1);
+        };
     }
 
     /**
