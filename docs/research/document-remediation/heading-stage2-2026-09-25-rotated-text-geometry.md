@@ -176,9 +176,17 @@ pool.** That is the honest count, not a loss: each was a card whose image
 showed an unrelated page, and abstention was never available for it, because
 the model still answers whatever it is shown.
 
-## Still open on this path
+## Closed on this path
 
-`split_heads` does not know each block's `dir`. `first_line_x1` comes from
-`Cards.harvest`'s glyph list, still in the reading frame, while the box is now
-page space, so `is_run_in_head`'s ratio is meaningless on a rotated block.
-**Do not run `--split-run-in-heads`** until it does.
+`split_heads` now knows. `Cards` emits each block's `text_dir` — the direction
+its glyphs agree on, `null` when they differ — and both splits leave a block
+whole unless it is upright and has a box
+([`2026-09-25-split-heads-abstains-on-rotated-registration.md`](../../superpowers/plans/2026-09-25-split-heads-abstains-on-rotated-registration.md)).
+On cohort 8: 3,139 blocks are not upright, `split_enumerated_heads` is
+unchanged at 54, and `split_run_in_heads` at width 0.5 drops 297 → 250, the 47
+the page-space registration predicted.
+
+`--split-run-in-heads` is consistent again, in one frame on the blocks it
+still acts on. It is **not** thereby adopted: it has never passed an adoption
+measurement, and the two it has had are void — the first compared two
+coordinates in the same wrong frame, the second ran on contaminated cards.

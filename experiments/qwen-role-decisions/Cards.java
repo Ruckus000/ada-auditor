@@ -63,7 +63,7 @@ public final class Cards {
     private static final float CAPTION_GAP = 24f;
     private static final float MIN_OVERLAP = 0.5f;
 
-    private record Glyph(String u, float x, float y, float w, float fontPt, boolean bold) {}
+    private record Glyph(String u, float x, float y, float w, float fontPt, boolean bold, float dir) {}
 
     private record Face(int fontPt, String weight) {}
 
@@ -118,6 +118,14 @@ public final class Cards {
                 json.append("    {\"locator\": ").append(q(stem + ":" + i));
                 json.append(", \"existing_tag\": ").append(q(type == null ? "" : type));
                 json.append(", \"text\": ").append(q(t));
+                // The direction these glyphs read in, when they agree on one.
+                // `x`, `y`, `w` above and `first_line_x1` below are all in that
+                // frame, while the box is page space, so anything comparing the
+                // two needs to know — `labels/split_heads.py` splits only an
+                // upright block. Null when a block mixes directions: it is not
+                // upright either.
+                Float dir = textDir(gs);
+                json.append(", \"text_dir\": ").append(dir == null ? "null" : String.format(Locale.ROOT, "%.0f", dir));
                 FirstLine fl = firstLineOf(gs);
                 json.append(", \"first_line\": ").append(q(fl.text()));
                 json.append(", \"line_count\": ").append(fl.lines());
@@ -188,11 +196,22 @@ public final class Cards {
                         tp.getYDirAdj(),
                         tp.getWidthDirAdj(),
                         tp.getFontSizeInPt(),
-                        isBoldFace(tp.getFont())));
+                        isBoldFace(tp.getFont()),
+                        tp.getDir()));
             } else if (o instanceof PDMarkedContent child) {
                 harvest(child, page, out);
             }
         }
+    }
+
+    /** The one direction every glyph of the block reads in, or null when they differ. */
+    static Float textDir(List<Glyph> glyphs) {
+        if (glyphs.isEmpty()) return 0f;
+        float first = glyphs.get(0).dir;
+        for (Glyph g : glyphs) {
+            if (g.dir != first) return null;
+        }
+        return first;
     }
 
     private static boolean isBoldFace(PDFont font) {

@@ -174,3 +174,38 @@ def test_training_key_builder_ignores_first_line_x1():
     cards = [document_cards(Path("d"), "d", random.Random(SEED), dump=lambda _p, compile=False, b=b: {"blocks": b}, select=False)
              for b in (shaped, old)]
     assert cards[0] == cards[1]
+
+
+def _rotated(block: dict, dir_: float | None) -> dict:
+    return {**block, "text_dir": dir_}
+
+
+def test_a_rotated_block_is_left_whole_by_both_splits():
+    """The box is page space and `first_line_x1` is the reading frame, so on a
+    rotated block the width ratio compares two frames and the `y0 + 1.3 em` cut
+    runs along the reading axis. Registered 2026-09-25: leave it whole."""
+    enum = {"existing_tag": "LI", "line_count": 2, "first_line": "A. Plans",
+            "text": "A. Plans and the body that follows", "font_pt": 10.0,
+            "x0": 0.0, "y0": 0.0, "x1": 100.0, "y1": 40.0, "locator": "d:1"}
+    run_in = {**enum, "first_line": "Plant Selection", "text": "Plant Selection Native species thrive",
+              "existing_tag": "P", "first_line_x1": 20.0}
+    for dir_ in (90, 270, 180, None):
+        assert split_enumerated_heads([_rotated(enum, dir_)])[1] == 0, dir_
+        assert split_run_in_heads([_rotated(run_in, dir_)], 0.5)[1] == 0, dir_
+    # Upright still splits, and so does a dump from before text_dir existed.
+    assert split_enumerated_heads([_rotated(enum, 0)])[1] == 1
+    assert split_run_in_heads([_rotated(run_in, 0)], 0.5)[1] == 1
+    assert split_enumerated_heads([enum])[1] == 1
+    assert split_run_in_heads([run_in], 0.5)[1] == 1
+
+
+def test_a_block_with_no_box_is_left_whole_by_both_splits():
+    """Since StructText stopped inventing a box off another page, a block can
+    reach the splits with no geometry. They run on raw blocks, before
+    run.blocks_to_cards refuses it, and both cut at y0 + 1.3 em."""
+    enum = {"existing_tag": "LI", "line_count": 2, "first_line": "A. Plans",
+            "text": "A. Plans and the body that follows", "font_pt": 10.0, "locator": "d:1"}
+    run_in = {**enum, "first_line": "Plant Selection", "existing_tag": "P",
+              "text": "Plant Selection Native species thrive", "first_line_x1": 20.0}
+    assert split_enumerated_heads([enum])[1] == 0
+    assert split_run_in_heads([run_in], 0.5)[1] == 0

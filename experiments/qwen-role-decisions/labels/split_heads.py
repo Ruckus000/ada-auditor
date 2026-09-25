@@ -22,6 +22,36 @@ MAX_HEAD_WORDS = 6
 LINE_EM = 1.3
 
 
+def upright(block: dict) -> bool:
+    """Whether the block reads left to right, from ``Cards``' ``text_dir``.
+
+    Both splits are reading-frame operations on a page-space box: the width test
+    compares ``first_line_x1`` (reading frame) against ``x1 - x0`` (page space
+    since 2026-09-25), and the head/body cut takes ``y0 + 1.3 em``, which is the
+    cross-line axis upright and the *reading* axis rotated. On a rotated block
+    the first is meaningless and the second slices characters off a vertical run.
+    So a block that is not upright is left whole
+    (``docs/superpowers/plans/2026-09-25-split-heads-abstains-on-rotated-registration.md``).
+
+    ``null`` means the block's glyphs disagree, which is not upright either. A
+    dump from before ``text_dir`` existed has no opinion and keeps its old
+    behaviour.
+    """
+    return block.get("text_dir", 0) == 0
+
+
+def has_box(block: dict) -> bool:
+    """Geometry to cut with.
+
+    Both splits cut at ``y0 + 1.3 em`` and the run-in test divides by the block
+    width, so a block with no box cannot be split — and since
+    ``StructText.merge`` stopped inventing one off another page (1f33dd66) a
+    block can reach here with none. ``run.blocks_to_cards`` refuses that shape as
+    ``missing_box``, but the splits run on raw blocks, before it.
+    """
+    return all(block.get(k) is not None for k in ("x0", "y0", "x1", "y1"))
+
+
 def head_words(line: str) -> int:
     """Tokens that carry a letter or digit; a punctuation-only token ("–", "&") is not a word."""
     return sum(1 for t in line.split() if re.search(r"\w", t))
@@ -29,6 +59,8 @@ def head_words(line: str) -> int:
 
 def is_enumerated_head(block: dict) -> bool:
     first = (block.get("first_line") or "").strip()
+    if not upright(block) or not has_box(block):
+        return False
     if block.get("existing_tag") not in SPLIT_TAGS or (block.get("line_count") or 0) < 2:
         return False
     if not ENUM_HEAD.match(first) or head_words(first) > MAX_HEAD_WORDS:
@@ -62,7 +94,10 @@ def is_run_in_head(block: dict, width_frac: float) -> bool:
     """A run-in heading block: tag P/LI/H*, at least two physical lines, a first line of
     at most ``MAX_HEAD_WORDS`` words with no closing ``.;:``, ending before
     ``width_frac`` of the block width (``first_line_x1`` — a dump without it never splits).
-    Table cells are out: a short first line there is a header cell, not a run-in heading."""
+    Table cells are out: a short first line there is a header cell, not a run-in heading.
+    A block that is not ``upright`` is out too: the ratio below mixes two frames."""
+    if not upright(block) or not has_box(block):
+        return False
     if block.get("existing_tag") not in RUN_IN_TAGS or (block.get("line_count") or 0) < 2:
         return False
     if block.get("in_table_box") or block.get("font_pt") is None:
