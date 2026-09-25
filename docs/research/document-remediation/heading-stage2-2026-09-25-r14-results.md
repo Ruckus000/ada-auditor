@@ -40,9 +40,26 @@ The cohort-9 product path keeps it off.
   cards into asks and does not recover run-in headings as answers.
 - Labels for the 122 cards: `out/labels/cohort8-runin-judges/labels.jsonl`.
 
-## Step 3: r14 training
+## Step 3: r14, GUARD NOT MET
 
-- **Started** 2026-09-25 at commit ed6a8e2, with the exact r13 recipe and
-  11,144 iterations (about 1.4 epochs of 7,965 rows).
-- **Output:** `out/r14/train/adapter-r14`.
-- Results will be appended here.
+- **Training.** Commit ed6a8e2, the exact r13 recipe, 11,144 iterations (about
+  1.4 epochs of 7,965 rows). It finished 2026-09-25 at 14:04 and took 16.1 h.
+  Output: `out/r14/train/adapter-r14`, SFT sha256 `07ee09bd…`.
+- **Validation.** Keys validation (keys-all-9 cards, split validation, key
+  ladder, 1,525 rows, 0 parse failures), with the registered r11
+  operating-point rule and r13 as the reference (`out/r14/op`).
+
+| | Threshold | Covered | TP | FP | FN | Accuracy LB | FP UB |
+|---|---|---|---|---|---|---|---|
+| r13 (reference) | 0.98081 | 1,086 | 323 | 3 | 9 | 0.98078 | 0.0116 |
+| r14 | 0.97050 | 1,052 | 230 | **0** | 12 | **0.98016** | 0.0045 |
+
+**Guard: NOT MET.** The accuracy LB is 0.0006 below r13's; the FP leg passes.
+- The guard is not re-registered.
+- Under the registered candidate rule, r14 is not the cohort-9 model.
+- r14 covers far fewer validation headings than r13 (242 against 332 covered
+  positives, TP 230 against 323). It trades heading coverage for 0 FP.
+
+**Secondary check (reported, not gating):** r14 at t_r14 on the 24 cohort-8
+validation documents, through the product path, against r13's look on the same
+documents. Running.

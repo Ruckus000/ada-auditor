@@ -53,3 +53,14 @@ amendment commit, with no `labels/` change after it.
   the invisible-mark count.
 - **Training use:** cohort-9 labels are never training data until this result
   is recorded.
+
+## Amendment 1: held (2026-09-25, before any cohort-9 document is run)
+
+- **r14 did not meet its guard** on keys validation: accuracy LB 0.98016
+  against r13's 0.98078, with FP 0 against 3 (`heading-stage2-2026-09-25-r14-results.md`).
+  Under the rule above, that would make r13 the cohort-9 model.
+- **r13's fresh-document error rate is 1.49 %** (cohort 8), where P(pass) ≈ 0.
+- **The user decided on 2026-09-25 to hold cohort 9 until there is a better
+  model.** Nothing in it has been run, rendered or judged, and it stays unspent.
+- **Before its look,** a further amendment will name the model and threshold,
+  and the evidence that it is better. The population above stays fixed.
