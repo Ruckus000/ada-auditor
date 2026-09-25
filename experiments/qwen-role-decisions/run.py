@@ -239,6 +239,15 @@ def blocks_to_cards(blocks: list[dict]) -> tuple[list[dict], list[dict]]:
         if block.get("font_pt") is None:
             failed.append({"locator": block.get("locator"), "reason": "missing_font"})
             continue
+        if any(block.get(k) is None for k in ("x0", "y0", "x1", "y1")):
+            # No box, so no marked image, no margin band and nothing for a judge
+            # to look at. `StructText.merge` used to invent one off another page
+            # rather than leave it absent (see
+            # docs/superpowers/plans/2026-09-25-card-box-path-two-defects-registration.md);
+            # now that it does not, the block has to stop here instead of
+            # reaching `drop_duplicate_cards` as a card with no geometry.
+            failed.append({"locator": block.get("locator"), "reason": "missing_box"})
+            continue
         usable.append(block)
     cards = []
     for i, block in enumerate(usable):

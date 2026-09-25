@@ -31,12 +31,19 @@ def _java_missing() -> str | None:
     return None
 
 
-def _one_page_pdf(dest: Path) -> Path:
-    """A blank MediaBox-only page: Mark reads the boxes and the rotation, nothing else."""
+def _one_page_pdf(dest: Path, crop: tuple[float, float, float, float] | None = None) -> Path:
+    """A blank page: Mark reads the boxes and the rotation, nothing else.
+
+    ``crop`` adds a CropBox offset from the MediaBox, the shape that showed
+    Mark subtracting the crop origin from an already crop-relative box.
+    """
+    page = f"<</Type/Page/Parent 2 0 R/MediaBox[0 0 {PAGE_W} {PAGE_H}]"
+    if crop is not None:
+        page += "/CropBox[" + " ".join(f"{v:g}" for v in crop) + "]"
     objects = [
         b"<</Type/Catalog/Pages 2 0 R>>",
         b"<</Type/Pages/Kids[3 0 R]/Count 1>>",
-        f"<</Type/Page/Parent 2 0 R/MediaBox[0 0 {PAGE_W} {PAGE_H}]>>".encode(),
+        (page + ">>").encode(),
     ]
     out = bytearray(b"%PDF-1.4\n")
     offsets = []
@@ -53,8 +60,8 @@ def _one_page_pdf(dest: Path) -> Path:
     return dest
 
 
-def _white_png(dest: Path) -> Path:
-    Image.new("RGB", RASTER, (255, 255, 255)).save(dest)
+def _white_png(dest: Path, size=None) -> Path:
+    Image.new("RGB", size or RASTER, (255, 255, 255)).save(dest)
     return dest
 
 
@@ -63,11 +70,11 @@ def _magenta_pixels(png: Path) -> int:
     return int(((a[:, :, 0] > 200) & (a[:, :, 1] < 80) & (a[:, :, 2] > 200)).sum())
 
 
-def _mark(box, dest_name="marked.png"):
+def _mark(box, dest_name="marked.png", crop=None, raster=None):
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
-        pdf = _one_page_pdf(root / "page.pdf")
-        src = _white_png(root / "page.png")
+        pdf = _one_page_pdf(root / "page.pdf", crop)
+        src = _white_png(root / "page.png", raster)
         dest = root / dest_name
         mapped = mark_page_png(pdf, 1, box, src, dest)
         return mapped, dest, (_magenta_pixels(dest) if dest.is_file() else None)
@@ -129,3 +136,28 @@ def test_marked_image_drops_the_card_whose_box_is_off_the_page():
         on_page = {**card, "card_id": "doc:2", "y0": 100.0, "y1": 120.0}
         got = marked_image(on_page, pdf, pages)
         assert got is not None and _magenta_pixels(got) > 0
+
+
+def test_a_box_on_a_cropped_page_is_not_shifted_by_the_crop_origin():
+    """c8-0077's shape: CropBox [597 0 1224 792] on a 1224-wide MediaBox.
+
+    PDFBox reports text positions against the crop box, so a card box is
+    already crop-relative and there is no origin to remove. Mark took one off
+    anyway -- copied from Preview, which is right to do it for a FigureOrder
+    box in media space -- and the outline landed off the raster with nothing
+    drawn. The box below sits at the left edge of the *crop*, which is where
+    c8-0077:13's headline sits.
+    """
+    if (why := _java_missing()):
+        print(f"skip: {why}"); return
+    crop = (597.0, 0.0, 1224.0, 792.0)
+    crop_w, crop_h = crop[2] - crop[0], crop[3] - crop[1]
+    raster = (800, 1012)
+    from_java, _dest, magenta = _mark((31.9, 40.0, 610.4, 60.0), crop=crop, raster=raster)
+    assert from_java["visible"] is True, from_java
+    assert magenta > 0
+    # Mapped by the crop's own width, with no origin taken off.
+    assert from_java["x"] == round(31.9 / crop_w * raster[0]), from_java
+    assert from_java["y"] == round(40.0 / crop_h * raster[1]), from_java
+    # The old behaviour: 597 removed a second time put it far off the left edge.
+    assert round((31.9 - 597.0) / crop_w * raster[0]) < 0

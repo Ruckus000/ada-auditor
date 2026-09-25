@@ -130,11 +130,22 @@ public final class StructText {
     }
 
     private Box merge(Integer page, int mcid, Box acc) {
-        Box b = page != null ? boxByPage.getOrDefault(page, Map.of()).get(mcid) : null;
-        if (b == null) {
-            for (Map<Integer, Box> m : boxByPage.values()) { b = m.get(mcid); if (b != null) break; }
+        if (page != null) {
+            // The element names its own page, so an id that page's map does not
+            // hold means there is no box -- not "look on another page". Marked
+            // content ids restart at 0 on every page, so that scan can return a
+            // box off an unrelated one. `append` below already refuses it, and
+            // `Inspect.java:427` refuses it for figure locations in the same
+            // words: absent beats invented.
+            Box b = boxByPage.getOrDefault(page, Map.of()).get(mcid);
+            return b == null ? acc : b.union(acc);
         }
-        return b == null ? acc : b.union(acc);
+        // No /Pg on the element -- take the id from whichever page holds it.
+        for (Map<Integer, Box> m : boxByPage.values()) {
+            Box b = m.get(mcid);
+            if (b != null) return b.union(acc);
+        }
+        return acc;
     }
 
     private void collect(PDStructureElement el, StringBuilder b, Set<Object> seen) {

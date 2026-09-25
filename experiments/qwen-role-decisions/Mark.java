@@ -117,8 +117,15 @@ public final class Mark {
         PDRectangle crop = page.getCropBox();
         float width = crop.getWidth(), height = crop.getHeight();
         int rotation = Math.floorMod(page.getRotation(), 360);
-        double x = x0 - crop.getLowerLeftX();
-        double y = y0 + crop.getUpperRightY() - page.getMediaBox().getHeight();
+        // Already crop-relative. PDFBox reports text positions against the crop
+        // box and `Preview` renders the crop, so unlike a `FigureOrder` box --
+        // media space, which Preview.java:37-47 is right to shift -- there is
+        // nothing here to take off. Subtracting the origin a second time drove
+        // the box off the raster: c8-0077's crop starts at x=597 while its cards
+        // span 31.9..610.4, inside the crop width. The `y` term was spurious the
+        // same way, and read as zero whenever the crop reaches the media top,
+        // which is why only `x` ever showed.
+        double x = x0, y = y0;
         double w = x1 - x0, h = y1 - y0, dw = width, dh = height;
         if (rotation == 90) { double old = x; x = height - y - h; y = old; double swap = w; w = h; h = swap; dw = height; dh = width; }
         else if (rotation == 180) { x = width - x - w; y = height - y - h; }

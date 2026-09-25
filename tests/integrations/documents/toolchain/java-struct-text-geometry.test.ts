@@ -84,6 +84,45 @@ function fixture(pageRotation: number, textRotation: number): Buffer {
 }
 
 /**
+ * Two pages. Page 1 tags its text as MCID 0; page 2 draws text with no marked
+ * content at all, while its structure element still names `/Pg` page 2 and
+ * MCID 0. That is the real shape behind 1,550 of cohort 8's 17,088 blocks —
+ * an element whose own page has no entry for the id it asks for.
+ */
+function crossPageFixture(): Buffer {
+  const one = `/P <</MCID 0>> BDC BT /F1 10 Tf 1 0 0 1 ${ORIGIN_X} ${ORIGIN_Y} Tm (PAGEONE) Tj ET EMC`;
+  const two = `BT /F1 10 Tf 1 0 0 1 ${ORIGIN_X} ${ORIGIN_Y} Tm (PAGETWO) Tj ET`;
+  const page = (contents: number, structParents: number) =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${contents} 0 R /StructParents ${structParents} /Resources << /Font << /F1 7 0 R >> >> >>`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> >>',
+    '<< /Type /Pages /Kids [3 0 R 8 0 R] /Count 2 >>',
+    page(4, 0),
+    `<< /Length ${one.length} >>\nstream\n${one}\nendstream`,
+    '<< /Type /StructTreeRoot /K [6 0 R 9 0 R] >>',
+    '<< /Type /StructElem /S /P /P 5 0 R /Pg 3 0 R /K 0 >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    page(10, 1),
+    '<< /Type /StructElem /S /P /P 5 0 R /Pg 8 0 R /K 0 >>',
+    `<< /Length ${two.length} >>\nstream\n${two}\nendstream`,
+  ];
+  let pdf = '%PDF-1.7\n';
+  const offsets: number[] = [];
+  objects.forEach((object, i) => {
+    offsets.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.forEach(offset => {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  });
+  return Buffer.from(
+    `${pdf}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`,
+  );
+}
+
+/**
  * Test scaffolding, not product surface: nothing in `src/` calls `boxOf`, so
  * there is no stage whose output would show the box. Rather than widen a
  * stage's JSON for a test, compile a probe against the built classes.
@@ -101,8 +140,13 @@ public final class BoxProbe {
         try (PDDocument doc = Loader.loadPDF(new File(args[0]))) {
             PDStructureTreeRoot root = doc.getDocumentCatalog().getStructureTreeRoot();
             StructText text = new StructText(doc);
-            PDStructureElement el = StructText.find(root, Set.of("P"), root.getRoleMap()).get(0);
+            int index = args.length > 1 ? Integer.parseInt(args[1]) : 0;
+            PDStructureElement el = StructText.find(root, Set.of("P"), root.getRoleMap()).get(index);
             StructText.Box b = text.boxOf(el);
+            if (b == null) {
+                System.out.println("{\\"page\\":-1,\\"x0\\":0,\\"y0\\":0,\\"x1\\":0,\\"y1\\":0,\\"text\\":\\"" + text.of(el) + "\\"}");
+                return;
+            }
             System.out.println(String.format(Locale.ROOT,
                 "{\\"page\\":%d,\\"x0\\":%.3f,\\"y0\\":%.3f,\\"x1\\":%.3f,\\"y1\\":%.3f,\\"text\\":\\"%s\\"}",
                 b.page(), b.x0(), b.y0(), b.x1(), b.y1(), text.of(el)));
@@ -144,6 +188,39 @@ describe.skipIf(!runtime.available)('StructText.Box is page space, not the text 
     ]);
     return JSON.parse(stdout.trim().split('\n').at(-1)!) as Box;
   }
+
+  /** The probe against an arbitrary file and element. `page` is -1 for no box. */
+  async function boxOfElement(pdf: Buffer, index: number, name: string): Promise<Box> {
+    if (!runtime.available) throw new Error(runtime.reason);
+    const path = join(work, `${name}.pdf`);
+    await writeFile(path, pdf);
+    const { stdout } = await execFileAsync(runtime.javaBin, [
+      '-Djava.awt.headless=true',
+      '-cp',
+      `${runtime.classpath}:${probeClasses}`,
+      'BoxProbe',
+      path,
+      String(index),
+    ]);
+    return JSON.parse(stdout.trim().split('\n').at(-1)!) as Box;
+  }
+
+  // Marked content ids restart at 0 on every page. `merge` used to fall back to
+  // scanning every page when the element's own page had no entry for the id, so
+  // an element on page 2 could be located by page 1's geometry — measured at
+  // 1,550 of cohort 8's 17,088 blocks, 978 of them in one document. `append`
+  // (the text half) and `Inspect.java:427` (figure locations) both already
+  // refuse it. Absent beats invented.
+  it('refuses a box from another page when the element names its own', async () => {
+    const pdf = crossPageFixture();
+    const onPageOne = await boxOfElement(pdf, 0, 'cross-page');
+    expect(onPageOne.page, 'the page-1 element is located normally').toBe(0);
+    expect(onPageOne.x0).toBeLessThanOrEqual(ORIGIN_X + 0.01);
+
+    const onPageTwo = await boxOfElement(pdf, 1, 'cross-page');
+    expect(onPageTwo.text.trim(), 'the element is found, and it is the page-2 one').toBe('');
+    expect(onPageTwo.page, 'no box, rather than page 1 geometry').toBe(-1);
+  }, 60_000);
 
   it.each([0, 90, 180, 270])('keeps the box inside the page for text drawn at %i degrees', async textRotation => {
     for (const pageRotation of [0, 90, 180, 270]) {
