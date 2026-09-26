@@ -41,11 +41,27 @@
  * launcher, which finds its own `java` — `javaEnv()` in
  * `experiments/document-remediation/java.mjs` is what constrains that one.
  * Both are recorded here rather than left as silent holes.
+ *
+ * `tests/support/call-text.ts` carries a third: it does not lex regular
+ * expression literals, so a regex in a JVM call's arguments could derail the
+ * scan. A derailed scan reports the site as unreadable, which is an offender,
+ * so it fails loud. No call site in the tree contains one.
+ *
+ * WHAT IT HAS ACTUALLY SEEN
+ *
+ * `[V]` Measured on this tree: 19 spawn sites, call texts 101–445 characters,
+ * and every one of the 19 cleared by the flag inside its own argument array —
+ * none unreadable, none without a literal array, none carrying the flag only
+ * outside it. That is the number the floor below is set against, and it is
+ * what makes "this change reds nothing that was green" checkable rather than
+ * asserted.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+
+import { argvArray, callText } from '../support/call-text';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const ROOTS = ['src', 'scripts', 'experiments'];
@@ -151,50 +167,104 @@ function sourceFiles(dir: string): string[] {
 }
 
 /**
- * Call sites that spawn a JVM without asking for headless.
+ * Every JVM spawn in the tree, located but not yet judged.
  *
- * The window examined is the call itself — from the spawn to the end of its
- * argument array — so a `java.awt.headless` elsewhere in the file cannot
- * vouch for a call that does not carry it.
+ * Both cases below consume this one list. They used to walk the tree with a
+ * loop each, which is how the count and the check came apart: a site whose
+ * argument array could not be found was skipped by `offenders()` and counted
+ * by the floor anyway, so the floor could be satisfied by sites nothing had
+ * looked at. Sharing the enumeration makes that divergence unexpressible
+ * rather than merely fixed.
  */
-function offenders(): string[] {
-  const found: string[] = [];
-  const files = ROOTS.flatMap((root) => sourceFiles(join(ROOT, root)));
-  const carriers = headlessCarriers(files);
+function jvmCallSites(files: readonly string[]): { file: string; line: number; open: number; src: string }[] {
+  const sites: { file: string; line: number; open: number; src: string }[] = [];
 
-  {
-    for (const file of files) {
-      const src = readFileSync(file, 'utf8');
-      let match: RegExpExecArray | null;
-      const spawn = new RegExp(SPAWN.source, 'g');
+  for (const file of files) {
+    const src = readFileSync(file, 'utf8');
+    const spawn = new RegExp(SPAWN.source, 'g');
+    let match: RegExpExecArray | null;
 
-      while ((match = spawn.exec(src)) !== null) {
-        const head = src.slice(match.index, match.index + 400);
-        if (!JAVA_BINARY.test(head)) continue;
-
-        const open = src.indexOf('[', match.index);
-        if (open === -1) continue;
-        const close = src.indexOf(']', open);
-        const args = src.slice(open, close === -1 ? open + 400 : close);
-        if (satisfiesHeadless(args, carriers)) continue;
-
-        const line = src.slice(0, match.index).split('\n').length;
-        found.push(`${relative(ROOT, file)}:${line}`);
-      }
+    while ((match = spawn.exec(src)) !== null) {
+      if (!JAVA_BINARY.test(src.slice(match.index, match.index + 400))) continue;
+      sites.push({
+        file,
+        line: src.slice(0, match.index).split('\n').length,
+        // `SPAWN` ends on the call's own `(`, so this is exact. An
+        // `indexOf('(')` could drift to a different call.
+        open: match.index + match[0].length - 1,
+        src,
+      });
     }
   }
 
-  return found.sort();
+  return sites;
+}
+
+/**
+ * What this guard has to say about one JVM spawn — `''` when it is clean.
+ *
+ * The window is the call's **argument array** and nothing else. Not the whole
+ * call, deliberately: the options object lives there too, and `WHY NOT
+ * JAVA_TOOL_OPTIONS` above sets out why a flag delivered through the
+ * environment is not a fix at all — `childEnv` in `stage.ts` withholds those
+ * variables, so an env-level flag never reaches the production stages. A
+ * window wide enough to accept one would have this guard certify the broken
+ * fix, on the call site that matters most.
+ *
+ * Every site gets a verdict. There is no path that returns quietly without
+ * one, because "the guard could not read this" is a thing the reader of a
+ * green run needs to know, not a reason to say nothing.
+ */
+function verdict(
+  site: { file: string; line: number; open: number; src: string },
+  carriers: ReadonlySet<string>,
+): string {
+  const where = `${relative(ROOT, site.file)}:${site.line}`;
+
+  const call = callText(site.src, site.open);
+  if (call === null) {
+    return `${where}  (its call does not close — this guard could not read it)`;
+  }
+
+  const argv = argvArray(call);
+  if (argv === null) {
+    return `${where}  (passes no literal argument array — this guard cannot see what the JVM is given)`;
+  }
+
+  if (satisfiesHeadless(argv, carriers)) return '';
+
+  if (satisfiesHeadless(call, carriers)) {
+    return `${where}  (asks for headless outside the argument array — an environment-level flag is withheld by childEnv and never reaches the production stages)`;
+  }
+
+  return where;
+}
+
+function offenders(): string[] {
+  const files = ROOTS.flatMap((root) => sourceFiles(join(ROOT, root)));
+  const carriers = headlessCarriers(files);
+  return jvmCallSites(files)
+    .map((site) => verdict(site, carriers))
+    .filter((line) => line !== '')
+    .sort();
 }
 
 describe('JVM invocations', () => {
   it('always ask for headless, so a build never steals the developer\'s screen', () => {
-    expect(offenders().join('\n')).toBe('');
+    expect(
+      offenders().join('\n'),
+      'Put `-Djava.awt.headless=true` in the argument array of the call itself. '
+        + 'A site this guard could not read is listed here too: a call it cannot see is not a call it has cleared.',
+    ).toBe('');
   });
 
   it('examines a non-zero population, so a passing run means something', () => {
     // A scan that matched nothing would pass this suite while proving nothing —
     // the same vacuity `verification.md` warns about for guards generally.
+    //
+    // This counts the same list `offenders()` renders a verdict on, and every
+    // member of that list gets one — clean, or an offender saying why. So the
+    // floor can no longer be met by sites the guard skipped.
     //
     // The floor is not arbitrary. `[V]` 19 sites on this tree; the bound is set
     // four below that so a rename or a new spawn idiom that hides a handful of
@@ -203,17 +273,7 @@ describe('JVM invocations', () => {
     // 16 to 5 with no other case going red. If you deleted spike runners on
     // purpose, re-measure and lower this with the new number written down — do
     // not lower it to make a red run green.
-    let jvmCalls = 0;
-    for (const root of ROOTS) {
-      for (const file of sourceFiles(join(ROOT, root))) {
-        const src = readFileSync(file, 'utf8');
-        const spawn = new RegExp(SPAWN.source, 'g');
-        let match: RegExpExecArray | null;
-        while ((match = spawn.exec(src)) !== null) {
-          if (JAVA_BINARY.test(src.slice(match.index, match.index + 400))) jvmCalls += 1;
-        }
-      }
-    }
-    expect(jvmCalls).toBeGreaterThan(15);
+    const files = ROOTS.flatMap((root) => sourceFiles(join(ROOT, root)));
+    expect(jvmCallSites(files).length).toBeGreaterThan(15);
   });
 });
