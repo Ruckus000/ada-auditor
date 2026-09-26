@@ -194,6 +194,7 @@ async function main(): Promise<void> {
     // module fails here, where the log is read, rather than on the first
     // production request. `java -version` reports on stderr and exits 0.
     const { stderr } = await run('the assembled runtime does not run', join(jreDir, 'bin', 'java'), [
+      '-Djava.awt.headless=true',
       '-version',
     ]);
     const version = stderr.trim().split('\n')[0] ?? '';

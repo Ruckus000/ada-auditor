@@ -31,6 +31,16 @@
  *
  * Reads the tree rather than running anything, the idiom
  * `tests/services/log-shape.test.ts` established.
+ *
+ * WHAT THIS SCAN CANNOT SEE
+ *
+ * It reads JavaScript and TypeScript only. `experiments/qwen-role-decisions`
+ * spawns five JVMs from Python (`run.py`, `labels/strip.py`,
+ * `labels/judge/page_sheets.py`); all five carry the flag today, but by
+ * convention rather than by this guard. It also does not follow the veraPDF
+ * launcher, which finds its own `java` — `javaEnv()` in
+ * `experiments/document-remediation/java.mjs` is what constrains that one.
+ * Both are recorded here rather than left as silent holes.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -39,10 +49,26 @@ import { describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const ROOTS = ['src', 'scripts', 'experiments'];
-const EXTENSIONS = ['.ts', '.mjs', '.js'];
+const EXTENSIONS = ['.ts', '.mts', '.mjs', '.js'];
 
-/** The binary argument of a child-process call, when it is a JVM. */
-const JAVA_BINARY = /(`\$\{JAVA_HOME\}\/bin\/java`|'java'|"java"|javaBin|JAVA_BIN)/;
+/**
+ * The binary argument of a child-process call, when it is a JVM.
+ *
+ * `JAVA` is here ahead of the commit that needs it. On `master` today every
+ * spike runner still spells the binary `\`\${JAVA_HOME}/bin/java\``, which the
+ * alternative above already matches. On `claude/heading-labelling-pass`,
+ * `892145f3` replaced that literal in eleven runners with a constant imported
+ * from `experiments/document-remediation/java.mjs` — and `[V]` the population
+ * this scan examines fell from 16 to 5 in that one commit. Every one of the
+ * eleven stayed headless, so nothing turned red; the guard simply stopped
+ * looking at two thirds of the tree, and the count asserted below is what
+ * caught it, three weeks late. Teaching the pattern the new name here means
+ * master does not inherit the blindness when that branch lands.
+ *
+ * `\b` on both sides deliberately: `JAVA_HOME` and `JAVA_BIN` must not match
+ * through this alternative.
+ */
+const JAVA_BINARY = /(`\$\{JAVA_HOME\}\/bin\/java`|'java'|"java"|javaBin|JAVA_BIN|\bJAVA\b)/;
 /**
  * `execute` is here because `stage.ts` — the production path, and the one that
  * matters most — spawns through an injected `StageExecutor` rather than calling
@@ -51,8 +77,17 @@ const JAVA_BINARY = /(`\$\{JAVA_HOME\}\/bin\/java`|'java'|"java"|javaBin|JAVA_BI
  * removed from it. The probe that was supposed to prove the guard works is what
  * found that; a guard blind to the most important call site is worse than none,
  * because it reads as coverage.
+ *
+ * `run` is the same lesson a second time: every build script spawns through
+ * `scripts/run-command.ts`, never a node built-in, so `prepare-jvm.ts` and
+ * `prepare-verapdf.ts` were examined not at all — and two of their three JVM
+ * calls were in fact missing the flag when this alternative was added.
+ *
+ * Broadening the verb costs nothing here because `JAVA_BINARY` does the real
+ * filtering: across all three roots it admits three extra call sites, all of
+ * them genuine JVMs.
  */
-const SPAWN = /\b(execFileSync|execFileAsync|execFile|spawnSync|spawn|execute)\s*\(/g;
+const SPAWN = /\b(execFileSync|execFileAsync|execFile|spawnSync|spawn|execute|run)\s*\(/g;
 const HEADLESS = 'java.awt.headless';
 
 /**
@@ -160,6 +195,14 @@ describe('JVM invocations', () => {
   it('examines a non-zero population, so a passing run means something', () => {
     // A scan that matched nothing would pass this suite while proving nothing —
     // the same vacuity `verification.md` warns about for guards generally.
+    //
+    // The floor is not arbitrary. `[V]` 19 sites on this tree; the bound is set
+    // four below that so a rename or a new spawn idiom that hides a handful of
+    // them fails here rather than passing quietly — which is exactly what
+    // `892145f3` did on `claude/heading-labelling-pass`, taking the count from
+    // 16 to 5 with no other case going red. If you deleted spike runners on
+    // purpose, re-measure and lower this with the new number written down — do
+    // not lower it to make a red run green.
     let jvmCalls = 0;
     for (const root of ROOTS) {
       for (const file of sourceFiles(join(ROOT, root))) {
@@ -171,6 +214,6 @@ describe('JVM invocations', () => {
         }
       }
     }
-    expect(jvmCalls).toBeGreaterThan(10);
+    expect(jvmCalls).toBeGreaterThan(15);
   });
 });
