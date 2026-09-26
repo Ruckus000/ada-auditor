@@ -152,6 +152,7 @@ async function main(): Promise<void> {
     // Prove the artifact runs on the runtime that ships, before the build
     // moves on. A missing module fails here, in a log somebody reads.
     const { stdout } = await run('the installed checker does not run', javaBin, [
+      '-Djava.awt.headless=true',
       '-jar',
       jarPath,
       '--version',
