@@ -92,3 +92,40 @@ A surprise is a reason to stop, not to adjust the rule.
 - No detector is built. `Cards.java`, `Mark.java`, `split_heads.py` and
   `rules.py` are untouched.
 - Cohort 9 stays held and unspent.
+
+## Amendment 1: the control arm was void, and why (2026-09-26, after the first run, disclosed)
+
+**The arm failed as registered: 10 of 18, against a threshold of 15.** Reported
+as a failed instrument, as this registration required. Nothing below rests on
+the first control set.
+
+**The cause is the control definition, not the judges.** A control was defined
+as a card whose `first_line_runs` holds two or more runs. That admits runs that
+differ only in **font size**. Seven of the eight non-reporting controls are
+`c8-0220`, a garbled scan: its runs are all `bold: false` and differ only in
+size (11, 12, 13, 14, 15, 16, 17, 31 pt), which is size jitter in a broken text
+layer, not a heading-to-body contrast. The judges answered `none` and described
+the line as "bold at one size from start to end". They were right; those seven
+were never valid controls.
+
+Of the 18, **11 carry a genuine weight contrast** (run 0 bold, run 1 regular).
+On those, judges reported a distinguisher **11 of 11**. That is a post-hoc
+subset and is not treated as the registered arm passing. 11 valid controls also
+cannot clear a threshold of 15, so the arm cannot be rescued by re-reading it.
+
+**Corrected control definition, fixed before the second run.** A control is a
+covered, labelled cohort-8 card, **not** among the 58, whose first line's runs
+begin `bold` then `regular` — a weight contrast, not a size change — with
+`line_count >= 2` and text over 60 characters. 55 cards qualify;
+`random.Random(20260926)` draws **20**. All 20 are labelled not-`H`, which is
+not a defect: a control's job is to show a judge reports a visible
+distinguisher, and keeping the type mixed away from `H` keeps that answer
+independent of the type call.
+
+**Threshold: 17 of 20** — the same 83 % the first arm asked for.
+
+**The subjects are not re-judged.** Their 120 answers were collected blind under
+identical conditions and are unaffected by which controls ride along; each card
+is judged alone, so no judge could see the composition of either batch.
+Disclosed: the corrected controls were judged in a second batch, after the
+subjects.
