@@ -70,3 +70,33 @@ identical; only its neighbours' marks differ.
 - It does not revive r14, whose training fold and validation comparison both
   drew on the corrupt cards.
 - Cohort 9 stays held and untouched.
+
+## Amendment during implementation (2026-09-26, before any judge ran)
+
+**The judges' sheets carried the defect the model's images had fixed.**
+`page_sheets.draw_sheet` kept its own copy of the outline geometry — the mapped
+box inflated by 2 px — and knew nothing about the `MIN_MARK` growth added in
+330ed00. A glyph-sized box therefore reached a judge as an outline a few pixels
+across, the same invisibility the visibility registration fixed for the model.
+The registered pixel check found it: `c8-0004:100` read 5.0 px against a 3 px
+limit, because the check compared a grown outline against an ungrown
+expectation.
+
+`draw_sheet` now draws the rectangle **Mark reports drawing**
+(`markX/markY/markW/markH`), so there is one definition of the outline and the
+sheets match the model's images. For any box at or above `MIN_MARK` the
+rectangle is identical to what it drew before, so every sheet already released
+is unaffected. The check compares against the same rectangle.
+
+**Tolerance.** The check allowed 3 px, measured on a sheet that is usually not
+scaled. `c8-0005`'s one page is upscaled 1.062x to reach `SHEET_WIDTH`, and Mark
+rounds each edge independently at the target size, so the same rounding arrives
+scaled: 3.05 px. That single card has failed the check since the cohort-8 look,
+where it was disclosed and worked around by eye. The tolerance is now 3 px **in
+the reference image's frame** (`3 x max(1, scale)`), which leaves it exactly as
+tight as it has always been on an unscaled sheet and stops a permanently red
+guard from being ignored. The check reports its tolerance and scale per card.
+
+With both changes the check passes on all five sampled documents. The 2,439
+sheets for this re-measurement were rebuilt afterwards, so no judge saw the old
+geometry.

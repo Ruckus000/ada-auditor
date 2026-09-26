@@ -93,18 +93,18 @@ def tag_font(size: int):
 
 
 def draw_sheet(sheet: Path, boxes: list[tuple[int, int, int, int, int]]) -> None:
-    """boxes: (k, x, y, w, h) in sheet pixels. Magenta 3px rect at (x-2,y-2,w+4,h+4)
-    like Mark, plus a numbered tag outside the box's top-left corner."""
+    """boxes: (k, x, y, w, h) in sheet pixels — Mark's own outline rectangle, drawn
+    as given, plus a numbered tag outside its top-left corner."""
     from PIL import Image, ImageDraw
     img = Image.open(sheet).convert("RGB")
     d = ImageDraw.Draw(img)
     font = tag_font(20)
     for k, x, y, w, h in boxes:
-        d.rectangle([x - 2, y - 2, x + w + 2, y + h + 2], outline=MAGENTA, width=3)
+        d.rectangle([x, y, x + w, y + h], outline=MAGENTA, width=3)
         label = str(k)
         tw = d.textlength(label, font=font)
         th = 22
-        tx, ty = x - 2, y - 2 - th - 2
+        tx, ty = x, y - th - 2
         if ty < 0:
             ty = y + h + 4  # no room above: below the box
         if tx + tw + 8 > img.width:
@@ -144,7 +144,12 @@ def build_sheet(sheets_dir: Path, stem: str, page: int, group: list[dict], sheet
     boxes = []
     for c in group:
         m = mark_box(pdf, page + 1, (float(c["x0"]), float(c["y0"]), float(c["x1"]), float(c["y1"])), sheet)
-        boxes.append((c["_k"], m["x"], m["y"], m["w"], m["h"]))
+        # Mark's own outline rectangle, not the mapped box: it carries the 2 px
+        # gap and the MIN_MARK growth that keeps a glyph-sized box visible. This
+        # file used to recompute the gap and knew nothing about the growth, so a
+        # tiny box reached a judge as an outline a few pixels across — the defect
+        # 330ed00 fixed for the model's images, in the copy the judges see.
+        boxes.append((c["_k"], m["markX"], m["markY"], m["markW"], m["markH"]))
     draw_sheet(sheet, boxes)
     return {"sheet": str(sheet.resolve()),
             "cards": [{"k": c["_k"], "id": c["id"], "text": c["text"]} for c in group],
@@ -187,6 +192,8 @@ def cmd_check(suggests: list[Path]) -> None:
         cc = dict(c)
         cc["_k"] = 1
         entry = build_sheet(tmpdir, stem, page, [cc], f"check-{stem}_p{page}.jpg")
+        # The outline Mark says it drew, so the check compares like with like:
+        # a grown MIN_MARK outline is not a misplaced one.
         _, mx, my, mw, mh = entry["_boxes"][0]
         base = tmpdir / f"check-base-{stem}_p{page}.png"
         render_page(pdf, page + 1, base)
@@ -197,10 +204,18 @@ def cmd_check(suggests: list[Path]) -> None:
         from PIL import Image
         s = Image.open(entry["sheet"]).width / Image.open(c["image_full"]).width
         ref = tuple(v * s for v in ref_bbox)
-        mine = (mx - 2, my - 2, mx + mw + 2, my + mh + 2)
+        mine = (mx, my, mx + mw, my + mh)
         # Java's stroke is centered on the same rect: outer edge up to 1.5 px out
         delta = max(abs(a - b) for a, b in zip(mine, ref))
-        results.append({"id": c["id"], "delta_px": round(delta, 2), "ok": delta <= 3})
+        # 3 px of slack in the *reference* image's pixels. A sheet narrower than
+        # SHEET_WIDTH is scaled up to it, and Mark rounds each edge independently
+        # at the target size, so the same rounding arrives scaled — c8-0005's one
+        # page is upscaled 1.062x and lands at 3.05. Measuring the tolerance in
+        # the frame the reference was measured in keeps the check as tight as it
+        # has always been on an unscaled sheet.
+        tol = 3 * max(1.0, s)
+        results.append({"id": c["id"], "delta_px": round(delta, 2), "tolerance_px": round(tol, 2),
+                        "scale": round(s, 3), "ok": delta <= tol})
         if len(results) == 5:
             break
     if len(results) < 5:
