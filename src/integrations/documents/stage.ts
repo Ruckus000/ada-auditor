@@ -213,6 +213,12 @@ export type StageOptions = {
   executor?: StageExecutor;
   /** Injected by tests to exercise failures without a real toolchain. */
   runtime?: JavaRuntime;
+  /**
+   * The stage rasterises pages (`Preview`, `Contrast`), so it refuses a
+   * runtime carrying a `renderGap` — checked here, after an injected runtime
+   * is chosen, because the conversion routes resolve once and pass theirs in.
+   */
+  renders?: boolean;
 };
 
 /**
@@ -237,6 +243,9 @@ async function spawnStage(
 
   if (!runtime.available) {
     return { ok: false, failure: { kind: 'unavailable', reason: runtime.reason } };
+  }
+  if (options.renders && runtime.renderGap) {
+    return { ok: false, failure: { kind: 'unavailable', reason: runtime.renderGap } };
   }
 
   const execute = options.executor ?? defaultExecutor;

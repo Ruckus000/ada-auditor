@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { measureContrast } from '../../../../src/integrations/documents/contrast';
 import { resolveJavaRuntime } from '../../../../src/integrations/documents/java-runtime';
+import { IMAGE_CODECS, codecImagePdf } from '../../../support/codec-image-pdf';
+import { pdfFromObjects } from '../../../support/pdf-objects';
 
 /**
  * The contrast stage against a real JVM, on documents built here.
@@ -36,18 +38,7 @@ function onePage(colourOperator: string, size = 12, extra = ''): Uint8Array {
     `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
   ];
-
-  let pdf = '%PDF-1.7\n';
-  const offsets: number[] = [];
-  objects.forEach((body, i) => {
-    offsets.push(pdf.length);
-    pdf += `${i + 1} 0 obj\n${body}\nendobj\n`;
-  });
-  const startxref = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (const offset of offsets) pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${startxref}\n%%EOF\n`;
-  return new Uint8Array(Buffer.from(pdf, 'latin1'));
+  return new Uint8Array(pdfFromObjects(objects));
 }
 
 describe.skipIf(skip)('Contrast, against a real JVM', () => {
@@ -152,6 +143,23 @@ describe.skipIf(skip)('Contrast, against a real JVM', () => {
     expect(result.value.failing).toBe(0);
     expect(result.value.decorative).toBeGreaterThan(0);
     expect(result.value.decorativeGlyphs).toBeGreaterThan(0);
+  }, 120_000);
+
+  /**
+   * The background is sampled from the rendered page, so a page image PDFBox
+   * cannot decode becomes a white background that is not there. Yellow on the
+   * black image is 19.56:1; yellow on the white a failed decode paints is
+   * 1.07:1 — a failure invented out of a missing codec.
+   */
+  it.each(IMAGE_CODECS)('measures text against a %s image behind it, not a blank page', async (codec) => {
+    const result = await measure(new Uint8Array(codecImagePdf(codec, { colour: '1 1 0 rg', size: 24 })), `over-${IMAGE_CODECS.indexOf(codec)}`);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.findings).toEqual([]);
+    expect(result.value.failing).toBe(0);
+    expect(result.value.undetermined).toBe(0);
+    expect(result.value.passing).toBeGreaterThan(0);
   }, 120_000);
 
   it('ignores invisible text, which is the OCR layer on every scan', async () => {

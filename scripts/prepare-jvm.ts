@@ -32,7 +32,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { BUNDLED_JRE_DIR, DOCUMENT_CLASSES_DIR } from '../src/integrations/documents/java-runtime';
+import { BUNDLED_JRE_DIR, DOCUMENT_CLASSES_DIR, missingJpxDecoder } from '../src/integrations/documents/java-runtime';
 import { run } from './run-command';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -146,6 +146,20 @@ async function main(): Promise<void> {
         + 'The build cache is carrying half of what build-documents.ts produces. '
         + 'Check the `path:` of the cache step in .github/workflows/deploy.yml — it '
         + 'must list dist/documents alongside vendor.',
+      );
+    }
+    // The same half-restore, for the third thing `build-documents.ts` writes.
+    // Everything but `Preview` and `Contrast` would still run, so this one
+    // would not even surface as a refusal — only as those two answering
+    // `unavailable` on every request.
+    const decoderGap = missingJpxDecoder(ROOT);
+    if (decoderGap) {
+      // Not repaired here: `build-documents.ts` also compiles, and on this
+      // path there is no javac — `vendor/jre` is a jlink runtime.
+      throw new Error(
+        `${BUNDLED_JRE_DIR} was restored without the JPX decoder (${decoderGap}) `
+        + `Where no JDK is installed, delete ${BUNDLED_JRE_DIR} or clear the build cache `
+        + 'so the full path of this script runs instead.',
       );
     }
     console.log('bundled runtime already present');

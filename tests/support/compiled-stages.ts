@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   DOCUMENT_CLASSES_DIR,
   DOCUMENT_JAVA_DIR,
+  missingJpxDecoder,
 } from '../../src/integrations/documents/java-runtime';
 
 /**
@@ -53,12 +54,18 @@ import {
  */
 export function staleStagesComplaint(root: string = process.cwd()): string | null {
   const stale = staleDocumentStage(root);
-  if (!stale) return null;
+  if (stale) {
+    return (
+      `${stale} is newer than the compiled stages in ${DOCUMENT_CLASSES_DIR}. ` +
+      'Run `npm run build:documents`.'
+    );
+  }
 
-  return (
-    `${stale} is newer than the compiled stages in ${DOCUMENT_CLASSES_DIR}. ` +
-    'Run `npm run build:documents`.'
-  );
+  // The same kind of gap: a tree built before the JPX decoder existed. The
+  // runtime still reports available — only `Preview` and `Contrast` refuse —
+  // so without this the suites would run and fail on those two stages with
+  // nothing pointing at the one command that fixes every case.
+  return missingJpxDecoder(root);
 }
 
 export function staleDocumentStage(root: string = process.cwd()): string | null {

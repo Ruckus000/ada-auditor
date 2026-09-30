@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   DOCUMENT_CLASSES_DIR,
   DOCUMENT_JAVA_DIR,
+  JPX_DECODER,
 } from '../../../src/integrations/documents/java-runtime';
 import { staleDocumentStage, staleStagesComplaint } from '../../support/compiled-stages';
 
@@ -28,9 +29,18 @@ afterEach(() => {
   if (root) rmSync(root, { recursive: true, force: true });
 });
 
-/** A tree with the two real directory names, and mtimes set to order. */
-function tree(sources: Record<string, number>, classes: Record<string, number>): string {
+/**
+ * A tree with the two real directory names, and mtimes set to order — plus
+ * the JPX decoder jars `build-documents.ts` fetches, unless told otherwise.
+ */
+function tree(sources: Record<string, number>, classes: Record<string, number>, jpx = true): string {
   root = mkdtempSync(join(tmpdir(), 'ada-compiled-stages-'));
+  if (jpx) {
+    for (const { path } of JPX_DECODER) {
+      mkdirSync(join(root, path, '..'), { recursive: true });
+      writeFileSync(join(root, path), '');
+    }
+  }
 
   for (const [dir, files] of [
     [join(root, DOCUMENT_JAVA_DIR), sources],
@@ -117,5 +127,19 @@ describe('staleStagesComplaint', () => {
     const dir = tree({ 'Inspect.java': 1000 }, { 'Inspect.class': 2000 });
 
     expect(staleStagesComplaint(dir)).toBeNull();
+  });
+
+  /**
+   * Current classes, but built before the JPX decoder was part of the build.
+   * The runtime reports available, so the suites would otherwise run and fail
+   * on `Preview`/`Contrast` with nothing naming the fix.
+   */
+  it('names the missing JPX decoder and the command that fetches it', () => {
+    const dir = tree({ 'Inspect.java': 1000 }, { 'Inspect.class': 2000 }, false);
+
+    const complaint = staleStagesComplaint(dir);
+
+    expect(complaint).toContain('jai-imageio');
+    expect(complaint).toContain('npm run build:documents');
   });
 });
