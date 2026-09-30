@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Ice Window Brief</title>
+<style>
+  @page { size: A4; margin: 22mm 20mm; }
+  html { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
+  body { font: 11pt/1.55 Didot, "Bodoni 72", serif; color: #1b1410;
+         letter-spacing: 0.025em; }
+  .kicker { font-size: 13pt; font-style: italic; font-weight: 400;
+            margin: 0 0 18pt; display: block; text-align: center; }
+  h1 { font-size: 26pt; font-weight: 400; margin: 0 0 14pt; display: block;
+       text-align: center; }
+  h2 { font-size: 14pt; font-weight: 700; margin: 18pt 0 8pt; display: block; }
+  h3 { font-size: 11pt; font-weight: 400; font-style: italic; margin: 16pt 0 8pt;
+       display: block; }
+  p { margin: 8pt 0; }
+  .chart-title { font-size: 12pt; font-weight: 400; margin: 16pt 0 8pt; display: block; }
+  .chart-title.loud { font-size: 20pt; font-weight: 700; margin: 16pt 0 8pt; }
+  .axis { font-size: 9pt; font-weight: 400; margin: 8pt 0; display: block; }
+  .spot { text-align: center; margin: 4pt 0 8pt; }
+  .runfoot { font-size: 8pt; color: #6a5c50; margin-top: 20pt; display: block;
+             text-align: center; }
+</style>
+</head>
+<body>
+<p class="kicker">Harbour master circular</p>
+
+<h1>Ice Window Brief</h1>
+<p>This circular states when the inner channel is expected to be usable.
+It is advice for masters, not a closure order.</p>
+
+<h2>Open water</h2>
+<p>Open water here means a path a loaded coaster can keep without ice
+escort. The picture below is the present reading, not a forecast.</p>
+
+<p class="chart-title">Channel status</p>
+<div class="spot">
+  <svg width="280" height="80" viewBox="0 0 280 80" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="40" r="10" fill="#cfc4b0"/>
+    <circle cx="140" cy="28" r="10" fill="#7a8f6a"/>
+    <circle cx="230" cy="46" r="10" fill="#cfc4b0"/>
+  </svg>
+</div>
+<p>Dots mark the three reaches. Colour is a drawing convenience. It is
+not a heading.</p>
+
+<h3>Tug cover</h3>
+<p>One tug is held at the lock. A second tug is on two hours notice.
+Cover is not increased automatically when ice thickens.</p>
+
+<p class="chart-title loud">Wait times</p>
+<div class="spot">
+  <svg width="280" height="70" viewBox="0 0 280 70" xmlns="http://www.w3.org/2000/svg">
+    <rect x="30" y="30" width="40" height="24" fill="#1b1410"/>
+    <rect x="90" y="18" width="40" height="36" fill="#1b1410"/>
+    <rect x="150" y="24" width="40" height="30" fill="#1b1410"/>
+    <rect x="210" y="10" width="40" height="44" fill="#1b1410"/>
+  </svg>
+</div>
+<p class="axis">Wait in hours</p>
+<p>The columns are a picture of delay at the lock. They do not name a
+new part of this circular.</p>
+
+<div class="runfoot">Northwind Logistics · harbour office · winter desk</div>
+</body>
+</html>

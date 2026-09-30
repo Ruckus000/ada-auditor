@@ -1,0 +1,41 @@
+{
+  "document": "17-visitor-brief",
+  "tests": "Part 19 role-coverage validation fixture. Quiet H4 against a louder non-heading callout. Different CSS family from the training set.",
+  "adversarial": false,
+  "title": "Visitor Day Brief",
+  "language": "en",
+  "split": "validation",
+  "headingHierarchy": [
+    { "level": 1, "text": "Visitor Day Brief" },
+    { "level": 2, "text": "Arrival" },
+    { "level": 3, "text": "Reception" },
+    { "level": 4, "text": "Badges" },
+    { "level": 4, "text": "Cloakroom" },
+    { "level": 3, "text": "Tours" },
+    { "level": 4, "text": "Workshop floor" },
+    { "level": 2, "text": "Departure" },
+    { "level": 3, "text": "Feedback" },
+    { "level": 4, "text": "Forms" }
+  ],
+  "nonHeadings": [
+    { "text": "Open morning · site brief", "role": "P", "category": "running-header" },
+    { "text": "Do not enter the machine hall unescorted.", "role": "P", "category": "callout" },
+    { "text": "Host copy — not for visitors", "role": "P", "category": "running-footer" }
+  ],
+  "readingOrder": [
+    "running header", "H1", "intro", "callout",
+    "H2 Arrival", "paragraph",
+    "H3 Reception", "paragraph", "H4 Badges", "paragraph", "H4 Cloakroom", "paragraph",
+    "H3 Tours", "paragraph", "H4 Workshop floor", "paragraph",
+    "H2 Departure", "paragraph",
+    "H3 Feedback", "paragraph", "H4 Forms", "paragraph",
+    "running footer"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": [],
+  "links": [],
+  "artifacts": ["running header", "running footer"],
+  "intentionalProblems": []
+}

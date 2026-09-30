@@ -1,0 +1,34 @@
+{
+  "document": "19-quay-roster",
+  "tests": "Part 23 chart-title coverage train fixture. Courier memo. Chart titles are heading-like phrases beside CSS bars, one quieter than H2 and one louder than H3.",
+  "adversarial": false,
+  "title": "Quay Roster Notice",
+  "language": "en",
+  "split": "train",
+  "headingHierarchy": [
+    { "level": 1, "text": "Quay Roster Notice" },
+    { "level": 2, "text": "Night allocation" },
+    { "level": 3, "text": "Sign-off" }
+  ],
+  "nonHeadings": [
+    { "text": "UNCONTROLLED COPY", "role": "P", "category": "stamp" },
+    { "text": "Berth occupancy", "role": "P", "category": "chart-title" },
+    { "text": "Tied up", "role": "P", "category": "chart-legend" },
+    { "text": "Delay mix", "role": "P", "category": "chart-title" }
+  ],
+  "readingOrder": [
+    "stamp", "H1", "intro",
+    "H2 Night allocation",
+    "chart-title Berth occupancy", "bars", "legend Tied up", "paragraph",
+    "H3 Sign-off", "paragraph",
+    "chart-title Delay mix", "bar", "paragraph",
+    "running footer"
+  ],
+  "lists": [],
+  "tables": [],
+  "figures": [],
+  "decorativeGraphics": ["CSS occupancy bars", "CSS delay mix bar"],
+  "links": [],
+  "artifacts": [],
+  "intentionalProblems": []
+}

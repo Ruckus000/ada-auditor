@@ -1,0 +1,103 @@
+{
+  "model": "mlx-community/Qwen3.5-4B-MLX-4bit",
+  "prompt_stem": "You assign one PDF tag role. Return ONLY JSON with keys role, action, confidence, reason. role is one of H1,H2,H3,H4,H5,H6,P,LI,Table,Figure,Artifact. action is retag, keep, or abstain. confidence is 0..1. A heading introduces a semantic section or subsection of the document. Typography alone is insufficient: large, bold, centered, or isolated text is not a heading merely because it looks prominent. Addresses, running headers, running footers, stamps, watermarks, table labels, and other page furniture are not headings. Abstain when semantic evidence is insufficient to determine the role. Do not invent facts.",
+  "conservative_prompt_stem": "You assign one PDF tag role. Return ONLY JSON with keys role, action, confidence, reason. role is one of H1,H2,H3,H4,H5,H6,P,LI,Table,Figure,Artifact. action is retag, keep, or abstain. confidence is 0..1. A heading introduces a semantic section or subsection of the document. Typography alone is insufficient: large, bold, centered, or isolated text is not a heading merely because it looks prominent. Addresses, running headers, running footers, stamps, watermarks, table labels, and other page furniture are not headings. Abstain when semantic evidence is insufficient to determine the role. Do not invent facts.",
+  "note": "Spike 4 fresh validation: every element from corpus/07-complex-chart. Frozen before any generate. Not used in training.",
+  "cases": [
+    {
+      "id": "07-h1",
+      "text": "Throughput Trend Analysis",
+      "font_pt": 18,
+      "weight": "bold",
+      "prev": "none",
+      "next": "The chart below plots containers handled per quarter for the three depots across the review period.",
+      "existing_tag": "H1",
+      "expect": {
+        "role": "H1",
+        "action": "keep"
+      },
+      "category": "H1",
+      "source": "corpus/07-complex-chart.html headingHierarchy"
+    },
+    {
+      "id": "07-intro",
+      "text": "The chart below plots containers handled per quarter for the three depots across the review period. It is the only place the per-quarter series appears; the summary table elsewhere reports totals only.",
+      "font_pt": 11,
+      "weight": "regular",
+      "prev": "Throughput Trend Analysis",
+      "next": "Containers handled per quarter (hundreds)",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "trap": "heading",
+      "source": "corpus/07-complex-chart.html intro paragraph"
+    },
+    {
+      "id": "07-chart-title",
+      "text": "Containers handled per quarter (hundreds)",
+      "font_pt": 13,
+      "weight": "bold",
+      "prev": "the summary table elsewhere reports totals only.",
+      "next": "0",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "prominent-nonheading",
+      "source": "corpus/07-complex-chart.html SVG chart title; not in headingHierarchy",
+      "trap": "heading"
+    },
+    {
+      "id": "07-northern",
+      "text": "Northern",
+      "font_pt": 9,
+      "weight": "regular",
+      "prev": "Coastal",
+      "next": "Southern",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-label",
+      "source": "corpus/07-complex-chart.html SVG legend; not in headingHierarchy",
+      "trap": "heading"
+    },
+    {
+      "id": "07-q1",
+      "text": "Q1",
+      "font_pt": 9,
+      "weight": "regular",
+      "prev": "Quarter",
+      "next": "Q2",
+      "existing_tag": "none",
+      "expect": {
+        "role": "P",
+        "action": "retag"
+      },
+      "category": "chart-label",
+      "source": "corpus/07-complex-chart.html SVG axis tick; not in headingHierarchy",
+      "trap": "heading"
+    },
+    {
+      "id": "07-cap",
+      "text": "Northern rises steadily across all four quarters. Southern is flat within noise. Coastal declines slowly and continuously, and is the only series that ends below where it began.",
+      "font_pt": 9.5,
+      "weight": "regular",
+      "prev": "Northern",
+      "next": "none",
+      "existing_tag": "P",
+      "expect": {
+        "role": "P",
+        "action": "keep"
+      },
+      "category": "paragraph",
+      "trap": "heading",
+      "source": "corpus/07-complex-chart.html trailing description paragraph"
+    }
+  ]
+}
