@@ -160,6 +160,17 @@ Fetches PDFBox 3.0.8 into `vendor/` (gitignored) and compiles
 `src/integrations/documents/java/*.java` into `dist/documents/classes`
 (gitignored). Needs a JDK 17+, via `JAVA_HOME` or on `PATH`.
 
+It also fetches the JPEG 2000 ImageIO decoder into `vendor/imageio/`,
+checksummed. PDFBox paints nothing for an image it has no decoder for and
+exits 0, so without it a `JPXDecode` page previews as a white sheet and
+`Contrast` measures text against a background that is not there.
+`pdfbox-app` already carries the JBIG2 decoder; JPX is the half it leaves
+out, declaring the jar an optional dependency. That codec is under the JJ2000
+licence, recorded with the others in `build-documents.ts`. While either jar
+is missing the runtime stays available — `Inspect`, `Finish`, the archive and
+veraPDF never decode an image — but carries a `renderGap`, and `Preview` and
+`Contrast` refuse it as `unavailable` rather than report on a blank page.
+
 The repo tracks **zero binaries** and this must not change that.
 
 ## Tests

@@ -569,6 +569,10 @@ describe('routes that spawn a JVM', () => {
     expect(included, 'the jlink-assembled runtime').toContain('vendor/jre');
     expect(included, 'PDFBox').toContain('pdfbox-app');
     expect(included, 'the compiled stages').toContain('dist/documents/classes');
+    // The JPEG 2000 decoder PDFBox does not bundle. Without it a JPX page
+    // renders white at exit 0 — Preview shows a blank sheet and Contrast
+    // measures against a background that is not there.
+    expect(included, 'the JPX ImageIO decoder').toContain('vendor/imageio');
     // The second instrument travels with the first: every route that reads a
     // document also validates it, and a deployment without the checker would
     // answer "conformance not checked" on every reading — honest, but a

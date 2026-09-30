@@ -22,7 +22,7 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,6 +31,7 @@ import {
   DOCUMENT_CLASSES_DIR,
   DOCUMENT_FONTS_DIR,
   DOCUMENT_JAVA_DIR,
+  JPX_DECODER,
   PDFBOX_JAR,
   PDFBOX_VERSION,
 } from '../src/integrations/documents/java-runtime';
@@ -128,6 +129,63 @@ async function ensureFonts(): Promise<void> {
   console.log(`fonts -> ${DOCUMENT_FONTS_DIR}`);
 }
 
+function sha256Of(bytes: Buffer): string {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+/**
+ * The JPEG 2000 ImageIO decoder (`java-runtime.ts` says why it is needed, and
+ * holds each jar's path, source and SHA-256 in one table).
+ *
+ * Only JPX. `pdfbox-app` is a fat jar that already carries
+ * `org.apache.pdfbox.jbig2` and its ImageIO SPI, so fetching `jbig2-imageio`
+ * as well would put two copies of the same classes on the classpath.
+ *
+ * ## Licensing, read from the jars' own META-INF/LICENSE
+ *
+ * - `jai-imageio-core` 1.4.0: BSD 3-clause (Sun Microsystems, 2005) with a
+ *   disclaimer that the software is not designed for nuclear facilities — an
+ *   acknowledgement, not a field-of-use restriction.
+ * - `jai-imageio-jpeg2000` 1.4.0: the same BSD text, plus the **JJ2000
+ *   licence** on the codec itself. JJ2000 grants its rights for use "in
+ *   hardware or software products claiming conformance to the JPEG 2000
+ *   Standard" and says "No license or right to this software module is
+ *   granted for non JPEG 2000 Standard conforming products". Decoding JPEG
+ *   2000 codestreams embedded in PDFs is that use. It also warns that use
+ *   "may infringe existing patents" — a notice, not a grant or a restriction,
+ *   and one to put in front of counsel before calling this settled. The
+ *   licence is not OSI-approved, and PDFBox — an Apache project — declares
+ *   the jar an optional dependency rather than shipping it.
+ *
+ * Both notices must travel with the binary. They do: each jar carries its
+ * LICENSE and NOTICE in META-INF, and the jar is copied whole.
+ *
+ * The checksum is checked on every build, not just the first download: a jar
+ * already on disk may have come from anywhere — a cache, a copy, a hand — and
+ * this executes in production. A mismatch is re-fetched, and the fetch must
+ * match or the build stops. Hashing ~1MB costs milliseconds.
+ */
+async function ensureJpxDecoder(): Promise<void> {
+  for (const { path, url, sha256 } of JPX_DECODER) {
+    const dest = join(ROOT, path);
+    if (existsSync(dest) && sha256Of(await readFile(dest)) === sha256) continue;
+
+    console.log(`fetching ${path}`);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`${path} download failed: ${response.status} ${response.statusText}`);
+    }
+    const bytes = Buffer.from(await response.arrayBuffer());
+    const digest = sha256Of(bytes);
+    if (digest !== sha256) {
+      // Refused outright, like the fonts: this executes in production.
+      throw new Error(`${path} checksum mismatch: expected ${sha256}, got ${digest}`);
+    }
+    await mkdir(dirname(dest), { recursive: true });
+    await writeFile(dest, bytes);
+  }
+}
+
 /** `javac` from `JAVA_HOME` if set, else whatever is on `PATH`. */
 function javacBinary(): string {
   const home = process.env.JAVA_HOME?.trim();
@@ -143,6 +201,7 @@ function javacBinary(): string {
 async function main(): Promise<void> {
   const jar = await ensurePdfbox();
   await ensureFonts();
+  await ensureJpxDecoder();
 
   const sources = (await readdir(JAVA_SRC))
     .filter((name) => name.endsWith('.java'))

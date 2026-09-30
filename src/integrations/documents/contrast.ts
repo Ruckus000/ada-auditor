@@ -27,5 +27,5 @@ export function measureContrast(
   pdfPath: string,
   options: StageOptions = {},
 ): Promise<StageResult<ContrastReading>> {
-  return runStage('Contrast', [pdfPath], contrastReadingSchema, options);
+  return runStage('Contrast', [pdfPath], contrastReadingSchema, { ...options, renders: true });
 }

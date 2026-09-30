@@ -3059,6 +3059,12 @@ describe('passkey sign-in', () => {
  * these, the client-scoped convert route, lists 311 on a tree with no
  * `vendor/` and 369 once `npm run build:documents` has put the fonts, PDFBox
  * and the compiled classes there (the rest 156–218; veraPDF adds one jar).
+ * `[V]` Re-measured 2026-09-30 when the JPEG 2000 decoder joined the build:
+ * the convert route lists 380, the rest 200–228. The decoder is 4 of those
+ * entries on every JVM route — two jars, each listed twice, once traced from
+ * `java-runtime.ts` and once from the include, exactly as PDFBox is — and 2
+ * on the settings, remediate and ready modules, which trace only the former.
+ * The other 7 are drift since the first measurement.
  * A tripwire for the walk coming back, not a budget to spend up to — the
  * next thing that legitimately needs to ride along has to raise it on the
  * record, with the measurement.

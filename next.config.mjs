@@ -1,3 +1,20 @@
+/**
+ * What every route that spawns a JVM needs beside it: the jlink runtime,
+ * veraPDF, PDFBox, the JPEG 2000 decoder, the fonts `Finish` embeds, and the
+ * compiled stages. One list, spread into each `outputFileTracingIncludes`
+ * entry below, so the next dependency is added once — the JPX decoder had to
+ * be added to seven copies. `tests/deploy/browser-routes-are-packaged.test.ts`
+ * holds each route to it.
+ */
+const JVM_FILES = [
+  './vendor/jre/**',
+  './vendor/verapdf/**',
+  './vendor/pdfbox-app-3.0.8.jar',
+  './vendor/imageio/**',
+  './vendor/fonts/**',
+  './dist/documents/classes/**',
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -84,36 +101,20 @@ const nextConfig = {
     // that does the converting, and the route would deploy clean and refuse
     // every request with `converter_unavailable`.
     '/api/platform/clients/**/documents/convert/**': [
-      './vendor/jre/**',
-      './vendor/verapdf/**',
-      './vendor/pdfbox-app-3.0.8.jar',
-      './vendor/fonts/**',
-      './dist/documents/classes/**',
+      ...JVM_FILES,
       './vendor/libreoffice/**',
     ],
     '/api/platform/clients/**/documents/**': [
-      './vendor/jre/**',
-      './vendor/verapdf/**',
-      './vendor/pdfbox-app-3.0.8.jar',
-      './vendor/fonts/**',
-      './dist/documents/classes/**',
+      ...JVM_FILES,
     ],
     // Delivery creation and review build a ZIP through the same bounded JVM
     // stage as the document pipeline. Keep both route depths on the first
     // matching key so they do not inherit the browser-only client bundle.
     '/api/platform/clients/**/delivery': [
-      './vendor/jre/**',
-      './vendor/verapdf/**',
-      './vendor/pdfbox-app-3.0.8.jar',
-      './vendor/fonts/**',
-      './dist/documents/classes/**',
+      ...JVM_FILES,
     ],
     '/api/platform/clients/**/delivery/**': [
-      './vendor/jre/**',
-      './vendor/verapdf/**',
-      './vendor/pdfbox-app-3.0.8.jar',
-      './vendor/fonts/**',
-      './dist/documents/classes/**',
+      ...JVM_FILES,
     ],
     '/api/platform/clients/**': [
       './node_modules/playwright-core/**',
@@ -145,27 +146,15 @@ const nextConfig = {
     // of `/api/documents/**` itself so `inspect` and `inspect-url` do not each
     // grow a 440MB LibreOffice they never exec.
     '/api/documents/remediate/**': [
-      './vendor/jre/**',
-      './vendor/verapdf/**',
-      './vendor/pdfbox-app-3.0.8.jar',
-      './vendor/fonts/**',
-      './dist/documents/classes/**',
+      ...JVM_FILES,
       './vendor/libreoffice/**',
     ],
     '/api/documents/remediate-url/**': [
-      './vendor/jre/**',
-      './vendor/verapdf/**',
-      './vendor/pdfbox-app-3.0.8.jar',
-      './vendor/fonts/**',
-      './dist/documents/classes/**',
+      ...JVM_FILES,
       './vendor/libreoffice/**',
     ],
     '/api/documents/**': [
-      './vendor/jre/**',
-      './vendor/verapdf/**',
-      './vendor/pdfbox-app-3.0.8.jar',
-      './vendor/fonts/**',
-      './dist/documents/classes/**',
+      ...JVM_FILES,
     ],
   },
   // The other direction. Turbopack traces a function's dependencies by

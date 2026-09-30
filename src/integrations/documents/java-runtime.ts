@@ -47,6 +47,56 @@ export const DOCUMENT_CLASSES_DIR = join('dist', 'documents', 'classes');
 export const PDFBOX_JAR = join('vendor', `pdfbox-app-${PDFBOX_VERSION}.jar`);
 
 /**
+ * The JPEG 2000 ImageIO decoder, and the `jai-imageio-core` it is built on.
+ *
+ * `pdfbox-app` is a fat jar and already carries a JBIG2 decoder
+ * (`org.apache.pdfbox.jbig2`, registered as an ImageIO SPI), but nothing for
+ * `JPXDecode`. Without these two jars PDFBox logs a warning (`[V]` for a JPX
+ * whose dictionary omits the optional `/ColorSpace`: "could not determine
+ * color space") and paints NOTHING where the image was, at exit 0 — so a
+ * JPX page previews as a white sheet and `Contrast` samples a white
+ * background that is not there. `[V]` 2026-09-30: yellow text over a black
+ * JPX image measured 1.07:1 against white — a failure invented by a missing
+ * codec — and passes with the decoder present (19.56:1 by the formula).
+ *
+ * Versions are the ones PDFBox 3.0.8's own `pdfbox-parent` pins
+ * (`jai.version` 1.4.0). One table carries each jar's path, source and
+ * SHA-256 (taken 2026-09-30, cross-checked against Central's `.sha1`), so the
+ * resolver and `build-documents.ts` — which fetches, verifies, and records the
+ * licences — cannot pair a file name with the wrong bytes.
+ *
+ * Core first only for reading order; ImageIO finds both through their SPI
+ * files, so classpath position does not matter.
+ */
+export const JPX_DECODER = [
+  {
+    path: join('vendor', 'imageio', 'jai-imageio-core-1.4.0.jar'),
+    url: 'https://repo1.maven.org/maven2/com/github/jai-imageio/jai-imageio-core/1.4.0/jai-imageio-core-1.4.0.jar',
+    sha256: '8ad3c68e9efffb10ac87ff8bc589adf64b04a729c5194c079efd0643607fd72a',
+  },
+  {
+    path: join('vendor', 'imageio', 'jai-imageio-jpeg2000-1.4.0.jar'),
+    url: 'https://repo1.maven.org/maven2/com/github/jai-imageio/jai-imageio-jpeg2000/1.4.0/jai-imageio-jpeg2000-1.4.0.jar',
+    sha256: '07fb6e3a3040122b846c5e52520033175c3251e2ec8830df82f87cb21f388bb1',
+  },
+] as const;
+
+/**
+ * Why a stage that RENDERS pages cannot run here, or `null` when it can.
+ *
+ * Only `Preview` and `Contrast` rasterise; `Inspect`, `Finish`, the archive
+ * and veraPDF never decode an image, so a missing decoder must not take them
+ * down with it. `spawnStage` refuses a rendering stage on this answer rather
+ * than let it report on a blank page.
+ */
+export function missingJpxDecoder(root: string = process.cwd()): string | null {
+  const missing = JPX_DECODER.find((jar) => !existsSync(join(root, jar.path)));
+  return missing
+    ? `the JPEG 2000 decoder is missing at ${missing.path}, so JPX pages would render blank. Run \`npm run build:documents\`.`
+    : null;
+}
+
+/**
  * The Liberation font family, fetched pinned-and-checksummed by
  * `build-documents.ts` — metric-compatible replacements for the Windows faces
  * real PDFs name without embedding (Arial, Times New Roman, Courier New).
@@ -77,7 +127,12 @@ export const BUNDLED_JRE_DIR = join('vendor', 'jre');
 export type Env = Record<string, string | undefined>;
 
 export type JavaRuntime =
-  | { available: true; javaBin: string; classpath: string }
+  /**
+   * `renderGap`, when present, says why stages that render pages must not run
+   * on this runtime (see `missingJpxDecoder`). Absent means nothing is missing,
+   * which is also what a runtime a test constructs means.
+   */
+  | { available: true; javaBin: string; classpath: string; renderGap?: string }
   | { available: false; reason: string };
 
 /**
@@ -161,7 +216,23 @@ export function resolveJavaRuntime(
 
   // Classpath order matters only for duplicate class names, which there are
   // none of; jar first matches the spike's runners so the two cannot diverge.
-  return { available: true, javaBin, classpath: `${jar}${delimiter}${classes}` };
+  //
+  // The decoder goes on whole or not at all. `[V]` The JPEG 2000 jar without
+  // core makes ImageIO's SPI scan throw ServiceConfigurationError, which kills
+  // the stage before it reads a page — worse than the blank render it fixes.
+  //
+  // `turbopackIgnore` because a `join` over a table entry is a path the tracer
+  // cannot resolve, and its answer is to trace the whole project (AGENTS.md,
+  // "Function traces are bounded"). The jars reach each function through
+  // `outputFileTracingIncludes` instead, as PDFBox does.
+  const renderGap = missingJpxDecoder(root);
+  const decoders = renderGap ? [] : JPX_DECODER.map((jar) => join(/*turbopackIgnore: true*/ root, jar.path));
+  return {
+    available: true,
+    javaBin,
+    classpath: [jar, classes, ...decoders].join(delimiter),
+    ...(renderGap ? { renderGap } : {}),
+  };
 }
 
 /** Whether document stages can run here. Read by `/api/ready` and settings. */
