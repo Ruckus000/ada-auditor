@@ -54,3 +54,13 @@ Three veto settings are a small multiple look on development data that has been 
 A success here is a reason to build the second opinion and test it on fresh documents (a shadow),
 never a pass claim, and never a reason to open cohort 9. A model trained out of fold on ~80 cohort-8
 documents is not the model a product would ship; that one would be trained on more documents.
+
+## Amendment 1 (2026-10-09, after the control failed and before any real read)
+
+Instrument check (2) is amended to be **one-sided: shuffled-label control OOF AUC ≤ 0.55**. Reason: the
+registered two-sided band assumed a noise-trained model scores at chance. With 8 % positives and
+unregularised trees it scores below chance, at 0.41–0.43 across four shuffle seeds and rising to
+0.47 under regularisation (diagnosis in `heading-cpu-probes-2026-10-09.md` §3). A label leak would
+push the control *up*, which the one-sided check still catches. The model, features, folds, veto
+settings, success and kill criteria are unchanged. The user approved this amendment; the real
+out-of-fold model had not been fit when it was written.

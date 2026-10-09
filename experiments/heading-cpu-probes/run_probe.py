@@ -94,7 +94,7 @@ def main(data: Path, experiment: Path, result: Path) -> None:
     auc_ctrl = roc_auc_score(y[labelled], p_ctrl[labelled])
     checks = {"baseline": baseline, "control_auc": auc_ctrl,
               "passed": baseline == {"cards": cards_total, "decided": 8893, "errors": 48, "ids_match": True}
-              and 0.45 <= auc_ctrl <= 0.55 and len(cards) == cards_total,
+              and auc_ctrl <= 0.55 and len(cards) == cards_total,  # amendment 1: one-sided
               "hosts": len(set(groups)), "documents": len(by_doc), "trained_rows": int(train_mask.sum()), "feature_cards": len(cards)}
     print(json.dumps(checks), flush=True)
     if not checks["passed"]:
