@@ -1,9 +1,10 @@
 # No-GPU heading probes: trainer audit, label-audit design, CPU second opinion (2026-10-09)
 
-The three levers from the 2026-10-09 literature review that need no GPU. Nothing here started MLX,
-judged a card, or touched cohort 9, the shadows, or the r14 checkout. Scripts are in
-`experiments/heading-cpu-probes/`. Outputs, including the card ids, are in the data directory under
-`out/cpu-probes-2026-10-09/`, not in this repository.
+The three levers from the 2026-10-09 literature review that need no GPU, plus the user-approved
+re-judge of §4. Nothing here started MLX or touched cohort 9, the shadows, or the r14 checkout. Scripts
+are in `experiments/heading-cpu-probes/`. Card-level outputs (predictions, labels, judge answers) are
+in the data directory under `out/cpu-probes-2026-10-09/`, backed up to the private data repo
+(a440d54), not in this repository.
 
 ## 1. Trainer audit: no silent waste, and the page-sharing levers do not apply to this input
 
