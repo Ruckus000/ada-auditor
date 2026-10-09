@@ -118,3 +118,30 @@ The registration is `heading-cpu-probes-2026-10-09-registration.md` (commit 8bf2
   trees it does not.
 - Amending the check is a decision for the user, made before any real read. The obvious amendment
   is one-sided: control AUC ≤ 0.55.
+
+### Result under amendment 1 (one look): KILL, the second opinion makes the same mistakes
+
+The checks passed under the one-sided control (0.424 ≤ 0.55, baseline exact). Out of fold, the
+typography-only model reaches AUC 0.909 and accuracy 0.939 on all labelled cards, far weaker than
+the combination. On the combination's 48 errors it is wrong the same way:
+
+| veto at | caught (model FN / rule FN / FP) | correct lost | decided | errors | bar | coverage |
+|---:|---|---:|---:|---:|---:|---:|
+| 0.50 | 4 (1 / 3 / 0) | 122 | 8,767 | 44 | 30 | 0.875 |
+| 0.80 | 1 (0 / 1 / 0) | 44 | 8,848 | 47 | 30 | 0.883 |
+| 0.95 | 0 | 14 | 8,879 | 48 | 31 | 0.886 |
+
+- Kill fires (caught < 18 at every setting), and no setting passes. FP stays at 2, within `fp_max`.
+- **The model false negatives look like non-headings in every stored field.** The weaker model,
+  given only typography, text shape, neighbours and the ODL tag, catches 1 of 33. These errors are
+  not a VLM quirk that a cheap different-input model can outvote. Whatever separates them is not in
+  the stored card fields.
+- **What the stored fields lack:** the image, the line's style runs (`first_line_runs` is not
+  stored), and sibling context such as the table row or column.
+- This narrows the open levers to those that change the input:
+  - page or sibling context;
+  - per-run style from a fixed extraction;
+  - a decorrelated *image* view, such as a crop.
+- It argues against spending GPU time on another same-input ensemble member.
+- The linear-probe test over the VLM's hidden states is still open. It asks a different question:
+  whether the VLM's *own* features separate these cards.
