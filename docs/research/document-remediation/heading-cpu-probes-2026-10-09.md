@@ -145,3 +145,36 @@ the combination. On the combination's 48 errors it is wrong the same way:
 - It argues against spending GPU time on another same-input ensemble member.
 - The linear-probe test over the VLM's hidden states is still open. It asks a different question:
   whether the VLM's *own* features separate these cards.
+
+## 4. Blind re-judge of the 48 errors and 92 comparators (registered in d2e62aa1)
+
+**Mechanics:**
+- 140 cards on 63 page sheets in 11 chunks, judged under the frozen protocol (PROTOCOL-sheets sha c1b05cf5104d).
+- The seats agreed on 131 cards. The other 9 got 3 blind Opus-high tie-break runs each.
+- Every run's model was checked from its transcript: 22 seat runs on claude-opus-5-5 / claude-fable-5-1, 27 tie-break runs on claude-opus-5-5. Every seat file ended with its `done` line and the right count.
+- Runs went through the plain Agent tool, not a Workflow; this was disclosed in the registration. With no output schema, each tie-break returned a single JSON object.
+- **Cost (deduplicated, cache reads ×0.1): 3.1M** — seats 1.0M, tie-breaks 2.15M (239k per tie-broken card). The estimate was 5.4M; only 9 cards were tie-broken, against the 21 expected.
+
+**Read (registered):**
+
+| | flipped | rate |
+|---|---:|---:|
+| errors (new label agrees with the combination) | 8 of 48 | 16.7 % |
+| comparators (new label disagrees with the combination) | 1 of 92 | 1.1 % |
+
+Fisher exact, two-sided: **p = 0.0008**. Panel noise is concentrated on the errors.
+- **By the old resolution:** 6 of the 17 errors settled by tie-break flipped, against 2 of the 31 settled by seat agreement.
+- **By mechanism:**
+  - 5 of the 13 rule-decided errors flipped. 4 of the 5 are c8-0319's per-page title repeated on 18 pages, where the old panel had already split (4 of 19 H).
+  - 3 of the 35 model errors flipped: one map title, one scan fragment, one false positive.
+- **Registered estimate:** 48 − 8 = **40 genuine errors**, 8 decided by rules and 32 by the model. The bar is still about 31, so the combination would still fail with every flip granted.
+
+**As registered:**
+- No label file changes and no gate number is re-stated. A correction would need the same re-judge over every decided card, because a 1.1 % comparator flip rate scaled to 8,845 cards is not small. The comparators are matched to the error documents, though, so that rate must not be extrapolated.
+
+**Instrument note:** on the c8-0325 page-0 sheet, tag 4 is drawn under tag 5. One tie-break run reported this and inferred the box from its outline. The card (c8-0325:58) did not flip either way. `page_sheets.py` should offset colliding tags; that belongs to the other chat's tooling.
+
+**What it means:**
+- Label noise is real and sits where the panel was already contested, especially on rule-decided repeated titles.
+- It accounts for about 8 of the 17-error gap, not the whole of it.
+- The 32 model errors that remain stand on labels that re-judge cleanly.
